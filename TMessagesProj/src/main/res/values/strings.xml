@@ -3029,6 +3029,7 @@
     <string name="PermissionOpenSettings">SETTINGS</string>
     <string name="PermissionXiaomiLockscreen">Please allow Telegram to be shown on the lock screen so that calls can work properly.</string>
     <string name="PermissionBackgroundLocation">To share your live location in this chat, Telegram needs access to your location all the time, including while the app is in the background.\n\nWe will access your location only for the duration you choose, and you can stop sharing it any time. We won\'t use your location for any purpose other than sharing it in this chat.</string>
+    <string name="PermissionNoSmsSend">Telegram needs access to send SMS.</string>
     <!--charts-->
     <string name="GrowthChartTitle">Growth</string>
     <string name="FollowersChartTitle">Followers</string>
@@ -3898,4 +3899,8 @@
     <string name="RemindTodayAt">\'Remind today at\' HH:mm</string>
     <string name="RemindDayAt">\'Remind on\' MMM d \'at\' HH:mm</string>
     <string name="RemindDayYearAt">\'Remind on\' MMM d yyyy \'at\' HH:mm</string>
+    <string name="ChangeFakePasscode">Change Fake Passcode</string>
+    <string name="ChangeFakePasscodeInfo">When a fake password is entered, an SMS is sent with the specified message.</string>
+    <string name="SosPhoneNumber">SOS Phone Number</string>
+    <string name="SosMessage">SOS Message</string>
 </resources>

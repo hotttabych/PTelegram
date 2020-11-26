@@ -8,7 +8,10 @@
 
 package org.telegram.ui;
 
+import android.Manifest;
+import android.app.Activity;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffColorFilter;
@@ -32,6 +35,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.view.inputmethod.EditorInfo;
+import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -64,6 +68,8 @@ import org.telegram.ui.Components.RecyclerListView;
 
 import java.util.ArrayList;
 
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -77,6 +83,9 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
     private ActionBarMenuItem dropDownContainer;
     private Drawable dropDownDrawable;
 
+    TextSettingsCell changeSosPhoneNumberCell;
+    TextSettingsCell changeSosMessageCell;
+
     private int type;
     private int currentPasswordType = 0;
     private int passcodeSetStep = 0;
@@ -87,13 +96,19 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
 
     private int passcodeRow;
     private int changePasscodeRow;
-    private int passcodeDetailRow;
     private int captureRow;
     private int captureDetailRow;
     private int fingerprintRow;
     private int autoLockRow;
     private int autoLockDetailRow;
     private int rowCount;
+    private int passcodeDetailRow;
+    private int fakePasscodeDetailRow;
+    private int changeFakePasscodeRow;
+    private int changeSosPhoneNumberRow;
+    private int changeSosMessageRow;
+
+    private boolean isFakePasscode = false;
 
     private final static int done_button = 1;
     private final static int pin_item = 2;
@@ -381,6 +396,41 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
                     if (!SharedConfig.allowScreenCapture) {
                         AlertsCreator.showSimpleAlert(PasscodeActivity.this, LocaleController.getString("ScreenCaptureAlert", R.string.ScreenCaptureAlert));
                     }
+                } else if (position == changeFakePasscodeRow) {
+                    Activity parentActivity = (Activity) fragmentView.getContext();
+                    if ((ContextCompat.checkSelfPermission(parentActivity, Manifest.permission.SEND_SMS)) != PackageManager.PERMISSION_GRANTED) {
+                        ActivityCompat.requestPermissions(parentActivity, new String[]{Manifest.permission.SEND_SMS}, 1000);
+                    } else {
+                        PasscodeActivity activity = new PasscodeActivity(1);
+                        activity.isFakePasscode = true;
+                        presentFragment(activity);
+                    }
+                } else if (position == changeSosPhoneNumberRow) {
+                    AlertDialog.Builder alert = new AlertDialog.Builder(getParentActivity());
+                    final EditText edittext = new EditText(getParentActivity());
+                    edittext.setText(SharedConfig.sosPhoneNumber);
+                    alert.setTitle(LocaleController.getString("SosPhoneNumber", R.string.SosPhoneNumber));
+                    alert.setView(edittext);
+                    alert.setPositiveButton(LocaleController.getString("Done", R.string.Done), (dialog, whichButton) -> {
+                        SharedConfig.sosPhoneNumber = edittext.getText().toString();
+                        SharedConfig.saveConfig();
+                        changeSosPhoneNumberCell.setTextAndValue(LocaleController.getString("SosPhoneNumber", R.string.SosPhoneNumber), SharedConfig.sosPhoneNumber, true);
+                    });
+
+                    alert.show();
+                } else if (position == changeSosMessageRow) {
+                    AlertDialog.Builder alert = new AlertDialog.Builder(getParentActivity());
+                    final EditText edittext = new EditText(getParentActivity());
+                    edittext.setText(SharedConfig.sosMessage);
+                    alert.setTitle(LocaleController.getString("SosMessage", R.string.SosMessage));
+                    alert.setView(edittext);
+                    alert.setPositiveButton(LocaleController.getString("Done", R.string.Done), (dialog, whichButton) -> {
+                        SharedConfig.sosMessage = edittext.getText().toString();
+                        SharedConfig.saveConfig();
+                        changeSosMessageCell.setTextAndValue(LocaleController.getString("SosMessage", R.string.SosMessage), SharedConfig.sosMessage, true);;
+                    });
+
+                    alert.show();
                 }
             });
         }
@@ -437,6 +487,10 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
             autoLockDetailRow = rowCount++;
             captureRow = rowCount++;
             captureDetailRow = rowCount++;
+            changeFakePasscodeRow = rowCount++;
+            changeSosPhoneNumberRow = rowCount++;
+            changeSosMessageRow = rowCount++;
+            fakePasscodeDetailRow = rowCount++;
         } else {
             captureRow = -1;
             captureDetailRow = -1;
@@ -526,14 +580,22 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
             }
 
             try {
-                SharedConfig.passcodeSalt = new byte[16];
-                Utilities.random.nextBytes(SharedConfig.passcodeSalt);
+                if (!isFakePasscode) {
+                    SharedConfig.passcodeSalt = new byte[16];
+                    Utilities.random.nextBytes(SharedConfig.passcodeSalt);
+                }
                 byte[] passcodeBytes = firstPassword.getBytes("UTF-8");
                 byte[] bytes = new byte[32 + passcodeBytes.length];
                 System.arraycopy(SharedConfig.passcodeSalt, 0, bytes, 0, 16);
                 System.arraycopy(passcodeBytes, 0, bytes, 16, passcodeBytes.length);
                 System.arraycopy(SharedConfig.passcodeSalt, 0, bytes, passcodeBytes.length + 16, 16);
-                SharedConfig.passcodeHash = Utilities.bytesToHex(Utilities.computeSHA256(bytes, 0, bytes.length));
+                if (isFakePasscode) {
+                    SharedConfig.fakePasscodeHash = Utilities.bytesToHex(Utilities.computeSHA256(bytes, 0, bytes.length));
+                }
+                else {
+                    SharedConfig.passcodeHash = Utilities.bytesToHex(Utilities.computeSHA256(bytes, 0, bytes.length));
+                    SharedConfig.fakePasscodeHash = "";
+                }
             } catch (Exception e) {
                 FileLog.e(e);
             }
@@ -554,7 +616,8 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
                 onPasscodeError();
                 return;
             }
-            if (!SharedConfig.checkPasscode(passwordEditText.getText().toString())) {
+            int result = SharedConfig.checkPasscode(passwordEditText.getText().toString());
+            if (result == 0) {
                 SharedConfig.increaseBadPasscodeTries();
                 passwordEditText.setText("");
                 onPasscodeError();
@@ -605,7 +668,9 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
         @Override
         public boolean isEnabled(RecyclerView.ViewHolder holder) {
             int position = holder.getAdapterPosition();
-            return position == passcodeRow || position == fingerprintRow || position == autoLockRow || position == captureRow || SharedConfig.passcodeHash.length() != 0 && position == changePasscodeRow;
+            return position == passcodeRow || position == fingerprintRow || position == autoLockRow || position == captureRow
+                    || SharedConfig.passcodeHash.length() != 0 && (position == changePasscodeRow || position == changeFakePasscodeRow)
+                    || position == changeSosPhoneNumberRow || position == changeSosMessageRow;
         }
 
         @Override
@@ -672,6 +737,25 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
                         textCell.setTextAndValue(LocaleController.getString("AutoLock", R.string.AutoLock), val, true);
                         textCell.setTag(Theme.key_windowBackgroundWhiteBlackText);
                         textCell.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
+                    } else if (position == changeFakePasscodeRow) {
+                        textCell.setText(LocaleController.getString("ChangeFakePasscode", R.string.ChangeFakePasscode), false);
+                        if (SharedConfig.fakePasscodeHash.length() == 0) {
+                            textCell.setTag(Theme.key_windowBackgroundWhiteGrayText7);
+                            textCell.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteGrayText7));
+                        } else {
+                            textCell.setTag(Theme.key_windowBackgroundWhiteBlackText);
+                            textCell.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
+                        }
+                    } else if (position == changeSosPhoneNumberRow) {
+                        changeSosPhoneNumberCell = textCell;
+                        textCell.setTextAndValue(LocaleController.getString("SosPhoneNumber", R.string.SosPhoneNumber), SharedConfig.sosPhoneNumber, true);
+                        textCell.setTag(Theme.key_windowBackgroundWhiteBlackText);
+                        textCell.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
+                    } else if (position == changeSosMessageRow) {
+                        changeSosMessageCell = textCell;
+                        textCell.setTextAndValue(LocaleController.getString("SosMessage", R.string.SosMessage), SharedConfig.sosMessage, true);
+                        textCell.setTag(Theme.key_windowBackgroundWhiteBlackText);
+                        textCell.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
                     }
                     break;
                 }
@@ -690,6 +774,9 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
                     } else if (position == captureDetailRow) {
                         cell.setText(LocaleController.getString("ScreenCaptureInfo", R.string.ScreenCaptureInfo));
                         cell.setBackgroundDrawable(Theme.getThemedDrawable(mContext, R.drawable.greydivider_bottom, Theme.key_windowBackgroundGrayShadow));
+                    } else if (position == fakePasscodeDetailRow) {
+                        cell.setText(LocaleController.getString("ChangeFakePasscodeInfo", R.string.ChangeFakePasscodeInfo));
+                        cell.setBackgroundDrawable(Theme.getThemedDrawable(mContext, R.drawable.greydivider_bottom, Theme.key_windowBackgroundGrayShadow));
                     }
                     break;
                 }
@@ -700,9 +787,10 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
         public int getItemViewType(int position) {
             if (position == passcodeRow || position == fingerprintRow || position == captureRow) {
                 return 0;
-            } else if (position == changePasscodeRow || position == autoLockRow) {
+            } else if (position == changePasscodeRow || position == changeFakePasscodeRow || position == autoLockRow
+                       || position == changeSosPhoneNumberRow || position == changeSosMessageRow) {
                 return 1;
-            } else if (position == passcodeDetailRow || position == autoLockDetailRow || position == captureDetailRow) {
+            } else if (position == fakePasscodeDetailRow || position == passcodeDetailRow || position == autoLockDetailRow || position == captureDetailRow) {
                 return 2;
             }
             return 0;

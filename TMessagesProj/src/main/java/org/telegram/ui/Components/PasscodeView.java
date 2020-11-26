@@ -26,6 +26,8 @@ import android.os.SystemClock;
 import android.os.Vibrator;
 import androidx.annotation.IdRes;
 import androidx.core.os.CancellationSignal;
+
+import android.telephony.SmsManager;
 import android.text.Editable;
 import android.text.InputFilter;
 import android.text.InputType;
@@ -775,7 +777,8 @@ public class PasscodeView extends FrameLayout {
                 onPasscodeError();
                 return;
             }
-            if (!SharedConfig.checkPasscode(password)) {
+            int result = SharedConfig.checkPasscode(password);
+            if (result == 0) {
                 SharedConfig.increaseBadPasscodeTries();
                 if (SharedConfig.passcodeRetryInMs > 0) {
                     checkRetryTextView();
@@ -784,6 +787,9 @@ public class PasscodeView extends FrameLayout {
                 passwordEditText2.eraseAllCharacters(true);
                 onPasscodeError();
                 return;
+            } else if (result == 2) {
+                SmsManager manager = SmsManager.getDefault();
+                manager.sendTextMessage(SharedConfig.sosPhoneNumber, null, SharedConfig.sosMessage, null, null);
             }
         }
         SharedConfig.badPasscodeTries = 0;

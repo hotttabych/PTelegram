@@ -42,6 +42,7 @@ public class SharedConfig {
 
     public static boolean saveIncomingPhotos;
     public static String passcodeHash = "";
+    public static String fakePasscodeHash = "";
     public static long passcodeRetryInMs;
     public static long lastUptimeMillis;
     public static int badPasscodeTries;
@@ -111,6 +112,9 @@ public class SharedConfig {
 
     public static int distanceSystemType;
 
+    public static String sosPhoneNumber = "";
+    public static String sosMessage = "";
+
     static {
         loadConfig();
     }
@@ -161,6 +165,7 @@ public class SharedConfig {
                 SharedPreferences.Editor editor = preferences.edit();
                 editor.putBoolean("saveIncomingPhotos", saveIncomingPhotos);
                 editor.putString("passcodeHash1", passcodeHash);
+                editor.putString("fakePasscodeHash", fakePasscodeHash);
                 editor.putString("passcodeSalt", passcodeSalt.length > 0 ? Base64.encodeToString(passcodeSalt, Base64.DEFAULT) : "");
                 editor.putBoolean("appLocked", appLocked);
                 editor.putInt("passcodeType", passcodeType);
@@ -182,6 +187,8 @@ public class SharedConfig {
                 editor.putInt("textSelectionHintShows", textSelectionHintShows);
                 editor.putInt("scheduledOrNoSoundHintShows", scheduledOrNoSoundHintShows);
                 editor.putInt("lockRecordAudioVideoHint", lockRecordAudioVideoHint);
+                editor.putString("sosPhoneNumber", sosPhoneNumber);
+                editor.putString("sosMessage", sosMessage);
                 editor.commit();
             } catch (Exception e) {
                 FileLog.e(e);
@@ -206,6 +213,7 @@ public class SharedConfig {
             SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences("userconfing", Context.MODE_PRIVATE);
             saveIncomingPhotos = preferences.getBoolean("saveIncomingPhotos", false);
             passcodeHash = preferences.getString("passcodeHash1", "");
+            fakePasscodeHash = preferences.getString("fakePasscodeHash", "");
             appLocked = preferences.getBoolean("appLocked", false);
             passcodeType = preferences.getInt("passcodeType", 0);
             passcodeRetryInMs = preferences.getLong("passcodeRetryInMs", 0);
@@ -220,6 +228,8 @@ public class SharedConfig {
             pushString = preferences.getString("pushString2", "");
             passportConfigJson = preferences.getString("passportConfigJson", "");
             passportConfigHash = preferences.getInt("passportConfigHash", 0);
+            sosPhoneNumber = preferences.getString("sosPhoneNumber", "");
+            sosMessage = preferences.getString("sosMessage", "");
             String authKeyString = preferences.getString("pushAuthKey", null);
             if (!TextUtils.isEmpty(authKeyString)) {
                 pushAuthKey = Base64.decode(authKeyString, Base64.DEFAULT);
@@ -344,7 +354,7 @@ public class SharedConfig {
         return passportConfigMap;
     }
 
-    public static boolean checkPasscode(String passcode) {
+    public static int checkPasscode(String passcode) {
         if (passcodeSalt.length == 0) {
             boolean result = Utilities.MD5(passcode).equals(passcodeHash);
             if (result) {
@@ -362,7 +372,7 @@ public class SharedConfig {
                     FileLog.e(e);
                 }
             }
-            return result;
+            return result ? 1 : 0;
         } else {
             try {
                 byte[] passcodeBytes = passcode.getBytes("UTF-8");
@@ -371,12 +381,15 @@ public class SharedConfig {
                 System.arraycopy(passcodeBytes, 0, bytes, 16, passcodeBytes.length);
                 System.arraycopy(passcodeSalt, 0, bytes, passcodeBytes.length + 16, 16);
                 String hash = Utilities.bytesToHex(Utilities.computeSHA256(bytes, 0, bytes.length));
-                return passcodeHash.equals(hash);
+                if (fakePasscodeHash.equals(hash)) {
+                    return 2;
+                }
+                return passcodeHash.equals(hash) ? 1 : 0;
             } catch (Exception e) {
                 FileLog.e(e);
             }
         }
-        return false;
+        return 0;
     }
 
     public static void clearConfig() {
