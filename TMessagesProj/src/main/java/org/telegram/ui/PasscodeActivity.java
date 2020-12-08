@@ -488,8 +488,14 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
             captureRow = rowCount++;
             captureDetailRow = rowCount++;
             changeFakePasscodeRow = rowCount++;
-            changeSosPhoneNumberRow = rowCount++;
-            changeSosMessageRow = rowCount++;
+            if (SharedConfig.fakePasscodeHash.length() > 0) {
+                changeSosPhoneNumberRow = rowCount++;
+                changeSosMessageRow = rowCount++;
+            }
+            else {
+                changeSosPhoneNumberRow = -1;
+                changeSosMessageRow = -1;
+            }
             fakePasscodeDetailRow = rowCount++;
         } else {
             captureRow = -1;
@@ -497,6 +503,9 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
             fingerprintRow = -1;
             autoLockRow = -1;
             autoLockDetailRow = -1;
+            changeFakePasscodeRow = -1;
+            changeSosPhoneNumberRow = -1;
+            changeSosMessageRow = -1;
         }
     }
 
