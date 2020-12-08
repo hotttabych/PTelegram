@@ -107,6 +107,7 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
     private int fakePasscodeRow;
     private int fakePasscodeDetailRow;
     private int changeFakePasscodeRow;
+    private int allowFakePasscodeLoginRow;
     private int changeSosPhoneNumberRow;
     private int changeSosMessageRow;
 
@@ -427,6 +428,10 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
                         activity.isFakePasscode = true;
                         presentFragment(activity);
                     }
+                } else if (position == allowFakePasscodeLoginRow) {
+                    TextCheckCell cell = (TextCheckCell) view;
+                    SharedConfig.allowFakePasscodeLogin = !SharedConfig.allowFakePasscodeLogin;
+                    cell.setChecked(SharedConfig.allowFakePasscodeLogin);
                 } else if (position == changeSosPhoneNumberRow) {
                     AlertDialog.Builder alert = new AlertDialog.Builder(getParentActivity());
                     final EditText edittext = new EditText(getParentActivity());
@@ -512,6 +517,7 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
             fakePasscodeRow = rowCount++;
             changeFakePasscodeRow = rowCount++;
             if (SharedConfig.fakePasscodeHash.length() > 0) {
+                allowFakePasscodeLoginRow = rowCount++;
                 changeSosPhoneNumberRow = rowCount++;
                 changeSosMessageRow = rowCount++;
             }
@@ -528,6 +534,7 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
             autoLockDetailRow = -1;
             fakePasscodeRow = -1;
             changeFakePasscodeRow = -1;
+            allowFakePasscodeLoginRow = -1;
             changeSosPhoneNumberRow = -1;
             changeSosMessageRow = -1;
             fakePasscodeDetailRow = -1;
@@ -650,8 +657,8 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
                 onPasscodeError();
                 return;
             }
-            int result = SharedConfig.checkPasscode(passwordEditText.getText().toString());
-            if (result == 0) {
+            SharedConfig.PasscodeCheckResult result = SharedConfig.checkPasscode(passwordEditText.getText().toString());
+            if (!result.allowLogin()) {
                 SharedConfig.increaseBadPasscodeTries();
                 passwordEditText.setText("");
                 onPasscodeError();
@@ -704,7 +711,8 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
             int position = holder.getAdapterPosition();
             return position == passcodeRow || position == fingerprintRow || position == autoLockRow || position == captureRow
                     || SharedConfig.passcodeHash.length() != 0 && (position == changePasscodeRow || position == changeFakePasscodeRow)
-                    || position == fakePasscodeRow || position == changeSosPhoneNumberRow || position == changeSosMessageRow;
+                    || position == fakePasscodeRow || position == allowFakePasscodeLoginRow
+                    || position == changeSosPhoneNumberRow || position == changeSosMessageRow;
         }
 
         @Override
@@ -745,6 +753,8 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
                         textCell.setTextAndCheck(LocaleController.getString("ScreenCapture", R.string.ScreenCapture), SharedConfig.allowScreenCapture, false);
                     } else if (position == fakePasscodeRow) {
                         textCell.setTextAndCheck(LocaleController.getString("FakePasscode", R.string.FakePasscode), SharedConfig.fakePasscodeHash.length() > 0, true);
+                    } else if (position == allowFakePasscodeLoginRow) {
+                        textCell.setTextAndCheck(LocaleController.getString("AllowFakePasscodeLogin", R.string.AllowFakePasscodeLogin), SharedConfig.allowFakePasscodeLogin, true);
                     }
                     break;
                 }

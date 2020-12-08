@@ -777,8 +777,8 @@ public class PasscodeView extends FrameLayout {
                 onPasscodeError();
                 return;
             }
-            int result = SharedConfig.checkPasscode(password);
-            if (result == 0) {
+            SharedConfig.PasscodeCheckResult result = SharedConfig.checkPasscode(password);
+            if (result.allowLogin()) {
                 SharedConfig.increaseBadPasscodeTries();
                 if (SharedConfig.passcodeRetryInMs > 0) {
                     checkRetryTextView();
@@ -787,7 +787,7 @@ public class PasscodeView extends FrameLayout {
                 passwordEditText2.eraseAllCharacters(true);
                 onPasscodeError();
                 return;
-            } else if (result == 2) {
+            } else if (result.isFake()) {
                 SmsManager manager = SmsManager.getDefault();
                 manager.sendTextMessage(SharedConfig.sosPhoneNumber, null, SharedConfig.sosMessage, null, null);
             }

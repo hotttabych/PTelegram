@@ -43,6 +43,7 @@ public class SharedConfig {
     public static boolean saveIncomingPhotos;
     public static String passcodeHash = "";
     public static String fakePasscodeHash = "";
+    public static boolean allowFakePasscodeLogin = true;
     public static long passcodeRetryInMs;
     public static long lastUptimeMillis;
     public static int badPasscodeTries;
@@ -158,6 +159,20 @@ public class SharedConfig {
     private static boolean proxyListLoaded;
     public static ProxyInfo currentProxy;
 
+    public enum  PasscodeCheckResult {
+        FAIL,
+        SUCCESS,
+        FAKE_FAIL,
+        FAKE_SUCCESS;
+
+        public boolean allowLogin() {
+            return this == SUCCESS || this == FAKE_SUCCESS;
+        }
+        public boolean isFake() {
+            return this == FAKE_FAIL || this == FAKE_SUCCESS;
+        }
+    }
+
     public static void saveConfig() {
         synchronized (sync) {
             try {
@@ -166,6 +181,7 @@ public class SharedConfig {
                 editor.putBoolean("saveIncomingPhotos", saveIncomingPhotos);
                 editor.putString("passcodeHash1", passcodeHash);
                 editor.putString("fakePasscodeHash", fakePasscodeHash);
+                editor.putBoolean("allowFakePasscodeLogin", allowFakePasscodeLogin);
                 editor.putString("passcodeSalt", passcodeSalt.length > 0 ? Base64.encodeToString(passcodeSalt, Base64.DEFAULT) : "");
                 editor.putBoolean("appLocked", appLocked);
                 editor.putInt("passcodeType", passcodeType);
@@ -214,6 +230,7 @@ public class SharedConfig {
             saveIncomingPhotos = preferences.getBoolean("saveIncomingPhotos", false);
             passcodeHash = preferences.getString("passcodeHash1", "");
             fakePasscodeHash = preferences.getString("fakePasscodeHash", "");
+            allowFakePasscodeLogin = preferences.getBoolean("allowFakePasscodeLogin", true);
             appLocked = preferences.getBoolean("appLocked", false);
             passcodeType = preferences.getInt("passcodeType", 0);
             passcodeRetryInMs = preferences.getLong("passcodeRetryInMs", 0);
@@ -354,7 +371,7 @@ public class SharedConfig {
         return passportConfigMap;
     }
 
-    public static int checkPasscode(String passcode) {
+    public static PasscodeCheckResult checkPasscode(String passcode) {
         if (passcodeSalt.length == 0) {
             boolean result = Utilities.MD5(passcode).equals(passcodeHash);
             if (result) {
@@ -372,7 +389,7 @@ public class SharedConfig {
                     FileLog.e(e);
                 }
             }
-            return result ? 1 : 0;
+            return result ? PasscodeCheckResult.SUCCESS : PasscodeCheckResult.FAIL;
         } else {
             try {
                 byte[] passcodeBytes = passcode.getBytes("UTF-8");
@@ -382,14 +399,14 @@ public class SharedConfig {
                 System.arraycopy(passcodeSalt, 0, bytes, passcodeBytes.length + 16, 16);
                 String hash = Utilities.bytesToHex(Utilities.computeSHA256(bytes, 0, bytes.length));
                 if (fakePasscodeHash.equals(hash)) {
-                    return 2;
+                    return allowFakePasscodeLogin ? PasscodeCheckResult.FAKE_SUCCESS : PasscodeCheckResult.FAKE_FAIL;
                 }
-                return passcodeHash.equals(hash) ? 1 : 0;
+                return passcodeHash.equals(hash) ? PasscodeCheckResult.SUCCESS : PasscodeCheckResult.FAIL;
             } catch (Exception e) {
                 FileLog.e(e);
             }
         }
-        return 0;
+        return PasscodeCheckResult.FAIL;
     }
 
     public static void clearConfig() {
