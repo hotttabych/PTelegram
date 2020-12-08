@@ -3899,6 +3899,7 @@
     <string name="RemindTodayAt">\'Remind today at\' HH:mm</string>
     <string name="RemindDayAt">\'Remind on\' MMM d \'at\' HH:mm</string>
     <string name="RemindDayYearAt">\'Remind on\' MMM d yyyy \'at\' HH:mm</string>
+    <string name="FakePasscode">Fake Passcode</string>
     <string name="ChangeFakePasscode">Change Fake Passcode</string>
     <string name="ChangeFakePasscodeInfo">When a fake password is entered, an SMS is sent with the specified message.</string>
     <string name="SosPhoneNumber">SOS Phone Number</string>

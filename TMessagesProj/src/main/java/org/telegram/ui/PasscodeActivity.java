@@ -103,6 +103,8 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
     private int autoLockDetailRow;
     private int rowCount;
     private int passcodeDetailRow;
+
+    private int fakePasscodeRow;
     private int fakePasscodeDetailRow;
     private int changeFakePasscodeRow;
     private int changeSosPhoneNumberRow;
@@ -405,6 +407,26 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
                         activity.isFakePasscode = true;
                         presentFragment(activity);
                     }
+                } else if (position == fakePasscodeRow) {
+                    TextCheckCell cell = (TextCheckCell) view;
+                    if (SharedConfig.fakePasscodeHash.length() != 0) {
+                        SharedConfig.fakePasscodeHash = "";
+                        SharedConfig.saveConfig();
+                        int count = listView.getChildCount();
+                        for (int a = 0; a < count; a++) {
+                            View child = listView.getChildAt(a);
+                            if (a == changeFakePasscodeRow) {
+                                TextSettingsCell textCell = (TextSettingsCell) child;
+                                textCell.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteGrayText7));
+                            }
+                        }
+                        cell.setChecked(SharedConfig.fakePasscodeHash.length() != 0);
+                        NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.didSetPasscode);
+                    } else {
+                        PasscodeActivity activity = new PasscodeActivity(1);
+                        activity.isFakePasscode = true;
+                        presentFragment(activity);
+                    }
                 } else if (position == changeSosPhoneNumberRow) {
                     AlertDialog.Builder alert = new AlertDialog.Builder(getParentActivity());
                     final EditText edittext = new EditText(getParentActivity());
@@ -487,6 +509,7 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
             autoLockDetailRow = rowCount++;
             captureRow = rowCount++;
             captureDetailRow = rowCount++;
+            fakePasscodeRow = rowCount++;
             changeFakePasscodeRow = rowCount++;
             if (SharedConfig.fakePasscodeHash.length() > 0) {
                 changeSosPhoneNumberRow = rowCount++;
@@ -503,9 +526,11 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
             fingerprintRow = -1;
             autoLockRow = -1;
             autoLockDetailRow = -1;
+            fakePasscodeRow = -1;
             changeFakePasscodeRow = -1;
             changeSosPhoneNumberRow = -1;
             changeSosMessageRow = -1;
+            fakePasscodeDetailRow = -1;
         }
     }
 
@@ -679,7 +704,7 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
             int position = holder.getAdapterPosition();
             return position == passcodeRow || position == fingerprintRow || position == autoLockRow || position == captureRow
                     || SharedConfig.passcodeHash.length() != 0 && (position == changePasscodeRow || position == changeFakePasscodeRow)
-                    || position == changeSosPhoneNumberRow || position == changeSosMessageRow;
+                    || position == fakePasscodeRow || position == changeSosPhoneNumberRow || position == changeSosMessageRow;
         }
 
         @Override
@@ -718,6 +743,8 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
                         textCell.setTextAndCheck(LocaleController.getString("UnlockFingerprint", R.string.UnlockFingerprint), SharedConfig.useFingerprint, true);
                     } else if (position == captureRow) {
                         textCell.setTextAndCheck(LocaleController.getString("ScreenCapture", R.string.ScreenCapture), SharedConfig.allowScreenCapture, false);
+                    } else if (position == fakePasscodeRow) {
+                        textCell.setTextAndCheck(LocaleController.getString("FakePasscode", R.string.FakePasscode), SharedConfig.fakePasscodeHash.length() > 0, true);
                     }
                     break;
                 }
@@ -794,7 +821,7 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
 
         @Override
         public int getItemViewType(int position) {
-            if (position == passcodeRow || position == fingerprintRow || position == captureRow) {
+            if (position == passcodeRow || position == fingerprintRow || position == captureRow || position == fakePasscodeRow) {
                 return 0;
             } else if (position == changePasscodeRow || position == changeFakePasscodeRow || position == autoLockRow
                        || position == changeSosPhoneNumberRow || position == changeSosMessageRow) {
