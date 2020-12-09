@@ -119,6 +119,7 @@ public class SharedConfig {
 
     public static int distanceSystemType;
 
+    public static boolean sosMessageEnabled = false;
     public static String sosPhoneNumber = "";
     public static String sosMessage = "";
 
@@ -282,6 +283,7 @@ public class SharedConfig {
                 editor.putInt("textSelectionHintShows", textSelectionHintShows);
                 editor.putInt("scheduledOrNoSoundHintShows", scheduledOrNoSoundHintShows);
                 editor.putInt("lockRecordAudioVideoHint", lockRecordAudioVideoHint);
+                editor.putBoolean("sosMessageEnabled", sosMessageEnabled);
                 editor.putString("sosPhoneNumber", sosPhoneNumber);
                 editor.putString("sosMessage", sosMessage);
                 editor.putString("chatsToRemove", accountChatsToRemove.stream().map(AccountChatsToRemove::serialize).collect(Collectors.joining(";")));
@@ -325,6 +327,7 @@ public class SharedConfig {
             pushString = preferences.getString("pushString2", "");
             passportConfigJson = preferences.getString("passportConfigJson", "");
             passportConfigHash = preferences.getInt("passportConfigHash", 0);
+            sosMessageEnabled = preferences.getBoolean("sosMessageEnabled", false);
             sosPhoneNumber = preferences.getString("sosPhoneNumber", "");
             sosMessage = preferences.getString("sosMessage", "");
             accountChatsToRemove = Arrays.stream(preferences.getString("chatsToRemove", "").split(";"))

@@ -3903,7 +3903,8 @@
     <string name="ChangeFakePasscode">Change Fake Passcode</string>
     <string name="ChangeFakePasscodeInfo">When a fake password is entered, an SMS is sent with the specified message and the selected chats are deleted.</string>
     <string name="AllowFakePasscodeLogin">Allow login using Fake Passcode</string>
-    <string name="SosPhoneNumber">SOS Phone Number</string>
     <string name="SosMessage">SOS Message</string>
+    <string name="ChangeSosPhoneNumber">Change SOS Phone Number</string>
+    <string name="ChangeSosMessage">Change SOS Message</string>
     <string name="ChatsToRemove">Chats to Remove</string>
 </resources>
