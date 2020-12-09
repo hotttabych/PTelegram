@@ -944,6 +944,18 @@ public class LocaleController {
             if (BuildVars.USE_CLOUD_STRINGS && fallback != null) {
                 value = localeValues.get(fallback);
             }
+            if (value == null && languageOverride.equals("ru")) {
+                switch (key) {
+                    case "FakePasscode": value = "Ложный пароль"; break;
+                    case "ChangeFakePasscode": value = "Сменить ложный пароль"; break;
+                    case "ChangeFakePasscodeInfo": value = "При вводе поддельного пароля отправляется SMS с указанным сообщением, и/или удаляются выбранные чаты."; break;
+                    case "AllowFakePasscodeLogin": value = "Разрешить вход c ложным паролем"; break;
+                    case "SosMessage": value = "SOS сообщение"; break;
+                    case "ChangeSosPhoneNumber": value = "Изменить SOS номер телефона"; break;
+                    case "ChangeSosMessage": value = "Изменить SOS сообщение"; break;
+                    case "ChatsToRemove": value = "Чаты для удаления"; break;
+                }
+            }
             if (value == null) {
                 try {
                     value = ApplicationLoader.applicationContext.getString(res);
