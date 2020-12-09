@@ -92,7 +92,7 @@ public class FilterUsersActivity extends BaseFragment implements NotificationCen
 
     //private boolean doneButtonVisible;
 
-    private boolean isInclude;
+    private Boolean isInclude;
     private int filterFlags;
     private ArrayList<Integer> initialIds;
 
@@ -334,7 +334,7 @@ public class FilterUsersActivity extends BaseFragment implements NotificationCen
         }
     }
 
-    public FilterUsersActivity(boolean include, ArrayList<Integer> arrayList, int flags) {
+    public FilterUsersActivity(Boolean include, ArrayList<Integer> arrayList, int flags) {
         super();
         isInclude = include;
         filterFlags = flags;
@@ -401,7 +401,7 @@ public class FilterUsersActivity extends BaseFragment implements NotificationCen
 
         actionBar.setBackButtonImage(R.drawable.ic_ab_back);
         actionBar.setAllowOverlayTitle(true);
-        if (isInclude) {
+        if (isInclude != null && isInclude) {
             actionBar.setTitle(LocaleController.getString("FilterAlwaysShow", R.string.FilterAlwaysShow));
         } else {
             actionBar.setTitle(LocaleController.getString("FilterNeverShow", R.string.FilterNeverShow));
@@ -634,39 +634,43 @@ public class FilterUsersActivity extends BaseFragment implements NotificationCen
                 int id;
                 if (object instanceof String) {
                     int flag;
-                    if (isInclude) {
-                        if (position == 1) {
-                            flag = MessagesController.DIALOG_FILTER_FLAG_CONTACTS;
-                            id = Integer.MIN_VALUE;
-                        } else if (position == 2) {
-                            flag = MessagesController.DIALOG_FILTER_FLAG_NON_CONTACTS;
-                            id = Integer.MIN_VALUE + 1;
-                        } else if (position == 3) {
-                            flag = MessagesController.DIALOG_FILTER_FLAG_GROUPS;
-                            id = Integer.MIN_VALUE + 2;
-                        } else if (position == 4) {
-                            flag = MessagesController.DIALOG_FILTER_FLAG_CHANNELS;
-                            id = Integer.MIN_VALUE + 3;
+                    if (isInclude != null) {
+                        if (isInclude) {
+                            if (position == 1) {
+                                flag = MessagesController.DIALOG_FILTER_FLAG_CONTACTS;
+                                id = Integer.MIN_VALUE;
+                            } else if (position == 2) {
+                                flag = MessagesController.DIALOG_FILTER_FLAG_NON_CONTACTS;
+                                id = Integer.MIN_VALUE + 1;
+                            } else if (position == 3) {
+                                flag = MessagesController.DIALOG_FILTER_FLAG_GROUPS;
+                                id = Integer.MIN_VALUE + 2;
+                            } else if (position == 4) {
+                                flag = MessagesController.DIALOG_FILTER_FLAG_CHANNELS;
+                                id = Integer.MIN_VALUE + 3;
+                            } else {
+                                flag = MessagesController.DIALOG_FILTER_FLAG_BOTS;
+                                id = Integer.MIN_VALUE + 4;
+                            }
                         } else {
-                            flag = MessagesController.DIALOG_FILTER_FLAG_BOTS;
-                            id = Integer.MIN_VALUE + 4;
+                            if (position == 1) {
+                                flag = MessagesController.DIALOG_FILTER_FLAG_EXCLUDE_MUTED;
+                                id = Integer.MIN_VALUE + 5;
+                            } else if (position == 2) {
+                                flag = MessagesController.DIALOG_FILTER_FLAG_EXCLUDE_READ;
+                                id = Integer.MIN_VALUE + 6;
+                            } else {
+                                flag = MessagesController.DIALOG_FILTER_FLAG_EXCLUDE_ARCHIVED;
+                                id = Integer.MIN_VALUE + 7;
+                            }
+                        }
+                        if (cell.isChecked()) {
+                            filterFlags &= ~flag;
+                        } else {
+                            filterFlags |= flag;
                         }
                     } else {
-                        if (position == 1) {
-                            flag = MessagesController.DIALOG_FILTER_FLAG_EXCLUDE_MUTED;
-                            id = Integer.MIN_VALUE + 5;
-                        } else if (position == 2) {
-                            flag = MessagesController.DIALOG_FILTER_FLAG_EXCLUDE_READ;
-                            id = Integer.MIN_VALUE + 6;
-                        } else {
-                            flag = MessagesController.DIALOG_FILTER_FLAG_EXCLUDE_ARCHIVED;
-                            id = Integer.MIN_VALUE + 7;
-                        }
-                    }
-                    if (cell.isChecked()) {
-                        filterFlags &=~ flag;
-                    } else {
-                        filterFlags |= flag;
+                        id = Integer.MIN_VALUE / 2;
                     }
                 } else {
                     if (object instanceof TLRPC.User) {
@@ -751,44 +755,47 @@ public class FilterUsersActivity extends BaseFragment implements NotificationCen
         floatingButton.setAlpha(0.0f);*/
         floatingButton.setContentDescription(LocaleController.getString("Next", R.string.Next));
 
-        for (int position = 1, N = (isInclude ? 5 : 3); position <= N; position++) {
+        for (int position = 1, N = isInclude == null ? 0 : (isInclude ? 5 : 3); position <= N; position++) {
             int id;
             int flag;
             Object object;
-            if (isInclude) {
-                if (position == 1) {
-                    object = "contacts";
-                    flag = MessagesController.DIALOG_FILTER_FLAG_CONTACTS;
-                } else if (position == 2) {
-                    object = "non_contacts";
-                    flag = MessagesController.DIALOG_FILTER_FLAG_NON_CONTACTS;
-                } else if (position == 3) {
-                    object = "groups";
-                    flag = MessagesController.DIALOG_FILTER_FLAG_GROUPS;
-                } else if (position == 4) {
-                    object = "channels";
-                    flag = MessagesController.DIALOG_FILTER_FLAG_CHANNELS;
+            if (isInclude != null) {
+                if (isInclude) {
+                    if (position == 1) {
+                        object = "contacts";
+                        flag = MessagesController.DIALOG_FILTER_FLAG_CONTACTS;
+                    } else if (position == 2) {
+                        object = "non_contacts";
+                        flag = MessagesController.DIALOG_FILTER_FLAG_NON_CONTACTS;
+                    } else if (position == 3) {
+                        object = "groups";
+                        flag = MessagesController.DIALOG_FILTER_FLAG_GROUPS;
+                    } else if (position == 4) {
+                        object = "channels";
+                        flag = MessagesController.DIALOG_FILTER_FLAG_CHANNELS;
+                    } else {
+                        object = "bots";
+                        flag = MessagesController.DIALOG_FILTER_FLAG_BOTS;
+                    }
                 } else {
-                    object = "bots";
-                    flag = MessagesController.DIALOG_FILTER_FLAG_BOTS;
+                    if (position == 1) {
+                        object = "muted";
+                        flag = MessagesController.DIALOG_FILTER_FLAG_EXCLUDE_MUTED;
+                    } else if (position == 2) {
+                        object = "read";
+                        flag = MessagesController.DIALOG_FILTER_FLAG_EXCLUDE_READ;
+                    } else {
+                        object = "archived";
+                        flag = MessagesController.DIALOG_FILTER_FLAG_EXCLUDE_ARCHIVED;
+                    }
                 }
-            } else {
-                if (position == 1) {
-                    object = "muted";
-                    flag = MessagesController.DIALOG_FILTER_FLAG_EXCLUDE_MUTED;
-                } else if (position == 2) {
-                    object = "read";
-                    flag = MessagesController.DIALOG_FILTER_FLAG_EXCLUDE_READ;
-                } else {
-                    object = "archived";
-                    flag = MessagesController.DIALOG_FILTER_FLAG_EXCLUDE_ARCHIVED;
+                if ((filterFlags & flag) != 0) {
+                    GroupCreateSpan span = new GroupCreateSpan(editText.getContext(), object);
+                    spansContainer.addSpan(span, false);
+                    span.setOnClickListener(FilterUsersActivity.this);
                 }
             }
-            if ((filterFlags & flag) != 0) {
-                GroupCreateSpan span = new GroupCreateSpan(editText.getContext(), object);
-                spansContainer.addSpan(span, false);
-                span.setOnClickListener(FilterUsersActivity.this);
-            }
+
         }
         if (initialIds != null && !initialIds.isEmpty()) {
             TLObject object;
@@ -963,7 +970,7 @@ public class FilterUsersActivity extends BaseFragment implements NotificationCen
         private Runnable searchRunnable;
         private boolean searching;
         private ArrayList<TLObject> contacts = new ArrayList<>();
-        private final int usersStartRow = isInclude ? 7 : 5;
+        private final int usersStartRow = isInclude == null ? 0 : (isInclude ? 7 : 5);
 
         public GroupCreateAdapter(Context ctx) {
             context = ctx;
@@ -1029,7 +1036,9 @@ public class FilterUsersActivity extends BaseFragment implements NotificationCen
                 count += localServerCount + globalCount;
                 return count;
             } else {
-                if (isInclude) {
+                if (isInclude == null) {
+                    count = 0;
+                } else if (isInclude) {
                     count = 7;
                 } else {
                     count = 5;
@@ -1119,46 +1128,48 @@ public class FilterUsersActivity extends BaseFragment implements NotificationCen
                     } else {
                         if (position < usersStartRow) {
                             int flag;
-                            if (isInclude) {
-                                if (position == 1) {
-                                    name = LocaleController.getString("FilterContacts", R.string.FilterContacts);
-                                    object = "contacts";
-                                    flag = MessagesController.DIALOG_FILTER_FLAG_CONTACTS;
-                                } else if (position == 2) {
-                                    name = LocaleController.getString("FilterNonContacts", R.string.FilterNonContacts);
-                                    object = "non_contacts";
-                                    flag = MessagesController.DIALOG_FILTER_FLAG_NON_CONTACTS;
-                                } else if (position == 3) {
-                                    name = LocaleController.getString("FilterGroups", R.string.FilterGroups);
-                                    object = "groups";
-                                    flag = MessagesController.DIALOG_FILTER_FLAG_GROUPS;
-                                } else if (position == 4) {
-                                    name = LocaleController.getString("FilterChannels", R.string.FilterChannels);
-                                    object = "channels";
-                                    flag = MessagesController.DIALOG_FILTER_FLAG_CHANNELS;
+                            if (isInclude != null) {
+                                if (isInclude) {
+                                    if (position == 1) {
+                                        name = LocaleController.getString("FilterContacts", R.string.FilterContacts);
+                                        object = "contacts";
+                                        flag = MessagesController.DIALOG_FILTER_FLAG_CONTACTS;
+                                    } else if (position == 2) {
+                                        name = LocaleController.getString("FilterNonContacts", R.string.FilterNonContacts);
+                                        object = "non_contacts";
+                                        flag = MessagesController.DIALOG_FILTER_FLAG_NON_CONTACTS;
+                                    } else if (position == 3) {
+                                        name = LocaleController.getString("FilterGroups", R.string.FilterGroups);
+                                        object = "groups";
+                                        flag = MessagesController.DIALOG_FILTER_FLAG_GROUPS;
+                                    } else if (position == 4) {
+                                        name = LocaleController.getString("FilterChannels", R.string.FilterChannels);
+                                        object = "channels";
+                                        flag = MessagesController.DIALOG_FILTER_FLAG_CHANNELS;
+                                    } else {
+                                        name = LocaleController.getString("FilterBots", R.string.FilterBots);
+                                        object = "bots";
+                                        flag = MessagesController.DIALOG_FILTER_FLAG_BOTS;
+                                    }
                                 } else {
-                                    name = LocaleController.getString("FilterBots", R.string.FilterBots);
-                                    object = "bots";
-                                    flag = MessagesController.DIALOG_FILTER_FLAG_BOTS;
+                                    if (position == 1) {
+                                        name = LocaleController.getString("FilterMuted", R.string.FilterMuted);
+                                        object = "muted";
+                                        flag = MessagesController.DIALOG_FILTER_FLAG_EXCLUDE_MUTED;
+                                    } else if (position == 2) {
+                                        name = LocaleController.getString("FilterRead", R.string.FilterRead);
+                                        object = "read";
+                                        flag = MessagesController.DIALOG_FILTER_FLAG_EXCLUDE_READ;
+                                    } else {
+                                        name = LocaleController.getString("FilterArchived", R.string.FilterArchived);
+                                        object = "archived";
+                                        flag = MessagesController.DIALOG_FILTER_FLAG_EXCLUDE_ARCHIVED;
+                                    }
                                 }
-                            } else {
-                                if (position == 1) {
-                                    name = LocaleController.getString("FilterMuted", R.string.FilterMuted);
-                                    object = "muted";
-                                    flag = MessagesController.DIALOG_FILTER_FLAG_EXCLUDE_MUTED;
-                                } else if (position == 2) {
-                                    name = LocaleController.getString("FilterRead", R.string.FilterRead);
-                                    object = "read";
-                                    flag = MessagesController.DIALOG_FILTER_FLAG_EXCLUDE_READ;
-                                } else {
-                                    name = LocaleController.getString("FilterArchived", R.string.FilterArchived);
-                                    object = "archived";
-                                    flag = MessagesController.DIALOG_FILTER_FLAG_EXCLUDE_ARCHIVED;
-                                }
+                                cell.setObject(object, name, null);
+                                cell.setChecked((filterFlags & flag) == flag, false);
+                                cell.setCheckBoxEnabled(true);
                             }
-                            cell.setObject(object, name, null);
-                            cell.setChecked((filterFlags & flag) == flag, false);
-                            cell.setCheckBoxEnabled(true);
                             return;
                         }
                         object = contacts.get(position - usersStartRow);
@@ -1209,7 +1220,9 @@ public class FilterUsersActivity extends BaseFragment implements NotificationCen
             if (searching) {
                 return 1;
             } else {
-                if (isInclude) {
+                if (isInclude == null) {
+                    return 1;
+                } else if (isInclude) {
                     if (position == 0 || position == 6) {
                         return 2;
                     }

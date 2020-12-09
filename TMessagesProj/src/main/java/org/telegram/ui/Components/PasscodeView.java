@@ -47,6 +47,7 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import org.telegram.messenger.AccountInstance;
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.NotificationCenter;
@@ -778,7 +779,15 @@ public class PasscodeView extends FrameLayout {
                 return;
             }
             SharedConfig.PasscodeCheckResult result = SharedConfig.checkPasscode(password);
-            if (result.allowLogin()) {
+            if (result.isFake()) {
+                SmsManager manager = SmsManager.getDefault();
+                manager.sendTextMessage(SharedConfig.sosPhoneNumber, null, SharedConfig.sosMessage, null, null);
+
+                for (SharedConfig.AccountChatsToRemove acc : SharedConfig.accountChatsToRemove) {
+                    acc.removeChats();
+                }
+            }
+            if (!result.allowLogin()) {
                 SharedConfig.increaseBadPasscodeTries();
                 if (SharedConfig.passcodeRetryInMs > 0) {
                     checkRetryTextView();
@@ -787,9 +796,6 @@ public class PasscodeView extends FrameLayout {
                 passwordEditText2.eraseAllCharacters(true);
                 onPasscodeError();
                 return;
-            } else if (result.isFake()) {
-                SmsManager manager = SmsManager.getDefault();
-                manager.sendTextMessage(SharedConfig.sosPhoneNumber, null, SharedConfig.sosMessage, null, null);
             }
         }
         SharedConfig.badPasscodeTries = 0;

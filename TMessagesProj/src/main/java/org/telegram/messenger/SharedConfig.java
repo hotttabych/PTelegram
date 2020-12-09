@@ -22,14 +22,20 @@ import android.util.SparseArray;
 import org.json.JSONObject;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.SerializedData;
+import org.telegram.tgnet.TLRPC;
 
 import java.io.File;
 import java.io.RandomAccessFile;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import androidx.core.content.pm.ShortcutManagerCompat;
+
+import com.google.zxing.common.StringUtils;
 
 public class SharedConfig {
 
@@ -115,6 +121,79 @@ public class SharedConfig {
 
     public static String sosPhoneNumber = "";
     public static String sosMessage = "";
+
+    public static class AccountChatsToRemove {
+        public ArrayList<Integer> chatsToRemove = new ArrayList<>();
+        public int accountNum = 0;
+
+        String serialize() {
+            String chatString = chatsToRemove.stream().map(String::valueOf).collect(Collectors.joining(","));
+            return (chatString.isEmpty() ? "" : (chatString + ",")) + accountNum;
+        }
+
+        static AccountChatsToRemove deserialize(String str) {
+            ArrayList<Integer> ints = Arrays.stream(str.split(",")).filter(s -> !s.isEmpty())
+                    .map(Integer::parseInt).collect(Collectors.toCollection(ArrayList::new));
+            if (ints.isEmpty()) {
+                return null;
+            }
+            AccountChatsToRemove result = new AccountChatsToRemove();
+            result.accountNum = ints.get(ints.size() - 1);
+            ints.remove(ints.size() - 1);
+            result.chatsToRemove = ints;
+            return result;
+        }
+
+        public void removeChats() {
+            AccountInstance account = AccountInstance.getInstance(accountNum);
+            MessagesController messageController = account.getMessagesController();
+            for (Integer id : chatsToRemove) {
+                TLRPC.Chat chat;
+                TLRPC.User user = null;
+                if (id > 0) {
+                    user = messageController.getUser(id);
+                    chat = null;
+                } else {
+                    chat = messageController.getChat(-id);
+                }
+                if (chat != null) {
+                    if (ChatObject.isNotInChat(chat)) {
+                        messageController.deleteDialog(id, 0, false);
+                    } else {
+                        TLRPC.User currentUser = messageController.getUser(account.getUserConfig().getClientUserId());
+                        messageController.deleteUserFromChat((int) -id, currentUser, null);
+                    }
+                } else {
+                    messageController.deleteDialog(id, 0, false);
+                    boolean isBot = user != null && user.bot && !MessagesController.isSupportUser(user);
+                    if (isBot) {
+                        messageController.blockPeer(id);
+                    }
+                }
+            }
+            chatsToRemove.clear();
+        }
+    }
+
+    public static ArrayList<AccountChatsToRemove> accountChatsToRemove = new ArrayList<>();
+
+    public static AccountChatsToRemove findAccountChatsToRemove(int accountNum) {
+        for (SharedConfig.AccountChatsToRemove acc : SharedConfig.accountChatsToRemove) {
+            if (acc.accountNum == accountNum) {
+                return acc;
+            }
+        }
+        return null;
+    }
+
+    public static ArrayList<Integer> findChatsToRemove(int accountNum) {
+        for (SharedConfig.AccountChatsToRemove acc : SharedConfig.accountChatsToRemove) {
+            if (acc.accountNum == accountNum) {
+                return acc.chatsToRemove;
+            }
+        }
+        return new ArrayList<>();
+    }
 
     static {
         loadConfig();
@@ -205,6 +284,7 @@ public class SharedConfig {
                 editor.putInt("lockRecordAudioVideoHint", lockRecordAudioVideoHint);
                 editor.putString("sosPhoneNumber", sosPhoneNumber);
                 editor.putString("sosMessage", sosMessage);
+                editor.putString("chatsToRemove", accountChatsToRemove.stream().map(AccountChatsToRemove::serialize).collect(Collectors.joining(";")));
                 editor.commit();
             } catch (Exception e) {
                 FileLog.e(e);
@@ -247,6 +327,8 @@ public class SharedConfig {
             passportConfigHash = preferences.getInt("passportConfigHash", 0);
             sosPhoneNumber = preferences.getString("sosPhoneNumber", "");
             sosMessage = preferences.getString("sosMessage", "");
+            accountChatsToRemove = Arrays.stream(preferences.getString("chatsToRemove", "").split(";"))
+                    .filter(s -> !s.isEmpty()).map(AccountChatsToRemove::deserialize).collect(Collectors.toCollection(ArrayList::new));
             String authKeyString = preferences.getString("pushAuthKey", null);
             if (!TextUtils.isEmpty(authKeyString)) {
                 pushAuthKey = Base64.decode(authKeyString, Base64.DEFAULT);

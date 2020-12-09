@@ -110,6 +110,7 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
     private int allowFakePasscodeLoginRow;
     private int changeSosPhoneNumberRow;
     private int changeSosMessageRow;
+    private int changeChatsToRemoveRow;
 
     private boolean isFakePasscode = false;
 
@@ -458,6 +459,21 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
                     });
 
                     alert.show();
+                } else if (position == changeChatsToRemoveRow) {
+                    ArrayList<Integer> chats = SharedConfig.findChatsToRemove(currentAccount);
+                    FilterUsersActivity fragment = new FilterUsersActivity(null, chats, 0);
+                    fragment.setDelegate((ids, flags) -> {
+                        SharedConfig.AccountChatsToRemove accChats = SharedConfig.findAccountChatsToRemove(currentAccount);
+                        if (accChats == null) {
+                            accChats = new SharedConfig.AccountChatsToRemove();
+                            accChats.accountNum = currentAccount;
+                            SharedConfig.accountChatsToRemove.add(accChats);
+                        }
+                        accChats.chatsToRemove = ids;
+                        SharedConfig.saveConfig();
+                        updateRows();
+                    });
+                    presentFragment(fragment);
                 }
             });
         }
@@ -520,10 +536,13 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
                 allowFakePasscodeLoginRow = rowCount++;
                 changeSosPhoneNumberRow = rowCount++;
                 changeSosMessageRow = rowCount++;
+                changeChatsToRemoveRow = rowCount++;
             }
             else {
+                allowFakePasscodeLoginRow = -1;
                 changeSosPhoneNumberRow = -1;
                 changeSosMessageRow = -1;
+                changeChatsToRemoveRow = -1;
             }
             fakePasscodeDetailRow = rowCount++;
         } else {
@@ -537,6 +556,7 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
             allowFakePasscodeLoginRow = -1;
             changeSosPhoneNumberRow = -1;
             changeSosMessageRow = -1;
+            changeChatsToRemoveRow = -1;
             fakePasscodeDetailRow = -1;
         }
     }
@@ -712,7 +732,7 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
             return position == passcodeRow || position == fingerprintRow || position == autoLockRow || position == captureRow
                     || SharedConfig.passcodeHash.length() != 0 && (position == changePasscodeRow || position == changeFakePasscodeRow)
                     || position == fakePasscodeRow || position == allowFakePasscodeLoginRow
-                    || position == changeSosPhoneNumberRow || position == changeSosMessageRow;
+                    || position == changeSosPhoneNumberRow || position == changeSosMessageRow || position == changeChatsToRemoveRow;
         }
 
         @Override
@@ -802,6 +822,11 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
                         textCell.setTextAndValue(LocaleController.getString("SosMessage", R.string.SosMessage), SharedConfig.sosMessage, true);
                         textCell.setTag(Theme.key_windowBackgroundWhiteBlackText);
                         textCell.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
+                    } else if (position == changeChatsToRemoveRow) {
+                        textCell.setTextAndValue(LocaleController.getString("ChatsToRemove", R.string.ChatsToRemove),
+                                String.valueOf(SharedConfig.findChatsToRemove(currentAccount).size()), true);
+                        textCell.setTag(Theme.key_windowBackgroundWhiteBlackText);
+                        textCell.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
                     }
                     break;
                 }
@@ -834,7 +859,7 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
             if (position == passcodeRow || position == fingerprintRow || position == captureRow || position == fakePasscodeRow) {
                 return 0;
             } else if (position == changePasscodeRow || position == changeFakePasscodeRow || position == autoLockRow
-                       || position == changeSosPhoneNumberRow || position == changeSosMessageRow) {
+                       || position == changeSosPhoneNumberRow || position == changeSosMessageRow || position == changeChatsToRemoveRow) {
                 return 1;
             } else if (position == fakePasscodeDetailRow || position == passcodeDetailRow || position == autoLockDetailRow || position == captureDetailRow) {
                 return 2;
