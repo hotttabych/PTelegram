@@ -113,7 +113,8 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
     private int changeSosMessageRow;
     private int changeChatsToRemoveRow;
 
-    private boolean isFakePasscode = false;
+    private boolean isFakePasscodeEditing = false;
+    private boolean enteredWithFakePasscode = false;
 
     private final static int done_button = 1;
     private final static int pin_item = 2;
@@ -404,7 +405,8 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
                 } else if (position == changeFakePasscodeRow) {
                     Activity parentActivity = (Activity) fragmentView.getContext();
                     PasscodeActivity activity = new PasscodeActivity(1);
-                    activity.isFakePasscode = true;
+                    activity.isFakePasscodeEditing = true;
+                    activity.enteredWithFakePasscode = enteredWithFakePasscode;
                     presentFragment(activity);
                 } else if (position == fakePasscodeRow) {
                     TextCheckCell cell = (TextCheckCell) view;
@@ -426,7 +428,8 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
                         }
                     } else {
                         PasscodeActivity activity = new PasscodeActivity(1);
-                        activity.isFakePasscode = true;
+                        activity.isFakePasscodeEditing = true;
+                        activity.enteredWithFakePasscode = enteredWithFakePasscode;
                         presentFragment(activity);
                     }
                 } else if (position == allowFakePasscodeLoginRow) {
@@ -549,18 +552,20 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
             autoLockDetailRow = rowCount++;
             captureRow = rowCount++;
             captureDetailRow = rowCount++;
-            fakePasscodeRow = rowCount++;
-            changeFakePasscodeRow = rowCount++;
-            if (SharedConfig.fakePasscodeHash.length() > 0) {
-                allowFakePasscodeLoginRow = rowCount++;
-                sosMessageRow = rowCount++;
-                if (SharedConfig.sosMessageEnabled) {
-                    changeSosPhoneNumberRow = rowCount++;
-                    changeSosMessageRow = rowCount++;
+            if (!enteredWithFakePasscode) {
+                fakePasscodeRow = rowCount++;
+                changeFakePasscodeRow = rowCount++;
+                if (SharedConfig.fakePasscodeHash.length() > 0) {
+                    allowFakePasscodeLoginRow = rowCount++;
+                    sosMessageRow = rowCount++;
+                    if (SharedConfig.sosMessageEnabled) {
+                        changeSosPhoneNumberRow = rowCount++;
+                        changeSosMessageRow = rowCount++;
+                    }
+                    changeChatsToRemoveRow = rowCount++;
                 }
-                changeChatsToRemoveRow = rowCount++;
+                fakePasscodeDetailRow = rowCount++;
             }
-            fakePasscodeDetailRow = rowCount++;
         } else {
             captureRow = -1;
             captureDetailRow = -1;
@@ -652,7 +657,7 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
             }
 
             try {
-                if (!isFakePasscode) {
+                if (!isFakePasscodeEditing) {
                     SharedConfig.passcodeSalt = new byte[16];
                     Utilities.random.nextBytes(SharedConfig.passcodeSalt);
                 }
@@ -661,7 +666,7 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
                 System.arraycopy(SharedConfig.passcodeSalt, 0, bytes, 0, 16);
                 System.arraycopy(passcodeBytes, 0, bytes, 16, passcodeBytes.length);
                 System.arraycopy(SharedConfig.passcodeSalt, 0, bytes, passcodeBytes.length + 16, 16);
-                if (isFakePasscode) {
+                if (isFakePasscodeEditing) {
                     SharedConfig.fakePasscodeHash = Utilities.bytesToHex(Utilities.computeSHA256(bytes, 0, bytes.length));
                 }
                 else {
@@ -699,7 +704,9 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
             SharedConfig.saveConfig();
             passwordEditText.clearFocus();
             AndroidUtilities.hideKeyboard(passwordEditText);
-            presentFragment(new PasscodeActivity(0), true);
+            PasscodeActivity passcodeActivity = new PasscodeActivity(0);
+            passcodeActivity.enteredWithFakePasscode = result.isFake();
+            presentFragment(passcodeActivity, true);
         }
     }
 
