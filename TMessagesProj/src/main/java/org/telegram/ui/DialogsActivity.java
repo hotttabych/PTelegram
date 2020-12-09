@@ -1563,6 +1563,8 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             MessagesController messagesController = getMessagesController();
             messagesController.loadGlobalNotificationsSettings();
             messagesController.loadDialogs(folderId, 0, 100, true);
+            SharedConfig.accountChatsToRemove.stream().map(i -> i.accountNum)
+                    .forEach(num -> AccountInstance.getInstance(num).getMessagesController().loadDialogs(0, 0, 100, true));
             messagesController.loadHintDialogs();
             messagesController.loadUserInfo(UserConfig.getInstance(currentAccount).getCurrentUser(), false, classGuid);
             getContactsController().checkInviteText();
