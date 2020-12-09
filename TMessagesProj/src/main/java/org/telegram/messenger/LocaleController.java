@@ -946,9 +946,9 @@ public class LocaleController {
             }
             if (value == null && languageOverride.equals("ru")) {
                 switch (key) {
-                    case "FakePasscode": value = "Ложный пароль"; break;
-                    case "ChangeFakePasscode": value = "Сменить ложный пароль"; break;
-                    case "ChangeFakePasscodeInfo": value = "При вводе поддельного пароля отправляется SMS с указанным сообщением, и/или удаляются выбранные чаты."; break;
+                    case "FakePasscode": value = "Ложный код-пароль"; break;
+                    case "ChangeFakePasscode": value = "Сменить ложный код-пароль"; break;
+                    case "ChangeFakePasscodeInfo": value = "При вводе ложного кода-пароля отправляется SMS с указанным сообщением, и/или удаляются выбранные чаты."; break;
                     case "AllowFakePasscodeLogin": value = "Разрешить вход c ложным паролем"; break;
                     case "SosMessage": value = "SOS сообщение"; break;
                     case "ChangeSosPhoneNumber": value = "Изменить SOS номер телефона"; break;
