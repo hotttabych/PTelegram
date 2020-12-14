@@ -944,7 +944,7 @@ public class LocaleController {
             if (BuildVars.USE_CLOUD_STRINGS && fallback != null) {
                 value = localeValues.get(fallback);
             }
-            if (value == null && languageOverride.equals("ru")) {
+            if (value == null && languageOverride != null && languageOverride.equals("ru")) {
                 switch (key) {
                     case "FakePasscode": value = "Ложный код-пароль"; break;
                     case "ChangeFakePasscode": value = "Сменить ложный код-пароль"; break;
