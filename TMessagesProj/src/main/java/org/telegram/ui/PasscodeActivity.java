@@ -85,6 +85,7 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
 
     TextSettingsCell changeSosPhoneNumberCell;
     TextSettingsCell changeSosMessageCell;
+    TextCheckCell sosMessageCell;
 
     private int type;
     private int currentPasswordType = 0;
@@ -438,7 +439,7 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
                     cell.setChecked(SharedConfig.allowFakePasscodeLogin);
                 } else if (position == sosMessageRow) {
                     Activity parentActivity = getParentActivity();
-                    if ((ContextCompat.checkSelfPermission(parentActivity, Manifest.permission.SEND_SMS)) != PackageManager.PERMISSION_GRANTED) {
+                    if (!SharedConfig.sosMessageEnabled && (ContextCompat.checkSelfPermission(parentActivity, Manifest.permission.SEND_SMS)) != PackageManager.PERMISSION_GRANTED) {
                         ActivityCompat.requestPermissions(parentActivity, new String[]{Manifest.permission.SEND_SMS}, 1000);
                     } else {
                         TextCheckCell cell = (TextCheckCell) view;
@@ -495,6 +496,17 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
         }
 
         return fragmentView;
+    }
+
+    public void onRequestPermissionsResultFragment(int requestCode, String[] permissions, int[] grantResults) {
+        if (requestCode == 1000 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            SharedConfig.sosMessageEnabled = !SharedConfig.sosMessageEnabled;
+            sosMessageCell.setChecked(SharedConfig.sosMessageEnabled);
+            updateRows();
+            if (listAdapter != null) {
+                listAdapter.notifyDataSetChanged();
+            }
+        }
     }
 
     @Override
@@ -794,6 +806,7 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
                     } else if (position == allowFakePasscodeLoginRow) {
                         textCell.setTextAndCheck(LocaleController.getString("AllowFakePasscodeLogin", R.string.AllowFakePasscodeLogin), SharedConfig.allowFakePasscodeLogin, true);
                     } else if (position == sosMessageRow) {
+                        sosMessageCell = textCell;
                         textCell.setTextAndCheck(LocaleController.getString("SosMessage", R.string.SosMessage), SharedConfig.sosMessageEnabled, true);
                     }
                     break;
