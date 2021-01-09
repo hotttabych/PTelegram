@@ -86,6 +86,7 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
     TextSettingsCell changeSosPhoneNumberCell;
     TextSettingsCell changeSosMessageCell;
     TextCheckCell sosMessageCell;
+    TextSettingsCell changeFakePasscodeCell;
 
     private int type;
     private int currentPasswordType = 0;
@@ -415,13 +416,7 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
                         SharedConfig.fakePasscodeHash = "";
                         SharedConfig.saveConfig();
                         int count = listView.getChildCount();
-                        for (int a = 0; a < count; a++) {
-                            View child = listView.getChildAt(a);
-                            if (a == changeFakePasscodeRow) {
-                                TextSettingsCell textCell = (TextSettingsCell) child;
-                                textCell.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteGrayText7));
-                            }
-                        }
+                        changeFakePasscodeCell.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteGrayText7));
                         cell.setChecked(SharedConfig.fakePasscodeHash.length() != 0);
                         updateRows();
                         if (listAdapter != null) {
@@ -837,6 +832,7 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
                         textCell.setTag(Theme.key_windowBackgroundWhiteBlackText);
                         textCell.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
                     } else if (position == changeFakePasscodeRow) {
+                        changeFakePasscodeCell = textCell;
                         textCell.setText(LocaleController.getString("ChangeFakePasscode", R.string.ChangeFakePasscode), false);
                         if (SharedConfig.fakePasscodeHash.length() == 0) {
                             textCell.setTag(Theme.key_windowBackgroundWhiteGrayText7);
