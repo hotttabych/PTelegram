@@ -72,7 +72,10 @@ public class SharedConfig {
     public static int lockRecordAudioVideoHint;
     public static boolean searchMessagesAsListUsed;
     public static boolean stickersReorderingHintUsed;
+    public static boolean disableVoiceAudioEffects;
     private static int lastLocalId = -210000;
+
+    public static String storageCacheDir;
 
     private static String passportConfigJson = "";
     private static HashMap<String, String> passportConfigMap;
@@ -99,6 +102,7 @@ public class SharedConfig {
     public static boolean saveStreamMedia = true;
     public static boolean smoothKeyboard = true;
     public static boolean pauseMusicOnRecord = true;
+    public static boolean noStatusBar;
     public static boolean sortContactsByName;
     public static boolean sortFilesByName;
     public static boolean shuffleMusic;
@@ -283,6 +287,8 @@ public class SharedConfig {
                 editor.putInt("textSelectionHintShows", textSelectionHintShows);
                 editor.putInt("scheduledOrNoSoundHintShows", scheduledOrNoSoundHintShows);
                 editor.putInt("lockRecordAudioVideoHint", lockRecordAudioVideoHint);
+                editor.putBoolean("disableVoiceAudioEffects", disableVoiceAudioEffects);
+                editor.putString("storageCacheDir", !TextUtils.isEmpty(storageCacheDir) ? storageCacheDir : "");
                 editor.putBoolean("sosMessageEnabled", sosMessageEnabled);
                 editor.putString("sosPhoneNumber", sosPhoneNumber);
                 editor.putString("sosMessage", sosMessage);
@@ -327,6 +333,7 @@ public class SharedConfig {
             pushString = preferences.getString("pushString2", "");
             passportConfigJson = preferences.getString("passportConfigJson", "");
             passportConfigHash = preferences.getInt("passportConfigHash", 0);
+            storageCacheDir = preferences.getString("storageCacheDir", null);
             sosMessageEnabled = preferences.getBoolean("sosMessageEnabled", false);
             sosPhoneNumber = preferences.getString("sosPhoneNumber", "");
             sosMessage = preferences.getString("sosMessage", "");
@@ -351,7 +358,6 @@ public class SharedConfig {
             preferences = ApplicationLoader.applicationContext.getSharedPreferences("mainconfig", Activity.MODE_PRIVATE);
             saveToGallery = preferences.getBoolean("save_gallery", false);
             autoplayGifs = preferences.getBoolean("autoplay_gif", true);
-            chatBubbles = preferences.getBoolean("chatBubbles", Build.VERSION.SDK_INT >= 30);
             autoplayVideo = preferences.getBoolean("autoplay_video", true);
             mapPreviewType = preferences.getInt("mapPreviewType", 2);
             raiseToSpeak = preferences.getBoolean("raise_to_speak", true);
@@ -385,6 +391,7 @@ public class SharedConfig {
             devicePerformanceClass = preferences.getInt("devicePerformanceClass", -1);
             loopStickers = preferences.getBoolean("loopStickers", true);
             keepMedia = preferences.getInt("keep_media", 2);
+            noStatusBar = preferences.getBoolean("noStatusBar", false);
             lastKeepMediaCheckTime = preferences.getInt("lastKeepMediaCheckTime", 0);
             searchMessagesAsListHintShows = preferences.getInt("searchMessagesAsListHintShows", 0);
             searchMessagesAsListUsed = preferences.getBoolean("searchMessagesAsListUsed", false);
@@ -392,6 +399,7 @@ public class SharedConfig {
             textSelectionHintShows = preferences.getInt("textSelectionHintShows", 0);
             scheduledOrNoSoundHintShows = preferences.getInt("scheduledOrNoSoundHintShows", 0);
             lockRecordAudioVideoHint = preferences.getInt("lockRecordAudioVideoHint", 0);
+            disableVoiceAudioEffects = preferences.getBoolean("disableVoiceAudioEffects", false);
             preferences = ApplicationLoader.applicationContext.getSharedPreferences("Notifications", Activity.MODE_PRIVATE);
             showNotificationsForAllAccounts = preferences.getBoolean("AllAccounts", true);
 
@@ -642,6 +650,22 @@ public class SharedConfig {
         });
     }
 
+    public static void toggleDisableVoiceAudioEffects() {
+        disableVoiceAudioEffects = !disableVoiceAudioEffects;
+        SharedPreferences preferences = MessagesController.getGlobalMainSettings();
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putBoolean("disableVoiceAudioEffects", disableVoiceAudioEffects);
+        editor.commit();
+    }
+
+    public static void toggleNoStatusBar() {
+        noStatusBar = !noStatusBar;
+        SharedPreferences preferences = MessagesController.getGlobalMainSettings();
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putBoolean("noStatusBar", noStatusBar);
+        editor.commit();
+    }
+
     public static void toggleLoopStickers() {
         loopStickers = !loopStickers;
         SharedPreferences preferences = MessagesController.getGlobalMainSettings();
@@ -702,14 +726,6 @@ public class SharedConfig {
         SharedPreferences preferences = MessagesController.getGlobalMainSettings();
         SharedPreferences.Editor editor = preferences.edit();
         editor.putBoolean("autoplay_gif", autoplayGifs);
-        editor.commit();
-    }
-
-    public static void toggleChatBubbles() {
-        chatBubbles = !chatBubbles;
-        SharedPreferences preferences = MessagesController.getGlobalMainSettings();
-        SharedPreferences.Editor editor = preferences.edit();
-        editor.putBoolean("chatBubbles", chatBubbles);
         editor.commit();
     }
 
@@ -1026,7 +1042,7 @@ public class SharedConfig {
             } else {
                 devicePerformanceClass = PERFORMANCE_CLASS_HIGH;
             }
-            if (BuildVars.DEBUG_VERSION) {
+            if (BuildVars.LOGS_ENABLED) {
                 FileLog.d("device performance info (cpu_count = " + cpuCount + ", freq = " + maxCpuFreq + ", memoryClass = " + memoryClass + ", android version " + androidVersion + ")");
             }
         }

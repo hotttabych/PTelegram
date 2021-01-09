@@ -982,7 +982,7 @@ public class FileLoader extends BaseController {
                 return getPathToAttach(photoSize, ext, false);
             } else if (attach instanceof TLRPC.PhotoSize) {
                 TLRPC.PhotoSize photoSize = (TLRPC.PhotoSize) attach;
-                if (photoSize instanceof TLRPC.TL_photoStrippedSize) {
+                if (photoSize instanceof TLRPC.TL_photoStrippedSize || photoSize instanceof TLRPC.TL_photoPathSize) {
                     dir = null;
                 } else if (photoSize.location == null || photoSize.location.key != null || photoSize.location.volume_id == Integer.MIN_VALUE && photoSize.location.local_id < 0 || photoSize.size < 0) {
                     dir = getDirectory(MEDIA_DIR_CACHE);
@@ -1029,6 +1029,10 @@ public class FileLoader extends BaseController {
     }
 
     public static TLRPC.PhotoSize getClosestPhotoSizeWithSize(ArrayList<TLRPC.PhotoSize> sizes, int side, boolean byMinSide) {
+        return getClosestPhotoSizeWithSize(sizes, side, byMinSide, null);
+    }
+
+    public static TLRPC.PhotoSize getClosestPhotoSizeWithSize(ArrayList<TLRPC.PhotoSize> sizes, int side, boolean byMinSide, TLRPC.PhotoSize toIgnore) {
         if (sizes == null || sizes.isEmpty()) {
             return null;
         }
@@ -1036,7 +1040,7 @@ public class FileLoader extends BaseController {
         TLRPC.PhotoSize closestObject = null;
         for (int a = 0; a < sizes.size(); a++) {
             TLRPC.PhotoSize obj = sizes.get(a);
-            if (obj == null || obj instanceof TLRPC.TL_photoSizeEmpty) {
+            if (obj == null || obj == toIgnore || obj instanceof TLRPC.TL_photoSizeEmpty || obj instanceof TLRPC.TL_photoPathSize) {
                 continue;
             }
             if (byMinSide) {
@@ -1054,6 +1058,20 @@ public class FileLoader extends BaseController {
             }
         }
         return closestObject;
+    }
+
+    public static TLRPC.TL_photoPathSize getPathPhotoSize(ArrayList<TLRPC.PhotoSize> sizes) {
+        if (sizes == null || sizes.isEmpty()) {
+            return null;
+        }
+        for (int a = 0; a < sizes.size(); a++) {
+            TLRPC.PhotoSize obj = sizes.get(a);
+            if (obj instanceof TLRPC.TL_photoPathSize) {
+                continue;
+            }
+            return (TLRPC.TL_photoPathSize) obj;
+        }
+        return null;
     }
 
     public static String getFileExtension(File file) {

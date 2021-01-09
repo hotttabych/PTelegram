@@ -175,7 +175,7 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
 
         if (type != 0) {
             ActionBarMenu menu = actionBar.createMenu();
-            menu.addItemWithWidth(done_button, R.drawable.ic_done, AndroidUtilities.dp(56));
+            menu.addItemWithWidth(done_button, R.drawable.ic_done, AndroidUtilities.dp(56), LocaleController.getString("Done", R.string.Done));
 
             titleTextView = new TextView(context);
             titleTextView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteGrayText6));
@@ -729,9 +729,9 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
                 dropDownContainer.setLayoutParams(layoutParams);
             }
             if (!AndroidUtilities.isTablet() && ApplicationLoader.applicationContext.getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
-                dropDown.setTextSize(18);
+                dropDown.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 18);
             } else {
-                dropDown.setTextSize(20);
+                dropDown.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 20);
             }
         }
     }
