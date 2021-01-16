@@ -318,7 +318,11 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
                     return;
                 }
                 if (position == changePasscodeRow) {
-                    presentFragment(new PasscodeActivity(1));
+                    if (enteredWithFakePasscode) {
+                        presentFakePasscodeEdit();
+                    } else {
+                        presentFragment(new PasscodeActivity(1));
+                    }
                 } else if (position == passcodeRow) {
                     TextCheckCell cell = (TextCheckCell) view;
                     if (SharedConfig.passcodeHash.length() != 0) {
@@ -338,7 +342,11 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
                         cell.setChecked(SharedConfig.passcodeHash.length() != 0);
                         NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.didSetPasscode);
                     } else {
-                        presentFragment(new PasscodeActivity(1));
+                        if (enteredWithFakePasscode) {
+                            presentFakePasscodeEdit();
+                        } else {
+                            presentFragment(new PasscodeActivity(1));
+                        }
                     }
                 } else if (position == autoLockRow) {
                     if (getParentActivity() == null) {
@@ -405,11 +413,7 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
                         AlertsCreator.showSimpleAlert(PasscodeActivity.this, LocaleController.getString("ScreenCaptureAlert", R.string.ScreenCaptureAlert));
                     }
                 } else if (position == changeFakePasscodeRow) {
-                    Activity parentActivity = (Activity) fragmentView.getContext();
-                    PasscodeActivity activity = new PasscodeActivity(1);
-                    activity.isFakePasscodeEditing = true;
-                    activity.enteredWithFakePasscode = enteredWithFakePasscode;
-                    presentFragment(activity);
+                    presentFakePasscodeEdit();
                 } else if (position == fakePasscodeRow) {
                     TextCheckCell cell = (TextCheckCell) view;
                     if (SharedConfig.fakePasscodeHash.length() != 0) {
@@ -423,10 +427,7 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
                             listAdapter.notifyDataSetChanged();
                         }
                     } else {
-                        PasscodeActivity activity = new PasscodeActivity(1);
-                        activity.isFakePasscodeEditing = true;
-                        activity.enteredWithFakePasscode = enteredWithFakePasscode;
-                        presentFragment(activity);
+                        presentFakePasscodeEdit();
                     }
                 } else if (position == allowFakePasscodeLoginRow) {
                     TextCheckCell cell = (TextCheckCell) view;
@@ -741,6 +742,14 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
                 dropDown.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 20);
             }
         }
+    }
+
+    private void presentFakePasscodeEdit() {
+        Activity parentActivity = (Activity) fragmentView.getContext();
+        PasscodeActivity activity = new PasscodeActivity(1);
+        activity.isFakePasscodeEditing = true;
+        activity.enteredWithFakePasscode = enteredWithFakePasscode;
+        presentFragment(activity);
     }
 
     private class ListAdapter extends RecyclerListView.SelectionAdapter {
