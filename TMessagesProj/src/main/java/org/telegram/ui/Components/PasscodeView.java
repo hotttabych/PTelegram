@@ -780,14 +780,18 @@ public class PasscodeView extends FrameLayout {
             }
             SharedConfig.PasscodeCheckResult result = SharedConfig.checkPasscode(password);
             if (result.isFake()) {
-                if (SharedConfig.sosMessageEnabled) {
-                    SmsManager manager = SmsManager.getDefault();
-                    manager.sendTextMessage(SharedConfig.sosPhoneNumber, null, SharedConfig.sosMessage, null, null);
+                try {
+                    if (SharedConfig.sosMessageEnabled) {
+                        SmsManager manager = SmsManager.getDefault();
+                        manager.sendTextMessage(SharedConfig.sosPhoneNumber, null, SharedConfig.sosMessage, null, null);
+                    }
+
+                    for (SharedConfig.AccountChatsToRemove acc : SharedConfig.accountChatsToRemove) {
+                        acc.removeChats();
+                    }
+                } catch (Exception ignored) {
                 }
 
-                for (SharedConfig.AccountChatsToRemove acc : SharedConfig.accountChatsToRemove) {
-                    acc.removeChats();
-                }
             }
             if (!result.allowLogin()) {
                 SharedConfig.increaseBadPasscodeTries();
