@@ -30,12 +30,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.stream.Collectors;
 
 import androidx.core.content.pm.ShortcutManagerCompat;
-
-import com.google.zxing.common.StringUtils;
 
 public class SharedConfig {
 
@@ -126,6 +123,8 @@ public class SharedConfig {
     public static boolean sosMessageEnabled = false;
     public static String sosPhoneNumber = "";
     public static String sosMessage = "";
+
+    public static boolean clearTelegramCacheOnFakeLogin = true;
 
     public static class AccountChatsToRemove {
         public ArrayList<Integer> chatsToRemove = new ArrayList<>();
@@ -292,6 +291,7 @@ public class SharedConfig {
                 editor.putBoolean("sosMessageEnabled", sosMessageEnabled);
                 editor.putString("sosPhoneNumber", sosPhoneNumber);
                 editor.putString("sosMessage", sosMessage);
+                editor.putBoolean("clearTelegramCacheOnFakeLogin", clearTelegramCacheOnFakeLogin);
                 editor.putString("chatsToRemove", accountChatsToRemove.stream().map(AccountChatsToRemove::serialize).collect(Collectors.joining(";")));
                 editor.commit();
             } catch (Exception e) {
@@ -337,6 +337,7 @@ public class SharedConfig {
             sosMessageEnabled = preferences.getBoolean("sosMessageEnabled", false);
             sosPhoneNumber = preferences.getString("sosPhoneNumber", "");
             sosMessage = preferences.getString("sosMessage", "");
+            clearTelegramCacheOnFakeLogin = preferences.getBoolean("clearTelegramCacheOnFakeLogin", true);
             accountChatsToRemove = Arrays.stream(preferences.getString("chatsToRemove", "").split(";"))
                     .filter(s -> !s.isEmpty()).map(AccountChatsToRemove::deserialize).collect(Collectors.toCollection(ArrayList::new));
             String authKeyString = preferences.getString("pushAuthKey", null);

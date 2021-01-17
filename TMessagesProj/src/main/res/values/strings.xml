@@ -4027,4 +4027,5 @@
     <string name="ChangeSosPhoneNumber">Change SOS Phone Number</string>
     <string name="ChangeSosMessage">Change SOS Message</string>
     <string name="ChatsToRemove">Chats to Remove</string>
+    <string name="ClearTelegramCacheOnFakeLogin">Clear Telegram Cache</string>
 </resources>

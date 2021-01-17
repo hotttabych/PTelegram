@@ -113,6 +113,7 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
     private int sosMessageRow;
     private int changeSosPhoneNumberRow;
     private int changeSosMessageRow;
+    private int clearTelegramCacheRow;
     private int changeChatsToRemoveRow;
 
     private boolean isFakePasscodeEditing = false;
@@ -472,6 +473,14 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
                     });
 
                     alert.show();
+                } else if (position == clearTelegramCacheRow) {
+                    TextCheckCell cell = (TextCheckCell) view;
+                    SharedConfig.clearTelegramCacheOnFakeLogin = !SharedConfig.clearTelegramCacheOnFakeLogin;
+                    cell.setChecked(SharedConfig.clearTelegramCacheOnFakeLogin);
+                    updateRows();
+                    if (listAdapter != null) {
+                        listAdapter.notifyDataSetChanged();
+                    }
                 } else if (position == changeChatsToRemoveRow) {
                     ArrayList<Integer> chats = SharedConfig.findChatsToRemove(currentAccount);
                     FilterUsersActivity fragment = new FilterUsersActivity(null, chats, 0);
@@ -540,6 +549,7 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
         changeSosPhoneNumberRow = -1;
         changeSosMessageRow = -1;
         changeChatsToRemoveRow = -1;
+        clearTelegramCacheRow = -1;
 
         rowCount = 0;
         passcodeRow = rowCount++;
@@ -571,6 +581,7 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
                         changeSosMessageRow = rowCount++;
                     }
                     changeChatsToRemoveRow = rowCount++;
+                    clearTelegramCacheRow = rowCount++;
                 }
                 fakePasscodeDetailRow = rowCount++;
             }
@@ -766,7 +777,8 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
             return position == passcodeRow || position == fingerprintRow || position == autoLockRow || position == captureRow
                     || SharedConfig.passcodeHash.length() != 0 && (position == changePasscodeRow || position == changeFakePasscodeRow)
                     || position == fakePasscodeRow || position == allowFakePasscodeLoginRow || position == sosMessageRow
-                    || position == changeSosPhoneNumberRow || position == changeSosMessageRow || position == changeChatsToRemoveRow;
+                    || position == changeSosPhoneNumberRow || position == changeSosMessageRow || position == changeChatsToRemoveRow
+                    || position == clearTelegramCacheRow;
         }
 
         @Override
@@ -812,6 +824,8 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
                     } else if (position == sosMessageRow) {
                         sosMessageCell = textCell;
                         textCell.setTextAndCheck(LocaleController.getString("SosMessage", R.string.SosMessage), SharedConfig.sosMessageEnabled, true);
+                    } else if (position == clearTelegramCacheRow) {
+                        textCell.setTextAndCheck(LocaleController.getString("ClearTelegramCacheOnFakeLogin", R.string.ClearTelegramCacheOnFakeLogin), SharedConfig.clearTelegramCacheOnFakeLogin, true);
                     }
                     break;
                 }
@@ -895,7 +909,7 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
         @Override
         public int getItemViewType(int position) {
             if (position == passcodeRow || position == fingerprintRow || position == captureRow || position == fakePasscodeRow ||
-                    position == allowFakePasscodeLoginRow || position == sosMessageRow) {
+                    position == allowFakePasscodeLoginRow || position == sosMessageRow || position == clearTelegramCacheRow) {
                 return 0;
             } else if (position == changePasscodeRow || position == changeFakePasscodeRow || position == autoLockRow
                        || position == changeSosPhoneNumberRow || position == changeSosMessageRow || position == changeChatsToRemoveRow) {
