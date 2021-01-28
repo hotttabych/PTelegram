@@ -20,6 +20,7 @@ import android.util.Base64;
 import android.util.SparseArray;
 
 import org.json.JSONObject;
+import org.telegram.messenger.fakepasscode.FakePasscode;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.SerializedData;
 import org.telegram.tgnet.TLRPC;
@@ -30,6 +31,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.stream.Collectors;
 
 import androidx.core.content.pm.ShortcutManagerCompat;
@@ -120,66 +122,7 @@ public class SharedConfig {
 
     public static int distanceSystemType;
 
-    public static boolean sosMessageEnabled = false;
-    public static String sosPhoneNumber = "";
-    public static String sosMessage = "";
-
-    public static boolean clearTelegramCacheOnFakeLogin = true;
-
-    public static class AccountChatsToRemove {
-        public ArrayList<Integer> chatsToRemove = new ArrayList<>();
-        public int accountNum = 0;
-
-        String serialize() {
-            String chatString = chatsToRemove.stream().map(String::valueOf).collect(Collectors.joining(","));
-            return (chatString.isEmpty() ? "" : (chatString + ",")) + accountNum;
-        }
-
-        static AccountChatsToRemove deserialize(String str) {
-            ArrayList<Integer> ints = Arrays.stream(str.split(",")).filter(s -> !s.isEmpty())
-                    .map(Integer::parseInt).collect(Collectors.toCollection(ArrayList::new));
-            if (ints.isEmpty()) {
-                return null;
-            }
-            AccountChatsToRemove result = new AccountChatsToRemove();
-            result.accountNum = ints.get(ints.size() - 1);
-            ints.remove(ints.size() - 1);
-            result.chatsToRemove = ints;
-            return result;
-        }
-
-        public void removeChats() {
-            AccountInstance account = AccountInstance.getInstance(accountNum);
-            MessagesController messageController = account.getMessagesController();
-            for (Integer id : chatsToRemove) {
-                TLRPC.Chat chat;
-                TLRPC.User user = null;
-                if (id > 0) {
-                    user = messageController.getUser(id);
-                    chat = null;
-                } else {
-                    chat = messageController.getChat(-id);
-                }
-                if (chat != null) {
-                    if (ChatObject.isNotInChat(chat)) {
-                        messageController.deleteDialog(id, 0, false);
-                    } else {
-                        TLRPC.User currentUser = messageController.getUser(account.getUserConfig().getClientUserId());
-                        messageController.deleteUserFromChat((int) -id, currentUser, null);
-                    }
-                } else {
-                    messageController.deleteDialog(id, 0, false);
-                    boolean isBot = user != null && user.bot && !MessagesController.isSupportUser(user);
-                    if (isBot) {
-                        messageController.blockPeer(id);
-                    }
-                }
-            }
-            chatsToRemove.clear();
-        }
-    }
-
-    public static ArrayList<AccountChatsToRemove> accountChatsToRemove = new ArrayList<>();
+    public static List<FakePasscode> fakePasscodes;
 
     public static AccountChatsToRemove findAccountChatsToRemove(int accountNum) {
         for (SharedConfig.AccountChatsToRemove acc : SharedConfig.accountChatsToRemove) {
