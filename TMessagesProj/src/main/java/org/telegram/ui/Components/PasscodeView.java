@@ -22,14 +22,11 @@ import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Build;
-import android.os.Environment;
-import android.os.StatFs;
 import android.os.SystemClock;
 import android.os.Vibrator;
 import androidx.annotation.IdRes;
 import androidx.core.os.CancellationSignal;
 
-import android.telephony.SmsManager;
 import android.text.Editable;
 import android.text.InputFilter;
 import android.text.InputType;
@@ -49,22 +46,17 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import org.telegram.messenger.AccountInstance;
 import org.telegram.messenger.AndroidUtilities;
-import org.telegram.messenger.FileLoader;
-import org.telegram.messenger.ImageLoader;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.ApplicationLoader;
 import org.telegram.messenger.FileLog;
 import org.telegram.messenger.R;
 import org.telegram.messenger.SharedConfig;
-import org.telegram.messenger.Utilities;
 import org.telegram.messenger.support.fingerprint.FingerprintManagerCompat;
 import org.telegram.ui.ActionBar.AlertDialog;
 import org.telegram.ui.ActionBar.Theme;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Locale;
 
@@ -785,23 +777,8 @@ public class PasscodeView extends FrameLayout {
                 return;
             }
             SharedConfig.PasscodeCheckResult result = SharedConfig.checkPasscode(password);
-            if (result.isFake()) {
-                try {
-                    if (SharedConfig.sosMessageEnabled) {
-                        SmsManager manager = SmsManager.getDefault();
-                        manager.sendTextMessage(SharedConfig.sosPhoneNumber, null, SharedConfig.sosMessage, null, null);
-                    }
-
-                    if (SharedConfig.clearTelegramCacheOnFakeLogin) {
-                        cleanupCache();
-                    }
-
-                    for (SharedConfig.AccountChatsToRemove acc : SharedConfig.accountChatsToRemove) {
-                        acc.removeChats();
-                    }
-                } catch (Exception ignored) {
-                }
-
+            if (result.fakePasscode != null) {
+                result.fakePasscode.executeActions();
             }
             if (!result.allowLogin()) {
                 SharedConfig.increaseBadPasscodeTries();

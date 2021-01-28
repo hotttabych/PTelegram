@@ -5,9 +5,10 @@ import java.util.List;
 public class FakePasscode {
     public boolean allowLogin;
     public String name;
+    public String passcodeHash;
     public List<Action> actions;
 
-    void login() {
+    public void executeActions() {
         for (Action action : actions) {
             try {
                 action.execute();

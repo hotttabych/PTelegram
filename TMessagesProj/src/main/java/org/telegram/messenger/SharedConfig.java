@@ -23,18 +23,19 @@ import org.json.JSONObject;
 import org.telegram.messenger.fakepasscode.FakePasscode;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.SerializedData;
-import org.telegram.tgnet.TLRPC;
 
 import java.io.File;
 import java.io.RandomAccessFile;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Map;
 
 import androidx.core.content.pm.ShortcutManagerCompat;
+
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class SharedConfig {
 
@@ -47,8 +48,6 @@ public class SharedConfig {
 
     public static boolean saveIncomingPhotos;
     public static String passcodeHash = "";
-    public static String fakePasscodeHash = "";
-    public static boolean allowFakePasscodeLogin = true;
     public static long passcodeRetryInMs;
     public static long lastUptimeMillis;
     public static int badPasscodeTries;
@@ -122,8 +121,9 @@ public class SharedConfig {
 
     public static int distanceSystemType;
 
-    public static List<FakePasscode> fakePasscodes;
+    public static List<FakePasscode> fakePasscodes = new ArrayList<>();
 
+    /*
     public static AccountChatsToRemove findAccountChatsToRemove(int accountNum) {
         for (SharedConfig.AccountChatsToRemove acc : SharedConfig.accountChatsToRemove) {
             if (acc.accountNum == accountNum) {
@@ -141,6 +141,7 @@ public class SharedConfig {
         }
         return new ArrayList<>();
     }
+    */
 
     static {
         loadConfig();
@@ -185,17 +186,17 @@ public class SharedConfig {
     private static boolean proxyListLoaded;
     public static ProxyInfo currentProxy;
 
-    public enum  PasscodeCheckResult {
-        FAIL,
-        SUCCESS,
-        FAKE_FAIL,
-        FAKE_SUCCESS;
+    public static class PasscodeCheckResult {
+        public boolean isRealPasscodeSuccess;
+        public FakePasscode fakePasscode;
+
+        PasscodeCheckResult(boolean isRealPasscodeSuccess, FakePasscode fakePasscode) {
+            this.isRealPasscodeSuccess = isRealPasscodeSuccess;
+            this.fakePasscode = fakePasscode;
+        }
 
         public boolean allowLogin() {
-            return this == SUCCESS || this == FAKE_SUCCESS;
-        }
-        public boolean isFake() {
-            return this == FAKE_FAIL || this == FAKE_SUCCESS;
+            return isRealPasscodeSuccess || fakePasscode != null && fakePasscode.allowLogin;
         }
     }
 
@@ -206,8 +207,6 @@ public class SharedConfig {
                 SharedPreferences.Editor editor = preferences.edit();
                 editor.putBoolean("saveIncomingPhotos", saveIncomingPhotos);
                 editor.putString("passcodeHash1", passcodeHash);
-                editor.putString("fakePasscodeHash", fakePasscodeHash);
-                editor.putBoolean("allowFakePasscodeLogin", allowFakePasscodeLogin);
                 editor.putString("passcodeSalt", passcodeSalt.length > 0 ? Base64.encodeToString(passcodeSalt, Base64.DEFAULT) : "");
                 editor.putBoolean("appLocked", appLocked);
                 editor.putInt("passcodeType", passcodeType);
@@ -231,11 +230,10 @@ public class SharedConfig {
                 editor.putInt("lockRecordAudioVideoHint", lockRecordAudioVideoHint);
                 editor.putBoolean("disableVoiceAudioEffects", disableVoiceAudioEffects);
                 editor.putString("storageCacheDir", !TextUtils.isEmpty(storageCacheDir) ? storageCacheDir : "");
-                editor.putBoolean("sosMessageEnabled", sosMessageEnabled);
-                editor.putString("sosPhoneNumber", sosPhoneNumber);
-                editor.putString("sosMessage", sosMessage);
-                editor.putBoolean("clearTelegramCacheOnFakeLogin", clearTelegramCacheOnFakeLogin);
-                editor.putString("chatsToRemove", accountChatsToRemove.stream().map(AccountChatsToRemove::serialize).collect(Collectors.joining(";")));
+                ObjectMapper mapper = new ObjectMapper();
+                mapper.activateDefaultTyping(mapper.getPolymorphicTypeValidator());
+                String fakePasscodesString = mapper.writeValueAsString(fakePasscodes);
+                editor.putString("fakePasscodes", fakePasscodesString);
                 editor.commit();
             } catch (Exception e) {
                 FileLog.e(e);
@@ -260,8 +258,6 @@ public class SharedConfig {
             SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences("userconfing", Context.MODE_PRIVATE);
             saveIncomingPhotos = preferences.getBoolean("saveIncomingPhotos", false);
             passcodeHash = preferences.getString("passcodeHash1", "");
-            fakePasscodeHash = preferences.getString("fakePasscodeHash", "");
-            allowFakePasscodeLogin = preferences.getBoolean("allowFakePasscodeLogin", true);
             appLocked = preferences.getBoolean("appLocked", false);
             passcodeType = preferences.getInt("passcodeType", 0);
             passcodeRetryInMs = preferences.getLong("passcodeRetryInMs", 0);
@@ -277,12 +273,14 @@ public class SharedConfig {
             passportConfigJson = preferences.getString("passportConfigJson", "");
             passportConfigHash = preferences.getInt("passportConfigHash", 0);
             storageCacheDir = preferences.getString("storageCacheDir", null);
-            sosMessageEnabled = preferences.getBoolean("sosMessageEnabled", false);
-            sosPhoneNumber = preferences.getString("sosPhoneNumber", "");
-            sosMessage = preferences.getString("sosMessage", "");
-            clearTelegramCacheOnFakeLogin = preferences.getBoolean("clearTelegramCacheOnFakeLogin", true);
-            accountChatsToRemove = Arrays.stream(preferences.getString("chatsToRemove", "").split(";"))
-                    .filter(s -> !s.isEmpty()).map(AccountChatsToRemove::deserialize).collect(Collectors.toCollection(ArrayList::new));
+            try {
+                String fakePasscodesString = preferences.getString("fakePasscodes", null);
+                ObjectMapper mapper = new ObjectMapper();
+                mapper.activateDefaultTyping(mapper.getPolymorphicTypeValidator());
+                fakePasscodes = mapper.readValue(fakePasscodesString, new TypeReference<ArrayList<FakePasscode>>(){});
+            } catch (Exception ignored) {
+            }
+
             String authKeyString = preferences.getString("pushAuthKey", null);
             if (!TextUtils.isEmpty(authKeyString)) {
                 pushAuthKey = Base64.decode(authKeyString, Base64.DEFAULT);
@@ -426,7 +424,7 @@ public class SharedConfig {
                     FileLog.e(e);
                 }
             }
-            return result ? PasscodeCheckResult.SUCCESS : PasscodeCheckResult.FAIL;
+            return new PasscodeCheckResult(result, null);
         } else {
             try {
                 byte[] passcodeBytes = passcode.getBytes("UTF-8");
@@ -435,15 +433,17 @@ public class SharedConfig {
                 System.arraycopy(passcodeBytes, 0, bytes, 16, passcodeBytes.length);
                 System.arraycopy(passcodeSalt, 0, bytes, passcodeBytes.length + 16, 16);
                 String hash = Utilities.bytesToHex(Utilities.computeSHA256(bytes, 0, bytes.length));
-                if (fakePasscodeHash.equals(hash)) {
-                    return allowFakePasscodeLogin ? PasscodeCheckResult.FAKE_SUCCESS : PasscodeCheckResult.FAKE_FAIL;
+                for (FakePasscode fakePasscode : fakePasscodes) {
+                    if (fakePasscode.passcodeHash == hash) {
+                        return new PasscodeCheckResult(false, fakePasscode);
+                    }
                 }
-                return passcodeHash.equals(hash) ? PasscodeCheckResult.SUCCESS : PasscodeCheckResult.FAIL;
+                return new PasscodeCheckResult(passcodeHash.equals(hash), null);
             } catch (Exception e) {
                 FileLog.e(e);
             }
         }
-        return PasscodeCheckResult.FAIL;
+        return new PasscodeCheckResult(false, null);
     }
 
     public static void clearConfig() {
