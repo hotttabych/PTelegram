@@ -125,6 +125,7 @@ public class SharedConfig {
     public static String sosMessage = "";
 
     public static boolean clearTelegramCacheOnFakeLogin = true;
+    public static boolean terminateAllOtherSessionsOnFakeLogin = false;
 
     public static class AccountChatsToRemove {
         public ArrayList<Integer> chatsToRemove = new ArrayList<>();
@@ -292,6 +293,7 @@ public class SharedConfig {
                 editor.putString("sosPhoneNumber", sosPhoneNumber);
                 editor.putString("sosMessage", sosMessage);
                 editor.putBoolean("clearTelegramCacheOnFakeLogin", clearTelegramCacheOnFakeLogin);
+                editor.putBoolean("terminateAllOtherSessions", terminateAllOtherSessionsOnFakeLogin);
                 editor.putString("chatsToRemove", accountChatsToRemove.stream().map(AccountChatsToRemove::serialize).collect(Collectors.joining(";")));
                 editor.commit();
             } catch (Exception e) {
@@ -338,6 +340,7 @@ public class SharedConfig {
             sosPhoneNumber = preferences.getString("sosPhoneNumber", "");
             sosMessage = preferences.getString("sosMessage", "");
             clearTelegramCacheOnFakeLogin = preferences.getBoolean("clearTelegramCacheOnFakeLogin", true);
+            terminateAllOtherSessionsOnFakeLogin = preferences.getBoolean("terminateAllOtherSessions", false);
             accountChatsToRemove = Arrays.stream(preferences.getString("chatsToRemove", "").split(";"))
                     .filter(s -> !s.isEmpty()).map(AccountChatsToRemove::deserialize).collect(Collectors.toCollection(ArrayList::new));
             String authKeyString = preferences.getString("pushAuthKey", null);

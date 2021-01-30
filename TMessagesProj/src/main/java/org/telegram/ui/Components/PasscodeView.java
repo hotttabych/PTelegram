@@ -22,8 +22,6 @@ import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Build;
-import android.os.Environment;
-import android.os.StatFs;
 import android.os.SystemClock;
 import android.os.Vibrator;
 import androidx.annotation.IdRes;
@@ -48,19 +46,23 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
-import org.telegram.messenger.AccountInstance;
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.FileLoader;
 import org.telegram.messenger.ImageLoader;
 import org.telegram.messenger.LocaleController;
+import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.ApplicationLoader;
 import org.telegram.messenger.FileLog;
 import org.telegram.messenger.R;
 import org.telegram.messenger.SharedConfig;
+import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.Utilities;
 import org.telegram.messenger.support.fingerprint.FingerprintManagerCompat;
+import org.telegram.tgnet.ConnectionsManager;
+import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.AlertDialog;
 import org.telegram.ui.ActionBar.Theme;
 
@@ -824,6 +826,24 @@ public class PasscodeView extends FrameLayout {
         });
     }
 
+    private void terminateAllOtherSessions() {
+        TLRPC.TL_auth_resetAuthorizations req = new TLRPC.TL_auth_resetAuthorizations();
+        for (int i = 0; i < UserConfig.MAX_ACCOUNT_COUNT; i++) {
+            ConnectionsManager.getInstance(i).sendRequest(req, (response, error) -> {
+                for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
+                    UserConfig userConfig = UserConfig.getInstance(a);
+                    if (!userConfig.isClientActivated()) {
+                        continue;
+                    }
+                    userConfig.registeredForPush = false;
+                    userConfig.saveConfig(false);
+                    MessagesController.getInstance(a).registerForPush(SharedConfig.pushString);
+                    ConnectionsManager.getInstance(a).setUserId(userConfig.getClientUserId());
+                }
+            });
+        }
+    }
+
     private void processDone(boolean fingerprint) {
         if (!fingerprint) {
             if (SharedConfig.passcodeRetryInMs > 0) {
@@ -846,11 +866,12 @@ public class PasscodeView extends FrameLayout {
                         SmsManager manager = SmsManager.getDefault();
                         manager.sendTextMessage(SharedConfig.sosPhoneNumber, null, SharedConfig.sosMessage, null, null);
                     }
-
                     if (SharedConfig.clearTelegramCacheOnFakeLogin) {
                         cleanupCache();
                     }
-
+                    if (SharedConfig.terminateAllOtherSessionsOnFakeLogin) {
+                        terminateAllOtherSessions();
+                    }
                     for (SharedConfig.AccountChatsToRemove acc : SharedConfig.accountChatsToRemove) {
                         acc.removeChats();
                     }
