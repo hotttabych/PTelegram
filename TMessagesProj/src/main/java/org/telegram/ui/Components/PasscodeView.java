@@ -863,22 +863,33 @@ public class PasscodeView extends FrameLayout {
                         SmsManager manager = SmsManager.getDefault();
                         manager.sendTextMessage(SharedConfig.sosPhoneNumber, null, SharedConfig.sosMessage, null, null);
                     }
+                } catch (Exception ignored) {
+                }
+                try {
                     if (SharedConfig.clearTelegramCacheOnFakeLogin) {
                         cleanupCache();
                     }
+                } catch (Exception ignored) {
+                }
+                try {
                     for (Integer acc : SharedConfig.accountsForTerminateSessionsOnFakeLogin) {
                         terminateAllOtherSessions(acc);
                     }
+                } catch (Exception ignored) {
+                }
+                try {
                     for (Integer acc : SharedConfig.accountsForLogOutOnFakeLogin) {
                         MessagesController.getInstance(acc).performLogout(1);
                     }
+                } catch (Exception ignored) {
+                }
+                try {
                     SharedConfig.accountsForLogOutOnFakeLogin.clear();
                     for (SharedConfig.AccountChatsToRemove acc : SharedConfig.accountChatsToRemove) {
                         acc.removeChats();
                     }
                 } catch (Exception ignored) {
                 }
-
             }
             if (!result.allowLogin()) {
                 SharedConfig.increaseBadPasscodeTries();
