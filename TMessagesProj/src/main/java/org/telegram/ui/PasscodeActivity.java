@@ -67,6 +67,7 @@ import org.telegram.ui.Components.NumberPicker;
 import org.telegram.ui.Components.RecyclerListView;
 
 import java.util.ArrayList;
+import java.util.stream.Collectors;
 
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -85,6 +86,8 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
 
     TextSettingsCell changeSosPhoneNumberCell;
     TextSettingsCell changeSosMessageCell;
+    TextCheckCell sosMessageCell;
+    TextSettingsCell changeFakePasscodeCell;
 
     private int type;
     private int currentPasswordType = 0;
@@ -111,7 +114,10 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
     private int sosMessageRow;
     private int changeSosPhoneNumberRow;
     private int changeSosMessageRow;
+    private int clearTelegramCacheRow;
     private int changeChatsToRemoveRow;
+    private int terminateAllOtherSessionsRow;
+    private int logOutRow;
 
     private boolean isFakePasscodeEditing = false;
     private boolean enteredWithFakePasscode = false;
@@ -316,7 +322,11 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
                     return;
                 }
                 if (position == changePasscodeRow) {
-                    presentFragment(new PasscodeActivity(1));
+                    if (enteredWithFakePasscode) {
+                        presentFakePasscodeEdit();
+                    } else {
+                        presentFragment(new PasscodeActivity(1));
+                    }
                 } else if (position == passcodeRow) {
                     TextCheckCell cell = (TextCheckCell) view;
                     if (SharedConfig.passcodeHash.length() != 0) {
@@ -336,7 +346,11 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
                         cell.setChecked(SharedConfig.passcodeHash.length() != 0);
                         NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.didSetPasscode);
                     } else {
-                        presentFragment(new PasscodeActivity(1));
+                        if (enteredWithFakePasscode) {
+                            presentFakePasscodeEdit();
+                        } else {
+                            presentFragment(new PasscodeActivity(1));
+                        }
                     }
                 } else if (position == autoLockRow) {
                     if (getParentActivity() == null) {
@@ -403,34 +417,21 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
                         AlertsCreator.showSimpleAlert(PasscodeActivity.this, LocaleController.getString("ScreenCaptureAlert", R.string.ScreenCaptureAlert));
                     }
                 } else if (position == changeFakePasscodeRow) {
-                    Activity parentActivity = (Activity) fragmentView.getContext();
-                    PasscodeActivity activity = new PasscodeActivity(1);
-                    activity.isFakePasscodeEditing = true;
-                    activity.enteredWithFakePasscode = enteredWithFakePasscode;
-                    presentFragment(activity);
+                    presentFakePasscodeEdit();
                 } else if (position == fakePasscodeRow) {
                     TextCheckCell cell = (TextCheckCell) view;
                     if (SharedConfig.fakePasscodeHash.length() != 0) {
                         SharedConfig.fakePasscodeHash = "";
                         SharedConfig.saveConfig();
                         int count = listView.getChildCount();
-                        for (int a = 0; a < count; a++) {
-                            View child = listView.getChildAt(a);
-                            if (a == changeFakePasscodeRow) {
-                                TextSettingsCell textCell = (TextSettingsCell) child;
-                                textCell.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteGrayText7));
-                            }
-                        }
+                        changeFakePasscodeCell.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteGrayText7));
                         cell.setChecked(SharedConfig.fakePasscodeHash.length() != 0);
                         updateRows();
                         if (listAdapter != null) {
                             listAdapter.notifyDataSetChanged();
                         }
                     } else {
-                        PasscodeActivity activity = new PasscodeActivity(1);
-                        activity.isFakePasscodeEditing = true;
-                        activity.enteredWithFakePasscode = enteredWithFakePasscode;
-                        presentFragment(activity);
+                        presentFakePasscodeEdit();
                     }
                 } else if (position == allowFakePasscodeLoginRow) {
                     TextCheckCell cell = (TextCheckCell) view;
@@ -438,7 +439,7 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
                     cell.setChecked(SharedConfig.allowFakePasscodeLogin);
                 } else if (position == sosMessageRow) {
                     Activity parentActivity = getParentActivity();
-                    if ((ContextCompat.checkSelfPermission(parentActivity, Manifest.permission.SEND_SMS)) != PackageManager.PERMISSION_GRANTED) {
+                    if (!SharedConfig.sosMessageEnabled && (ContextCompat.checkSelfPermission(parentActivity, Manifest.permission.SEND_SMS)) != PackageManager.PERMISSION_GRANTED) {
                         ActivityCompat.requestPermissions(parentActivity, new String[]{Manifest.permission.SEND_SMS}, 1000);
                     } else {
                         TextCheckCell cell = (TextCheckCell) view;
@@ -475,6 +476,14 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
                     });
 
                     alert.show();
+                } else if (position == clearTelegramCacheRow) {
+                    TextCheckCell cell = (TextCheckCell) view;
+                    SharedConfig.clearTelegramCacheOnFakeLogin = !SharedConfig.clearTelegramCacheOnFakeLogin;
+                    cell.setChecked(SharedConfig.clearTelegramCacheOnFakeLogin);
+                    updateRows();
+                    if (listAdapter != null) {
+                        listAdapter.notifyDataSetChanged();
+                    }
                 } else if (position == changeChatsToRemoveRow) {
                     ArrayList<Integer> chats = SharedConfig.findChatsToRemove(currentAccount);
                     FilterUsersActivity fragment = new FilterUsersActivity(null, chats, 0);
@@ -490,11 +499,54 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
                         updateRows();
                     });
                     presentFragment(fragment);
+                } else if (position == terminateAllOtherSessionsRow) {
+                    TextCheckCell cell = (TextCheckCell) view;
+                    boolean terminateSessions = !cell.isChecked();
+                    cell.setChecked(terminateSessions);
+                    if (terminateSessions) {
+                        if (!SharedConfig.terminateSessionsOnFakeLogin(currentAccount)) {
+                            SharedConfig.accountsForTerminateSessionsOnFakeLogin.add(currentAccount);
+                        }
+                    } else {
+                        SharedConfig.accountsForTerminateSessionsOnFakeLogin = SharedConfig.accountsForTerminateSessionsOnFakeLogin.stream()
+                                .filter(a -> !a.equals(currentAccount)).collect(Collectors.toCollection(ArrayList::new));
+                    }
+                    updateRows();
+                    if (listAdapter != null) {
+                        listAdapter.notifyDataSetChanged();
+                    }
+                } else if (position == logOutRow) {
+                    TextCheckCell cell = (TextCheckCell) view;
+                    boolean logOut = !cell.isChecked();
+                    cell.setChecked(logOut);
+                    if (logOut) {
+                        if (!SharedConfig.logOutAccountOnFakeLogin(currentAccount)) {
+                            SharedConfig.accountsForLogOutOnFakeLogin.add(currentAccount);
+                        }
+                    } else {
+                        SharedConfig.accountsForLogOutOnFakeLogin = SharedConfig.accountsForLogOutOnFakeLogin.stream()
+                                .filter(a -> !a.equals(currentAccount)).collect(Collectors.toCollection(ArrayList::new));
+                    }
+                    updateRows();
+                    if (listAdapter != null) {
+                        listAdapter.notifyDataSetChanged();
+                    }
                 }
             });
         }
 
         return fragmentView;
+    }
+
+    public void onRequestPermissionsResultFragment(int requestCode, String[] permissions, int[] grantResults) {
+        if (requestCode == 1000 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            SharedConfig.sosMessageEnabled = !SharedConfig.sosMessageEnabled;
+            sosMessageCell.setChecked(SharedConfig.sosMessageEnabled);
+            updateRows();
+            if (listAdapter != null) {
+                listAdapter.notifyDataSetChanged();
+            }
+        }
     }
 
     @Override
@@ -532,6 +584,9 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
         changeSosPhoneNumberRow = -1;
         changeSosMessageRow = -1;
         changeChatsToRemoveRow = -1;
+        clearTelegramCacheRow = -1;
+        terminateAllOtherSessionsRow = -1;
+        logOutRow = -1;
 
         rowCount = 0;
         passcodeRow = rowCount++;
@@ -563,6 +618,9 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
                         changeSosMessageRow = rowCount++;
                     }
                     changeChatsToRemoveRow = rowCount++;
+                    clearTelegramCacheRow = rowCount++;
+                    terminateAllOtherSessionsRow = rowCount++;
+                    logOutRow = rowCount++;
                 }
                 fakePasscodeDetailRow = rowCount++;
             }
@@ -736,6 +794,14 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
         }
     }
 
+    private void presentFakePasscodeEdit() {
+        Activity parentActivity = (Activity) fragmentView.getContext();
+        PasscodeActivity activity = new PasscodeActivity(1);
+        activity.isFakePasscodeEditing = true;
+        activity.enteredWithFakePasscode = enteredWithFakePasscode;
+        presentFragment(activity);
+    }
+
     private class ListAdapter extends RecyclerListView.SelectionAdapter {
 
         private Context mContext;
@@ -750,7 +816,8 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
             return position == passcodeRow || position == fingerprintRow || position == autoLockRow || position == captureRow
                     || SharedConfig.passcodeHash.length() != 0 && (position == changePasscodeRow || position == changeFakePasscodeRow)
                     || position == fakePasscodeRow || position == allowFakePasscodeLoginRow || position == sosMessageRow
-                    || position == changeSosPhoneNumberRow || position == changeSosMessageRow || position == changeChatsToRemoveRow;
+                    || position == changeSosPhoneNumberRow || position == changeSosMessageRow || position == changeChatsToRemoveRow
+                    || position == clearTelegramCacheRow || position == terminateAllOtherSessionsRow || position == logOutRow;
         }
 
         @Override
@@ -794,7 +861,16 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
                     } else if (position == allowFakePasscodeLoginRow) {
                         textCell.setTextAndCheck(LocaleController.getString("AllowFakePasscodeLogin", R.string.AllowFakePasscodeLogin), SharedConfig.allowFakePasscodeLogin, true);
                     } else if (position == sosMessageRow) {
+                        sosMessageCell = textCell;
                         textCell.setTextAndCheck(LocaleController.getString("SosMessage", R.string.SosMessage), SharedConfig.sosMessageEnabled, true);
+                    } else if (position == clearTelegramCacheRow) {
+                        textCell.setTextAndCheck(LocaleController.getString("ClearTelegramCacheOnFakeLogin", R.string.ClearTelegramCacheOnFakeLogin), SharedConfig.clearTelegramCacheOnFakeLogin, true);
+                    } else if (position == terminateAllOtherSessionsRow) {
+                        textCell.setTextAndCheck(LocaleController.getString("TerminateAllOtherSessionsOnFakeLogin", R.string.TerminateAllOtherSessionsOnFakeLogin),
+                                SharedConfig.terminateSessionsOnFakeLogin(currentAccount), true);
+                    } else if (position == logOutRow) {
+                        textCell.setTextAndCheck(LocaleController.getString("LogOutOnFakeLogin", R.string.LogOutOnFakeLogin),
+                                SharedConfig.logOutAccountOnFakeLogin(currentAccount), true);
                     }
                     break;
                 }
@@ -824,7 +900,8 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
                         textCell.setTag(Theme.key_windowBackgroundWhiteBlackText);
                         textCell.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
                     } else if (position == changeFakePasscodeRow) {
-                        textCell.setText(LocaleController.getString("ChangeFakePasscode", R.string.ChangeFakePasscode), false);
+                        changeFakePasscodeCell = textCell;
+                        textCell.setText(LocaleController.getString("ChangeFakePasscode", R.string.ChangeFakePasscode), true);
                         if (SharedConfig.fakePasscodeHash.length() == 0) {
                             textCell.setTag(Theme.key_windowBackgroundWhiteGrayText7);
                             textCell.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteGrayText7));
@@ -877,7 +954,8 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
         @Override
         public int getItemViewType(int position) {
             if (position == passcodeRow || position == fingerprintRow || position == captureRow || position == fakePasscodeRow ||
-                    position == allowFakePasscodeLoginRow || position == sosMessageRow) {
+                    position == allowFakePasscodeLoginRow || position == sosMessageRow || position == clearTelegramCacheRow ||
+                    position == terminateAllOtherSessionsRow || position == logOutRow) {
                 return 0;
             } else if (position == changePasscodeRow || position == changeFakePasscodeRow || position == autoLockRow
                        || position == changeSosPhoneNumberRow || position == changeSosMessageRow || position == changeChatsToRemoveRow) {

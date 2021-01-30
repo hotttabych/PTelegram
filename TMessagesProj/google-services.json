@@ -1,34 +1,33 @@
 {
   "project_info": {
-    "project_number": "887183772757",
-    "firebase_url": "https://messanger-ce479.firebaseio.com",
-    "project_id": "messanger-ce479",
-    "storage_bucket": "messanger-ce479.appspot.com"
+    "project_number": "127113305710",
+    "project_id": "tg-double-bottom",
+    "storage_bucket": "tg-double-bottom.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:887183772757:android:fac64bc3a3ca20489e18dc",
+        "mobilesdk_app_id": "1:127113305710:android:450481b8390a513531507f",
         "android_client_info": {
           "package_name": "org.telegram.messenger"
         }
       },
       "oauth_client": [
         {
-          "client_id": "887183772757-asiqcte424rlnd710cit45v1oeahpukl.apps.googleusercontent.com",
+          "client_id": "127113305710-6po10ip8e5203blp2go1u89crb9u18rs.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyBK_VzXhLRXNyTCCQhnJ4pcF5sVuIdsrKM"
+          "current_key": "AIzaSyBTmRCAvCpc7y17TnfzBQsrFXjS-UineYU"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "887183772757-asiqcte424rlnd710cit45v1oeahpukl.apps.googleusercontent.com",
+              "client_id": "127113305710-6po10ip8e5203blp2go1u89crb9u18rs.apps.googleusercontent.com",
               "client_type": 3
             }
           ]
@@ -37,27 +36,27 @@
     },
     {
       "client_info": {
-        "mobilesdk_app_id": "1:887183772757:android:3868fb1f71ddf11e9e18dc",
+        "mobilesdk_app_id": "1:127113305710:android:88940d6bc502479031507f",
         "android_client_info": {
           "package_name": "org.telegram.messenger.beta"
         }
       },
       "oauth_client": [
         {
-          "client_id": "887183772757-asiqcte424rlnd710cit45v1oeahpukl.apps.googleusercontent.com",
+          "client_id": "127113305710-6po10ip8e5203blp2go1u89crb9u18rs.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyBK_VzXhLRXNyTCCQhnJ4pcF5sVuIdsrKM"
+          "current_key": "AIzaSyBTmRCAvCpc7y17TnfzBQsrFXjS-UineYU"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "887183772757-asiqcte424rlnd710cit45v1oeahpukl.apps.googleusercontent.com",
+              "client_id": "127113305710-6po10ip8e5203blp2go1u89crb9u18rs.apps.googleusercontent.com",
               "client_type": 3
             }
           ]
