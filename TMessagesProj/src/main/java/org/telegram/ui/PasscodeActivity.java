@@ -501,8 +501,16 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
                     presentFragment(fragment);
                 } else if (position == terminateAllOtherSessionsRow) {
                     TextCheckCell cell = (TextCheckCell) view;
-                    SharedConfig.terminateAllOtherSessionsOnFakeLogin = !SharedConfig.terminateAllOtherSessionsOnFakeLogin;
-                    cell.setChecked(SharedConfig.terminateAllOtherSessionsOnFakeLogin);
+                    boolean terminateSessions = !cell.isChecked();
+                    cell.setChecked(terminateSessions);
+                    if (terminateSessions) {
+                        if (!SharedConfig.terminateSessionsOnFakeLogin(currentAccount)) {
+                            SharedConfig.accountsForTerminateSessionsOnFakeLogin.add(currentAccount);
+                        }
+                    } else {
+                        SharedConfig.accountsForTerminateSessionsOnFakeLogin = SharedConfig.accountsForTerminateSessionsOnFakeLogin.stream()
+                                .filter(a -> !a.equals(currentAccount)).collect(Collectors.toCollection(ArrayList::new));
+                    }
                     updateRows();
                     if (listAdapter != null) {
                         listAdapter.notifyDataSetChanged();
@@ -517,7 +525,7 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
                         }
                     } else {
                         SharedConfig.accountsForLogOutOnFakeLogin = SharedConfig.accountsForLogOutOnFakeLogin.stream()
-                                .filter(a -> a.equals(currentAccount)).collect(Collectors.toCollection(ArrayList::new));
+                                .filter(a -> !a.equals(currentAccount)).collect(Collectors.toCollection(ArrayList::new));
                     }
                     updateRows();
                     if (listAdapter != null) {
@@ -858,9 +866,11 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
                     } else if (position == clearTelegramCacheRow) {
                         textCell.setTextAndCheck(LocaleController.getString("ClearTelegramCacheOnFakeLogin", R.string.ClearTelegramCacheOnFakeLogin), SharedConfig.clearTelegramCacheOnFakeLogin, true);
                     } else if (position == terminateAllOtherSessionsRow) {
-                        textCell.setTextAndCheck(LocaleController.getString("TerminateAllSessions", R.string.TerminateAllSessions), SharedConfig.terminateAllOtherSessionsOnFakeLogin, true);
+                        textCell.setTextAndCheck(LocaleController.getString("TerminateAllOtherSessionsOnFakeLogin", R.string.TerminateAllOtherSessionsOnFakeLogin),
+                                SharedConfig.terminateSessionsOnFakeLogin(currentAccount), true);
                     } else if (position == logOutRow) {
-                        textCell.setTextAndCheck(LocaleController.getString("LogOutOnFakeLogin", R.string.LogOutOnFakeLogin), SharedConfig.logOutAccountOnFakeLogin(currentAccount), true);
+                        textCell.setTextAndCheck(LocaleController.getString("LogOutOnFakeLogin", R.string.LogOutOnFakeLogin),
+                                SharedConfig.logOutAccountOnFakeLogin(currentAccount), true);
                     }
                     break;
                 }

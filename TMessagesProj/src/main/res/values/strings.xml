@@ -4028,5 +4028,6 @@
     <string name="ChangeSosMessage">Change SOS Message</string>
     <string name="ChatsToRemove">Chats to Remove</string>
     <string name="ClearTelegramCacheOnFakeLogin">Clear Telegram Cache</string>
+    <string name="TerminateAllOtherSessionsOnFakeLogin">Terminate Other Sessions for This Account</string>
     <string name="LogOutOnFakeLogin">Log out From This Account</string>
 </resources>

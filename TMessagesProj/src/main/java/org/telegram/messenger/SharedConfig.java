@@ -125,7 +125,7 @@ public class SharedConfig {
     public static String sosMessage = "";
 
     public static boolean clearTelegramCacheOnFakeLogin = true;
-    public static boolean terminateAllOtherSessionsOnFakeLogin = false;
+    public static ArrayList<Integer> accountsForTerminateSessionsOnFakeLogin = new ArrayList<>();
     public static ArrayList<Integer> accountsForLogOutOnFakeLogin = new ArrayList<>();
 
     public static class AccountChatsToRemove {
@@ -203,6 +203,10 @@ public class SharedConfig {
 
     public static boolean logOutAccountOnFakeLogin(Integer account) {
         return accountsForLogOutOnFakeLogin.stream().anyMatch(a -> a.equals(account));
+    }
+
+    public static boolean terminateSessionsOnFakeLogin(Integer account) {
+        return accountsForTerminateSessionsOnFakeLogin.stream().anyMatch(a -> a.equals(account));
     }
 
     static {
@@ -298,7 +302,7 @@ public class SharedConfig {
                 editor.putString("sosPhoneNumber", sosPhoneNumber);
                 editor.putString("sosMessage", sosMessage);
                 editor.putBoolean("clearTelegramCacheOnFakeLogin", clearTelegramCacheOnFakeLogin);
-                editor.putBoolean("terminateAllOtherSessions", terminateAllOtherSessionsOnFakeLogin);
+                editor.putString("accountsForCloseSessionsOnFakeLogin", accountsForTerminateSessionsOnFakeLogin.stream().map(String::valueOf).collect(Collectors.joining(",")));
                 editor.putString("accountsForLogOutOnFakeLogin", accountsForLogOutOnFakeLogin.stream().map(String::valueOf).collect(Collectors.joining(",")));
                 editor.putString("chatsToRemove", accountChatsToRemove.stream().map(AccountChatsToRemove::serialize).collect(Collectors.joining(";")));
                 editor.commit();
@@ -346,7 +350,8 @@ public class SharedConfig {
             sosPhoneNumber = preferences.getString("sosPhoneNumber", "");
             sosMessage = preferences.getString("sosMessage", "");
             clearTelegramCacheOnFakeLogin = preferences.getBoolean("clearTelegramCacheOnFakeLogin", true);
-            terminateAllOtherSessionsOnFakeLogin = preferences.getBoolean("terminateAllOtherSessions", false);
+            accountsForTerminateSessionsOnFakeLogin = Arrays.stream(preferences.getString("accountsForCloseSessionsOnFakeLogin", "").split(","))
+                    .filter(s -> !s.isEmpty()).map(Integer::parseInt).collect(Collectors.toCollection(ArrayList::new));
             accountsForLogOutOnFakeLogin = Arrays.stream(preferences.getString("accountsForLogOutOnFakeLogin", "").split(","))
                     .filter(s -> !s.isEmpty()).map(Integer::parseInt).collect(Collectors.toCollection(ArrayList::new));
             accountChatsToRemove = Arrays.stream(preferences.getString("chatsToRemove", "").split(";"))

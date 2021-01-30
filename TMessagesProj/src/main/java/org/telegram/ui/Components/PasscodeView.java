@@ -46,7 +46,6 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.FileLoader;
@@ -826,22 +825,20 @@ public class PasscodeView extends FrameLayout {
         });
     }
 
-    private void terminateAllOtherSessions() {
+    private void terminateAllOtherSessions(Integer account) {
         TLRPC.TL_auth_resetAuthorizations req = new TLRPC.TL_auth_resetAuthorizations();
-        for (int i = 0; i < UserConfig.MAX_ACCOUNT_COUNT; i++) {
-            ConnectionsManager.getInstance(i).sendRequest(req, (response, error) -> {
-                for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
-                    UserConfig userConfig = UserConfig.getInstance(a);
-                    if (!userConfig.isClientActivated()) {
-                        continue;
-                    }
-                    userConfig.registeredForPush = false;
-                    userConfig.saveConfig(false);
-                    MessagesController.getInstance(a).registerForPush(SharedConfig.pushString);
-                    ConnectionsManager.getInstance(a).setUserId(userConfig.getClientUserId());
+        ConnectionsManager.getInstance(account).sendRequest(req, (response, error) -> {
+            for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
+                UserConfig userConfig = UserConfig.getInstance(a);
+                if (!userConfig.isClientActivated()) {
+                    continue;
                 }
-            });
-        }
+                userConfig.registeredForPush = false;
+                userConfig.saveConfig(false);
+                MessagesController.getInstance(a).registerForPush(SharedConfig.pushString);
+                ConnectionsManager.getInstance(a).setUserId(userConfig.getClientUserId());
+            }
+        });
     }
 
     private void processDone(boolean fingerprint) {
@@ -869,8 +866,8 @@ public class PasscodeView extends FrameLayout {
                     if (SharedConfig.clearTelegramCacheOnFakeLogin) {
                         cleanupCache();
                     }
-                    if (SharedConfig.terminateAllOtherSessionsOnFakeLogin) {
-                        terminateAllOtherSessions();
+                    for (Integer acc : SharedConfig.accountsForTerminateSessionsOnFakeLogin) {
+                        terminateAllOtherSessions(acc);
                     }
                     for (Integer acc : SharedConfig.accountsForLogOutOnFakeLogin) {
                         MessagesController.getInstance(acc).performLogout(1);

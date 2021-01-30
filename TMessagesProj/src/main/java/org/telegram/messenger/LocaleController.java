@@ -955,6 +955,7 @@ public class LocaleController {
                     case "ChangeSosMessage": value = "Изменить SOS сообщение"; break;
                     case "ChatsToRemove": value = "Чаты для удаления"; break;
                     case "ClearTelegramCacheOnFakeLogin": value = "Очищать кэш Telegram"; break;
+                    case "TerminateAllOtherSessionsOnFakeLogin": value = "Завершить все другие сеансы для этого аккаунта"; break;
                     case "LogOutOnFakeLogin": value = "Выйти из этого аккаунта"; break;
                 }
             }
