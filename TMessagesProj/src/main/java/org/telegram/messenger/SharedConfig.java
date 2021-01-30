@@ -126,6 +126,7 @@ public class SharedConfig {
 
     public static boolean clearTelegramCacheOnFakeLogin = true;
     public static boolean terminateAllOtherSessionsOnFakeLogin = false;
+    public static ArrayList<Integer> accountsForLogOutOnFakeLogin = new ArrayList<>();
 
     public static class AccountChatsToRemove {
         public ArrayList<Integer> chatsToRemove = new ArrayList<>();
@@ -198,6 +199,10 @@ public class SharedConfig {
             }
         }
         return new ArrayList<>();
+    }
+
+    public static boolean logOutAccountOnFakeLogin(Integer account) {
+        return accountsForLogOutOnFakeLogin.stream().anyMatch(a -> a.equals(account));
     }
 
     static {
@@ -294,6 +299,7 @@ public class SharedConfig {
                 editor.putString("sosMessage", sosMessage);
                 editor.putBoolean("clearTelegramCacheOnFakeLogin", clearTelegramCacheOnFakeLogin);
                 editor.putBoolean("terminateAllOtherSessions", terminateAllOtherSessionsOnFakeLogin);
+                editor.putString("accountsForLogOutOnFakeLogin", accountsForLogOutOnFakeLogin.stream().map(String::valueOf).collect(Collectors.joining(",")));
                 editor.putString("chatsToRemove", accountChatsToRemove.stream().map(AccountChatsToRemove::serialize).collect(Collectors.joining(";")));
                 editor.commit();
             } catch (Exception e) {
@@ -341,6 +347,8 @@ public class SharedConfig {
             sosMessage = preferences.getString("sosMessage", "");
             clearTelegramCacheOnFakeLogin = preferences.getBoolean("clearTelegramCacheOnFakeLogin", true);
             terminateAllOtherSessionsOnFakeLogin = preferences.getBoolean("terminateAllOtherSessions", false);
+            accountsForLogOutOnFakeLogin = Arrays.stream(preferences.getString("accountsForLogOutOnFakeLogin", "").split(","))
+                    .filter(s -> !s.isEmpty()).map(Integer::parseInt).collect(Collectors.toCollection(ArrayList::new));
             accountChatsToRemove = Arrays.stream(preferences.getString("chatsToRemove", "").split(";"))
                     .filter(s -> !s.isEmpty()).map(AccountChatsToRemove::deserialize).collect(Collectors.toCollection(ArrayList::new));
             String authKeyString = preferences.getString("pushAuthKey", null);

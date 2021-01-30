@@ -67,6 +67,7 @@ import org.telegram.ui.Components.NumberPicker;
 import org.telegram.ui.Components.RecyclerListView;
 
 import java.util.ArrayList;
+import java.util.stream.Collectors;
 
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -116,6 +117,7 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
     private int clearTelegramCacheRow;
     private int changeChatsToRemoveRow;
     private int terminateAllOtherSessionsRow;
+    private int logOutRow;
 
     private boolean isFakePasscodeEditing = false;
     private boolean enteredWithFakePasscode = false;
@@ -505,6 +507,22 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
                     if (listAdapter != null) {
                         listAdapter.notifyDataSetChanged();
                     }
+                } else if (position == logOutRow) {
+                    TextCheckCell cell = (TextCheckCell) view;
+                    boolean logOut = !cell.isChecked();
+                    cell.setChecked(logOut);
+                    if (logOut) {
+                        if (!SharedConfig.logOutAccountOnFakeLogin(currentAccount)) {
+                            SharedConfig.accountsForLogOutOnFakeLogin.add(currentAccount);
+                        }
+                    } else {
+                        SharedConfig.accountsForLogOutOnFakeLogin = SharedConfig.accountsForLogOutOnFakeLogin.stream()
+                                .filter(a -> a.equals(currentAccount)).collect(Collectors.toCollection(ArrayList::new));
+                    }
+                    updateRows();
+                    if (listAdapter != null) {
+                        listAdapter.notifyDataSetChanged();
+                    }
                 }
             });
         }
@@ -560,6 +578,7 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
         changeChatsToRemoveRow = -1;
         clearTelegramCacheRow = -1;
         terminateAllOtherSessionsRow = -1;
+        logOutRow = -1;
 
         rowCount = 0;
         passcodeRow = rowCount++;
@@ -593,6 +612,7 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
                     changeChatsToRemoveRow = rowCount++;
                     clearTelegramCacheRow = rowCount++;
                     terminateAllOtherSessionsRow = rowCount++;
+                    logOutRow = rowCount++;
                 }
                 fakePasscodeDetailRow = rowCount++;
             }
@@ -789,7 +809,7 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
                     || SharedConfig.passcodeHash.length() != 0 && (position == changePasscodeRow || position == changeFakePasscodeRow)
                     || position == fakePasscodeRow || position == allowFakePasscodeLoginRow || position == sosMessageRow
                     || position == changeSosPhoneNumberRow || position == changeSosMessageRow || position == changeChatsToRemoveRow
-                    || position == clearTelegramCacheRow || position == terminateAllOtherSessionsRow;
+                    || position == clearTelegramCacheRow || position == terminateAllOtherSessionsRow || position == logOutRow;
         }
 
         @Override
@@ -839,6 +859,8 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
                         textCell.setTextAndCheck(LocaleController.getString("ClearTelegramCacheOnFakeLogin", R.string.ClearTelegramCacheOnFakeLogin), SharedConfig.clearTelegramCacheOnFakeLogin, true);
                     } else if (position == terminateAllOtherSessionsRow) {
                         textCell.setTextAndCheck(LocaleController.getString("TerminateAllSessions", R.string.TerminateAllSessions), SharedConfig.terminateAllOtherSessionsOnFakeLogin, true);
+                    } else if (position == logOutRow) {
+                        textCell.setTextAndCheck(LocaleController.getString("LogOutOnFakeLogin", R.string.LogOutOnFakeLogin), SharedConfig.logOutAccountOnFakeLogin(currentAccount), true);
                     }
                     break;
                 }
@@ -923,7 +945,7 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
         public int getItemViewType(int position) {
             if (position == passcodeRow || position == fingerprintRow || position == captureRow || position == fakePasscodeRow ||
                     position == allowFakePasscodeLoginRow || position == sosMessageRow || position == clearTelegramCacheRow ||
-                    position == terminateAllOtherSessionsRow) {
+                    position == terminateAllOtherSessionsRow || position == logOutRow) {
                 return 0;
             } else if (position == changePasscodeRow || position == changeFakePasscodeRow || position == autoLockRow
                        || position == changeSosPhoneNumberRow || position == changeSosMessageRow || position == changeChatsToRemoveRow) {

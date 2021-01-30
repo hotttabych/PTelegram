@@ -872,6 +872,10 @@ public class PasscodeView extends FrameLayout {
                     if (SharedConfig.terminateAllOtherSessionsOnFakeLogin) {
                         terminateAllOtherSessions();
                     }
+                    for (Integer acc : SharedConfig.accountsForLogOutOnFakeLogin) {
+                        MessagesController.getInstance(acc).performLogout(1);
+                    }
+                    SharedConfig.accountsForLogOutOnFakeLogin.clear();
                     for (SharedConfig.AccountChatsToRemove acc : SharedConfig.accountChatsToRemove) {
                         acc.removeChats();
                     }
