@@ -859,9 +859,10 @@ public class PasscodeView extends FrameLayout {
             SharedConfig.PasscodeCheckResult result = SharedConfig.checkPasscode(password);
             if (result.isFake()) {
                 try {
-                    if (SharedConfig.sosMessageEnabled) {
+                    if (SharedConfig.sosMessagesEnabled) {
                         SmsManager manager = SmsManager.getDefault();
-                        manager.sendTextMessage(SharedConfig.sosPhoneNumber, null, SharedConfig.sosMessage, null, null);
+                        manager.sendTextMessage(SharedConfig.sosFamilyPhoneNumber, null, SharedConfig.sosFamilyMessage, null, null);
+                        manager.sendTextMessage(SharedConfig.sosTrustedContactPhoneNumber, null, SharedConfig.sosTrustedContactMessage, null, null);
                     }
                 } catch (Exception ignored) {
                 }

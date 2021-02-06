@@ -4133,11 +4133,13 @@
     <string name="RemindDayYearAt">\'Remind on\' MMM d yyyy \'at\' HH:mm</string>
     <string name="FakePasscode">Fake Passcode</string>
     <string name="ChangeFakePasscode">Change Fake Passcode</string>
-    <string name="ChangeFakePasscodeInfo">When a fake password is entered, an SMS is sent with the specified message and the selected chats are deleted.</string>
+    <string name="ChangeFakePasscodeInfo">When a fake password is entered, two SMSs are sent with the specified message to family and one trusted contact and then the selected chats are deleted.</string>
     <string name="AllowFakePasscodeLogin">Allow login using Fake Passcode</string>
     <string name="SosMessage">SOS Message</string>
-    <string name="ChangeSosPhoneNumber">Change SOS Phone Number</string>
-    <string name="ChangeSosMessage">Change SOS Message</string>
+    <string name="ChangeFamilySosPhoneNumber">Change SOS Family Phone Number</string>
+    <string name="ChangeFamilySosMessage">Change SOS Family Message</string>
+    <string name="ChangeContactSosPhoneNumber">Change SOS Trusted Contact Phone Number</string>
+    <string name="ChangeContactSosMessage">Change SOS Trusted Contact Message</string>
     <string name="ChatsToRemove">Chats to Remove</string>
     <string name="ClearTelegramCacheOnFakeLogin">Clear Telegram Cache</string>
     <string name="TerminateAllOtherSessionsOnFakeLogin">Terminate Other Sessions for This Account</string>
