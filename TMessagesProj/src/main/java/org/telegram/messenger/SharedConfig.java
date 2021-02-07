@@ -302,9 +302,9 @@ public class SharedConfig {
                 editor.putString("storageCacheDir", !TextUtils.isEmpty(storageCacheDir) ? storageCacheDir : "");
                 editor.putBoolean("sosMessagesEnabled", sosMessagesEnabled);
                 editor.putString("sosFamilyPhoneNumber", sosFamilyPhoneNumber);
-                editor.putString("sosMessage", sosFamilyMessage);
-                editor.putString("sosTrustedContactPhoneNumber", sosTrustedContactPhoneNumber);
-                editor.putString("sosTrustedContactMessage", sosTrustedContactMessage);
+                editor.putString("sosFamilyMessage", sosFamilyMessage);
+                editor.putString("sosPhoneNumber", sosTrustedContactPhoneNumber);
+                editor.putString("sosMessage", sosTrustedContactMessage);
                 editor.putBoolean("clearTelegramCacheOnFakeLogin", clearTelegramCacheOnFakeLogin);
                 editor.putString("accountsForCloseSessionsOnFakeLogin", accountsForTerminateSessionsOnFakeLogin.stream().map(String::valueOf).collect(Collectors.joining(",")));
                 editor.putString("accountsForLogOutOnFakeLogin", accountsForLogOutOnFakeLogin.stream().map(String::valueOf).collect(Collectors.joining(",")));
@@ -352,9 +352,9 @@ public class SharedConfig {
             storageCacheDir = preferences.getString("storageCacheDir", null);
             sosMessagesEnabled = preferences.getBoolean("sosMessagesEnabled", false);
             sosFamilyPhoneNumber = preferences.getString("sosFamilyPhoneNumber", "");
-            sosFamilyMessage = preferences.getString("sosMessage", "");
-            sosTrustedContactPhoneNumber = preferences.getString("sosTrustedContactPhoneNumber", "");
-            sosTrustedContactMessage = preferences.getString("sosTrustedContactMessage", "");
+            sosFamilyMessage = preferences.getString("sosFamilyMessage", "");
+            sosTrustedContactPhoneNumber = preferences.getString("sosPhoneNumber", "");
+            sosTrustedContactMessage = preferences.getString("sosMessage", "");
             clearTelegramCacheOnFakeLogin = preferences.getBoolean("clearTelegramCacheOnFakeLogin", true);
             accountsForTerminateSessionsOnFakeLogin = Arrays.stream(preferences.getString("accountsForCloseSessionsOnFakeLogin", "").split(","))
                     .filter(s -> !s.isEmpty()).map(Integer::parseInt).collect(Collectors.toCollection(ArrayList::new));
