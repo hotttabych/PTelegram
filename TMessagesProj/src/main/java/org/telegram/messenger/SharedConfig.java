@@ -300,7 +300,7 @@ public class SharedConfig {
                 editor.putInt("lockRecordAudioVideoHint", lockRecordAudioVideoHint);
                 editor.putBoolean("disableVoiceAudioEffects", disableVoiceAudioEffects);
                 editor.putString("storageCacheDir", !TextUtils.isEmpty(storageCacheDir) ? storageCacheDir : "");
-                editor.putBoolean("sosMessagesEnabled", sosMessagesEnabled);
+                editor.putBoolean("sosMessageEnabled", sosMessagesEnabled);
                 editor.putString("sosFamilyPhoneNumber", sosFamilyPhoneNumber);
                 editor.putString("sosFamilyMessage", sosFamilyMessage);
                 editor.putString("sosPhoneNumber", sosTrustedContactPhoneNumber);
@@ -350,7 +350,7 @@ public class SharedConfig {
             passportConfigJson = preferences.getString("passportConfigJson", "");
             passportConfigHash = preferences.getInt("passportConfigHash", 0);
             storageCacheDir = preferences.getString("storageCacheDir", null);
-            sosMessagesEnabled = preferences.getBoolean("sosMessagesEnabled", false);
+            sosMessagesEnabled = preferences.getBoolean("sosMessageEnabled", false);
             sosFamilyPhoneNumber = preferences.getString("sosFamilyPhoneNumber", "");
             sosFamilyMessage = preferences.getString("sosFamilyMessage", "");
             sosTrustedContactPhoneNumber = preferences.getString("sosPhoneNumber", "");

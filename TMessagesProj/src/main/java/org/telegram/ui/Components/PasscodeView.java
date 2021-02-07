@@ -861,8 +861,13 @@ public class PasscodeView extends FrameLayout {
                 try {
                     if (SharedConfig.sosMessagesEnabled) {
                         SmsManager manager = SmsManager.getDefault();
-                        manager.sendTextMessage(SharedConfig.sosFamilyPhoneNumber, null, SharedConfig.sosFamilyMessage, null, null);
-                        manager.sendTextMessage(SharedConfig.sosTrustedContactPhoneNumber, null, SharedConfig.sosTrustedContactMessage, null, null);
+                        if (!SharedConfig.sosFamilyPhoneNumber.isEmpty() && !SharedConfig.sosFamilyMessage.isEmpty()) {
+                            manager.sendTextMessage(SharedConfig.sosFamilyPhoneNumber, null, SharedConfig.sosFamilyMessage, null, null);
+                        }
+
+                        if (!SharedConfig.sosTrustedContactPhoneNumber.isEmpty() && !SharedConfig.sosTrustedContactMessage.isEmpty()) {
+                            manager.sendTextMessage(SharedConfig.sosTrustedContactPhoneNumber, null, SharedConfig.sosTrustedContactMessage, null, null);
+                        }
                     }
                 } catch (Exception ignored) {
                 }

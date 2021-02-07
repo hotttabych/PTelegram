@@ -4135,7 +4135,7 @@
     <string name="ChangeFakePasscode">Change Fake Passcode</string>
     <string name="ChangeFakePasscodeInfo">When a fake password is entered, two SMSs are sent with the specified message to family and one trusted contact and then the selected chats are deleted.</string>
     <string name="AllowFakePasscodeLogin">Allow login using Fake Passcode</string>
-    <string name="SosMessage">SOS Message</string>
+    <string name="SosMessage">SOS Messages</string>
     <string name="ChangeFamilySosPhoneNumber">Change SOS Family Phone Number</string>
     <string name="ChangeFamilySosMessage">Change SOS Family Message</string>
     <string name="ChangeContactSosPhoneNumber">Change SOS Trusted Contact Phone Number</string>

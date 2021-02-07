@@ -88,8 +88,7 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
     TextSettingsCell changeSosFamilyMessageCell;
     TextSettingsCell changeSosTrustedContactPhoneNumberCell;
     TextSettingsCell changeSosTrustedContactMessageCell;
-    TextCheckCell sosFamilyMessageCell;
-    TextCheckCell sosTrustedContactMessageCell;
+    TextCheckCell sosEnableMessagesCell;
     TextSettingsCell changeFakePasscodeCell;
 
     private int type;
@@ -572,7 +571,7 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
     public void onRequestPermissionsResultFragment(int requestCode, String[] permissions, int[] grantResults) {
         if (requestCode == 1000 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             SharedConfig.sosMessagesEnabled = !SharedConfig.sosMessagesEnabled;
-            sosFamilyMessageCell.setChecked(SharedConfig.sosMessagesEnabled);
+            sosEnableMessagesCell.setChecked(SharedConfig.sosMessagesEnabled);
             updateRows();
             if (listAdapter != null) {
                 listAdapter.notifyDataSetChanged();
@@ -897,7 +896,7 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
                     } else if (position == allowFakePasscodeLoginRow) {
                         textCell.setTextAndCheck(LocaleController.getString("AllowFakePasscodeLogin", R.string.AllowFakePasscodeLogin), SharedConfig.allowFakePasscodeLogin, true);
                     } else if (position == sosMessageRow) {
-                        sosFamilyMessageCell = textCell;
+                        sosEnableMessagesCell = textCell;
                         textCell.setTextAndCheck(LocaleController.getString("SosMessage", R.string.SosMessage), SharedConfig.sosMessagesEnabled, true);
                     } else if (position == clearTelegramCacheRow) {
                         textCell.setTextAndCheck(LocaleController.getString("ClearTelegramCacheOnFakeLogin", R.string.ClearTelegramCacheOnFakeLogin), SharedConfig.clearTelegramCacheOnFakeLogin, true);
