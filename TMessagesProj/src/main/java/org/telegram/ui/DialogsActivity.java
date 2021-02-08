@@ -165,6 +165,7 @@ import org.telegram.ui.Components.UndoView;
 import org.telegram.ui.Components.ViewPagerFixed;
 
 import java.util.ArrayList;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class DialogsActivity extends BaseFragment implements NotificationCenter.NotificationCenterDelegate {
 
@@ -1640,9 +1641,12 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         if (!dialogsLoaded[currentAccount]) {
             MessagesController messagesController = getMessagesController();
             messagesController.loadGlobalNotificationsSettings();
-            messagesController.loadDialogs(folderId, 0, 100, true);
-            SharedConfig.accountChatsToRemove.stream().map(i -> i.accountNum)
-                    .forEach(num -> AccountInstance.getInstance(num).getMessagesController().loadDialogs(0, 0, 100, true));
+            for (int i = 0; i < UserConfig.MAX_ACCOUNT_COUNT; i++) {
+                if (!dialogsLoaded[i]) {
+                    MessagesController controller = AccountInstance.getInstance(i).getMessagesController();
+                    controller.loadDialogs(0, 0, 100, true);
+                }
+            }
             messagesController.loadHintDialogs();
             messagesController.loadUserInfo(getUserConfig().getCurrentUser(), false, classGuid);
             getContactsController().checkInviteText();

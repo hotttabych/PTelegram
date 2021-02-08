@@ -72,7 +72,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-
+/*
 public class FakePasscodeActivity extends BaseFragment implements NotificationCenter.NotificationCenterDelegate {
 
     private ListAdapter listAdapter;
@@ -963,3 +963,4 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
         return themeDescriptions;
     }
 }
+*/
