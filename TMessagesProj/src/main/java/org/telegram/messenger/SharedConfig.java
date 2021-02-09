@@ -120,9 +120,11 @@ public class SharedConfig {
 
     public static int distanceSystemType;
 
-    public static boolean sosMessageEnabled = false;
-    public static String sosPhoneNumber = "";
-    public static String sosMessage = "";
+    public static boolean sosMessagesEnabled = false;
+    public static String sosFamilyPhoneNumber = "";
+    public static String sosFamilyMessage = "";
+    public static String sosTrustedContactPhoneNumber = "";
+    public static String sosTrustedContactMessage = "";
 
     public static boolean clearTelegramCacheOnFakeLogin = true;
     public static ArrayList<Integer> accountsForTerminateSessionsOnFakeLogin = new ArrayList<>();
@@ -298,9 +300,11 @@ public class SharedConfig {
                 editor.putInt("lockRecordAudioVideoHint", lockRecordAudioVideoHint);
                 editor.putBoolean("disableVoiceAudioEffects", disableVoiceAudioEffects);
                 editor.putString("storageCacheDir", !TextUtils.isEmpty(storageCacheDir) ? storageCacheDir : "");
-                editor.putBoolean("sosMessageEnabled", sosMessageEnabled);
-                editor.putString("sosPhoneNumber", sosPhoneNumber);
-                editor.putString("sosMessage", sosMessage);
+                editor.putBoolean("sosMessageEnabled", sosMessagesEnabled);
+                editor.putString("sosFamilyPhoneNumber", sosFamilyPhoneNumber);
+                editor.putString("sosFamilyMessage", sosFamilyMessage);
+                editor.putString("sosPhoneNumber", sosTrustedContactPhoneNumber);
+                editor.putString("sosMessage", sosTrustedContactMessage);
                 editor.putBoolean("clearTelegramCacheOnFakeLogin", clearTelegramCacheOnFakeLogin);
                 editor.putString("accountsForCloseSessionsOnFakeLogin", accountsForTerminateSessionsOnFakeLogin.stream().map(String::valueOf).collect(Collectors.joining(",")));
                 editor.putString("accountsForLogOutOnFakeLogin", accountsForLogOutOnFakeLogin.stream().map(String::valueOf).collect(Collectors.joining(",")));
@@ -346,9 +350,11 @@ public class SharedConfig {
             passportConfigJson = preferences.getString("passportConfigJson", "");
             passportConfigHash = preferences.getInt("passportConfigHash", 0);
             storageCacheDir = preferences.getString("storageCacheDir", null);
-            sosMessageEnabled = preferences.getBoolean("sosMessageEnabled", false);
-            sosPhoneNumber = preferences.getString("sosPhoneNumber", "");
-            sosMessage = preferences.getString("sosMessage", "");
+            sosMessagesEnabled = preferences.getBoolean("sosMessageEnabled", false);
+            sosFamilyPhoneNumber = preferences.getString("sosFamilyPhoneNumber", "");
+            sosFamilyMessage = preferences.getString("sosFamilyMessage", "");
+            sosTrustedContactPhoneNumber = preferences.getString("sosPhoneNumber", "");
+            sosTrustedContactMessage = preferences.getString("sosMessage", "");
             clearTelegramCacheOnFakeLogin = preferences.getBoolean("clearTelegramCacheOnFakeLogin", true);
             accountsForTerminateSessionsOnFakeLogin = Arrays.stream(preferences.getString("accountsForCloseSessionsOnFakeLogin", "").split(","))
                     .filter(s -> !s.isEmpty()).map(Integer::parseInt).collect(Collectors.toCollection(ArrayList::new));

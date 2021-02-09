@@ -950,9 +950,11 @@ public class LocaleController {
                     case "ChangeFakePasscode": value = "Сменить ложный код-пароль"; break;
                     case "ChangeFakePasscodeInfo": value = "При вводе ложного кода-пароля отправляется SMS с указанным сообщением, и/или удаляются выбранные чаты."; break;
                     case "AllowFakePasscodeLogin": value = "Разрешить вход c ложным паролем"; break;
-                    case "SosMessage": value = "SOS сообщение"; break;
-                    case "ChangeSosPhoneNumber": value = "Изменить SOS номер телефона"; break;
-                    case "ChangeSosMessage": value = "Изменить SOS сообщение"; break;
+                    case "SosMessage": value = "SOS сообщения"; break;
+                    case "ChangeFamilySosPhoneNumber": value = "Изменить SOS номер телефона семьи"; break;
+                    case "ChangeFamilySosMessage": value = "Изменить SOS сообщение для семьи"; break;
+                    case "ChangeContactSosPhoneNumber": value = "Изменить SOS номер телефона доверенного контакта"; break;
+                    case "ChangeContactSosMessage": value = "Изменить SOS сообщение для доверенного контакта"; break;
                     case "ChatsToRemove": value = "Чаты для удаления"; break;
                     case "ClearTelegramCacheOnFakeLogin": value = "Очищать кэш Telegram"; break;
                     case "TerminateAllOtherSessionsOnFakeLogin": value = "Завершить все другие сеансы для этого аккаунта"; break;
