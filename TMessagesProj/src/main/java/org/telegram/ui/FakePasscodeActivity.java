@@ -660,7 +660,12 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
             SharedConfig.passcodeType = currentPasswordType;
             SharedConfig.saveConfig();
             getMediaDataController().buildShortcuts();
-            presentFragment(new FakePasscodeActivity(0, fakePasscode, false), true);
+            if (creating) {
+                SharedConfig.fakePasscodes.add(fakePasscode);
+                presentFragment(new FakePasscodeActivity(0, fakePasscode, false), true);
+            } else {
+                finishFragment();
+            }
             NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.didSetPasscode);
             passwordEditText.clearFocus();
             AndroidUtilities.hideKeyboard(passwordEditText);

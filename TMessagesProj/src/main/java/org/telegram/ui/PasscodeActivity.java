@@ -400,9 +400,7 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
                 } else if (firstFakePasscodeRow <= position && position <= lastFakePasscodeRow) {
                     presentFragment(new FakePasscodeActivity(0, SharedConfig.fakePasscodes.get(position - firstFakePasscodeRow), false));
                 } else if (position == addFakePasscodeRow) {
-                    FakePasscode passcode = new FakePasscode();
-                    SharedConfig.fakePasscodes.add(passcode);
-                    presentFragment(new FakePasscodeActivity(1, passcode, true));
+                    presentFragment(new FakePasscodeActivity(1, new FakePasscode(), true));
                 }
             });
         }
