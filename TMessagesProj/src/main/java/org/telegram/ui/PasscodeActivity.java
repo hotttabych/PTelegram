@@ -733,7 +733,7 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
                         textCell.setTag(Theme.key_windowBackgroundWhiteBlackText);
                         textCell.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
                     } else if (position == addFakePasscodeRow) {
-                        textCell.setText(LocaleController.formatString("Add Fake Passcode", R.string.AddFakePasscode), true);
+                        textCell.setText(LocaleController.getString("AddFakePasscode", R.string.AddFakePasscode), true);
                         textCell.setTag(Theme.key_windowBackgroundWhiteBlueText4);
                         textCell.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlueText4));
                     }
