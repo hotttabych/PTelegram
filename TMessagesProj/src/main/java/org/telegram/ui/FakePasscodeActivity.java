@@ -85,9 +85,6 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
     private RecyclerListView listView;
     private TextView titleTextView;
     private EditTextBoldCursor passwordEditText;
-    private TextView dropDown;
-    private ActionBarMenuItem dropDownContainer;
-    private Drawable dropDownDrawable;
 
     TextSettingsCell changeNameCell;
     TextSettingsCell changeFakePasscodeCell;
@@ -99,7 +96,6 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
     TextCheckCell sosTrustedContactMessageCell;
 
     private int type;
-    private int currentPasswordType = 0;
     private int passcodeSetStep = 0;
     private String firstPassword;
 
@@ -125,8 +121,6 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
     private FakePasscode fakePasscode;
 
     private final static int done_button = 1;
-    private final static int pin_item = 2;
-    private final static int password_item = 3;
 
     public FakePasscodeActivity(int type, FakePasscode fakePasscode, boolean creating) {
         super();
@@ -170,12 +164,6 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
                     } else if (passcodeSetStep == 1) {
                         processDone();
                     }
-                } else if (id == pin_item) {
-                    currentPasswordType = 0;
-                    updateDropDownTextView();
-                } else if (id == password_item) {
-                    currentPasswordType = 1;
-                    updateDropDownTextView();
                 }
             }
         });
@@ -247,7 +235,7 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
                 @Override
                 public void afterTextChanged(Editable s) {
                     if (passwordEditText.length() == 4) {
-                        if (type == 1 && currentPasswordType == 0) {
+                        if (type == 1 && SharedConfig.passcodeType == 0) {
                             if (passcodeSetStep == 0) {
                                 processNext();
                             } else if (passcodeSetStep == 1) {
@@ -276,33 +264,23 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
             });
 
             if (type == 1) {
-                frameLayout.setTag(Theme.key_windowBackgroundWhite);
-                dropDownContainer = new ActionBarMenuItem(context, menu, 0, 0);
-                dropDownContainer.setSubMenuOpenSide(1);
-                dropDownContainer.addSubItem(pin_item, LocaleController.getString("PasscodePIN", R.string.PasscodePIN));
-                dropDownContainer.addSubItem(password_item, LocaleController.getString("PasscodePassword", R.string.PasscodePassword));
-                actionBar.addView(dropDownContainer, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.MATCH_PARENT, Gravity.TOP | Gravity.LEFT, AndroidUtilities.isTablet() ? 64 : 56, 0, 40, 0));
-                dropDownContainer.setOnClickListener(view -> dropDownContainer.toggleSubMenu());
-
-                dropDown = new TextView(context);
-                dropDown.setGravity(Gravity.LEFT);
-                dropDown.setSingleLine(true);
-                dropDown.setLines(1);
-                dropDown.setMaxLines(1);
-                dropDown.setEllipsize(TextUtils.TruncateAt.END);
-                dropDown.setTextColor(Theme.getColor(Theme.key_actionBarDefaultTitle));
-                dropDown.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
-                dropDownDrawable = context.getResources().getDrawable(R.drawable.ic_arrow_drop_down).mutate();
-                dropDownDrawable.setColorFilter(new PorterDuffColorFilter(Theme.getColor(Theme.key_actionBarDefaultTitle), PorterDuff.Mode.MULTIPLY));
-                dropDown.setCompoundDrawablesWithIntrinsicBounds(null, null, dropDownDrawable, null);
-                dropDown.setCompoundDrawablePadding(AndroidUtilities.dp(4));
-                dropDown.setPadding(0, 0, AndroidUtilities.dp(10), 0);
-                dropDownContainer.addView(dropDown, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_VERTICAL, 16, 0, 0, 1));
+                if (SharedConfig.passcodeType == 0) {
+                    actionBar.setTitle(LocaleController.getString("PasscodePIN", R.string.PasscodePIN));
+                    InputFilter[] filterArray = new InputFilter[1];
+                    filterArray[0] = new InputFilter.LengthFilter(4);
+                    passwordEditText.setFilters(filterArray);
+                    passwordEditText.setInputType(InputType.TYPE_CLASS_PHONE);
+                    passwordEditText.setKeyListener(DigitsKeyListener.getInstance("1234567890"));
+                } else if (SharedConfig.passcodeType == 1) {
+                    actionBar.setTitle(LocaleController.getString("PasscodePassword", R.string.PasscodePassword));
+                    passwordEditText.setFilters(new InputFilter[0]);
+                    passwordEditText.setKeyListener(null);
+                    passwordEditText.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
+                }
+                passwordEditText.setTransformationMethod(PasswordTransformationMethod.getInstance());
             } else {
                 actionBar.setTitle(LocaleController.getString("Passcode", R.string.Passcode));
             }
-
-            updateDropDownTextView();
         } else {
             actionBar.setTitle(LocaleController.getString("Passcode", R.string.Passcode));
             frameLayout.setTag(Theme.key_windowBackgroundGray);
@@ -544,7 +522,6 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
                 }
             }, 200);
         }
-        fixLayoutInternal();
     }
 
     @Override
@@ -601,7 +578,6 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
                 @Override
                 public boolean onPreDraw() {
                     listView.getViewTreeObserver().removeOnPreDrawListener(this);
-                    fixLayoutInternal();
                     return true;
                 }
             });
@@ -615,30 +591,8 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
         }
     }
 
-    private void updateDropDownTextView() {
-        if (dropDown != null) {
-            if (currentPasswordType == 0) {
-                dropDown.setText(LocaleController.getString("PasscodePIN", R.string.PasscodePIN));
-            } else if (currentPasswordType == 1) {
-                dropDown.setText(LocaleController.getString("PasscodePassword", R.string.PasscodePassword));
-            }
-        }
-        if (type == 1 && currentPasswordType == 0) {
-            InputFilter[] filterArray = new InputFilter[1];
-            filterArray[0] = new InputFilter.LengthFilter(4);
-            passwordEditText.setFilters(filterArray);
-            passwordEditText.setInputType(InputType.TYPE_CLASS_PHONE);
-            passwordEditText.setKeyListener(DigitsKeyListener.getInstance("1234567890"));
-        } else if (type == 1 && currentPasswordType == 1) {
-            passwordEditText.setFilters(new InputFilter[0]);
-            passwordEditText.setKeyListener(null);
-            passwordEditText.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
-        }
-        passwordEditText.setTransformationMethod(PasswordTransformationMethod.getInstance());
-    }
-
     private void processNext() {
-        if (passwordEditText.getText().length() == 0 || currentPasswordType == 0 && passwordEditText.getText().length() != 4) {
+        if (passwordEditText.getText().length() == 0 || SharedConfig.passcodeType == 0 && passwordEditText.getText().length() != 4) {
             onPasscodeError();
             return;
         }
@@ -653,12 +607,11 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
             passwordEditText.setText("");
             return;
         }
-        if (currentPasswordType == 0) {
+        if (SharedConfig.passcodeType == 0) {
             actionBar.setTitle(LocaleController.getString("PasscodePIN", R.string.PasscodePIN));
         } else {
             actionBar.setTitle(LocaleController.getString("PasscodePassword", R.string.PasscodePassword));
         }
-        dropDownContainer.setVisibility(View.GONE);
         titleTextView.setText(LocaleController.getString("ReEnterYourPasscode", R.string.ReEnterYourPasscode));
         firstPassword = passwordEditText.getText().toString();
         passwordEditText.setText("");
@@ -694,7 +647,6 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
             }
 
             SharedConfig.allowScreenCapture = true;
-            SharedConfig.passcodeType = currentPasswordType;
             SharedConfig.saveConfig();
             getMediaDataController().buildShortcuts();
             if (creating) {
@@ -720,21 +672,6 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
             v.vibrate(200);
         }
         AndroidUtilities.shakeView(titleTextView, 2, 0);
-    }
-
-    private void fixLayoutInternal() {
-        if (dropDownContainer != null) {
-            if (!AndroidUtilities.isTablet()) {
-                FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) dropDownContainer.getLayoutParams();
-                layoutParams.topMargin = (Build.VERSION.SDK_INT >= 21 ? AndroidUtilities.statusBarHeight : 0);
-                dropDownContainer.setLayoutParams(layoutParams);
-            }
-            if (!AndroidUtilities.isTablet() && ApplicationLoader.applicationContext.getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
-                dropDown.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 18);
-            } else {
-                dropDown.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 20);
-            }
-        }
     }
 
     private class ListAdapter extends RecyclerListView.SelectionAdapter {
@@ -905,8 +842,6 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
         themeDescriptions.add(new ThemeDescription(passwordEditText, ThemeDescription.FLAG_TEXTCOLOR, null, null, null, null, Theme.key_windowBackgroundWhiteBlackText));
         themeDescriptions.add(new ThemeDescription(passwordEditText, ThemeDescription.FLAG_BACKGROUNDFILTER, null, null, null, null, Theme.key_windowBackgroundWhiteInputField));
         themeDescriptions.add(new ThemeDescription(passwordEditText, ThemeDescription.FLAG_BACKGROUNDFILTER | ThemeDescription.FLAG_DRAWABLESELECTEDSTATE, null, null, null, null, Theme.key_windowBackgroundWhiteInputFieldActivated));
-        themeDescriptions.add(new ThemeDescription(dropDown, ThemeDescription.FLAG_TEXTCOLOR, null, null, null, null, Theme.key_actionBarDefaultTitle));
-        themeDescriptions.add(new ThemeDescription(dropDown, 0, null, null, new Drawable[]{dropDownDrawable}, null, Theme.key_actionBarDefaultTitle));
 
         themeDescriptions.add(new ThemeDescription(listView, 0, new Class[]{TextCheckCell.class}, new String[]{"textView"}, null, null, null, Theme.key_windowBackgroundWhiteBlackText));
         themeDescriptions.add(new ThemeDescription(listView, 0, new Class[]{TextCheckCell.class}, new String[]{"checkBox"}, null, null, null, Theme.key_switchTrack));
