@@ -12,12 +12,18 @@ public class FakePasscode {
     public String passcodeHash = "";
     public ClearCacheAction clearCacheAction = new ClearCacheAction();
     public List<RemoveChatsAction> removeChatsActions = new ArrayList<>();
-    public SosMessageAction sosMessageAction = new SosMessageAction();
+    public SosMessageAction familySosMessageAction = new SosMessageAction();
+    public SosMessageAction trustedContactSosMessageAction = new SosMessageAction();
+    public List<TerminateOtherSessionsAction> terminateOtherSessionsActions = new ArrayList<>();
+    public List<LogOutAction> logOutActions = new ArrayList<>();
 
     List<Action> actions()
     {
-        List<Action> result = new ArrayList<>(Arrays.asList(clearCacheAction, sosMessageAction));
+        List<Action> result = new ArrayList<>(Arrays.asList(clearCacheAction, familySosMessageAction,
+                trustedContactSosMessageAction));
         result.addAll(removeChatsActions);
+        result.addAll(terminateOtherSessionsActions);
+        result.addAll(logOutActions);
         return result;
     }
 
@@ -37,6 +43,14 @@ public class FakePasscode {
             }
         }
         return new ArrayList<>();
+    }
+
+    public boolean terminateSessionsOnFakeLogin(Integer account) {
+        return terminateOtherSessionsActions.stream().anyMatch(a -> a.accountNum == account);
+    }
+
+    public boolean logOutAccountOnFakeLogin(Integer account) {
+        return logOutActions.stream().anyMatch(a -> a.accountNum == account);
     }
 
     public void executeActions() {

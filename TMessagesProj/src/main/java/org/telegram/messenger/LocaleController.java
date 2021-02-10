@@ -950,12 +950,17 @@ public class LocaleController {
                     case "ChangeFakePasscode": value = "Сменить ложный код-пароль"; break;
                     case "ChangeFakePasscodeInfo": value = "При вводе ложного кода-пароля отправляется SMS с указанным сообщением, и/или удаляются выбранные чаты."; break;
                     case "AllowFakePasscodeLogin": value = "Разрешить вход c ложным паролем"; break;
-                    case "SosMessage": value = "SOS сообщение"; break;
-                    case "ChangeSosPhoneNumber": value = "Изменить SOS номер телефона"; break;
-                    case "ChangeSosMessage": value = "Изменить SOS сообщение"; break;
+                    case "FamilySosMessage": value = "SOS сообщение семьи"; break;
+                    case "ChangeFamilySosPhoneNumber": value = "Изменить SOS номер телефона семьи"; break;
+                    case "ChangeFamilySosMessage": value = "Изменить SOS сообщение для семьи"; break;
+                    case "ContactSosMessage": value = "SOS сообщение доверенного контакта"; break;
+                    case "ChangeContactSosPhoneNumber": value = "Изменить SOS номер телефона доверенного контакта"; break;
+                    case "ChangeContactSosMessage": value = "Изменить SOS сообщение для доверенного контакта"; break;
                     case "ChatsToRemove": value = "Чаты для удаления"; break;
                     case "ClearTelegramCacheOnFakeLogin": value = "Очищать кэш Telegram"; break;
-                    case "AddFakePasscode": value = "Add Fake Passcode"; break;
+                    case "AddFakePasscode": value = "Добавить ложный код-пароль"; break;
+                    case "TerminateAllOtherSessionsOnFakeLogin": value = "Завершить все другие сеансы для этого аккаунта"; break;
+                    case "LogOutOnFakeLogin": value = "Выйти из этого аккаунта"; break;
                 }
             }
             if (value == null) {
@@ -1702,6 +1707,17 @@ public class LocaleController {
                 format = LocaleController.formatString("formatDateAtTime", R.string.formatDateAtTime, getInstance().formatterYear.format(new Date(date)), getInstance().formatterDay.format(new Date(date)));
             }
             return formatString("ChannelOtherSubscriberJoined", R.string.ChannelOtherSubscriberJoined, format);
+        } catch (Exception e) {
+            FileLog.e(e);
+        }
+        return "LOC_ERR";
+    }
+
+    public static String formatImportedDate(long date) {
+        try {
+            date *= 1000;
+            Date dt = new Date(date);
+            return String.format("%1$s, %2$s", getInstance().formatterYear.format(dt), getInstance().formatterDay.format(dt));
         } catch (Exception e) {
             FileLog.e(e);
         }
