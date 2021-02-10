@@ -642,6 +642,17 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
             onPasscodeError();
             return;
         }
+        SharedConfig.PasscodeCheckResult passcodeCheckResult = SharedConfig.checkPasscode(passwordEditText.getText().toString());
+        if (passcodeCheckResult.isRealPasscodeSuccess || passcodeCheckResult.fakePasscode != null) {
+            try {
+                Toast.makeText(getParentActivity(), LocaleController.getString("PasscodeInUse", R.string.PasscodeInUse), Toast.LENGTH_SHORT).show();
+            } catch (Exception e) {
+                FileLog.e(e);
+            }
+            AndroidUtilities.shakeView(titleTextView, 2, 0);
+            passwordEditText.setText("");
+            return;
+        }
         if (currentPasswordType == 0) {
             actionBar.setTitle(LocaleController.getString("PasscodePIN", R.string.PasscodePIN));
         } else {
@@ -668,17 +679,6 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
                 }
                 AndroidUtilities.shakeView(titleTextView, 2, 0);
                 passwordEditText.setText("");
-                return;
-            }
-
-            SharedConfig.PasscodeCheckResult passcodeCheckResult = SharedConfig.checkPasscode(firstPassword);
-            if (passcodeCheckResult.isRealPasscodeSuccess || passcodeCheckResult.fakePasscode != null) {
-                try {
-                    Toast.makeText(getParentActivity(), LocaleController.getString("PasscodeInUse", R.string.PasscodeInUse), Toast.LENGTH_SHORT).show();
-                } catch (Exception e) {
-                    FileLog.e(e);
-                }
-                presentFragment(new FakePasscodeActivity(1, fakePasscode, creating), true);
                 return;
             }
 
