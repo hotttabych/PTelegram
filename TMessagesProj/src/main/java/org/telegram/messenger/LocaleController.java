@@ -964,6 +964,7 @@ public class LocaleController {
                     case "DeleteFakePasscode": value = "Удалить ложный код-пароль"; break;
                     case "ChangeFakePasscodeName": value = "Изменить название"; break;
                     case "AreYouSureDeleteFakePasscode": value = "Вы точно хотите удалить этот ложный код-пароль?"; break;
+                    case "PasscodeUsed": value = "Этот код-пароль уже используется"; break;
                 }
             }
             if (value == null) {

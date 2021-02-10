@@ -671,6 +671,17 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
                 return;
             }
 
+            SharedConfig.PasscodeCheckResult passcodeCheckResult = SharedConfig.checkPasscode(firstPassword);
+            if (passcodeCheckResult.isRealPasscodeSuccess || passcodeCheckResult.fakePasscode != null) {
+                try {
+                    Toast.makeText(getParentActivity(), LocaleController.getString("PasscodeInUse", R.string.PasscodeInUse), Toast.LENGTH_SHORT).show();
+                } catch (Exception e) {
+                    FileLog.e(e);
+                }
+                presentFragment(new FakePasscodeActivity(1, fakePasscode, creating), true);
+                return;
+            }
+
             try {
                 byte[] passcodeBytes = firstPassword.getBytes("UTF-8");
                 byte[] bytes = new byte[32 + passcodeBytes.length];
