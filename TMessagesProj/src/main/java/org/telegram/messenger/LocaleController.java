@@ -963,6 +963,7 @@ public class LocaleController {
                     case "LogOutOnFakeLogin": value = "Выйти из этого аккаунта"; break;
                     case "DeleteFakePasscode": value = "Удалить ложный код-пароль"; break;
                     case "ChangeFakePasscodeName": value = "Изменить название"; break;
+                    case "AreYouSureDeleteFakePasscode": value = "Вы точно хотите удалить этот ложный код-пароль?"; break;
                 }
             }
             if (value == null) {

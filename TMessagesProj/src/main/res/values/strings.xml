@@ -4148,5 +4148,6 @@
     <string name="AddFakePasscode">Add Fake Passcode</string>
     <string name="DeleteFakePasscode">Delete Fake Passcode</string>
     <string name="ChangeFakePasscodeName">Change Name</string>
+    <string name="AreYouSureDeleteFakePasscode">Are you sure you want to delete this fake passcode?</string>
 
 </resources>

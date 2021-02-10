@@ -11,6 +11,7 @@ package org.telegram.ui;
 import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.PorterDuff;
@@ -42,16 +43,20 @@ import android.widget.Toast;
 
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.LocaleController;
+import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.ApplicationLoader;
 import org.telegram.messenger.FileLog;
 import org.telegram.messenger.R;
 import org.telegram.messenger.SharedConfig;
+import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.Utilities;
 import org.telegram.messenger.fakepasscode.FakePasscode;
 import org.telegram.messenger.fakepasscode.LogOutAction;
 import org.telegram.messenger.fakepasscode.RemoveChatsAction;
 import org.telegram.messenger.fakepasscode.TerminateOtherSessionsAction;
+import org.telegram.tgnet.ConnectionsManager;
+import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.ActionBar;
 import org.telegram.ui.ActionBar.ActionBarMenu;
 import org.telegram.ui.ActionBar.ActionBarMenuItem;
@@ -482,10 +487,26 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
                         listAdapter.notifyDataSetChanged();
                     }
                 } else if (position == deletePasscodeRow) {
-                    SharedConfig.fakePasscodes = SharedConfig.fakePasscodes.stream()
-                            .filter(a -> a != fakePasscode).collect(Collectors.toCollection(ArrayList::new));
-
-                    finishFragment();
+                    if (getParentActivity() == null) {
+                        return;
+                    }
+                    AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
+                    String buttonText;
+                    builder.setMessage(LocaleController.getString("AreYouSureDeleteFakePasscode", R.string.AreYouSureDeleteFakePasscode));
+                    builder.setTitle(LocaleController.getString("DeleteFakePasscode", R.string.DeleteFakePasscode));
+                    buttonText = LocaleController.getString("Delete", R.string.Delete);
+                    builder.setPositiveButton(buttonText, (dialogInterface, i) -> {
+                        SharedConfig.fakePasscodes = SharedConfig.fakePasscodes.stream()
+                                .filter(a -> a != fakePasscode).collect(Collectors.toCollection(ArrayList::new));
+                        finishFragment();
+                    });
+                    builder.setNegativeButton(LocaleController.getString("Cancel", R.string.Cancel), null);
+                    AlertDialog alertDialog = builder.create();
+                    showDialog(alertDialog);
+                    TextView button = (TextView) alertDialog.getButton(DialogInterface.BUTTON_POSITIVE);
+                    if (button != null) {
+                        button.setTextColor(Theme.getColor(Theme.key_dialogTextRed2));
+                    }
                 }
             });
         }
