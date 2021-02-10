@@ -1,5 +1,7 @@
 package org.telegram.messenger.fakepasscode;
 
+import org.telegram.messenger.LocaleController;
+import org.telegram.messenger.R;
 import org.telegram.messenger.SharedConfig;
 
 import java.util.ArrayList;
@@ -8,7 +10,7 @@ import java.util.List;
 
 public class FakePasscode {
     public boolean allowLogin = true;
-    public String name = "Fake passcode";
+    public String name = LocaleController.getString("FakePasscode", R.string.FakePasscode);
     public String passcodeHash = "";
     public ClearCacheAction clearCacheAction = new ClearCacheAction();
     public List<RemoveChatsAction> removeChatsActions = new ArrayList<>();

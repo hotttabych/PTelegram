@@ -962,6 +962,7 @@ public class LocaleController {
                     case "TerminateAllOtherSessionsOnFakeLogin": value = "Завершить все другие сеансы для этого аккаунта"; break;
                     case "LogOutOnFakeLogin": value = "Выйти из этого аккаунта"; break;
                     case "DeleteFakePasscode": value = "Удалить ложный код-пароль"; break;
+                    case "ChangeFakePasscodeName": value = "Изменить название"; break;
                 }
             }
             if (value == null) {

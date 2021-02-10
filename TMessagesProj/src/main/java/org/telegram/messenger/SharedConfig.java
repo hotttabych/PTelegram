@@ -121,6 +121,7 @@ public class SharedConfig {
 
     public static int distanceSystemType;
 
+    public static int fakePasscodeIndex = 1;
     public static List<FakePasscode> fakePasscodes = new ArrayList<>();
     private static class FakePasscodesWrapper {
         public List<FakePasscode> fakePasscodes;
@@ -217,6 +218,7 @@ public class SharedConfig {
                 editor.putInt("lockRecordAudioVideoHint", lockRecordAudioVideoHint);
                 editor.putBoolean("disableVoiceAudioEffects", disableVoiceAudioEffects);
                 editor.putString("storageCacheDir", !TextUtils.isEmpty(storageCacheDir) ? storageCacheDir : "");
+                editor.putInt("fakePasscodeIndex", fakePasscodeIndex);
                 ObjectMapper mapper = new ObjectMapper();
                 mapper.enableDefaultTyping();
                 FakePasscodesWrapper wrapper = new FakePasscodesWrapper(fakePasscodes);
@@ -261,6 +263,7 @@ public class SharedConfig {
             passportConfigJson = preferences.getString("passportConfigJson", "");
             passportConfigHash = preferences.getInt("passportConfigHash", 0);
             storageCacheDir = preferences.getString("storageCacheDir", null);
+            fakePasscodeIndex = preferences.getInt("fakePasscodeIndex", 1);
             try {
                 String fakePasscodesString = preferences.getString("fakePasscodes", null);
                 ObjectMapper mapper = new ObjectMapper();

@@ -4147,4 +4147,6 @@
     <string name="LogOutOnFakeLogin">Log out From This Account</string>
     <string name="AddFakePasscode">Add Fake Passcode</string>
     <string name="DeleteFakePasscode">Delete Fake Passcode</string>
+    <string name="ChangeFakePasscodeName">Change Name</string>
+
 </resources>
