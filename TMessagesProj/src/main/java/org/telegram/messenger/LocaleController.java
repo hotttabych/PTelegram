@@ -961,6 +961,7 @@ public class LocaleController {
                     case "AddFakePasscode": value = "Добавить ложный код-пароль"; break;
                     case "TerminateAllOtherSessionsOnFakeLogin": value = "Завершить все другие сеансы для этого аккаунта"; break;
                     case "LogOutOnFakeLogin": value = "Выйти из этого аккаунта"; break;
+                    case "DeleteFakePasscode": value = "Удалить ложный код-пароль"; break;
                 }
             }
             if (value == null) {

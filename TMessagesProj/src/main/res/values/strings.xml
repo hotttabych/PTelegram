@@ -4146,4 +4146,5 @@
     <string name="TerminateAllOtherSessionsOnFakeLogin">Terminate Other Sessions for This Account</string>
     <string name="LogOutOnFakeLogin">Log out From This Account</string>
     <string name="AddFakePasscode">Add Fake Passcode</string>
+    <string name="DeleteFakePasscode">Delete Fake Passcode</string>
 </resources>

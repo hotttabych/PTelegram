@@ -425,6 +425,7 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
             }, 200);
         }
         fixLayoutInternal();
+        updateRows();
     }
 
     @Override
