@@ -4019,6 +4019,7 @@
     <string name="RemindDayAt">\'Remind on\' MMM d \'at\' HH:mm</string>
     <string name="RemindDayYearAt">\'Remind on\' MMM d yyyy \'at\' HH:mm</string>
     <string name="Enable">Enable</string>
+
     <string name="FakePasscode">Fake Passcode</string>
     <string name="ChangeFakePasscode">Change Fake Passcode</string>
     <string name="ChangeFakePasscodeInfo">When a fake password is entered, an SMS is sent with the specified message and the selected chats are deleted.</string>
@@ -4028,4 +4029,5 @@
     <string name="ChangeSosMessage">Change SOS Message</string>
     <string name="ChatsToRemove">Chats to Remove</string>
     <string name="ClearTelegramCacheOnFakeLogin">Clear Telegram Cache</string>
+    <string name="AddFakePasscode">Add Fake Passcode</string>
 </resources>

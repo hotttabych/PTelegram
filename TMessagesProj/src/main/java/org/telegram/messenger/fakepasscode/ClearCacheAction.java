@@ -8,6 +8,8 @@ import org.telegram.messenger.Utilities;
 import java.io.File;
 
 public class ClearCacheAction implements Action {
+    public boolean enabled = false;
+
     @Override
     public void execute() {
         Utilities.globalQueue.postRunnable(() -> {

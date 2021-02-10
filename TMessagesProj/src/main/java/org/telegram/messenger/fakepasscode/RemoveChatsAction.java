@@ -10,11 +10,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
-public class RemoveChatsAction {
+public class RemoveChatsAction implements Action {
     public ArrayList<Integer> chatsToRemove = new ArrayList<>();
     public int accountNum = 0;
 
     public void execute() {
+        if (chatsToRemove.isEmpty()) {
+            return;
+        }
         AccountInstance account = AccountInstance.getInstance(accountNum);
         MessagesController messageController = account.getMessagesController();
         for (Integer id : chatsToRemove) {
@@ -42,5 +45,6 @@ public class RemoveChatsAction {
             }
         }
         chatsToRemove.clear();
+        SharedConfig.saveConfig();
     }
 }

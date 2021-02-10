@@ -122,26 +122,13 @@ public class SharedConfig {
     public static int distanceSystemType;
 
     public static List<FakePasscode> fakePasscodes = new ArrayList<>();
-
-    /*
-    public static AccountChatsToRemove findAccountChatsToRemove(int accountNum) {
-        for (SharedConfig.AccountChatsToRemove acc : SharedConfig.accountChatsToRemove) {
-            if (acc.accountNum == accountNum) {
-                return acc;
-            }
+    private static class FakePasscodesWrapper {
+        public List<FakePasscode> fakePasscodes;
+        public FakePasscodesWrapper(List<FakePasscode> fakePasscodes) {
+            this.fakePasscodes = fakePasscodes;
         }
-        return null;
+        public FakePasscodesWrapper() {}
     }
-
-    public static ArrayList<Integer> findChatsToRemove(int accountNum) {
-        for (SharedConfig.AccountChatsToRemove acc : SharedConfig.accountChatsToRemove) {
-            if (acc.accountNum == accountNum) {
-                return acc.chatsToRemove;
-            }
-        }
-        return new ArrayList<>();
-    }
-    */
 
     static {
         loadConfig();
@@ -231,8 +218,9 @@ public class SharedConfig {
                 editor.putBoolean("disableVoiceAudioEffects", disableVoiceAudioEffects);
                 editor.putString("storageCacheDir", !TextUtils.isEmpty(storageCacheDir) ? storageCacheDir : "");
                 ObjectMapper mapper = new ObjectMapper();
-                mapper.activateDefaultTyping(mapper.getPolymorphicTypeValidator());
-                String fakePasscodesString = mapper.writeValueAsString(fakePasscodes);
+                mapper.enableDefaultTyping();
+                FakePasscodesWrapper wrapper = new FakePasscodesWrapper(fakePasscodes);
+                String fakePasscodesString = mapper.writeValueAsString(wrapper);
                 editor.putString("fakePasscodes", fakePasscodesString);
                 editor.commit();
             } catch (Exception e) {
@@ -276,8 +264,9 @@ public class SharedConfig {
             try {
                 String fakePasscodesString = preferences.getString("fakePasscodes", null);
                 ObjectMapper mapper = new ObjectMapper();
-                mapper.activateDefaultTyping(mapper.getPolymorphicTypeValidator());
-                fakePasscodes = mapper.readValue(fakePasscodesString, new TypeReference<ArrayList<FakePasscode>>(){});
+                mapper.enableDefaultTyping();
+                FakePasscodesWrapper wrapper = mapper.readValue(fakePasscodesString, FakePasscodesWrapper.class);
+                fakePasscodes = wrapper.fakePasscodes;
             } catch (Exception ignored) {
             }
 
@@ -434,7 +423,7 @@ public class SharedConfig {
                 System.arraycopy(passcodeSalt, 0, bytes, passcodeBytes.length + 16, 16);
                 String hash = Utilities.bytesToHex(Utilities.computeSHA256(bytes, 0, bytes.length));
                 for (FakePasscode fakePasscode : fakePasscodes) {
-                    if (fakePasscode.passcodeHash == hash) {
+                    if (fakePasscode.passcodeHash.equals(hash)) {
                         return new PasscodeCheckResult(false, fakePasscode);
                     }
                 }
