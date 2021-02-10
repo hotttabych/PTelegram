@@ -948,7 +948,7 @@ public class LocaleController {
                 switch (key) {
                     case "FakePasscode": value = "Ложный код-пароль"; break;
                     case "ChangeFakePasscode": value = "Сменить ложный код-пароль"; break;
-                    case "ChangeFakePasscodeInfo": value = "При вводе ложного кода-пароля отправляется SMS с указанным сообщением, и/или удаляются выбранные чаты."; break;
+                    case "ChangeFakePasscodeInfo": value = "При вводе ложного кода-пароля выполняются выбранные действия."; break;
                     case "AllowFakePasscodeLogin": value = "Разрешить вход c ложным паролем"; break;
                     case "FamilySosMessage": value = "SOS сообщение семьи"; break;
                     case "ChangeFamilySosPhoneNumber": value = "Изменить SOS номер телефона семьи"; break;

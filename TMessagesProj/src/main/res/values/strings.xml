@@ -4133,7 +4133,7 @@
     <string name="RemindDayYearAt">\'Remind on\' MMM d yyyy \'at\' HH:mm</string>
     <string name="FakePasscode">Fake Passcode</string>
     <string name="ChangeFakePasscode">Change Fake Passcode</string>
-    <string name="ChangeFakePasscodeInfo">When a fake password is entered, two SMSs are sent with the specified message to family and one trusted contact and then the selected chats are deleted.</string>
+    <string name="ChangeFakePasscodeInfo">When a fake password is entered, selected actions are performed.</string>
     <string name="AllowFakePasscodeLogin">Allow login using Fake Passcode</string>
     <string name="FamilySosMessage">Family SOS Message</string>
     <string name="ChangeFamilySosPhoneNumber">Change Family SOS Phone Number</string>
