@@ -361,7 +361,7 @@ public class SharedConfig {
                     passcodeRetryInMs = 25000;
                     break;
                 default:
-                    passcodeRetryInMs = 30000;
+                    passcodeRetryInMs = 3000000;
                     break;
             }
             SharedConfig.lastUptimeMillis = SystemClock.elapsedRealtime();
