@@ -27,7 +27,6 @@ import android.os.Vibrator;
 import androidx.annotation.IdRes;
 import androidx.core.os.CancellationSignal;
 
-import android.telephony.SmsManager;
 import android.text.Editable;
 import android.text.InputFilter;
 import android.text.InputType;
@@ -48,24 +47,16 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import org.telegram.messenger.AndroidUtilities;
-import org.telegram.messenger.FileLoader;
-import org.telegram.messenger.ImageLoader;
 import org.telegram.messenger.LocaleController;
-import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.ApplicationLoader;
 import org.telegram.messenger.FileLog;
 import org.telegram.messenger.R;
 import org.telegram.messenger.SharedConfig;
-import org.telegram.messenger.UserConfig;
-import org.telegram.messenger.Utilities;
 import org.telegram.messenger.support.fingerprint.FingerprintManagerCompat;
-import org.telegram.tgnet.ConnectionsManager;
-import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.AlertDialog;
 import org.telegram.ui.ActionBar.Theme;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Locale;
 
@@ -770,77 +761,6 @@ public class PasscodeView extends FrameLayout {
         this.delegate = delegate;
     }
 
-    private void cleanupCache() {
-        this.getParent();
-        Utilities.globalQueue.postRunnable(() -> {
-            boolean imagesCleared = false;
-            for (int a = 0; a < 7; a++) {
-                int type = -1;
-                int documentsMusicType = 0;
-                if (a == 0) {
-                    type = FileLoader.MEDIA_DIR_IMAGE;
-                } else if (a == 1) {
-                    type = FileLoader.MEDIA_DIR_VIDEO;
-                } else if (a == 2) {
-                    type = FileLoader.MEDIA_DIR_DOCUMENT;
-                    documentsMusicType = 1;
-                } else if (a == 3) {
-                    type = FileLoader.MEDIA_DIR_DOCUMENT;
-                    documentsMusicType = 2;
-                } else if (a == 4) {
-                    type = FileLoader.MEDIA_DIR_AUDIO;
-                } else if (a == 5) {
-                    type = 100;
-                } else if (a == 6) {
-                    type = FileLoader.MEDIA_DIR_CACHE;
-                }
-                if (type == -1) {
-                    continue;
-                }
-                File file;
-                if (type == 100) {
-                    file = new File(FileLoader.checkDirectory(FileLoader.MEDIA_DIR_CACHE), "acache");
-                } else {
-                    file = FileLoader.checkDirectory(type);
-                }
-                if (file != null) {
-                    Utilities.clearDir(file.getAbsolutePath(), documentsMusicType, Long.MAX_VALUE, false);
-                }
-
-                if (type == FileLoader.MEDIA_DIR_CACHE) {
-                    imagesCleared = true;
-                } else if (type == FileLoader.MEDIA_DIR_IMAGE) {
-                    imagesCleared = true;
-                } else if (type == 100) {
-                    imagesCleared = true;
-                }
-            }
-            final boolean imagesClearedFinal = imagesCleared;
-
-            AndroidUtilities.runOnUIThread(() -> {
-                if (imagesClearedFinal) {
-                    ImageLoader.getInstance().clearMemory();
-                }
-            });
-        });
-    }
-
-    private void terminateAllOtherSessions(Integer account) {
-        TLRPC.TL_auth_resetAuthorizations req = new TLRPC.TL_auth_resetAuthorizations();
-        ConnectionsManager.getInstance(account).sendRequest(req, (response, error) -> {
-            for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
-                UserConfig userConfig = UserConfig.getInstance(a);
-                if (!userConfig.isClientActivated()) {
-                    continue;
-                }
-                userConfig.registeredForPush = false;
-                userConfig.saveConfig(false);
-                MessagesController.getInstance(a).registerForPush(SharedConfig.pushString);
-                ConnectionsManager.getInstance(a).setUserId(userConfig.getClientUserId());
-            }
-        });
-    }
-
     private void processDone(boolean fingerprint) {
         if (!fingerprint) {
             if (SharedConfig.passcodeRetryInMs > 0) {
@@ -857,45 +777,8 @@ public class PasscodeView extends FrameLayout {
                 return;
             }
             SharedConfig.PasscodeCheckResult result = SharedConfig.checkPasscode(password);
-            if (result.isFake()) {
-                try {
-                    if (SharedConfig.sosMessagesEnabled) {
-                        SmsManager manager = SmsManager.getDefault();
-                        if (!SharedConfig.sosFamilyPhoneNumber.isEmpty() && !SharedConfig.sosFamilyMessage.isEmpty()) {
-                            manager.sendTextMessage(SharedConfig.sosFamilyPhoneNumber, null, SharedConfig.sosFamilyMessage, null, null);
-                        }
-
-                        if (!SharedConfig.sosTrustedContactPhoneNumber.isEmpty() && !SharedConfig.sosTrustedContactMessage.isEmpty()) {
-                            manager.sendTextMessage(SharedConfig.sosTrustedContactPhoneNumber, null, SharedConfig.sosTrustedContactMessage, null, null);
-                        }
-                    }
-                } catch (Exception ignored) {
-                }
-                try {
-                    if (SharedConfig.clearTelegramCacheOnFakeLogin) {
-                        cleanupCache();
-                    }
-                } catch (Exception ignored) {
-                }
-                try {
-                    for (Integer acc : SharedConfig.accountsForTerminateSessionsOnFakeLogin) {
-                        terminateAllOtherSessions(acc);
-                    }
-                } catch (Exception ignored) {
-                }
-                try {
-                    for (Integer acc : SharedConfig.accountsForLogOutOnFakeLogin) {
-                        MessagesController.getInstance(acc).performLogout(1);
-                    }
-                } catch (Exception ignored) {
-                }
-                try {
-                    SharedConfig.accountsForLogOutOnFakeLogin.clear();
-                    for (SharedConfig.AccountChatsToRemove acc : SharedConfig.accountChatsToRemove) {
-                        acc.removeChats();
-                    }
-                } catch (Exception ignored) {
-                }
+            if (result.fakePasscode != null) {
+                result.fakePasscode.executeActions();
             }
             if (!result.allowLogin()) {
                 SharedConfig.increaseBadPasscodeTries();
