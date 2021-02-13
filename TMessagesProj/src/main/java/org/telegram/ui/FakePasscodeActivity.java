@@ -328,6 +328,7 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
                     } else {
                         TextCheckCell cell = (TextCheckCell) view;
                         fakePasscode.familySosMessageAction.enabled = !fakePasscode.familySosMessageAction.enabled;
+                        SharedConfig.saveConfig();
                         cell.setChecked(fakePasscode.familySosMessageAction.enabled);
                         updateRows();
                         if (listAdapter != null) {
@@ -442,6 +443,7 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
                         fakePasscode.terminateOtherSessionsActions = fakePasscode.terminateOtherSessionsActions.stream()
                                 .filter(a -> a.accountNum != currentAccount).collect(Collectors.toCollection(ArrayList::new));
                     }
+                    SharedConfig.saveConfig();
                     updateRows();
                     if (listAdapter != null) {
                         listAdapter.notifyDataSetChanged();
@@ -460,6 +462,7 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
                         fakePasscode.logOutActions = fakePasscode.logOutActions.stream()
                                 .filter(a -> a.accountNum != currentAccount).collect(Collectors.toCollection(ArrayList::new));
                     }
+                    SharedConfig.saveConfig();
                     updateRows();
                     if (listAdapter != null) {
                         listAdapter.notifyDataSetChanged();
