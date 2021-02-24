@@ -327,7 +327,7 @@ public class SharedConfig {
             badPasscodeTries = preferences.getInt("badPasscodeTries", 0);
             autoLockIn = preferences.getInt("autoLockIn", 60 * 60);
             lastPauseTime = preferences.getInt("lastPauseTime", 0);
-            useFingerprint = preferences.getBoolean("useFingerprint", true);
+            useFingerprint = preferences.getBoolean("useFingerprint", false);
             lastUpdateVersion = preferences.getString("lastUpdateVersion2", "3.5");
             allowScreenCapture = preferences.getBoolean("allowScreenCapture", false);
             lastLocalId = preferences.getInt("lastLocalId", -210000);
@@ -521,7 +521,7 @@ public class SharedConfig {
         passcodeSalt = new byte[0];
         autoLockIn = 60 * 60;
         lastPauseTime = 0;
-        useFingerprint = true;
+        useFingerprint = false;
         isWaitingForPasscodeEnter = false;
         allowScreenCapture = false;
         lastUpdateVersion = BuildVars.BUILD_VERSION_STRING;

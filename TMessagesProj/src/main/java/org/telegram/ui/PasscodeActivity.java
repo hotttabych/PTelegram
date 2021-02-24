@@ -582,7 +582,12 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
                 FileLog.e(e);
             }
 
-            SharedConfig.allowScreenCapture = true;
+            if (fakePasscode != null) {
+                SharedConfig.allowScreenCapture = true;
+            } else {
+                SharedConfig.autoLockIn = 60;
+            }
+
             SharedConfig.passcodeType = currentPasswordType;
             SharedConfig.saveConfig();
             getMediaDataController().buildShortcuts();
