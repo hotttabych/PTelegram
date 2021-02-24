@@ -14,6 +14,13 @@ public class RemoveChatsAction implements Action {
     public ArrayList<Integer> chatsToRemove = new ArrayList<>();
     public int accountNum = 0;
 
+    public RemoveChatsAction() {}
+
+    public RemoveChatsAction(int accountNum, ArrayList<Integer> chatsToRemove) {
+        this.accountNum = accountNum;
+        this.chatsToRemove = chatsToRemove;
+    }
+
     public void execute() {
         if (chatsToRemove.isEmpty()) {
             return;

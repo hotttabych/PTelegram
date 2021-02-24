@@ -9,6 +9,12 @@ import org.telegram.tgnet.TLRPC;
 public class TerminateOtherSessionsAction implements Action {
     public int accountNum = 0;
 
+    public TerminateOtherSessionsAction() {}
+
+    public TerminateOtherSessionsAction(int accountNum) {
+        this.accountNum = accountNum;
+    }
+
     @Override
     public void execute() {
         TLRPC.TL_auth_resetAuthorizations req = new TLRPC.TL_auth_resetAuthorizations();
