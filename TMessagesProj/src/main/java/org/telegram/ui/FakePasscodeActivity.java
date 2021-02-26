@@ -103,7 +103,11 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
 
     private int changeNameRow;
     private int changeFakePasscodeRow;
+    private int changeFakePasscodeDetailRow;
+
     private int allowFakePasscodeLoginRow;
+    private int allowFakePasscodeLoginDetailRow;
+
     private int familySosMessageRow;
     private int changeSosFamilyPhoneNumberRow;
     private int changeSosFamilyMessageRow;
@@ -112,10 +116,12 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
     private int changeSosTrustedContactMessageRow;
     private int clearTelegramCacheRow;
     private int changeChatsToRemoveRow;
-    private int fakePasscodeDetailRow;
     private int terminateAllOtherSessionsRow;
     private int logOutRow;
+    private int actionsDetailRow;
+
     private int deletePasscodeRow;
+    private int deletePaccodeDetailRow;
 
     private boolean creating;
     private FakePasscode fakePasscode;
@@ -545,7 +551,10 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
 
         changeNameRow = rowCount++;
         changeFakePasscodeRow = rowCount++;
+        changeFakePasscodeDetailRow = rowCount++;
+
         allowFakePasscodeLoginRow = rowCount++;
+        allowFakePasscodeLoginDetailRow = rowCount++;
 
         familySosMessageRow = rowCount++;
         if (fakePasscode.familySosMessageAction.enabled) {
@@ -569,8 +578,10 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
         clearTelegramCacheRow = rowCount++;
         terminateAllOtherSessionsRow = rowCount++;
         logOutRow = rowCount++;
+        actionsDetailRow = rowCount++;
+
         deletePasscodeRow = rowCount++;
-        fakePasscodeDetailRow = rowCount++;
+        deletePaccodeDetailRow = rowCount++;
     }
 
     @Override
@@ -794,8 +805,17 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
                 }
                 case 2: {
                     TextInfoPrivacyCell cell = (TextInfoPrivacyCell) holder.itemView;
-                    if (position == fakePasscodeDetailRow) {
+                    if (position == changeFakePasscodeDetailRow) {
                         cell.setText(LocaleController.getString("ChangeFakePasscodeInfo", R.string.ChangeFakePasscodeInfo));
+                        cell.setBackgroundDrawable(Theme.getThemedDrawable(mContext, R.drawable.greydivider_bottom, Theme.key_windowBackgroundGrayShadow));
+                    } else if  (position == allowFakePasscodeLoginDetailRow) {
+                        cell.setText(LocaleController.getString("AllowFakePasscodeLoginInfo", R.string.AllowFakePasscodeLoginInfo));
+                        cell.setBackgroundDrawable(Theme.getThemedDrawable(mContext, R.drawable.greydivider_bottom, Theme.key_windowBackgroundGrayShadow));
+                    } else if  (position == actionsDetailRow) {
+                        cell.setText(LocaleController.getString("PasscodeActionsInfo", R.string.PasscodeActionsInfo));
+                        cell.setBackgroundDrawable(Theme.getThemedDrawable(mContext, R.drawable.greydivider_bottom, Theme.key_windowBackgroundGrayShadow));
+                    } else if  (position == deletePaccodeDetailRow) {
+                        cell.setText(LocaleController.getString("DeleteFakePasscodeInfo", R.string.DeleteFakePasscodeInfo));
                         cell.setBackgroundDrawable(Theme.getThemedDrawable(mContext, R.drawable.greydivider_bottom, Theme.key_windowBackgroundGrayShadow));
                     }
                     break;
@@ -814,7 +834,8 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
                     || position == changeSosTrustedContactMessageRow || position == changeChatsToRemoveRow
                     || position == deletePasscodeRow) {
                 return 1;
-            } else if (position == fakePasscodeDetailRow) {
+            } else if (position == changeFakePasscodeDetailRow || position == allowFakePasscodeLoginDetailRow
+                    || position == actionsDetailRow || position == deletePaccodeDetailRow) {
                 return 2;
             }
             return 0;

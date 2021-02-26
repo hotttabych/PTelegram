@@ -948,7 +948,7 @@ public class LocaleController {
                 switch (key) {
                     case "FakePasscode": value = "Ложный код-пароль"; break;
                     case "ChangeFakePasscode": value = "Сменить ложный код-пароль"; break;
-                    case "ChangeFakePasscodeInfo": value = "⚠️ При вводе ложного кода-пароля выполняются выбранные действия."; break;
+                    case "PasscodeActionsInfo": value = "При вводе ложного кода-пароля выполняются выбранные действия."; break;
                     case "AllowFakePasscodeLogin": value = "Разрешить вход c ложным паролем"; break;
                     case "FamilySosMessage": value = "SOS сообщение семьи"; break;
                     case "ChangeFamilySosPhoneNumber": value = "Изменить SOS номер телефона семьи"; break;
@@ -965,6 +965,9 @@ public class LocaleController {
                     case "ChangeFakePasscodeName": value = "Изменить название"; break;
                     case "AreYouSureDeleteFakePasscode": value = "Вы точно хотите удалить этот ложный код-пароль?"; break;
                     case "PasscodeUsed": value = "Этот код-пароль уже используется"; break;
+                    case "ChangeFakePasscodeInfo": value = "Вы можете изменить ложный код-пароль, не удаляя его."; break;
+                    case "AllowFakePasscodeLoginInfo": value = "Вы можете запретить вход с этим ложным кодом-паролем. В таком случае злоумышленник не получит доступ к аккаунтуам, но действия будут выполнены."; break;
+                    case "DeleteFakePasscodeInfo": value = "Если Вы удалите ложный код-пароль, все действия будут очищены. Вы можете изменить код-пароль, если не хотите удалять его."; break;
                 }
             }
             if (value == null) {
