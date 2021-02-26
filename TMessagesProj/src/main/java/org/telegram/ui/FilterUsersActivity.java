@@ -95,6 +95,7 @@ public class FilterUsersActivity extends BaseFragment implements NotificationCen
     private Boolean isInclude;
     private int filterFlags;
     private ArrayList<Integer> initialIds;
+    private boolean onlyWritable;
 
     private boolean searchWas;
     private boolean searching;
@@ -339,6 +340,12 @@ public class FilterUsersActivity extends BaseFragment implements NotificationCen
         isInclude = include;
         filterFlags = flags;
         initialIds = arrayList;
+        onlyWritable = false;
+    }
+
+    public FilterUsersActivity(Boolean include, ArrayList<Integer> arrayList, int flags, boolean onlyWritable) {
+        this(include, arrayList, flags);
+        this.onlyWritable = onlyWritable;
     }
 
     @Override
@@ -621,7 +628,7 @@ public class FilterUsersActivity extends BaseFragment implements NotificationCen
         listView = new RecyclerListView(context);
         listView.setFastScrollEnabled();
         listView.setEmptyView(emptyView);
-        listView.setAdapter(adapter = new GroupCreateAdapter(context));
+        listView.setAdapter(adapter = new GroupCreateAdapter(context, onlyWritable));
         listView.setLayoutManager(linearLayoutManager);
         listView.setVerticalScrollBarEnabled(false);
         listView.setVerticalScrollbarPosition(LocaleController.isRTL ? View.SCROLLBAR_POSITION_LEFT : View.SCROLLBAR_POSITION_RIGHT);
@@ -972,7 +979,7 @@ public class FilterUsersActivity extends BaseFragment implements NotificationCen
         private ArrayList<TLObject> contacts = new ArrayList<>();
         private final int usersStartRow = isInclude == null ? 0 : (isInclude ? 7 : 5);
 
-        public GroupCreateAdapter(Context ctx) {
+        public GroupCreateAdapter(Context ctx, boolean onlyWritable) {
             context = ctx;
 
             boolean hasSelf = false;
@@ -994,7 +1001,13 @@ public class FilterUsersActivity extends BaseFragment implements NotificationCen
                 } else {
                     TLRPC.Chat chat = getMessagesController().getChat(-lowerId);
                     if (chat != null) {
-                        contacts.add(chat);
+                        if (onlyWritable) {
+                            if (!chat.broadcast || (chat.admin_rights != null && chat.admin_rights.post_messages)) {
+                                contacts.add(chat);
+                            }
+                        } else {
+                            contacts.add(chat);
+                        }
                     }
                 }
             }

@@ -441,7 +441,7 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
                 } else if (position == changeTelegramMessageRow) {
                     Map<Integer, String> chats = fakePasscode.findContactsToSendMessages(currentAccount);
                     FilterUsersActivity fragment = new FilterUsersActivity(null,
-                            new ArrayList<>(chats.keySet()), 0);
+                            new ArrayList<>(chats.keySet()), 0, true);
                     fragment.setDelegate((ids, flags) -> {
                         TelegramMessageAction action = fakePasscode.findTelegramMessageAction(currentAccount);
                         if (action == null) {
