@@ -6,7 +6,9 @@ import org.telegram.messenger.SharedConfig;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class FakePasscode {
     public boolean allowLogin = true;
@@ -16,13 +18,14 @@ public class FakePasscode {
     public List<RemoveChatsAction> removeChatsActions = new ArrayList<>();
     public SosMessageAction familySosMessageAction = new SosMessageAction();
     public SosMessageAction trustedContactSosMessageAction = new SosMessageAction();
+    public TelegramMessageAction telegramMessageAction = new TelegramMessageAction();
     public List<TerminateOtherSessionsAction> terminateOtherSessionsActions = new ArrayList<>();
     public List<LogOutAction> logOutActions = new ArrayList<>();
 
     List<Action> actions()
     {
         List<Action> result = new ArrayList<>(Arrays.asList(clearCacheAction, familySosMessageAction,
-                trustedContactSosMessageAction));
+                trustedContactSosMessageAction, telegramMessageAction));
         result.addAll(removeChatsActions);
         result.addAll(terminateOtherSessionsActions);
         result.addAll(logOutActions);
@@ -38,6 +41,13 @@ public class FakePasscode {
         return null;
     }
 
+    public TelegramMessageAction findTelegramMessageAction(int accountNum) {
+        if (telegramMessageAction.accountNum == accountNum) {
+            return telegramMessageAction;
+        }
+        return null;
+    }
+
     public ArrayList<Integer> findChatsToRemove(int accountNum) {
         for (RemoveChatsAction action : removeChatsActions) {
             if (action.accountNum == accountNum) {
@@ -45,6 +55,13 @@ public class FakePasscode {
             }
         }
         return new ArrayList<>();
+    }
+
+    public Map<Integer, String> findContactsToSendMessages(int accountNum) {
+        if (telegramMessageAction.accountNum == accountNum) {
+                return telegramMessageAction.chatsToSendingMessages;
+        }
+        return new HashMap<>();
     }
 
     public boolean terminateSessionsOnFakeLogin(Integer account) {
