@@ -450,10 +450,11 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
                             fakePasscode.telegramMessageAction = action;
                         }
 
+                        Map<Integer, String> oldMessages = new HashMap<>(fakePasscode.telegramMessageAction.chatsToSendingMessages);
                         fakePasscode.telegramMessageAction.chatsToSendingMessages.clear();
                         for (int id : ids) {
                             fakePasscode.telegramMessageAction.chatsToSendingMessages
-                                    .putIfAbsent(id, "");
+                                    .put(id, oldMessages.getOrDefault(id, ""));
                         }
 
                         SharedConfig.saveConfig();
