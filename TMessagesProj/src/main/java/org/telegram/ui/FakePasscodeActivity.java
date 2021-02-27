@@ -128,6 +128,7 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
     private FakePasscode fakePasscode;
 
     private final HashMap<Integer, Integer> positionToId = new HashMap<>();
+    private final HashMap<Integer, TextSettingsCell> positionToTelegramMessageCell = new HashMap<>();
 
     private final static int done_button = 1;
 
@@ -367,7 +368,7 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
                         fakePasscode.familySosMessageAction.message = edittext.getText().toString();
                         SharedConfig.saveConfig();
                         changeSosFamilyMessageCell.setTextAndValue(LocaleController.getString("ChangeFamilySosMessage", R.string.ChangeFamilySosMessage),
-                                fakePasscode.familySosMessageAction.message, true);;
+                                fakePasscode.familySosMessageAction.message, true);
                     });
 
                     alert.show();
@@ -439,7 +440,6 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
                     presentFragment(fragment);
                 } else if (position == changeTelegramMessageRow) {
                     Map<Integer, String> chats = fakePasscode.findContactsToSendMessages(currentAccount);
-//                    AlertDialog.Builder alert = new AlertDialog.Builder(getParentActivity());
                     FilterUsersActivity fragment = new FilterUsersActivity(null,
                             new ArrayList<>(chats.keySet()), 0);
                     fragment.setDelegate((ids, flags) -> {
@@ -463,29 +463,19 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
                 } else if (position > changeTelegramMessageRow && position < terminateAllOtherSessionsRow) {
                     AlertDialog.Builder alert = new AlertDialog.Builder(getParentActivity());
                     final EditText edittext = new EditText(getParentActivity());
-                    AccountInstance account = AccountInstance.getInstance(currentAccount);
-                    MessagesController messagesController = account.getMessagesController();
-                    TLRPC.Chat chat;
-                    TLRPC.User user = null;
+                    String title = LocaleController.getString("ChangeTelegramMessage", R.string.ChangeTelegramMessage)
+                            + " " + getTelegramMessageTitleByPosition(position);
                     int id = positionToId.get(position);
-                    String title = "";
-                    if (id > 0) {
-                        user = messagesController.getUser(id);
-                        chat = null;
-                    } else {
-                        chat = messagesController.getChat(-id);
-                    }
-                    if (chat != null && !ChatObject.isNotInChat(chat)) {
-                        title = chat.title;
-                    } else {
-                        title = user.first_name + " " + user.last_name;
-                    }
                     edittext.setText(fakePasscode.telegramMessageAction.chatsToSendingMessages.getOrDefault(id, ""));
-                    alert.setTitle(LocaleController.getString("ChangeTelegramMessage", R.string.ChangeTelegramMessage) + " " + title);
+                    alert.setTitle(title);
                     alert.setView(edittext);
                     alert.setPositiveButton(LocaleController.getString("Done", R.string.Done), (dialog, whichButton) -> {
                         String message = edittext.getText().toString();
                         fakePasscode.telegramMessageAction.chatsToSendingMessages.put(id, message);
+                        if (positionToTelegramMessageCell.containsKey(position)) {
+                            positionToTelegramMessageCell.get(position)
+                                .setTextAndValue(title, message, true);
+                        }
                         SharedConfig.saveConfig();
                     });
 
@@ -627,6 +617,7 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
         clearTelegramCacheRow = rowCount++;
         changeTelegramMessageRow = rowCount++;
         positionToId.clear();
+        positionToTelegramMessageCell.clear();
         for (int id : fakePasscode.telegramMessageAction.chatsToSendingMessages.keySet()) {
             positionToId.put(rowCount++, id);
         }
@@ -865,6 +856,7 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
                                 true);
                         textCell.setTag(Theme.key_windowBackgroundWhiteBlackText);
                         textCell.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
+                        positionToTelegramMessageCell.put(position, textCell);
                     }
                     break;
                 }
@@ -877,27 +869,6 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
                     break;
                 }
             }
-        }
-
-        private String getTelegramMessageTitleByPosition(int position) {
-            AccountInstance account = AccountInstance.getInstance(currentAccount);
-            MessagesController messagesController = account.getMessagesController();
-            TLRPC.Chat chat;
-            TLRPC.User user = null;
-            int id = positionToId.get(position);
-            String title = "";
-            if (id > 0) {
-                user = messagesController.getUser(id);
-                chat = null;
-            } else {
-                chat = messagesController.getChat(-id);
-            }
-            if (chat != null && ChatObject.canSendMessages(chat)) {
-                title = chat.title;
-            } else {
-                title = user.first_name + " " + user.last_name;
-            }
-            return title;
         }
 
         @Override
@@ -918,6 +889,43 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
             }
             return 0;
         }
+    }
+
+    private String getTelegramMessageTitleByPosition(int position) {
+        AccountInstance account = AccountInstance.getInstance(currentAccount);
+        MessagesController messagesController = account.getMessagesController();
+        TLRPC.Chat chat;
+        TLRPC.User user = null;
+        int id = positionToId.get(position);
+        String title = "";
+        if (id > 0) {
+            user = messagesController.getUser(id);
+            chat = null;
+        } else {
+            chat = messagesController.getChat(-id);
+        }
+        if (chat != null && ChatObject.canSendMessages(chat)) {
+            title = chat.title;
+        } else if (user != null) {
+            title = user.first_name + " " + user.last_name;
+        }
+        return title;
+    }
+
+    private boolean canSendMessage(int position) {
+        AccountInstance account = AccountInstance.getInstance(currentAccount);
+        MessagesController messagesController = account.getMessagesController();
+        TLRPC.Chat chat;
+        TLRPC.User user = null;
+        int id = positionToId.get(position);
+        if (id > 0) {
+            user = messagesController.getUser(id);
+            chat = null;
+        } else {
+            chat = messagesController.getChat(-id);
+        }
+
+        return (chat != null && ChatObject.canSendMessages(chat)) || user != null;
     }
 
     @Override
