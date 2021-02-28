@@ -443,17 +443,11 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
                     FilterUsersActivity fragment = new FilterUsersActivity(null,
                             new ArrayList<>(chats.keySet()), 0, true);
                     fragment.setDelegate((ids, flags) -> {
-                        TelegramMessageAction action = fakePasscode.findTelegramMessageAction(currentAccount);
-                        if (action == null) {
-                            action = new TelegramMessageAction();
-                            action.accountNum = currentAccount;
-                            fakePasscode.telegramMessageAction = action;
-                        }
-
-                        Map<Integer, String> oldMessages = new HashMap<>(fakePasscode.telegramMessageAction.chatsToSendingMessages);
-                        fakePasscode.telegramMessageAction.chatsToSendingMessages.clear();
+                        TelegramMessageAction action = fakePasscode.findOrAddTelegramMessageAction(currentAccount);
+                        Map<Integer, String> oldMessages = new HashMap<>(action.chatsToSendingMessages);
+                        action.chatsToSendingMessages.clear();
                         for (int id : ids) {
-                            fakePasscode.telegramMessageAction.chatsToSendingMessages
+                            action.chatsToSendingMessages
                                     .put(id, oldMessages.getOrDefault(id, ""));
                         }
 
@@ -462,17 +456,18 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
                     });
                     presentFragment(fragment);
                 } else if (position > changeTelegramMessageRow && position < terminateAllOtherSessionsRow) {
+                    TelegramMessageAction action = fakePasscode.findTelegramMessageAction(currentAccount);
                     AlertDialog.Builder alert = new AlertDialog.Builder(getParentActivity());
                     final EditText edittext = new EditText(getParentActivity());
                     String title = LocaleController.getString("ChangeTelegramMessage", R.string.ChangeTelegramMessage)
                             + " " + getTelegramMessageTitleByPosition(position);
                     int id = positionToId.get(position);
-                    edittext.setText(fakePasscode.telegramMessageAction.chatsToSendingMessages.getOrDefault(id, ""));
+                    edittext.setText(action.chatsToSendingMessages.getOrDefault(id, ""));
                     alert.setTitle(title);
                     alert.setView(edittext);
                     alert.setPositiveButton(LocaleController.getString("Done", R.string.Done), (dialog, whichButton) -> {
                         String message = edittext.getText().toString();
-                        fakePasscode.telegramMessageAction.chatsToSendingMessages.put(id, message);
+                        action.chatsToSendingMessages.put(id, message);
                         if (positionToTelegramMessageCell.containsKey(position)) {
                             positionToTelegramMessageCell.get(position)
                                 .setTextAndValue(title, message, true);
@@ -619,7 +614,8 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
         changeTelegramMessageRow = rowCount++;
         positionToId.clear();
         positionToTelegramMessageCell.clear();
-        for (int id : fakePasscode.telegramMessageAction.chatsToSendingMessages.keySet()) {
+        TelegramMessageAction action = fakePasscode.findOrAddTelegramMessageAction(currentAccount);
+        for (int id : action.chatsToSendingMessages.keySet()) {
             positionToId.put(rowCount++, id);
         }
         terminateAllOtherSessionsRow = rowCount++;
@@ -852,8 +848,9 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
                         textCell.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteRedText2));
                     } else if (position > changeTelegramMessageRow && position < terminateAllOtherSessionsRow) {
                         String title = getTelegramMessageTitleByPosition(position);
+                        TelegramMessageAction action = fakePasscode.findOrAddTelegramMessageAction(currentAccount);
                         textCell.setTextAndValue(LocaleController.getString("ChangeTelegramMessage", R.string.ChangeTelegramMessage) + " " + title,
-                                fakePasscode.telegramMessageAction.chatsToSendingMessages.getOrDefault(positionToId.get(position), ""),
+                                action.chatsToSendingMessages.getOrDefault(positionToId.get(position), ""),
                                 true);
                         textCell.setTag(Theme.key_windowBackgroundWhiteBlackText);
                         textCell.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
@@ -908,7 +905,13 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
         if (chat != null && ChatObject.canSendMessages(chat)) {
             title = chat.title;
         } else if (user != null) {
-            title = user.first_name + " " + user.last_name;
+            if (user.first_name != null && user.last_name != null) {
+                title = user.first_name + " " + user.last_name;
+            } else if (user.first_name != null) {
+                title = user.first_name;
+            } else if (user.last_name != null) {
+                title = user.last_name;
+            }
         }
         return title;
     }

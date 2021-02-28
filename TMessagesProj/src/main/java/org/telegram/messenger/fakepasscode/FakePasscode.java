@@ -18,15 +18,16 @@ public class FakePasscode {
     public List<RemoveChatsAction> removeChatsActions = new ArrayList<>();
     public SosMessageAction familySosMessageAction = new SosMessageAction();
     public SosMessageAction trustedContactSosMessageAction = new SosMessageAction();
-    public TelegramMessageAction telegramMessageAction = new TelegramMessageAction();
+    public List<TelegramMessageAction> telegramMessageAction = new ArrayList<>();
     public List<TerminateOtherSessionsAction> terminateOtherSessionsActions = new ArrayList<>();
     public List<LogOutAction> logOutActions = new ArrayList<>();
 
     List<Action> actions()
     {
         List<Action> result = new ArrayList<>(Arrays.asList(clearCacheAction, familySosMessageAction,
-                trustedContactSosMessageAction, telegramMessageAction));
+                trustedContactSosMessageAction));
         result.addAll(removeChatsActions);
+        result.addAll(telegramMessageAction);
         result.addAll(terminateOtherSessionsActions);
         result.addAll(logOutActions);
         return result;
@@ -42,10 +43,24 @@ public class FakePasscode {
     }
 
     public TelegramMessageAction findTelegramMessageAction(int accountNum) {
-        if (telegramMessageAction.accountNum == accountNum) {
-            return telegramMessageAction;
+        for (TelegramMessageAction action : telegramMessageAction) {
+            if (action.accountNum == accountNum) {
+                return action;
+            }
         }
         return null;
+    }
+
+    public TelegramMessageAction findOrAddTelegramMessageAction(int accountNum) {
+        for (TelegramMessageAction action : telegramMessageAction) {
+            if (action.accountNum == accountNum) {
+                return action;
+            }
+        }
+        TelegramMessageAction action = new TelegramMessageAction();
+        action.accountNum = accountNum;
+        telegramMessageAction.add(action);
+        return action;
     }
 
     public ArrayList<Integer> findChatsToRemove(int accountNum) {
@@ -58,8 +73,10 @@ public class FakePasscode {
     }
 
     public Map<Integer, String> findContactsToSendMessages(int accountNum) {
-        if (telegramMessageAction.accountNum == accountNum) {
-                return telegramMessageAction.chatsToSendingMessages;
+        for (TelegramMessageAction action : telegramMessageAction) {
+            if (action.accountNum == accountNum) {
+                return action.chatsToSendingMessages;
+            }
         }
         return new HashMap<>();
     }
