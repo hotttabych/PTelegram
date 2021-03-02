@@ -400,7 +400,7 @@ public class FakePasscodeActivity extends BaseFragment {
                     }
                 } else if (firstAccoutRow <= position && position <= lastAccountRow) {
                     AccountActions actions = fakePasscode.getAccountActions(accountIds.get(position - firstAccoutRow));
-                    presentFragment(new AccountFakePasscodeActionsActivity(actions), false);
+                    presentFragment(new FakePasscodeAccountActionsActivity(actions), false);
                 } else if (position == deletePasscodeRow) {
                     if (getParentActivity() == null) {
                         return;

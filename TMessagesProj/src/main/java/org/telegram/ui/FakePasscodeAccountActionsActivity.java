@@ -36,11 +36,10 @@ import java.util.ArrayList;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-public class AccountFakePasscodeActionsActivity extends BaseFragment {
+public class FakePasscodeAccountActionsActivity extends BaseFragment {
 
     private ListAdapter listAdapter;
     private RecyclerListView listView;
-    private TextView titleTextView;
 
     AccountActions actions;
 
@@ -51,7 +50,7 @@ public class AccountFakePasscodeActionsActivity extends BaseFragment {
     private int logOutRow;
     private int actionsDetailRow;
 
-    public AccountFakePasscodeActionsActivity(AccountActions actions) {
+    public FakePasscodeAccountActionsActivity(AccountActions actions) {
         super();
         this.actions = actions;
     }
@@ -266,8 +265,6 @@ public class AccountFakePasscodeActionsActivity extends BaseFragment {
         themeDescriptions.add(new ThemeDescription(listView, ThemeDescription.FLAG_SELECTOR, null, null, null, null, Theme.key_listSelector));
 
         themeDescriptions.add(new ThemeDescription(listView, 0, new Class[]{View.class}, Theme.dividerPaint, null, null, Theme.key_divider));
-
-        themeDescriptions.add(new ThemeDescription(titleTextView, ThemeDescription.FLAG_TEXTCOLOR, null, null, null, null, Theme.key_windowBackgroundWhiteGrayText6));
 
         themeDescriptions.add(new ThemeDescription(listView, 0, new Class[]{TextCheckCell.class}, new String[]{"textView"}, null, null, null, Theme.key_windowBackgroundWhiteBlackText));
         themeDescriptions.add(new ThemeDescription(listView, 0, new Class[]{TextCheckCell.class}, new String[]{"checkBox"}, null, null, null, Theme.key_switchTrack));
