@@ -959,8 +959,8 @@ public class LocaleController {
                     case "ChatsToRemove": value = "Чаты для удаления"; break;
                     case "ClearTelegramCacheOnFakeLogin": value = "Очищать кэш Telegram"; break;
                     case "AddFakePasscode": value = "Добавить ложный код-пароль"; break;
-                    case "TerminateAllOtherSessionsOnFakeLogin": value = "Завершить все другие сеансы для этого аккаунта"; break;
-                    case "LogOutOnFakeLogin": value = "Выйти из этого аккаунта"; break;
+                    case "TerminateAllOtherSessionsOnFakeLogin": value = "Завершать все другие сеансы"; break;
+                    case "LogOutOnFakeLogin": value = "Выходить из аккаунта"; break;
                     case "DeleteFakePasscode": value = "Удалить ложный код-пароль"; break;
                     case "ChangeFakePasscodeName": value = "Изменить название"; break;
                     case "AreYouSureDeleteFakePasscode": value = "Вы точно хотите удалить этот ложный код-пароль?"; break;
@@ -969,6 +969,9 @@ public class LocaleController {
                     case "AllowFakePasscodeLoginInfo": value = "Вы можете запретить вход с этим ложным кодом-паролем. В таком случае злоумышленник не получит доступ к аккаунтуам, но действия будут выполнены."; break;
                     case "DeleteFakePasscodeInfo": value = "Если Вы удалите ложный код-пароль, все действия будут очищены. Вы можете изменить код-пароль, если не хотите удалять его."; break;
                     case "FakePasscodeAccountActionsInfo": value = "Вы можете настроить некоторые действия для конкретных аккаунтов."; break;
+                    case "FakePasscodeActionsHeader": value = "Действия"; break;
+                    case "FakePasscodeAccountsHeader": value = "Действия для аккаунтов"; break;
+                    case "FakePasscodes": value = "Ложные коды-пароли"; break;
                 }
             }
             if (value == null) {

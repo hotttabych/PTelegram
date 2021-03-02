@@ -51,6 +51,7 @@ import org.telegram.ui.ActionBar.BaseFragment;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.ActionBar.ThemeDescription;
 import org.telegram.ui.Cells.DrawerUserCell;
+import org.telegram.ui.Cells.HeaderCell;
 import org.telegram.ui.Cells.TextCheckCell;
 import org.telegram.ui.Cells.TextInfoPrivacyCell;
 import org.telegram.ui.Cells.TextSettingsCell;
@@ -96,6 +97,7 @@ public class FakePasscodeActivity extends BaseFragment {
     private int allowFakePasscodeLoginRow;
     private int allowFakePasscodeLoginDetailRow;
 
+    private int actionsHeaderRow;
     private int familySosMessageRow;
     private int changeSosFamilyPhoneNumberRow;
     private int changeSosFamilyMessageRow;
@@ -105,6 +107,7 @@ public class FakePasscodeActivity extends BaseFragment {
     private int clearTelegramCacheRow;
     private int actionsDetailRow;
 
+    private int accountHeaderRow;
     private int firstAccoutRow;
     private int lastAccountRow;
     private int accountDetailRow;
@@ -473,6 +476,7 @@ public class FakePasscodeActivity extends BaseFragment {
         allowFakePasscodeLoginRow = rowCount++;
         allowFakePasscodeLoginDetailRow = rowCount++;
 
+        actionsHeaderRow = rowCount++;
         familySosMessageRow = rowCount++;
         if (fakePasscode.familySosMessageAction.enabled) {
             changeSosFamilyPhoneNumberRow = rowCount++;
@@ -494,6 +498,7 @@ public class FakePasscodeActivity extends BaseFragment {
         clearTelegramCacheRow = rowCount++;
         actionsDetailRow = rowCount++;
 
+        accountHeaderRow = rowCount++;
         firstAccoutRow = rowCount;
         lastAccountRow = firstAccoutRow - 1;
         for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
@@ -650,8 +655,13 @@ public class FakePasscodeActivity extends BaseFragment {
                     view = new TextInfoPrivacyCell(mContext);
                     break;
                 case 3:
-                default:
                     view = new DrawerUserCell(mContext);
+                    view.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundWhite));
+                    break;
+                case 4:
+                default:
+                    view = new HeaderCell(mContext);
+                    view.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundWhite));
                     break;
             }
             return new RecyclerListView.Holder(view);
@@ -741,8 +751,16 @@ public class FakePasscodeActivity extends BaseFragment {
                 case 3: {
                     DrawerUserCell cell = (DrawerUserCell) holder.itemView;
                     cell.setAccount(accountIds.get(position - firstAccoutRow));
-                    cell.setBackgroundDrawable(Theme.getThemedDrawable(mContext, R.drawable.greydivider_bottom, Theme.key_windowBackgroundWhiteGrayText7));
+                    cell.hideCheckbox();
                     break;
+                }
+                case 4: {
+                    HeaderCell headerCell = (HeaderCell) holder.itemView;
+                    if (position == actionsHeaderRow) {
+                        headerCell.setText(LocaleController.getString("FakePasscodeActionsHeader", R.string.FakePasscodeActionsHeader));
+                    } else if (position == accountHeaderRow) {
+                        headerCell.setText(LocaleController.getString("FakePasscodeAccountsHeader", R.string.FakePasscodeAccountsHeader));
+                    }
                 }
             }
         }
@@ -761,6 +779,8 @@ public class FakePasscodeActivity extends BaseFragment {
                 return 2;
             } else if (firstAccoutRow <= position && position <= lastAccountRow) {
                 return 3;
+            } else if (position == actionsHeaderRow || position == accountHeaderRow) {
+                return 4;
             }
             return 0;
         }
@@ -770,7 +790,7 @@ public class FakePasscodeActivity extends BaseFragment {
     public ArrayList<ThemeDescription> getThemeDescriptions() {
         ArrayList<ThemeDescription> themeDescriptions = new ArrayList<>();
 
-        themeDescriptions.add(new ThemeDescription(listView, ThemeDescription.FLAG_CELLBACKGROUNDCOLOR, new Class[]{TextCheckCell.class, TextSettingsCell.class}, null, null, null, Theme.key_windowBackgroundWhite));
+        themeDescriptions.add(new ThemeDescription(listView, ThemeDescription.FLAG_CELLBACKGROUNDCOLOR, new Class[]{TextCheckCell.class, TextSettingsCell.class, DrawerUserCell.class, HeaderCell.class}, null, null, null, Theme.key_windowBackgroundWhite));
         themeDescriptions.add(new ThemeDescription(fragmentView, ThemeDescription.FLAG_BACKGROUND | ThemeDescription.FLAG_CHECKTAG, null, null, null, null, Theme.key_windowBackgroundWhite));
         themeDescriptions.add(new ThemeDescription(fragmentView, ThemeDescription.FLAG_BACKGROUND | ThemeDescription.FLAG_CHECKTAG, null, null, null, null, Theme.key_windowBackgroundGray));
 
@@ -796,14 +816,16 @@ public class FakePasscodeActivity extends BaseFragment {
         themeDescriptions.add(new ThemeDescription(listView, 0, new Class[]{TextCheckCell.class}, new String[]{"checkBox"}, null, null, null, Theme.key_switchTrack));
         themeDescriptions.add(new ThemeDescription(listView, 0, new Class[]{TextCheckCell.class}, new String[]{"checkBox"}, null, null, null, Theme.key_switchTrackChecked));
 
-        themeDescriptions.add(new ThemeDescription(listView, ThemeDescription.FLAG_CHECKTAG, new Class[]{DrawerUserCell.class}, new String[]{"textView"}, null, null, null, Theme.key_windowBackgroundWhiteGrayText7));
-
         themeDescriptions.add(new ThemeDescription(listView, ThemeDescription.FLAG_CHECKTAG, new Class[]{TextSettingsCell.class}, new String[]{"textView"}, null, null, null, Theme.key_windowBackgroundWhiteBlackText));
         themeDescriptions.add(new ThemeDescription(listView, ThemeDescription.FLAG_CHECKTAG, new Class[]{TextSettingsCell.class}, new String[]{"textView"}, null, null, null, Theme.key_windowBackgroundWhiteGrayText7));
         themeDescriptions.add(new ThemeDescription(listView, 0, new Class[]{TextSettingsCell.class}, new String[]{"valueTextView"}, null, null, null, Theme.key_windowBackgroundWhiteValueText));
 
         themeDescriptions.add(new ThemeDescription(listView, ThemeDescription.FLAG_BACKGROUNDFILTER, new Class[]{TextInfoPrivacyCell.class}, null, null, null, Theme.key_windowBackgroundGrayShadow));
         themeDescriptions.add(new ThemeDescription(listView, 0, new Class[]{TextInfoPrivacyCell.class}, new String[]{"textView"}, null, null, null, Theme.key_windowBackgroundWhiteGrayText4));
+
+        themeDescriptions.add(new ThemeDescription(listView, ThemeDescription.FLAG_CHECKTAG, new Class[]{DrawerUserCell.class}, new String[]{"textView"}, null, null, null, Theme.key_windowBackgroundWhiteGrayText7));
+
+        themeDescriptions.add(new ThemeDescription(listView, 0, new Class[]{HeaderCell.class}, new String[]{"textView"}, null, null, null, Theme.key_windowBackgroundWhiteBlueHeader));
 
         return themeDescriptions;
     }

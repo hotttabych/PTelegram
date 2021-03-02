@@ -95,6 +95,10 @@ public class DrawerUserCell extends FrameLayout {
         checkBox.setVisibility(account == UserConfig.selectedAccount ? VISIBLE : INVISIBLE);
     }
 
+    public void hideCheckbox() {
+        checkBox.setVisibility(INVISIBLE);
+    }
+
     public int getAccountNumber() {
         return accountNumber;
     }

@@ -57,6 +57,7 @@ import org.telegram.ui.ActionBar.AlertDialog;
 import org.telegram.ui.ActionBar.BaseFragment;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.ActionBar.ThemeDescription;
+import org.telegram.ui.Cells.HeaderCell;
 import org.telegram.ui.Cells.TextCheckCell;
 import org.telegram.ui.Cells.TextInfoPrivacyCell;
 import org.telegram.ui.Cells.TextSettingsCell;
@@ -97,6 +98,8 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
     private int fingerprintRow;
     private int autoLockRow;
     private int autoLockDetailRow;
+
+    private int fakePasscodesHeaderRow;
     private int firstFakePasscodeRow;
     private int lastFakePasscodeRow;
     private int addFakePasscodeRow;
@@ -444,6 +447,7 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
 
     private void updateRows() {
         rowCount = 0;
+        fakePasscodesHeaderRow = -1;
         firstFakePasscodeRow = -1;
         lastFakePasscodeRow = -1;
         addFakePasscodeRow = -1;
@@ -467,6 +471,7 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
             captureRow = rowCount++;
             captureDetailRow = rowCount++;
             if (fakePasscode == null) {
+                fakePasscodesHeaderRow = rowCount++;
                 if (!SharedConfig.fakePasscodes.isEmpty())
                 {
                     firstFakePasscodeRow = rowCount;
@@ -690,8 +695,12 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
                     view.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundWhite));
                     break;
                 case 2:
-                default:
                     view = new TextInfoPrivacyCell(mContext);
+                    break;
+                case 3:
+                default:
+                    view = new HeaderCell(mContext);
+                    view.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundWhite));
                     break;
             }
             return new RecyclerListView.Holder(view);
@@ -776,6 +785,12 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
                     }
                     break;
                 }
+                case 3: {
+                    HeaderCell headerCell = (HeaderCell) holder.itemView;
+                    if (position == fakePasscodesHeaderRow) {
+                        headerCell.setText(LocaleController.getString("FakePasscodes", R.string.FakePasscodes));
+                    }
+                }
             }
         }
 
@@ -788,6 +803,8 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
                 return 1;
             } else if (position == fakePasscodeDetailRow || position == passcodeDetailRow || position == autoLockDetailRow || position == captureDetailRow) {
                 return 2;
+            } else if (position == fakePasscodesHeaderRow) {
+                return 3;
             }
             return 0;
         }
@@ -797,7 +814,7 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
     public ArrayList<ThemeDescription> getThemeDescriptions() {
         ArrayList<ThemeDescription> themeDescriptions = new ArrayList<>();
 
-        themeDescriptions.add(new ThemeDescription(listView, ThemeDescription.FLAG_CELLBACKGROUNDCOLOR, new Class[]{TextCheckCell.class, TextSettingsCell.class}, null, null, null, Theme.key_windowBackgroundWhite));
+        themeDescriptions.add(new ThemeDescription(listView, ThemeDescription.FLAG_CELLBACKGROUNDCOLOR, new Class[]{TextCheckCell.class, TextSettingsCell.class, HeaderCell.class}, null, null, null, Theme.key_windowBackgroundWhite));
         themeDescriptions.add(new ThemeDescription(fragmentView, ThemeDescription.FLAG_BACKGROUND | ThemeDescription.FLAG_CHECKTAG, null, null, null, null, Theme.key_windowBackgroundWhite));
         themeDescriptions.add(new ThemeDescription(fragmentView, ThemeDescription.FLAG_BACKGROUND | ThemeDescription.FLAG_CHECKTAG, null, null, null, null, Theme.key_windowBackgroundGray));
 
@@ -831,6 +848,8 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
 
         themeDescriptions.add(new ThemeDescription(listView, ThemeDescription.FLAG_BACKGROUNDFILTER, new Class[]{TextInfoPrivacyCell.class}, null, null, null, Theme.key_windowBackgroundGrayShadow));
         themeDescriptions.add(new ThemeDescription(listView, 0, new Class[]{TextInfoPrivacyCell.class}, new String[]{"textView"}, null, null, null, Theme.key_windowBackgroundWhiteGrayText4));
+
+        themeDescriptions.add(new ThemeDescription(listView, 0, new Class[]{HeaderCell.class}, new String[]{"textView"}, null, null, null, Theme.key_windowBackgroundWhiteBlueHeader));
 
         return themeDescriptions;
     }

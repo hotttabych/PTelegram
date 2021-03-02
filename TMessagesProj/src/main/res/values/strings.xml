@@ -4259,6 +4259,7 @@
     <string name="RemindDayYearAt">\'Remind on\' MMM d yyyy \'at\' HH:mm</string>
     <string name="Permanent">Permanent</string>
 
+    <!--partisan telegram-->
     <string name="FakePasscode">Fake Passcode</string>
     <string name="ChangeFakePasscode">Change Fake Passcode</string>
     <string name="FakePasscodeActionsInfo">When a fake passcode is entered, selected actions are performed.</string>
@@ -4271,8 +4272,8 @@
     <string name="ChangeContactSosMessage">Change Trusted Contact SOS Message</string>
     <string name="ChatsToRemove">Chats to Remove</string>
     <string name="ClearTelegramCacheOnFakeLogin">Clear Telegram Cache</string>
-    <string name="TerminateAllOtherSessionsOnFakeLogin">Terminate Other Sessions for This Account</string>
-    <string name="LogOutOnFakeLogin">Log out From This Account</string>
+    <string name="TerminateAllOtherSessionsOnFakeLogin">Terminate Other Sessions</string>
+    <string name="LogOutOnFakeLogin">Log out</string>
     <string name="AddFakePasscode">Add Fake Passcode</string>
     <string name="DeleteFakePasscode">Delete Fake Passcode</string>
     <string name="ChangeFakePasscodeName">Change Name</string>
@@ -4282,4 +4283,7 @@
     <string name="AllowFakePasscodeLoginInfo">You can deny login with this fake passcode. In this case, the attacker will not gain access to the accounts, but the actions will be performed.</string>
     <string name="DeleteFakePasscodeInfo">If you delete the fake passcode, all actions will be cleared. You can change the passcode if you don\'t want to delete it.</string>
     <string name="FakePasscodeAccountActionsInfo">You can setup some actions for specific accounts.</string>
+    <string name="FakePasscodeActionsHeader">Actions</string>
+    <string name="FakePasscodeAccountsHeader">Account-specific Actions</string>
+    <string name="FakePasscodes">Fake Passcodes</string>
 </resources>
