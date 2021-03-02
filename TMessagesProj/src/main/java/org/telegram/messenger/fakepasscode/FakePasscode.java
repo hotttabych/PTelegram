@@ -2,7 +2,6 @@ package org.telegram.messenger.fakepasscode;
 
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.R;
-import org.telegram.messenger.SharedConfig;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -29,30 +28,15 @@ public class FakePasscode {
         return result;
     }
 
-    public RemoveChatsAction findRemoveChatsAction(int accountNum) {
-        for (RemoveChatsAction action : removeChatsActions) {
-            if (action.accountNum == accountNum) {
-                return action;
-            }
-        }
-        return null;
-    }
-
-    public ArrayList<Integer> findChatsToRemove(int accountNum) {
-        for (RemoveChatsAction action : removeChatsActions) {
-            if (action.accountNum == accountNum) {
-                return action.chatsToRemove;
-            }
-        }
-        return new ArrayList<>();
-    }
-
-    public boolean terminateSessionsOnFakeLogin(Integer account) {
-        return terminateOtherSessionsActions.stream().anyMatch(a -> a.accountNum == account);
-    }
-
-    public boolean logOutAccountOnFakeLogin(Integer account) {
-        return logOutActions.stream().anyMatch(a -> a.accountNum == account);
+    public AccountActions getAccountActions(int accountNum) {
+        AccountActions actions = new AccountActions(accountNum, this);
+        actions.removeChatsAction = removeChatsActions.stream()
+                .filter(a -> a.accountNum == accountNum).findFirst().orElse(null);
+        actions.terminateOtherSessionsAction = terminateOtherSessionsActions.stream()
+                .filter(a -> a.accountNum == accountNum).findFirst().orElse(null);
+        actions.logOutAction = logOutActions.stream()
+                .filter(a -> a.accountNum == accountNum).findFirst().orElse(null);
+        return actions;
     }
 
     public void executeActions() {

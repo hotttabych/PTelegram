@@ -4261,7 +4261,7 @@
 
     <string name="FakePasscode">Fake Passcode</string>
     <string name="ChangeFakePasscode">Change Fake Passcode</string>
-    <string name="PasscodeActionsInfo">When a fake passcode is entered, selected actions are performed.</string>
+    <string name="FakePasscodeActionsInfo">When a fake passcode is entered, selected actions are performed.</string>
     <string name="AllowFakePasscodeLogin">Allow login using Fake Passcode</string>
     <string name="FamilySosMessage">Family SOS Message</string>
     <string name="ChangeFamilySosPhoneNumber">Change Family SOS Phone Number</string>
@@ -4281,4 +4281,5 @@
     <string name="ChangeFakePasscodeInfo">You can change the fake passcode without deleting it.</string>
     <string name="AllowFakePasscodeLoginInfo">You can deny login with this fake passcode. In this case, the attacker will not gain access to the accounts, but the actions will be performed.</string>
     <string name="DeleteFakePasscodeInfo">If you delete the fake passcode, all actions will be cleared. You can change the passcode if you don\'t want to delete it.</string>
+    <string name="FakePasscodeAccountActionsInfo">You can setup some actions for specific accounts.</string>
 </resources>
