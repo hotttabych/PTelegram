@@ -541,9 +541,13 @@ public class FakePasscodeActivity extends BaseFragment {
                     view = new TextInfoPrivacyCell(mContext);
                     break;
                 case 3:
-                    view = new DrawerUserCell(mContext);
+                {
+                    DrawerUserCell cell = new DrawerUserCell(mContext);
+                    view = cell;
+                    cell.setFakePasscodeMode(true);
                     view.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundWhite));
                     break;
+                }
                 case 4:
                 default:
                     view = new HeaderCell(mContext);
@@ -610,7 +614,6 @@ public class FakePasscodeActivity extends BaseFragment {
                 case 3: {
                     DrawerUserCell cell = (DrawerUserCell) holder.itemView;
                     cell.setAccount(accountIds.get(position - firstAccoutRow));
-                    cell.hideCheckbox();
                     break;
                 }
                 case 4: {
