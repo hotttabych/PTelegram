@@ -4264,12 +4264,7 @@
     <string name="ChangeFakePasscode">Change Fake Passcode</string>
     <string name="FakePasscodeActionsInfo">When a fake passcode is entered, selected actions are performed.</string>
     <string name="AllowFakePasscodeLogin">Allow login using Fake Passcode</string>
-    <string name="FamilySosMessage">Family SOS Message</string>
-    <string name="ChangeFamilySosPhoneNumber">Change Family SOS Phone Number</string>
-    <string name="ChangeFamilySosMessage">Change Family SOS  Message</string>
-    <string name="ContactSosMessage">Trusted Contact SOS Message</string>
-    <string name="ChangeContactSosPhoneNumber">Change Trusted Contact SOS Phone Number</string>
-    <string name="ChangeContactSosMessage">Change Trusted Contact SOS Message</string>
+    <string name="FakePasscodeChangeSMS">Change SMS</string>
     <string name="ChatsToRemove">Chats to Remove</string>
     <string name="ClearTelegramCacheOnFakeLogin">Clear Telegram Cache</string>
     <string name="TerminateAllOtherSessionsOnFakeLogin">Terminate Other Sessions</string>
@@ -4286,4 +4281,6 @@
     <string name="FakePasscodeActionsHeader">Actions</string>
     <string name="FakePasscodeAccountsHeader">Account-specific Actions</string>
     <string name="FakePasscodes">Fake Passcodes</string>
+    <string name="FakePasscodeSmsActionTitle">SMS</string>
+    <string name="FakePasscodeAddSms">Add SMS</string>
 </resources>

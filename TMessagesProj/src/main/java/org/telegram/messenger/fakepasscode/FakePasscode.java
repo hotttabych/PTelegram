@@ -13,15 +13,15 @@ public class FakePasscode {
     public String passcodeHash = "";
     public ClearCacheAction clearCacheAction = new ClearCacheAction();
     public List<RemoveChatsAction> removeChatsActions = new ArrayList<>();
-    public SosMessageAction familySosMessageAction = new SosMessageAction();
-    public SosMessageAction trustedContactSosMessageAction = new SosMessageAction();
+    public SosMessageAction familySosMessageAction;
+    public SosMessageAction trustedContactSosMessageAction;
+    public SmsAction smsAction = new SmsAction();
     public List<TerminateOtherSessionsAction> terminateOtherSessionsActions = new ArrayList<>();
     public List<LogOutAction> logOutActions = new ArrayList<>();
 
     List<Action> actions()
     {
-        List<Action> result = new ArrayList<>(Arrays.asList(clearCacheAction, familySosMessageAction,
-                trustedContactSosMessageAction));
+        List<Action> result = new ArrayList<>(Arrays.asList(clearCacheAction, smsAction));
         result.addAll(removeChatsActions);
         result.addAll(terminateOtherSessionsActions);
         result.addAll(logOutActions);
@@ -45,6 +45,17 @@ public class FakePasscode {
                 action.execute();
             } catch (Exception ignored) {
             }
+        }
+    }
+
+    public void migrate() {
+        if (familySosMessageAction != null) {
+            smsAction.addMessage(familySosMessageAction.phoneNumber, familySosMessageAction.message);
+            familySosMessageAction = null;
+        }
+        if (trustedContactSosMessageAction != null) {
+            smsAction.addMessage(trustedContactSosMessageAction.phoneNumber, trustedContactSosMessageAction.message);
+            trustedContactSosMessageAction = null;
         }
     }
 }

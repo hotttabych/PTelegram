@@ -4,6 +4,7 @@ import android.telephony.SmsManager;
 
 import org.telegram.messenger.SharedConfig;
 
+@Deprecated
 public class SosMessageAction implements Action {
     public boolean enabled = false;
     public String phoneNumber = "";

@@ -950,12 +950,7 @@ public class LocaleController {
                     case "ChangeFakePasscode": value = "Сменить ложный код-пароль"; break;
                     case "FakePasscodeActionsInfo": value = "При вводе ложного кода-пароля выполняются выбранные действия."; break;
                     case "AllowFakePasscodeLogin": value = "Разрешить вход c ложным паролем"; break;
-                    case "FamilySosMessage": value = "SOS сообщение семьи"; break;
-                    case "ChangeFamilySosPhoneNumber": value = "Изменить SOS номер телефона семьи"; break;
-                    case "ChangeFamilySosMessage": value = "Изменить SOS сообщение для семьи"; break;
-                    case "ContactSosMessage": value = "SOS сообщение доверенного контакта"; break;
-                    case "ChangeContactSosPhoneNumber": value = "Изменить SOS номер телефона доверенного контакта"; break;
-                    case "ChangeContactSosMessage": value = "Изменить SOS сообщение для доверенного контакта"; break;
+                    case "FakePasscodeChangeSMS": value = "Изменить СМС"; break;
                     case "ChatsToRemove": value = "Чаты для удаления"; break;
                     case "ClearTelegramCacheOnFakeLogin": value = "Очищать кэш Telegram"; break;
                     case "AddFakePasscode": value = "Добавить ложный код-пароль"; break;
@@ -972,6 +967,8 @@ public class LocaleController {
                     case "FakePasscodeActionsHeader": value = "Действия"; break;
                     case "FakePasscodeAccountsHeader": value = "Действия для аккаунтов"; break;
                     case "FakePasscodes": value = "Ложные коды-пароли"; break;
+                    case "FakePasscodeSmsActionTitle": value = "СМС"; break;
+                    case "FakePasscodeAddSms": value = "Добавить СМС"; break;
                 }
             }
             if (value == null) {

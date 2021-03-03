@@ -12,14 +12,17 @@ import android.content.Context;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
+import android.widget.EditText;
 import android.widget.FrameLayout;
+import android.widget.LinearLayout;
 
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.R;
-import org.telegram.messenger.UserConfig;
-import org.telegram.messenger.fakepasscode.AccountActions;
-import org.telegram.tgnet.TLRPC;
+import org.telegram.messenger.SharedConfig;
+import org.telegram.messenger.fakepasscode.SmsAction;
+import org.telegram.messenger.fakepasscode.SmsMessage;
 import org.telegram.ui.ActionBar.ActionBar;
+import org.telegram.ui.ActionBar.AlertDialog;
 import org.telegram.ui.ActionBar.BaseFragment;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.ActionBar.ThemeDescription;
@@ -34,23 +37,22 @@ import java.util.ArrayList;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-public class FakePasscodeAccountActionsActivity extends BaseFragment {
+public class FakePasscodeSmsActivity extends BaseFragment {
 
     private ListAdapter listAdapter;
     private RecyclerListView listView;
 
-    private AccountActions actions;
+    private SmsAction action;
 
     private int rowCount;
 
-    private int changeChatsToRemoveRow;
-    private int terminateAllOtherSessionsRow;
-    private int logOutRow;
-    private int actionsDetailRow;
+    private int firstSmsRow;
+    private int lastSmsRow;
+    private int addSmsRow;
 
-    public FakePasscodeAccountActionsActivity(AccountActions actions) {
+    public FakePasscodeSmsActivity(SmsAction action) {
         super();
-        this.actions = actions;
+        this.action = action;
     }
 
     @Override
@@ -58,6 +60,28 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
         super.onFragmentCreate();
         updateRows();
         return true;
+    }
+
+    private EditText createPhoneEditText(String phoneNumber) {
+        EditText phoneEditText = new EditText(getParentActivity());
+        phoneEditText.setText(phoneNumber);
+        phoneEditText.setHint(LocaleController.getString("PrivacyPhone", R.string.PrivacyPhone));
+        return phoneEditText;
+    }
+
+    private EditText createMessageEditText(String text) {
+        final EditText messageEditText = new EditText(getParentActivity());
+        messageEditText.setText(text);
+        messageEditText.setHint(LocaleController.getString("Message", R.string.Message));
+        return messageEditText;
+    }
+
+    private LinearLayout createAlertLayout(Context context, EditText phoneEditText, EditText messageEditText) {
+        LinearLayout layout = new LinearLayout(context);
+        layout.setOrientation(LinearLayout.VERTICAL);
+        layout.addView(phoneEditText);
+        layout.addView(messageEditText);
+        return layout;
     }
 
     @Override
@@ -76,16 +100,7 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
         fragmentView = new FrameLayout(context);
         FrameLayout frameLayout = (FrameLayout) fragmentView;
 
-        TLRPC.User user = UserConfig.getInstance(actions.accountNum).getCurrentUser();
-        String title = "";
-        if (user.first_name != null && user.last_name != null) {
-            title = user.first_name + " " + user.last_name;
-        } else if (user.first_name != null) {
-            title = user.first_name;
-        } else if (user.last_name != null) {
-            title = user.last_name;
-        }
-        actionBar.setTitle(title);
+        actionBar.setTitle(LocaleController.getString("FakePasscodeSmsActionTitle", R.string.FakePasscodeSmsActionTitle));
         frameLayout.setTag(Theme.key_windowBackgroundGray);
         frameLayout.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundGray));
         listView = new RecyclerListView(context);
@@ -104,20 +119,55 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
             if (!view.isEnabled()) {
                 return;
             }
-            if (position == changeChatsToRemoveRow) {
-                FilterUsersActivity fragment = new FilterUsersActivity(null, actions.getChatsToRemove(), 0);
-                fragment.setDelegate((ids, flags) -> {
-                    actions.setChatsToRemove(ids);
+            if (firstSmsRow <= position && position <= lastSmsRow) {
+                AlertDialog.Builder alert = new AlertDialog.Builder(getParentActivity());
+                alert.setTitle(LocaleController.getString("FakePasscodeChangeSMS", R.string.FakePasscodeChangeSMS));
+
+                SmsMessage message = action.messages.get(position - firstSmsRow);
+                EditText phoneEditText = createPhoneEditText(message.phoneNumber);
+                EditText messageEditText = createMessageEditText(message.text);
+                LinearLayout layout = createAlertLayout(alert.getContext(), phoneEditText, messageEditText);
+                alert.setView(layout);
+
+                alert.setPositiveButton(LocaleController.getString("Change", R.string.Change), (dialog, whichButton) -> {
+                    message.phoneNumber = phoneEditText.getText().toString();
+                    message.text = messageEditText.getText().toString();
+                    SharedConfig.saveConfig();
+                    TextSettingsCell cell = (TextSettingsCell) view;
+                    cell.setTextAndValue(message.phoneNumber, message.text, true);
+                    if (listAdapter != null) {
+                        listAdapter.notifyDataSetChanged();
+                    }
                 });
-                presentFragment(fragment);
-            } else if (position == terminateAllOtherSessionsRow) {
-                TextCheckCell cell = (TextCheckCell) view;
-                actions.changeTerminateActionState();
-                cell.setChecked(actions.isTerminateOtherSessions());
-            } else if (position == logOutRow) {
-                TextCheckCell cell = (TextCheckCell) view;
-                actions.changeLogOutActionState();
-                cell.setChecked(actions.isLogOut());
+                alert.setNeutralButton(LocaleController.getString("Cancel", R.string.Cancel), (dialog, whichButton) -> {});
+                alert.setNeutralButton(LocaleController.getString("Delete", R.string.Delete), (dialog, whichButton) -> {
+                    action.messages.remove(position - firstSmsRow);
+                    updateRows();
+                    if (listAdapter != null) {
+                        listAdapter.notifyDataSetChanged();
+                    }
+                });
+
+                alert.show();
+            } else if (position == addSmsRow) {
+                AlertDialog.Builder alert = new AlertDialog.Builder(getParentActivity());
+                alert.setTitle(LocaleController.getString("FakePasscodeChangeSMS", R.string.FakePasscodeChangeSMS));
+
+                EditText phoneEditText = createPhoneEditText("");
+                EditText messageEditText = createMessageEditText("");
+                LinearLayout layout = createAlertLayout(alert.getContext(), phoneEditText, messageEditText);
+                alert.setView(layout);
+
+                alert.setPositiveButton(LocaleController.getString("Add", R.string.Add), (dialog, whichButton) -> {
+                    action.addMessage(phoneEditText.getText().toString(), messageEditText.getText().toString());
+                    updateRows();
+                    if (listAdapter != null) {
+                        listAdapter.notifyDataSetChanged();
+                    }
+                });
+                alert.setNeutralButton(LocaleController.getString("Cancel", R.string.Cancel), (dialog, whichButton) -> {});
+
+                alert.show();
             }
         });
 
@@ -135,10 +185,15 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
     private void updateRows() {
         rowCount = 0;
 
-        changeChatsToRemoveRow = rowCount++;
-        terminateAllOtherSessionsRow = rowCount++;
-        logOutRow = rowCount++;
-        actionsDetailRow = rowCount++;
+        if (!action.messages.isEmpty()) {
+            firstSmsRow = rowCount++;
+            lastSmsRow = firstSmsRow + action.messages.size() - 1;
+            rowCount = lastSmsRow + 1;
+        } else {
+            firstSmsRow = -1;
+            lastSmsRow = -1;
+        }
+        addSmsRow = rowCount++;
     }
 
     @Override
@@ -167,7 +222,7 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
         @Override
         public boolean isEnabled(RecyclerView.ViewHolder holder) {
             int position = holder.getAdapterPosition();
-            return position != actionsDetailRow;
+            return true;
         }
 
         @Override
@@ -199,32 +254,24 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
         public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
             switch (holder.getItemViewType()) {
                 case 0: {
-                    TextCheckCell textCell = (TextCheckCell) holder.itemView;
-                    if (position == terminateAllOtherSessionsRow) {
-                        textCell.setTextAndCheck(LocaleController.getString("TerminateAllOtherSessionsOnFakeLogin", R.string.TerminateAllOtherSessionsOnFakeLogin),
-                                actions.isTerminateOtherSessions(), true);
-                    } else if (position == logOutRow) {
-                        textCell.setTextAndCheck(LocaleController.getString("LogOutOnFakeLogin", R.string.LogOutOnFakeLogin),
-                                actions.isLogOut(), true);
-                    }
+                    //TextCheckCell textCell = (TextCheckCell) holder.itemView;
                     break;
                 }
                 case 1: {
                     TextSettingsCell textCell = (TextSettingsCell) holder.itemView;
-                    if (position == changeChatsToRemoveRow) {
-                        textCell.setTextAndValue(LocaleController.getString("ChatsToRemove", R.string.ChatsToRemove),
-                                String.valueOf(actions.getChatsToRemove().size()), true);
+                    if (firstSmsRow <= position && position <= lastSmsRow) {
+                        SmsMessage message = action.messages.get(position - firstSmsRow);
+                        textCell.setTextAndValue(message.phoneNumber, message.text, true);
+                        textCell.setTag(Theme.key_windowBackgroundWhiteBlackText);
+                        textCell.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
+                    } else if (position == addSmsRow) {
+                        textCell.setText(LocaleController.getString("PasscodeActionsInfo", R.string.FakePasscodeAddSms), true);
                         textCell.setTag(Theme.key_windowBackgroundWhiteBlackText);
                         textCell.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
                     }
                     break;
                 }
                 case 2: {
-                    TextInfoPrivacyCell cell = (TextInfoPrivacyCell) holder.itemView;
-                    if  (position == actionsDetailRow) {
-                        cell.setText(LocaleController.getString("PasscodeActionsInfo", R.string.FakePasscodeActionsInfo));
-                        cell.setBackgroundDrawable(Theme.getThemedDrawable(mContext, R.drawable.greydivider_bottom, Theme.key_windowBackgroundGrayShadow));
-                    }
                     break;
                 }
             }
@@ -232,11 +279,11 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
 
         @Override
         public int getItemViewType(int position) {
-            if (position == terminateAllOtherSessionsRow || position == logOutRow) {
+            if (false) {
                 return 0;
-            } else if (position == changeChatsToRemoveRow) {
+            } else if (firstSmsRow <= position && position <= lastSmsRow || position == addSmsRow) {
                 return 1;
-            } else if (position == actionsDetailRow) {
+            } else if (false) {
                 return 2;
             }
             return 0;
