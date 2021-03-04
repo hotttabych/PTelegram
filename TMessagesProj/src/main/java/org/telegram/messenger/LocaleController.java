@@ -969,6 +969,7 @@ public class LocaleController {
                     case "FakePasscodes": value = "Ложные коды-пароли"; break;
                     case "FakePasscodeSmsActionTitle": value = "СМС"; break;
                     case "FakePasscodeAddSms": value = "Добавить СМС"; break;
+                    case "FakePasscodeSmsSendOnlyIfDisconnected": value = "Отправлять только если нет интернета"; break;
                 }
             }
             if (value == null) {

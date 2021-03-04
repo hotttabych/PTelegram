@@ -9,6 +9,8 @@
 package org.telegram.ui;
 
 import android.content.Context;
+import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.Drawable;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
@@ -17,6 +19,7 @@ import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 
 import org.telegram.messenger.LocaleController;
+import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.R;
 import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.fakepasscode.SmsAction;
@@ -26,9 +29,11 @@ import org.telegram.ui.ActionBar.AlertDialog;
 import org.telegram.ui.ActionBar.BaseFragment;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.ActionBar.ThemeDescription;
+import org.telegram.ui.Cells.ShadowSectionCell;
 import org.telegram.ui.Cells.TextCheckCell;
 import org.telegram.ui.Cells.TextInfoPrivacyCell;
 import org.telegram.ui.Cells.TextSettingsCell;
+import org.telegram.ui.Components.CombinedDrawable;
 import org.telegram.ui.Components.LayoutHelper;
 import org.telegram.ui.Components.RecyclerListView;
 
@@ -49,6 +54,8 @@ public class FakePasscodeSmsActivity extends BaseFragment {
     private int firstSmsRow;
     private int lastSmsRow;
     private int addSmsRow;
+    private int smsDetailsRow;
+    private int sendOnlyIfDisconnectedRow;
 
     public FakePasscodeSmsActivity(SmsAction action) {
         super();
@@ -119,7 +126,12 @@ public class FakePasscodeSmsActivity extends BaseFragment {
             if (!view.isEnabled()) {
                 return;
             }
-            if (firstSmsRow <= position && position <= lastSmsRow) {
+            if (position == sendOnlyIfDisconnectedRow) {
+                TextCheckCell cell = (TextCheckCell) view;
+                action.onlyIfDisconnected = !action.onlyIfDisconnected;
+                cell.setChecked(action.onlyIfDisconnected);
+                SharedConfig.saveConfig();
+            } if (firstSmsRow <= position && position <= lastSmsRow) {
                 AlertDialog.Builder alert = new AlertDialog.Builder(getParentActivity());
                 alert.setTitle(LocaleController.getString("FakePasscodeChangeSMS", R.string.FakePasscodeChangeSMS));
 
@@ -194,6 +206,8 @@ public class FakePasscodeSmsActivity extends BaseFragment {
             lastSmsRow = -1;
         }
         addSmsRow = rowCount++;
+        smsDetailsRow = rowCount++;
+        sendOnlyIfDisconnectedRow = rowCount++;
     }
 
     @Override
@@ -243,8 +257,15 @@ public class FakePasscodeSmsActivity extends BaseFragment {
                     view.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundWhite));
                     break;
                 case 2:
-                default:
                     view = new TextInfoPrivacyCell(mContext);
+                    break;
+                case 3:
+                default:
+                    view = new ShadowSectionCell(mContext);
+                    Drawable drawable = Theme.getThemedDrawable(mContext, R.drawable.greydivider, Theme.key_windowBackgroundGrayShadow);
+                    CombinedDrawable combinedDrawable = new CombinedDrawable(new ColorDrawable(Theme.getColor(Theme.key_windowBackgroundGray)), drawable);
+                    combinedDrawable.setFullsize(true);
+                    view.setBackgroundDrawable(combinedDrawable);
                     break;
             }
             return new RecyclerListView.Holder(view);
@@ -254,7 +275,10 @@ public class FakePasscodeSmsActivity extends BaseFragment {
         public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
             switch (holder.getItemViewType()) {
                 case 0: {
-                    //TextCheckCell textCell = (TextCheckCell) holder.itemView;
+                    TextCheckCell textCell = (TextCheckCell) holder.itemView;
+                    if (position == sendOnlyIfDisconnectedRow) {
+                        textCell.setTextAndCheck(LocaleController.getString("FakePasscodeSmsSendOnlyIfDisconnected", R.string.FakePasscodeSmsSendOnlyIfDisconnected), action.onlyIfDisconnected, true);
+                    }
                     break;
                 }
                 case 1: {
@@ -265,13 +289,10 @@ public class FakePasscodeSmsActivity extends BaseFragment {
                         textCell.setTag(Theme.key_windowBackgroundWhiteBlackText);
                         textCell.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
                     } else if (position == addSmsRow) {
-                        textCell.setText(LocaleController.getString("PasscodeActionsInfo", R.string.FakePasscodeAddSms), true);
+                        textCell.setText(LocaleController.getString("FakePasscodeAddSms", R.string.FakePasscodeAddSms), true);
                         textCell.setTag(Theme.key_windowBackgroundWhiteBlackText);
                         textCell.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
                     }
-                    break;
-                }
-                case 2: {
                     break;
                 }
             }
@@ -279,12 +300,12 @@ public class FakePasscodeSmsActivity extends BaseFragment {
 
         @Override
         public int getItemViewType(int position) {
-            if (false) {
+            if (position == sendOnlyIfDisconnectedRow) {
                 return 0;
             } else if (firstSmsRow <= position && position <= lastSmsRow || position == addSmsRow) {
                 return 1;
-            } else if (false) {
-                return 2;
+            } else if (position == smsDetailsRow) {
+                return 3;
             }
             return 0;
         }
