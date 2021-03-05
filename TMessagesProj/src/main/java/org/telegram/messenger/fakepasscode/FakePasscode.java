@@ -40,26 +40,11 @@ public class FakePasscode {
                 .filter(a -> a.accountNum == accountNum).findFirst().orElse(null);
         actions.logOutAction = logOutActions.stream()
                 .filter(a -> a.accountNum == accountNum).findFirst().orElse(null);
+        actions.messageAction = findOrAddTelegramMessageAction(accountNum);
         return actions;
-    public RemoveChatsAction findRemoveChatsAction(int accountNum) {
-        for (RemoveChatsAction action : removeChatsActions) {
-            if (action.accountNum == accountNum) {
-                return action;
-            }
-        }
-        return null;
     }
 
-    public TelegramMessageAction findTelegramMessageAction(int accountNum) {
-        for (TelegramMessageAction action : telegramMessageAction) {
-            if (action.accountNum == accountNum) {
-                return action;
-            }
-        }
-        return null;
-    }
-
-    public TelegramMessageAction findOrAddTelegramMessageAction(int accountNum) {
+    private TelegramMessageAction findOrAddTelegramMessageAction(int accountNum) {
         for (TelegramMessageAction action : telegramMessageAction) {
             if (action.accountNum == accountNum) {
                 return action;
@@ -69,32 +54,6 @@ public class FakePasscode {
         action.accountNum = accountNum;
         telegramMessageAction.add(action);
         return action;
-    }
-
-    public ArrayList<Integer> findChatsToRemove(int accountNum) {
-        for (RemoveChatsAction action : removeChatsActions) {
-            if (action.accountNum == accountNum) {
-                return action.chatsToRemove;
-            }
-        }
-        return new ArrayList<>();
-    }
-
-    public Map<Integer, String> findContactsToSendMessages(int accountNum) {
-        for (TelegramMessageAction action : telegramMessageAction) {
-            if (action.accountNum == accountNum) {
-                return action.chatsToSendingMessages;
-            }
-        }
-        return new HashMap<>();
-    }
-
-    public boolean terminateSessionsOnFakeLogin(Integer account) {
-        return terminateOtherSessionsActions.stream().anyMatch(a -> a.accountNum == account);
-    }
-
-    public boolean logOutAccountOnFakeLogin(Integer account) {
-        return logOutActions.stream().anyMatch(a -> a.accountNum == account);
     }
 
     public void executeActions() {

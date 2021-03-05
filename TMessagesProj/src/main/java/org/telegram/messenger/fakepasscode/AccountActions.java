@@ -11,6 +11,7 @@ public class AccountActions {
     public int accountNum;
     private FakePasscode fakePasscode;
 
+    public TelegramMessageAction messageAction = null;
     public RemoveChatsAction removeChatsAction = null;
     public TerminateOtherSessionsAction terminateOtherSessionsAction = null;
     public LogOutAction logOutAction = null;

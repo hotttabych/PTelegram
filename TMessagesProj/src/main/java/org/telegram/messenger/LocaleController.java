@@ -971,6 +971,7 @@ public class LocaleController {
                     case "FakePasscodeSmsActionTitle": value = "СМС"; break;
                     case "FakePasscodeAddSms": value = "Добавить СМС"; break;
                     case "FakePasscodeSmsSendOnlyIfDisconnected": value = "Отправлять только если нет интернета"; break;
+                    case "FakePasscodeTelegramMessageInfo": value = "Настроите сообщения, которые будут отправляться при вводе ложного кода-пароля."; break;
                 }
             }
             if (value == null) {

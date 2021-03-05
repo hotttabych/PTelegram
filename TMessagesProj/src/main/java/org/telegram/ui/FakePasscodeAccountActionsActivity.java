@@ -12,14 +12,21 @@ import android.content.Context;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
+import android.widget.EditText;
 import android.widget.FrameLayout;
 
+import org.telegram.messenger.AccountInstance;
+import org.telegram.messenger.ChatObject;
 import org.telegram.messenger.LocaleController;
+import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.R;
+import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.fakepasscode.AccountActions;
+import org.telegram.messenger.fakepasscode.TelegramMessageAction;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.ActionBar;
+import org.telegram.ui.ActionBar.AlertDialog;
 import org.telegram.ui.ActionBar.BaseFragment;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.ActionBar.ThemeDescription;
@@ -30,6 +37,8 @@ import org.telegram.ui.Components.LayoutHelper;
 import org.telegram.ui.Components.RecyclerListView;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -42,6 +51,12 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
     private AccountActions actions;
 
     private int rowCount;
+
+    private int changeTelegramMessageRow;
+    private int messagesDetailRow;
+
+    private final HashMap<Integer, Integer> positionToPeerId = new HashMap<>();
+    private final HashMap<Integer, TextSettingsCell> positionToTelegramMessageCell = new HashMap<>();
 
     private int changeChatsToRemoveRow;
     private int terminateAllOtherSessionsRow;
@@ -77,15 +92,15 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
         FrameLayout frameLayout = (FrameLayout) fragmentView;
 
         TLRPC.User user = UserConfig.getInstance(actions.accountNum).getCurrentUser();
-        String title = "";
+        String activityTitle = "";
         if (user.first_name != null && user.last_name != null) {
-            title = user.first_name + " " + user.last_name;
+            activityTitle = user.first_name + " " + user.last_name;
         } else if (user.first_name != null) {
-            title = user.first_name;
+            activityTitle = user.first_name;
         } else if (user.last_name != null) {
-            title = user.last_name;
+            activityTitle = user.last_name;
         }
-        actionBar.setTitle(title);
+        actionBar.setTitle(activityTitle);
         frameLayout.setTag(Theme.key_windowBackgroundGray);
         frameLayout.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundGray));
         listView = new RecyclerListView(context);
@@ -104,7 +119,42 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
             if (!view.isEnabled()) {
                 return;
             }
-            if (position == changeChatsToRemoveRow) {
+            if (position == changeTelegramMessageRow) {
+                Map<Integer, String> chats = actions.messageAction.chatsToSendingMessages;
+                FilterUsersActivity fragment = new FilterUsersActivity(null,
+                        new ArrayList<>(chats.keySet()), 0, true);
+                fragment.setDelegate((ids, flags) -> {
+                    Map<Integer, String> oldMessages = new HashMap<>(chats);
+                    chats.clear();
+                    for (int id : ids) {
+                        chats.put(id, oldMessages.getOrDefault(id, ""));
+                    }
+
+                    SharedConfig.saveConfig();
+                    updateRows();
+                });
+                presentFragment(fragment);
+            } else if (positionToPeerId.containsKey(position)) {
+                AlertDialog.Builder alert = new AlertDialog.Builder(getParentActivity());
+                final EditText edittext = new EditText(getParentActivity());
+                int id = positionToPeerId.get(position);
+                edittext.setText(actions.messageAction.chatsToSendingMessages.getOrDefault(id, ""));
+                String title = LocaleController.getString("ChangeTelegramMessage", R.string.ChangeTelegramMessage)
+                        + " " + getTelegramMessageTitleByPosition(position);
+                alert.setTitle(title);
+                alert.setView(edittext);
+                alert.setPositiveButton(LocaleController.getString("Done", R.string.Done), (dialog, whichButton) -> {
+                    String message = edittext.getText().toString();
+                    actions.messageAction.chatsToSendingMessages.put(id, message);
+                    if (positionToTelegramMessageCell.containsKey(position)) {
+                        positionToTelegramMessageCell.get(position)
+                                .setTextAndValue(title, message, true);
+                    }
+                    SharedConfig.saveConfig();
+                });
+
+                alert.show();
+            } else if (position == changeChatsToRemoveRow) {
                 FilterUsersActivity fragment = new FilterUsersActivity(null, actions.getChatsToRemove(), 0);
                 fragment.setDelegate((ids, flags) -> {
                     actions.setChatsToRemove(ids);
@@ -134,6 +184,14 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
 
     private void updateRows() {
         rowCount = 0;
+
+        changeTelegramMessageRow = rowCount++;
+        positionToPeerId.clear();
+        positionToTelegramMessageCell.clear();
+        for (int id : actions.messageAction.chatsToSendingMessages.keySet()) {
+            positionToPeerId.put(rowCount++, id);
+        }
+        messagesDetailRow = rowCount++;
 
         changeChatsToRemoveRow = rowCount++;
         terminateAllOtherSessionsRow = rowCount++;
@@ -167,7 +225,7 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
         @Override
         public boolean isEnabled(RecyclerView.ViewHolder holder) {
             int position = holder.getAdapterPosition();
-            return position != actionsDetailRow;
+            return position != actionsDetailRow && position != messagesDetailRow;
         }
 
         @Override
@@ -211,7 +269,20 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
                 }
                 case 1: {
                     TextSettingsCell textCell = (TextSettingsCell) holder.itemView;
-                    if (position == changeChatsToRemoveRow) {
+                    if (position == changeTelegramMessageRow) {
+                        textCell.setTextAndValue(LocaleController.getString("ChangeTelegramMessage", R.string.ChangeTelegramMessage),
+                                String.valueOf(actions.messageAction.chatsToSendingMessages.size()), true);
+                        textCell.setTag(Theme.key_windowBackgroundWhiteBlackText);
+                        textCell.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
+                    } else if (positionToPeerId.containsKey(position)) {
+                        String title = getTelegramMessageTitleByPosition(position);
+                        textCell.setTextAndValue(LocaleController.getString("ChangeTelegramMessage", R.string.ChangeTelegramMessage) + " " + title,
+                                actions.messageAction.chatsToSendingMessages.getOrDefault(positionToPeerId.get(position), ""),
+                                true);
+                        textCell.setTag(Theme.key_windowBackgroundWhiteBlackText);
+                        textCell.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
+                        positionToTelegramMessageCell.put(position, textCell);
+                    } else if (position == changeChatsToRemoveRow) {
                         textCell.setTextAndValue(LocaleController.getString("ChatsToRemove", R.string.ChatsToRemove),
                                 String.valueOf(actions.getChatsToRemove().size()), true);
                         textCell.setTag(Theme.key_windowBackgroundWhiteBlackText);
@@ -221,7 +292,10 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
                 }
                 case 2: {
                     TextInfoPrivacyCell cell = (TextInfoPrivacyCell) holder.itemView;
-                    if  (position == actionsDetailRow) {
+                    if (position == messagesDetailRow) {
+                        cell.setText(LocaleController.getString("FakePasscodeTelegramMessageInfo", R.string.FakePasscodeTelegramMessageInfo));
+                        cell.setBackgroundDrawable(Theme.getThemedDrawable(mContext, R.drawable.greydivider_bottom, Theme.key_windowBackgroundGrayShadow));
+                    } else if  (position == actionsDetailRow) {
                         cell.setText(LocaleController.getString("PasscodeActionsInfo", R.string.FakePasscodeActionsInfo));
                         cell.setBackgroundDrawable(Theme.getThemedDrawable(mContext, R.drawable.greydivider_bottom, Theme.key_windowBackgroundGrayShadow));
                     }
@@ -234,13 +308,41 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
         public int getItemViewType(int position) {
             if (position == terminateAllOtherSessionsRow || position == logOutRow) {
                 return 0;
-            } else if (position == changeChatsToRemoveRow) {
+            } else if (position == changeChatsToRemoveRow || position == changeTelegramMessageRow
+                    || positionToPeerId.containsKey(position)) {
                 return 1;
-            } else if (position == actionsDetailRow) {
+            } else if (position == messagesDetailRow || position == actionsDetailRow) {
                 return 2;
             }
             return 0;
         }
+    }
+
+    private String getTelegramMessageTitleByPosition(int position) {
+        AccountInstance account = AccountInstance.getInstance(currentAccount);
+        MessagesController messagesController = account.getMessagesController();
+        TLRPC.Chat chat;
+        TLRPC.User user = null;
+        int id = positionToPeerId.get(position);
+        String title = "";
+        if (id > 0) {
+            user = messagesController.getUser(id);
+            chat = null;
+        } else {
+            chat = messagesController.getChat(-id);
+        }
+        if (chat != null && ChatObject.canSendMessages(chat)) {
+            title = chat.title;
+        } else if (user != null) {
+            if (user.first_name != null && user.last_name != null) {
+                title = user.first_name + " " + user.last_name;
+            } else if (user.first_name != null) {
+                title = user.first_name;
+            } else if (user.last_name != null) {
+                title = user.last_name;
+            }
+        }
+        return title;
     }
 
     @Override

@@ -4285,4 +4285,5 @@
     <string name="FakePasscodeSmsActionTitle">SMS</string>
     <string name="FakePasscodeAddSms">Add SMS</string>
     <string name="FakePasscodeSmsSendOnlyIfDisconnected">Send only if there is no internet</string>
+    <string name="FakePasscodeTelegramMessageInfo">Set up messages that will be sent when you enter a fake passcode.</string>
 </resources>
