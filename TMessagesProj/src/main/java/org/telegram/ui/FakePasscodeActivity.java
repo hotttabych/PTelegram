@@ -485,7 +485,6 @@ public class FakePasscodeActivity extends BaseFragment {
                 FileLog.e(e);
             }
 
-            SharedConfig.allowScreenCapture = true;
             SharedConfig.saveConfig();
             getMediaDataController().buildShortcuts();
             if (creating) {
