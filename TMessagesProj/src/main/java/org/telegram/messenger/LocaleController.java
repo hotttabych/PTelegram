@@ -958,6 +958,7 @@ public class LocaleController {
                     case "LogOutOnFakeLogin": value = "Выходить из аккаунта"; break;
                     case "DeleteFakePasscode": value = "Удалить ложный код-пароль"; break;
                     case "ChangeFakePasscodeName": value = "Изменить название"; break;
+                    case "ChangeTelegramMessage": value = "Изменить сообщение в Telegram"; break;
                     case "AreYouSureDeleteFakePasscode": value = "Вы точно хотите удалить этот ложный код-пароль?"; break;
                     case "PasscodeUsed": value = "Этот код-пароль уже используется"; break;
                     case "ChangeFakePasscodeInfo": value = "Вы можете изменить ложный код-пароль, не удаляя его."; break;

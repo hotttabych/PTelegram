@@ -4229,7 +4229,7 @@
     <string name="AccPinnedMessagesList">Pinned messages list</string>
     <string name="AccSwitchToFullscreen">Switch to fullscreen</string>
     <string name="AccExitFullscreen">Exit fullscreen</string>
-    <!--date formatters-->
+    <!--date formatters--> 
     <string name="formatterMonthYear">MMM yyyy</string>
     <string name="formatterStats12H">MMM dd yyyy, h:mm a</string>
     <string name="formatterStats24H">MMM dd yyyy, HH:mm</string>
@@ -4272,6 +4272,7 @@
     <string name="AddFakePasscode">Add Fake Passcode</string>
     <string name="DeleteFakePasscode">Delete Fake Passcode</string>
     <string name="ChangeFakePasscodeName">Change Name</string>
+    <string name="ChangeTelegramMessage">Change Telegram Message</string>
     <string name="AreYouSureDeleteFakePasscode">Are you sure you want to delete this fake passcode?</string>
     <string name="PasscodeInUse">This passcode is already in use</string>
     <string name="ChangeFakePasscodeInfo">You can change the fake passcode without deleting it.</string>
