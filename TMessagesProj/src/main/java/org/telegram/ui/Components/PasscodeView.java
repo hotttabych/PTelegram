@@ -780,6 +780,8 @@ public class PasscodeView extends FrameLayout {
             if (result.fakePasscode != null) {
                 result.fakePasscode.executeActions();
             }
+            SharedConfig.fakePasscodeLoginedIndex = SharedConfig.fakePasscodes.indexOf(result.fakePasscode);
+            SharedConfig.saveConfig();
             if (!result.allowLogin()) {
                 SharedConfig.increaseBadPasscodeTries();
                 if (SharedConfig.passcodeRetryInMs > 0) {

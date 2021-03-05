@@ -147,6 +147,7 @@ public class SharedConfig {
     }
 
     public static int fakePasscodeIndex = 1;
+    public static int fakePasscodeLoginedIndex = -1;
     public static List<FakePasscode> fakePasscodes = new ArrayList<>();
     private static class FakePasscodesWrapper {
         public List<FakePasscode> fakePasscodes;
@@ -244,6 +245,7 @@ public class SharedConfig {
                 editor.putBoolean("disableVoiceAudioEffects", disableVoiceAudioEffects);
                 editor.putString("storageCacheDir", !TextUtils.isEmpty(storageCacheDir) ? storageCacheDir : "");
                 editor.putInt("fakePasscodeIndex", fakePasscodeIndex);
+                editor.putInt("fakePasscodeLoginedIndex", fakePasscodeLoginedIndex);
                 ObjectMapper mapper = new ObjectMapper();
                 mapper.enableDefaultTyping();
                 FakePasscodesWrapper wrapper = new FakePasscodesWrapper(fakePasscodes);
@@ -264,7 +266,7 @@ public class SharedConfig {
         return value;
     }
 
-    public static void migrateFakePasscode() {
+    private static void migrateFakePasscode() {
         SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences("userconfing", Context.MODE_PRIVATE);
         String fakePasscodeHash = preferences.getString("fakePasscodeHash", "");
         boolean hasNonJsonPasscode = !fakePasscodeHash.isEmpty();
@@ -342,6 +344,7 @@ public class SharedConfig {
             passportConfigHash = preferences.getInt("passportConfigHash", 0);
             storageCacheDir = preferences.getString("storageCacheDir", null);
             fakePasscodeIndex = preferences.getInt("fakePasscodeIndex", 1);
+            fakePasscodeLoginedIndex = preferences.getInt("fakePasscodeLoginedIndex", -1);
             try {
                 String fakePasscodesString = preferences.getString("fakePasscodes", null);
                 ObjectMapper mapper = new ObjectMapper();
