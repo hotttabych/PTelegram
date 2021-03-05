@@ -296,7 +296,7 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
                         cell.setText(LocaleController.getString("FakePasscodeTelegramMessageInfo", R.string.FakePasscodeTelegramMessageInfo));
                         cell.setBackgroundDrawable(Theme.getThemedDrawable(mContext, R.drawable.greydivider_bottom, Theme.key_windowBackgroundGrayShadow));
                     } else if  (position == actionsDetailRow) {
-                        cell.setText(LocaleController.getString("PasscodeActionsInfo", R.string.FakePasscodeActionsInfo));
+                        cell.setText(LocaleController.getString("FakePasscodeActionsInfo", R.string.FakePasscodeActionsInfo));
                         cell.setBackgroundDrawable(Theme.getThemedDrawable(mContext, R.drawable.greydivider_bottom, Theme.key_windowBackgroundGrayShadow));
                     }
                     break;
