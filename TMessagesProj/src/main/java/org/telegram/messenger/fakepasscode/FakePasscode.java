@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 
 public class FakePasscode implements NotificationCenter.NotificationCenterDelegate {
     public boolean allowLogin = true;
-    public String name = LocaleController.getString("FakePasscode", R.string.FakePasscode);
+    public String name;
     public String passcodeHash = "";
     public ClearCacheAction clearCacheAction = new ClearCacheAction();
     public List<RemoveChatsAction> removeChatsActions = new ArrayList<>();
