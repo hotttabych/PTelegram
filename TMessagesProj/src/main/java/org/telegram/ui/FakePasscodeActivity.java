@@ -335,6 +335,7 @@ public class FakePasscodeActivity extends BaseFragment {
                     builder.setTitle(LocaleController.getString("DeleteFakePasscode", R.string.DeleteFakePasscode));
                     buttonText = LocaleController.getString("Delete", R.string.Delete);
                     builder.setPositiveButton(buttonText, (dialogInterface, i) -> {
+                        fakePasscode.onDelete();
                         SharedConfig.fakePasscodes = SharedConfig.fakePasscodes.stream()
                                 .filter(a -> a != fakePasscode).collect(Collectors.toCollection(ArrayList::new));
                         SharedConfig.saveConfig();

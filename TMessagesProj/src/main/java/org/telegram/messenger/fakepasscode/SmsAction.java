@@ -11,7 +11,7 @@ import org.telegram.tgnet.ConnectionsManager;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SmsAction implements Action{
+public class SmsAction implements Action {
 
     public List<SmsMessage> messages = new ArrayList<>();
     public boolean onlyIfDisconnected = false;

@@ -1,15 +1,16 @@
 package org.telegram.messenger.fakepasscode;
 
 import org.telegram.messenger.LocaleController;
+import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.R;
+import org.telegram.messenger.UserConfig;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.stream.Collectors;
 
-public class FakePasscode {
+public class FakePasscode implements NotificationCenter.NotificationCenterDelegate {
     public boolean allowLogin = true;
     public String name = LocaleController.getString("FakePasscode", R.string.FakePasscode);
     public String passcodeHash = "";
@@ -21,6 +22,12 @@ public class FakePasscode {
     public List<TelegramMessageAction> telegramMessageAction = new ArrayList<>();
     public List<TerminateOtherSessionsAction> terminateOtherSessionsActions = new ArrayList<>();
     public List<LogOutAction> logOutActions = new ArrayList<>();
+
+    public FakePasscode() {
+        for (int i = 0; i < UserConfig.MAX_ACCOUNT_COUNT; i++) {
+            NotificationCenter.getInstance(i).addObserver(this, NotificationCenter.appDidLogout);
+        }
+    }
 
     List<Action> actions()
     {
@@ -73,6 +80,30 @@ public class FakePasscode {
         if (trustedContactSosMessageAction != null) {
             smsAction.addMessage(trustedContactSosMessageAction.phoneNumber, trustedContactSosMessageAction.message);
             trustedContactSosMessageAction = null;
+        }
+    }
+
+    private void removeAccount(int accountNum) {
+        removeChatsActions = removeChatsActions.stream()
+                .filter(a -> a.accountNum != accountNum).collect(Collectors.toList());
+        terminateOtherSessionsActions = terminateOtherSessionsActions.stream()
+                .filter(a -> a.accountNum != accountNum).collect(Collectors.toList());
+        logOutActions = logOutActions.stream()
+                .filter(a -> a.accountNum != accountNum).collect(Collectors.toList());
+        telegramMessageAction = telegramMessageAction.stream()
+                .filter(a -> a.accountNum != accountNum).collect(Collectors.toList());
+    }
+
+    public void onDelete() {
+        for (int i = 0; i < UserConfig.MAX_ACCOUNT_COUNT; i++) {
+            NotificationCenter.getInstance(i).removeObserver(this, NotificationCenter.appDidLogout);
+        }
+    }
+
+    @Override
+    public void didReceivedNotification(int id, int account, Object... args) {
+        if (id == NotificationCenter.appDidLogout) {
+            removeAccount(account);
         }
     }
 }
