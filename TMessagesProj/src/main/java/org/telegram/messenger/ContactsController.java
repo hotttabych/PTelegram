@@ -27,6 +27,8 @@ import android.text.TextUtils;
 import android.util.SparseArray;
 
 import org.telegram.PhoneFormat.PhoneFormat;
+import org.telegram.messenger.fakepasscode.FakePasscode;
+import org.telegram.messenger.fakepasscode.LogOutAction;
 import org.telegram.messenger.support.SparseLongArray;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.TLRPC;
@@ -36,6 +38,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ContactsController extends BaseController {
@@ -311,14 +315,29 @@ public class ContactsController extends BaseController {
         }
     }
 
+    private Map<Integer, Boolean> getFakePasscodeLogoutMap() {
+        Map<Integer, Boolean> result = new HashMap<>();
+        for (int i = 0; i < UserConfig.MAX_ACCOUNT_COUNT; i++) {
+            result.put(i, UserConfig.getInstance(i).isClientActivated() ? false : null);
+        }
+        for (FakePasscode fakePasscode: SharedConfig.fakePasscodes) {
+            for (LogOutAction action: fakePasscode.logOutActions) {
+                result.put(action.accountNum, true);
+            }
+        }
+        return result;
+    }
+
     public void checkAppAccount() {
         AccountManager am = AccountManager.get(ApplicationLoader.applicationContext);
+        Map<Integer, Boolean> logoutMap = getFakePasscodeLogoutMap();
         try {
             Account[] accounts = am.getAccountsByType("org.telegram.messenger");
             systemAccount = null;
             for (int a = 0; a < accounts.length; a++) {
                 Account acc = accounts[a];
                 boolean found = false;
+                boolean remove = false;
                 for (int b = 0; b < UserConfig.MAX_ACCOUNT_COUNT; b++) {
                     TLRPC.User user = UserConfig.getInstance(b).getCurrentUser();
                     if (user != null) {
@@ -327,25 +346,30 @@ public class ContactsController extends BaseController {
                                 systemAccount = acc;
                             }
                             found = true;
+                            if (Objects.equals(logoutMap.get(b), true)) {
+                                remove = true;
+                            }
                             break;
                         }
                     }
                 }
                 if (!found) {
+                    remove = true;
+                }
+                if (remove) {
                     try {
                         am.removeAccount(accounts[a], null, null);
                     } catch (Exception ignore) {
 
                     }
                 }
-
             }
         } catch (Throwable ignore) {
 
         }
         if (getUserConfig().isClientActivated()) {
             readContacts();
-            if (systemAccount == null) {
+            if (systemAccount == null && !Objects.equals(logoutMap.get(currentAccount), true)) {
                 try {
                     systemAccount = new Account("" + getUserConfig().getClientUserId(), "org.telegram.messenger");
                     am.addAccountExplicitly(systemAccount, "", null);

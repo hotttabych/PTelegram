@@ -17,13 +17,13 @@ import android.widget.FrameLayout;
 
 import org.telegram.messenger.AccountInstance;
 import org.telegram.messenger.ChatObject;
+import org.telegram.messenger.ContactsController;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.R;
 import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.fakepasscode.AccountActions;
-import org.telegram.messenger.fakepasscode.TelegramMessageAction;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.ActionBar;
 import org.telegram.ui.ActionBar.AlertDialog;
@@ -168,6 +168,7 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
                 TextCheckCell cell = (TextCheckCell) view;
                 actions.changeLogOutActionState();
                 cell.setChecked(actions.isLogOut());
+                ContactsController.getInstance(actions.accountNum).checkAppAccount();
             }
         });
 
