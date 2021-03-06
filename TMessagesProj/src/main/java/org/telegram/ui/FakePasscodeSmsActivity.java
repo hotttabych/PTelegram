@@ -11,6 +11,8 @@ package org.telegram.ui;
 import android.content.Context;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
+import android.util.TypedValue;
+import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
@@ -18,8 +20,8 @@ import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 
+import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.LocaleController;
-import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.R;
 import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.fakepasscode.SmsAction;
@@ -34,10 +36,12 @@ import org.telegram.ui.Cells.TextCheckCell;
 import org.telegram.ui.Cells.TextInfoPrivacyCell;
 import org.telegram.ui.Cells.TextSettingsCell;
 import org.telegram.ui.Components.CombinedDrawable;
+import org.telegram.ui.Components.EditTextCaption;
 import org.telegram.ui.Components.LayoutHelper;
 import org.telegram.ui.Components.RecyclerListView;
 
 import java.util.ArrayList;
+import java.util.function.Consumer;
 
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -69,17 +73,22 @@ public class FakePasscodeSmsActivity extends BaseFragment {
         return true;
     }
 
-    private EditText createPhoneEditText(String phoneNumber) {
-        EditText phoneEditText = new EditText(getParentActivity());
-        phoneEditText.setText(phoneNumber);
-        phoneEditText.setHint(LocaleController.getString("PrivacyPhone", R.string.PrivacyPhone));
-        return phoneEditText;
-    }
-
-    private EditText createMessageEditText(String text) {
-        final EditText messageEditText = new EditText(getParentActivity());
+    private EditTextCaption createEditText(String text, String hint, boolean singleLine) {
+        EditTextCaption messageEditText = new EditTextCaption(getParentActivity());
         messageEditText.setText(text);
-        messageEditText.setHint(LocaleController.getString("Message", R.string.Message));
+        messageEditText.setHint(hint);
+        messageEditText.setSingleLine(singleLine);
+        if (!singleLine) {
+            messageEditText.setMaxLines(6);
+        }
+        messageEditText.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 18);
+        messageEditText.setGravity(Gravity.BOTTOM);
+        messageEditText.setPadding(0, AndroidUtilities.dp(11), 0, AndroidUtilities.dp(12));
+        messageEditText.setTextColor(Theme.getColor(Theme.key_chat_messagePanelText));
+        messageEditText.setHintColor(Theme.getColor(Theme.key_chat_messagePanelHint));
+        messageEditText.setHintTextColor(Theme.getColor(Theme.key_chat_messagePanelHint));
+        messageEditText.setCursorColor(Theme.getColor(Theme.key_chat_messagePanelCursor));
+
         return messageEditText;
     }
 
@@ -89,6 +98,23 @@ public class FakePasscodeSmsActivity extends BaseFragment {
         layout.addView(phoneEditText);
         layout.addView(messageEditText);
         return layout;
+    }
+
+    private void addPositiveButtonListener(AlertDialog dialog, EditText phone, EditText message, Consumer<View> action) {
+        dialog.setOnShowListener(dialogInterface -> {
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(view -> {
+                if (phone.getText().toString().isEmpty()) {
+                    phone.setError("Enter phone. CHANGE ME!!!");
+                }
+                if (message.getText().toString().isEmpty()) {
+                    message.setError("Enter message. CHANGE ME!!!");
+                }
+                if (!phone.getText().toString().isEmpty() && !message.getText().toString().isEmpty()) {
+                    action.accept(view);
+                    dialog.dismiss();
+                }
+            });
+        });
     }
 
     @Override
@@ -132,18 +158,28 @@ public class FakePasscodeSmsActivity extends BaseFragment {
                 cell.setChecked(action.onlyIfDisconnected);
                 SharedConfig.saveConfig();
             } if (firstSmsRow <= position && position <= lastSmsRow) {
-                AlertDialog.Builder alert = new AlertDialog.Builder(getParentActivity());
-                alert.setTitle(LocaleController.getString("FakePasscodeChangeSMS", R.string.FakePasscodeChangeSMS));
+                AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(getParentActivity());
+                dialogBuilder.setTitle(LocaleController.getString("FakePasscodeChangeSMS", R.string.FakePasscodeChangeSMS));
 
                 SmsMessage message = action.messages.get(position - firstSmsRow);
-                EditText phoneEditText = createPhoneEditText(message.phoneNumber);
-                EditText messageEditText = createMessageEditText(message.text);
-                LinearLayout layout = createAlertLayout(alert.getContext(), phoneEditText, messageEditText);
-                alert.setView(layout);
+                EditText phoneEditText = createEditText(message.phoneNumber, LocaleController.getString("PrivacyPhone", R.string.PrivacyPhone), true);
+                EditText messageEditText = createEditText(message.text, LocaleController.getString("Message", R.string.Message), false);
+                LinearLayout layout = createAlertLayout(dialogBuilder.getContext(), phoneEditText, messageEditText);
+                dialogBuilder.setView(layout);
 
-                alert.setPositiveButton(LocaleController.getString("Change", R.string.Change), (dialog, whichButton) -> {
-                    message.phoneNumber = phoneEditText.getText().toString();
+                dialogBuilder.setPositiveButton(LocaleController.getString("Change", R.string.Change), null);
+                dialogBuilder.setNeutralButton(LocaleController.getString("Cancel", R.string.Cancel), (dialog, whichButton) -> {});
+                dialogBuilder.setNegativeButton(LocaleController.getString("Delete", R.string.Delete), (dialog, whichButton) -> {
+                    action.messages.remove(position - firstSmsRow);
+                    updateRows();
+                    if (listAdapter != null) {
+                        listAdapter.notifyDataSetChanged();
+                    }
+                });
+                AlertDialog dialog = dialogBuilder.create();
+                addPositiveButtonListener(dialog, phoneEditText, messageEditText, button -> {
                     message.text = messageEditText.getText().toString();
+                    message.phoneNumber = phoneEditText.getText().toString();
                     SharedConfig.saveConfig();
                     TextSettingsCell cell = (TextSettingsCell) view;
                     cell.setTextAndValue(message.phoneNumber, message.text, true);
@@ -151,35 +187,28 @@ public class FakePasscodeSmsActivity extends BaseFragment {
                         listAdapter.notifyDataSetChanged();
                     }
                 });
-                alert.setNeutralButton(LocaleController.getString("Cancel", R.string.Cancel), (dialog, whichButton) -> {});
-                alert.setNeutralButton(LocaleController.getString("Delete", R.string.Delete), (dialog, whichButton) -> {
-                    action.messages.remove(position - firstSmsRow);
-                    updateRows();
-                    if (listAdapter != null) {
-                        listAdapter.notifyDataSetChanged();
-                    }
-                });
-
-                alert.show();
+                dialog.show();
             } else if (position == addSmsRow) {
-                AlertDialog.Builder alert = new AlertDialog.Builder(getParentActivity());
-                alert.setTitle(LocaleController.getString("FakePasscodeChangeSMS", R.string.FakePasscodeChangeSMS));
+                AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(getParentActivity());
+                dialogBuilder.setTitle(LocaleController.getString("FakePasscodeChangeSMS", R.string.FakePasscodeChangeSMS));
 
-                EditText phoneEditText = createPhoneEditText("");
-                EditText messageEditText = createMessageEditText("");
-                LinearLayout layout = createAlertLayout(alert.getContext(), phoneEditText, messageEditText);
-                alert.setView(layout);
+                EditText phoneEditText = createEditText("", LocaleController.getString("PrivacyPhone", R.string.PrivacyPhone), true);
+                EditText messageEditText = createEditText("", LocaleController.getString("Message", R.string.Message), false);
+                LinearLayout layout = createAlertLayout(dialogBuilder.getContext(), phoneEditText, messageEditText);
+                dialogBuilder.setView(layout);
 
-                alert.setPositiveButton(LocaleController.getString("Add", R.string.Add), (dialog, whichButton) -> {
+                dialogBuilder.setPositiveButton(LocaleController.getString("Add", R.string.Add), null);
+                dialogBuilder.setNeutralButton(LocaleController.getString("Cancel", R.string.Cancel), (dialog, whichButton) -> {});
+
+                AlertDialog dialog = dialogBuilder.create();
+                addPositiveButtonListener(dialog, phoneEditText, messageEditText, button -> {
                     action.addMessage(phoneEditText.getText().toString(), messageEditText.getText().toString());
                     updateRows();
                     if (listAdapter != null) {
                         listAdapter.notifyDataSetChanged();
                     }
                 });
-                alert.setNeutralButton(LocaleController.getString("Cancel", R.string.Cancel), (dialog, whichButton) -> {});
-
-                alert.show();
+                dialog.show();
             }
         });
 
@@ -290,8 +319,8 @@ public class FakePasscodeSmsActivity extends BaseFragment {
                         textCell.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
                     } else if (position == addSmsRow) {
                         textCell.setText(LocaleController.getString("FakePasscodeAddSms", R.string.FakePasscodeAddSms), true);
-                        textCell.setTag(Theme.key_windowBackgroundWhiteBlackText);
-                        textCell.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
+                        textCell.setTag(Theme.key_windowBackgroundWhiteBlueText4);
+                        textCell.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlueText4));
                     }
                     break;
                 }
