@@ -3,6 +3,7 @@ package org.telegram.messenger.fakepasscode;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.R;
+import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.UserConfig;
 
 import java.util.ArrayList;
@@ -64,6 +65,9 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
     }
 
     public void executeActions() {
+        if (SharedConfig.fakePasscodeLoginedIndex == SharedConfig.fakePasscodes.indexOf(this)) {
+            return;
+        }
         for (Action action : actions()) {
             try {
                 action.execute();
