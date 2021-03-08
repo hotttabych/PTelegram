@@ -138,7 +138,7 @@ public class FakePasscodeSmsActivity extends BaseFragment {
                     }
                 };
                 AlertDialog dialog = FakePasscodeDialogBuilder.build(getParentActivity(), template);
-                dialog.show();
+                showDialog(dialog);
             } else if (position == addSmsRow) {
                 FakePasscodeDialogBuilder.Template template = new FakePasscodeDialogBuilder.Template();
                 template.type = FakePasscodeDialogBuilder.DialogType.ADD;
@@ -153,7 +153,7 @@ public class FakePasscodeSmsActivity extends BaseFragment {
                     }
                 };
                 AlertDialog dialog = FakePasscodeDialogBuilder.build(getParentActivity(), template);
-                dialog.show();
+                showDialog(dialog);
             }
         });
 

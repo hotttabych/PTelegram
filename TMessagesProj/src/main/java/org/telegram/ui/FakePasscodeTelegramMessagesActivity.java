@@ -453,7 +453,7 @@ public class FakePasscodeTelegramMessagesActivity extends BaseFragment implement
                         cell.setChecked(false, true);
                     };
                     AlertDialog dialog = FakePasscodeDialogBuilder.build(getParentActivity(), template);
-                    dialog.show();
+                    showDialog(dialog);
                 } else {
                     if (action.chatsToSendingMessages.size() >= 100) {
                         return;
@@ -476,7 +476,7 @@ public class FakePasscodeTelegramMessagesActivity extends BaseFragment implement
                         cell.setChecked(true, true);
                     };
                     AlertDialog dialog = FakePasscodeDialogBuilder.build(getParentActivity(), template);
-                    dialog.show();
+                    showDialog(dialog);
                 }
                 updateHint();
                 if (searching || searchWas) {
