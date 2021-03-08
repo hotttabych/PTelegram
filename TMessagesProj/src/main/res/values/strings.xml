@@ -4272,7 +4272,7 @@
     <string name="AddFakePasscode">Add Fake Passcode</string>
     <string name="DeleteFakePasscode">Delete Fake Passcode</string>
     <string name="ChangeFakePasscodeName">Change Name</string>
-    <string name="ChangeTelegramMessage">Change Telegram Message</string>
+    <string name="ChangeTelegramMessages">Change Telegram Messages</string>
     <string name="AreYouSureDeleteFakePasscode">Are you sure you want to delete this fake passcode?</string>
     <string name="PasscodeInUse">This passcode is already in use</string>
     <string name="ChangeFakePasscodeInfo">You can change the fake passcode without deleting it.</string>
@@ -4286,4 +4286,5 @@
     <string name="FakePasscodeAddSms">Add SMS</string>
     <string name="FakePasscodeSmsSendOnlyIfDisconnected">Send only if there is no internet</string>
     <string name="FakePasscodeTelegramMessageInfo">Set up messages that will be sent when you enter a fake passcode.</string>
+    <string name="TelegramMessages">Telegram Messages</string>
 </resources>

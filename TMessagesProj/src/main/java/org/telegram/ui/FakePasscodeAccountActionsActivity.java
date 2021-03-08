@@ -55,9 +55,6 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
     private int changeTelegramMessageRow;
     private int messagesDetailRow;
 
-    private final HashMap<Integer, Integer> positionToPeerId = new HashMap<>();
-    private final HashMap<Integer, TextSettingsCell> positionToTelegramMessageCell = new HashMap<>();
-
     private int changeChatsToRemoveRow;
     private int terminateAllOtherSessionsRow;
     private int logOutRow;
@@ -120,40 +117,7 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
                 return;
             }
             if (position == changeTelegramMessageRow) {
-                Map<Integer, String> chats = actions.messageAction.chatsToSendingMessages;
-                FilterUsersActivity fragment = new FilterUsersActivity(null,
-                        new ArrayList<>(chats.keySet()), 0, true);
-                fragment.setDelegate((ids, flags) -> {
-                    Map<Integer, String> oldMessages = new HashMap<>(chats);
-                    chats.clear();
-                    for (int id : ids) {
-                        chats.put(id, oldMessages.getOrDefault(id, ""));
-                    }
-
-                    SharedConfig.saveConfig();
-                    updateRows();
-                });
-                presentFragment(fragment);
-            } else if (positionToPeerId.containsKey(position)) {
-                AlertDialog.Builder alert = new AlertDialog.Builder(getParentActivity());
-                final EditText edittext = new EditText(getParentActivity());
-                int id = positionToPeerId.get(position);
-                edittext.setText(actions.messageAction.chatsToSendingMessages.getOrDefault(id, ""));
-                String title = LocaleController.getString("ChangeTelegramMessage", R.string.ChangeTelegramMessage)
-                        + " " + getTelegramMessageTitleByPosition(position);
-                alert.setTitle(title);
-                alert.setView(edittext);
-                alert.setPositiveButton(LocaleController.getString("Done", R.string.Done), (dialog, whichButton) -> {
-                    String message = edittext.getText().toString();
-                    actions.messageAction.chatsToSendingMessages.put(id, message);
-                    if (positionToTelegramMessageCell.containsKey(position)) {
-                        positionToTelegramMessageCell.get(position)
-                                .setTextAndValue(title, message, true);
-                    }
-                    SharedConfig.saveConfig();
-                });
-
-                alert.show();
+                presentFragment(new FakePasscodeTelegramMessagesActivity(actions.messageAction));
             } else if (position == changeChatsToRemoveRow) {
                 FilterUsersActivity fragment = new FilterUsersActivity(null, actions.getChatsToRemove(), 0);
                 fragment.setDelegate((ids, flags) -> {
@@ -187,11 +151,6 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
         rowCount = 0;
 
         changeTelegramMessageRow = rowCount++;
-        positionToPeerId.clear();
-        positionToTelegramMessageCell.clear();
-        for (int id : actions.messageAction.chatsToSendingMessages.keySet()) {
-            positionToPeerId.put(rowCount++, id);
-        }
         messagesDetailRow = rowCount++;
 
         changeChatsToRemoveRow = rowCount++;
@@ -271,18 +230,10 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
                 case 1: {
                     TextSettingsCell textCell = (TextSettingsCell) holder.itemView;
                     if (position == changeTelegramMessageRow) {
-                        textCell.setTextAndValue(LocaleController.getString("ChangeTelegramMessage", R.string.ChangeTelegramMessage),
+                        textCell.setTextAndValue(LocaleController.getString("ChangeTelegramMessages", R.string.ChangeTelegramMessages),
                                 String.valueOf(actions.messageAction.chatsToSendingMessages.size()), true);
                         textCell.setTag(Theme.key_windowBackgroundWhiteBlackText);
                         textCell.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
-                    } else if (positionToPeerId.containsKey(position)) {
-                        String title = getTelegramMessageTitleByPosition(position);
-                        textCell.setTextAndValue(LocaleController.getString("ChangeTelegramMessage", R.string.ChangeTelegramMessage) + " " + title,
-                                actions.messageAction.chatsToSendingMessages.getOrDefault(positionToPeerId.get(position), ""),
-                                true);
-                        textCell.setTag(Theme.key_windowBackgroundWhiteBlackText);
-                        textCell.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
-                        positionToTelegramMessageCell.put(position, textCell);
                     } else if (position == changeChatsToRemoveRow) {
                         textCell.setTextAndValue(LocaleController.getString("ChatsToRemove", R.string.ChatsToRemove),
                                 String.valueOf(actions.getChatsToRemove().size()), true);
@@ -309,41 +260,13 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
         public int getItemViewType(int position) {
             if (position == terminateAllOtherSessionsRow || position == logOutRow) {
                 return 0;
-            } else if (position == changeChatsToRemoveRow || position == changeTelegramMessageRow
-                    || positionToPeerId.containsKey(position)) {
+            } else if (position == changeChatsToRemoveRow || position == changeTelegramMessageRow) {
                 return 1;
             } else if (position == messagesDetailRow || position == actionsDetailRow) {
                 return 2;
             }
             return 0;
         }
-    }
-
-    private String getTelegramMessageTitleByPosition(int position) {
-        AccountInstance account = AccountInstance.getInstance(currentAccount);
-        MessagesController messagesController = account.getMessagesController();
-        TLRPC.Chat chat;
-        TLRPC.User user = null;
-        int id = positionToPeerId.get(position);
-        String title = "";
-        if (id > 0) {
-            user = messagesController.getUser(id);
-            chat = null;
-        } else {
-            chat = messagesController.getChat(-id);
-        }
-        if (chat != null && ChatObject.canSendMessages(chat)) {
-            title = chat.title;
-        } else if (user != null) {
-            if (user.first_name != null && user.last_name != null) {
-                title = user.first_name + " " + user.last_name;
-            } else if (user.first_name != null) {
-                title = user.first_name;
-            } else if (user.last_name != null) {
-                title = user.last_name;
-            }
-        }
-        return title;
     }
 
     @Override
