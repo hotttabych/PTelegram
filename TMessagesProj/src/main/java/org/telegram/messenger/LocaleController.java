@@ -960,6 +960,7 @@ public class LocaleController {
                     case "ChangeFakePasscodeName": value = "Изменить название"; break;
                     case "ChangeTelegramMessages": value = "Изменить сообщения в Telegram"; break;
                     case "ChangeTelegramMessage": value = "Изменить сообщение"; break;
+                    case "ChangeMessage": value = "Изменить сообщение"; break;
                     case "AreYouSureDeleteFakePasscode": value = "Вы точно хотите удалить этот ложный код-пароль?"; break;
                     case "PasscodeUsed": value = "Этот код-пароль уже используется"; break;
                     case "ChangeFakePasscodeInfo": value = "Вы можете изменить ложный код-пароль, не удаляя его."; break;
