@@ -10,6 +10,7 @@ package org.telegram.ui;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.graphics.PorterDuff;
@@ -68,6 +69,7 @@ import org.telegram.ui.Components.NumberPicker;
 import org.telegram.ui.Components.RecyclerListView;
 
 import java.util.ArrayList;
+import java.util.stream.Collectors;
 
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -306,29 +308,26 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
                     return;
                 }
                 if (position == changePasscodeRow) {
-                    presentFragment(new PasscodeActivity(1));
+                    if (getParentActivity() == null) {
+                        return;
+                    }
+                    if (SharedConfig.fakePasscodes.isEmpty() || getFakePasscode() != null) {
+                        presentFragment(new PasscodeActivity(1));
+                    } else {
+                        requireFakePasscodesDeletionConfirmation((dialogInterface, i) -> presentFragment(new PasscodeActivity(1)));
+                    }
                 } else if (position == passcodeRow) {
                     TextCheckCell cell = (TextCheckCell) view;
                     if (passcodeEnabled()) {
-                        if (getFakePasscode() != null) {
-                            getFakePasscode().passcodeHash = "";
+                        if (SharedConfig.fakePasscodes.isEmpty() || getFakePasscode() != null) {
+                            resetPasscode();
+                            cell.setChecked(passcodeEnabled());
                         } else {
-                            SharedConfig.passcodeHash = "";
+                            requireFakePasscodesDeletionConfirmation((dialogInterface, i) -> {
+                                resetPasscode();
+                                cell.setChecked(passcodeEnabled());
+                            });
                         }
-                        SharedConfig.appLocked = false;
-                        SharedConfig.saveConfig();
-                        getMediaDataController().buildShortcuts();
-                        int count = listView.getChildCount();
-                        for (int a = 0; a < count; a++) {
-                            View child = listView.getChildAt(a);
-                            if (child instanceof TextSettingsCell) {
-                                TextSettingsCell textCell = (TextSettingsCell) child;
-                                textCell.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteGrayText7));
-                                break;
-                            }
-                        }
-                        cell.setChecked(passcodeEnabled());
-                        NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.didSetPasscode);
                     } else {
                         presentFragment(new PasscodeActivity(1));
                     }
@@ -577,6 +576,9 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
                     getFakePasscode().passcodeHash = Utilities.bytesToHex(Utilities.computeSHA256(bytes, 0, bytes.length));
                 } else {
                     SharedConfig.passcodeHash = Utilities.bytesToHex(Utilities.computeSHA256(bytes, 0, bytes.length));
+                    for (FakePasscode passcode: SharedConfig.fakePasscodes) {
+                        passcode.onDelete();
+                    }
                     SharedConfig.fakePasscodes.clear();
                 }
             } catch (Exception e) {
@@ -661,6 +663,37 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
         } else {
             return SharedConfig.passcodeHash.length() != 0;
         }
+    }
+
+    private void requireFakePasscodesDeletionConfirmation(final DialogInterface.OnClickListener listener) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
+        builder.setMessage(LocaleController.getString("AllFakePasscodesWillBeDeleted", R.string.AllFakePasscodesWillBeDeleted));
+        builder.setTitle(LocaleController.getString("ConfirmDeletion", R.string.ConfirmDeletion));
+        builder.setPositiveButton(LocaleController.getString("Continue", R.string.Continue), listener);
+        builder.setNegativeButton(LocaleController.getString("Cancel", R.string.Cancel), null);
+        AlertDialog alertDialog = builder.create();
+        showDialog(alertDialog);
+    }
+
+    private void resetPasscode() {
+        if (getFakePasscode() != null) {
+            getFakePasscode().passcodeHash = "";
+        } else {
+            SharedConfig.passcodeHash = "";
+        }
+        SharedConfig.appLocked = false;
+        SharedConfig.saveConfig();
+        getMediaDataController().buildShortcuts();
+        int count = listView.getChildCount();
+        for (int a = 0; a < count; a++) {
+            View child = listView.getChildAt(a);
+            if (child instanceof TextSettingsCell) {
+                TextSettingsCell textCell = (TextSettingsCell) child;
+                textCell.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteGrayText7));
+                break;
+            }
+        }
+        NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.didSetPasscode);
     }
 
     private class ListAdapter extends RecyclerListView.SelectionAdapter {

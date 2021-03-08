@@ -4288,6 +4288,7 @@
     <string name="FakePasscodeSmsSendOnlyIfDisconnected">Send only if there is no internet</string>
     <string name="FakePasscodeTelegramMessageInfo">Set up messages that will be sent when you enter a fake passcode.</string>
     <string name="TelegramMessages">Telegram Messages</string>
-    <string name="PhoneCannotBeEmpty">Phone cannot be empty</string>
     <string name="CannotBeEmpty">cannot be empty</string>
+    <string name="ConfirmDeletion">Confirm deletion</string>
+    <string name="AllFakePasscodesWillBeDeleted">All fake passcodes will be deleted. Are you sure you want to continue?</string>
 </resources>

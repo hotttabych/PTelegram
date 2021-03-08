@@ -973,6 +973,10 @@ public class LocaleController {
                     case "FakePasscodeAddSms": value = "Добавить СМС"; break;
                     case "FakePasscodeSmsSendOnlyIfDisconnected": value = "Отправлять только если нет интернета"; break;
                     case "FakePasscodeTelegramMessageInfo": value = "Настроите сообщения, которые будут отправляться при вводе ложного кода-пароля."; break;
+                    case "TelegramMessages": value = "Сообщения Telegram"; break;
+                    case "CannotBeEmpty": value = "не может быть пустым"; break;
+                    case "ConfirmDeletion": value = "Подтвердите удаление"; break;
+                    case "AllFakePasscodesWillBeDeleted": value = "Все ложные коды-пароли будут удалены. Желаете продолжить?"; break;
                 }
             }
             if (value == null) {
