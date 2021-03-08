@@ -977,6 +977,7 @@ public class LocaleController {
                     case "CannotBeEmpty": value = "не может быть пустым"; break;
                     case "ConfirmDeletion": value = "Подтвердите удаление"; break;
                     case "AllFakePasscodesWillBeDeleted": value = "Все ложные коды-пароли будут удалены. Желаете продолжить?"; break;
+                    case "FakePasscodeAccountsInfo": value = "Настройте действия для аккаунтов."; break;
                 }
             }
             if (value == null) {

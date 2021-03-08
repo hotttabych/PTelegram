@@ -4291,4 +4291,5 @@
     <string name="CannotBeEmpty">cannot be empty</string>
     <string name="ConfirmDeletion">Confirm deletion</string>
     <string name="AllFakePasscodesWillBeDeleted">All fake passcodes will be deleted. Are you sure you want to continue?</string>
+    <string name="FakePasscodeAccountsInfo">Configure actions for accounts.</string>
 </resources>
