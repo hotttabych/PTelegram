@@ -88,15 +88,16 @@ public class FakePasscodeSmsActivity extends BaseFragment {
         messageEditText.setHintColor(Theme.getColor(Theme.key_chat_messagePanelHint));
         messageEditText.setHintTextColor(Theme.getColor(Theme.key_chat_messagePanelHint));
         messageEditText.setCursorColor(Theme.getColor(Theme.key_chat_messagePanelCursor));
-
         return messageEditText;
     }
 
     private LinearLayout createAlertLayout(Context context, EditText phoneEditText, EditText messageEditText) {
         LinearLayout layout = new LinearLayout(context);
         layout.setOrientation(LinearLayout.VERTICAL);
-        layout.addView(phoneEditText);
-        layout.addView(messageEditText);
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,LinearLayout.LayoutParams.WRAP_CONTENT);
+        lp.setMargins(30, 0, 30, 0);
+        layout.addView(phoneEditText, lp);
+        layout.addView(messageEditText, lp);
         return layout;
     }
 
@@ -104,10 +105,10 @@ public class FakePasscodeSmsActivity extends BaseFragment {
         dialog.setOnShowListener(dialogInterface -> {
             dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(view -> {
                 if (phone.getText().toString().isEmpty()) {
-                    phone.setError("Enter phone. CHANGE ME!!!");
+                    phone.setError("Phone");
                 }
                 if (message.getText().toString().isEmpty()) {
-                    message.setError("Enter message. CHANGE ME!!!");
+                    message.setError("Message");
                 }
                 if (!phone.getText().toString().isEmpty() && !message.getText().toString().isEmpty()) {
                     action.accept(view);
