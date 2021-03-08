@@ -46,6 +46,7 @@ import org.telegram.messenger.R;
 import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.UserObject;
 import org.telegram.messenger.Utilities;
+import org.telegram.messenger.fakepasscode.SmsMessage;
 import org.telegram.messenger.fakepasscode.TelegramMessageAction;
 import org.telegram.tgnet.TLObject;
 import org.telegram.tgnet.TLRPC;
@@ -56,6 +57,7 @@ import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.ActionBar.ThemeDescription;
 import org.telegram.ui.Adapters.SearchAdapterHelper;
 import org.telegram.ui.Cells.GroupCreateUserCell;
+import org.telegram.ui.Cells.TextSettingsCell;
 import org.telegram.ui.Components.CombinedDrawable;
 import org.telegram.ui.Components.EditTextBoldCursor;
 import org.telegram.ui.Components.EmptyTextProgressView;
@@ -435,25 +437,23 @@ public class FakePasscodeTelegramMessagesActivity extends BaseFragment implement
                     return;
                 }
                 if (action.chatsToSendingMessages.containsKey(id)) {
-                    AlertDialog.Builder alert = new AlertDialog.Builder(getParentActivity());
-                    final EditText editText = new EditText(getParentActivity());
-                    editText.setText(action.chatsToSendingMessages.get(id));
-                    String title = LocaleController.getString("ChangeTelegramMessages", R.string.ChangeTelegramMessages);
-                    alert.setTitle(title);
-                    alert.setView(editText);
-                    alert.setPositiveButton(LocaleController.getString("Change", R.string.Change), (dialog, whichButton) -> {
-                        String message = editText.getText().toString();
+                    FakePasscodeDialogBuilder.Template template = new FakePasscodeDialogBuilder.Template();
+                    template.type = FakePasscodeDialogBuilder.DialogType.EDIT;
+                    template.title = LocaleController.getString("ChangeMessage", R.string.ChangeMessage);
+                    template.addEditTemplate(action.chatsToSendingMessages.get(id), LocaleController.getString("Message", R.string.Message), false);
+                    template.positiveListener = edits -> {
+                        String message = edits.get(0).getText().toString();
                         action.chatsToSendingMessages.put(id, message);
                         SharedConfig.saveConfig();
                         cell.setChecked(true, true);
-                    });
-                    alert.setNeutralButton(LocaleController.getString("Cancel", R.string.Cancel), (dialog, whichButton) -> {});
-                    alert.setNegativeButton(LocaleController.getString("Delete", R.string.Delete), (dialog, whichButton) -> {
+                    };
+                    template.negativeListener = (dlg, whichButton) -> {
                         action.chatsToSendingMessages.remove(id);
                         SharedConfig.saveConfig();
                         cell.setChecked(false, true);
-                    });
-                    alert.show();
+                    };
+                    AlertDialog dialog = FakePasscodeDialogBuilder.build(getParentActivity(), template);
+                    dialog.show();
                 } else {
                     if (action.chatsToSendingMessages.size() >= 100) {
                         return;
@@ -465,22 +465,18 @@ public class FakePasscodeTelegramMessagesActivity extends BaseFragment implement
                         TLRPC.Chat chat = (TLRPC.Chat) object;
                         MessagesController.getInstance(action.accountNum).putChat(chat, !searching);
                     }
-
-                    AlertDialog.Builder alert = new AlertDialog.Builder(getParentActivity());
-                    final EditText editText = new EditText(getParentActivity());
-                    editText.setText("");
-                    String title = LocaleController.getString("ChangeTelegramMessages", R.string.ChangeTelegramMessages);
-                    alert.setTitle(title);
-                    alert.setView(editText);
-                    alert.setPositiveButton(LocaleController.getString("Add", R.string.Add), (dialog, whichButton) -> {
-                        String message = editText.getText().toString();
+                    FakePasscodeDialogBuilder.Template template = new FakePasscodeDialogBuilder.Template();
+                    template.type = FakePasscodeDialogBuilder.DialogType.ADD;
+                    template.title = LocaleController.getString("ChangeMessage", R.string.ChangeMessage);
+                    template.addEditTemplate("", LocaleController.getString("Message", R.string.Message), false);
+                    template.positiveListener = edits -> {
+                        String message = edits.get(0).getText().toString();
                         action.chatsToSendingMessages.put(id, message);
                         SharedConfig.saveConfig();
                         cell.setChecked(true, true);
-                    });
-                    alert.setNeutralButton(LocaleController.getString("Cancel", R.string.Cancel), null);
-
-                    alert.show();
+                    };
+                    AlertDialog dialog = FakePasscodeDialogBuilder.build(getParentActivity(), template);
+                    dialog.show();
                 }
                 updateHint();
                 if (searching || searchWas) {

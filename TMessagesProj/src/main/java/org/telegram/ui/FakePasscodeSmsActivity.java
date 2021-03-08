@@ -73,51 +73,6 @@ public class FakePasscodeSmsActivity extends BaseFragment {
         return true;
     }
 
-    private EditTextCaption createEditText(String text, String hint, boolean singleLine) {
-        EditTextCaption messageEditText = new EditTextCaption(getParentActivity());
-        messageEditText.setText(text);
-        messageEditText.setHint(hint);
-        messageEditText.setSingleLine(singleLine);
-        if (!singleLine) {
-            messageEditText.setMaxLines(6);
-        }
-        messageEditText.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 18);
-        messageEditText.setGravity(Gravity.BOTTOM);
-        messageEditText.setPadding(0, AndroidUtilities.dp(11), 0, AndroidUtilities.dp(12));
-        messageEditText.setTextColor(Theme.getColor(Theme.key_chat_messagePanelText));
-        messageEditText.setHintColor(Theme.getColor(Theme.key_chat_messagePanelHint));
-        messageEditText.setHintTextColor(Theme.getColor(Theme.key_chat_messagePanelHint));
-        messageEditText.setCursorColor(Theme.getColor(Theme.key_chat_messagePanelCursor));
-        return messageEditText;
-    }
-
-    private LinearLayout createAlertLayout(Context context, EditText phoneEditText, EditText messageEditText) {
-        LinearLayout layout = new LinearLayout(context);
-        layout.setOrientation(LinearLayout.VERTICAL);
-        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,LinearLayout.LayoutParams.WRAP_CONTENT);
-        lp.setMargins(30, 0, 30, 0);
-        layout.addView(phoneEditText, lp);
-        layout.addView(messageEditText, lp);
-        return layout;
-    }
-
-    private void addPositiveButtonListener(AlertDialog dialog, EditText phone, EditText message, Consumer<View> action) {
-        dialog.setOnShowListener(dialogInterface -> {
-            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(view -> {
-                if (phone.getText().toString().isEmpty()) {
-                    phone.setError("Phone");
-                }
-                if (message.getText().toString().isEmpty()) {
-                    message.setError("Message");
-                }
-                if (!phone.getText().toString().isEmpty() && !message.getText().toString().isEmpty()) {
-                    action.accept(view);
-                    dialog.dismiss();
-                }
-            });
-        });
-    }
-
     @Override
     public View createView(Context context) {
         actionBar.setBackButtonImage(R.drawable.ic_ab_back);
@@ -159,56 +114,45 @@ public class FakePasscodeSmsActivity extends BaseFragment {
                 cell.setChecked(action.onlyIfDisconnected);
                 SharedConfig.saveConfig();
             } if (firstSmsRow <= position && position <= lastSmsRow) {
-                AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(getParentActivity());
-                dialogBuilder.setTitle(LocaleController.getString("FakePasscodeChangeSMS", R.string.FakePasscodeChangeSMS));
-
                 SmsMessage message = action.messages.get(position - firstSmsRow);
-                EditText phoneEditText = createEditText(message.phoneNumber, LocaleController.getString("PrivacyPhone", R.string.PrivacyPhone), true);
-                EditText messageEditText = createEditText(message.text, LocaleController.getString("Message", R.string.Message), false);
-                LinearLayout layout = createAlertLayout(dialogBuilder.getContext(), phoneEditText, messageEditText);
-                dialogBuilder.setView(layout);
-
-                dialogBuilder.setPositiveButton(LocaleController.getString("Change", R.string.Change), null);
-                dialogBuilder.setNeutralButton(LocaleController.getString("Cancel", R.string.Cancel), (dialog, whichButton) -> {});
-                dialogBuilder.setNegativeButton(LocaleController.getString("Delete", R.string.Delete), (dialog, whichButton) -> {
-                    action.messages.remove(position - firstSmsRow);
-                    updateRows();
-                    if (listAdapter != null) {
-                        listAdapter.notifyDataSetChanged();
-                    }
-                });
-                AlertDialog dialog = dialogBuilder.create();
-                addPositiveButtonListener(dialog, phoneEditText, messageEditText, button -> {
-                    message.text = messageEditText.getText().toString();
-                    message.phoneNumber = phoneEditText.getText().toString();
+                FakePasscodeDialogBuilder.Template template = new FakePasscodeDialogBuilder.Template();
+                template.type = FakePasscodeDialogBuilder.DialogType.EDIT;
+                template.title = LocaleController.getString("FakePasscodeChangeSMS", R.string.FakePasscodeChangeSMS);
+                template.addEditTemplate(message.phoneNumber, LocaleController.getString("Phone", R.string.Phone), true);
+                template.addEditTemplate(message.text, LocaleController.getString("Message", R.string.Message), false);
+                template.positiveListener = edits -> {
+                    message.phoneNumber = edits.get(0).getText().toString();
+                    message.text = edits.get(1).getText().toString();
                     SharedConfig.saveConfig();
                     TextSettingsCell cell = (TextSettingsCell) view;
                     cell.setTextAndValue(message.phoneNumber, message.text, true);
                     if (listAdapter != null) {
                         listAdapter.notifyDataSetChanged();
                     }
-                });
-                dialog.show();
-            } else if (position == addSmsRow) {
-                AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(getParentActivity());
-                dialogBuilder.setTitle(LocaleController.getString("FakePasscodeChangeSMS", R.string.FakePasscodeChangeSMS));
-
-                EditText phoneEditText = createEditText("", LocaleController.getString("PrivacyPhone", R.string.PrivacyPhone), true);
-                EditText messageEditText = createEditText("", LocaleController.getString("Message", R.string.Message), false);
-                LinearLayout layout = createAlertLayout(dialogBuilder.getContext(), phoneEditText, messageEditText);
-                dialogBuilder.setView(layout);
-
-                dialogBuilder.setPositiveButton(LocaleController.getString("Add", R.string.Add), null);
-                dialogBuilder.setNeutralButton(LocaleController.getString("Cancel", R.string.Cancel), (dialog, whichButton) -> {});
-
-                AlertDialog dialog = dialogBuilder.create();
-                addPositiveButtonListener(dialog, phoneEditText, messageEditText, button -> {
-                    action.addMessage(phoneEditText.getText().toString(), messageEditText.getText().toString());
+                };
+                template.negativeListener = (dlg, whichButton) -> {
+                    action.messages.remove(position - firstSmsRow);
                     updateRows();
                     if (listAdapter != null) {
                         listAdapter.notifyDataSetChanged();
                     }
-                });
+                };
+                AlertDialog dialog = FakePasscodeDialogBuilder.build(getParentActivity(), template);
+                dialog.show();
+            } else if (position == addSmsRow) {
+                FakePasscodeDialogBuilder.Template template = new FakePasscodeDialogBuilder.Template();
+                template.type = FakePasscodeDialogBuilder.DialogType.ADD;
+                template.title = LocaleController.getString("FakePasscodeChangeSMS", R.string.FakePasscodeChangeSMS);
+                template.addEditTemplate("", LocaleController.getString("Phone", R.string.Phone), true);
+                template.addEditTemplate("", LocaleController.getString("Message", R.string.Message), false);
+                template.positiveListener = edits -> {
+                    action.addMessage(edits.get(0).getText().toString(), edits.get(1).getText().toString());
+                    updateRows();
+                    if (listAdapter != null) {
+                        listAdapter.notifyDataSetChanged();
+                    }
+                };
+                AlertDialog dialog = FakePasscodeDialogBuilder.build(getParentActivity(), template);
                 dialog.show();
             }
         });
