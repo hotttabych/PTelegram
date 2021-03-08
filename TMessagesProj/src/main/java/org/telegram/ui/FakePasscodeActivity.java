@@ -358,8 +358,10 @@ public class FakePasscodeActivity extends BaseFragment {
     @Override
     public void onRequestPermissionsResultFragment(int requestCode, String[] permissions, int[] grantResults) {
         if (requestCode == 1000 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            FakePasscodeSmsActivity activity = new FakePasscodeSmsActivity(fakePasscode.smsAction);
-            presentFragment(activity);
+            AndroidUtilities.runOnUIThread(() -> {
+                FakePasscodeSmsActivity activity = new FakePasscodeSmsActivity(fakePasscode.smsAction);
+                presentFragment(activity);
+            });
         }
     }
 
