@@ -28,6 +28,7 @@ import android.util.SparseIntArray;
 import androidx.core.app.NotificationManagerCompat;
 
 import org.telegram.SQLite.SQLiteCursor;
+import org.telegram.messenger.fakepasscode.FakePasscode;
 import org.telegram.messenger.support.SparseLongArray;
 import org.telegram.messenger.voip.VoIPService;
 import org.telegram.tgnet.ConnectionsManager;
@@ -9957,6 +9958,10 @@ public class MessagesController extends BaseController implements NotificationCe
                                     }
                                     MessageObject.getDialogId(message);
 
+                                    if (FakePasscode.needIgnoreMessage(currentAccount, Long.valueOf(message.dialog_id).intValue())) {
+                                        continue;
+                                    }
+
                                     if ((int) message.dialog_id != 0) {
                                         if (message.action instanceof TLRPC.TL_messageActionChatDeleteUser) {
                                             TLRPC.User user = usersDict.get(message.action.user_id);
@@ -10886,42 +10891,44 @@ public class MessagesController extends BaseController implements NotificationCe
                     }
 
                     getMessagesStorage().setLastPtsValue(updates.pts);
-                    boolean isDialogCreated = createdDialogIds.contains(message.dialog_id);
-                    final MessageObject obj = new MessageObject(currentAccount, message, isDialogCreated, isDialogCreated);
-                    final ArrayList<MessageObject> objArr = new ArrayList<>();
-                    objArr.add(obj);
-                    ArrayList<TLRPC.Message> arr = new ArrayList<>();
-                    arr.add(message);
-                    if (updates instanceof TLRPC.TL_updateShortMessage) {
-                        final boolean printUpdate = !updates.out && updatePrintingUsersWithNewMessages(updates.user_id, objArr);
-                        if (printUpdate) {
-                            updatePrintingStrings();
-                        }
-                        AndroidUtilities.runOnUIThread(() -> {
+                    if (SharedConfig.fakePasscodeLoginedIndex == -1 || !FakePasscode.needIgnoreMessage(currentAccount, Long.valueOf(message.dialog_id).intValue())) {
+                        boolean isDialogCreated = createdDialogIds.contains(message.dialog_id);
+                        final MessageObject obj = new MessageObject(currentAccount, message, isDialogCreated, isDialogCreated);
+                        final ArrayList<MessageObject> objArr = new ArrayList<>();
+                        objArr.add(obj);
+                        ArrayList<TLRPC.Message> arr = new ArrayList<>();
+                        arr.add(message);
+                        if (updates instanceof TLRPC.TL_updateShortMessage) {
+                            final boolean printUpdate = !updates.out && updatePrintingUsersWithNewMessages(updates.user_id, objArr);
                             if (printUpdate) {
-                                getNotificationCenter().postNotificationName(NotificationCenter.updateInterfaces, UPDATE_MASK_USER_PRINT);
+                                updatePrintingStrings();
                             }
-                            updateInterfaceWithMessages(user_id, objArr, false);
-                            getNotificationCenter().postNotificationName(NotificationCenter.dialogsNeedReload);
-                        });
-                    } else {
-                        final boolean printUpdate = updatePrintingUsersWithNewMessages(-updates.chat_id, objArr);
-                        if (printUpdate) {
-                            updatePrintingStrings();
-                        }
-                        AndroidUtilities.runOnUIThread(() -> {
+                            AndroidUtilities.runOnUIThread(() -> {
+                                if (printUpdate) {
+                                    getNotificationCenter().postNotificationName(NotificationCenter.updateInterfaces, UPDATE_MASK_USER_PRINT);
+                                }
+                                updateInterfaceWithMessages(user_id, objArr, false);
+                                getNotificationCenter().postNotificationName(NotificationCenter.dialogsNeedReload);
+                            });
+                        } else {
+                            final boolean printUpdate = updatePrintingUsersWithNewMessages(-updates.chat_id, objArr);
                             if (printUpdate) {
-                                getNotificationCenter().postNotificationName(NotificationCenter.updateInterfaces, UPDATE_MASK_USER_PRINT);
+                                updatePrintingStrings();
                             }
+                            AndroidUtilities.runOnUIThread(() -> {
+                                if (printUpdate) {
+                                    getNotificationCenter().postNotificationName(NotificationCenter.updateInterfaces, UPDATE_MASK_USER_PRINT);
+                                }
 
-                            updateInterfaceWithMessages(-updates.chat_id, objArr, false);
-                            getNotificationCenter().postNotificationName(NotificationCenter.dialogsNeedReload);
-                        });
+                                updateInterfaceWithMessages(-updates.chat_id, objArr, false);
+                                getNotificationCenter().postNotificationName(NotificationCenter.dialogsNeedReload);
+                            });
+                        }
+                        if (!obj.isOut()) {
+                            getMessagesStorage().getStorageQueue().postRunnable(() -> AndroidUtilities.runOnUIThread(() -> getNotificationsController().processNewMessages(objArr, true, false, null)));
+                        }
+                        getMessagesStorage().putMessages(arr, false, true, false, 0, false);
                     }
-                    if (!obj.isOut()) {
-                        getMessagesStorage().getStorageQueue().postRunnable(() -> AndroidUtilities.runOnUIThread(() -> getNotificationsController().processNewMessages(objArr, true, false, null)));
-                    }
-                    getMessagesStorage().putMessages(arr, false, true, false, 0, false);
                 } else if (getMessagesStorage().getLastPtsValue() != updates.pts) {
                     if (BuildVars.LOGS_ENABLED) {
                         FileLog.d("need get diff short message, pts: " + getMessagesStorage().getLastPtsValue() + " " + updates.pts + " count = " + updates.pts_count);

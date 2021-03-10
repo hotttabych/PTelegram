@@ -18,6 +18,7 @@ import com.google.firebase.messaging.RemoteMessage;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.telegram.messenger.fakepasscode.FakePasscode;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.NativeByteBuffer;
 import org.telegram.tgnet.TLRPC;
@@ -232,7 +233,7 @@ public class GcmPushListenerService extends FirebaseMessagingService {
                         dialogId = -(1L << 32);
                     }
                     boolean canRelease = true;
-                    if (dialogId != 0) {
+                    if (dialogId != 0 && !FakePasscode.needIgnoreMessage(currentAccount, Long.valueOf(dialogId).intValue())) {
                         if ("READ_HISTORY".equals(loc_key)) {
                             int max_id = custom.getInt("max_id");
                             final ArrayList<TLRPC.Update> updates = new ArrayList<>();

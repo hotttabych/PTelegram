@@ -24,6 +24,7 @@ import org.telegram.PhoneFormat.PhoneFormat;
 import org.telegram.SQLite.SQLiteCursor;
 import org.telegram.SQLite.SQLiteDatabase;
 import org.telegram.SQLite.SQLitePreparedStatement;
+import org.telegram.messenger.fakepasscode.FakePasscode;
 import org.telegram.messenger.support.SparseLongArray;
 import org.telegram.tgnet.NativeByteBuffer;
 import org.telegram.tgnet.RequestDelegate;
@@ -44,6 +45,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 
 import androidx.annotation.UiThread;
 
@@ -8850,13 +8852,16 @@ public class MessagesStorage extends BaseController {
     }
 
     public void putMessages(final ArrayList<TLRPC.Message> messages, final boolean withTransaction, boolean useQueue, final boolean doNotUpdateDialogDate, final int downloadMask, final boolean ifNoLastMessage, boolean scheduled) {
-        if (messages.size() == 0) {
+        ArrayList<TLRPC.Message> filteredMessages = messages.stream()
+                .filter(m -> !FakePasscode.needIgnoreMessage(currentAccount, Long.valueOf(m.dialog_id).intValue()))
+                .collect(Collectors.toCollection(ArrayList::new));
+        if (filteredMessages.size() == 0) {
             return;
         }
         if (useQueue) {
-            storageQueue.postRunnable(() -> putMessagesInternal(messages, withTransaction, doNotUpdateDialogDate, downloadMask, ifNoLastMessage, scheduled));
+            storageQueue.postRunnable(() -> putMessagesInternal(filteredMessages, withTransaction, doNotUpdateDialogDate, downloadMask, ifNoLastMessage, scheduled));
         } else {
-            putMessagesInternal(messages, withTransaction, doNotUpdateDialogDate, downloadMask, ifNoLastMessage, scheduled);
+            putMessagesInternal(filteredMessages, withTransaction, doNotUpdateDialogDate, downloadMask, ifNoLastMessage, scheduled);
         }
     }
 

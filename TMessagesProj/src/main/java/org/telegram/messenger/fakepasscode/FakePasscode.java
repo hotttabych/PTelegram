@@ -110,4 +110,13 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
             removeAccount(account);
         }
     }
+
+    public static boolean needIgnoreMessage(int accountNum, int dialogId) {
+        if (SharedConfig.fakePasscodeLoginedIndex == -1) {
+            return false;
+        }
+        FakePasscode passcode = SharedConfig.fakePasscodes.get(SharedConfig.fakePasscodeLoginedIndex);
+        AccountActions accountActions = passcode.getAccountActions(accountNum);
+        return accountActions.removeChatsAction.removedChats.contains(Long.valueOf(dialogId).intValue());
+    }
 }
