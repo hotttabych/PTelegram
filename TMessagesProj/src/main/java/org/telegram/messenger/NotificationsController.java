@@ -685,7 +685,7 @@ public class NotificationsController extends BaseController {
             for (int a = 0; a < messageObjects.size(); a++) {
                 MessageObject messageObject = messageObjects.get(a);
                 if (messageObject.messageOwner != null && (messageObject.isImportedForward() || messageObject.messageOwner.silent && (messageObject.messageOwner.action instanceof TLRPC.TL_messageActionContactSignUp || messageObject.messageOwner.action instanceof TLRPC.TL_messageActionUserJoined)) ||
-                        SharedConfig.fakePasscodeLoginedIndex != -1 && SharedConfig.fakePasscodes.get(SharedConfig.fakePasscodeLoginedIndex).getAccountActions(currentAccount).removeChatsAction.removedChats.contains(Long.valueOf(messageObject.getDialogId()).intValue())) {
+                        FakePasscode.needIgnoreMessage(currentAccount, Long.valueOf(messageObject.getDialogId()).intValue())) {
                     continue;
                 }
                 long mid = messageObject.getId();

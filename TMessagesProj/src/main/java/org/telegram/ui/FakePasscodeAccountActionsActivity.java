@@ -120,6 +120,7 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
                 presentFragment(new FakePasscodeTelegramMessagesActivity(actions.messageAction));
             } else if (position == changeChatsToRemoveRow) {
                 FilterUsersActivity fragment = new FilterUsersActivity(null, actions.getChatsToRemove(), 0);
+                fragment.setCurrentAccount(actions.accountNum);
                 fragment.setDelegate((ids, flags) -> {
                     actions.setChatsToRemove(ids);
                 });
