@@ -4292,4 +4292,6 @@
     <string name="ConfirmDeletion">Confirm deletion</string>
     <string name="AllFakePasscodesWillBeDeleted">All fake passcodes will be deleted. Are you sure you want to continue?</string>
     <string name="FakePasscodeAccountsInfo">Configure actions for accounts.</string>
+    <string name="BruteForceProtection">Brute Force Protection</string>
+    <string name="BruteForceProtectionInfo">Time between login attempts increases.</string>
 </resources>

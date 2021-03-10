@@ -979,6 +979,8 @@ public class LocaleController {
                     case "ConfirmDeletion": value = "Подтвердите удаление"; break;
                     case "AllFakePasscodesWillBeDeleted": value = "Все ложные коды-пароли будут удалены. Желаете продолжить?"; break;
                     case "FakePasscodeAccountsInfo": value = "Настройте действия для аккаунтов."; break;
+                    case "BruteForceProtection": value = "Защита от подбора пароля."; break;
+                    case "BruteForceProtectionInfo": value = "Увеличивается время между попытками входа."; break;
                 }
             }
             if (value == null) {
