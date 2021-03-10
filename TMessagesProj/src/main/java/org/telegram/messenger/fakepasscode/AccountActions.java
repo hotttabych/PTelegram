@@ -13,6 +13,7 @@ public class AccountActions {
 
     public TelegramMessageAction messageAction = null;
     public RemoveChatsAction removeChatsAction = null;
+    public DeleteContactsAction deleteContactsAction = null;
     public TerminateOtherSessionsAction terminateOtherSessionsAction = null;
     public LogOutAction logOutAction = null;
 
@@ -31,6 +32,22 @@ public class AccountActions {
             fakePasscode.removeChatsActions.add(removeChatsAction);
         }
         SharedConfig.saveConfig();
+    }
+
+    public void changeDeleteContactsState() {
+        if (deleteContactsAction != null) {
+            deleteContactsAction = null;
+            fakePasscode.deleteContactsActions = fakePasscode.deleteContactsActions.stream()
+                    .filter(a -> a.accountNum != accountNum).collect(Collectors.toCollection(ArrayList::new));
+        } else {
+            deleteContactsAction = new DeleteContactsAction(accountNum);
+            fakePasscode.deleteContactsActions.add(deleteContactsAction);
+        }
+        SharedConfig.saveConfig();
+    }
+
+    public boolean isDeleteContacts() {
+        return deleteContactsAction != null;
     }
 
     public void changeTerminateActionState() {

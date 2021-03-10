@@ -21,6 +21,7 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
     public SosMessageAction trustedContactSosMessageAction;
     public SmsAction smsAction = new SmsAction();
     public List<TelegramMessageAction> telegramMessageAction = new ArrayList<>();
+    public List<DeleteContactsAction> deleteContactsActions = new ArrayList<>();
     public List<TerminateOtherSessionsAction> terminateOtherSessionsActions = new ArrayList<>();
     public List<LogOutAction> logOutActions = new ArrayList<>();
 
@@ -35,6 +36,7 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
         List<Action> result = new ArrayList<>(Arrays.asList(clearCacheAction, smsAction));
         result.addAll(removeChatsActions);
         result.addAll(telegramMessageAction);
+        result.addAll(deleteContactsActions);
         result.addAll(terminateOtherSessionsActions);
         result.addAll(logOutActions);
         return result;
@@ -43,6 +45,8 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
     public AccountActions getAccountActions(int accountNum) {
         AccountActions actions = new AccountActions(accountNum, this);
         actions.removeChatsAction = removeChatsActions.stream()
+                .filter(a -> a.accountNum == accountNum).findFirst().orElse(null);
+        actions.deleteContactsAction = deleteContactsActions.stream()
                 .filter(a -> a.accountNum == accountNum).findFirst().orElse(null);
         actions.terminateOtherSessionsAction = terminateOtherSessionsActions.stream()
                 .filter(a -> a.accountNum == accountNum).findFirst().orElse(null);
@@ -89,6 +93,8 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
 
     private void removeAccount(int accountNum) {
         removeChatsActions = removeChatsActions.stream()
+                .filter(a -> a.accountNum != accountNum).collect(Collectors.toList());
+        deleteContactsActions = deleteContactsActions.stream()
                 .filter(a -> a.accountNum != accountNum).collect(Collectors.toList());
         terminateOtherSessionsActions = terminateOtherSessionsActions.stream()
                 .filter(a -> a.accountNum != accountNum).collect(Collectors.toList());

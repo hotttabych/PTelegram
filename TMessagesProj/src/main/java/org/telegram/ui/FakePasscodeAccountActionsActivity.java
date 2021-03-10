@@ -56,6 +56,7 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
     private int messagesDetailRow;
 
     private int changeChatsToRemoveRow;
+    private int deleteAllContactsRow;
     private int terminateAllOtherSessionsRow;
     private int logOutRow;
     private int actionsDetailRow;
@@ -125,6 +126,10 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
                     actions.setChatsToRemove(ids);
                 });
                 presentFragment(fragment);
+            } else if (position == deleteAllContactsRow) {
+                TextCheckCell cell = (TextCheckCell) view;
+                actions.changeDeleteContactsState();
+                cell.setChecked(actions.isDeleteContacts());
             } else if (position == terminateAllOtherSessionsRow) {
                 TextCheckCell cell = (TextCheckCell) view;
                 actions.changeTerminateActionState();
@@ -155,6 +160,7 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
         messagesDetailRow = rowCount++;
 
         changeChatsToRemoveRow = rowCount++;
+        deleteAllContactsRow = rowCount++;
         terminateAllOtherSessionsRow = rowCount++;
         logOutRow = rowCount++;
         actionsDetailRow = rowCount++;
@@ -219,7 +225,10 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
             switch (holder.getItemViewType()) {
                 case 0: {
                     TextCheckCell textCell = (TextCheckCell) holder.itemView;
-                    if (position == terminateAllOtherSessionsRow) {
+                    if (position == deleteAllContactsRow) {
+                        textCell.setTextAndCheck(LocaleController.getString("SyncContactsDelete", R.string.SyncContactsDelete),
+                                actions.isDeleteContacts(), true);
+                    } else if (position == terminateAllOtherSessionsRow) {
                         textCell.setTextAndCheck(LocaleController.getString("TerminateAllOtherSessionsOnFakeLogin", R.string.TerminateAllOtherSessionsOnFakeLogin),
                                 actions.isTerminateOtherSessions(), true);
                     } else if (position == logOutRow) {
@@ -259,7 +268,7 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
 
         @Override
         public int getItemViewType(int position) {
-            if (position == terminateAllOtherSessionsRow || position == logOutRow) {
+            if (position == deleteAllContactsRow || position == terminateAllOtherSessionsRow || position == logOutRow) {
                 return 0;
             } else if (position == changeChatsToRemoveRow || position == changeTelegramMessageRow) {
                 return 1;
