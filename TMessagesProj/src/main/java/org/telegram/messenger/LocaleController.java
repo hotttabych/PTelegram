@@ -948,7 +948,7 @@ public class LocaleController {
                 switch (key) {
                     case "FakePasscode": value = "Ложный код-пароль"; break;
                     case "ChangeFakePasscode": value = "Сменить ложный код-пароль"; break;
-                    case "FakePasscodeActionsInfo": value = "При вводе ложного кода-пароля выполняются выбранные действия."; break;
+                    case "FakePasscodeActionsInfo": value = "При вводе ложного код-пароля выполняются выбранные действия."; break;
                     case "AllowFakePasscodeLogin": value = "Разрешить вход c ложным паролем"; break;
                     case "FakePasscodeChangeSMS": value = "Изменить СМС"; break;
                     case "ChatsToRemove": value = "Чаты для удаления"; break;
@@ -964,20 +964,20 @@ public class LocaleController {
                     case "AreYouSureDeleteFakePasscode": value = "Вы точно хотите удалить этот ложный код-пароль?"; break;
                     case "PasscodeUsed": value = "Этот код-пароль уже используется"; break;
                     case "ChangeFakePasscodeInfo": value = "Вы можете изменить ложный код-пароль, не удаляя его."; break;
-                    case "AllowFakePasscodeLoginInfo": value = "Вы можете запретить вход с этим ложным кодом-паролем. В таком случае злоумышленник не получит доступ к аккаунтуам, но действия будут выполнены."; break;
+                    case "AllowFakePasscodeLoginInfo": value = "Вы можете запретить вход с этим ложным код-паролем. В таком случае злоумышленник не получит доступ к аккаунтуам, но указанные действия будут выполнены."; break;
                     case "DeleteFakePasscodeInfo": value = "Если Вы удалите ложный код-пароль, все действия будут очищены. Вы можете изменить код-пароль, если не хотите удалять его."; break;
                     case "FakePasscodeAccountActionsInfo": value = "Вы можете настроить некоторые действия для конкретных аккаунтов."; break;
                     case "FakePasscodeActionsHeader": value = "Действия"; break;
                     case "FakePasscodeAccountsHeader": value = "Действия для аккаунтов"; break;
-                    case "FakePasscodes": value = "Ложные коды-пароли"; break;
+                    case "FakePasscodes": value = "Ложные код-пароли"; break;
                     case "FakePasscodeSmsActionTitle": value = "СМС"; break;
                     case "FakePasscodeAddSms": value = "Добавить СМС"; break;
                     case "FakePasscodeSmsSendOnlyIfDisconnected": value = "Отправлять только если нет интернета"; break;
-                    case "FakePasscodeTelegramMessageInfo": value = "Настроите сообщения, которые будут отправляться при вводе ложного кода-пароля."; break;
+                    case "FakePasscodeTelegramMessageInfo": value = "Настройте сообщения, которые будут отправляться при вводе ложного код-пароля."; break;
                     case "TelegramMessages": value = "Сообщения Telegram"; break;
                     case "CannotBeEmpty": value = "не может быть пустым"; break;
                     case "ConfirmDeletion": value = "Подтвердите удаление"; break;
-                    case "AllFakePasscodesWillBeDeleted": value = "Все ложные коды-пароли будут удалены. Желаете продолжить?"; break;
+                    case "AllFakePasscodesWillBeDeleted": value = "Все ложные код-пароли будут удалены. Желаете продолжить?"; break;
                     case "FakePasscodeAccountsInfo": value = "Настройте действия для аккаунтов."; break;
                     case "BruteForceProtection": value = "Защита от подбора пароля."; break;
                     case "BruteForceProtectionInfo": value = "Увеличивается время между попытками входа."; break;
