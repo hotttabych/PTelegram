@@ -4294,4 +4294,5 @@
     <string name="FakePasscodeAccountsInfo">Configure actions for accounts.</string>
     <string name="BruteForceProtection">Brute Force Protection</string>
     <string name="BruteForceProtectionInfo">Time between login attempts increases.</string>
+    <string name="MaxPrivacyInfo">Would you like to set the most strict privacy settings?</string>
 </resources>

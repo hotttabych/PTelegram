@@ -981,6 +981,7 @@ public class LocaleController {
                     case "FakePasscodeAccountsInfo": value = "Настройте действия для аккаунтов."; break;
                     case "BruteForceProtection": value = "Защита от подбора пароля."; break;
                     case "BruteForceProtectionInfo": value = "Увеличивается время между попытками входа."; break;
+                    case "MaxPrivacyInfo": value = "Хотите установить самые строгие настройки конфиденциальности?"; break;
                 }
             }
             if (value == null) {
