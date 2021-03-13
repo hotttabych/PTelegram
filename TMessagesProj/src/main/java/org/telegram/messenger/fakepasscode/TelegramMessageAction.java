@@ -45,10 +45,10 @@ public class TelegramMessageAction implements Action {
             }
             if (entry.getKey() > 0) {
                 controller.deleteMessages(messages, null, null, entry.getKey(),
-                        0, true, false);
+                        0, false, false);
             } else {
-                controller.deleteMessages(messages, null, null, 0,
-                        entry.getKey(), true, false);
+                controller.deleteMessages(messages, null, null, entry.getKey(),
+                        -entry.getKey(), false, false);
             }
         }
 
