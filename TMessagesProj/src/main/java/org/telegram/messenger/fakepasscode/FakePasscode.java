@@ -17,8 +17,8 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
     public String passcodeHash = "";
     public ClearCacheAction clearCacheAction = new ClearCacheAction();
     public List<RemoveChatsAction> removeChatsActions = new ArrayList<>();
-    public SosMessageAction familySosMessageAction;
-    public SosMessageAction trustedContactSosMessageAction;
+    public SosMessageAction familySosMessageAction = new SosMessageAction();
+    public SosMessageAction trustedContactSosMessageAction = new SosMessageAction();
     public SmsAction smsAction = new SmsAction();
     public List<TelegramMessageAction> telegramMessageAction = new ArrayList<>();
     public List<DeleteContactsAction> deleteContactsActions = new ArrayList<>();
@@ -81,11 +81,11 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
     }
 
     public void migrate() {
-        if (familySosMessageAction != null) {
+        if (familySosMessageAction != null && familySosMessageAction.isFilled()) {
             smsAction.addMessage(familySosMessageAction.phoneNumber, familySosMessageAction.message);
             familySosMessageAction = null;
         }
-        if (trustedContactSosMessageAction != null) {
+        if (trustedContactSosMessageAction != null && trustedContactSosMessageAction.isFilled()) {
             smsAction.addMessage(trustedContactSosMessageAction.phoneNumber, trustedContactSosMessageAction.message);
             trustedContactSosMessageAction = null;
         }

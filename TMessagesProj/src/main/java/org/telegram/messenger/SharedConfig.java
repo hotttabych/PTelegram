@@ -275,7 +275,7 @@ public class SharedConfig {
         if (hasNonJsonPasscode)
         {
             FakePasscode fakePasscode = new FakePasscode();
-            fakePasscode.name += " " + SharedConfig.fakePasscodeIndex;
+            fakePasscode.name = LocaleController.getString("FakePasscode", R.string.FakePasscode) + " " + SharedConfig.fakePasscodeIndex;
             SharedConfig.fakePasscodeIndex++;
             fakePasscode.passcodeHash = fakePasscodeHash;
             fakePasscode.allowLogin = preferences.getBoolean("allowFakePasscodeLogin", true);

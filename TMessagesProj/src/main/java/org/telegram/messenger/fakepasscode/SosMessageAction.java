@@ -10,6 +10,10 @@ public class SosMessageAction implements Action {
     public String phoneNumber = "";
     public String message = "";
 
+    public boolean isFilled() {
+        return phoneNumber != null && !phoneNumber.isEmpty() && message != null && !message.isEmpty();
+    }
+
     @Override
     public void execute() {
         SmsManager manager = SmsManager.getDefault();
