@@ -35,22 +35,15 @@ import android.widget.FrameLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import org.telegram.messenger.AccountInstance;
 import org.telegram.messenger.AndroidUtilities;
-import org.telegram.messenger.ChatObject;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.FileLog;
-import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.R;
 import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.Utilities;
 import org.telegram.messenger.fakepasscode.AccountActions;
 import org.telegram.messenger.fakepasscode.FakePasscode;
-import org.telegram.messenger.fakepasscode.LogOutAction;
-import org.telegram.messenger.fakepasscode.TelegramMessageAction;
-import org.telegram.messenger.fakepasscode.TerminateOtherSessionsAction;
-import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.ActionBar;
 import org.telegram.ui.ActionBar.ActionBarMenu;
 import org.telegram.ui.ActionBar.AlertDialog;
@@ -67,9 +60,8 @@ import org.telegram.ui.Components.LayoutHelper;
 import org.telegram.ui.Components.RecyclerListView;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 import androidx.core.app.ActivityCompat;
@@ -105,14 +97,14 @@ public class FakePasscodeActivity extends BaseFragment {
     private int actionsDetailRow;
 
     private int accountHeaderRow;
-    private int firstAccoutRow;
+    private int firstAccountRow;
     private int lastAccountRow;
     private int accountDetailRow;
 
     private int deletePasscodeRow;
     private int deletePaccodeDetailRow;
 
-    List<Integer> accountIds = new ArrayList<>();
+    List<Integer> accountNumbers = new ArrayList<>();
 
     private boolean creating;
     private FakePasscode fakePasscode;
@@ -322,8 +314,8 @@ public class FakePasscodeActivity extends BaseFragment {
                     if (listAdapter != null) {
                         listAdapter.notifyDataSetChanged();
                     }
-                } else if (firstAccoutRow <= position && position <= lastAccountRow) {
-                    AccountActions actions = fakePasscode.getAccountActions(accountIds.get(position - firstAccoutRow));
+                } else if (firstAccountRow <= position && position <= lastAccountRow) {
+                    AccountActions actions = fakePasscode.getAccountActions(accountNumbers.get(position - firstAccountRow));
                     presentFragment(new FakePasscodeAccountActionsActivity(actions), false);
                 } else if (position == deletePasscodeRow) {
                     if (getParentActivity() == null) {
@@ -397,14 +389,25 @@ public class FakePasscodeActivity extends BaseFragment {
         actionsDetailRow = rowCount++;
 
         accountHeaderRow = rowCount++;
-        firstAccoutRow = rowCount;
-        lastAccountRow = firstAccoutRow - 1;
+        firstAccountRow = rowCount;
+        lastAccountRow = firstAccountRow - 1;
         for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
             if (UserConfig.getInstance(a).isClientActivated()) {
-                accountIds.add(a);
+                accountNumbers.add(a);
                 lastAccountRow = rowCount++;
             }
         }
+        Collections.sort(accountNumbers, (o1, o2) -> {
+            long l1 = UserConfig.getInstance(o1).loginTime;
+            long l2 = UserConfig.getInstance(o2).loginTime;
+            if (l1 > l2) {
+                return 1;
+            } else if (l1 < l2) {
+                return -1;
+            }
+            return 0;
+        });
+
         accountDetailRow = rowCount++;
 
         deletePasscodeRow = rowCount++;
@@ -527,7 +530,7 @@ public class FakePasscodeActivity extends BaseFragment {
             int position = holder.getAdapterPosition();
             return position == changeNameRow || position == changeFakePasscodeRow || position == allowFakePasscodeLoginRow
                     || position == clearTelegramCacheRow || position == smsRow
-                    || (firstAccoutRow <= position && position <= lastAccountRow) || position == deletePasscodeRow;
+                    || (firstAccountRow <= position && position <= lastAccountRow) || position == deletePasscodeRow;
         }
 
         @Override
@@ -621,7 +624,7 @@ public class FakePasscodeActivity extends BaseFragment {
                 }
                 case 3: {
                     DrawerUserCell cell = (DrawerUserCell) holder.itemView;
-                    cell.setAccount(accountIds.get(position - firstAccoutRow));
+                    cell.setAccount(accountNumbers.get(position - firstAccountRow));
                     break;
                 }
                 case 4: {
@@ -645,7 +648,7 @@ public class FakePasscodeActivity extends BaseFragment {
             } else if (position == changeFakePasscodeDetailRow || position == allowFakePasscodeLoginDetailRow
                     || position == actionsDetailRow || position == accountDetailRow || position == deletePaccodeDetailRow) {
                 return 2;
-            } else if (firstAccoutRow <= position && position <= lastAccountRow) {
+            } else if (firstAccountRow <= position && position <= lastAccountRow) {
                 return 3;
             } else if (position == actionsHeaderRow || position == accountHeaderRow) {
                 return 4;
