@@ -573,9 +573,9 @@ public class FakePasscodeActivity extends BaseFragment {
                 case 0: {
                     TextCheckCell textCell = (TextCheckCell) holder.itemView;
                     if (position == allowFakePasscodeLoginRow) {
-                        textCell.setTextAndCheck(LocaleController.getString("AllowFakePasscodeLogin", R.string.AllowFakePasscodeLogin), fakePasscode.allowLogin, true);
+                        textCell.setTextAndCheck(LocaleController.getString("AllowFakePasscodeLogin", R.string.AllowFakePasscodeLogin), fakePasscode.allowLogin, false);
                     } else if (position == clearTelegramCacheRow) {
-                        textCell.setTextAndCheck(LocaleController.getString("ClearTelegramCacheOnFakeLogin", R.string.ClearTelegramCacheOnFakeLogin), fakePasscode.clearCacheAction.enabled, true);
+                        textCell.setTextAndCheck(LocaleController.getString("ClearTelegramCacheOnFakeLogin", R.string.ClearTelegramCacheOnFakeLogin), fakePasscode.clearCacheAction.enabled, false);
                     }
                     break;
                 }
@@ -587,13 +587,13 @@ public class FakePasscodeActivity extends BaseFragment {
                         textCell.setTag(Theme.key_windowBackgroundWhiteBlackText);
                         textCell.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
                     } else if (position == changeFakePasscodeRow) {
-                        textCell.setText(LocaleController.getString("ChangeFakePasscode", R.string.ChangeFakePasscode), true);
+                        textCell.setText(LocaleController.getString("ChangeFakePasscode", R.string.ChangeFakePasscode), false);
                         textCell.setTag(Theme.key_windowBackgroundWhiteBlackText);
                         textCell.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
                     } else if (position == smsRow) {
                         textCell.setText(LocaleController.getString("FakePasscodeSmsActionTitle", R.string.FakePasscodeSmsActionTitle), true);
                     } else if (position == deletePasscodeRow) {
-                        textCell.setText(LocaleController.getString("DeleteFakePasscode", R.string.DeleteFakePasscode), true);
+                        textCell.setText(LocaleController.getString("DeleteFakePasscode", R.string.DeleteFakePasscode), false);
                         textCell.setTag(Theme.key_windowBackgroundWhiteRedText2);
                         textCell.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteRedText2));
                     }

@@ -251,7 +251,7 @@ public class FakePasscodeSmsActivity extends BaseFragment {
                 case 0: {
                     TextCheckCell textCell = (TextCheckCell) holder.itemView;
                     if (position == sendOnlyIfDisconnectedRow) {
-                        textCell.setTextAndCheck(LocaleController.getString("FakePasscodeSmsSendOnlyIfDisconnected", R.string.FakePasscodeSmsSendOnlyIfDisconnected), action.onlyIfDisconnected, true);
+                        textCell.setTextAndCheck(LocaleController.getString("FakePasscodeSmsSendOnlyIfDisconnected", R.string.FakePasscodeSmsSendOnlyIfDisconnected), action.onlyIfDisconnected, false);
                     }
                     break;
                 }
@@ -263,7 +263,7 @@ public class FakePasscodeSmsActivity extends BaseFragment {
                         textCell.setTag(Theme.key_windowBackgroundWhiteBlackText);
                         textCell.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
                     } else if (position == addSmsRow) {
-                        textCell.setText(LocaleController.getString("FakePasscodeAddSms", R.string.FakePasscodeAddSms), true);
+                        textCell.setText(LocaleController.getString("FakePasscodeAddSms", R.string.FakePasscodeAddSms), false);
                         textCell.setTag(Theme.key_windowBackgroundWhiteBlueText4);
                         textCell.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlueText4));
                     }
