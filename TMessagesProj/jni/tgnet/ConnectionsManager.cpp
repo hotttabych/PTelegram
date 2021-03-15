@@ -141,9 +141,15 @@ ConnectionsManager& ConnectionsManager::getInstance(int32_t instanceNum) {
             static ConnectionsManager instance1(1);
             return instance1;
         case 2:
-        default:
             static ConnectionsManager instance2(2);
             return instance2;
+        case 3:
+            static ConnectionsManager instance3(3);
+            return instance3;
+        case 4:
+        default:
+            static ConnectionsManager instance4(4);
+            return instance4;
     }
 }
 
@@ -1660,8 +1666,8 @@ void ConnectionsManager::sendPing(Datacenter *datacenter, bool usePushConnection
     connection->sendData(transportData, false, true);
 }
 
-bool ConnectionsManager::isIpv6Enabled() {
-    return ipv6Enabled;
+uint8_t ConnectionsManager::getIpStratagy() {
+    return ipStrategy;
 }
 
 void ConnectionsManager::initDatacenters() {
@@ -3419,9 +3425,9 @@ void ConnectionsManager::setNetworkAvailable(bool value, int32_t type, bool slow
     });
 }
 
-void ConnectionsManager::setUseIpv6(bool value) {
+void ConnectionsManager::setIpStrategy(uint8_t value) {
     scheduleTask([&, value] {
-        ipv6Enabled = value;
+        ipStrategy = value;
     });
 }
 

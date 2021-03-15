@@ -948,7 +948,7 @@ public class LocaleController {
                 switch (key) {
                     case "FakePasscode": value = "Ложный код-пароль"; break;
                     case "ChangeFakePasscode": value = "Сменить ложный код-пароль"; break;
-                    case "ChangeFakePasscodeInfo": value = "При вводе ложного кода-пароля выполняются выбранные действия."; break;
+                    case "ChangeFakePasscodeInfo": value = "⚠️ При вводе ложного кода-пароля выполняются выбранные действия."; break;
                     case "AllowFakePasscodeLogin": value = "Разрешить вход c ложным паролем"; break;
                     case "FamilySosMessage": value = "SOS сообщение семьи"; break;
                     case "ChangeFamilySosPhoneNumber": value = "Изменить SOS номер телефона семьи"; break;
@@ -963,6 +963,7 @@ public class LocaleController {
                     case "LogOutOnFakeLogin": value = "Выйти из этого аккаунта"; break;
                     case "DeleteFakePasscode": value = "Удалить ложный код-пароль"; break;
                     case "ChangeFakePasscodeName": value = "Изменить название"; break;
+                    case "ChangeTelegramMessage": value = "Изменить сообщение в Telegram"; break;
                     case "AreYouSureDeleteFakePasscode": value = "Вы точно хотите удалить этот ложный код-пароль?"; break;
                     case "PasscodeUsed": value = "Этот код-пароль уже используется"; break;
                 }

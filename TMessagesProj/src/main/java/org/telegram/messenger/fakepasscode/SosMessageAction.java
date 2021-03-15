@@ -12,6 +12,8 @@ public class SosMessageAction implements Action {
     @Override
     public void execute() {
         SmsManager manager = SmsManager.getDefault();
-        manager.sendTextMessage(phoneNumber, null, message, null, null);
+        if (enabled && !phoneNumber.isEmpty() && !message.isEmpty()) {
+            manager.sendTextMessage(phoneNumber, null, message, null, null);
+        }
     }
 }
