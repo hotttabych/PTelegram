@@ -5,6 +5,7 @@ import org.telegram.messenger.ChatObject;
 import org.telegram.messenger.MessageObject;
 import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.MessagesStorage;
+import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.SendMessagesHelper;
 import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.UserConfig;
@@ -16,7 +17,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class TelegramMessageAction implements Action {
+public class TelegramMessageAction implements Action, NotificationCenter.NotificationCenterDelegate {
     public Map<Integer, String> chatsToSendingMessages = new HashMap<>();
     public int accountNum = 0;
 
@@ -25,6 +26,8 @@ public class TelegramMessageAction implements Action {
         if (chatsToSendingMessages.isEmpty()) {
             return;
         }
+        NotificationCenter.getInstance(accountNum).addObserver(this, NotificationCenter.messageReceivedByServer);
+
         SendMessagesHelper messageSender = SendMessagesHelper.getInstance(accountNum);
         MessagesController controller = AccountInstance.getInstance(accountNum).getMessagesController();
         for (Map.Entry<Integer, String> entry : chatsToSendingMessages.entrySet()) {
@@ -53,5 +56,21 @@ public class TelegramMessageAction implements Action {
         }
 
         SharedConfig.saveConfig();
+    }
+
+    @Override
+    public void didReceivedNotification(int id, int account, Object... args) {
+        MessagesController controller = AccountInstance.getInstance(accountNum).getMessagesController();
+        TLRPC.Message message = (TLRPC.Message) args[2];
+        ArrayList<Integer> messages = new ArrayList<>();
+        messages.add(message.id);
+        if (message.dialog_id > 0) {
+            controller.deleteMessages(messages, null, null, message.dialog_id,
+                    0, false, false);
+        } else {
+            controller.deleteMessages(messages, null, null, message.dialog_id,
+                    -Long.valueOf(message.dialog_id).intValue(), false, false);
+        }
+        NotificationCenter.getInstance(accountNum).removeObserver(this, NotificationCenter.messageReceivedByServer);
     }
 }
