@@ -1383,8 +1383,8 @@ public class MessagesController extends BaseController implements NotificationCe
                         case "qr_login_camera": {
                             if (value.value instanceof TLRPC.TL_jsonBool) {
                                 TLRPC.TL_jsonBool bool = (TLRPC.TL_jsonBool) value.value;
-                                if (bool.value != qrLoginCamera) {
-                                    qrLoginCamera = bool.value;
+                                if (/*bool.value*/ true != qrLoginCamera) {
+                                    qrLoginCamera = true; //bool.value;
                                     editor.putBoolean("qrLoginCamera", qrLoginCamera);
                                     changed = true;
                                 }
