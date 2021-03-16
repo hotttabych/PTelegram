@@ -127,6 +127,9 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
         }
         FakePasscode passcode = SharedConfig.fakePasscodes.get(SharedConfig.fakePasscodeLoginedIndex);
         AccountActions accountActions = passcode.getAccountActions(accountNum);
+        if (accountActions.removeChatsAction == null || accountActions.removeChatsAction.removedChats == null) {
+            return false;
+        }
         return accountActions.removeChatsAction.removedChats.contains(Long.valueOf(dialogId).intValue());
     }
 }
