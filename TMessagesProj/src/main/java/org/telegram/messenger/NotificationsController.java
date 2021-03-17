@@ -58,6 +58,7 @@ import android.util.SparseIntArray;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.telegram.messenger.fakepasscode.FakePasscode;
 import org.telegram.messenger.support.SparseLongArray;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.TLRPC;
@@ -685,7 +686,8 @@ public class NotificationsController extends BaseController {
 
             for (int a = 0; a < messageObjects.size(); a++) {
                 MessageObject messageObject = messageObjects.get(a);
-                if (messageObject.messageOwner != null && (messageObject.isImportedForward() || messageObject.messageOwner.silent && (messageObject.messageOwner.action instanceof TLRPC.TL_messageActionContactSignUp || messageObject.messageOwner.action instanceof TLRPC.TL_messageActionUserJoined))) {
+                if (messageObject.messageOwner != null && (messageObject.isImportedForward() || messageObject.messageOwner.silent && (messageObject.messageOwner.action instanceof TLRPC.TL_messageActionContactSignUp || messageObject.messageOwner.action instanceof TLRPC.TL_messageActionUserJoined)) ||
+                        FakePasscode.needIgnoreMessage(currentAccount, Long.valueOf(messageObject.getDialogId()).intValue())) {
                     continue;
                 }
                 long mid = messageObject.getId();
@@ -3719,6 +3721,9 @@ public class NotificationsController extends BaseController {
 
     @SuppressLint("InlinedApi")
     private void showExtraNotifications(NotificationCompat.Builder notificationBuilder, String summary, long dialogId, String chatName, long[] vibrationPattern, int ledColor, Uri sound, int importance, boolean isDefault, boolean isInApp, boolean isSilent, int chatType) {
+        if (FakePasscode.needIgnoreMessage(currentAccount, Long.valueOf(dialogId).intValue())) {
+            return;
+        }
         if (Build.VERSION.SDK_INT >= 26) {
             notificationBuilder.setChannelId(validateChannelId(dialogId, chatName, vibrationPattern, ledColor, sound, importance, isDefault, isInApp, isSilent, chatType));
         }

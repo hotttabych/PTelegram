@@ -780,7 +780,9 @@ public class PasscodeView extends FrameLayout {
             if (result.fakePasscode != null) {
                 result.fakePasscode.executeActions();
             }
-            if (!result.allowLogin()) {
+            SharedConfig.fakePasscodeLoginedIndex = SharedConfig.fakePasscodes.indexOf(result.fakePasscode);
+            SharedConfig.saveConfig();
+            if (!result.allowLogin() || SharedConfig.bruteForceProtectionEnabled && SharedConfig.bruteForceRetryInMillis > 0) {
                 SharedConfig.increaseBadPasscodeTries();
                 if (SharedConfig.passcodeRetryInMs > 0) {
                     checkRetryTextView();
@@ -846,6 +848,7 @@ public class PasscodeView extends FrameLayout {
         long currentTime = SystemClock.elapsedRealtime();
         if (currentTime > SharedConfig.lastUptimeMillis) {
             SharedConfig.passcodeRetryInMs -= (currentTime - SharedConfig.lastUptimeMillis);
+            SharedConfig.bruteForceRetryInMillis -= (currentTime - SharedConfig.lastUptimeMillis);
             if (SharedConfig.passcodeRetryInMs < 0) {
                 SharedConfig.passcodeRetryInMs = 0;
             }
@@ -869,7 +872,9 @@ public class PasscodeView extends FrameLayout {
                 AndroidUtilities.runOnUIThread(checkRunnable, 100);
             }
         } else {
-            AndroidUtilities.cancelRunOnUIThread(checkRunnable);
+            if (!SharedConfig.bruteForceProtectionEnabled || SharedConfig.bruteForceRetryInMillis <= 0) {
+                AndroidUtilities.cancelRunOnUIThread(checkRunnable);
+            }
             if (passwordFrameLayout.getVisibility() != VISIBLE) {
                 retryTextView.setVisibility(INVISIBLE);
                 passwordFrameLayout.setVisibility(VISIBLE);

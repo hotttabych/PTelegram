@@ -40,6 +40,8 @@ public class DrawerUserCell extends FrameLayout {
     private int accountNumber;
     private RectF rect = new RectF();
 
+    private boolean fakePasscodeMode = false;
+
     public DrawerUserCell(Context context) {
         super(context);
 
@@ -92,7 +94,11 @@ public class DrawerUserCell extends FrameLayout {
         textView.setText(ContactsController.formatName(user.first_name, user.last_name));
         imageView.getImageReceiver().setCurrentAccount(account);
         imageView.setImage(ImageLocation.getForUser(user, false), "50_50", avatarDrawable, user);
-        checkBox.setVisibility(account == UserConfig.selectedAccount ? VISIBLE : INVISIBLE);
+        checkBox.setVisibility((account == UserConfig.selectedAccount && !fakePasscodeMode) ? VISIBLE : INVISIBLE);
+    }
+
+    public void setFakePasscodeMode(boolean value) {
+        fakePasscodeMode = value;
     }
 
     public int getAccountNumber() {
@@ -101,6 +107,9 @@ public class DrawerUserCell extends FrameLayout {
 
     @Override
     protected void onDraw(Canvas canvas) {
+        if (fakePasscodeMode) {
+            return;
+        }
         if (UserConfig.getActivatedAccountsCount() <= 1 || !NotificationsController.getInstance(accountNumber).showBadgeNumber) {
             return;
         }

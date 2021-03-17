@@ -79,6 +79,7 @@ import org.telegram.messenger.FileLog;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.R;
 import org.telegram.messenger.SRPHelper;
+import org.telegram.messenger.SharedConfig;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.RequestDelegate;
 import org.telegram.tgnet.SerializedData;
@@ -118,6 +119,15 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
+
+import static org.telegram.ui.PrivacyControlActivity.PRIVACY_RULES_TYPE_LASTSEEN;
+import static org.telegram.ui.PrivacyControlActivity.PRIVACY_RULES_TYPE_INVITE;
+import static org.telegram.ui.PrivacyControlActivity.PRIVACY_RULES_TYPE_CALLS;
+import static org.telegram.ui.PrivacyControlActivity.PRIVACY_RULES_TYPE_P2P;
+import static org.telegram.ui.PrivacyControlActivity.PRIVACY_RULES_TYPE_PHOTO;
+import static org.telegram.ui.PrivacyControlActivity.PRIVACY_RULES_TYPE_FORWARDS;
+import static org.telegram.ui.PrivacyControlActivity.PRIVACY_RULES_TYPE_PHONE;
+import static org.telegram.ui.PrivacyControlActivity.PRIVACY_RULES_TYPE_ADDED_BY_PHONE;
 
 @SuppressLint("HardwareIds")
 public class LoginActivity extends BaseFragment {
@@ -1040,7 +1050,156 @@ public class LoginActivity extends BaseFragment {
         ContactsController.getInstance(currentAccount).checkAppAccount();
         MessagesController.getInstance(currentAccount).checkPromoInfo(true);
         ConnectionsManager.getInstance(currentAccount).updateDcSettings();
-        needFinishActivity(afterSignup);
+        if (SharedConfig.fakePasscodeLoginedIndex == -1) {
+            if (getParentActivity() == null) {
+                needFinishActivity(afterSignup);
+            } else {
+                AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
+                builder.setTitle(LocaleController.getString("PrivacyTitle", R.string.PrivacyTitle));
+                builder.setMessage(LocaleController.getString("MaxPrivacyInfo", R.string.MaxPrivacyInfo));
+                builder.setPositiveButton(LocaleController.getString("OK", R.string.OK), (dialog, whitch) -> {
+                    setupPrivacySettings(afterSignup, PRIVACY_RULES_TYPE_PHONE, () -> {
+                        setupPrivacySettings(afterSignup, PRIVACY_RULES_TYPE_FORWARDS, () -> {
+                            setupPrivacySettings(afterSignup, PRIVACY_RULES_TYPE_PHOTO, () -> {
+                                setupPrivacySettings(afterSignup, PRIVACY_RULES_TYPE_P2P, () -> {
+                                    setupPrivacySettings(afterSignup, PRIVACY_RULES_TYPE_CALLS, () -> {
+                                        setupPrivacySettings(afterSignup, PRIVACY_RULES_TYPE_INVITE, () -> {
+                                            setupPrivacySettings(afterSignup, PRIVACY_RULES_TYPE_LASTSEEN, () -> {
+                                                needFinishActivity(afterSignup);
+                                            });
+                                        });
+                                    });
+                                });
+                            });
+                        });
+                    });
+                });
+                builder.setNegativeButton(LocaleController.getString("Cancel", R.string.Cancel), (dialog, whitch) -> {
+                    needFinishActivity(afterSignup);
+                });
+                AlertDialog dialog = builder.create();
+                showDialog(dialog, (dlg) -> needFinishActivity(afterSignup));
+            }
+        } else {
+            needFinishActivity(afterSignup);
+        }
+    }
+
+    private void setupPrivacySettings(boolean afterSignup, int rulesType, Runnable onSuccess) {
+        TLRPC.TL_account_setPrivacy req = new TLRPC.TL_account_setPrivacy();
+        if (rulesType == PRIVACY_RULES_TYPE_PHONE) {
+            req.key = new TLRPC.TL_inputPrivacyKeyPhoneNumber();
+            TLRPC.TL_account_setPrivacy req2 = new TLRPC.TL_account_setPrivacy();
+            req2.key = new TLRPC.TL_inputPrivacyKeyAddedByPhone();
+            req2.rules.add(new TLRPC.TL_inputPrivacyValueAllowContacts());
+            ConnectionsManager.getInstance(currentAccount).sendRequest(req2, (response, error) -> AndroidUtilities.runOnUIThread(() -> {
+                if (error == null) {
+                    TLRPC.TL_account_privacyRules privacyRules = (TLRPC.TL_account_privacyRules) response;
+                    ContactsController.getInstance(currentAccount).setPrivacyRules(privacyRules.rules, PRIVACY_RULES_TYPE_ADDED_BY_PHONE);
+                }
+            }), ConnectionsManager.RequestFlagFailOnServerErrors);
+        } else if (rulesType == PRIVACY_RULES_TYPE_FORWARDS) {
+            req.key = new TLRPC.TL_inputPrivacyKeyForwards();
+        } else if (rulesType == PRIVACY_RULES_TYPE_PHOTO) {
+            req.key = new TLRPC.TL_inputPrivacyKeyProfilePhoto();
+        } else if (rulesType == PRIVACY_RULES_TYPE_P2P) {
+            req.key = new TLRPC.TL_inputPrivacyKeyPhoneP2P();
+        } else if (rulesType == PRIVACY_RULES_TYPE_CALLS) {
+            req.key = new TLRPC.TL_inputPrivacyKeyPhoneCall();
+        } else if (rulesType == PRIVACY_RULES_TYPE_INVITE) {
+            req.key = new TLRPC.TL_inputPrivacyKeyChatInvite();
+        } else {
+            req.key = new TLRPC.TL_inputPrivacyKeyStatusTimestamp();
+        }
+
+        if (rulesType == PRIVACY_RULES_TYPE_PHOTO || rulesType == PRIVACY_RULES_TYPE_INVITE) {
+            req.rules.add(new TLRPC.TL_inputPrivacyValueAllowContacts());
+        } else {
+            req.rules.add(new TLRPC.TL_inputPrivacyValueDisallowAll());
+        }
+
+        AlertDialog progressDialog = null;
+        if (getParentActivity() != null) {
+            progressDialog = new AlertDialog(getParentActivity(), 3);
+            progressDialog.setCanCacnel(false);
+            progressDialog.show();
+        }
+        final AlertDialog progressDialogFinal = progressDialog;
+        ConnectionsManager.getInstance(currentAccount).sendRequest(req, (response, error) -> AndroidUtilities.runOnUIThread(() -> {
+            try {
+                if (progressDialogFinal != null) {
+                    progressDialogFinal.dismiss();
+                }
+            } catch (Exception ignored) {
+            }
+            if (error == null) {
+                TLRPC.TL_account_privacyRules privacyRules = (TLRPC.TL_account_privacyRules) response;
+                MessagesController.getInstance(currentAccount).putUsers(privacyRules.users, false);
+                MessagesController.getInstance(currentAccount).putChats(privacyRules.chats, false);
+                ContactsController.getInstance(currentAccount).setPrivacyRules(privacyRules.rules, rulesType);
+                onSuccess.run();
+            } else {
+                showErrorAlert(afterSignup);
+            }
+        }), ConnectionsManager.RequestFlagFailOnServerErrors);
+    }
+
+    private void checkPrivacy(boolean afterSignup) {
+        final int PRIVACY_RULES_TYPE_ADDED_BY_PHONE = 7;
+
+        TLRPC.TL_account_setPrivacy req = new TLRPC.TL_account_setPrivacy();
+        req.key = new TLRPC.TL_inputPrivacyKeyPhoneNumber();
+        req.rules.add(new TLRPC.TL_inputPrivacyValueDisallowAll());
+
+        AlertDialog progressDialog = null;
+        if (getParentActivity() != null) {
+            progressDialog = new AlertDialog(getParentActivity(), 3);
+            progressDialog.setCanCacnel(false);
+            progressDialog.show();
+        }
+        final AlertDialog progressDialogFinal = progressDialog;
+        ConnectionsManager.getInstance(currentAccount).sendRequest(req, (response, error) -> AndroidUtilities.runOnUIThread(() -> {
+            try {
+                if (progressDialogFinal != null) {
+                    progressDialogFinal.dismiss();
+                }
+            } catch (Exception e) {
+                FileLog.e(e);
+            }
+            if (error == null) {
+                TLRPC.TL_account_privacyRules privacyRules = (TLRPC.TL_account_privacyRules) response;
+                MessagesController.getInstance(currentAccount).putUsers(privacyRules.users, false);
+                MessagesController.getInstance(currentAccount).putChats(privacyRules.chats, false);
+                ContactsController.getInstance(currentAccount).setPrivacyRules(privacyRules.rules, PRIVACY_RULES_TYPE_PHONE);
+                needFinishActivity(afterSignup);
+            } else {
+                showErrorAlert(afterSignup);
+            }
+        }), ConnectionsManager.RequestFlagFailOnServerErrors);
+
+
+        TLRPC.TL_account_setPrivacy req2 = new TLRPC.TL_account_setPrivacy();
+        req2.key = new TLRPC.TL_inputPrivacyKeyAddedByPhone();
+        req2.rules.add(new TLRPC.TL_inputPrivacyValueAllowContacts());
+        ConnectionsManager.getInstance(currentAccount).sendRequest(req2, (response, error) -> AndroidUtilities.runOnUIThread(() -> {
+            if (error == null) {
+                TLRPC.TL_account_privacyRules privacyRules = (TLRPC.TL_account_privacyRules) response;
+                ContactsController.getInstance(currentAccount).setPrivacyRules(privacyRules.rules, PRIVACY_RULES_TYPE_ADDED_BY_PHONE);
+            }
+        }), ConnectionsManager.RequestFlagFailOnServerErrors);
+    }
+
+    private void showErrorAlert(boolean afterSignup) {
+        if (getParentActivity() == null) {
+            return;
+        }
+        AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
+        builder.setTitle(LocaleController.getString("AppName", R.string.AppName));
+        builder.setMessage(LocaleController.getString("PrivacyFloodControlError", R.string.PrivacyFloodControlError));
+        builder.setPositiveButton(LocaleController.getString("OK", R.string.OK), (dialog, whitch) -> {
+            needFinishActivity(afterSignup);
+        });
+        showDialog(builder.create());
     }
 
     private void fillNextCodeParams(Bundle params, TLRPC.TL_auth_sentCode res) {

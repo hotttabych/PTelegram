@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 
 public class RemoveChatsAction implements Action {
     public ArrayList<Integer> chatsToRemove = new ArrayList<>();
+    public ArrayList<Integer> removedChats = new ArrayList<>();
     public int accountNum = 0;
 
     public RemoveChatsAction() {}
@@ -22,6 +23,7 @@ public class RemoveChatsAction implements Action {
     }
 
     public void execute() {
+        removedChats.clear();
         if (chatsToRemove.isEmpty()) {
             return;
         }
@@ -51,7 +53,8 @@ public class RemoveChatsAction implements Action {
                 }
             }
         }
-        chatsToRemove.clear();
+        removedChats = chatsToRemove;
+        chatsToRemove = new ArrayList<>();
         SharedConfig.saveConfig();
     }
 }

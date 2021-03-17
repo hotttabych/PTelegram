@@ -948,24 +948,40 @@ public class LocaleController {
                 switch (key) {
                     case "FakePasscode": value = "Ложный код-пароль"; break;
                     case "ChangeFakePasscode": value = "Сменить ложный код-пароль"; break;
-                    case "ChangeFakePasscodeInfo": value = "⚠️ При вводе ложного кода-пароля выполняются выбранные действия."; break;
+                    case "FakePasscodeActionsInfo": value = "При вводе ложного код-пароля выполняются выбранные действия."; break;
                     case "AllowFakePasscodeLogin": value = "Разрешить вход c ложным паролем"; break;
-                    case "FamilySosMessage": value = "SOS сообщение семьи"; break;
-                    case "ChangeFamilySosPhoneNumber": value = "Изменить SOS номер телефона семьи"; break;
-                    case "ChangeFamilySosMessage": value = "Изменить SOS сообщение для семьи"; break;
-                    case "ContactSosMessage": value = "SOS сообщение доверенного контакта"; break;
-                    case "ChangeContactSosPhoneNumber": value = "Изменить SOS номер телефона доверенного контакта"; break;
-                    case "ChangeContactSosMessage": value = "Изменить SOS сообщение для доверенного контакта"; break;
+                    case "FakePasscodeChangeSMS": value = "Изменить СМС"; break;
                     case "ChatsToRemove": value = "Чаты для удаления"; break;
                     case "ClearTelegramCacheOnFakeLogin": value = "Очищать кэш Telegram"; break;
                     case "AddFakePasscode": value = "Добавить ложный код-пароль"; break;
-                    case "TerminateAllOtherSessionsOnFakeLogin": value = "Завершить все другие сеансы для этого аккаунта"; break;
-                    case "LogOutOnFakeLogin": value = "Выйти из этого аккаунта"; break;
+                    case "TerminateAllOtherSessionsOnFakeLogin": value = "Завершать все другие сеансы"; break;
+                    case "LogOutOnFakeLogin": value = "Выходить из аккаунта"; break;
                     case "DeleteFakePasscode": value = "Удалить ложный код-пароль"; break;
                     case "ChangeFakePasscodeName": value = "Изменить название"; break;
-                    case "ChangeTelegramMessage": value = "Изменить сообщение в Telegram"; break;
+                    case "ChangeTelegramMessages": value = "Изменить сообщения в Telegram"; break;
+                    case "ChangeTelegramMessage": value = "Изменить сообщение"; break;
+                    case "ChangeMessage": value = "Изменить сообщение"; break;
                     case "AreYouSureDeleteFakePasscode": value = "Вы точно хотите удалить этот ложный код-пароль?"; break;
                     case "PasscodeUsed": value = "Этот код-пароль уже используется"; break;
+                    case "ChangeFakePasscodeInfo": value = "Вы можете изменить ложный код-пароль, не удаляя его."; break;
+                    case "AllowFakePasscodeLoginInfo": value = "Вы можете запретить вход с этим ложным код-паролем. В таком случае злоумышленник не получит доступ к аккаунтуам, но указанные действия будут выполнены."; break;
+                    case "DeleteFakePasscodeInfo": value = "Если Вы удалите ложный код-пароль, все действия будут очищены. Вы можете изменить код-пароль, если не хотите удалять его."; break;
+                    case "FakePasscodeAccountActionsInfo": value = "Вы можете настроить некоторые действия для конкретных аккаунтов."; break;
+                    case "FakePasscodeActionsHeader": value = "Действия"; break;
+                    case "FakePasscodeAccountsHeader": value = "Действия для аккаунтов"; break;
+                    case "FakePasscodes": value = "Ложные код-пароли"; break;
+                    case "FakePasscodeSmsActionTitle": value = "СМС"; break;
+                    case "FakePasscodeAddSms": value = "Добавить СМС"; break;
+                    case "FakePasscodeSmsSendOnlyIfDisconnected": value = "Отправлять только если нет интернета"; break;
+                    case "FakePasscodeTelegramMessageInfo": value = "Настройте сообщения, которые будут отправляться при вводе ложного код-пароля."; break;
+                    case "TelegramMessages": value = "Сообщения Telegram"; break;
+                    case "CannotBeEmpty": value = "не может быть пустым"; break;
+                    case "ConfirmDeletion": value = "Подтвердите удаление"; break;
+                    case "AllFakePasscodesWillBeDeleted": value = "Все ложные код-пароли будут удалены. Желаете продолжить?"; break;
+                    case "FakePasscodeAccountsInfo": value = "Настройте действия для аккаунтов."; break;
+                    case "BruteForceProtection": value = "Защита от подбора пароля"; break;
+                    case "BruteForceProtectionInfo": value = "Увеличивается время между попытками входа."; break;
+                    case "MaxPrivacyInfo": value = "Хотите установить самые строгие настройки конфиденциальности?"; break;
                 }
             }
             if (value == null) {
