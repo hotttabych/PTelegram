@@ -498,6 +498,11 @@ public class SharedConfig {
                     System.arraycopy(passcodeBytes, 0, bytes, 16, passcodeBytes.length);
                     System.arraycopy(passcodeSalt, 0, bytes, passcodeBytes.length + 16, 16);
                     passcodeHash = Utilities.bytesToHex(Utilities.computeSHA256(bytes, 0, bytes.length));
+                    for (FakePasscode p: fakePasscodes) {
+                        p.onDelete();
+                    }
+                    fakePasscodes.clear();
+                    fakePasscodeLoginedIndex = -1;
                     saveConfig();
                 } catch (Exception e) {
                     FileLog.e(e);
@@ -533,6 +538,11 @@ public class SharedConfig {
         lastUptimeMillis = 0;
         badPasscodeTries = 0;
         passcodeHash = "";
+        for (FakePasscode p: fakePasscodes) {
+            p.onDelete();
+        }
+        fakePasscodes.clear();
+        fakePasscodeLoginedIndex = -1;
         passcodeSalt = new byte[0];
         autoLockIn = 60 * 60;
         lastPauseTime = 0;

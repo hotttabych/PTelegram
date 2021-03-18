@@ -693,6 +693,10 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
             getFakePasscode().passcodeHash = "";
         } else {
             SharedConfig.passcodeHash = "";
+            for (FakePasscode passcode: SharedConfig.fakePasscodes) {
+                passcode.onDelete();
+            }
+            SharedConfig.fakePasscodes.clear();
         }
         SharedConfig.appLocked = false;
         SharedConfig.saveConfig();
