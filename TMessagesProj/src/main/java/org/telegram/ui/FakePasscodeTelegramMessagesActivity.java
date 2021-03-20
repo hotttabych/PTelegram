@@ -734,7 +734,7 @@ public class FakePasscodeTelegramMessagesActivity extends BaseFragment implement
             switch (viewType) {
                 case 1:
                 default:
-                    view = new GroupCreateUserCell(context, true, 0, true);
+                    view = new GroupCreateUserCell(context, 1, 0, true);
                     break;
             }
             return new RecyclerListView.Holder(view);
