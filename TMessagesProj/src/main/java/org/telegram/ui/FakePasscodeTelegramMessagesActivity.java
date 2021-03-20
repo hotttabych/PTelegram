@@ -66,6 +66,9 @@ import org.telegram.ui.Components.LayoutHelper;
 import org.telegram.ui.Components.RecyclerListView;
 
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 import androidx.annotation.Keep;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -640,10 +643,31 @@ public class FakePasscodeTelegramMessagesActivity extends BaseFragment implement
 
             boolean hasSelf = false;
             ArrayList<TLRPC.Dialog> dialogs = getMessagesController().getAllDialogs();
+
+            Set<Integer> selectedIds = action.chatsToSendingMessages.keySet();
+            for (Integer id: selectedIds) {
+                if (id > 0) {
+                    TLRPC.User user = getMessagesController().getUser(id);
+                    if (user != null) {
+                        contacts.add(user);
+                        if (UserObject.isUserSelf(user)) {
+                            hasSelf = true;
+                        }
+                    }
+                } else {
+                    TLRPC.Chat chat = getMessagesController().getChat(id);
+                    if (chat != null) {
+                        if (!chat.broadcast || (chat.admin_rights != null && chat.admin_rights.post_messages)) {
+                            contacts.add(chat);
+                        }
+                    }
+                }
+            }
+
             for (int a = 0, N = dialogs.size(); a < N; a++) {
                 TLRPC.Dialog dialog = dialogs.get(a);
                 int lowerId = (int) dialog.id;
-                if (lowerId == 0) {
+                if (lowerId == 0 || selectedIds.contains(lowerId)) {
                     continue;
                 }
                 if (lowerId > 0) {
