@@ -4075,6 +4075,12 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
             } else if (reason == 4) {
                 showTosActivity(account, (TLRPC.TL_help_termsOfService) args[1]);
                 return;
+            } else if (reason == 2) {
+                String type = (String) args[2];
+                if (type.startsWith("API_FRESH_TERMINATE_SESSION_NA_") && !mainFragmentsStack.isEmpty()
+                    && mainFragmentsStack.get(mainFragmentsStack.size() - 1) instanceof DialogsActivity) {
+                    return;
+                }
             }
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
             builder.setTitle(LocaleController.getString("AppName", R.string.AppName));
