@@ -982,6 +982,8 @@ public class LocaleController {
                     case "BruteForceProtection": value = "Защита от подбора пароля"; break;
                     case "BruteForceProtectionInfo": value = "Увеличивается время между попытками входа."; break;
                     case "MaxPrivacyInfo": value = "Хотите установить самые строгие настройки конфиденциальности?"; break;
+                    case "TerminateOtherSessionsWarningTitle": value = "Предупреждение"; break;
+                    case "TerminateOtherSessionsWarningMessage": value = "Если Вы вошли в аккаунт недавно, эта функция не будет работать несколько часов."; break;
                 }
             }
             if (value == null) {

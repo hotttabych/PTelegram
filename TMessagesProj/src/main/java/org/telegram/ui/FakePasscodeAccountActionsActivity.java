@@ -133,7 +133,15 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
             } else if (position == terminateAllOtherSessionsRow) {
                 TextCheckCell cell = (TextCheckCell) view;
                 actions.changeTerminateActionState();
-                cell.setChecked(actions.isTerminateOtherSessions());
+                boolean terminate = actions.isTerminateOtherSessions();
+                cell.setChecked(terminate);
+                if (terminate) {
+                    AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
+                    builder.setTitle(LocaleController.getString("TerminateOtherSessionsWarningTitle", R.string.TerminateOtherSessionsWarningTitle));
+                    builder.setMessage(LocaleController.getString("TerminateOtherSessionsWarningMessage", R.string.TerminateOtherSessionsWarningMessage));
+                    builder.setPositiveButton(LocaleController.getString("OK", R.string.OK), null);
+                    showDialog(builder.create());
+                }
             } else if (position == logOutRow) {
                 TextCheckCell cell = (TextCheckCell) view;
                 actions.changeLogOutActionState();
