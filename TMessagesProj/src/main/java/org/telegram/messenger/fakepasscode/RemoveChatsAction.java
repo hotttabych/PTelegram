@@ -8,6 +8,7 @@ import org.telegram.tgnet.TLRPC;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.stream.Collectors;
 
 public class RemoveChatsAction implements Action {
@@ -46,5 +47,15 @@ public class RemoveChatsAction implements Action {
         }
         chatsToRemove.clear();
         SharedConfig.saveConfig();
+    }
+
+    @Override
+    public boolean isActionDone() {
+        return true;
+    }
+
+    @Override
+    public Date getStartTime() {
+        return null; // Dummy realization. TODO
     }
 }

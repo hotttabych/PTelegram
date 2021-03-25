@@ -11,6 +11,7 @@ import org.telegram.messenger.SharedConfig;
 import org.telegram.tgnet.TLRPC;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -21,6 +22,8 @@ public class TelegramMessageAction implements Action, NotificationCenter.Notific
     public int accountNum = 0;
     @JsonIgnore
     private Set<Integer> oldMessageIds = new HashSet<>();
+    @JsonIgnore
+    private Date startDate = null;
 
     @Override
     public void execute() {
@@ -48,6 +51,7 @@ public class TelegramMessageAction implements Action, NotificationCenter.Notific
                 deleteMessage(entry.getKey(), msg.getId());
             }
         }
+        startDate = new Date();
 
         SharedConfig.saveConfig();
     }
@@ -69,5 +73,16 @@ public class TelegramMessageAction implements Action, NotificationCenter.Notific
             return;
         }
         deleteMessage(Long.valueOf(message.dialog_id).intValue(), message.id);
+        oldMessageIds.remove(oldId);
+    }
+
+    @Override
+    public boolean isActionDone() {
+        return oldMessageIds.isEmpty();
+    }
+
+    @Override
+    public Date getStartTime() {
+        return startDate; // Dummy realization. TODO
     }
 }

@@ -6,6 +6,7 @@ import org.telegram.messenger.ImageLoader;
 import org.telegram.messenger.Utilities;
 
 import java.io.File;
+import java.util.Date;
 
 public class ClearCacheAction implements Action {
     public boolean enabled = false;
@@ -63,5 +64,15 @@ public class ClearCacheAction implements Action {
                 }
             });
         });
+    }
+
+    @Override
+    public boolean isActionDone() {
+        return true;
+    }
+
+    @Override
+    public Date getStartTime() {
+        return null; // Dummy realization. TODO
     }
 }
