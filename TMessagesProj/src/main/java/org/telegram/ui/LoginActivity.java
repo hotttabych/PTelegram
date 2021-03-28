@@ -180,7 +180,7 @@ public class LoginActivity extends BaseFragment implements NotificationCenter.No
             }
             NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.privacyRulesUpdated);
             if (isGoodPrivacy()) {
-                needFinishActivity(afterSignup);
+                checkTwoStepVerification();
             } else {
                 AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
                 builder.setTitle(LocaleController.getString("PrivacyTitle", R.string.PrivacyTitle));
@@ -193,7 +193,7 @@ public class LoginActivity extends BaseFragment implements NotificationCenter.No
                                     setupPrivacySettings(afterSignup, PRIVACY_RULES_TYPE_CALLS, () -> {
                                         setupPrivacySettings(afterSignup, PRIVACY_RULES_TYPE_INVITE, () -> {
                                             setupPrivacySettings(afterSignup, PRIVACY_RULES_TYPE_LASTSEEN, () -> {
-                                                needFinishActivity(afterSignup);
+                                                checkTwoStepVerification();
                                             });
                                         });
                                     });
@@ -203,12 +203,51 @@ public class LoginActivity extends BaseFragment implements NotificationCenter.No
                     });
                 });
                 builder.setNegativeButton(LocaleController.getString("Decline", R.string.Decline), (dialog, whitch) -> {
-                    needFinishActivity(afterSignup);
+                    checkTwoStepVerification();
                 });
                 AlertDialog dialog = builder.create();
-                showDialog(dialog, (dlg) -> needFinishActivity(afterSignup));
+                showDialog(dialog, (dlg) -> checkTwoStepVerification());
             }
         }
+    }
+
+    private void checkTwoStepVerification() {
+        TLRPC.TL_account_getPassword req = new TLRPC.TL_account_getPassword();
+        getConnectionsManager().sendRequest(req, (response, error) -> {
+            if (response != null) {
+                TLRPC.TL_account_password password = (TLRPC.TL_account_password) response;
+                if (password.has_password) {
+                    AndroidUtilities.runOnUIThread(() -> needFinishActivity(afterSignup));
+                } else {
+                    AndroidUtilities.runOnUIThread(() -> {
+                        TwoStepVerificationActivity.initPasswordNewAlgo(password);
+                        if (!getUserConfig().hasSecureData && password.has_secure_values) {
+                            getUserConfig().hasSecureData = true;
+                            getUserConfig().saveConfig(false);
+                        }
+                        AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
+                        builder.setTitle(LocaleController.getString("TwoStepVerificationWarningTitle", R.string.TwoStepVerificationWarningTitle));
+                        builder.setMessage(LocaleController.getString("TwoStepVerificationWarningMessage", R.string.TwoStepVerificationWarningMessage));
+                        builder.setPositiveButton(LocaleController.getString("Agree", R.string.Agree), (dialog, whitch) -> {
+                            needFinishActivity(afterSignup);
+                            int type;
+                            if (TextUtils.isEmpty(password.email_unconfirmed_pattern)) {
+                                type = TwoStepVerificationSetupActivity.TYPE_INTRO;
+                            } else {
+                                type = TwoStepVerificationSetupActivity.TYPE_EMAIL_CONFIRM;
+                            }
+                            presentFragment(new TwoStepVerificationSetupActivity(type, password));
+                        });
+                        builder.setNegativeButton(LocaleController.getString("Decline", R.string.Decline), (dialog, whitch) -> {
+                            needFinishActivity(afterSignup);
+                        });
+                        showDialog(builder.create());
+                    });
+                }
+            } else {
+                AndroidUtilities.runOnUIThread(() -> needFinishActivity(afterSignup));
+            }
+        }, ConnectionsManager.RequestFlagFailOnServerErrors | ConnectionsManager.RequestFlagWithoutLogin);
     }
 
     private static class ProgressView extends View {
