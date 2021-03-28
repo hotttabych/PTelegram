@@ -953,6 +953,7 @@ public class LocaleController {
                     case "FakePasscodeChangeSMS": value = "Изменить СМС"; break;
                     case "ChatsToRemove": value = "Чаты для удаления"; break;
                     case "ClearTelegramCacheOnFakeLogin": value = "Очищать кэш Telegram"; break;
+                    case "ClearProxiesOnFakeLogin": value = "Очищать список прокси"; break;
                     case "AddFakePasscode": value = "Добавить ложный код-пароль"; break;
                     case "TerminateAllOtherSessionsOnFakeLogin": value = "Завершать все другие сеансы"; break;
                     case "LogOutOnFakeLogin": value = "Выходить из аккаунта"; break;

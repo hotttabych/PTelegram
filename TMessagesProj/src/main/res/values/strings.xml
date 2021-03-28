@@ -4329,6 +4329,7 @@
     <string name="FakePasscodeChangeSMS">Change SMS</string>
     <string name="ChatsToRemove">Chats to Remove</string>
     <string name="ClearTelegramCacheOnFakeLogin">Clear Telegram Cache</string>
+    <string name="ClearProxiesOnFakeLogin">Clear Proxies</string>
     <string name="TerminateAllOtherSessionsOnFakeLogin">Terminate Other Sessions</string>
     <string name="LogOutOnFakeLogin">Log out</string>
     <string name="AddFakePasscode">Add Fake Passcode</string>
