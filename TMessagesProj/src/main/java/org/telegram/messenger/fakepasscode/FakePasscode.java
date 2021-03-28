@@ -43,29 +43,7 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
     }
 
     public AccountActions getAccountActions(int accountNum) {
-        AccountActions actions = new AccountActions(accountNum, this);
-        actions.removeChatsAction = removeChatsActions.stream()
-                .filter(a -> a.accountNum == accountNum).findFirst().orElse(null);
-        actions.deleteContactsAction = deleteContactsActions.stream()
-                .filter(a -> a.accountNum == accountNum).findFirst().orElse(null);
-        actions.terminateOtherSessionsAction = terminateOtherSessionsActions.stream()
-                .filter(a -> a.accountNum == accountNum).findFirst().orElse(null);
-        actions.logOutAction = logOutActions.stream()
-                .filter(a -> a.accountNum == accountNum).findFirst().orElse(null);
-        actions.messageAction = findOrAddTelegramMessageAction(accountNum);
-        return actions;
-    }
-
-    private TelegramMessageAction findOrAddTelegramMessageAction(int accountNum) {
-        for (TelegramMessageAction action : telegramMessageAction) {
-            if (action.accountNum == accountNum) {
-                return action;
-            }
-        }
-        TelegramMessageAction action = new TelegramMessageAction();
-        action.accountNum = accountNum;
-        telegramMessageAction.add(action);
-        return action;
+        return new AccountActions(accountNum, this);
     }
 
     public void executeActions() {
@@ -127,9 +105,10 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
         }
         FakePasscode passcode = SharedConfig.fakePasscodes.get(SharedConfig.fakePasscodeLoginedIndex);
         AccountActions accountActions = passcode.getAccountActions(accountNum);
-        if (accountActions.removeChatsAction == null || accountActions.removeChatsAction.removedChats == null) {
+        RemoveChatsAction action = accountActions.getRemoveChatsAction();
+        if (action == null || action.removedChats == null) {
             return false;
         }
-        return accountActions.removeChatsAction.removedChats.contains(Long.valueOf(dialogId).intValue());
+        return action.removedChats.contains(Long.valueOf(dialogId).intValue());
     }
 }

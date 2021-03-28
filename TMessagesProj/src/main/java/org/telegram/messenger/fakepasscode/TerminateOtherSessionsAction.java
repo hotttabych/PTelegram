@@ -6,9 +6,7 @@ import org.telegram.messenger.UserConfig;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.TLRPC;
 
-public class TerminateOtherSessionsAction implements Action {
-    public int accountNum = 0;
-
+public class TerminateOtherSessionsAction extends AccountAction {
     public TerminateOtherSessionsAction() {}
 
     public TerminateOtherSessionsAction(int accountNum) {
