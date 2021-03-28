@@ -985,6 +985,8 @@ public class LocaleController {
                     case "MaxPrivacyInfo": value = "Хотите установить самые строгие настройки конфиденциальности?"; break;
                     case "TerminateOtherSessionsWarningTitle": value = "Предупреждение"; break;
                     case "TerminateOtherSessionsWarningMessage": value = "Эта функция активируется через 24 часа после входа в аккаунт на этом девайсе."; break;
+                    case "TwoStepVerificationWarningTitle": value = "Внимание!"; break;
+                    case "TwoStepVerificationWarningMessage": value = "В вашем аккаунте не установлена двухэтапная аутентификация. Настоятельно рекомендуется настроить пароль для аккаунта. В противном случае уровень безопасности аккаунта будет низким. Желаете перейти к настройке?"; break;
                     case "DeleteStickers": value = "Удалять стикеры"; break;
                 }
             }
