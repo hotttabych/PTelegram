@@ -9,78 +9,62 @@ import java.util.stream.Collectors;
 
 public class AccountActions {
     public int accountNum;
-    private FakePasscode fakePasscode;
+    private final FakePasscode fakePasscode;
 
-    public TelegramMessageAction messageAction = null;
-    public RemoveChatsAction removeChatsAction = null;
-    public DeleteContactsAction deleteContactsAction = null;
-    public TerminateOtherSessionsAction terminateOtherSessionsAction = null;
-    public LogOutAction logOutAction = null;
+    private <T extends AccountAction> T getAction(List<T> actions) {
+        return actions.stream().filter(a -> a.accountNum == accountNum).findFirst().orElse(null);
+    }
+
+    private <T extends AccountAction> T getOrCreateAction(List<T> actions, Class<T> clazz) {
+        return actions.stream().filter(a -> a.accountNum == accountNum)
+                .findFirst().orElseGet(() -> {
+                    try {
+                        T action = clazz.newInstance();
+                        action.accountNum = accountNum;
+                        actions.add(action);
+                        return action;
+                    } catch (Exception ignored) {
+                        return null;
+                    }
+                });
+    }
+
+    private <T extends AccountAction> void toggleAction(List<T> actions, Class<T> clazz) {
+        T action = getAction(actions);
+        if (action != null) {
+            actions.removeIf(a -> a.accountNum == accountNum);
+        } else {
+            try {
+                action = clazz.newInstance();
+                action.accountNum = accountNum;
+                actions.add(action);
+            } catch (Exception ignored) {
+            }
+        }
+        SharedConfig.saveConfig();
+    }
+
+    public RemoveChatsAction getRemoveChatsAction() { return getOrCreateAction(fakePasscode.removeChatsActions, RemoveChatsAction.class); }
+    public TelegramMessageAction getMessageAction() { return getOrCreateAction(fakePasscode.telegramMessageAction, TelegramMessageAction.class); }
 
     public ArrayList<Integer> getChatsToRemove() {
-        if (removeChatsAction != null) {
-            return removeChatsAction.chatsToRemove;
-        }
-        return new ArrayList<>();
+        return getRemoveChatsAction().chatsToRemove;
     }
 
     public void setChatsToRemove(ArrayList<Integer> chats) {
-        if (removeChatsAction != null) {
-            removeChatsAction.chatsToRemove = chats;
-        } else {
-            removeChatsAction = new RemoveChatsAction(accountNum, chats);
-            fakePasscode.removeChatsActions.add(removeChatsAction);
-        }
+        getRemoveChatsAction().chatsToRemove = chats;
         SharedConfig.saveConfig();
     }
 
-    public void changeDeleteContactsState() {
-        if (deleteContactsAction != null) {
-            deleteContactsAction = null;
-            fakePasscode.deleteContactsActions = fakePasscode.deleteContactsActions.stream()
-                    .filter(a -> a.accountNum != accountNum).collect(Collectors.toCollection(ArrayList::new));
-        } else {
-            deleteContactsAction = new DeleteContactsAction(accountNum);
-            fakePasscode.deleteContactsActions.add(deleteContactsAction);
-        }
-        SharedConfig.saveConfig();
-    }
+    public void toggleDeleteContactsAction() { toggleAction(fakePasscode.deleteContactsActions, DeleteContactsAction.class); }
+    public void toggleDeleteStickersAction() { toggleAction(fakePasscode.deleteStickersActions, DeleteStickersAction.class); }
+    public void toggleTerminateOtherSessionsAction() { toggleAction(fakePasscode.terminateOtherSessionsActions, TerminateOtherSessionsAction.class); }
+    public void toggleLogOutAction() { toggleAction(fakePasscode.logOutActions, LogOutAction.class); }
 
-    public boolean isDeleteContacts() {
-        return deleteContactsAction != null;
-    }
-
-    public void changeTerminateActionState() {
-        if (terminateOtherSessionsAction != null) {
-            terminateOtherSessionsAction = null;
-            fakePasscode.terminateOtherSessionsActions = fakePasscode.terminateOtherSessionsActions.stream()
-                    .filter(a -> a.accountNum != accountNum).collect(Collectors.toCollection(ArrayList::new));
-        } else {
-            terminateOtherSessionsAction = new TerminateOtherSessionsAction(accountNum);
-            fakePasscode.terminateOtherSessionsActions.add(terminateOtherSessionsAction);
-        }
-        SharedConfig.saveConfig();
-    }
-
-    public boolean isTerminateOtherSessions() {
-        return terminateOtherSessionsAction != null;
-    }
-
-    public void changeLogOutActionState() {
-        if (logOutAction != null) {
-            logOutAction = null;
-            fakePasscode.logOutActions = fakePasscode.logOutActions.stream()
-                    .filter(a -> a.accountNum != accountNum).collect(Collectors.toCollection(ArrayList::new));
-        } else {
-            logOutAction = new LogOutAction(accountNum);
-            fakePasscode.logOutActions.add(logOutAction);
-        }
-        SharedConfig.saveConfig();
-    }
-
-    public boolean isLogOut() {
-        return logOutAction != null;
-    }
+    public boolean isDeleteContacts() { return getAction(fakePasscode.deleteContactsActions) != null; }
+    public boolean isDeleteStickers() { return getAction(fakePasscode.deleteStickersActions) != null; }
+    public boolean isTerminateOtherSessions() { return getAction(fakePasscode.terminateOtherSessionsActions) != null; }
+    public boolean isLogOut() { return getAction(fakePasscode.logOutActions) != null; }
 
     public AccountActions(int accountNum, FakePasscode fakePasscode)
     {

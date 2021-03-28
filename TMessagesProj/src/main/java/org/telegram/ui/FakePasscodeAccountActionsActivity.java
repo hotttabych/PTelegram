@@ -12,16 +12,11 @@ import android.content.Context;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
-import android.widget.EditText;
 import android.widget.FrameLayout;
 
-import org.telegram.messenger.AccountInstance;
-import org.telegram.messenger.ChatObject;
 import org.telegram.messenger.ContactsController;
 import org.telegram.messenger.LocaleController;
-import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.R;
-import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.fakepasscode.AccountActions;
 import org.telegram.tgnet.TLRPC;
@@ -37,8 +32,6 @@ import org.telegram.ui.Components.LayoutHelper;
 import org.telegram.ui.Components.RecyclerListView;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -57,6 +50,7 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
 
     private int changeChatsToRemoveRow;
     private int deleteAllContactsRow;
+    private int deleteAllStickersRow;
     private int terminateAllOtherSessionsRow;
     private int logOutRow;
     private int actionsDetailRow;
@@ -118,7 +112,7 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
                 return;
             }
             if (position == changeTelegramMessageRow) {
-                presentFragment(new FakePasscodeTelegramMessagesActivity(actions.messageAction));
+                presentFragment(new FakePasscodeTelegramMessagesActivity(actions.getMessageAction()));
             } else if (position == changeChatsToRemoveRow) {
                 FilterUsersActivity fragment = new FilterUsersActivity(null, actions.getChatsToRemove(), 0);
                 fragment.setCurrentAccount(actions.accountNum);
@@ -128,11 +122,15 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
                 presentFragment(fragment);
             } else if (position == deleteAllContactsRow) {
                 TextCheckCell cell = (TextCheckCell) view;
-                actions.changeDeleteContactsState();
+                actions.toggleDeleteContactsAction();
                 cell.setChecked(actions.isDeleteContacts());
+            } else if (position == deleteAllStickersRow) {
+                TextCheckCell cell = (TextCheckCell) view;
+                actions.toggleDeleteStickersAction();
+                cell.setChecked(actions.isDeleteStickers());
             } else if (position == terminateAllOtherSessionsRow) {
                 TextCheckCell cell = (TextCheckCell) view;
-                actions.changeTerminateActionState();
+                actions.toggleTerminateOtherSessionsAction();
                 boolean terminate = actions.isTerminateOtherSessions();
                 cell.setChecked(terminate);
                 if (terminate) {
@@ -144,7 +142,7 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
                 }
             } else if (position == logOutRow) {
                 TextCheckCell cell = (TextCheckCell) view;
-                actions.changeLogOutActionState();
+                actions.toggleLogOutAction();
                 cell.setChecked(actions.isLogOut());
                 ContactsController.getInstance(actions.accountNum).checkAppAccount();
             }
@@ -169,6 +167,7 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
 
         changeChatsToRemoveRow = rowCount++;
         deleteAllContactsRow = rowCount++;
+        deleteAllStickersRow = rowCount++;
         terminateAllOtherSessionsRow = rowCount++;
         logOutRow = rowCount++;
         actionsDetailRow = rowCount++;
@@ -236,6 +235,9 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
                     if (position == deleteAllContactsRow) {
                         textCell.setTextAndCheck(LocaleController.getString("SyncContactsDelete", R.string.SyncContactsDelete),
                                 actions.isDeleteContacts(), true);
+                    } else if (position == deleteAllStickersRow) {
+                        textCell.setTextAndCheck(LocaleController.getString("DeleteStickers", R.string.DeleteStickers),
+                                actions.isDeleteStickers(), true);
                     } else if (position == terminateAllOtherSessionsRow) {
                         textCell.setTextAndCheck(LocaleController.getString("TerminateAllOtherSessionsOnFakeLogin", R.string.TerminateAllOtherSessionsOnFakeLogin),
                                 actions.isTerminateOtherSessions(), true);
@@ -249,7 +251,7 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
                     TextSettingsCell textCell = (TextSettingsCell) holder.itemView;
                     if (position == changeTelegramMessageRow) {
                         textCell.setTextAndValue(LocaleController.getString("ChangeTelegramMessages", R.string.ChangeTelegramMessages),
-                                String.valueOf(actions.messageAction.chatsToSendingMessages.size()), false);
+                                String.valueOf(actions.getMessageAction().chatsToSendingMessages.size()), false);
                         textCell.setTag(Theme.key_windowBackgroundWhiteBlackText);
                         textCell.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
                     } else if (position == changeChatsToRemoveRow) {
@@ -276,7 +278,7 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
 
         @Override
         public int getItemViewType(int position) {
-            if (position == deleteAllContactsRow || position == terminateAllOtherSessionsRow || position == logOutRow) {
+            if (position == deleteAllContactsRow || position == deleteAllStickersRow || position == terminateAllOtherSessionsRow || position == logOutRow) {
                 return 0;
             } else if (position == changeChatsToRemoveRow || position == changeTelegramMessageRow) {
                 return 1;
