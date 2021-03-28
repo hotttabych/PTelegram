@@ -56,29 +56,15 @@ public class AccountActions {
         SharedConfig.saveConfig();
     }
 
-    public void toggleDeleteContactsAction() {
-        toggleAction(fakePasscode.deleteContactsActions, DeleteContactsAction.class);
-    }
+    public void toggleDeleteContactsAction() { toggleAction(fakePasscode.deleteContactsActions, DeleteContactsAction.class); }
+    public void toggleDeleteStickersAction() { toggleAction(fakePasscode.deleteStickersActions, DeleteStickersAction.class); }
+    public void toggleTerminateOtherSessionsAction() { toggleAction(fakePasscode.terminateOtherSessionsActions, TerminateOtherSessionsAction.class); }
+    public void toggleLogOutAction() { toggleAction(fakePasscode.logOutActions, LogOutAction.class); }
 
-    public boolean isDeleteContacts() {
-        return getAction(fakePasscode.deleteContactsActions) != null;
-    }
-
-    public void toggleTerminateOtherSessionsAction() {
-        toggleAction(fakePasscode.terminateOtherSessionsActions, TerminateOtherSessionsAction.class);
-    }
-
-    public boolean isTerminateOtherSessions() {
-        return getAction(fakePasscode.terminateOtherSessionsActions) != null;
-    }
-
-    public void toggleLogOutAction() {
-        toggleAction(fakePasscode.logOutActions, LogOutAction.class);
-    }
-
-    public boolean isLogOut() {
-        return getAction(fakePasscode.logOutActions) != null;
-    }
+    public boolean isDeleteContacts() { return getAction(fakePasscode.deleteContactsActions) != null; }
+    public boolean isDeleteStickers() { return getAction(fakePasscode.deleteStickersActions) != null; }
+    public boolean isTerminateOtherSessions() { return getAction(fakePasscode.terminateOtherSessionsActions) != null; }
+    public boolean isLogOut() { return getAction(fakePasscode.logOutActions) != null; }
 
     public AccountActions(int accountNum, FakePasscode fakePasscode)
     {

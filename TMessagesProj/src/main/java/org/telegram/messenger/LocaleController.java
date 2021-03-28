@@ -985,6 +985,7 @@ public class LocaleController {
                     case "MaxPrivacyInfo": value = "Хотите установить самые строгие настройки конфиденциальности?"; break;
                     case "TerminateOtherSessionsWarningTitle": value = "Предупреждение"; break;
                     case "TerminateOtherSessionsWarningMessage": value = "Эта функция активируется через 24 часа после входа в аккаунт на этом девайсе."; break;
+                    case "DeleteStickers": value = "Удалять стикеры"; break;
                 }
             }
             if (value == null) {
