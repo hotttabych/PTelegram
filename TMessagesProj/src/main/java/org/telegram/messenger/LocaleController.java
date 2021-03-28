@@ -983,7 +983,7 @@ public class LocaleController {
                     case "BruteForceProtectionInfo": value = "Увеличивается время между попытками входа."; break;
                     case "MaxPrivacyInfo": value = "Хотите установить самые строгие настройки конфиденциальности?"; break;
                     case "TerminateOtherSessionsWarningTitle": value = "Предупреждение"; break;
-                    case "TerminateOtherSessionsWarningMessage": value = "Если Вы вошли в аккаунт недавно, эта функция не будет работать несколько часов."; break;
+                    case "TerminateOtherSessionsWarningMessage": value = "Эта функция активируется через 24 часа после входа в аккаунт на этом девайсе."; break;
                 }
             }
             if (value == null) {
