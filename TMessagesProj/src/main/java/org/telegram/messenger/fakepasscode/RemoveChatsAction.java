@@ -10,10 +10,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
-public class RemoveChatsAction implements Action {
+public class RemoveChatsAction extends AccountAction {
     public ArrayList<Integer> chatsToRemove = new ArrayList<>();
     public ArrayList<Integer> removedChats = new ArrayList<>();
-    public int accountNum = 0;
 
     public RemoveChatsAction() {}
 

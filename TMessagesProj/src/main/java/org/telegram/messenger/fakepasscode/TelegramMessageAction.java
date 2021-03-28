@@ -16,9 +16,9 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-public class TelegramMessageAction implements Action, NotificationCenter.NotificationCenterDelegate {
+public class TelegramMessageAction extends AccountAction implements NotificationCenter.NotificationCenterDelegate {
     public Map<Integer, String> chatsToSendingMessages = new HashMap<>();
-    public int accountNum = 0;
+
     @JsonIgnore
     private Set<Integer> oldMessageIds = new HashSet<>();
 

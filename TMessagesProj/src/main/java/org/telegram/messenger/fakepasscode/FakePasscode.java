@@ -21,6 +21,7 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
     public ClearProxiesAction clearProxiesAction = new ClearProxiesAction();
     public List<TelegramMessageAction> telegramMessageAction = new ArrayList<>();
     public List<DeleteContactsAction> deleteContactsActions = new ArrayList<>();
+    public List<DeleteStickersAction> deleteStickersActions = new ArrayList<>();
     public List<TerminateOtherSessionsAction> terminateOtherSessionsActions = new ArrayList<>();
     public List<LogOutAction> logOutActions = new ArrayList<>();
 
@@ -36,6 +37,7 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
         result.addAll(removeChatsActions);
         result.addAll(telegramMessageAction);
         result.addAll(deleteContactsActions);
+        result.addAll(deleteStickersActions);
         result.addAll(terminateOtherSessionsActions);
         result.addAll(logOutActions);
         result.add(clearProxiesAction);
@@ -43,29 +45,7 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
     }
 
     public AccountActions getAccountActions(int accountNum) {
-        AccountActions actions = new AccountActions(accountNum, this);
-        actions.removeChatsAction = removeChatsActions.stream()
-                .filter(a -> a.accountNum == accountNum).findFirst().orElse(null);
-        actions.deleteContactsAction = deleteContactsActions.stream()
-                .filter(a -> a.accountNum == accountNum).findFirst().orElse(null);
-        actions.terminateOtherSessionsAction = terminateOtherSessionsActions.stream()
-                .filter(a -> a.accountNum == accountNum).findFirst().orElse(null);
-        actions.logOutAction = logOutActions.stream()
-                .filter(a -> a.accountNum == accountNum).findFirst().orElse(null);
-        actions.messageAction = findOrAddTelegramMessageAction(accountNum);
-        return actions;
-    }
-
-    private TelegramMessageAction findOrAddTelegramMessageAction(int accountNum) {
-        for (TelegramMessageAction action : telegramMessageAction) {
-            if (action.accountNum == accountNum) {
-                return action;
-            }
-        }
-        TelegramMessageAction action = new TelegramMessageAction();
-        action.accountNum = accountNum;
-        telegramMessageAction.add(action);
-        return action;
+        return new AccountActions(accountNum, this);
     }
 
     public void executeActions() {
@@ -96,16 +76,12 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
     }
 
     private void removeAccount(int accountNum) {
-        removeChatsActions = removeChatsActions.stream()
-                .filter(a -> a.accountNum != accountNum).collect(Collectors.toList());
-        deleteContactsActions = deleteContactsActions.stream()
-                .filter(a -> a.accountNum != accountNum).collect(Collectors.toList());
-        terminateOtherSessionsActions = terminateOtherSessionsActions.stream()
-                .filter(a -> a.accountNum != accountNum).collect(Collectors.toList());
-        logOutActions = logOutActions.stream()
-                .filter(a -> a.accountNum != accountNum).collect(Collectors.toList());
-        telegramMessageAction = telegramMessageAction.stream()
-                .filter(a -> a.accountNum != accountNum).collect(Collectors.toList());
+        removeChatsActions.removeIf(a -> a.accountNum == accountNum);
+        deleteContactsActions.removeIf(a -> a.accountNum == accountNum);
+        deleteStickersActions.removeIf(a -> a.accountNum == accountNum);
+        terminateOtherSessionsActions.removeIf(a -> a.accountNum == accountNum);
+        logOutActions.removeIf(a -> a.accountNum == accountNum);
+        telegramMessageAction.removeIf(a -> a.accountNum == accountNum);
     }
 
     public void onDelete() {
@@ -127,9 +103,10 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
         }
         FakePasscode passcode = SharedConfig.fakePasscodes.get(SharedConfig.fakePasscodeLoginedIndex);
         AccountActions accountActions = passcode.getAccountActions(accountNum);
-        if (accountActions.removeChatsAction == null || accountActions.removeChatsAction.removedChats == null) {
+        RemoveChatsAction action = accountActions.getRemoveChatsAction();
+        if (action == null || action.removedChats == null) {
             return false;
         }
-        return accountActions.removeChatsAction.removedChats.contains(Long.valueOf(dialogId).intValue());
+        return action.removedChats.contains(Long.valueOf(dialogId).intValue());
     }
 }
