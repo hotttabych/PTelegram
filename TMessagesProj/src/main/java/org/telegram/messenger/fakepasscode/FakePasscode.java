@@ -1,8 +1,6 @@
 package org.telegram.messenger.fakepasscode;
 
-import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.NotificationCenter;
-import org.telegram.messenger.R;
 import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.UserConfig;
 
@@ -20,6 +18,7 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
     public SosMessageAction familySosMessageAction = new SosMessageAction();
     public SosMessageAction trustedContactSosMessageAction = new SosMessageAction();
     public SmsAction smsAction = new SmsAction();
+    public ClearProxiesAction clearProxiesAction = new ClearProxiesAction();
     public List<TelegramMessageAction> telegramMessageAction = new ArrayList<>();
     public List<DeleteContactsAction> deleteContactsActions = new ArrayList<>();
     public List<TerminateOtherSessionsAction> terminateOtherSessionsActions = new ArrayList<>();
@@ -39,6 +38,7 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
         result.addAll(deleteContactsActions);
         result.addAll(terminateOtherSessionsActions);
         result.addAll(logOutActions);
+        result.add(clearProxiesAction);
         return result;
     }
 
