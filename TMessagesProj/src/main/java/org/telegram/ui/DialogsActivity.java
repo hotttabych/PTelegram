@@ -3870,7 +3870,6 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     passwordFragment = null;
                 })
             , 500);
-            //error
             return;
         } else if (tosAccepted && checkPermission && !onlySelect && Build.VERSION.SDK_INT >= 23) {
             Activity activity = getParentActivity();
