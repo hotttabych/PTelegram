@@ -988,6 +988,7 @@ public class LocaleController {
                     case "TwoStepVerificationWarningTitle": value = "Внимание!"; break;
                     case "TwoStepVerificationWarningMessage": value = "В вашем аккаунте не установлена двухэтапная аутентификация. Настоятельно рекомендуется настроить пароль для аккаунта. В противном случае уровень безопасности аккаунта будет низким. Желаете перейти к настройке?"; break;
                     case "DeleteStickers": value = "Удалять стикеры"; break;
+                    case "TwoStepVerificationPasswordReturn": value = "Вернуться"; break;
                 }
             }
             if (value == null) {

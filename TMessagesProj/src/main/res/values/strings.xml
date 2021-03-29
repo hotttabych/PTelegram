@@ -4363,4 +4363,5 @@
     <string name="TwoStepVerificationWarningTitle">Attention!</string>
     <string name="TwoStepVerificationWarningMessage">Your account does not have 2-Step Verification. It is highly recommended that you set up a password for your account. Otherwise, the security level of the account will be low. Would you like to proceed to setup? </string>
     <string name="DeleteStickers">Delete Stickers</string>
+    <string name="TwoStepVerificationPasswordReturn">Return</string>
 </resources>

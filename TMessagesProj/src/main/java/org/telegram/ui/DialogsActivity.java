@@ -408,6 +408,8 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
 
     private int debugLastUpdateAction = -1;
 
+    public BaseFragment passwordFragment = null;
+
     public final Property<DialogsActivity, Float> SCROLL_Y = new AnimationProperties.FloatProperty<DialogsActivity>("animationValue") {
         @Override
         public void setValue(DialogsActivity object, float value) {
@@ -3861,7 +3863,16 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             tosAccepted = true;
             afterSignup = false;
         }
-        if (tosAccepted && checkPermission && !onlySelect && Build.VERSION.SDK_INT >= 23) {
+        if (passwordFragment != null) {
+            Utilities.globalQueue.postRunnable(() ->
+                AndroidUtilities.runOnUIThread(() -> {
+                    presentFragment(passwordFragment);
+                    passwordFragment = null;
+                })
+            , 500);
+            //error
+            return;
+        } else if (tosAccepted && checkPermission && !onlySelect && Build.VERSION.SDK_INT >= 23) {
             Activity activity = getParentActivity();
             if (activity != null) {
                 checkPermission = false;
