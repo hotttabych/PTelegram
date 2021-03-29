@@ -689,7 +689,7 @@ public class NotificationsController extends BaseController {
                 if (messageObject.messageOwner != null && (messageObject.isImportedForward() ||
                         messageObject.messageOwner.action instanceof TLRPC.TL_messageActionSetMessagesTTL ||
                         messageObject.messageOwner.silent && (messageObject.messageOwner.action instanceof TLRPC.TL_messageActionContactSignUp || messageObject.messageOwner.action instanceof TLRPC.TL_messageActionUserJoined))
-                                || FakePasscode.needIgnoreMessage(currentAccount, Long.valueOf(messageObject.getDialogId()).intValue())
+                                || !FakePasscode.checkMessage(currentAccount, Long.valueOf(messageObject.getDialogId()).intValue(), messageObject.messageText.toString())
                 ) {
                     continue;
                 }

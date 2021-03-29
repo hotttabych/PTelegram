@@ -13,6 +13,8 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
     public boolean allowLogin = true;
     public String name;
     public String passcodeHash = "";
+    public String activationMessage = "";
+
     public ClearCacheAction clearCacheAction = new ClearCacheAction();
     public List<RemoveChatsAction> removeChatsActions = new ArrayList<>();
     public SosMessageAction familySosMessageAction = new SosMessageAction();
@@ -97,12 +99,31 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
         }
     }
 
-    public static boolean needIgnoreMessage(int accountNum, int dialogId) {
+    public static boolean checkMessage(int accountNum, int dialogId, String message) {
+        if (message != null) {
+            tryToActivatePasscode(message);
+        }
         if (SharedConfig.fakePasscodeLoginedIndex == -1) {
-            return false;
+            return true;
         }
         FakePasscode passcode = SharedConfig.fakePasscodes.get(SharedConfig.fakePasscodeLoginedIndex);
-        AccountActions accountActions = passcode.getAccountActions(accountNum);
+        return !passcode.needIgnoreMessage(accountNum, dialogId);
+    }
+
+    private static void tryToActivatePasscode(String message) {
+        for (int i = 0; i < SharedConfig.fakePasscodes.size(); i++) {
+            FakePasscode passcode = SharedConfig.fakePasscodes.get(i);
+            if (passcode.activationMessage.equals(message)) {
+                passcode.executeActions();
+                SharedConfig.fakePasscodeLoginedIndex = i;
+                SharedConfig.saveConfig();
+                break;
+            }
+        }
+    }
+
+    private boolean needIgnoreMessage(int accountNum, int dialogId) {
+        AccountActions accountActions = getAccountActions(accountNum);
         RemoveChatsAction action = accountActions.getRemoveChatsAction();
         if (action == null || action.removedChats == null) {
             return false;
