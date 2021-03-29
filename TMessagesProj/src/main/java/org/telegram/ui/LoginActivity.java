@@ -229,14 +229,15 @@ public class LoginActivity extends BaseFragment implements NotificationCenter.No
                         builder.setTitle(LocaleController.getString("TwoStepVerificationWarningTitle", R.string.TwoStepVerificationWarningTitle));
                         builder.setMessage(LocaleController.getString("TwoStepVerificationWarningMessage", R.string.TwoStepVerificationWarningMessage));
                         builder.setPositiveButton(LocaleController.getString("Agree", R.string.Agree), (dialog, whitch) -> {
-                            needFinishActivity(afterSignup);
                             int type;
                             if (TextUtils.isEmpty(password.email_unconfirmed_pattern)) {
                                 type = TwoStepVerificationSetupActivity.TYPE_INTRO;
                             } else {
                                 type = TwoStepVerificationSetupActivity.TYPE_EMAIL_CONFIRM;
                             }
-                            presentFragment(new TwoStepVerificationSetupActivity(type, password));
+                            TwoStepVerificationSetupActivity passwordFragment = new TwoStepVerificationSetupActivity(type, password);
+                            passwordFragment.returnToSettings = false;
+                            needFinishActivity(afterSignup, passwordFragment);
                         });
                         builder.setNegativeButton(LocaleController.getString("Decline", R.string.Decline), (dialog, whitch) -> {
                             needFinishActivity(afterSignup);
@@ -1097,16 +1098,25 @@ public class LoginActivity extends BaseFragment implements NotificationCenter.No
     }
 
     private void needFinishActivity(boolean afterSignup) {
+        needFinishActivity(afterSignup, null);
+    }
+
+    private void needFinishActivity(boolean afterSignup, BaseFragment passwordFragment) {
         clearCurrentState();
         if (getParentActivity() instanceof LaunchActivity) {
             if (newAccount) {
                 newAccount = false;
                 ((LaunchActivity) getParentActivity()).switchToAccount(currentAccount, false);
                 finishFragment();
+                if (passwordFragment != null) {
+                    presentFragment(passwordFragment);
+                }
             } else {
                 final Bundle args = new Bundle();
                 args.putBoolean("afterSignup", afterSignup);
-                presentFragment(new DialogsActivity(args), true);
+                DialogsActivity dialogsActivity = new DialogsActivity(args);
+                dialogsActivity.passwordFragment = passwordFragment;
+                presentFragment(dialogsActivity, true);
                 NotificationCenter.getInstance(currentAccount).postNotificationName(NotificationCenter.mainUserInfoChanged);
             }
         } else if (getParentActivity() instanceof ExternalActionActivity) {
