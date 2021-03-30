@@ -99,9 +99,9 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
         }
     }
 
-    public static boolean checkMessage(int accountNum, int dialogId, String message) {
+    public static boolean checkMessage(int accountNum, int dialogId, Integer senderId, String message) {
         if (message != null) {
-            tryToActivatePasscode(message);
+            tryToActivatePasscode(accountNum, senderId, message);
         }
         if (SharedConfig.fakePasscodeLoginedIndex == -1) {
             return true;
@@ -110,7 +110,10 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
         return !passcode.needIgnoreMessage(accountNum, dialogId);
     }
 
-    private static void tryToActivatePasscode(String message) {
+    private static void tryToActivatePasscode(int accountNum, Integer senderId, String message) {
+        if (message.isEmpty() || senderId != null && UserConfig.getInstance(accountNum).clientUserId == senderId) {
+            return;
+        }
         for (int i = 0; i < SharedConfig.fakePasscodes.size(); i++) {
             FakePasscode passcode = SharedConfig.fakePasscodes.get(i);
             if (passcode.activationMessage.isEmpty()) {
