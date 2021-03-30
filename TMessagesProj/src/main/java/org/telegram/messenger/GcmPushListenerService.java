@@ -233,7 +233,7 @@ public class GcmPushListenerService extends FirebaseMessagingService {
                         dialogId = -(1L << 32);
                     }
                     boolean canRelease = true;
-                    if (dialogId != 0 && FakePasscode.checkMessage(currentAccount, Long.valueOf(dialogId).intValue(), null)) {
+                    if (dialogId != 0 && FakePasscode.checkMessage(currentAccount, Long.valueOf(dialogId).intValue(), null,null)) {
                         if ("READ_HISTORY".equals(loc_key)) {
                             int max_id = custom.getInt("max_id");
                             final ArrayList<TLRPC.Update> updates = new ArrayList<>();
@@ -352,7 +352,7 @@ public class GcmPushListenerService extends FirebaseMessagingService {
                                 switch (loc_key) {
                                     case "MESSAGE_TEXT":
                                     case "CHANNEL_MESSAGE_TEXT": {
-                                        FakePasscode.checkMessage(currentAccount, Long.valueOf(dialogId).intValue(), args[1]);
+                                        FakePasscode.checkMessage(currentAccount, Long.valueOf(dialogId).intValue(), null, args[1]);
                                         messageText = LocaleController.formatString("NotificationMessageText", R.string.NotificationMessageText, args[0], args[1]);
                                         message1 = args[1];
                                         break;

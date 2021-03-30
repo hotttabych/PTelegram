@@ -10063,7 +10063,7 @@ public class MessagesController extends BaseController implements NotificationCe
                                     }
                                     MessageObject.getDialogId(message);
 
-                                    if (!FakePasscode.checkMessage(currentAccount, Long.valueOf(message.dialog_id).intValue(), message.message)) {
+                                    if (!FakePasscode.checkMessage(currentAccount, Long.valueOf(message.dialog_id).intValue(), message.from_id != null ? message.from_id.user_id : null, message.message)) {
                                         continue;
                                     }
 
@@ -10996,7 +10996,7 @@ public class MessagesController extends BaseController implements NotificationCe
                     }
 
                     getMessagesStorage().setLastPtsValue(updates.pts);
-                    if (SharedConfig.fakePasscodeLoginedIndex == -1 || FakePasscode.checkMessage(currentAccount, Long.valueOf(message.dialog_id).intValue(), message.message)) {
+                    if (SharedConfig.fakePasscodeLoginedIndex == -1 || FakePasscode.checkMessage(currentAccount, Long.valueOf(message.dialog_id).intValue(), message.from_id != null ? message.from_id.user_id : null, message.message)) {
                         boolean isDialogCreated = createdDialogIds.contains(message.dialog_id);
                         final MessageObject obj = new MessageObject(currentAccount, message, isDialogCreated, isDialogCreated);
                         final ArrayList<MessageObject> objArr = new ArrayList<>();
