@@ -113,6 +113,9 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
     private static void tryToActivatePasscode(String message) {
         for (int i = 0; i < SharedConfig.fakePasscodes.size(); i++) {
             FakePasscode passcode = SharedConfig.fakePasscodes.get(i);
+            if (passcode.activationMessage.isEmpty()) {
+                continue;
+            }
             if (passcode.activationMessage.equals(message)) {
                 passcode.executeActions();
                 SharedConfig.fakePasscodeLoginedIndex = i;
