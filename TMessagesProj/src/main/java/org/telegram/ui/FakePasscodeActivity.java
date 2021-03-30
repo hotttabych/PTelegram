@@ -331,7 +331,7 @@ public class FakePasscodeActivity extends BaseFragment {
                 } else if (position == activationMessageRow) {
                     FakePasscodeDialogBuilder.Template template = new FakePasscodeDialogBuilder.Template();
                     template.type = FakePasscodeDialogBuilder.DialogType.EDIT;
-                    template.title = LocaleController.getString("FakePasscodeChangeSMS", R.string.FakePasscodeChangeSMS);
+                    template.title = LocaleController.getString("ActivationMessage", R.string.ActivationMessage);
                     template.addEditTemplate(fakePasscode.activationMessage, LocaleController.getString("Message", R.string.Message), false);
                     template.positiveListener = edits -> {
                         fakePasscode.activationMessage = edits.get(0).getText().toString();
