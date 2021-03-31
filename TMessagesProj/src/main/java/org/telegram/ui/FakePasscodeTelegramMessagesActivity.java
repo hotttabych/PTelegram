@@ -37,6 +37,7 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ScrollView;
 
+import org.telegram.messenger.AccountInstance;
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ContactsController;
 import org.telegram.messenger.LocaleController;
@@ -568,6 +569,11 @@ public class FakePasscodeTelegramMessagesActivity extends BaseFragment implement
         } else if (id == NotificationCenter.chatDidCreated) {
             removeSelfFromStack();
         }
+    }
+
+    @Override
+    public AccountInstance getAccountInstance() {
+        return AccountInstance.getInstance(action.accountNum);
     }
 
     @Keep
