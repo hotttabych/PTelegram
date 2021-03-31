@@ -37,6 +37,7 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ScrollView;
 
+import org.telegram.messenger.AccountInstance;
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ContactsController;
 import org.telegram.messenger.LocaleController;
@@ -570,6 +571,11 @@ public class FakePasscodeTelegramMessagesActivity extends BaseFragment implement
         }
     }
 
+    @Override
+    public AccountInstance getAccountInstance() {
+        return AccountInstance.getInstance(action.accountNum);
+    }
+
     @Keep
     public void setContainerHeight(int value) {
         containerHeight = value;
@@ -655,7 +661,7 @@ public class FakePasscodeTelegramMessagesActivity extends BaseFragment implement
                         }
                     }
                 } else {
-                    TLRPC.Chat chat = getMessagesController().getChat(id);
+                    TLRPC.Chat chat = getMessagesController().getChat(-id);
                     if (chat != null) {
                         if (!chat.broadcast || (chat.admin_rights != null && chat.admin_rights.post_messages)) {
                             contacts.add(chat);
