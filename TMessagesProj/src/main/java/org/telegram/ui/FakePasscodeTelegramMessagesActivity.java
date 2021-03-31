@@ -661,7 +661,7 @@ public class FakePasscodeTelegramMessagesActivity extends BaseFragment implement
                         }
                     }
                 } else {
-                    TLRPC.Chat chat = getMessagesController().getChat(id);
+                    TLRPC.Chat chat = getMessagesController().getChat(-id);
                     if (chat != null) {
                         if (!chat.broadcast || (chat.admin_rights != null && chat.admin_rights.post_messages)) {
                             contacts.add(chat);
