@@ -965,7 +965,7 @@ public class LocaleController {
                     case "AreYouSureDeleteFakePasscode": value = "Вы точно хотите удалить этот ложный код-пароль?"; break;
                     case "PasscodeUsed": value = "Этот код-пароль уже используется"; break;
                     case "ChangeFakePasscodeInfo": value = "Вы можете изменить ложный код-пароль, не удаляя его."; break;
-                    case "AllowFakePasscodeLoginInfo": value = "Вы можете запретить вход с этим ложным код-паролем. В таком случае злоумышленник не получит доступ к аккаунтуам, но указанные действия будут выполнены."; break;
+                    case "AllowFakePasscodeLoginInfo": value = "Вы можете запретить вход с этим ложным код-паролем. В таком случае злоумышленник не получит доступ к аккаунтам, но указанные действия будут выполнены."; break;
                     case "DeleteFakePasscodeInfo": value = "Если Вы удалите ложный код-пароль, все действия будут очищены. Вы можете изменить код-пароль, если не хотите удалять его."; break;
                     case "FakePasscodeAccountActionsInfo": value = "Вы можете настроить некоторые действия для конкретных аккаунтов."; break;
                     case "FakePasscodeActionsHeader": value = "Действия"; break;
