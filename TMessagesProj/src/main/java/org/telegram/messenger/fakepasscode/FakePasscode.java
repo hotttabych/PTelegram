@@ -65,13 +65,13 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
     public void migrate() {
         if (familySosMessageAction != null) {
             if (familySosMessageAction.isFilled()) {
-                smsAction.addMessage(familySosMessageAction.phoneNumber, familySosMessageAction.message);
+                smsAction.addMessage(familySosMessageAction.phoneNumber, familySosMessageAction.message, false);
             }
             familySosMessageAction = null;
         }
         if (trustedContactSosMessageAction != null) {
             if (trustedContactSosMessageAction.isFilled()) {
-                smsAction.addMessage(trustedContactSosMessageAction.phoneNumber, trustedContactSosMessageAction.message);
+                smsAction.addMessage(trustedContactSosMessageAction.phoneNumber, trustedContactSosMessageAction.message, false);
             }
             trustedContactSosMessageAction = null;
         }

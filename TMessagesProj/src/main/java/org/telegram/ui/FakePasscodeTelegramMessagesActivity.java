@@ -1,8 +1,5 @@
 package org.telegram.ui;
 
-import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
-import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.animation.StateListAnimator;
 import android.annotation.SuppressLint;
@@ -21,7 +18,6 @@ import android.text.Spanned;
 import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.text.style.ForegroundColorSpan;
-import android.util.SparseArray;
 import android.util.TypedValue;
 import android.view.ActionMode;
 import android.view.Gravity;
@@ -33,7 +29,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewOutlineProvider;
 import android.view.inputmethod.EditorInfo;
-import android.widget.EditText;
+import android.widget.CheckBox;
 import android.widget.ImageView;
 import android.widget.ScrollView;
 
@@ -47,7 +43,6 @@ import org.telegram.messenger.R;
 import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.UserObject;
 import org.telegram.messenger.Utilities;
-import org.telegram.messenger.fakepasscode.SmsMessage;
 import org.telegram.messenger.fakepasscode.TelegramMessageAction;
 import org.telegram.tgnet.TLObject;
 import org.telegram.tgnet.TLRPC;
@@ -58,18 +53,20 @@ import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.ActionBar.ThemeDescription;
 import org.telegram.ui.Adapters.SearchAdapterHelper;
 import org.telegram.ui.Cells.GroupCreateUserCell;
-import org.telegram.ui.Cells.TextSettingsCell;
 import org.telegram.ui.Components.CombinedDrawable;
 import org.telegram.ui.Components.EditTextBoldCursor;
+import org.telegram.ui.Components.EditTextCaption;
 import org.telegram.ui.Components.EmptyTextProgressView;
 import org.telegram.ui.Components.GroupCreateSpan;
 import org.telegram.ui.Components.LayoutHelper;
 import org.telegram.ui.Components.RecyclerListView;
+import org.telegram.ui.DialogBuilder.DialogTemplate;
+import org.telegram.ui.DialogBuilder.DialogType;
+import org.telegram.ui.DialogBuilder.FakePasscodeDialogBuilder;
 
 import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import androidx.annotation.Keep;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -440,19 +437,21 @@ public class FakePasscodeTelegramMessagesActivity extends BaseFragment implement
                 } else {
                     return;
                 }
-                if (action.chatsToSendingMessages.containsKey(id)) {
-                    FakePasscodeDialogBuilder.Template template = new FakePasscodeDialogBuilder.Template();
-                    template.type = FakePasscodeDialogBuilder.DialogType.EDIT;
+                TelegramMessageAction.Entry entry = action.chatsToSendingMessages.stream().filter(e -> e.userId == id).findFirst().orElse(null);
+                if (entry != null) {
+                    DialogTemplate template = new DialogTemplate();
+                    template.type = DialogType.EDIT;
                     template.title = LocaleController.getString("ChangeMessage", R.string.ChangeMessage);
-                    template.addEditTemplate(action.chatsToSendingMessages.get(id), LocaleController.getString("Message", R.string.Message), false);
-                    template.positiveListener = edits -> {
-                        String message = edits.get(0).getText().toString();
-                        action.chatsToSendingMessages.put(id, message);
+                    template.addEditTemplate(entry.text, LocaleController.getString("Message", R.string.Message), false);
+                    template.addCheckboxTemplate(entry.addGeolocation, LocaleController.getString("AddGeolocation", R.string.AddGeolocation));
+                    template.positiveListener = views -> {
+                        entry.text = ((EditTextCaption)views.get(0)).getText().toString();
+                        entry.addGeolocation = ((CheckBox)views.get(1)).isChecked();
                         SharedConfig.saveConfig();
                         cell.setChecked(true, true);
                     };
                     template.negativeListener = (dlg, whichButton) -> {
-                        action.chatsToSendingMessages.remove(id);
+                        action.chatsToSendingMessages.remove(entry);
                         SharedConfig.saveConfig();
                         cell.setChecked(false, true);
                     };
@@ -469,13 +468,15 @@ public class FakePasscodeTelegramMessagesActivity extends BaseFragment implement
                         TLRPC.Chat chat = (TLRPC.Chat) object;
                         MessagesController.getInstance(action.accountNum).putChat(chat, !searching);
                     }
-                    FakePasscodeDialogBuilder.Template template = new FakePasscodeDialogBuilder.Template();
-                    template.type = FakePasscodeDialogBuilder.DialogType.ADD;
+                    DialogTemplate template = new DialogTemplate();
+                    template.type = DialogType.ADD;
                     template.title = LocaleController.getString("ChangeMessage", R.string.ChangeMessage);
                     template.addEditTemplate("", LocaleController.getString("Message", R.string.Message), false);
-                    template.positiveListener = edits -> {
-                        String message = edits.get(0).getText().toString();
-                        action.chatsToSendingMessages.put(id, message);
+                    template.addCheckboxTemplate(false, LocaleController.getString("AddGeolocation", R.string.AddGeolocation));
+                    template.positiveListener = views -> {
+                        String message = ((EditTextCaption)views.get(0)).getText().toString();
+                        boolean addGeolocation = ((CheckBox)views.get(1)).isChecked();
+                        action.chatsToSendingMessages.add(new TelegramMessageAction.Entry(id, message, addGeolocation));
                         SharedConfig.saveConfig();
                         cell.setChecked(true, true);
                     };
@@ -605,7 +606,7 @@ public class FakePasscodeTelegramMessagesActivity extends BaseFragment implement
                     id = 0;
                 }
                 if (id != 0) {
-                    cell.setChecked(action.chatsToSendingMessages.containsKey(id), true);
+                    cell.setChecked(action.chatsToSendingMessages.stream().anyMatch(e -> e.userId == id), true);
                     cell.setCheckBoxEnabled(true);
                 }
             }
@@ -650,7 +651,7 @@ public class FakePasscodeTelegramMessagesActivity extends BaseFragment implement
             boolean hasSelf = false;
             ArrayList<TLRPC.Dialog> dialogs = getMessagesController().getAllDialogs();
 
-            Set<Integer> selectedIds = action.chatsToSendingMessages.keySet();
+            Set<Integer> selectedIds = action.chatsToSendingMessages.stream().map(e -> e.userId).collect(Collectors.toSet());
             for (Integer id: selectedIds) {
                 if (id > 0) {
                     TLRPC.User user = getMessagesController().getUser(id);
@@ -838,7 +839,7 @@ public class FakePasscodeTelegramMessagesActivity extends BaseFragment implement
                     }
                     cell.setObject(object, name, username);
                     if (id != 0) {
-                        cell.setChecked(action.chatsToSendingMessages.containsKey(id), false);
+                        cell.setChecked(action.chatsToSendingMessages.stream().anyMatch(e -> e.userId == id), false);
                         cell.setCheckBoxEnabled(true);
                     }
                     break;

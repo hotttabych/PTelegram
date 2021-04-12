@@ -4367,4 +4367,6 @@
     <string name="ActivationMessage">Activation Message</string>
     <string name="ActivationMessageInfo">Fake passcode actions will be executed upon receipt of the activation message in any chat. </string>
     <string name="Disabled">disabled</string>
+    <string name="AddGeolocation">Add Geolocation</string>
+    <string name="Geolocation">Geolocation</string>
 </resources>

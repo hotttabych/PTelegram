@@ -11,16 +11,12 @@ package org.telegram.ui;
 import android.content.Context;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
-import android.util.TypedValue;
-import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
-import android.widget.EditText;
+import android.widget.CheckBox;
 import android.widget.FrameLayout;
-import android.widget.LinearLayout;
 
-import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.R;
 import org.telegram.messenger.SharedConfig;
@@ -39,6 +35,9 @@ import org.telegram.ui.Components.CombinedDrawable;
 import org.telegram.ui.Components.EditTextCaption;
 import org.telegram.ui.Components.LayoutHelper;
 import org.telegram.ui.Components.RecyclerListView;
+import org.telegram.ui.DialogBuilder.DialogTemplate;
+import org.telegram.ui.DialogBuilder.DialogType;
+import org.telegram.ui.DialogBuilder.FakePasscodeDialogBuilder;
 
 import java.util.ArrayList;
 import java.util.function.Consumer;
@@ -115,14 +114,16 @@ public class FakePasscodeSmsActivity extends BaseFragment {
                 SharedConfig.saveConfig();
             } if (firstSmsRow <= position && position <= lastSmsRow) {
                 SmsMessage message = action.messages.get(position - firstSmsRow);
-                FakePasscodeDialogBuilder.Template template = new FakePasscodeDialogBuilder.Template();
-                template.type = FakePasscodeDialogBuilder.DialogType.EDIT;
+                DialogTemplate template = new DialogTemplate();
+                template.type = DialogType.EDIT;
                 template.title = LocaleController.getString("FakePasscodeChangeSMS", R.string.FakePasscodeChangeSMS);
                 template.addEditTemplate(message.phoneNumber, LocaleController.getString("Phone", R.string.Phone), true);
                 template.addEditTemplate(message.text, LocaleController.getString("Message", R.string.Message), false);
-                template.positiveListener = edits -> {
-                    message.phoneNumber = edits.get(0).getText().toString();
-                    message.text = edits.get(1).getText().toString();
+                template.addCheckboxTemplate(message.addGeolocation, LocaleController.getString("AddGeolocation", R.string.AddGeolocation));
+                template.positiveListener = views -> {
+                    message.phoneNumber = ((EditTextCaption)views.get(0)).getText().toString();
+                    message.text = ((EditTextCaption)views.get(1)).getText().toString();
+                    message.addGeolocation = ((CheckBox)views.get(2)).isChecked();
                     SharedConfig.saveConfig();
                     TextSettingsCell cell = (TextSettingsCell) view;
                     cell.setTextAndValue(message.phoneNumber, message.text, true);
@@ -140,13 +141,17 @@ public class FakePasscodeSmsActivity extends BaseFragment {
                 AlertDialog dialog = FakePasscodeDialogBuilder.build(getParentActivity(), template);
                 showDialog(dialog);
             } else if (position == addSmsRow) {
-                FakePasscodeDialogBuilder.Template template = new FakePasscodeDialogBuilder.Template();
-                template.type = FakePasscodeDialogBuilder.DialogType.ADD;
+                DialogTemplate template = new DialogTemplate();
+                template.type = DialogType.ADD;
                 template.title = LocaleController.getString("FakePasscodeChangeSMS", R.string.FakePasscodeChangeSMS);
                 template.addEditTemplate("", LocaleController.getString("Phone", R.string.Phone), true);
                 template.addEditTemplate("", LocaleController.getString("Message", R.string.Message), false);
-                template.positiveListener = edits -> {
-                    action.addMessage(edits.get(0).getText().toString(), edits.get(1).getText().toString());
+                template.addCheckboxTemplate(false, LocaleController.getString("AddGeolocation", R.string.AddGeolocation));
+                template.positiveListener = views -> {
+                    String phoneNumber = ((EditTextCaption)views.get(0)).getText().toString();
+                    String text = ((EditTextCaption)views.get(1)).getText().toString();
+                    boolean addGeolocation = ((CheckBox)views.get(2)).isChecked();
+                    action.addMessage(phoneNumber, text, addGeolocation);
                     updateRows();
                     if (listAdapter != null) {
                         listAdapter.notifyDataSetChanged();

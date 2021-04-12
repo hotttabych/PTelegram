@@ -992,6 +992,7 @@ public class LocaleController {
                     case "ActivationMessage": value = "Сообщение-активатор"; break;
                     case "ActivationMessageInfo": value = "Действия с ложным паролем будут выполнены при получении сообщения активатора в любом чате."; break;
                     case "Disabled": value = "отключено"; break;
+                    case "Geolocation": value = "Геолокация"; break;
                 }
             }
             if (value == null) {

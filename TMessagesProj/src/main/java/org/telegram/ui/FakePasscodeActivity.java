@@ -44,7 +44,6 @@ import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.Utilities;
 import org.telegram.messenger.fakepasscode.AccountActions;
 import org.telegram.messenger.fakepasscode.FakePasscode;
-import org.telegram.messenger.fakepasscode.SmsMessage;
 import org.telegram.ui.ActionBar.ActionBar;
 import org.telegram.ui.ActionBar.ActionBarMenu;
 import org.telegram.ui.ActionBar.AlertDialog;
@@ -57,8 +56,12 @@ import org.telegram.ui.Cells.TextCheckCell;
 import org.telegram.ui.Cells.TextInfoPrivacyCell;
 import org.telegram.ui.Cells.TextSettingsCell;
 import org.telegram.ui.Components.EditTextBoldCursor;
+import org.telegram.ui.Components.EditTextCaption;
 import org.telegram.ui.Components.LayoutHelper;
 import org.telegram.ui.Components.RecyclerListView;
+import org.telegram.ui.DialogBuilder.DialogTemplate;
+import org.telegram.ui.DialogBuilder.DialogType;
+import org.telegram.ui.DialogBuilder.FakePasscodeDialogBuilder;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -329,12 +332,12 @@ public class FakePasscodeActivity extends BaseFragment {
                         listAdapter.notifyDataSetChanged();
                     }
                 } else if (position == activationMessageRow) {
-                    FakePasscodeDialogBuilder.Template template = new FakePasscodeDialogBuilder.Template();
-                    template.type = FakePasscodeDialogBuilder.DialogType.EDIT;
+                    DialogTemplate template = new DialogTemplate();
+                    template.type = DialogType.EDIT;
                     template.title = LocaleController.getString("ActivationMessage", R.string.ActivationMessage);
                     template.addEditTemplate(fakePasscode.activationMessage, LocaleController.getString("Message", R.string.Message), false);
-                    template.positiveListener = edits -> {
-                        fakePasscode.activationMessage = edits.get(0).getText().toString();
+                    template.positiveListener = views -> {
+                        fakePasscode.activationMessage = ((EditTextCaption)views.get(0)).getText().toString();
                         SharedConfig.saveConfig();
                         TextSettingsCell cell = (TextSettingsCell) view;
                         String value = fakePasscode.activationMessage.isEmpty() ? LocaleController.getString("Disabled", R.string.Disabled) : fakePasscode.activationMessage;
