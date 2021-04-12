@@ -54,6 +54,7 @@ import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.Utilities;
 import org.telegram.messenger.fakepasscode.FakePasscode;
+import org.telegram.messenger.fakepasscode.FakePasscodeMessages;
 import org.telegram.messenger.fakepasscode.LogOutAction;
 import org.telegram.messenger.fakepasscode.RemoveChatsAction;
 import org.telegram.messenger.fakepasscode.TelegramMessageAction;
@@ -500,8 +501,7 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
                     cell.setChecked(logOut);
                     if (logOut) {
                         if (!fakePasscode.logOutAccountOnFakeLogin(currentAccount)) {
-                            LogOutAction action = new LogOutAction();
-                            action.accountNum = currentAccount;
+                            LogOutAction action = new LogOutAction(currentAccount, fakePasscode);
                             fakePasscode.logOutActions.add(action);
                         }
                     } else {

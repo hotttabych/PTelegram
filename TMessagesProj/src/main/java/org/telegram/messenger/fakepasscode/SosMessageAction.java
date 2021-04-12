@@ -21,9 +21,4 @@ public class SosMessageAction implements Action {
     public boolean isActionDone() {
         return true;
     }
-
-    @Override
-    public Date getStartTime() {
-        return null; // Dummy realization. TODO
-    }
 }
