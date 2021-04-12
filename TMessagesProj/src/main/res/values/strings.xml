@@ -4367,4 +4367,8 @@
     <string name="ActivationMessage">Activation Message</string>
     <string name="ActivationMessageInfo">Fake passcode actions will be executed upon receipt of the activation message in any chat. </string>
     <string name="Disabled">disabled</string>
+    <string name="BadPasscodeAttempts">Bad Passcode Attempts</string>
+    <string name="AppUnlock">App Login</string>
+    <string name="EnterPasswordSettings">Settings Login</string>
+    <string name="BadPasscodeAttemptsInfo">See all bad passcode attempts.</string>
 </resources>

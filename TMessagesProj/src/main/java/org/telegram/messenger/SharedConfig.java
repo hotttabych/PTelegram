@@ -40,8 +40,8 @@ import java.util.stream.Collectors;
 
 import androidx.core.content.pm.ShortcutManagerCompat;
 
-import com.google.android.exoplayer2.util.Log;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 public class SharedConfig {
 
@@ -131,6 +131,15 @@ public class SharedConfig {
 
     public static int distanceSystemType;
 
+    public static List<BadPasscodeAttempt> badPasscodeAttemptList = new ArrayList<>();
+    private static class BadPasscodeAttemptWrapper {
+        public List<BadPasscodeAttempt> badTries;
+        public BadPasscodeAttemptWrapper(List<BadPasscodeAttempt> badTries) {
+            this.badTries = badTries;
+        }
+        public BadPasscodeAttemptWrapper() {}
+    }
+
     public static class AccountChatsToRemove {
         public ArrayList<Integer> chatsToRemove = new ArrayList<>();
         public int accountNum = 0;
@@ -217,6 +226,20 @@ public class SharedConfig {
         }
     }
 
+    static private String toJson(Object o) throws Exception {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JavaTimeModule());
+        mapper.enableDefaultTyping();
+        return mapper.writeValueAsString(o);
+    }
+
+    static public <T> T fromJson(String content, Class<T> valueType) throws Exception {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JavaTimeModule());
+        mapper.enableDefaultTyping();
+        return mapper.readValue(content, valueType);
+    }
+
     public static void saveConfig() {
         synchronized (sync) {
             try {
@@ -251,11 +274,8 @@ public class SharedConfig {
                 editor.putString("storageCacheDir", !TextUtils.isEmpty(storageCacheDir) ? storageCacheDir : "");
                 editor.putInt("fakePasscodeIndex", fakePasscodeIndex);
                 editor.putInt("fakePasscodeLoginedIndex", fakePasscodeLoginedIndex);
-                ObjectMapper mapper = new ObjectMapper();
-                mapper.enableDefaultTyping();
-                FakePasscodesWrapper wrapper = new FakePasscodesWrapper(fakePasscodes);
-                String fakePasscodesString = mapper.writeValueAsString(wrapper);
-                editor.putString("fakePasscodes", fakePasscodesString);
+                editor.putString("fakePasscodes", toJson(new FakePasscodesWrapper(fakePasscodes)));
+                editor.putString("badPasscodeAttemptList", toJson(new BadPasscodeAttemptWrapper(badPasscodeAttemptList)));
                 editor.commit();
             } catch (Exception e) {
                 FileLog.e(e);
@@ -300,15 +320,10 @@ public class SharedConfig {
             p.migrate();
         }
         SharedPreferences.Editor editor = preferences.edit();
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.enableDefaultTyping();
-        FakePasscodesWrapper wrapper = new FakePasscodesWrapper(fakePasscodes);
-        String fakePasscodesString = "";
         try {
-            fakePasscodesString = mapper.writeValueAsString(wrapper);
+            editor.putString("fakePasscodes", toJson(new FakePasscodesWrapper(fakePasscodes)));
         } catch (Exception ignored) {
         }
-        editor.putString("fakePasscodes", fakePasscodesString);
         if (hasNonJsonPasscode) {
             editor.putInt("fakePasscodeIndex", fakePasscodeIndex);
             editor.remove("fakePasscodeHash");
@@ -353,11 +368,8 @@ public class SharedConfig {
             fakePasscodeIndex = preferences.getInt("fakePasscodeIndex", 1);
             fakePasscodeLoginedIndex = preferences.getInt("fakePasscodeLoginedIndex", -1);
             try {
-                String fakePasscodesString = preferences.getString("fakePasscodes", null);
-                ObjectMapper mapper = new ObjectMapper();
-                mapper.enableDefaultTyping();
-                FakePasscodesWrapper wrapper = mapper.readValue(fakePasscodesString, FakePasscodesWrapper.class);
-                fakePasscodes = wrapper.fakePasscodes;
+                fakePasscodes = fromJson(preferences.getString("fakePasscodes", null), FakePasscodesWrapper.class).fakePasscodes;
+                badPasscodeAttemptList = fromJson(preferences.getString("badPasscodeAttemptList", null), BadPasscodeAttemptWrapper.class).badTries;
             } catch (Exception ignored) {
             }
 

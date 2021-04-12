@@ -992,6 +992,10 @@ public class LocaleController {
                     case "ActivationMessage": value = "Сообщение-активатор"; break;
                     case "ActivationMessageInfo": value = "Действия с ложным паролем будут выполнены при получении сообщения активатора в любом чате."; break;
                     case "Disabled": value = "отключено"; break;
+                    case "BadPasscodeAttempts": value = "Неудачные попытки ввода код-пароля"; break;
+                    case "AppUnlock": value = "Разблокировка приложения"; break;
+                    case "EnterPasswordSettings": value = "Вход в настройки код-пароля"; break;
+                    case "BadPasscodeAttemptsInfo": value = "Посмотрите все неудачные попытки ввода код-пароля."; break;
                 }
             }
             if (value == null) {
