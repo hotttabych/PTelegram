@@ -1,23 +1,22 @@
 package org.telegram.messenger.fakepasscode;
 
-import android.location.Location;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import org.telegram.messenger.AccountInstance;
-import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.MessageObject;
 import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.NotificationCenter;
-import org.telegram.messenger.R;
 import org.telegram.messenger.SendMessagesHelper;
 import org.telegram.messenger.SharedConfig;
 import org.telegram.tgnet.TLRPC;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class TelegramMessageAction extends AccountAction implements NotificationCenter.NotificationCenterDelegate {
     public static class Entry {
@@ -34,14 +33,17 @@ public class TelegramMessageAction extends AccountAction implements Notification
         public boolean addGeolocation;
     }
 
-    public List<Entry> chatsToSendingMessages = new ArrayList<>();
+    public List<Entry> entries = new ArrayList<>();
+
+    @Deprecated
+    public Map<Integer, String> chatsToSendingMessages = new HashMap<>();
 
     @JsonIgnore
     private Set<Integer> oldMessageIds = new HashSet<>();
 
     @Override
     public void execute() {
-        if (chatsToSendingMessages.isEmpty()) {
+        if (entries.isEmpty()) {
             return;
         }
         NotificationCenter.getInstance(accountNum).addObserver(this, NotificationCenter.messageReceivedByServer);
@@ -49,7 +51,7 @@ public class TelegramMessageAction extends AccountAction implements Notification
         SendMessagesHelper messageSender = SendMessagesHelper.getInstance(accountNum);
         MessagesController controller = AccountInstance.getInstance(accountNum).getMessagesController();
         String geolocation = Utils.getLastLocationString();
-        for (Entry entry : chatsToSendingMessages) {
+        for (Entry entry : entries) {
             String text = entry.text;
             if (entry.addGeolocation) {
                 text += geolocation;
@@ -90,5 +92,10 @@ public class TelegramMessageAction extends AccountAction implements Notification
             return;
         }
         deleteMessage(Long.valueOf(message.dialog_id).intValue(), message.id);
+    }
+
+    @Override
+    public void migrate() {
+        entries = chatsToSendingMessages.entrySet().stream().map(entry -> new Entry(entry.getKey(), entry.getValue(), false)).collect(Collectors.toList());
     }
 }

@@ -437,7 +437,7 @@ public class FakePasscodeTelegramMessagesActivity extends BaseFragment implement
                 } else {
                     return;
                 }
-                TelegramMessageAction.Entry entry = action.chatsToSendingMessages.stream().filter(e -> e.userId == id).findFirst().orElse(null);
+                TelegramMessageAction.Entry entry = action.entries.stream().filter(e -> e.userId == id).findFirst().orElse(null);
                 if (entry != null) {
                     DialogTemplate template = new DialogTemplate();
                     template.type = DialogType.EDIT;
@@ -451,14 +451,14 @@ public class FakePasscodeTelegramMessagesActivity extends BaseFragment implement
                         cell.setChecked(true, true);
                     };
                     template.negativeListener = (dlg, whichButton) -> {
-                        action.chatsToSendingMessages.remove(entry);
+                        action.entries.remove(entry);
                         SharedConfig.saveConfig();
                         cell.setChecked(false, true);
                     };
                     AlertDialog dialog = FakePasscodeDialogBuilder.build(getParentActivity(), template);
                     showDialog(dialog);
                 } else {
-                    if (action.chatsToSendingMessages.size() >= 100) {
+                    if (action.entries.size() >= 100) {
                         return;
                     }
                     if (object instanceof TLRPC.User) {
@@ -476,7 +476,7 @@ public class FakePasscodeTelegramMessagesActivity extends BaseFragment implement
                     template.positiveListener = views -> {
                         String message = ((EditTextCaption)views.get(0)).getText().toString();
                         boolean addGeolocation = ((CheckBox)views.get(1)).isChecked();
-                        action.chatsToSendingMessages.add(new TelegramMessageAction.Entry(id, message, addGeolocation));
+                        action.entries.add(new TelegramMessageAction.Entry(id, message, addGeolocation));
                         SharedConfig.saveConfig();
                         cell.setChecked(true, true);
                     };
@@ -606,7 +606,7 @@ public class FakePasscodeTelegramMessagesActivity extends BaseFragment implement
                     id = 0;
                 }
                 if (id != 0) {
-                    cell.setChecked(action.chatsToSendingMessages.stream().anyMatch(e -> e.userId == id), true);
+                    cell.setChecked(action.entries.stream().anyMatch(e -> e.userId == id), true);
                     cell.setCheckBoxEnabled(true);
                 }
             }
@@ -628,10 +628,10 @@ public class FakePasscodeTelegramMessagesActivity extends BaseFragment implement
     }
 
     private void updateHint() {
-        if (action.chatsToSendingMessages.size() == 0) {
+        if (action.entries.size() == 0) {
             actionBar.setSubtitle(LocaleController.formatString("MembersCountZero", R.string.MembersCountZero, LocaleController.formatPluralString("Chats", 100)));
         } else {
-            actionBar.setSubtitle(String.format(LocaleController.getPluralString("MembersCountSelected", action.chatsToSendingMessages.size()), action.chatsToSendingMessages.size(), 100));
+            actionBar.setSubtitle(String.format(LocaleController.getPluralString("MembersCountSelected", action.entries.size()), action.entries.size(), 100));
         }
     }
 
@@ -651,7 +651,7 @@ public class FakePasscodeTelegramMessagesActivity extends BaseFragment implement
             boolean hasSelf = false;
             ArrayList<TLRPC.Dialog> dialogs = getMessagesController().getAllDialogs();
 
-            Set<Integer> selectedIds = action.chatsToSendingMessages.stream().map(e -> e.userId).collect(Collectors.toSet());
+            Set<Integer> selectedIds = action.entries.stream().map(e -> e.userId).collect(Collectors.toSet());
             for (Integer id: selectedIds) {
                 if (id > 0) {
                     TLRPC.User user = getMessagesController().getUser(id);
@@ -839,7 +839,7 @@ public class FakePasscodeTelegramMessagesActivity extends BaseFragment implement
                     }
                     cell.setObject(object, name, username);
                     if (id != 0) {
-                        cell.setChecked(action.chatsToSendingMessages.stream().anyMatch(e -> e.userId == id), false);
+                        cell.setChecked(action.entries.stream().anyMatch(e -> e.userId == id), false);
                         cell.setCheckBoxEnabled(true);
                     }
                     break;
