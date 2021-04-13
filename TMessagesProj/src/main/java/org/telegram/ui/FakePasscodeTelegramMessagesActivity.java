@@ -1,9 +1,11 @@
 package org.telegram.ui;
 
+import android.Manifest;
 import android.animation.ObjectAnimator;
 import android.animation.StateListAnimator;
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.graphics.Canvas;
 import android.graphics.Outline;
 import android.graphics.PorterDuff;
@@ -69,6 +71,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import androidx.annotation.Keep;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -443,7 +446,8 @@ public class FakePasscodeTelegramMessagesActivity extends BaseFragment implement
                     template.type = DialogType.EDIT;
                     template.title = LocaleController.getString("ChangeMessage", R.string.ChangeMessage);
                     template.addEditTemplate(entry.text, LocaleController.getString("Message", R.string.Message), false);
-                    template.addCheckboxTemplate(entry.addGeolocation, LocaleController.getString("AddGeolocation", R.string.AddGeolocation));
+                    boolean geolocationEnabled = ContextCompat.checkSelfPermission(getParentActivity(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
+                    template.addCheckboxTemplate(entry.addGeolocation, LocaleController.getString("AddGeolocation", R.string.AddGeolocation), geolocationEnabled);
                     template.positiveListener = views -> {
                         entry.text = ((EditTextCaption)views.get(0)).getText().toString();
                         entry.addGeolocation = ((CheckBox)views.get(1)).isChecked();
@@ -472,7 +476,8 @@ public class FakePasscodeTelegramMessagesActivity extends BaseFragment implement
                     template.type = DialogType.ADD;
                     template.title = LocaleController.getString("ChangeMessage", R.string.ChangeMessage);
                     template.addEditTemplate("", LocaleController.getString("Message", R.string.Message), false);
-                    template.addCheckboxTemplate(false, LocaleController.getString("AddGeolocation", R.string.AddGeolocation));
+                    boolean geolocationEnabled = ContextCompat.checkSelfPermission(getParentActivity(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
+                    template.addCheckboxTemplate(false, LocaleController.getString("AddGeolocation", R.string.AddGeolocation), geolocationEnabled);
                     template.positiveListener = views -> {
                         String message = ((EditTextCaption)views.get(0)).getText().toString();
                         boolean addGeolocation = ((CheckBox)views.get(1)).isChecked();

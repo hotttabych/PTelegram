@@ -12,6 +12,7 @@ import org.telegram.ui.ActionBar.Theme;
 public class CheckBoxTemplate implements ViewTemplate {
     String name;
     boolean checked;
+    boolean enabled;
 
     @Override
     public View create(Context context) {
@@ -22,6 +23,7 @@ public class CheckBoxTemplate implements ViewTemplate {
         checkBox.setGravity(Gravity.BOTTOM);
         checkBox.setPadding(0, AndroidUtilities.dp(11), 0, AndroidUtilities.dp(12));
         checkBox.setTextColor(Theme.getColor(Theme.key_chat_messagePanelText));
+        checkBox.setEnabled(enabled);
         return checkBox;
     }
 }

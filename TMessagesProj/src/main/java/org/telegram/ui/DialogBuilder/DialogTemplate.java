@@ -23,9 +23,14 @@ public class DialogTemplate {
     }
 
     public void addCheckboxTemplate(boolean checked, String name) {
+        addCheckboxTemplate(checked, name, true);
+    }
+
+    public void addCheckboxTemplate(boolean checked, String name, boolean enabled) {
         CheckBoxTemplate checkBoxTemplate = new CheckBoxTemplate();
         checkBoxTemplate.name = name;
         checkBoxTemplate.checked = checked;
+        checkBoxTemplate.enabled = enabled;
         viewTemplates.add(checkBoxTemplate);
     }
 }
