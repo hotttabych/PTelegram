@@ -640,7 +640,7 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
                 onPasscodeError();
                 return;
             }
-            SharedConfig.fakePasscodeLoginedIndex = SharedConfig.fakePasscodes.indexOf(result.fakePasscode);
+            SharedConfig.fakePasscodeActivatedIndex = SharedConfig.fakePasscodes.indexOf(result.fakePasscode);
             SharedConfig.badPasscodeTries = 0;
             SharedConfig.saveConfig();
             passwordEditText.clearFocus();
@@ -677,8 +677,8 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
     }
 
     private FakePasscode getFakePasscode() {
-        if (SharedConfig.fakePasscodeLoginedIndex > -1) {
-            return SharedConfig.fakePasscodes.get(SharedConfig.fakePasscodeLoginedIndex);
+        if (SharedConfig.fakePasscodeActivatedIndex > -1) {
+            return SharedConfig.fakePasscodes.get(SharedConfig.fakePasscodeActivatedIndex);
         } else {
             return null;
         }

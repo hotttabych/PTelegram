@@ -996,6 +996,8 @@ public class LocaleController {
                     case "AppUnlock": value = "Разблокировка приложения"; break;
                     case "EnterPasswordSettings": value = "Вход в настройки код-пароля"; break;
                     case "BadPasscodeAttemptsInfo": value = "Посмотрите все неудачные попытки ввода код-пароля."; break;
+                    case "BadPasscodeTriesToActivate": value = "Лимит попыток входа для активации"; break;
+                    case "BadPasscodeTriesToActivateInfo": value = "Действия с ложным паролем будут выполнены после указанного количества неудачных попыток ввода код-пароля."; break;
                 }
             }
             if (value == null) {

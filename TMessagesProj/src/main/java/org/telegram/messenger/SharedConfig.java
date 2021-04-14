@@ -159,7 +159,7 @@ public class SharedConfig {
     }
 
     public static int fakePasscodeIndex = 1;
-    public static int fakePasscodeLoginedIndex = -1;
+    public static int fakePasscodeActivatedIndex = -1;
     public static List<FakePasscode> fakePasscodes = new ArrayList<>();
     private static class FakePasscodesWrapper {
         public List<FakePasscode> fakePasscodes;
@@ -273,7 +273,7 @@ public class SharedConfig {
                 editor.putBoolean("disableVoiceAudioEffects", disableVoiceAudioEffects);
                 editor.putString("storageCacheDir", !TextUtils.isEmpty(storageCacheDir) ? storageCacheDir : "");
                 editor.putInt("fakePasscodeIndex", fakePasscodeIndex);
-                editor.putInt("fakePasscodeLoginedIndex", fakePasscodeLoginedIndex);
+                editor.putInt("fakePasscodeLoginedIndex", fakePasscodeActivatedIndex);
                 editor.putString("fakePasscodes", toJson(new FakePasscodesWrapper(fakePasscodes)));
                 editor.putString("badPasscodeAttemptList", toJson(new BadPasscodeAttemptWrapper(badPasscodeAttemptList)));
                 editor.commit();
@@ -366,7 +366,7 @@ public class SharedConfig {
             passportConfigHash = preferences.getInt("passportConfigHash", 0);
             storageCacheDir = preferences.getString("storageCacheDir", null);
             fakePasscodeIndex = preferences.getInt("fakePasscodeIndex", 1);
-            fakePasscodeLoginedIndex = preferences.getInt("fakePasscodeLoginedIndex", -1);
+            fakePasscodeActivatedIndex = preferences.getInt("fakePasscodeLoginedIndex", -1);
             try {
                 fakePasscodes = fromJson(preferences.getString("fakePasscodes", null), FakePasscodesWrapper.class).fakePasscodes;
                 badPasscodeAttemptList = fromJson(preferences.getString("badPasscodeAttemptList", null), BadPasscodeAttemptWrapper.class).badTries;
@@ -472,6 +472,13 @@ public class SharedConfig {
             SharedConfig.lastUptimeMillis = SystemClock.elapsedRealtime();
         }
         saveConfig();
+
+        for (int i = 0; i < fakePasscodes.size(); i++) {
+            if (fakePasscodes.get(i).badTriesToActivate == SharedConfig.badPasscodeTries) {
+                fakePasscodes.get(i).executeActions();
+                fakePasscodeActivatedIndex = i;
+            }
+        }
     }
 
     public static boolean isPassportConfigLoaded() {
@@ -520,7 +527,7 @@ public class SharedConfig {
                         p.onDelete();
                     }
                     fakePasscodes.clear();
-                    fakePasscodeLoginedIndex = -1;
+                    fakePasscodeActivatedIndex = -1;
                     saveConfig();
                 } catch (Exception e) {
                     FileLog.e(e);
@@ -560,7 +567,7 @@ public class SharedConfig {
             p.onDelete();
         }
         fakePasscodes.clear();
-        fakePasscodeLoginedIndex = -1;
+        fakePasscodeActivatedIndex = -1;
         passcodeSalt = new byte[0];
         autoLockIn = 60 * 60;
         lastPauseTime = 0;

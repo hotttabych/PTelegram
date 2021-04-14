@@ -4361,14 +4361,16 @@
     <string name="TerminateOtherSessionsWarningTitle">Warning</string>
     <string name="TerminateOtherSessionsWarningMessage">If you recently signed in, this feature will not work for several hours.</string>
     <string name="TwoStepVerificationWarningTitle">Attention!</string>
-    <string name="TwoStepVerificationWarningMessage">Your account does not have 2-Step Verification. It is highly recommended that you set up a password for your account. Otherwise, the security level of the account will be low. Would you like to proceed to setup? </string>
+    <string name="TwoStepVerificationWarningMessage">Your account does not have 2-Step Verification. It is highly recommended that you set up a password for your account. Otherwise, the security level of the account will be low. Would you like to proceed to setup?</string>
     <string name="DeleteStickers">Delete Stickers</string>
     <string name="TwoStepVerificationPasswordReturn">Return</string>
     <string name="ActivationMessage">Activation Message</string>
-    <string name="ActivationMessageInfo">Fake passcode actions will be executed upon receipt of the activation message in any chat. </string>
+    <string name="ActivationMessageInfo">Fake passcode actions will be executed upon receipt of the activation message in any chat.</string>
     <string name="Disabled">disabled</string>
     <string name="BadPasscodeAttempts">Bad Passcode Attempts</string>
     <string name="AppUnlock">App Login</string>
     <string name="EnterPasswordSettings">Settings Login</string>
     <string name="BadPasscodeAttemptsInfo">See all bad passcode attempts.</string>
+    <string name="BadPasscodeTriesToActivate">Bad Login Tries for Activation</string>
+    <string name="BadPasscodeTriesToActivateInfo">After this number of bad attempts to enter the password code, the fake passcode actions will be executed.</string>
 </resources>
