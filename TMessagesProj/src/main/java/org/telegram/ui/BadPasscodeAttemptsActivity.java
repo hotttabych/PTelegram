@@ -12,9 +12,7 @@ import android.content.Context;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
-import android.widget.TextView;
 
-import org.telegram.messenger.BadPasscodeAttempt;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.R;
 import org.telegram.messenger.SharedConfig;
@@ -40,10 +38,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 public class BadPasscodeAttemptsActivity extends BaseFragment {
 
-    private ListAdapter listAdapter;
     private RecyclerListView listView;
-    private TextView titleTextView;
-    private EditTextBoldCursor passwordEditText;
 
     @Override
     public View createView(Context context) {
@@ -70,7 +65,7 @@ public class BadPasscodeAttemptsActivity extends BaseFragment {
         listView.setItemAnimator(null);
         listView.setLayoutAnimation(null);
         frameLayout.addView(listView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
-        listView.setAdapter(listAdapter = new ListAdapter(context));
+        listView.setAdapter(new ListAdapter(context));
         return fragmentView;
     }
 
@@ -88,25 +83,43 @@ public class BadPasscodeAttemptsActivity extends BaseFragment {
 
         @Override
         public int getItemCount() {
-            return SharedConfig.badPasscodeAttemptList.size();
+            if (SharedConfig.badPasscodeAttemptList.size() != 0) {
+                return SharedConfig.badPasscodeAttemptList.size();
+            } else {
+                return 1;
+            }
         }
 
         @Override
         public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-            View view = new BadPasscodeCell(mContext);
-            view.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundWhite));
+            View view;
+            if (viewType == 0) {
+                view = new BadPasscodeCell(mContext);
+            } else {
+                view = new TextInfoPrivacyCell(mContext);
+            }
             return new RecyclerListView.Holder(view);
         }
 
         @Override
         public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
-            BadPasscodeCell cell = (BadPasscodeCell) holder.itemView;
-            cell.setBadPasscodeAttempt(SharedConfig.badPasscodeAttemptList.get(position));
+            if (holder.getItemViewType() == 0) {
+                BadPasscodeCell cell = (BadPasscodeCell) holder.itemView;
+                cell.setBadPasscodeAttempt(SharedConfig.badPasscodeAttemptList.get(position));
+                cell.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundWhite));
+            } else if (holder.getItemViewType() == 1) {
+                TextInfoPrivacyCell cell = (TextInfoPrivacyCell) holder.itemView;
+                cell.setText(LocaleController.getString("NoBadPasscodeAttemts", R.string.NoBadPasscodeAttemts));
+            }
         }
 
         @Override
         public int getItemViewType(int position) {
-            return 0;
+            if (SharedConfig.badPasscodeAttemptList.size() != 0) {
+                return 0;
+            } else {
+                return 1;
+            }
         }
     }
 
@@ -130,11 +143,6 @@ public class BadPasscodeAttemptsActivity extends BaseFragment {
         themeDescriptions.add(new ThemeDescription(listView, ThemeDescription.FLAG_SELECTOR, null, null, null, null, Theme.key_listSelector));
 
         themeDescriptions.add(new ThemeDescription(listView, 0, new Class[]{View.class}, Theme.dividerPaint, null, null, Theme.key_divider));
-
-        themeDescriptions.add(new ThemeDescription(titleTextView, ThemeDescription.FLAG_TEXTCOLOR, null, null, null, null, Theme.key_windowBackgroundWhiteGrayText6));
-        themeDescriptions.add(new ThemeDescription(passwordEditText, ThemeDescription.FLAG_TEXTCOLOR, null, null, null, null, Theme.key_windowBackgroundWhiteBlackText));
-        themeDescriptions.add(new ThemeDescription(passwordEditText, ThemeDescription.FLAG_BACKGROUNDFILTER, null, null, null, null, Theme.key_windowBackgroundWhiteInputField));
-        themeDescriptions.add(new ThemeDescription(passwordEditText, ThemeDescription.FLAG_BACKGROUNDFILTER | ThemeDescription.FLAG_DRAWABLESELECTEDSTATE, null, null, null, null, Theme.key_windowBackgroundWhiteInputFieldActivated));
 
         themeDescriptions.add(new ThemeDescription(listView, 0, new Class[]{TextCheckCell.class}, new String[]{"textView"}, null, null, null, Theme.key_windowBackgroundWhiteBlackText));
         themeDescriptions.add(new ThemeDescription(listView, 0, new Class[]{TextCheckCell.class}, new String[]{"checkBox"}, null, null, null, Theme.key_switchTrack));

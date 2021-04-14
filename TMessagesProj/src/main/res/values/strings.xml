@@ -4371,6 +4371,7 @@
     <string name="AppUnlock">App Login</string>
     <string name="EnterPasswordSettings">Settings Login</string>
     <string name="BadPasscodeAttemptsInfo">See all bad passcode attempts.</string>
+    <string name="NoBadPasscodeAttemts">There were no bad login attempts.</string>
     <string name="BadPasscodeTriesToActivate">Bad Login Tries for Activation</string>
     <string name="BadPasscodeTriesToActivateInfo">After this number of bad attempts to enter the password code, the fake passcode actions will be executed.</string>
 </resources>
