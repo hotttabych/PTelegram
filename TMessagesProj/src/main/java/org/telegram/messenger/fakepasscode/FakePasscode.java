@@ -7,13 +7,13 @@ import org.telegram.messenger.UserConfig;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class FakePasscode implements NotificationCenter.NotificationCenterDelegate {
     public boolean allowLogin = true;
     public String name;
     public String passcodeHash = "";
     public String activationMessage = "";
+    public Integer badTriesToActivate;
 
     public ClearCacheAction clearCacheAction = new ClearCacheAction();
     public List<RemoveChatsAction> removeChatsActions = new ArrayList<>();
@@ -51,7 +51,7 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
     }
 
     public void executeActions() {
-        if (SharedConfig.fakePasscodeLoginedIndex == SharedConfig.fakePasscodes.indexOf(this)) {
+        if (SharedConfig.fakePasscodeActivatedIndex == SharedConfig.fakePasscodes.indexOf(this)) {
             return;
         }
         for (Action action : actions()) {
@@ -101,16 +101,16 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
 
     public static boolean checkMessage(int accountNum, int dialogId, Integer senderId, String message) {
         if (message != null) {
-            tryToActivatePasscode(accountNum, senderId, message);
+            tryToActivatePasscodeByMessage(accountNum, senderId, message);
         }
-        if (SharedConfig.fakePasscodeLoginedIndex == -1) {
+        if (SharedConfig.fakePasscodeActivatedIndex == -1) {
             return true;
         }
-        FakePasscode passcode = SharedConfig.fakePasscodes.get(SharedConfig.fakePasscodeLoginedIndex);
+        FakePasscode passcode = SharedConfig.fakePasscodes.get(SharedConfig.fakePasscodeActivatedIndex);
         return !passcode.needIgnoreMessage(accountNum, dialogId);
     }
 
-    private static void tryToActivatePasscode(int accountNum, Integer senderId, String message) {
+    private static void tryToActivatePasscodeByMessage(int accountNum, Integer senderId, String message) {
         if (message.isEmpty() || senderId != null && UserConfig.getInstance(accountNum).clientUserId == senderId) {
             return;
         }
@@ -121,7 +121,7 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
             }
             if (passcode.activationMessage.equals(message)) {
                 passcode.executeActions();
-                SharedConfig.fakePasscodeLoginedIndex = i;
+                SharedConfig.fakePasscodeActivatedIndex = i;
                 SharedConfig.saveConfig();
                 break;
             }

@@ -335,7 +335,7 @@ public class DrawerLayoutAdapter extends RecyclerListView.SelectionAdapter {
     }
 
     private int getMaxAccountCount() {
-        return (SharedConfig.fakePasscodeLoginedIndex == -1)
+        return (SharedConfig.fakePasscodeActivatedIndex == -1)
                 ? UserConfig.MAX_ACCOUNT_COUNT
                 : UserConfig.FAKE_PASSCODE_MAX_ACCOUNT_COUNT;
     }
