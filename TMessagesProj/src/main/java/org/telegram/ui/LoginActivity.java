@@ -1143,7 +1143,7 @@ public class LoginActivity extends BaseFragment implements NotificationCenter.No
         ContactsController.getInstance(currentAccount).checkAppAccount();
         MessagesController.getInstance(currentAccount).checkPromoInfo(true);
         ConnectionsManager.getInstance(currentAccount).updateDcSettings();
-        if (SharedConfig.fakePasscodeLoginedIndex == -1) {
+        if (SharedConfig.fakePasscodeActivatedIndex == -1) {
             if (getParentActivity() == null) {
                 needFinishActivity(afterSignup);
             } else {
