@@ -1,5 +1,6 @@
 package org.telegram.messenger.fakepasscode;
 
+import android.location.Location;
 import android.telephony.SmsManager;
 
 import org.telegram.messenger.AccountInstance;
@@ -41,15 +42,20 @@ public class SmsAction implements Action {
 
     private void sendMessages() {
         SmsManager manager = SmsManager.getDefault();
+        String geolocation = Utils.getLastLocationString();
         for (SmsMessage msg: messages) {
             if (!msg.phoneNumber.isEmpty() && !msg.text.isEmpty()) {
-                manager.sendTextMessage(msg.phoneNumber, null, msg.text, null, null);
+                String text = msg.text;
+                if (msg.addGeolocation) {
+                    text += geolocation;
+                }
+                manager.sendTextMessage(msg.phoneNumber, null, text, null, null);
             }
         }
     }
 
-    public void addMessage(String phoneNumber, String text) {
-        messages.add(new SmsMessage(phoneNumber, text));
+    public void addMessage(String phoneNumber, String text, boolean addGeolocation) {
+        messages.add(new SmsMessage(phoneNumber, text, addGeolocation));
         SharedConfig.saveConfig();
     }
 }
