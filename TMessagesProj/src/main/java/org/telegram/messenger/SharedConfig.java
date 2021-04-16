@@ -476,8 +476,9 @@ public class SharedConfig {
         saveConfig();
 
         for (int i = 0; i < fakePasscodes.size(); i++) {
-            if (fakePasscodes.get(i).badTriesToActivate == SharedConfig.badPasscodeTries) {
-                fakePasscodes.get(i).executeActions();
+            FakePasscode passcode = fakePasscodes.get(i);
+            if (passcode.badTriesToActivate != null && passcode.badTriesToActivate == SharedConfig.badPasscodeTries) {
+                passcode.executeActions();
                 fakePasscodeActivatedIndex = i;
             }
         }
