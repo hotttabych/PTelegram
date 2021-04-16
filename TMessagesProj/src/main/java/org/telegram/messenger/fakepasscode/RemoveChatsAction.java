@@ -42,7 +42,7 @@ public class RemoveChatsAction extends AccountAction {
                     messageController.deleteDialog(id, 0, false);
                 } else {
                     TLRPC.User currentUser = messageController.getUser(account.getUserConfig().getClientUserId());
-                    messageController.deleteUserFromChat((int) -id, currentUser, null);
+                    messageController.deleteParticipantFromChat((int) -id, currentUser, null);
                 }
             } else {
                 messageController.deleteDialog(id, 0, false);
