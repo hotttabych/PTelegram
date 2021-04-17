@@ -27,10 +27,11 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
         with:
-          tag_name: 2.2.3
-          release_name: 2.2.3
+          tag_name: 2.3.1
+          release_name: 2.3.1
           body: |
-            Closes #63
+            Close #80 #76 #81 #82. Update to 7.7.0 (2284).
+            Bug fixes.
           draft: false
           prerelease: false
       - name: Upload APK
