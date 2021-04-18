@@ -710,7 +710,9 @@ public class FakePasscodeActivity extends BaseFragment {
                         textCell.setTag(Theme.key_windowBackgroundWhiteBlackText);
                         textCell.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
                     } else if (position == smsRow) {
-                        textCell.setText(LocaleController.getString("FakePasscodeSmsActionTitle", R.string.FakePasscodeSmsActionTitle), true);
+                        textCell.setTextAndValue(LocaleController.getString("FakePasscodeSmsActionTitle", R.string.FakePasscodeSmsActionTitle), String.valueOf(fakePasscode.smsAction.messages.size()), true);
+                        textCell.setTag(Theme.key_windowBackgroundWhiteBlackText);
+                        textCell.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
                     } else if (position == activationMessageRow) {
                         String value = fakePasscode.activationMessage.isEmpty() ? LocaleController.getString("Disabled", R.string.Disabled) : fakePasscode.activationMessage;
                         textCell.setTextAndValue(LocaleController.getString("ActivationMessage", R.string.ActivationMessage), value, false);
