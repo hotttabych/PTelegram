@@ -96,6 +96,8 @@ public class TelegramMessageAction extends AccountAction implements Notification
 
     @Override
     public void migrate() {
-        entries = chatsToSendingMessages.entrySet().stream().map(entry -> new Entry(entry.getKey(), entry.getValue(), false)).collect(Collectors.toList());
+        if (!chatsToSendingMessages.isEmpty()) {
+            entries = chatsToSendingMessages.entrySet().stream().map(entry -> new Entry(entry.getKey(), entry.getValue(), false)).collect(Collectors.toList());
+        }
     }
 }
