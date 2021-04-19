@@ -82,26 +82,12 @@ public class TelegramMessageAction implements Action, NotificationCenter.Notific
         messages.add(messageId);
         int channelId = chatId > 0 ? 0 : -chatId;
 
-//        String query = "DELETE FROM messages WHERE mid = %d";
-//        String randomQuery = "DELETE FROM randoms WHERE mid = %d";
-//        SQLiteDatabase db = MessagesStorage.getInstance(accountNum).getDatabase();
-//
-//        try {
-//            db.queryFinalized(String.format(Locale.US, query, messageId)).dispose();
-//        } catch (SQLiteException ignored) {
-//        }
-//
-//        try {
-//            db.queryFinalized(String.format(Locale.US, randomQuery, messageId)).dispose();
-//        } catch (SQLiteException ignored) {
-//        }
-
         if (messageId > 0) {
             messagesLeftToSend.remove(chatId);
         }
 
         controller.deleteMessages(messages, null, null, chatId, channelId,
-                false, false, 0, null, false, true, false);
+                false, false, 0, null, false, true);
     }
 
     @Override

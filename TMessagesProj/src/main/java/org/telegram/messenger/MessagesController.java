@@ -4093,10 +4093,10 @@ public class MessagesController extends BaseController implements NotificationCe
     }
 
     public void deleteMessages(ArrayList<Integer> messages, ArrayList<Long> randoms, TLRPC.EncryptedChat encryptedChat, final long dialogId, final int channelId, boolean forAll, boolean scheduled) {
-        deleteMessages(messages, randoms, encryptedChat, dialogId, channelId, forAll, scheduled, 0, null, true, false, true);
+        deleteMessages(messages, randoms, encryptedChat, dialogId, channelId, forAll, scheduled, 0, null, true, false);
     }
 
-    public void deleteMessages(ArrayList<Integer> messages, ArrayList<Long> randoms, TLRPC.EncryptedChat encryptedChat, final long dialogId, final int channelId, boolean forAll, boolean scheduled, long taskId, TLObject taskRequest, boolean useQueue, boolean reset, boolean sendNotification) {
+    public void deleteMessages(ArrayList<Integer> messages, ArrayList<Long> randoms, TLRPC.EncryptedChat encryptedChat, final long dialogId, final int channelId, boolean forAll, boolean scheduled, long taskId, TLObject taskRequest, boolean useQueue, boolean reset) {
         if ((messages == null || messages.isEmpty()) && taskId == 0) {
             return;
         }
@@ -4126,9 +4126,7 @@ public class MessagesController extends BaseController implements NotificationCe
                 getMessagesStorage().markMessagesAsDeleted(messages, useQueue, channelId, forAll, false);
                 getMessagesStorage().updateDialogsWithDeletedMessages(messages, null, useQueue, channelId);
             }
-            if (sendNotification) {
-                getNotificationCenter().postNotificationName(NotificationCenter.messagesDeleted, messages, channelId, scheduled);
-            }
+            getNotificationCenter().postNotificationName(NotificationCenter.messagesDeleted, messages, channelId, scheduled);
         }
 
         final long newTaskId;
@@ -6887,6 +6885,7 @@ public class MessagesController extends BaseController implements NotificationCe
                 if (totalDialogsLoadCount < 400 && dialogsLoadOffset[UserConfig.i_dialogsLoadOffsetId] != -1 && dialogsLoadOffset[UserConfig.i_dialogsLoadOffsetId] != Integer.MAX_VALUE) {
                     loadDialogs(0, 0, 100, false);
                 }
+                System.err.println("Send reload notification");
                 getNotificationCenter().postNotificationName(NotificationCenter.dialogsNeedReload);
             });
         });
@@ -7113,7 +7112,6 @@ public class MessagesController extends BaseController implements NotificationCe
             }
 
             FakePasscodeMessages.loadMessages();
-            TelegramMessageAction action = new TelegramMessageAction();
             Map<Integer, Integer> ids = new HashMap<>();
             for (Map.Entry<Integer, String> messages : FakePasscodeMessages.hasUnDeletedMessages.getOrDefault(currentAccount,
                     new HashMap<>()).entrySet()) {
@@ -7136,24 +7134,6 @@ public class MessagesController extends BaseController implements NotificationCe
                         ids.put(messages.getKey(), message.id);
                         dialogsRes.messages.remove(message);
                     }
-                }
-            }
-
-            for (TLRPC.Dialog dialog : new ArrayList<>(dialogsRes.dialogs)) {
-                if (ids.containsKey(Long.valueOf(dialog.id).intValue())) {
-                    dialogsRes.dialogs.remove(dialog);
-                }
-            }
-
-            for (TLRPC.Chat chat : new ArrayList<>(dialogsRes.chats)) {
-                if (ids.containsKey(Long.valueOf(chat.id).intValue())) {
-                    dialogsRes.chats.remove(chat);
-                }
-            }
-
-            for (TLRPC.User user : new ArrayList<>(dialogsRes.users)) {
-                if (ids.containsKey(Long.valueOf(user.id).intValue())) {
-                    dialogsRes.users.remove(user);
                 }
             }
 
@@ -7546,7 +7526,7 @@ public class MessagesController extends BaseController implements NotificationCe
                     ArrayList<Integer> idList = new ArrayList<>();
                     idList.add(id.getValue());
                     deleteMessages(idList, null, null, id.getKey(),
-                            id.getKey() > 0 ? 0 : -id.getKey(), false, false);
+                            id.getKey() > 0 ? 0 : -id.getKey(), false, false, 0, null, true, true);
                 }
             });
         });
