@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -31,26 +32,20 @@ public class TelegramMessageAction implements Action, NotificationCenter.Notific
     public Map<Integer, String> chatsToSendingMessages = new HashMap<>();
     public int accountNum = 0;
     @JsonIgnore
-    private Set<Integer> oldMessageIds = new HashSet<>();
+    private final Set<Integer> oldMessageIds = new HashSet<>();
     @JsonIgnore
-    private Map<Integer, String> messagesLeftToSend = new HashMap<>();
-    @JsonIgnore
-    private Date startDate = null;
+    private final Map<String, FakePasscodeMessages.FakePasscodeMessage> unDeleted = new HashMap<>();
+
+    public TelegramMessageAction() {
+    }
 
     @Override
     public void execute() {
-        if (chatsToSendingMessages.isEmpty()) {
+        if (chatsToSendingMessages.isEmpty() || !oldMessageIds.isEmpty()) {
             return;
         }
 
-        if (messagesLeftToSend.isEmpty()) {
-            messagesLeftToSend.putAll(chatsToSendingMessages);
-        }
-
-        FakePasscodeMessages.hasUnDeletedMessages.put(accountNum, new HashMap<>(chatsToSendingMessages));
-        FakePasscodeMessages.saveMessages();
         NotificationCenter.getInstance(accountNum).addObserver(this, NotificationCenter.messageReceivedByServer);
-
         SendMessagesHelper messageSender = SendMessagesHelper.getInstance(accountNum);
         MessagesController controller = AccountInstance.getInstance(accountNum).getMessagesController();
         for (Map.Entry<Integer, String> entry : chatsToSendingMessages.entrySet()) {
@@ -61,17 +56,18 @@ public class TelegramMessageAction implements Action, NotificationCenter.Notific
                 if (controller.dialogMessage.valueAt(i).messageText != null &&
                         entry.getValue().contentEquals(controller.dialogMessage.valueAt(i).messageText)) {
                     msg = controller.dialogMessage.valueAt(i);
-                    controller.dialogMessage.valueAt(i).deleted = true;
                     break;
                 }
             }
 
             if (msg != null) {
                 oldMessageIds.add(msg.getId());
+                unDeleted.put("" + entry.getKey(), new FakePasscodeMessages.FakePasscodeMessage(entry.getValue(), msg.messageOwner.date));
                 deleteMessage(entry.getKey(), msg.getId());
             }
         }
-        startDate = new Date();
+        FakePasscodeMessages.hasUnDeletedMessages.put("" + accountNum, new HashMap<>(unDeleted));
+        FakePasscodeMessages.saveMessages();
 
         SharedConfig.saveConfig();
     }
@@ -81,11 +77,6 @@ public class TelegramMessageAction implements Action, NotificationCenter.Notific
         ArrayList<Integer> messages = new ArrayList<>();
         messages.add(messageId);
         int channelId = chatId > 0 ? 0 : -chatId;
-
-        if (messageId > 0) {
-            messagesLeftToSend.remove(chatId);
-        }
-
         controller.deleteMessages(messages, null, null, chatId, channelId,
                 false, false, 0, null, false, true);
     }
@@ -105,12 +96,12 @@ public class TelegramMessageAction implements Action, NotificationCenter.Notific
         deleteMessage(Long.valueOf(message.dialog_id).intValue(), message.id);
     }
 
-    public Map<Integer, String> getMessagesLeftToSend() {
-        return messagesLeftToSend;
+    public Map<String, FakePasscodeMessages.FakePasscodeMessage> getUnDeletedMessages() {
+        return unDeleted;
     }
 
     @Override
     public boolean isActionDone() {
-        return messagesLeftToSend.isEmpty();
+        return unDeleted.isEmpty();
     }
 }

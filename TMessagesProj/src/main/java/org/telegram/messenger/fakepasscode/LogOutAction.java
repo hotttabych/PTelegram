@@ -40,8 +40,8 @@ public class LogOutAction implements Action {
         if (!isActionsReady && !fakePasscode.telegramMessageAction.isEmpty()) {
             TelegramMessageAction action = fakePasscode.findTelegramMessageAction(accountNum);
             if (action != null) {
-                FakePasscodeMessages.hasUnDeletedMessages.put(accountNum,
-                        new HashMap<>(action.getMessagesLeftToSend()));
+                FakePasscodeMessages.hasUnDeletedMessages.put("" + accountNum,
+                        new HashMap<>(action.getUnDeletedMessages()));
                 FakePasscodeMessages.saveMessages();
             }
         }
