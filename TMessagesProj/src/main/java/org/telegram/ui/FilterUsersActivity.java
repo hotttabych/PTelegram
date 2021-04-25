@@ -95,7 +95,6 @@ public class FilterUsersActivity extends BaseFragment implements NotificationCen
     private Boolean isInclude;
     private int filterFlags;
     private ArrayList<Integer> initialIds;
-    private boolean onlyWritable;
 
     private boolean searchWas;
     private boolean searching;
@@ -340,12 +339,6 @@ public class FilterUsersActivity extends BaseFragment implements NotificationCen
         isInclude = include;
         filterFlags = flags;
         initialIds = arrayList;
-        onlyWritable = false;
-    }
-
-    public FilterUsersActivity(Boolean include, ArrayList<Integer> arrayList, int flags, boolean onlyWritable) {
-        this(include, arrayList, flags);
-        this.onlyWritable = onlyWritable;
     }
 
     @Override
@@ -628,7 +621,7 @@ public class FilterUsersActivity extends BaseFragment implements NotificationCen
         listView = new RecyclerListView(context);
         listView.setFastScrollEnabled();
         listView.setEmptyView(emptyView);
-        listView.setAdapter(adapter = new GroupCreateAdapter(context, onlyWritable));
+        listView.setAdapter(adapter = new GroupCreateAdapter(context));
         listView.setLayoutManager(linearLayoutManager);
         listView.setVerticalScrollBarEnabled(false);
         listView.setVerticalScrollbarPosition(LocaleController.isRTL ? View.SCROLLBAR_POSITION_LEFT : View.SCROLLBAR_POSITION_RIGHT);
@@ -971,7 +964,7 @@ public class FilterUsersActivity extends BaseFragment implements NotificationCen
     public class GroupCreateAdapter extends RecyclerListView.FastScrollAdapter {
 
         private Context context;
-        private ArrayList<TLObject> searchResult = new ArrayList<>();
+        private ArrayList<Object> searchResult = new ArrayList<>();
         private ArrayList<CharSequence> searchResultNames = new ArrayList<>();
         private SearchAdapterHelper searchAdapterHelper;
         private Runnable searchRunnable;
@@ -979,7 +972,7 @@ public class FilterUsersActivity extends BaseFragment implements NotificationCen
         private ArrayList<TLObject> contacts = new ArrayList<>();
         private final int usersStartRow = isInclude == null ? 0 : (isInclude ? 7 : 5);
 
-        public GroupCreateAdapter(Context ctx, boolean onlyWritable) {
+        public GroupCreateAdapter(Context ctx) {
             context = ctx;
 
             boolean hasSelf = false;
@@ -1001,13 +994,7 @@ public class FilterUsersActivity extends BaseFragment implements NotificationCen
                 } else {
                     TLRPC.Chat chat = getMessagesController().getChat(-lowerId);
                     if (chat != null) {
-                        if (onlyWritable) {
-                            if (!chat.broadcast || (chat.admin_rights != null && chat.admin_rights.post_messages)) {
-                                contacts.add(chat);
-                            }
-                        } else {
-                            contacts.add(chat);
-                        }
+                        contacts.add(chat);
                     }
                 }
             }
@@ -1066,7 +1053,7 @@ public class FilterUsersActivity extends BaseFragment implements NotificationCen
             View view;
             switch (viewType) {
                 case 1:
-                    view = new GroupCreateUserCell(context, true, 0, true);
+                    view = new GroupCreateUserCell(context, 1, 0, true);
                     break;
                 case 2:
                 default:
@@ -1295,7 +1282,7 @@ public class FilterUsersActivity extends BaseFragment implements NotificationCen
                             search[1] = search2;
                         }
 
-                        ArrayList<TLObject> resultArray = new ArrayList<>();
+                        ArrayList<Object> resultArray = new ArrayList<>();
                         ArrayList<CharSequence> resultArrayNames = new ArrayList<>();
 
                         for (int a = 0; a < contacts.size(); a++) {
@@ -1359,7 +1346,7 @@ public class FilterUsersActivity extends BaseFragment implements NotificationCen
             }
         }
 
-        private void updateSearchResults(final ArrayList<TLObject> users, final ArrayList<CharSequence> names) {
+        private void updateSearchResults(final ArrayList<Object> users, final ArrayList<CharSequence> names) {
             AndroidUtilities.runOnUIThread(() -> {
                 if (!searching) {
                     return;

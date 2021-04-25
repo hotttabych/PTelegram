@@ -718,8 +718,9 @@ public class ChannelCreateActivity extends BaseFragment implements NotificationC
             privateContainer.setOrientation(LinearLayout.VERTICAL);
             linkContainer.addView(privateContainer, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
 
-            permanentLinkView = new LinkActionView(context, this, null, chatId, true);
-            permanentLinkView.showOptions(false);
+            permanentLinkView = new LinkActionView(context, this, null, chatId, true, ChatObject.isChannel(getMessagesController().getChat(chatId)));
+            //permanentLinkView.showOptions(false);
+            permanentLinkView.hideRevokeOption(true);
             permanentLinkView.setUsers(0, null);
             privateContainer.addView(permanentLinkView);
 
@@ -755,19 +756,15 @@ public class ChannelCreateActivity extends BaseFragment implements NotificationC
         if (loadingInvite || invite != null) {
             return;
         }
+        TLRPC.ChatFull chatFull = getMessagesController().getChatFull(chatId);
+        if (chatFull != null) {
+            invite = chatFull.exported_invite;
+        }
+        if (invite != null) {
+            return;
+        }
         loadingInvite = true;
-        TLRPC.TL_messages_exportChatInvite req = new TLRPC.TL_messages_exportChatInvite();
-        req.peer = getMessagesController().getInputPeer(-chatId);
-        final int reqId = getConnectionsManager().sendRequest(req, (response, error) -> AndroidUtilities.runOnUIThread(() -> {
-            if (error == null) {
-                invite = (TLRPC.TL_chatInviteExported) response;
-            }
-            loadingInvite = false;
-            permanentLinkView.setLink(invite != null ? invite.link : null);
-        }));
-        getConnectionsManager().bindRequestToGuid(reqId, classGuid);
-
-        /*TLRPC.TL_messages_getExportedChatInvites req = new TLRPC.TL_messages_getExportedChatInvites();  TODO layer 124
+        TLRPC.TL_messages_getExportedChatInvites req = new TLRPC.TL_messages_getExportedChatInvites();
         req.peer = getMessagesController().getInputPeer(-chatId);
         req.admin_id = getMessagesController().getInputUser(getUserConfig().getCurrentUser());
         req.limit = 1;
@@ -779,7 +776,7 @@ public class ChannelCreateActivity extends BaseFragment implements NotificationC
             }
             loadingInvite = false;
             permanentLinkView.setLink(invite != null ? invite.link : null);
-        }));*/
+        }));
     }
 
     private void updatePrivatePublic() {
@@ -1006,7 +1003,7 @@ public class ChannelCreateActivity extends BaseFragment implements NotificationC
             bundle.putInt("chat_id", chat_id);
             bundle.putBoolean("canCreatePublic", canCreatePublic);
             if (inputPhoto != null || inputVideo != null) {
-                MessagesController.getInstance(currentAccount).changeChatAvatar(chat_id, null, inputPhoto, inputVideo, videoTimestamp, inputVideoPath, avatar, avatarBig);
+                MessagesController.getInstance(currentAccount).changeChatAvatar(chat_id, null, inputPhoto, inputVideo, videoTimestamp, inputVideoPath, avatar, avatarBig, null);
             }
             presentFragment(new ChannelCreateActivity(bundle), true);
         }

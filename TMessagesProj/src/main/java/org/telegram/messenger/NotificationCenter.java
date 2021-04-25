@@ -212,6 +212,7 @@ public class NotificationCenter {
     public static final int voipServiceCreated = totalEvents++;
     public static final int webRtcMicAmplitudeEvent = totalEvents++;
     public static final int webRtcSpeakerAmplitudeEvent = totalEvents++;
+    public static final int showBulletin = totalEvents++;
 
     private SparseArray<ArrayList<NotificationCenterDelegate>> observers = new SparseArray<>();
     private SparseArray<ArrayList<NotificationCenterDelegate>> removeAfterBroadcast = new SparseArray<>();
@@ -399,8 +400,12 @@ public class NotificationCenter {
         return currentHeavyOperationFlags;
     }
 
+    public ArrayList<NotificationCenterDelegate> getObservers(int id) {
+        return observers.get(id);
+    }
+
     public void postNotificationName(int id, Object... args) {
-        boolean allowDuringAnimation = id == startAllHeavyOperations || id == stopAllHeavyOperations || id == didReplacedPhotoInMemCache;
+        boolean allowDuringAnimation = id == startAllHeavyOperations || id == stopAllHeavyOperations || id == didReplacedPhotoInMemCache || id == closeChats;
         ArrayList<Integer> expiredIndices = null;
         if (!allowDuringAnimation && !allowedNotifications.isEmpty()) {
             int size = allowedNotifications.size();

@@ -82,6 +82,7 @@ public class MentionsAdapter extends RecyclerListView.SelectionAdapter {
     private int resultStartPosition;
     private int resultLength;
     private String lastText;
+    private boolean lastForSearch;
     private boolean lastUsernameOnly;
     private int lastPosition;
     private ArrayList<MessageObject> messages;
@@ -147,7 +148,7 @@ public class MentionsAdapter extends RecyclerListView.SelectionAdapter {
             @Override
             public void onSetHashtags(ArrayList<SearchAdapterHelper.HashtagObject> arrayList, HashMap<String, SearchAdapterHelper.HashtagObject> hashMap) {
                 if (lastText != null) {
-                    searchUsernameOrHashtag(lastText, lastPosition, messages, lastUsernameOnly);
+                    searchUsernameOrHashtag(lastText, lastPosition, messages, lastUsernameOnly, lastForSearch);
                 }
             }
         });
@@ -196,7 +197,7 @@ public class MentionsAdapter extends RecyclerListView.SelectionAdapter {
             }
         }
         if (lastText != null) {
-            searchUsernameOrHashtag(lastText, lastPosition, messages, lastUsernameOnly);
+            searchUsernameOrHashtag(lastText, lastPosition, messages, lastUsernameOnly, lastForSearch);
         }
     }
 
@@ -550,7 +551,7 @@ public class MentionsAdapter extends RecyclerListView.SelectionAdapter {
         }
     }
 
-    public void searchUsernameOrHashtag(String text, int position, ArrayList<MessageObject> messageObjects, boolean usernameOnly) {
+    public void searchUsernameOrHashtag(String text, int position, ArrayList<MessageObject> messageObjects, boolean usernameOnly, boolean forSearch) {
         if (cancelDelayRunnable != null) {
             AndroidUtilities.cancelRunOnUIThread(cancelDelayRunnable);
             cancelDelayRunnable = null;
@@ -575,6 +576,7 @@ public class MentionsAdapter extends RecyclerListView.SelectionAdapter {
         }
         lastText = null;
         lastUsernameOnly = usernameOnly;
+        lastForSearch = forSearch;
         StringBuilder result = new StringBuilder();
         int foundType = -1;
         if (!usernameOnly && needBotContext && text.charAt(0) == '@') {
@@ -695,7 +697,7 @@ public class MentionsAdapter extends RecyclerListView.SelectionAdapter {
                     if (user == null) {
                         continue;
                     }
-                    if (user.username != null && user.username.length() > 0 && (usernameString.length() > 0 && user.username.toLowerCase().startsWith(usernameString) || usernameString.length() == 0)) {
+                    if (!TextUtils.isEmpty(user.username) && (usernameString.length() == 0 || user.username.toLowerCase().startsWith(usernameString))) {
                         newResult.add(user);
                         newResultsHashMap.put(user.id, user);
                         newMap.put(user.id, user);
@@ -719,7 +721,7 @@ public class MentionsAdapter extends RecyclerListView.SelectionAdapter {
                 threadId = 0;
             }
             if (chat != null && info != null && info.participants != null && (!ChatObject.isChannel(chat) || chat.megagroup)) {
-                for (int a = -1; a < info.participants.participants.size(); a++) {
+                for (int a = (forSearch ? -1 : 0); a < info.participants.participants.size(); a++) {
                     String username;
                     String firstName;
                     String lastName;
@@ -838,19 +840,29 @@ public class MentionsAdapter extends RecyclerListView.SelectionAdapter {
                                 if (error == null) {
                                     TLRPC.TL_channels_channelParticipants res = (TLRPC.TL_channels_channelParticipants) response;
                                     messagesController.putUsers(res.users, false);
+                                    messagesController.putChats(res.chats, false);
                                     boolean hasResults = !searchResultUsernames.isEmpty();
                                     if (!res.participants.isEmpty()) {
                                         int currentUserId = UserConfig.getInstance(currentAccount).getClientUserId();
                                         for (int a = 0; a < res.participants.size(); a++) {
                                             TLRPC.ChannelParticipant participant = res.participants.get(a);
-                                            if (searchResultUsernamesMap.indexOfKey(participant.user_id) >= 0 || !isSearchingMentions && participant.user_id == currentUserId) {
+                                            int peerId = MessageObject.getPeerId(participant.peer);
+                                            if (searchResultUsernamesMap.indexOfKey(peerId) >= 0 || !isSearchingMentions && peerId == currentUserId) {
                                                 continue;
                                             }
-                                            TLRPC.User user = messagesController.getUser(participant.user_id);
-                                            if (user == null) {
-                                                return;
+                                            if (peerId > 0) {
+                                                TLRPC.User user = messagesController.getUser(peerId);
+                                                if (user == null) {
+                                                    return;
+                                                }
+                                                searchResultUsernames.add(user);
+                                            } else {
+                                                TLRPC.Chat chat = messagesController.getChat(-peerId);
+                                                if (chat == null) {
+                                                    return;
+                                                }
+                                                searchResultUsernames.add(chat);
                                             }
-                                            searchResultUsernames.add(user);
                                         }
                                     }
                                 }

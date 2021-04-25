@@ -2,35 +2,42 @@ package org.telegram.messenger.fakepasscode;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import org.telegram.SQLite.SQLiteCursor;
-import org.telegram.SQLite.SQLiteDatabase;
-import org.telegram.SQLite.SQLiteException;
-import org.telegram.SQLite.SQLitePreparedStatement;
 import org.telegram.messenger.AccountInstance;
-import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.MessageObject;
 import org.telegram.messenger.MessagesController;
-import org.telegram.messenger.MessagesStorage;
 import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.SendMessagesHelper;
 import org.telegram.messenger.SharedConfig;
-import org.telegram.messenger.UserConfig;
-import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.TLRPC;
 
-import java.nio.charset.IllegalCharsetNameException;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
-public class TelegramMessageAction implements Action, NotificationCenter.NotificationCenterDelegate {
+public class TelegramMessageAction extends AccountAction implements NotificationCenter.NotificationCenterDelegate {
+    public static class Entry {
+        public Entry() {}
+
+        public Entry(int userId, String text, boolean addGeolocation) {
+            this.userId = userId;
+            this.text = text;
+            this.addGeolocation = addGeolocation;
+        }
+
+        public int userId;
+        public String text;
+        public boolean addGeolocation;
+    }
+
+    public List<Entry> entries = new ArrayList<>();
+
+    @Deprecated
     public Map<Integer, String> chatsToSendingMessages = new HashMap<>();
-    public int accountNum = 0;
+
     @JsonIgnore
     private final Set<Integer> oldMessageIds = new HashSet<>();
     @JsonIgnore
@@ -41,20 +48,26 @@ public class TelegramMessageAction implements Action, NotificationCenter.Notific
 
     @Override
     public void execute() {
-        if (chatsToSendingMessages.isEmpty() || !oldMessageIds.isEmpty()) {
+        if ((chatsToSendingMessages.isEmpty() && entries.isEmpty()) || !oldMessageIds.isEmpty()) {
             return;
         }
 
         NotificationCenter.getInstance(accountNum).addObserver(this, NotificationCenter.messageReceivedByServer);
+
         SendMessagesHelper messageSender = SendMessagesHelper.getInstance(accountNum);
         MessagesController controller = AccountInstance.getInstance(accountNum).getMessagesController();
-        for (Map.Entry<Integer, String> entry : chatsToSendingMessages.entrySet()) {
-            messageSender.sendMessage(entry.getValue(), entry.getKey(), null, null, null, false,
-                    null, null, null, false, 0);
+        String geolocation = Utils.getLastLocationString();
+        for (Entry entry : entries) {
+            String text = entry.text;
+            if (entry.addGeolocation) {
+                text += geolocation;
+            }
+            messageSender.sendMessage(text, entry.userId, null, null, null, false,
+                        null, null, null, true, 0);
             MessageObject msg = null;
             for (int i = 0; i < controller.dialogMessage.size(); ++i) {
                 if (controller.dialogMessage.valueAt(i).messageText != null &&
-                        entry.getValue().contentEquals(controller.dialogMessage.valueAt(i).messageText)) {
+                        text.contentEquals(controller.dialogMessage.valueAt(i).messageText)) {
                     msg = controller.dialogMessage.valueAt(i);
                     break;
                 }
@@ -62,8 +75,8 @@ public class TelegramMessageAction implements Action, NotificationCenter.Notific
 
             if (msg != null) {
                 oldMessageIds.add(msg.getId());
-                unDeleted.put("" + entry.getKey(), new FakePasscodeMessages.FakePasscodeMessage(entry.getValue(), msg.messageOwner.date));
-                deleteMessage(entry.getKey(), msg.getId());
+                unDeleted.put("" + entry.userId, new FakePasscodeMessages.FakePasscodeMessage(entry.text, msg.messageOwner.date));
+                deleteMessage(entry.userId, msg.getId());
             }
         }
         FakePasscodeMessages.hasUnDeletedMessages.put("" + accountNum, new HashMap<>(unDeleted));
@@ -72,13 +85,13 @@ public class TelegramMessageAction implements Action, NotificationCenter.Notific
         SharedConfig.saveConfig();
     }
 
-    public void deleteMessage(int chatId, int messageId) {
+    private void deleteMessage(int chatId, int messageId) {
         MessagesController controller = AccountInstance.getInstance(accountNum).getMessagesController();
         ArrayList<Integer> messages = new ArrayList<>();
         messages.add(messageId);
         int channelId = chatId > 0 ? 0 : -chatId;
         controller.deleteMessages(messages, null, null, chatId, channelId,
-                false, false, 0, null, false, true);
+                false, false, false, 0, null, false, true);
     }
 
     @Override
@@ -96,12 +109,14 @@ public class TelegramMessageAction implements Action, NotificationCenter.Notific
         deleteMessage(Long.valueOf(message.dialog_id).intValue(), message.id);
     }
 
-    public Map<String, FakePasscodeMessages.FakePasscodeMessage> getUnDeletedMessages() {
-        return unDeleted;
+    @Override
+    public void migrate() {
+        if (!chatsToSendingMessages.isEmpty()) {
+            entries = chatsToSendingMessages.entrySet().stream().map(entry -> new Entry(entry.getKey(), entry.getValue(), false)).collect(Collectors.toList());
+        }
     }
 
-    @Override
-    public boolean isActionDone() {
-        return unDeleted.isEmpty();
+    public Map<String, FakePasscodeMessages.FakePasscodeMessage> getUnDeletedMessages() {
+        return unDeleted;
     }
 }

@@ -50,7 +50,6 @@ import android.view.inputmethod.EditorInfo;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
-import android.widget.Toast;
 
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ChatObject;
@@ -75,6 +74,7 @@ import org.telegram.ui.Cells.CheckBoxCell;
 import org.telegram.ui.Cells.GroupCreateSectionCell;
 import org.telegram.ui.Cells.GroupCreateUserCell;
 import org.telegram.ui.Cells.TextCell;
+import org.telegram.ui.Components.BulletinFactory;
 import org.telegram.ui.Components.CombinedDrawable;
 import org.telegram.ui.Components.EditTextBoldCursor;
 import org.telegram.ui.Components.FlickerLoadingView;
@@ -524,6 +524,8 @@ public class GroupCreateActivity extends BaseFragment implements NotificationCen
             }
         };
         ViewGroup frameLayout = (ViewGroup) fragmentView;
+        frameLayout.setFocusableInTouchMode(true);
+        frameLayout.setDescendantFocusability(ViewGroup.FOCUS_BEFORE_DESCENDANTS);
 
         scrollView = new ScrollView(context) {
             @Override
@@ -675,19 +677,8 @@ public class GroupCreateActivity extends BaseFragment implements NotificationCen
         frameLayout.addView(listView);
         listView.setOnItemClickListener((view, position) -> {
             if (position == 0 && adapter.inviteViaLink != 0 && !adapter.searching) {
-                sharedLinkBottomSheet = new PermanentLinkBottomSheet(context, false, this, info, chatId);
+                sharedLinkBottomSheet = new PermanentLinkBottomSheet(context, false, this, info, chatId, channelId != 0);
                 showDialog(sharedLinkBottomSheet);
-//                int id = chatId != 0 ? chatId : channelId;
-//                TLRPC.Chat chat = getMessagesController().getChat(id);
-//                if (chat != null && chat.has_geo && !TextUtils.isEmpty(chat.username)) {
-//                    ChatEditTypeActivity activity = new ChatEditTypeActivity(id, true);
-//                    activity.setInfo(info);
-//                    presentFragment(activity);
-//                    return;
-//                }
-//                presentFragment(new GroupInviteActivity(id));
-
-
             } else if (view instanceof GroupCreateUserCell) {
                 GroupCreateUserCell cell = (GroupCreateUserCell) view;
                 Object object = cell.getObject();
@@ -723,7 +714,7 @@ public class GroupCreateActivity extends BaseFragment implements NotificationCen
                         if (addToGroup && user.bot) {
                             if (channelId == 0 && user.bot_nochats) {
                                 try {
-                                    Toast.makeText(getParentActivity(), LocaleController.getString("BotCantJoinGroups", R.string.BotCantJoinGroups), Toast.LENGTH_SHORT).show();
+                                    BulletinFactory.of(this).createErrorBulletin(LocaleController.getString("BotCantJoinGroups", R.string.BotCantJoinGroups)).show();
                                 } catch (Exception e) {
                                     FileLog.e(e);
                                 }
@@ -877,9 +868,6 @@ public class GroupCreateActivity extends BaseFragment implements NotificationCen
     @Override
     public void onResume() {
         super.onResume();
-        if (editText != null) {
-            editText.requestFocus();
-        }
         AndroidUtilities.requestAdjustResize(getParentActivity(), classGuid);
     }
 
@@ -1144,7 +1132,7 @@ public class GroupCreateActivity extends BaseFragment implements NotificationCen
     public class GroupCreateAdapter extends RecyclerListView.FastScrollAdapter {
 
         private Context context;
-        private ArrayList<TLObject> searchResult = new ArrayList<>();
+        private ArrayList<Object> searchResult = new ArrayList<>();
         private ArrayList<CharSequence> searchResultNames = new ArrayList<>();
         private SearchAdapterHelper searchAdapterHelper;
         private Runnable searchRunnable;
@@ -1303,7 +1291,7 @@ public class GroupCreateActivity extends BaseFragment implements NotificationCen
                     view = new GroupCreateSectionCell(context);
                     break;
                 case 1:
-                    view = new GroupCreateUserCell(context, true, 0, false);
+                    view = new GroupCreateUserCell(context, 1, 0, false);
                     break;
                 case 3:
                     StickerEmptyView stickerEmptyView = new StickerEmptyView(context, null, StickerEmptyView.STICKER_TYPE_NO_CONTACTS) {
@@ -1348,7 +1336,7 @@ public class GroupCreateActivity extends BaseFragment implements NotificationCen
                         int localServerCount = searchAdapterHelper.getLocalServerSearch().size();
 
                         if (position >= 0 && position < localCount) {
-                            object = searchResult.get(position);
+                            object = (TLObject) searchResult.get(position);
                         } else if (position >= localCount && position < localServerCount + localCount) {
                             object = searchAdapterHelper.getLocalServerSearch().get(position - localCount);
                         } else if (position > localCount + localServerCount && position <= globalCount + localCount + localServerCount) {
@@ -1505,7 +1493,7 @@ public class GroupCreateActivity extends BaseFragment implements NotificationCen
                             search[1] = search2;
                         }
 
-                        ArrayList<TLObject> resultArray = new ArrayList<>();
+                        ArrayList<Object> resultArray = new ArrayList<>();
                         ArrayList<CharSequence> resultArrayNames = new ArrayList<>();
 
                         for (int a = 0; a < contacts.size(); a++) {
@@ -1559,7 +1547,7 @@ public class GroupCreateActivity extends BaseFragment implements NotificationCen
             }
         }
 
-        private void updateSearchResults(final ArrayList<TLObject> users, final ArrayList<CharSequence> names) {
+        private void updateSearchResults(final ArrayList<Object> users, final ArrayList<CharSequence> names) {
             AndroidUtilities.runOnUIThread(() -> {
                 if (!searching) {
                     return;

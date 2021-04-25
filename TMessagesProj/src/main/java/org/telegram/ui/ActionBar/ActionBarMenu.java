@@ -17,7 +17,6 @@ import android.widget.LinearLayout;
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.ui.Adapters.FiltersView;
 import org.telegram.ui.Components.RLottieDrawable;
-import org.telegram.ui.Components.RLottieImageView;
 
 public class ActionBarMenu extends LinearLayout {
 
@@ -292,6 +291,39 @@ public class ActionBarMenu extends LinearLayout {
         for (int a = 0; a < count; a++) {
             View view = getChildAt(a);
             view.setEnabled(enabled);
+        }
+    }
+
+    public int getItemsMeasuredWidth() {
+        int w = 0;
+        int count = getChildCount();
+        for (int a = 0; a < count; a++) {
+            View view = getChildAt(a);
+            if (view instanceof ActionBarMenuItem) {
+                w += view.getMeasuredWidth();
+            }
+        }
+        return w;
+    }
+
+    public boolean searchFieldVisible() {
+        int count = getChildCount();
+        for (int a = 0; a < count; a++) {
+            View view = getChildAt(a);
+            if (view instanceof ActionBarMenuItem && ((ActionBarMenuItem) view).getSearchContainer() != null && ((ActionBarMenuItem) view).getSearchContainer().getVisibility() == View.VISIBLE) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public void translateXItems(int offset) {
+        int count = getChildCount();
+        for (int a = 0; a < count; a++) {
+            View view = getChildAt(a);
+            if (view instanceof ActionBarMenuItem) {
+                ((ActionBarMenuItem) view).setTransitionOffset(offset);
+            }
         }
     }
 }

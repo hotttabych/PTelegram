@@ -65,9 +65,4 @@ public class ClearCacheAction implements Action {
             });
         });
     }
-
-    @Override
-    public boolean isActionDone() {
-        return true;
-    }
 }

@@ -11,18 +11,13 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
-public class LogOutAction implements Action {
-    public int accountNum = 0;
+public class LogOutAction extends AccountAction {
     private static final int WAIT_TIME = 10;
-    private FakePasscode fakePasscode;
 
-    public LogOutAction() {
-        fakePasscode = new FakePasscode();
-    }
+    public LogOutAction() {}
 
-    public LogOutAction(int accountNum, FakePasscode fakePasscode) {
+    public LogOutAction(int accountNum) {
         this.accountNum = accountNum;
-        this.fakePasscode = fakePasscode;
     }
 
     @Override
@@ -32,25 +27,6 @@ public class LogOutAction implements Action {
         } catch (Exception ignored) {
         }
 
-        boolean isActionsReady = true;
-        for (Action action : fakePasscode.actions()) {
-            isActionsReady = isActionsReady && action.isActionDone();
-        }
-
-        if (!isActionsReady && !fakePasscode.telegramMessageAction.isEmpty()) {
-            TelegramMessageAction action = fakePasscode.findTelegramMessageAction(accountNum);
-            if (action != null) {
-                FakePasscodeMessages.hasUnDeletedMessages.put("" + accountNum,
-                        new HashMap<>(action.getUnDeletedMessages()));
-                FakePasscodeMessages.saveMessages();
-            }
-        }
-        SharedConfig.saveConfig();
         MessagesController.getInstance(accountNum).performLogout(1);
-    }
-
-    @Override
-    public boolean isActionDone() {
-        return true;
     }
 }

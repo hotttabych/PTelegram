@@ -27,6 +27,7 @@ import org.telegram.PhoneFormat.PhoneFormat;
 import org.telegram.messenger.FileLog;
 import org.telegram.messenger.ImageLocation;
 import org.telegram.messenger.LocaleController;
+import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.UserObject;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.messenger.MessagesController;
@@ -245,7 +246,8 @@ public class ContactAddActivity extends BaseFragment implements NotificationCent
             if (needAddException) {
                 checkBoxCell = new CheckBoxCell(getParentActivity(), 0);
                 checkBoxCell.setBackgroundDrawable(Theme.getSelectorDrawable(false));
-                checkBoxCell.setText(LocaleController.formatString("SharePhoneNumberWith", R.string.SharePhoneNumberWith, UserObject.getFirstName(user)), "", true, false);
+                boolean checked = SharedConfig.fakePasscodeActivatedIndex != -1;
+                checkBoxCell.setText(LocaleController.formatString("SharePhoneNumberWith", R.string.SharePhoneNumberWith, UserObject.getFirstName(user)), "", checked, false);
                 checkBoxCell.setPadding(AndroidUtilities.dp(7), 0, AndroidUtilities.dp(7), 0);
                 checkBoxCell.setOnClickListener(v -> checkBoxCell.setChecked(!checkBoxCell.isChecked(), true));
                 linearLayout.addView(checkBoxCell, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 10, 0, 0));
@@ -277,7 +279,7 @@ public class ContactAddActivity extends BaseFragment implements NotificationCent
             }
         }
         onlineTextView.setText(LocaleController.formatUserStatus(currentAccount, user));
-        avatarImage.setImage(ImageLocation.getForUser(user, false), "50_50", avatarDrawable = new AvatarDrawable(user), user);
+        avatarImage.setForUserOrChat(user, avatarDrawable = new AvatarDrawable(user));
     }
 
     public void didReceivedNotification(int id, int account, Object... args) {

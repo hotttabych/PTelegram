@@ -27,6 +27,7 @@ import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Outline;
 import android.graphics.Paint;
 import android.graphics.PorterDuff;
@@ -41,7 +42,6 @@ import android.os.Bundle;
 import android.os.Vibrator;
 import android.text.TextUtils;
 import android.util.Property;
-import android.util.SparseArray;
 import android.util.StateSet;
 import android.view.Gravity;
 import android.view.HapticFeedbackConstants;
@@ -72,6 +72,8 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.LinearSmoothScrollerCustom;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager.widget.ViewPager;
+
+import com.google.android.exoplayer2.util.Log;
 
 import org.telegram.messenger.AccountInstance;
 import org.telegram.messenger.AndroidUtilities;
@@ -163,6 +165,7 @@ import org.telegram.ui.Components.SizeNotifierFrameLayout;
 import org.telegram.ui.Components.StickersAlert;
 import org.telegram.ui.Components.UndoView;
 import org.telegram.ui.Components.ViewPagerFixed;
+import org.telegram.ui.Components.RecyclerItemsEnterAnimator;
 
 import java.util.ArrayList;
 import java.util.concurrent.ConcurrentHashMap;
@@ -201,6 +204,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         private FlickerLoadingView progressView;
         private int lastItemsCount;
         private DialogsItemAnimator dialogsItemAnimator;
+        private RecyclerItemsEnterAnimator recyclerItemsEnterAnimator;
 
         public ViewPage(Context context) {
             super(context);
@@ -244,8 +248,11 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
 
     private int initialDialogsType;
 
+    private boolean checkingImportDialog;
+
     private int messagesCount;
     private int hasPoll;
+    private boolean hasInvoice;
 
     private PacmanAnimation pacmanAnimation;
 
@@ -284,6 +291,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     private AnimatorSet searchAnimator;
     private Animator tabsAlphaAnimator;
     private float searchAnimationProgress;
+    private boolean searchAnimationTabsDelayedCrossfade;
 
     private AnimatedArrowDrawable arrowDrawable;
     private RecyclerView sideMenu;
@@ -400,7 +408,10 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     private float filterTabsMoveFrom;
     private float tabsYOffset;
     private float scrollAdditionalOffset;
-    private SparseArray<Float> listAlphaItems = new SparseArray<>();
+
+    private int debugLastUpdateAction = -1;
+
+    public BaseFragment passwordFragment = null;
 
     public final Property<DialogsActivity, Float> SCROLL_Y = new AnimationProperties.FloatProperty<DialogsActivity>("animationValue") {
         @Override
@@ -519,6 +530,19 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             if (child == viewPages[0] || (viewPages.length > 1 && child == viewPages[1]) || child == fragmentContextView || child == fragmentLocationContextView || child == searchViewPager) {
                 canvas.save();
                 canvas.clipRect(0, -getY() + actionBar.getY() + getActionBarFullHeight(), getMeasuredWidth(), getMeasuredHeight());
+                if (slideFragmentProgress != 1f) {
+                    float s = 1f - 0.05f * (1f - slideFragmentProgress);
+                    canvas.translate((isDrawerTransition ? AndroidUtilities.dp(4) : -AndroidUtilities.dp(4)) * (1f - slideFragmentProgress), 0);
+                    canvas.scale(s, s, isDrawerTransition ? getMeasuredWidth() : 0, -getY() + actionBar.getY() + getActionBarFullHeight());
+                }
+
+                result = super.drawChild(canvas, child, drawingTime);
+                canvas.restore();
+            } else if (child == actionBar && slideFragmentProgress != 1f) {
+                canvas.save();
+                float s = 1f - 0.05f * (1f - slideFragmentProgress);
+                canvas.translate((isDrawerTransition ? AndroidUtilities.dp(4) : -AndroidUtilities.dp(4)) * (1f - slideFragmentProgress), 0);
+                canvas.scale(s, s, isDrawerTransition ? getMeasuredWidth() : 0, (actionBar.getOccupyStatusBar() ? AndroidUtilities.statusBarHeight : 0) + ActionBar.getCurrentActionBarHeight() / 2f);
                 result = super.drawChild(canvas, child, drawingTime);
                 canvas.restore();
             } else {
@@ -585,7 +609,13 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     }
                     if (searchTabsView != null) {
                         float y = actionBarHeight - (actionBar.getHeight() + searchTabsView.getMeasuredHeight());
-                        float alpha = searchAnimationProgress < 0.5f ? 0 : (searchAnimationProgress - 0.5f) / 0.5f;
+                        float alpha;
+                        if (searchAnimationTabsDelayedCrossfade) {
+                            alpha = searchAnimationProgress < 0.5f ? 0 : (searchAnimationProgress - 0.5f) / 0.5f;
+                        } else {
+                            alpha = searchAnimationProgress;
+                        }
+
                         searchTabsView.setTranslationY(y);
                         searchTabsView.setAlpha(alpha);
                         if (filtersView != null) {
@@ -622,6 +652,11 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             if (fragmentContextView != null && fragmentContextView.isCallStyle()) {
                 canvas.save();
                 canvas.translate(fragmentContextView.getX(), fragmentContextView.getY());
+                if (slideFragmentProgress != 1f) {
+                    float s = 1f - 0.05f * (1f - slideFragmentProgress);
+                    canvas.translate((isDrawerTransition ? AndroidUtilities.dp(4) : -AndroidUtilities.dp(4)) * (1f - slideFragmentProgress), 0);
+                    canvas.scale(s, 1f, isDrawerTransition ? getMeasuredWidth() : 0, fragmentContextView.getY());
+                }
                 fragmentContextView.setDrawOverlay(true);
                 fragmentContextView.draw(canvas);
                 fragmentContextView.setDrawOverlay(false);
@@ -718,6 +753,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     } else {
                         child.setTranslationY(0);
                     }
+                    int transitionPadding = (isSlideBackTransition || isDrawerTransition) ? (int) (h * 0.05f) : 0;
+                    h += transitionPadding;
+                    child.setPadding(child.getPaddingLeft(), child.getPaddingTop(), child.getPaddingRight(), transitionPadding);
                     child.measure(contentWidthSpec, View.MeasureSpec.makeMeasureSpec(Math.max(AndroidUtilities.dp(10), h), View.MeasureSpec.EXACTLY));
                     child.setPivotX(child.getMeasuredWidth() / 2);
                 } else if (child == searchViewPager) {
@@ -856,9 +894,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
 
         @Override
         public boolean onTouchEvent(MotionEvent ev) {
-            if (filterTabsView != null  && !filterTabsView.isEditing() && !searching &&
+            if (parentLayout != null && filterTabsView != null && !filterTabsView.isEditing() && !searching &&
                     !parentLayout.checkTransitionAnimation() && !parentLayout.isInPreviewMode() && !parentLayout.isPreviewOpenAnimationInProgress() && !parentLayout.getDrawerLayoutContainer().isDrawerOpened() &&
-                    (ev == null || startedTracking || ev.getY() > actionBar.getMeasuredHeight() + actionBar.getTranslationY())) {
+                    (ev == null || startedTracking || ev.getY() > actionBar.getMeasuredHeight() + actionBar.getTranslationY()) && SharedConfig.getChatSwipeAction(currentAccount) == SwipeGestureSettingsView.SWIPE_GESTURE_FOLDERS) {
                 if (ev != null) {
                     if (velocityTracker == null) {
                         velocityTracker = VelocityTracker.obtain();
@@ -1033,7 +1071,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                                     viewPages[1].dialogsAdapter.pause();
                                 }
                                 if (parentLayout != null) {
-                                    parentLayout.getDrawerLayoutContainer().setAllowOpenDrawerBySwipe(viewPages[0].selectedType == filterTabsView.getFirstTabId() || searchIsShowed);
+                                    parentLayout.getDrawerLayoutContainer().setAllowOpenDrawerBySwipe(viewPages[0].selectedType == filterTabsView.getFirstTabId() || searchIsShowed || SharedConfig.getChatSwipeAction(currentAccount) != SwipeGestureSettingsView.SWIPE_GESTURE_FOLDERS);
                                 }
                                 viewPages[1].setVisibility(View.GONE);
                                 showScrollbars(true);
@@ -1048,7 +1086,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                         tabsAnimationInProgress = true;
                         startedTracking = false;
                     } else {
-                        parentLayout.getDrawerLayoutContainer().setAllowOpenDrawerBySwipe(viewPages[0].selectedType == filterTabsView.getFirstTabId() || searchIsShowed);
+                        parentLayout.getDrawerLayoutContainer().setAllowOpenDrawerBySwipe(viewPages[0].selectedType == filterTabsView.getFirstTabId() || searchIsShowed || SharedConfig.getChatSwipeAction(currentAccount) != SwipeGestureSettingsView.SWIPE_GESTURE_FOLDERS);
                         maybeStartTracking = false;
                         actionBar.setEnabled(true);
                         filterTabsView.setEnabled(true);
@@ -1076,10 +1114,13 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
 
         private boolean firstLayout = true;
         private boolean ignoreLayout;
-        private ViewPage parentPage;
+        private final ViewPage parentPage;
         private int appliedPaddingTop;
         private int lastTop;
         private int lastListPadding;
+
+        Paint paint = new Paint();
+        RectF rectF = new RectF();
 
         public DialogsRecyclerView(Context context, ViewPage page) {
             super(context);
@@ -1116,12 +1157,16 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         public void addView(View child, int index, ViewGroup.LayoutParams params) {
             super.addView(child, index, params);
             child.setTranslationY(viewOffset);
+            child.setTranslationX(0);
+            child.setAlpha(1f);
         }
 
         @Override
         public void removeView(View view) {
             super.removeView(view);
             view.setTranslationY(0);
+            view.setTranslationX(0);
+            view.setAlpha(1f);
         }
 
         @Override
@@ -1140,22 +1185,52 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             super.onDraw(canvas);
         }
 
-
         @Override
         protected void dispatchDraw(Canvas canvas) {
-            for (int i = 0; i < getChildCount(); i++) {
-                View child = getChildAt(i);
-                int position = getChildAdapterPosition(child);
-                Float alpha = listAlphaItems.get(position, null);
-                if (alpha == null) {
-                    child.setAlpha(1f);
-                } else {
-                    child.setAlpha(alpha);
-                }
-            }
+            parentPage.recyclerItemsEnterAnimator.dispatchDraw();
             super.dispatchDraw(canvas);
+            if (drawMovingViewsOverlayed()) {
+                paint.setColor(Theme.getColor(Theme.key_windowBackgroundWhite));
+                for (int i = 0; i < getChildCount(); i++) {
+                    View view = getChildAt(i);
+
+                    if ((view instanceof DialogCell && ((DialogCell) view).isMoving()) || (view instanceof DialogsAdapter.LastEmptyView && ((DialogsAdapter.LastEmptyView) view).moving)) {
+                        if (view.getAlpha() != 1f) {
+                            rectF.set(view.getX(), view.getY(), view.getX() + view.getMeasuredWidth(), view.getY() +  view.getMeasuredHeight());
+                            canvas.saveLayerAlpha(rectF, (int) (255 * view.getAlpha()), Canvas.ALL_SAVE_FLAG);
+                        } else {
+                            canvas.save();
+                        }
+                        canvas.translate(view.getX(), view.getY());
+                        canvas.drawRect(0, 0, view.getMeasuredWidth(), view.getMeasuredHeight(), paint);
+                        view.draw(canvas);
+                        canvas.restore();
+                    }
+                }
+                invalidate();
+            }
             if (slidingView != null && pacmanAnimation != null) {
                 pacmanAnimation.draw(canvas, slidingView.getTop() + slidingView.getMeasuredHeight() / 2);
+            }
+        }
+
+        private boolean drawMovingViewsOverlayed() {
+            return getItemAnimator() != null && getItemAnimator().isRunning() && (dialogRemoveFinished != 0 || dialogInsertFinished != 0 || dialogChangeFinished != 0);
+        }
+
+        @Override
+        public boolean drawChild(Canvas canvas, View child, long drawingTime) {
+            if (drawMovingViewsOverlayed() && child instanceof DialogCell && ((DialogCell) child).isMoving()) {
+                return true;
+            }
+            return super.drawChild(canvas, child, drawingTime);
+        }
+
+        @Override
+        protected void onDetachedFromWindow() {
+            super.onDetachedFromWindow();
+            if (parentPage != null && parentPage.recyclerItemsEnterAnimator != null) {
+                parentPage.recyclerItemsEnterAnimator.onDetached();
             }
         }
 
@@ -1167,7 +1242,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
 
         private void checkIfAdapterValid() {
             RecyclerView.Adapter adapter = getAdapter();
-            if (parentPage.lastItemsCount != adapter.getItemCount()) {
+            if (parentPage.lastItemsCount != adapter.getItemCount() && !dialogsListFrozen) {
                 ignoreLayout = true;
                 adapter.notifyDataSetChanged();
                 ignoreLayout = false;
@@ -1186,7 +1261,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             }
 
             int pos = parentPage.layoutManager.findFirstVisibleItemPosition();
-            if (pos != RecyclerView.NO_POSITION) {
+            if (pos != RecyclerView.NO_POSITION && !dialogsListFrozen && parentPage.itemTouchhelper.isIdle()) {
                 RecyclerView.ViewHolder holder = parentPage.listView.findViewHolderForAdapterPosition(pos);
                 if (holder != null) {
                     int top = holder.itemView.getTop();
@@ -1250,9 +1325,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         private void toggleArchiveHidden(boolean action, DialogCell dialogCell) {
             SharedConfig.toggleArchiveHidden();
             if (SharedConfig.archiveHidden) {
-                waitingForScrollFinished = true;
                 if (dialogCell != null) {
                     disableActionBarScrolling = true;
+                    waitingForScrollFinished = true;
                     smoothScrollBy(0, (dialogCell.getMeasuredHeight() + (dialogCell.getTop() - getPaddingTop())), CubicBezierInterpolator.EASE_OUT);
                     if (action) {
                         updatePullAfterScroll = true;
@@ -1291,7 +1366,49 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 if (!parentPage.itemTouchhelper.isIdle() && parentPage.swipeController.swipingFolder) {
                     parentPage.swipeController.swipeFolderBack = true;
                     if (parentPage.itemTouchhelper.checkHorizontalSwipe(null, ItemTouchHelper.LEFT) != 0) {
-                        toggleArchiveHidden(false, null);
+                        if (parentPage.swipeController.currentItemViewHolder != null) {
+                            ViewHolder viewHolder = parentPage.swipeController.currentItemViewHolder;
+                            if (viewHolder.itemView instanceof DialogCell) {
+                                DialogCell dialogCell = (DialogCell) viewHolder.itemView;
+                                long dialogId = dialogCell.getDialogId();
+                                if (DialogObject.isFolderDialogId(dialogId)) {
+                                    toggleArchiveHidden(false, dialogCell);
+                                } else {
+                                    ArrayList<TLRPC.Dialog> dialogs = getDialogsArray(currentAccount, parentPage.dialogsType, folderId, false);
+                                    TLRPC.Dialog dialog = dialogs.get(dialogCell.getDialogIndex());
+                                    if (SharedConfig.getChatSwipeAction(currentAccount) == SwipeGestureSettingsView.SWIPE_GESTURE_READ) {
+                                        ArrayList<Long> selectedDialogs = new ArrayList<>();
+                                        selectedDialogs.add(dialogId);
+                                        canReadCount = dialog.unread_count > 0 || dialog.unread_mark ? 1 : 0;
+                                        perfromSelectedDialogsAction(selectedDialogs, read, true);
+                                    } else if (SharedConfig.getChatSwipeAction(currentAccount) == SwipeGestureSettingsView.SWIPE_GESTURE_MUTE) {
+                                        if (!getMessagesController().isDialogMuted(dialogId)) {
+                                            NotificationsController.getInstance(UserConfig.selectedAccount).setDialogNotificationsSettings(dialogId, NotificationsController.SETTING_MUTE_FOREVER);
+                                            if (BulletinFactory.canShowBulletin(DialogsActivity.this)) {
+                                                BulletinFactory.createMuteBulletin(DialogsActivity.this, NotificationsController.SETTING_MUTE_FOREVER).show();
+                                            }
+                                        } else {
+                                            ArrayList<Long> selectedDialogs = new ArrayList<>();
+                                            selectedDialogs.add(dialogId);
+                                            canMuteCount = MessagesController.getInstance(currentAccount).isDialogMuted(dialogId) ? 0 : 1;
+                                            canUnmuteCount = canMuteCount > 0 ? 0 : 1;
+                                            perfromSelectedDialogsAction(selectedDialogs, mute, true);
+                                        }
+                                    } else if (SharedConfig.getChatSwipeAction(currentAccount) == SwipeGestureSettingsView.SWIPE_GESTURE_PIN) {
+                                        ArrayList<Long> selectedDialogs = new ArrayList<>();
+                                        selectedDialogs.add(dialogId);
+                                        boolean pinned = isDialogPinned(dialog);
+                                        canPinCount = pinned ? 0 : 1;
+                                        perfromSelectedDialogsAction(selectedDialogs, pin, true);
+                                    } else if (SharedConfig.getChatSwipeAction(currentAccount) == SwipeGestureSettingsView.SWIPE_GESTURE_DELETE) {
+                                        ArrayList<Long> selectedDialogs = new ArrayList<>();
+                                        selectedDialogs.add(dialogId);
+                                        perfromSelectedDialogsAction(selectedDialogs, delete, true);
+                                    }
+                                }
+                            }
+                        }
+
                     }
                 }
             }
@@ -1381,6 +1498,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 return 0;
             }
             if (swipingFolder && swipeFolderBack) {
+                if (viewHolder.itemView instanceof DialogCell) {
+                    ((DialogCell) viewHolder.itemView).swipeCanceled = true;
+                }
                 swipingFolder = false;
                 return 0;
             }
@@ -1394,13 +1514,27 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     }
                     movingView = (DialogCell) viewHolder.itemView;
                     movingView.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundWhite));
+                    swipeFolderBack = false;
                     return makeMovementFlags(ItemTouchHelper.UP | ItemTouchHelper.DOWN, 0);
                 } else {
-                    if (filterTabsView != null && filterTabsView.getVisibility() == View.VISIBLE || !allowSwipeDuringCurrentTouch || dialogId == getUserConfig().clientUserId || dialogId == 777000 || getMessagesController().isPromoDialog(dialogId, false) && getMessagesController().promoDialogType != MessagesController.PROMO_TYPE_PSA) {
+                    if ((filterTabsView != null && filterTabsView.getVisibility() == View.VISIBLE && SharedConfig.getChatSwipeAction(currentAccount) == SwipeGestureSettingsView.SWIPE_GESTURE_FOLDERS) || !allowSwipeDuringCurrentTouch || ((dialogId == getUserConfig().clientUserId || dialogId == 777000) && SharedConfig.getChatSwipeAction(currentAccount) == SwipeGestureSettingsView.SWIPE_GESTURE_ARCHIVE) || getMessagesController().isPromoDialog(dialogId, false) && getMessagesController().promoDialogType != MessagesController.PROMO_TYPE_PSA) {
                         return 0;
                     }
+                    boolean canSwipeBack = folderId == 0 && (SharedConfig.getChatSwipeAction(currentAccount) == SwipeGestureSettingsView.SWIPE_GESTURE_MUTE || SharedConfig.getChatSwipeAction(currentAccount) == SwipeGestureSettingsView.SWIPE_GESTURE_READ || SharedConfig.getChatSwipeAction(currentAccount) == SwipeGestureSettingsView.SWIPE_GESTURE_PIN || SharedConfig.getChatSwipeAction(currentAccount) == SwipeGestureSettingsView.SWIPE_GESTURE_DELETE);
+                    if (SharedConfig.getChatSwipeAction(currentAccount) == SwipeGestureSettingsView.SWIPE_GESTURE_READ) {
+                        MessagesController.DialogFilter filter = null;
+                        if (viewPages[0].dialogsType == 7 || viewPages[0].dialogsType == 8) {
+                            filter = getMessagesController().selectedDialogFilter[viewPages[0].dialogsType == 8 ? 1 : 0];
+                        }
+                        if (filter != null && (filter.flags & MessagesController.DIALOG_FILTER_FLAG_EXCLUDE_READ) != 0) {
+                            TLRPC.Dialog dialog = getMessagesController().dialogs_dict.get(dialogId);
+                            if (dialog != null && !filter.alwaysShow(currentAccount, dialog) && (dialog.unread_count > 0 || dialog.unread_mark)) {
+                                canSwipeBack = false;
+                            }
+                        }
+                    }
                     swipeFolderBack = false;
-                    swipingFolder = SharedConfig.archiveHidden && DialogObject.isFolderDialogId(dialogCell.getDialogId());
+                    swipingFolder = (canSwipeBack && !DialogObject.isFolderDialogId(dialogCell.getDialogId())) || (SharedConfig.archiveHidden && DialogObject.isFolderDialogId(dialogCell.getDialogId()));
                     dialogCell.setSliding(true);
                     return makeMovementFlags(0, ItemTouchHelper.LEFT);
                 }
@@ -1453,6 +1587,14 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 }
                 TLRPC.Dialog dialog = getMessagesController().dialogs_dict.get(dialogId);
                 if (dialog == null) {
+                    return;
+                }
+
+                if (!getMessagesController().isPromoDialog(dialogId, false) && folderId == 0 && SharedConfig.getChatSwipeAction(currentAccount) == SwipeGestureSettingsView.SWIPE_GESTURE_READ) {
+                    ArrayList<Long> selectedDialogs = new ArrayList<>();
+                    selectedDialogs.add(dialogId);
+                    canReadCount = dialog.unread_count > 0 || dialog.unread_mark ? 1 : 0;
+                    perfromSelectedDialogsAction(selectedDialogs, read, true);
                     return;
                 }
 
@@ -1574,6 +1716,10 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             if (viewHolder != null) {
                 parentPage.listView.hideSelector(false);
             }
+            currentItemViewHolder = viewHolder;
+            if (viewHolder != null && viewHolder.itemView instanceof DialogCell) {
+                ((DialogCell) viewHolder.itemView).swipeCanceled = false;
+            }
             super.onSelectedChanged(viewHolder, actionState);
         }
 
@@ -1633,6 +1779,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             resetDelegate = arguments.getBoolean("resetDelegate", true);
             messagesCount = arguments.getInt("messagesCount", 0);
             hasPoll = arguments.getInt("hasPoll", 0);
+            hasInvoice = arguments.getBoolean("hasInvoice", false);
         }
 
         if (initialDialogsType == 0) {
@@ -1676,8 +1823,15 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
 
         getNotificationCenter().addObserver(this, NotificationCenter.didClearDatabase);
 
+        loadDialogs(getAccountInstance());
+        getMessagesController().loadPinnedDialogs(folderId, 0, null);
+        return true;
+    }
+
+    public static void loadDialogs(AccountInstance accountInstance) {
+        int currentAccount = accountInstance.getCurrentAccount();
         if (!dialogsLoaded[currentAccount]) {
-            MessagesController messagesController = getMessagesController();
+            MessagesController messagesController = accountInstance.getMessagesController();
             messagesController.loadGlobalNotificationsSettings();
             for (int i = 0; i < UserConfig.MAX_ACCOUNT_COUNT; i++) {
                 if (!dialogsLoaded[i]) {
@@ -1686,17 +1840,16 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 }
             }
             messagesController.loadHintDialogs();
-            messagesController.loadUserInfo(getUserConfig().getCurrentUser(), false, classGuid);
-            getContactsController().checkInviteText();
-            getMediaDataController().loadRecents(MediaDataController.TYPE_FAVE, false, true, false);
-            getMediaDataController().checkFeaturedStickers();
+            messagesController.loadUserInfo(accountInstance.getUserConfig().getCurrentUser(), false, 0);
+            accountInstance.getContactsController().checkInviteText();
+            accountInstance.getMediaDataController().loadRecents(MediaDataController.TYPE_FAVE, false, true, false);
+            accountInstance.getMediaDataController().loadRecents(MediaDataController.TYPE_GREETINGS, false, true, false);
+            accountInstance.getMediaDataController().checkFeaturedStickers();
             for (String emoji : messagesController.diceEmojies) {
-                getMediaDataController().loadStickersByEmojiOrName(emoji, true, true);
+                accountInstance.getMediaDataController().loadStickersByEmojiOrName(emoji, true, true);
             }
             dialogsLoaded[currentAccount] = true;
         }
-        getMessagesController().loadPinnedDialogs(folderId, 0, null);
-        return true;
     }
 
     @Override
@@ -1750,8 +1903,10 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
 
             @Override
             public void setTranslationY(float translationY) {
+                if (translationY != getTranslationY() && fragmentView != null) {
+                    fragmentView.invalidate();
+                }
                 super.setTranslationY(translationY);
-                fragmentView.invalidate();
             }
 
             @Override
@@ -1903,7 +2058,6 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 return !actionBar.isActionModeShowed();
             }
         });
-        searchItem.setClearsTextOnSearchCollapse(false);
         searchItem.setSearchFieldHint(LocaleController.getString("Search", R.string.Search));
         searchItem.setContentDescription(LocaleController.getString("Search", R.string.Search));
         if (onlySelect) {
@@ -1969,10 +2123,12 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
 
                 @Override
                 public void setTranslationY(float translationY) {
-                    super.setTranslationY(translationY);
-                    updateContextViewPosition();
-                    if (fragmentView != null) {
-                        fragmentView.invalidate();
+                    if (getTranslationY() != translationY) {
+                        super.setTranslationY(translationY);
+                        updateContextViewPosition();
+                        if (fragmentView != null) {
+                            fragmentView.invalidate();
+                        }
                     }
                 }
 
@@ -2042,7 +2198,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                         return;
                     }
                     if (parentLayout != null) {
-                        parentLayout.getDrawerLayoutContainer().setAllowOpenDrawerBySwipe(id == filterTabsView.getFirstTabId());
+                        parentLayout.getDrawerLayoutContainer().setAllowOpenDrawerBySwipe(id == filterTabsView.getFirstTabId() || SharedConfig.getChatSwipeAction(currentAccount) != SwipeGestureSettingsView.SWIPE_GESTURE_FOLDERS);
                     }
                     viewPages[1].selectedType = id;
                     viewPages[1].setVisibility(View.VISIBLE);
@@ -2303,12 +2459,12 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             TLRPC.User user = getUserConfig().getCurrentUser();
             avatarDrawable.setInfo(user);
             imageView.getImageReceiver().setCurrentAccount(currentAccount);
-            imageView.setImage(ImageLocation.getForUser(user, false), "50_50", avatarDrawable, user);
+            imageView.setForUserOrChat(user, avatarDrawable);
 
             for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
                 TLRPC.User u = AccountInstance.getInstance(a).getUserConfig().getCurrentUser();
                 if (u != null) {
-                    AccountSelectCell cell = new AccountSelectCell(context);
+                    AccountSelectCell cell = new AccountSelectCell(context, false);
                     cell.setAccount(a, true);
                     switchItem.addSubItem(10 + a, cell, AndroidUtilities.dp(230), AndroidUtilities.dp(48));
                 }
@@ -2355,7 +2511,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             viewPage.listView.setAnimateEmptyView(true, 0);
             viewPage.listView.setClipToPadding(false);
             viewPage.listView.setPivotY(0);
-            viewPage.dialogsItemAnimator = new DialogsItemAnimator() {
+            viewPage.dialogsItemAnimator = new DialogsItemAnimator(viewPage.listView) {
                 @Override
                 public void onRemoveStarting(RecyclerView.ViewHolder item) {
                     super.onRemoveStarting(item);
@@ -2553,6 +2709,24 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     }
                     return super.scrollVerticallyBy(measuredDy, recycler, state);
                 }
+
+                @Override
+                public void onLayoutChildren(RecyclerView.Recycler recycler, RecyclerView.State state) {
+                    if (BuildVars.DEBUG_PRIVATE_VERSION) {
+                        try {
+                            super.onLayoutChildren(recycler, state);
+                        } catch (IndexOutOfBoundsException e) {
+                            throw new RuntimeException("Inconsistency detected. " + "dialogsListIsFrozen=" + dialogsListFrozen + " lastUpdateAction=" + debugLastUpdateAction);
+                        }
+                    } else {
+                        try {
+                            super.onLayoutChildren(recycler, state);
+                        } catch (IndexOutOfBoundsException e) {
+                            FileLog.e(e);
+                            AndroidUtilities.runOnUIThread(() -> viewPage.dialogsAdapter.notifyDataSetChanged());
+                        }
+                    }
+                }
             };
             viewPage.layoutManager.setOrientation(LinearLayoutManager.VERTICAL);
             viewPage.listView.setLayoutManager(viewPage.layoutManager);
@@ -2619,6 +2793,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 }
             });
             viewPage.swipeController = new SwipeController(viewPage);
+            viewPage.recyclerItemsEnterAnimator = new RecyclerItemsEnterAnimator(viewPage.listView);
 
             viewPage.itemTouchhelper = new ItemTouchHelper(viewPage.swipeController);
             viewPage.itemTouchhelper.attachToRecyclerView(viewPage.listView);
@@ -2644,6 +2819,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                                 viewPage.listView.updatePullState();
                                 updatePullAfterScroll = false;
                             }
+                            viewPage.dialogsAdapter.notifyDataSetChanged();
                         }
 
                         if (filterTabsView != null && filterTabsView.getVisibility() == View.VISIBLE && viewPages[0].listView == recyclerView) {
@@ -3167,6 +3343,38 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     }
                     return true;
                 }
+
+                @Override
+                protected void onRemoveDialogAction(long currentDialogId, int action) {
+                    if (action == UndoView.ACTION_DELETE) {
+                        debugLastUpdateAction = 1;
+                        setDialogsListFrozen(true);
+                        if (frozenDialogsList != null) {
+                            int selectedIndex = -1;
+                            for (int i = 0; i < frozenDialogsList.size(); i++) {
+                                if (frozenDialogsList.get(i).id == currentDialogId) {
+                                    selectedIndex = i;
+                                    break;
+                                }
+                            }
+
+                            if (selectedIndex >= 0) {
+                                TLRPC.Dialog dialog = frozenDialogsList.remove(selectedIndex);
+                                viewPages[0].dialogsAdapter.notifyDataSetChanged();
+                                int finalSelectedIndex = selectedIndex;
+                                AndroidUtilities.runOnUIThread(() -> {
+                                    if (frozenDialogsList != null) {
+                                        frozenDialogsList.add(finalSelectedIndex, dialog);
+                                        viewPages[0].dialogsAdapter.notifyItemInserted(finalSelectedIndex);
+                                        dialogInsertFinished = 2;
+                                    }
+                                });
+                            } else {
+                                setDialogsListFrozen(false);
+                            }
+                        }
+                    }
+                }
             };
             contentView.addView(undoView[a], LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.BOTTOM | Gravity.LEFT, 8, 0, 8, 8));
         }
@@ -3185,7 +3393,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 @Override
                 public void setAlpha(float alpha) {
                     super.setAlpha(alpha);
-                    fragmentView.invalidate();
+                    if (fragmentView != null) {
+                        fragmentView.invalidate();
+                    }
                 }
             };
             blurredView.setVisibility(View.GONE);
@@ -3265,7 +3475,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         }
     }
 
-    private void updateFiltersView(boolean showMediaFilters, ArrayList<TLObject> users, ArrayList<FiltersView.DateData> dates, boolean animated) {
+    private void updateFiltersView(boolean showMediaFilters, ArrayList<Object> users, ArrayList<FiltersView.DateData> dates, boolean animated) {
         if (!searchIsShowed || onlySelect) {
             return;
         }
@@ -3288,7 +3498,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         boolean hasUsersOrDates = (users != null && !users.isEmpty()) || (dates != null && !dates.isEmpty());
         if (!hasMediaFilter && !hasUsersOrDates && showMediaFilters) {
         } else if (hasUsersOrDates) {
-            ArrayList<TLObject> finalUsers = (users != null && !users.isEmpty() && !hasUserFilter) ? users : null;
+            ArrayList<Object> finalUsers = (users != null && !users.isEmpty() && !hasUserFilter) ? users : null;
             ArrayList<FiltersView.DateData> finalDates = (dates != null && !dates.isEmpty() && !hasDataFilter) ? dates : null;
             if (finalUsers != null || finalDates != null) {
                 visible = true;
@@ -3410,7 +3620,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                             currentCount = 0;
                         }
                         if (currentCount + alwaysShow.size() > 100) {
-                            showDialog(AlertsCreator.createSimpleAlert(getParentActivity(), LocaleController.getString("FilterAddToAlertFullTitle", R.string.FilterAddToAlertFullTitle), LocaleController.getString("FilterAddToAlertFullText", R.string.FilterAddToAlertFullText)).create());
+                            showDialog(AlertsCreator.createSimpleAlert(getParentActivity(), LocaleController.getString("FilterAddToAlertFullTitle", R.string.FilterAddToAlertFullTitle), LocaleController.getString("FilterRemoveFromAlertFullText", R.string.FilterRemoveFromAlertFullText)).create());
                             return;
                         }
                         if (filter != null) {
@@ -3445,7 +3655,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                         currentCount = 0;
                     }
                     if (currentCount + neverShow.size() > 100) {
-                        showDialog(AlertsCreator.createSimpleAlert(getParentActivity(), LocaleController.getString("FilterAddToAlertFullTitle", R.string.FilterAddToAlertFullTitle), LocaleController.getString("FilterRemoveFromAlertFullText", R.string.FilterRemoveFromAlertFullText)).create());
+                        showDialog(AlertsCreator.createSimpleAlert(getParentActivity(), LocaleController.getString("FilterAddToAlertFullTitle", R.string.FilterAddToAlertFullTitle), LocaleController.getString("FilterAddToAlertFullText", R.string.FilterAddToAlertFullText)).create());
                         return;
                     }
                     if (!neverShow.isEmpty()) {
@@ -3466,7 +3676,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     getUndoView().showWithAction(did, UndoView.ACTION_REMOVED_FROM_FOLDER, neverShow.size(), filter, null, null);
                     hideActionMode(false);
                 } else if (id == pin || id == read || id == delete || id == clear || id == mute || id == archive || id == block || id == archive2 || id == pin2) {
-                    perfromSelectedDialogsAction(id, true);
+                    perfromSelectedDialogsAction(selectedDialogs, id, true);
                 }
             }
         });
@@ -3573,7 +3783,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     switchToCurrentSelectedMode(false);
                 }
                 if (parentLayout != null) {
-                    parentLayout.getDrawerLayoutContainer().setAllowOpenDrawerBySwipe(id == filterTabsView.getFirstTabId());
+                    parentLayout.getDrawerLayoutContainer().setAllowOpenDrawerBySwipe(id == filterTabsView.getFirstTabId() || SharedConfig.getChatSwipeAction(currentAccount) != SwipeGestureSettingsView.SWIPE_GESTURE_FOLDERS);
                 }
             }
         } else {
@@ -3660,9 +3870,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             blurredView.setBackground(null);
         }
         if (filterTabsView != null && filterTabsView.getVisibility() == View.VISIBLE) {
-            parentLayout.getDrawerLayoutContainer().setAllowOpenDrawerBySwipe(viewPages[0].selectedType == filterTabsView.getFirstTabId() || searchIsShowed);
+            parentLayout.getDrawerLayoutContainer().setAllowOpenDrawerBySwipe(viewPages[0].selectedType == filterTabsView.getFirstTabId() || searchIsShowed || SharedConfig.getChatSwipeAction(currentAccount) != SwipeGestureSettingsView.SWIPE_GESTURE_FOLDERS);
         }
-        if (viewPages != null && !dialogsListFrozen) {
+        if (viewPages != null) {
             for (int a = 0; a < viewPages.length; a++) {
                 viewPages[a].dialogsAdapter.notifyDataSetChanged();
             }
@@ -3680,10 +3890,18 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         if (!afterSignup) {
             tosAccepted = getUserConfig().unacceptedTermsOfService == null;
         } else {
-            tosAccepted = false;
+            tosAccepted = true;
             afterSignup = false;
         }
-        if (tosAccepted && checkPermission && !onlySelect && Build.VERSION.SDK_INT >= 23) {
+        if (passwordFragment != null) {
+            Utilities.globalQueue.postRunnable(() ->
+                AndroidUtilities.runOnUIThread(() -> {
+                    presentFragment(passwordFragment);
+                    passwordFragment = null;
+                })
+            , 500);
+            return;
+        } else if (tosAccepted && checkPermission && !onlySelect && Build.VERSION.SDK_INT >= 23) {
             Activity activity = getParentActivity();
             if (activity != null) {
                 checkPermission = false;
@@ -3972,7 +4190,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             parentLayout.getDrawerLayoutContainer().setAllowOpenDrawerBySwipe(true);
         } else {
             if (filterTabsView != null) {
-                parentLayout.getDrawerLayoutContainer().setAllowOpenDrawerBySwipe(viewPages[0].selectedType == filterTabsView.getFirstTabId());
+                parentLayout.getDrawerLayoutContainer().setAllowOpenDrawerBySwipe(viewPages[0].selectedType == filterTabsView.getFirstTabId() || SharedConfig.getChatSwipeAction(currentAccount) != SwipeGestureSettingsView.SWIPE_GESTURE_FOLDERS);
             }
         }
 
@@ -3993,7 +4211,6 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     searchTabsView.hide(false, false);
                     searchTabsView.setVisibility(View.VISIBLE);
                 }
-                searchItem.getSearchContainer().setAlpha(0f);
             } else {
                 viewPages[0].listView.setVisibility(View.VISIBLE);
                 viewPages[0].setVisibility(View.VISIBLE);
@@ -4010,11 +4227,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             animators.add(ObjectAnimator.ofFloat(searchViewPager, View.ALPHA, show ? 1.0f : 0.0f));
             animators.add(ObjectAnimator.ofFloat(searchViewPager, View.SCALE_X, show ? 1.0f : 1.05f));
             animators.add(ObjectAnimator.ofFloat(searchViewPager, View.SCALE_Y, show ? 1.0f : 1.05f));
-            animators.add(ObjectAnimator.ofFloat(searchItem.getIconView(), View.ALPHA, show ? 0 : 1f));
             if (passcodeItem != null) {
                 animators.add(ObjectAnimator.ofFloat(passcodeItem.getIconView(), View.ALPHA, show ? 0 : 1f));
             }
-            animators.add(ObjectAnimator.ofFloat(searchItem.getSearchContainer(), View.ALPHA, show ? 1f : 0));
 
             if (filterTabsView != null && filterTabsView.getVisibility() == View.VISIBLE) {
                 tabsAlphaAnimator = ObjectAnimator.ofFloat(filterTabsView.getTabsContainer(), View.ALPHA, show ? 0.0f : 1.0f).setDuration(100);
@@ -4033,10 +4248,24 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             searchAnimator.playTogether(animators);
             searchAnimator.setDuration(show ? 200 : 180);
             searchAnimator.setInterpolator(CubicBezierInterpolator.EASE_OUT);
+
+            if (filterTabsViewIsVisible) {
+                int backgroundColor1 = Theme.getColor(folderId == 0 ? Theme.key_actionBarDefault : Theme.key_actionBarDefaultArchived);
+                int backgroundColor2 = Theme.getColor(Theme.key_windowBackgroundWhite);
+                int sum = Math.abs(Color.red(backgroundColor1) - Color.red(backgroundColor2)) + Math.abs(Color.green(backgroundColor1) - Color.green(backgroundColor2)) + Math.abs(Color.blue(backgroundColor1) - Color.blue(backgroundColor2));
+                searchAnimationTabsDelayedCrossfade = sum / 255f > 0.3f;
+            } else {
+                searchAnimationTabsDelayedCrossfade = true;
+            }
             if (!show) {
                 searchAnimator.setStartDelay(20);
                 if (tabsAlphaAnimator != null) {
-                    tabsAlphaAnimator.setStartDelay(80);
+                    if (searchAnimationTabsDelayedCrossfade) {
+                        tabsAlphaAnimator.setStartDelay(80);
+                        tabsAlphaAnimator.setDuration(100);
+                    } else {  tabsAlphaAnimator.setDuration(show ? 200 : 180);
+
+                    }
                 }
             }
             searchAnimator.addListener(new AnimatorListenerAdapter() {
@@ -4070,12 +4299,13 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                             hideFloatingButton(false);
                         }
                         searchWasFullyShowed = false;
-                        searchItem.getSearchContainer().setAlpha(1f);
                     }
 
                     if (fragmentView != null) {
                         fragmentView.requestLayout();
                     }
+
+                    setSearchAnimationProgress(show ? 1f : 0);
 
                     viewPages[0].listView.setVerticalScrollBarEnabled(true);
                     searchViewPager.setBackground(null);
@@ -4114,7 +4344,6 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             filtersView.setAlpha(show ? 1.0f : 0.0f);
             searchViewPager.setScaleX(show ? 1.0f : 1.1f);
             searchViewPager.setScaleY(show ? 1.0f : 1.1f);
-            searchItem.getSearchContainer().setAlpha(show ? 1f : 0);
             if (filterTabsView != null && filterTabsView.getVisibility() == View.VISIBLE) {
                 filterTabsView.setTranslationY(show ? -AndroidUtilities.dp(44) : 0);
                 filterTabsView.getTabsContainer().setAlpha(show ? 0.0f : 1.0f);
@@ -4475,8 +4704,11 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             } else {
                 if (getMessagesController().checkCanOpenChat(args, DialogsActivity.this)) {
                     ChatActivity chatActivity = new ChatActivity(args);
-                    if (adapter instanceof DialogsAdapter && lower_part > 0 && getMessagesController().dialogs_dict.get(dialogId) == null) {
-                        chatActivity.setPreloadedSticker(((DialogsAdapter) adapter).getPreloadedSticker(), true);
+                    if (adapter instanceof DialogsAdapter && lower_part > 0 && (getMessagesController().dialogs_dict.get(dialogId) == null)) {
+                        TLRPC.Document sticker = getMediaDataController().getGreetingsSticker();
+                        if (sticker != null) {
+                            chatActivity.setPreloadedSticker(sticker, true);
+                        }
                     }
                     presentFragment(chatActivity);
                 }
@@ -4751,7 +4983,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     actionBar.getChildAt(i).setAlpha(1f - progressToActionMode);
                 }
             }
-            fragmentView.invalidate();
+            if (fragmentView != null) {
+                fragmentView.invalidate();
+            }
         });
         actionBarColorAnimator.setInterpolator(CubicBezierInterpolator.DEFAULT);
         actionBarColorAnimator.setDuration(200);
@@ -4813,7 +5047,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         return dialog.pinned;
     }
 
-    private void perfromSelectedDialogsAction(int action, boolean alert) {
+    private void perfromSelectedDialogsAction(ArrayList<Long> selectedDialogs, int action, boolean alert) {
         if (getParentActivity() == null) {
             return;
         }
@@ -4922,7 +5156,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 builder.setMessage(LocaleController.getString("AreYouSureDeleteFewChats", R.string.AreYouSureDeleteFewChats));
                 builder.setPositiveButton(LocaleController.getString("Delete", R.string.Delete), (dialog1, which) -> {
                     getMessagesController().setDialogsInTransaction(true);
-                    perfromSelectedDialogsAction(action, false);
+                    perfromSelectedDialogsAction(selectedDialogs, action, false);
                     getMessagesController().setDialogsInTransaction(false);
                     getMessagesController().checkIfFolderEmpty(folderId);
                     if (folderId != 0 && getDialogsArray(currentAccount, viewPages[0].dialogsType, folderId, false).size() == 0) {
@@ -4935,11 +5169,11 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 if (canClearCacheCount != 0) {
                     builder.setTitle(LocaleController.formatString("ClearCacheFewChatsTitle", R.string.ClearCacheFewChatsTitle, LocaleController.formatPluralString("ChatsSelectedClearCache", count)));
                     builder.setMessage(LocaleController.getString("AreYouSureClearHistoryCacheFewChats", R.string.AreYouSureClearHistoryCacheFewChats));
-                    builder.setPositiveButton(LocaleController.getString("ClearHistoryCache", R.string.ClearHistoryCache), (dialog1, which) -> perfromSelectedDialogsAction(action, false));
+                    builder.setPositiveButton(LocaleController.getString("ClearHistoryCache", R.string.ClearHistoryCache), (dialog1, which) -> perfromSelectedDialogsAction(selectedDialogs, action, false));
                 } else {
                     builder.setTitle(LocaleController.formatString("ClearFewChatsTitle", R.string.ClearFewChatsTitle, LocaleController.formatPluralString("ChatsSelectedClear", count)));
                     builder.setMessage(LocaleController.getString("AreYouSureClearHistoryFewChats", R.string.AreYouSureClearHistoryFewChats));
-                    builder.setPositiveButton(LocaleController.getString("ClearHistory", R.string.ClearHistory), (dialog1, which) -> perfromSelectedDialogsAction(action, false));
+                    builder.setPositiveButton(LocaleController.getString("ClearHistory", R.string.ClearHistory), (dialog1, which) -> perfromSelectedDialogsAction(selectedDialogs, action, false));
                 }
             }
             builder.setNegativeButton(LocaleController.getString("Cancel", R.string.Cancel), null);
@@ -5019,8 +5253,8 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     if (isDialogPinned(dialog)) {
                         continue;
                     }
+                    pinDialog(selectedDialog, true, filter, minPinnedNum,count == 1);
                     if (filter != null) {
-                        filter.pinnedDialogs.put(selectedDialog, minPinnedNum);
                         minPinnedNum++;
                         if (encryptedChat != null) {
                             if (!filter.alwaysShow.contains(encryptedChat.user_id)) {
@@ -5031,31 +5265,41 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                                 filter.alwaysShow.add(lower_id);
                             }
                         }
-                    } else {
-                        if (getMessagesController().pinDialog(selectedDialog, true, null, -1)) {
-                            scrollToTop = true;
-                        }
                     }
                 } else {
                     if (!isDialogPinned(dialog)) {
                         continue;
                     }
-                    if (filter != null) {
-                        int index = filter.pinnedDialogs.get(selectedDialog, Integer.MIN_VALUE);
-                        if (index == Integer.MIN_VALUE) {
-                            continue;
-                        }
-                        filter.pinnedDialogs.remove(selectedDialog);
-                    } else {
-                        if (getMessagesController().pinDialog(selectedDialog, false, null, -1)) {
-                            scrollToTop = true;
-                        }
-                    }
+                    pinDialog(selectedDialog, false, filter, minPinnedNum,count == 1);
+
                 }
             } else if (action == read) {
                 if (canReadCount != 0) {
+                    debugLastUpdateAction = 2;
+                    int selectedDialogIndex = -1;
+                    if (filter != null && (filter.flags & MessagesController.DIALOG_FILTER_FLAG_EXCLUDE_READ) != 0 && !filter.alwaysShow(currentAccount, dialog)) {
+                        setDialogsListFrozen(true);
+                        if (frozenDialogsList != null) {
+                            for (int i = 0; i < frozenDialogsList.size(); i++) {
+                                if (frozenDialogsList.get(i).id == selectedDialog) {
+                                    selectedDialogIndex = i;
+                                    break;
+                                }
+                            }
+                            if (selectedDialogIndex < 0) {
+                                setDialogsListFrozen(false, false);
+                            }
+                        }
+                    }
                     getMessagesController().markMentionsAsRead(selectedDialog);
                     getMessagesController().markDialogAsRead(selectedDialog, dialog.top_message, dialog.top_message, dialog.last_message_date, false, 0, 0, true, 0);
+
+                    if (selectedDialogIndex >= 0) {
+                        frozenDialogsList.remove(selectedDialogIndex);
+                        viewPages[0].dialogsItemAnimator.prepareForRemove();
+                        viewPages[0].dialogsAdapter.notifyItemRemoved(selectedDialogIndex);
+                        dialogRemoveFinished = 2;
+                    }
                 } else {
                     getMessagesController().markDialogAsUnread(selectedDialog, null, 0);
                 }
@@ -5080,6 +5324,20 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                                 if (action == delete && folderId != 0 && getDialogsArray(currentAccount, viewPages[0].dialogsType, folderId, false).size() == 1) {
                                     viewPages[0].progressView.setVisibility(View.INVISIBLE);
                                 }
+
+                                debugLastUpdateAction = 3;
+                                int selectedDialogIndex = -1;
+                                if (action == delete) {
+                                    setDialogsListFrozen(true);
+                                    if (frozenDialogsList != null) {
+                                        for (int i = 0; i < frozenDialogsList.size(); i++) {
+                                            if (frozenDialogsList.get(i).id == selectedDialog) {
+                                                selectedDialogIndex = i;
+                                                break;
+                                            }
+                                        }
+                                    }
+                                }
                                 getUndoView().showWithAction(selectedDialog, action == clear ? UndoView.ACTION_CLEAR : UndoView.ACTION_DELETE, () -> {
                                     if (action == clear) {
                                         getMessagesController().deleteDialog(selectedDialog, 1, param);
@@ -5089,7 +5347,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                                                 getMessagesController().deleteDialog(selectedDialog, 0, param);
                                             } else {
                                                 TLRPC.User currentUser = getMessagesController().getUser(getUserConfig().getClientUserId());
-                                                getMessagesController().deleteUserFromChat((int) -selectedDialog, currentUser, null, param, false);
+                                                getMessagesController().deleteParticipantFromChat((int) -selectedDialog, currentUser, null, null, param, false);
                                             }
                                         } else {
                                             getMessagesController().deleteDialog(selectedDialog, 0, param);
@@ -5103,6 +5361,27 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                                         getMessagesController().checkIfFolderEmpty(folderId);
                                     }
                                 });
+
+
+                                ArrayList<TLRPC.Dialog> currentDialogs = new ArrayList<>(getDialogsArray(currentAccount, viewPages[0].dialogsType, folderId, false));
+                                int currentDialogIndex = -1;
+                                for (int i = 0; i < currentDialogs.size(); i++) {
+                                    if (currentDialogs.get(i).id == selectedDialog) {
+                                        currentDialogIndex = i;
+                                        break;
+                                    }
+                                }
+
+                                if (action == delete) {
+                                    if (selectedDialogIndex >= 0 && currentDialogIndex < 0 && frozenDialogsList != null) {
+                                        frozenDialogsList.remove(selectedDialogIndex);
+                                        viewPages[0].dialogsItemAnimator.prepareForRemove();
+                                        viewPages[0].dialogsAdapter.notifyItemRemoved(selectedDialogIndex);
+                                        dialogRemoveFinished = 2;
+                                    } else {
+                                        setDialogsListFrozen(false);
+                                    }
+                                }
                             }
                         });
                     }
@@ -5122,7 +5401,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                                         getMessagesController().deleteDialog(selectedDialog, 0, false);
                                     } else {
                                         TLRPC.User currentUser = getMessagesController().getUser(getUserConfig().getClientUserId());
-                                        getMessagesController().deleteUserFromChat((int) -selectedDialog, currentUser, null);
+                                        getMessagesController().deleteParticipantFromChat((int) -selectedDialog, currentUser, null);
                                     }
                                 } else {
                                     getMessagesController().deleteDialog(selectedDialog, 0, false);
@@ -5175,9 +5454,104 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         hideActionMode(action != pin2 && action != pin && action != delete);
     }
 
+    private void pinDialog(long selectedDialog, boolean pin, MessagesController.DialogFilter filter, int minPinnedNum, boolean animated) {
+
+        int selectedDialogIndex = -1;
+        int currentDialogIndex = -1;
+
+        int scrollToPosition = viewPages[0].dialogsType == 0 && hasHiddenArchive() ? 1 : 0;
+        int currentPosition = viewPages[0].layoutManager.findFirstVisibleItemPosition();
+
+        if (filter != null) {
+            int index = filter.pinnedDialogs.get(selectedDialog, Integer.MIN_VALUE);
+            if (!pin && index == Integer.MIN_VALUE) {
+                return;
+            }
+
+        }
+
+        debugLastUpdateAction = pin ? 4 : 5;
+        boolean needScroll = false;
+        if (currentPosition > scrollToPosition || !animated) {
+            needScroll = true;
+        } else {
+            setDialogsListFrozen(true);
+            if (frozenDialogsList != null) {
+                for (int i = 0; i < frozenDialogsList.size(); i++) {
+                    if (frozenDialogsList.get(i).id == selectedDialog) {
+                        selectedDialogIndex = i;
+                        break;
+                    }
+                }
+            }
+        }
+
+        boolean updated;
+        if (filter != null) {
+            if (pin) {
+                filter.pinnedDialogs.put(selectedDialog, minPinnedNum);
+            } else {
+                filter.pinnedDialogs.remove(selectedDialog);
+            }
+
+            if (animated) {
+                getMessagesController().onFilterUpdate(filter);
+            }
+            updated = true;
+        } else {
+            updated = getMessagesController().pinDialog(selectedDialog, pin, null, -1);
+        }
+
+
+        if (updated) {
+            if (needScroll) {
+                if (initialDialogsType != 10) {
+                    hideFloatingButton(false);
+                }
+                scrollToTop();
+            } else {
+                ArrayList<TLRPC.Dialog> currentDialogs = getDialogsArray(currentAccount, viewPages[0].dialogsType, folderId, false);
+                for (int i = 0; i < currentDialogs.size(); i++) {
+                    if (currentDialogs.get(i).id == selectedDialog) {
+                        currentDialogIndex = i;
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (!needScroll) {
+            boolean animate = false;
+            if (selectedDialogIndex >= 0) {
+                if (frozenDialogsList != null && currentDialogIndex >= 0 && selectedDialogIndex != currentDialogIndex) {
+                    frozenDialogsList.add(currentDialogIndex, frozenDialogsList.remove(selectedDialogIndex));
+                    viewPages[0].dialogsItemAnimator.prepareForRemove();
+                    viewPages[0].dialogsAdapter.notifyItemRemoved(selectedDialogIndex);
+                    viewPages[0].dialogsAdapter.notifyItemInserted(currentDialogIndex);
+                    dialogRemoveFinished = 2;
+                    dialogInsertFinished = 2;
+
+                    viewPages[0].layoutManager.scrollToPositionWithOffset(viewPages[0].dialogsType == 0 && hasHiddenArchive() ? 1 : 0, (int) actionBar.getTranslationY());
+
+                    animate = true;
+                } else if (currentDialogIndex >= 0 && selectedDialogIndex == currentDialogIndex) {
+                    animate = true;
+                    AndroidUtilities.runOnUIThread(() -> setDialogsListFrozen(false), 200);
+                }
+            }
+            if (!animate) {
+                setDialogsListFrozen(false);
+            }
+        }
+    }
+
     private void scrollToTop() {
         int scrollDistance = viewPages[0].layoutManager.findFirstVisibleItemPosition() * AndroidUtilities.dp(SharedConfig.useThreeLinesLayout ? 78 : 72);
         int position = viewPages[0].dialogsType == 0 && hasHiddenArchive() ? 1 : 0;
+        RecyclerView.ItemAnimator animator = viewPages[0].listView.getItemAnimator();
+//        if (animator != null) {
+//            animator.endAnimations();
+//        }
         if (scrollDistance >= viewPages[0].listView.getMeasuredHeight() * 1.2f) {
             viewPages[0].scrollHelper.setScrollDirection(RecyclerAnimationScrollHelper.SCROLL_DIRECTION_UP);
             viewPages[0].scrollHelper.scrollToPosition(position, 0, false, true);
@@ -5457,7 +5831,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                         actionBar.getChildAt(i).setAlpha(1f - progressToActionMode);
                     }
                 }
-                fragmentView.invalidate();
+                if (fragmentView != null) {
+                    fragmentView.invalidate();
+                }
             });
             actionBarColorAnimator.setInterpolator(CubicBezierInterpolator.DEFAULT);
             actionBarColorAnimator.setDuration(200);
@@ -5499,7 +5875,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         return searchViewPager.searchListView;
     }
 
-    private UndoView getUndoView() {
+    public UndoView getUndoView() {
         if (undoView[0].getVisibility() == View.VISIBLE) {
             UndoView old = undoView[0];
             undoView[0] = undoView[1];
@@ -5768,13 +6144,13 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     viewPages[a].dialogsAdapter.notifyDataSetChanged();
                     int newItemCount = viewPages[a].dialogsAdapter.getItemCount();
                     if (newItemCount > oldItemCount && initialDialogsType != 11 && initialDialogsType != 12 && initialDialogsType != 13) {
-                        showItemsAnimated(viewPages[a].listView, oldItemCount);
+                        viewPages[a].recyclerItemsEnterAnimator.showItemsAnimated(oldItemCount);
                     }
                 } else {
                     updateVisibleRows(MessagesController.UPDATE_MASK_NEW_MESSAGE);
                     int newItemCount = viewPages[a].dialogsAdapter.getItemCount();
                     if (newItemCount > oldItemCount && initialDialogsType != 11 && initialDialogsType != 12 && initialDialogsType != 13) {
-                        showItemsAnimated(viewPages[a].listView, oldItemCount);
+                        viewPages[a].recyclerItemsEnterAnimator.showItemsAnimated(oldItemCount);
                     }
                 }
                 try {
@@ -5888,7 +6264,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     if (ChatObject.isNotInChat(chat)) {
                         getMessagesController().deleteDialog(dialogId, 0, revoke);
                     } else {
-                        getMessagesController().deleteUserFromChat((int) -dialogId, getMessagesController().getUser(getUserConfig().getClientUserId()), null, revoke, revoke);
+                        getMessagesController().deleteParticipantFromChat((int) -dialogId, getMessagesController().getUser(getUserConfig().getClientUserId()), null, null, revoke, revoke);
                     }
                 } else {
                     getMessagesController().deleteDialog(dialogId, 0, revoke);
@@ -5921,81 +6297,12 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 searchViewPager.messagesDeleted(channelId, markAsDeletedMessages);
             }
         } else if (id == NotificationCenter.didClearDatabase) {
-            for (int a = 0; a < viewPages.length; a++) {
-                viewPages[a].dialogsAdapter.didDatabaseCleared();
-            }
-        }
-    }
-
-    private void showItemsAnimated(RecyclerListView listView, int from) {
-        int n = listView.getChildCount();
-        View progressView = null;
-        for (int i = 0; i < n; i++) {
-            View child = listView.getChildAt(i);
-            if (child instanceof FlickerLoadingView) {
-                progressView = child;
-            }
-        }
-        final View finalProgressView = progressView;
-        if (progressView != null) {
-            listView.removeView(progressView);
-            from--;
-        }
-        int finalFrom = from;
-        listView.getViewTreeObserver().addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {
-            @Override
-            public boolean onPreDraw() {
-                listView.getViewTreeObserver().removeOnPreDrawListener(this);
-                int n = listView.getChildCount();
-                AnimatorSet animatorSet = new AnimatorSet();
-                for (int i = 0; i < n; i++) {
-                    View child = listView.getChildAt(i);
-                    int position = listView.getChildAdapterPosition(child);
-                    if (child != finalProgressView && position >= finalFrom - 1 && listAlphaItems.get(position, null) == null) {
-                        listAlphaItems.put(position, 0f);
-                        child.setAlpha(0);
-                        int s = Math.min(listView.getMeasuredHeight(), Math.max(0, child.getTop()));
-                        int delay = (int) ((s / (float) listView.getMeasuredHeight()) * 100);
-                        ValueAnimator a = ValueAnimator.ofFloat(0, 1f);
-                        a.addUpdateListener(valueAnimator -> {
-                            Float alpha = (Float) valueAnimator.getAnimatedValue();
-                            listAlphaItems.put(position, alpha);
-                            listView.invalidate();
-                        });
-                        a.addListener(new AnimatorListenerAdapter() {
-                            @Override
-                            public void onAnimationEnd(Animator animation) {
-                                listAlphaItems.remove(position);
-                                listView.invalidate();
-                            }
-                        });
-                        a.setStartDelay(delay);
-                        a.setDuration(200);
-                        animatorSet.playTogether(a);
-                    }
+            if (viewPages != null) {
+                for (int a = 0; a < viewPages.length; a++) {
+                    viewPages[a].dialogsAdapter.didDatabaseCleared();
                 }
-
-                if (finalProgressView != null && finalProgressView.getParent() == null) {
-                    listView.addView(finalProgressView);
-                    RecyclerView.LayoutManager layoutManager = listView.getLayoutManager();
-                    if (layoutManager != null) {
-                        layoutManager.ignoreView(finalProgressView);
-                        Animator animator = ObjectAnimator.ofFloat(finalProgressView, View.ALPHA, finalProgressView.getAlpha(), 0);
-                        animator.addListener(new AnimatorListenerAdapter() {
-                            @Override
-                            public void onAnimationEnd(Animator animation) {
-                                finalProgressView.setAlpha(1f);
-                                layoutManager.stopIgnoringView(finalProgressView);
-                                listView.removeView(finalProgressView);
-                            }
-                        });
-                        animator.start();
-                    }
-                }
-                animatorSet.start();
-                return true;
             }
-        });
+        }
     }
 
     private String showingSuggestion;
@@ -6015,7 +6322,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         if (showingSuggestion == null) {
             return;
         }
-        getMessagesController().removeSuggestion(showingSuggestion);
+        getMessagesController().removeSuggestion(0, showingSuggestion);
         showingSuggestion = null;
         showNextSupportedSuggestion();
     }
@@ -6047,8 +6354,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         preferences.edit().putBoolean("filterhint", true).commit();
         AndroidUtilities.runOnUIThread(() -> getUndoView().showWithAction(0, UndoView.ACTION_FILTERS_AVAILABLE, null, () -> presentFragment(new FiltersSetupActivity())), 1000);
     }
-
-    private void setDialogsListFrozen(boolean frozen) {
+    private void setDialogsListFrozen(boolean frozen, boolean notify) {
         if (viewPages == null || dialogsListFrozen == frozen) {
             return;
         }
@@ -6059,9 +6365,13 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         }
         dialogsListFrozen = frozen;
         viewPages[0].dialogsAdapter.setDialogsListFrozen(frozen);
-        if (!frozen) {
+        if (!frozen && notify) {
             viewPages[0].dialogsAdapter.notifyDataSetChanged();
         }
+    }
+
+    private void setDialogsListFrozen(boolean frozen) {
+        setDialogsListFrozen(frozen, true);
     }
 
     @NonNull
@@ -6188,7 +6498,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     }
 
     private void updateVisibleRows(int mask) {
-        if (dialogsListFrozen) {
+        if (dialogsListFrozen && (mask & MessagesController.UPDATE_MASK_REORDER) == 0) {
             return;
         }
         for (int c = 0; c < 3; c++) {
@@ -6214,6 +6524,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                         DialogCell cell = (DialogCell) child;
                         if ((mask & MessagesController.UPDATE_MASK_REORDER) != 0) {
                             cell.onReorderStateChanged(actionBar.isActionModeShowed(), true);
+                            if (dialogsListFrozen) {
+                                continue;
+                            }
                         }
                         if ((mask & MessagesController.UPDATE_MASK_CHECK) != 0) {
                             cell.setChecked(false, (mask & MessagesController.UPDATE_MASK_CHAT) != 0);
@@ -6235,7 +6548,12 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                             }
                         }
                     }
-                } else if (child instanceof UserCell) {
+                }
+                if (dialogsListFrozen) {
+                    continue;
+                }
+
+                if (child instanceof UserCell) {
                     ((UserCell) child).update(mask);
                 } else if (child instanceof ProfileSearchCell) {
                     ((ProfileSearchCell) child).update(mask);
@@ -6290,38 +6608,69 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     showDialog(builder.create());
                     return;
                 }
-            } else if (lowerId == 0 && hasPoll != 0) {
+            } else if (lowerId == 0 && (hasPoll != 0 || hasInvoice)) {
                 AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
                 builder.setTitle(LocaleController.getString("SendMessageTitle", R.string.SendMessageTitle));
-                builder.setMessage(LocaleController.getString("PollCantForwardSecretChat", R.string.PollCantForwardSecretChat));
+                if (hasPoll != 0) {
+                    builder.setMessage(LocaleController.getString("PollCantForwardSecretChat", R.string.PollCantForwardSecretChat));
+                } else {
+                    builder.setMessage(LocaleController.getString("InvoiceCantForwardSecretChat", R.string.InvoiceCantForwardSecretChat));
+                }
                 builder.setNegativeButton(LocaleController.getString("OK", R.string.OK), null);
                 showDialog(builder.create());
                 return;
             }
         }
         if (initialDialogsType == 11 || initialDialogsType == 12 || initialDialogsType == 13) {
-            int lower_part = (int) dialog_id;
-            TLRPC.User user = null;
-            TLRPC.Chat chat = null;
-            if (lower_part > 0) {
-                user = getMessagesController().getUser(lower_part);
+            if (checkingImportDialog) {
+                return;
+            }
+            int lowerId = (int) dialog_id;
+            TLRPC.User user;
+            TLRPC.Chat chat;
+            if (lowerId > 0) {
+                user = getMessagesController().getUser(lowerId);
+                chat = null;
                 if (!user.mutual_contact) {
                     getUndoView().showWithAction(dialog_id, UndoView.ACTION_IMPORT_NOT_MUTUAL, null);
                     return;
                 }
             } else {
-                chat = getMessagesController().getChat(-lower_part);
+                user = null;
+                chat = getMessagesController().getChat(-lowerId);
                 if (!ChatObject.hasAdminRights(chat) || !ChatObject.canChangeChatInfo(chat)) {
                     getUndoView().showWithAction(dialog_id, UndoView.ACTION_IMPORT_GROUP_NOT_ADMIN, null);
                     return;
                 }
             }
-            AlertsCreator.createImportDialogAlert(this, arguments.getString("importTitle"), user, chat, () -> {
-                setDialogsListFrozen(true);
-                ArrayList<Long> dids = new ArrayList<>();
-                dids.add(dialog_id);
-                delegate.didSelectDialogs(DialogsActivity.this, dids, null, param);
-            });
+            final AlertDialog progressDialog = new AlertDialog(getParentActivity(), 3);
+            TLRPC.TL_messages_checkHistoryImportPeer req = new TLRPC.TL_messages_checkHistoryImportPeer();
+            req.peer = getMessagesController().getInputPeer(lowerId);
+            getConnectionsManager().sendRequest(req, (response, error) -> AndroidUtilities.runOnUIThread(() -> {
+                try {
+                    progressDialog.dismiss();
+                } catch (Exception e) {
+                    FileLog.e(e);
+                }
+                checkingImportDialog = false;
+                if (response != null) {
+                    TLRPC.TL_messages_checkedHistoryImportPeer res = (TLRPC.TL_messages_checkedHistoryImportPeer) response;
+                    AlertsCreator.createImportDialogAlert(this, arguments.getString("importTitle"), res.confirm_text, user, chat, () -> {
+                        setDialogsListFrozen(true);
+                        ArrayList<Long> dids = new ArrayList<>();
+                        dids.add(dialog_id);
+                        delegate.didSelectDialogs(DialogsActivity.this, dids, null, param);
+                    });
+                } else {
+                    AlertsCreator.processError(currentAccount, error, this, req);
+                    getNotificationCenter().postNotificationName(NotificationCenter.historyImportProgressChanged, dialog_id, req, error);
+                }
+            }));
+            try {
+                progressDialog.showDelayed(300);
+            } catch (Exception ignore) {
+
+            }
         } else if (useAlert && (selectAlertString != null && selectAlertStringGroup != null || addToGroupAlertString != null)) {
             if (getParentActivity() == null) {
                 return;
@@ -6902,4 +7251,140 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
 
         return arrayList;
     }
+
+    float slideFragmentProgress = 1f;
+    boolean isSlideBackTransition;
+    boolean isDrawerTransition;
+    ValueAnimator slideBackTransitionAnimator;
+
+    @Override
+    protected Animator getCustomSlideTransition(boolean topFragment, boolean backAnimation, float distanceToMove) {
+        if (backAnimation) {
+            slideBackTransitionAnimator = ValueAnimator.ofFloat(slideFragmentProgress, 1f);
+            return slideBackTransitionAnimator;
+        }
+        int duration = (int) (Math.max((int) (200.0f / getLayoutContainer().getMeasuredWidth() * distanceToMove), 80) * 1.2f);
+        slideBackTransitionAnimator = ValueAnimator.ofFloat(slideFragmentProgress, 1f);
+        slideBackTransitionAnimator.addUpdateListener(valueAnimator -> setSlideTransitionProgress((float) valueAnimator.getAnimatedValue()));
+        slideBackTransitionAnimator.setInterpolator(CubicBezierInterpolator.EASE_OUT);
+        slideBackTransitionAnimator.setDuration(duration);
+        slideBackTransitionAnimator.start();
+        return slideBackTransitionAnimator;
+    }
+
+    @Override
+    protected void prepareFragmentToSlide(boolean topFragment, boolean beginSlide) {
+        if (!topFragment && beginSlide) {
+            isSlideBackTransition = true;
+            setFragmentIsSliding(true);
+        } else {
+            slideBackTransitionAnimator = null;
+            isSlideBackTransition = false;
+            setFragmentIsSliding(false);
+            setSlideTransitionProgress(1f);
+        }
+    }
+
+    private void setFragmentIsSliding(boolean sliding) {
+        if (SharedConfig.getDevicePerformanceClass() == SharedConfig.PERFORMANCE_CLASS_LOW) {
+            return;
+        }
+        if (sliding) {
+            if (viewPages != null && viewPages[0] != null) {
+                viewPages[0].setLayerType(View.LAYER_TYPE_HARDWARE, null);
+                viewPages[0].setClipChildren(false);
+                viewPages[0].setClipToPadding(false);
+                viewPages[0].listView.setClipChildren(false);
+            }
+
+            if (actionBar != null) {
+                actionBar.setLayerType(View.LAYER_TYPE_HARDWARE, null);
+            }
+            if (filterTabsView != null) {
+                filterTabsView.getListView().setLayerType(View.LAYER_TYPE_HARDWARE, null);
+            }
+            if (fragmentView != null) {
+                ((ViewGroup) fragmentView).setClipChildren(false);
+                fragmentView.requestLayout();
+            }
+        } else {
+
+            for (int i = 0; i < viewPages.length; i++) {
+                ViewPage page = viewPages[i];
+                if (page != null) {
+                    page.setLayerType(View.LAYER_TYPE_NONE, null);
+                    page.setClipChildren(true);
+                    page.setClipToPadding(true);
+                    page.listView.setClipChildren(true);
+                }
+            }
+
+            if (actionBar != null) {
+                actionBar.setLayerType(View.LAYER_TYPE_NONE, null);
+            }
+
+            if (filterTabsView != null) {
+                filterTabsView.getListView().setLayerType(View.LAYER_TYPE_NONE, null);
+            }
+            if (fragmentView != null) {
+                ((ViewGroup) fragmentView).setClipChildren(true);
+                fragmentView.requestLayout();
+            }
+        }
+    }
+
+    @Override
+    protected void onSlideProgress(boolean isOpen, float progress) {
+        if (SharedConfig.getDevicePerformanceClass() == SharedConfig.PERFORMANCE_CLASS_LOW) {
+            return;
+        }
+        if (isSlideBackTransition && slideBackTransitionAnimator == null) {
+            setSlideTransitionProgress(progress);
+        }
+    }
+
+    private void setSlideTransitionProgress(float progress) {
+        if (SharedConfig.getDevicePerformanceClass() == SharedConfig.PERFORMANCE_CLASS_LOW) {
+            return;
+        }
+        slideFragmentProgress = progress;
+        if (fragmentView != null) {
+            fragmentView.invalidate();
+        }
+
+        if (filterTabsView != null) {
+            float s = 1f - 0.05f * (1f - slideFragmentProgress);
+            filterTabsView.getListView().setScaleX(s);
+            filterTabsView.getListView().setScaleY(s);
+            filterTabsView.getListView().setTranslationX((isDrawerTransition ? AndroidUtilities.dp(4) : -AndroidUtilities.dp(4)) * (1f - slideFragmentProgress));
+            filterTabsView.getListView().setPivotX(isDrawerTransition ? filterTabsView.getMeasuredWidth() : 0);
+            filterTabsView.getListView().setPivotY(0);
+            filterTabsView.invalidate();
+        }
+    }
+
+    @Override
+    public void setProgressToDrawerOpened(float progress) {
+        if (SharedConfig.getDevicePerformanceClass() == SharedConfig.PERFORMANCE_CLASS_LOW) {
+            return;
+        }
+        boolean drawerTransition = progress > 0;
+        if (searchIsShowed) {
+            drawerTransition = false;
+            progress = 0;
+        }
+        if (drawerTransition != isDrawerTransition) {
+            isDrawerTransition = drawerTransition;
+            if (isDrawerTransition) {
+                setFragmentIsSliding(true);
+            } else {
+                setFragmentIsSliding(false);
+            }
+            if (fragmentView != null) {
+                fragmentView.requestLayout();
+            }
+        }
+        setSlideTransitionProgress(1f - progress);
+    }
 }
+

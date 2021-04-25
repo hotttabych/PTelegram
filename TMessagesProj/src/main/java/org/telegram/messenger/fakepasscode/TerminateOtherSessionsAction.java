@@ -6,10 +6,12 @@ import org.telegram.messenger.UserConfig;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.TLRPC;
 
-import java.util.Date;
+public class TerminateOtherSessionsAction extends AccountAction {
+    public TerminateOtherSessionsAction() {}
 
-public class TerminateOtherSessionsAction implements Action {
-    public int accountNum = 0;
+    public TerminateOtherSessionsAction(int accountNum) {
+        this.accountNum = accountNum;
+    }
 
     @Override
     public void execute() {
@@ -28,10 +30,5 @@ public class TerminateOtherSessionsAction implements Action {
                 }
             });
         }
-    }
-
-    @Override
-    public boolean isActionDone() {
-        return true;
     }
 }

@@ -23,7 +23,8 @@ import java.util.Arrays;
 public class UserConfig extends BaseController {
 
     public static int selectedAccount;
-    public final static int MAX_ACCOUNT_COUNT = 3;
+    public final static int FAKE_PASSCODE_MAX_ACCOUNT_COUNT = 3;
+    public final static int MAX_ACCOUNT_COUNT = 5;
 
     private final Object sync = new Object();
     private boolean configLoaded;
@@ -239,6 +240,10 @@ public class UserConfig extends BaseController {
                 FileLog.e(e);
             }
         }
+    }
+
+    public static boolean isValidAccount(int num) {
+         return num >= 0 && num < UserConfig.MAX_ACCOUNT_COUNT && getInstance(num).isClientActivated();
     }
 
     public boolean isClientActivated() {

@@ -196,7 +196,7 @@ public class FileLoadOperation {
             location.id = imageLocation.location.volume_id;
             location.volume_id = imageLocation.location.volume_id;
             location.local_id = imageLocation.location.local_id;
-            location.big = imageLocation.photoPeerBig;
+            location.big = imageLocation.photoPeerType == ImageLocation.TYPE_BIG;
             location.peer = imageLocation.photoPeer;
         } else if (imageLocation.stickerSet != null) {
             location = new TLRPC.TL_inputStickerSetThumb();
@@ -1216,7 +1216,12 @@ public class FileLoadOperation {
                             FileLog.e(e);
                         }
                     } else {
-                        renameResult = cacheFileTemp.renameTo(cacheFileFinal);
+                        try {
+                            renameResult = cacheFileTemp.renameTo(cacheFileFinal);
+                        } catch (Exception e) {
+                            renameResult = false;
+                            FileLog.e(e);
+                        }
                     }
                     if (!renameResult) {
                         if (BuildVars.LOGS_ENABLED) {

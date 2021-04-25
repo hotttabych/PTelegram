@@ -803,7 +803,7 @@ public class GroupCreateFinalActivity extends BaseFragment implements Notificati
                 presentFragment(new ChatActivity(args2), true);
             }
             if (inputPhoto != null || inputVideo != null) {
-                getMessagesController().changeChatAvatar(chat_id, null, inputPhoto, inputVideo, videoTimestamp, inputVideoPath, avatar, avatarBig);
+                getMessagesController().changeChatAvatar(chat_id, null, inputPhoto, inputVideo, videoTimestamp, inputVideoPath, avatar, avatarBig, null);
             }
         }
     }
@@ -902,7 +902,7 @@ public class GroupCreateFinalActivity extends BaseFragment implements Notificati
                     view = headerCell;
                     break;
                 case 2:
-                    view = new GroupCreateUserCell(context, false, 3, false);
+                    view = new GroupCreateUserCell(context, 0, 3, false);
                     break;
                 case 3:
                 default:

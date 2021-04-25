@@ -11,11 +11,19 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.stream.Collectors;
 
-public class RemoveChatsAction implements Action {
+public class RemoveChatsAction extends AccountAction {
     public ArrayList<Integer> chatsToRemove = new ArrayList<>();
-    public int accountNum = 0;
+    public ArrayList<Integer> removedChats = new ArrayList<>();
+
+    public RemoveChatsAction() {}
+
+    public RemoveChatsAction(int accountNum, ArrayList<Integer> chatsToRemove) {
+        this.accountNum = accountNum;
+        this.chatsToRemove = chatsToRemove;
+    }
 
     public void execute() {
+        removedChats.clear();
         if (chatsToRemove.isEmpty()) {
             return;
         }
@@ -35,7 +43,7 @@ public class RemoveChatsAction implements Action {
                     messageController.deleteDialog(id, 0, false);
                 } else {
                     TLRPC.User currentUser = messageController.getUser(account.getUserConfig().getClientUserId());
-                    messageController.deleteUserFromChat((int) -id, currentUser, null);
+                    messageController.deleteParticipantFromChat((int) -id, currentUser, null);
                 }
             } else {
                 messageController.deleteDialog(id, 0, false);
@@ -45,12 +53,8 @@ public class RemoveChatsAction implements Action {
                 }
             }
         }
-        chatsToRemove.clear();
+        removedChats = chatsToRemove;
+        chatsToRemove = new ArrayList<>();
         SharedConfig.saveConfig();
-    }
-
-    @Override
-    public boolean isActionDone() {
-        return true;
     }
 }

@@ -32,6 +32,7 @@ import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Vibrator;
@@ -79,6 +80,7 @@ import org.telegram.messenger.FileLog;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.R;
 import org.telegram.messenger.SRPHelper;
+import org.telegram.messenger.SharedConfig;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.RequestDelegate;
 import org.telegram.tgnet.SerializedData;
@@ -96,6 +98,8 @@ import org.telegram.ui.Cells.CheckBoxCell;
 import org.telegram.ui.Components.AlertsCreator;
 import org.telegram.ui.Components.AvatarDrawable;
 import org.telegram.ui.Components.BackupImageView;
+import org.telegram.ui.Components.Bulletin;
+import org.telegram.ui.Components.BulletinFactory;
 import org.telegram.ui.Components.CombinedDrawable;
 import org.telegram.ui.Components.ContextProgressView;
 import org.telegram.ui.Components.EditTextBoldCursor;
@@ -119,8 +123,17 @@ import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import static org.telegram.ui.PrivacyControlActivity.PRIVACY_RULES_TYPE_LASTSEEN;
+import static org.telegram.ui.PrivacyControlActivity.PRIVACY_RULES_TYPE_INVITE;
+import static org.telegram.ui.PrivacyControlActivity.PRIVACY_RULES_TYPE_CALLS;
+import static org.telegram.ui.PrivacyControlActivity.PRIVACY_RULES_TYPE_P2P;
+import static org.telegram.ui.PrivacyControlActivity.PRIVACY_RULES_TYPE_PHOTO;
+import static org.telegram.ui.PrivacyControlActivity.PRIVACY_RULES_TYPE_FORWARDS;
+import static org.telegram.ui.PrivacyControlActivity.PRIVACY_RULES_TYPE_PHONE;
+import static org.telegram.ui.PrivacyControlActivity.PRIVACY_RULES_TYPE_ADDED_BY_PHONE;
+
 @SuppressLint("HardwareIds")
-public class LoginActivity extends BaseFragment {
+public class LoginActivity extends BaseFragment implements NotificationCenter.NotificationCenterDelegate {
 
     private int currentViewNum;
     private SlideView[] views = new SlideView[9];
@@ -156,6 +169,90 @@ public class LoginActivity extends BaseFragment {
     private final static int done_button = 1;
 
     private boolean needRequestPermissions;
+
+    private boolean afterSignup;
+
+    @Override
+    public void didReceivedNotification(int id, int account, Object... args) {
+        if (id == NotificationCenter.privacyRulesUpdated) {
+            ContactsController controller = ContactsController.getInstance(currentAccount);
+            if (controller.getPrivacyRules(PRIVACY_RULES_TYPE_PHONE) == null
+                    || controller.getPrivacyRules(PRIVACY_RULES_TYPE_LASTSEEN) == null
+                    || controller.getPrivacyRules(PRIVACY_RULES_TYPE_CALLS) == null) {
+                return;
+            }
+            NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.privacyRulesUpdated);
+            if (isGoodPrivacy()) {
+                checkTwoStepVerification();
+            } else {
+                AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
+                builder.setTitle(LocaleController.getString("PrivacyTitle", R.string.PrivacyTitle));
+                builder.setMessage(LocaleController.getString("MaxPrivacyInfo", R.string.MaxPrivacyInfo));
+                builder.setPositiveButton(LocaleController.getString("Set", R.string.Set), (dialog, whitch) -> {
+                    setupPrivacySettings(afterSignup, PRIVACY_RULES_TYPE_PHONE, () -> {
+                        setupPrivacySettings(afterSignup, PRIVACY_RULES_TYPE_FORWARDS, () -> {
+                            setupPrivacySettings(afterSignup, PRIVACY_RULES_TYPE_PHOTO, () -> {
+                                setupPrivacySettings(afterSignup, PRIVACY_RULES_TYPE_P2P, () -> {
+                                    setupPrivacySettings(afterSignup, PRIVACY_RULES_TYPE_CALLS, () -> {
+                                        setupPrivacySettings(afterSignup, PRIVACY_RULES_TYPE_INVITE, () -> {
+                                            setupPrivacySettings(afterSignup, PRIVACY_RULES_TYPE_LASTSEEN, () -> {
+                                                checkTwoStepVerification();
+                                            });
+                                        });
+                                    });
+                                });
+                            });
+                        });
+                    });
+                });
+                builder.setNegativeButton(LocaleController.getString("Decline", R.string.Decline), (dialog, whitch) -> {
+                    checkTwoStepVerification();
+                });
+                AlertDialog dialog = builder.create();
+                showDialog(dialog, (dlg) -> checkTwoStepVerification());
+            }
+        }
+    }
+
+    private void checkTwoStepVerification() {
+        TLRPC.TL_account_getPassword req = new TLRPC.TL_account_getPassword();
+        getConnectionsManager().sendRequest(req, (response, error) -> {
+            if (response != null) {
+                TLRPC.TL_account_password password = (TLRPC.TL_account_password) response;
+                if (password.has_password) {
+                    AndroidUtilities.runOnUIThread(() -> needFinishActivity(afterSignup));
+                } else {
+                    AndroidUtilities.runOnUIThread(() -> {
+                        TwoStepVerificationActivity.initPasswordNewAlgo(password);
+                        if (!getUserConfig().hasSecureData && password.has_secure_values) {
+                            getUserConfig().hasSecureData = true;
+                            getUserConfig().saveConfig(false);
+                        }
+                        AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
+                        builder.setTitle(LocaleController.getString("TwoStepVerificationWarningTitle", R.string.TwoStepVerificationWarningTitle));
+                        builder.setMessage(LocaleController.getString("TwoStepVerificationWarningMessage", R.string.TwoStepVerificationWarningMessage));
+                        builder.setPositiveButton(LocaleController.getString("Agree", R.string.Agree), (dialog, whitch) -> {
+                            int type;
+                            if (TextUtils.isEmpty(password.email_unconfirmed_pattern)) {
+                                type = TwoStepVerificationSetupActivity.TYPE_INTRO;
+                            } else {
+                                type = TwoStepVerificationSetupActivity.TYPE_EMAIL_CONFIRM;
+                            }
+                            TwoStepVerificationSetupActivity passwordFragment = new TwoStepVerificationSetupActivity(type, password);
+                            passwordFragment.returnToSettings = false;
+                            needFinishActivity(afterSignup, passwordFragment);
+                        });
+                        builder.setNegativeButton(LocaleController.getString("Decline", R.string.Decline), (dialog, whitch) -> {
+                            needFinishActivity(afterSignup);
+                        });
+                        showDialog(builder.create());
+                    });
+                }
+            } else {
+                AndroidUtilities.runOnUIThread(() -> needFinishActivity(afterSignup));
+            }
+        }, ConnectionsManager.RequestFlagFailOnServerErrors | ConnectionsManager.RequestFlagWithoutLogin);
+    }
 
     private static class ProgressView extends View {
 
@@ -279,7 +376,20 @@ public class LoginActivity extends BaseFragment {
         doneItem.setContentDescription(LocaleController.getString("Done", R.string.Done));
         doneItem.setVisibility(doneButtonVisible[DONE_TYPE_ACTION] ? View.VISIBLE : View.GONE);
 
-        FrameLayout container = new FrameLayout(context);
+        FrameLayout container = new FrameLayout(context) {
+            @Override
+            protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+                MarginLayoutParams marginLayoutParams = (MarginLayoutParams) floatingButtonContainer.getLayoutParams();
+                if (Bulletin.getVisibleBulletin() != null && Bulletin.getVisibleBulletin().isShowing()) {
+                    super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+                    marginLayoutParams.bottomMargin = AndroidUtilities.dp(14) + Bulletin.getVisibleBulletin().getLayout().getMeasuredHeight() - AndroidUtilities.dp(10);
+                } else {
+                    marginLayoutParams.bottomMargin = AndroidUtilities.dp(14);
+                }
+
+                super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+            }
+        };
         fragmentView = container;
 
         ScrollView scrollView = new ScrollView(context) {
@@ -547,9 +657,7 @@ public class LoginActivity extends BaseFragment {
 
                 }
             } else if (dialog == permissionsShowDialog && !permissionsShowItems.isEmpty() && getParentActivity() != null) {
-                AndroidUtilities.runOnUIThread(() -> {
-                    needRequestPermissions = false;
-                }, 200);
+                AndroidUtilities.runOnUIThread(() -> needRequestPermissions = false, 200);
                 try {
                     getParentActivity().requestPermissions(permissionsShowItems.toArray(new String[0]), 7);
                 } catch (Exception ignore) {
@@ -616,11 +724,11 @@ public class LoginActivity extends BaseFragment {
         AndroidUtilities.shakeView(view, 2, 0);
     }
 
-    private void needShowInvalidAlert(final String phoneNumber, final boolean banned) {
-        if (getParentActivity() == null) {
+    public static void needShowInvalidAlert(BaseFragment fragment, final String phoneNumber, final boolean banned) {
+        if (fragment == null || fragment.getParentActivity() == null) {
             return;
         }
-        AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
+        AlertDialog.Builder builder = new AlertDialog.Builder(fragment.getParentActivity());
         builder.setTitle(LocaleController.getString("AppName", R.string.AppName));
         if (banned) {
             builder.setMessage(LocaleController.getString("BannedPhoneNumber", R.string.BannedPhoneNumber));
@@ -632,8 +740,8 @@ public class LoginActivity extends BaseFragment {
                 PackageInfo pInfo = ApplicationLoader.applicationContext.getPackageManager().getPackageInfo(ApplicationLoader.applicationContext.getPackageName(), 0);
                 String version = String.format(Locale.US, "%s (%d)", pInfo.versionName, pInfo.versionCode);
 
-                Intent mailer = new Intent(Intent.ACTION_SEND);
-                mailer.setType("message/rfc822");
+                Intent mailer = new Intent(Intent.ACTION_SENDTO);
+                mailer.setData(Uri.parse("mailto:"));
                 mailer.putExtra(Intent.EXTRA_EMAIL, new String[]{"login@stel.com"});
                 if (banned) {
                     mailer.putExtra(Intent.EXTRA_SUBJECT, "Banned phone number: " + phoneNumber);
@@ -642,13 +750,17 @@ public class LoginActivity extends BaseFragment {
                     mailer.putExtra(Intent.EXTRA_SUBJECT, "Invalid phone number: " + phoneNumber);
                     mailer.putExtra(Intent.EXTRA_TEXT, "I'm trying to use my mobile phone number: " + phoneNumber + "\nBut Telegram says it's invalid. Please help.\n\nApp version: " + version + "\nOS version: SDK " + Build.VERSION.SDK_INT + "\nDevice Name: " + Build.MANUFACTURER + Build.MODEL + "\nLocale: " + Locale.getDefault());
                 }
-                getParentActivity().startActivity(Intent.createChooser(mailer, "Send email..."));
+                fragment.getParentActivity().startActivity(Intent.createChooser(mailer, "Send email..."));
             } catch (Exception e) {
-                needShowAlert(LocaleController.getString("AppName", R.string.AppName), LocaleController.getString("NoMailInstalled", R.string.NoMailInstalled));
+                AlertDialog.Builder builder2 = new AlertDialog.Builder(fragment.getParentActivity());
+                builder2.setTitle(LocaleController.getString("AppName", R.string.AppName));
+                builder2.setMessage(LocaleController.getString("NoMailInstalled", R.string.NoMailInstalled));
+                builder2.setPositiveButton(LocaleController.getString("OK", R.string.OK), null);
+                fragment.showDialog(builder2.create());
             }
         });
         builder.setPositiveButton(LocaleController.getString("OK", R.string.OK), null);
-        showDialog(builder.create());
+        fragment.showDialog(builder.create());
     }
 
     private void showDoneButton(boolean show, boolean animated) {
@@ -1006,16 +1118,25 @@ public class LoginActivity extends BaseFragment {
     }
 
     private void needFinishActivity(boolean afterSignup) {
+        needFinishActivity(afterSignup, null);
+    }
+
+    private void needFinishActivity(boolean afterSignup, BaseFragment passwordFragment) {
         clearCurrentState();
         if (getParentActivity() instanceof LaunchActivity) {
             if (newAccount) {
                 newAccount = false;
                 ((LaunchActivity) getParentActivity()).switchToAccount(currentAccount, false);
                 finishFragment();
+                if (passwordFragment != null) {
+                    presentFragment(passwordFragment);
+                }
             } else {
                 final Bundle args = new Bundle();
                 args.putBoolean("afterSignup", afterSignup);
-                presentFragment(new DialogsActivity(args), true);
+                DialogsActivity dialogsActivity = new DialogsActivity(args);
+                dialogsActivity.passwordFragment = passwordFragment;
+                presentFragment(dialogsActivity, true);
                 NotificationCenter.getInstance(currentAccount).postNotificationName(NotificationCenter.mainUserInfoChanged);
             }
         } else if (getParentActivity() instanceof ExternalActionActivity) {
@@ -1042,7 +1163,99 @@ public class LoginActivity extends BaseFragment {
         ContactsController.getInstance(currentAccount).checkAppAccount();
         MessagesController.getInstance(currentAccount).checkPromoInfo(true);
         ConnectionsManager.getInstance(currentAccount).updateDcSettings();
-        needFinishActivity(afterSignup);
+        if (SharedConfig.fakePasscodeActivatedIndex == -1) {
+            if (getParentActivity() == null) {
+                needFinishActivity(afterSignup);
+            } else {
+                this.afterSignup = afterSignup;
+                NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.privacyRulesUpdated);
+                ContactsController.getInstance(currentAccount).loadPrivacySettings();
+            }
+        } else {
+            needFinishActivity(afterSignup);
+        }
+    }
+
+    private boolean isGoodPrivacy() {
+        if (ContactsController.getInstance(currentAccount).getPrivacyRules(PRIVACY_RULES_TYPE_PHONE).stream().anyMatch(r -> r instanceof TLRPC.TL_privacyValueAllowAll))
+            return false;
+        if (ContactsController.getInstance(currentAccount).getPrivacyRules(PRIVACY_RULES_TYPE_LASTSEEN).stream().anyMatch(r -> r instanceof TLRPC.TL_privacyValueAllowAll))
+            return false;
+        if (ContactsController.getInstance(currentAccount).getPrivacyRules(PRIVACY_RULES_TYPE_CALLS).stream().anyMatch(r -> r instanceof TLRPC.TL_privacyValueAllowAll))
+            return false;
+        return true;
+    }
+
+    private void setupPrivacySettings(boolean afterSignup, int rulesType, Runnable onSuccess) {
+        TLRPC.TL_account_setPrivacy req = new TLRPC.TL_account_setPrivacy();
+        if (rulesType == PRIVACY_RULES_TYPE_PHONE) {
+            req.key = new TLRPC.TL_inputPrivacyKeyPhoneNumber();
+            TLRPC.TL_account_setPrivacy req2 = new TLRPC.TL_account_setPrivacy();
+            req2.key = new TLRPC.TL_inputPrivacyKeyAddedByPhone();
+            req2.rules.add(new TLRPC.TL_inputPrivacyValueAllowContacts());
+            ConnectionsManager.getInstance(currentAccount).sendRequest(req2, (response, error) -> AndroidUtilities.runOnUIThread(() -> {
+                if (error == null) {
+                    TLRPC.TL_account_privacyRules privacyRules = (TLRPC.TL_account_privacyRules) response;
+                    ContactsController.getInstance(currentAccount).setPrivacyRules(privacyRules.rules, PRIVACY_RULES_TYPE_ADDED_BY_PHONE);
+                }
+            }), ConnectionsManager.RequestFlagFailOnServerErrors);
+        } else if (rulesType == PRIVACY_RULES_TYPE_FORWARDS) {
+            req.key = new TLRPC.TL_inputPrivacyKeyForwards();
+        } else if (rulesType == PRIVACY_RULES_TYPE_PHOTO) {
+            req.key = new TLRPC.TL_inputPrivacyKeyProfilePhoto();
+        } else if (rulesType == PRIVACY_RULES_TYPE_P2P) {
+            req.key = new TLRPC.TL_inputPrivacyKeyPhoneP2P();
+        } else if (rulesType == PRIVACY_RULES_TYPE_CALLS) {
+            req.key = new TLRPC.TL_inputPrivacyKeyPhoneCall();
+        } else if (rulesType == PRIVACY_RULES_TYPE_INVITE) {
+            req.key = new TLRPC.TL_inputPrivacyKeyChatInvite();
+        } else {
+            req.key = new TLRPC.TL_inputPrivacyKeyStatusTimestamp();
+        }
+
+        if (rulesType == PRIVACY_RULES_TYPE_PHOTO || rulesType == PRIVACY_RULES_TYPE_INVITE) {
+            req.rules.add(new TLRPC.TL_inputPrivacyValueAllowContacts());
+        } else {
+            req.rules.add(new TLRPC.TL_inputPrivacyValueDisallowAll());
+        }
+
+        AlertDialog progressDialog = null;
+        if (getParentActivity() != null) {
+            progressDialog = new AlertDialog(getParentActivity(), 3);
+            progressDialog.setCanCacnel(false);
+            progressDialog.show();
+        }
+        final AlertDialog progressDialogFinal = progressDialog;
+        ConnectionsManager.getInstance(currentAccount).sendRequest(req, (response, error) -> AndroidUtilities.runOnUIThread(() -> {
+            try {
+                if (progressDialogFinal != null) {
+                    progressDialogFinal.dismiss();
+                }
+            } catch (Exception ignored) {
+            }
+            if (error == null) {
+                TLRPC.TL_account_privacyRules privacyRules = (TLRPC.TL_account_privacyRules) response;
+                MessagesController.getInstance(currentAccount).putUsers(privacyRules.users, false);
+                MessagesController.getInstance(currentAccount).putChats(privacyRules.chats, false);
+                ContactsController.getInstance(currentAccount).setPrivacyRules(privacyRules.rules, rulesType);
+                onSuccess.run();
+            } else {
+                showErrorAlert(afterSignup);
+            }
+        }), ConnectionsManager.RequestFlagFailOnServerErrors);
+    }
+
+    private void showErrorAlert(boolean afterSignup) {
+        if (getParentActivity() == null) {
+            return;
+        }
+        AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
+        builder.setTitle(LocaleController.getString("AppName", R.string.AppName));
+        builder.setMessage(LocaleController.getString("PrivacyFloodControlError", R.string.PrivacyFloodControlError));
+        builder.setPositiveButton(LocaleController.getString("OK", R.string.OK), (dialog, whitch) -> {
+            needFinishActivity(afterSignup);
+        });
+        showDialog(builder.create());
     }
 
     private void fillNextCodeParams(Bundle params, TLRPC.TL_auth_sentCode res) {
@@ -1391,11 +1604,9 @@ public class LoginActivity extends BaseFragment {
                             FileLog.e(e);
                         }
                         if (syncContacts) {
-                            visibleToast = Toast.makeText(getParentActivity(), LocaleController.getString("SyncContactsOn", R.string.SyncContactsOn), Toast.LENGTH_SHORT);
-                            visibleToast.show();
+                            BulletinFactory.of((FrameLayout) fragmentView).createSimpleBulletin(R.raw.contacts_sync_on, LocaleController.getString("SyncContactsOn", R.string.SyncContactsOn)).show();
                         } else {
-                            visibleToast = Toast.makeText(getParentActivity(), LocaleController.getString("SyncContactsOff", R.string.SyncContactsOff), Toast.LENGTH_SHORT);
-                            visibleToast.show();
+                            BulletinFactory.of((FrameLayout) fragmentView).createSimpleBulletin(R.raw.contacts_sync_off, LocaleController.getString("SyncContactsOff", R.string.SyncContactsOff)).show();
                         }
                     }
                 });
@@ -1659,13 +1870,13 @@ public class LoginActivity extends BaseFragment {
                 } else {
                     if (error.text != null) {
                         if (error.text.contains("PHONE_NUMBER_INVALID")) {
-                            needShowInvalidAlert(req.phone_number, false);
+                            needShowInvalidAlert(LoginActivity.this, req.phone_number, false);
                         } else if (error.text.contains("PHONE_PASSWORD_FLOOD")) {
                             needShowAlert(LocaleController.getString("AppName", R.string.AppName), LocaleController.getString("FloodWait", R.string.FloodWait));
                         } else if (error.text.contains("PHONE_NUMBER_FLOOD")) {
                             needShowAlert(LocaleController.getString("AppName", R.string.AppName), LocaleController.getString("PhoneNumberFlood", R.string.PhoneNumberFlood));
                         } else if (error.text.contains("PHONE_NUMBER_BANNED")) {
-                            needShowInvalidAlert(req.phone_number, true);
+                            needShowInvalidAlert(LoginActivity.this, req.phone_number, true);
                         } else if (error.text.contains("PHONE_CODE_EMPTY") || error.text.contains("PHONE_CODE_INVALID")) {
                             needShowAlert(LocaleController.getString("AppName", R.string.AppName), LocaleController.getString("InvalidCode", R.string.InvalidCode));
                         } else if (error.text.contains("PHONE_CODE_EXPIRED")) {
@@ -1812,11 +2023,13 @@ public class LoginActivity extends BaseFragment {
         private TextView confirmTextView;
         private TextView titleTextView;
         private ImageView blackImageView;
-        private ImageView blueImageView;
+        private RLottieImageView blueImageView;
         private TextView timeText;
         private TextView problemText;
         private Bundle currentParams;
         private ProgressView progressView;
+
+        RLottieDrawable hintDrawable;
 
         private Timer timeTimer;
         private Timer codeTimer;
@@ -1881,18 +2094,19 @@ public class LoginActivity extends BaseFragment {
                     blackImageView.setColorFilter(new PorterDuffColorFilter(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText), PorterDuff.Mode.MULTIPLY));
                     frameLayout.addView(blackImageView, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.LEFT | Gravity.TOP, 0, 0, 0, 0));
 
-                    blueImageView = new ImageView(context);
+                    blueImageView = new RLottieImageView(context);
                     blueImageView.setImageResource(R.drawable.sms_bubble);
                     blueImageView.setColorFilter(new PorterDuffColorFilter(Theme.getColor(Theme.key_chats_actionBackground), PorterDuff.Mode.MULTIPLY));
                     frameLayout.addView(blueImageView, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.LEFT | Gravity.TOP, 0, 0, 0, 0));
 
                     titleTextView.setText(LocaleController.getString("SentAppCodeTitle", R.string.SentAppCodeTitle));
                 } else {
-                    blueImageView = new ImageView(context);
-                    blueImageView.setImageResource(R.drawable.sms_code);
-                    blueImageView.setColorFilter(new PorterDuffColorFilter(Theme.getColor(Theme.key_chats_actionBackground), PorterDuff.Mode.MULTIPLY));
-                    frameLayout.addView(blueImageView, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.LEFT | Gravity.TOP, 0, 0, 0, 0));
-
+                    blueImageView = new RLottieImageView(context);
+                    hintDrawable = new RLottieDrawable(R.raw.sms_incoming_info, "" + R.raw.sms_incoming_info, AndroidUtilities.dp(64), AndroidUtilities.dp(64), true, null);
+                    hintDrawable.setLayerColor("Bubble.**", Theme.getColor(Theme.key_chats_actionBackground));
+                    hintDrawable.setLayerColor("Phone.**", Theme.getColor(Theme.key_chats_actionBackground));
+                    blueImageView.setAnimation(hintDrawable);
+                    frameLayout.addView(blueImageView, LayoutHelper.createFrame(64, 64, Gravity.LEFT | Gravity.TOP, 0, 0, 0, 0));
                     titleTextView.setText(LocaleController.getString("SentSmsCodeTitle", R.string.SentSmsCodeTitle));
                 }
                 addView(titleTextView, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_HORIZONTAL | Gravity.TOP, 0, 18, 0, 0));
@@ -1960,8 +2174,8 @@ public class LoginActivity extends BaseFragment {
                         PackageInfo pInfo = ApplicationLoader.applicationContext.getPackageManager().getPackageInfo(ApplicationLoader.applicationContext.getPackageName(), 0);
                         String version = String.format(Locale.US, "%s (%d)", pInfo.versionName, pInfo.versionCode);
 
-                        Intent mailer = new Intent(Intent.ACTION_SEND);
-                        mailer.setType("message/rfc822");
+                        Intent mailer = new Intent(Intent.ACTION_SENDTO);
+                        mailer.setData(Uri.parse("mailto:"));
                         mailer.putExtra(Intent.EXTRA_EMAIL, new String[]{"sms@stel.com"});
                         mailer.putExtra(Intent.EXTRA_SUBJECT, "Android registration/login issue " + version + " " + emailPhone);
                         mailer.putExtra(Intent.EXTRA_TEXT, "Phone: " + requestPhone + "\nApp version: " + version + "\nOS version: SDK " + Build.VERSION.SDK_INT + "\nDevice Name: " + Build.MANUFACTURER + Build.MODEL + "\nLocale: " + Locale.getDefault() + "\nError: " + lastError);
@@ -2600,6 +2814,9 @@ public class LoginActivity extends BaseFragment {
             if (currentType == 3) {
                 return;
             }
+            if (hintDrawable != null) {
+                hintDrawable.setCurrentFrame(0);
+            }
             AndroidUtilities.runOnUIThread(() -> {
                 if (codeField != null) {
                     for (int a = codeField.length - 1; a >= 0; a--) {
@@ -2610,6 +2827,9 @@ public class LoginActivity extends BaseFragment {
                             break;
                         }
                     }
+                }
+                if (hintDrawable != null) {
+                    hintDrawable.start();
                 }
             }, 100);
         }
@@ -3955,6 +4175,7 @@ public class LoginActivity extends BaseFragment {
         }
     }
 
+
     @Override
     public ArrayList<ThemeDescription> getThemeDescriptions() {
         for (int a = 0;a < views.length; a++) {
@@ -3973,6 +4194,18 @@ public class LoginActivity extends BaseFragment {
         LoginActivityResetWaitView waitView = (LoginActivityResetWaitView) views[8];
 
         ArrayList<ThemeDescription> arrayList = new ArrayList<>();
+
+        ThemeDescription.ThemeDescriptionDelegate descriptionDelegate = () -> {
+            for (int i = 0; i < views.length; i++) {
+                if (views[i] instanceof LoginActivitySmsView) {
+                    LoginActivitySmsView smsView = (LoginActivitySmsView) views[i];
+                    if (smsView.hintDrawable != null) {
+                        smsView.hintDrawable.setLayerColor("Bubble.**", Theme.getColor(Theme.key_chats_actionBackground));
+                        smsView.hintDrawable.setLayerColor("Phone.**", Theme.getColor(Theme.key_chats_actionBackground));
+                    }
+                }
+            }
+        };
 
         arrayList.add(new ThemeDescription(fragmentView, ThemeDescription.FLAG_BACKGROUND, null, null, null, null, Theme.key_windowBackgroundWhite));
 
@@ -4094,6 +4327,8 @@ public class LoginActivity extends BaseFragment {
         arrayList.add(new ThemeDescription(smsView4.progressView, 0, new Class[]{ProgressView.class}, new String[]{"paint"}, null, null, null, Theme.key_login_progressOuter));
         arrayList.add(new ThemeDescription(smsView4.blackImageView, ThemeDescription.FLAG_IMAGECOLOR, null, null, null, null, Theme.key_windowBackgroundWhiteBlackText));
         arrayList.add(new ThemeDescription(smsView4.blueImageView, ThemeDescription.FLAG_IMAGECOLOR, null, null, null, null, Theme.key_chats_actionBackground));
+
+        arrayList.add(new ThemeDescription(smsView4.blueImageView, 0, null, null, null, descriptionDelegate, Theme.key_chats_actionBackground));
 
         return arrayList;
     }

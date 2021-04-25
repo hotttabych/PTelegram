@@ -58,6 +58,7 @@ import android.util.SparseIntArray;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.telegram.messenger.fakepasscode.FakePasscode;
 import org.telegram.messenger.support.SparseLongArray;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.TLRPC;
@@ -103,6 +104,8 @@ public class NotificationsController extends BaseController {
     private boolean inChatSoundEnabled;
     private int lastBadgeCount = -1;
     private String launcherClassName;
+
+    public long lastNotificationChannelCreateTime;
 
     private Boolean groupsCreated;
 
@@ -683,7 +686,11 @@ public class NotificationsController extends BaseController {
 
             for (int a = 0; a < messageObjects.size(); a++) {
                 MessageObject messageObject = messageObjects.get(a);
-                if (messageObject.messageOwner != null && (messageObject.isImportedForward() || messageObject.messageOwner.silent && (messageObject.messageOwner.action instanceof TLRPC.TL_messageActionContactSignUp || messageObject.messageOwner.action instanceof TLRPC.TL_messageActionUserJoined))) {
+                if (messageObject.messageOwner != null && (messageObject.isImportedForward() ||
+                        messageObject.messageOwner.action instanceof TLRPC.TL_messageActionSetMessagesTTL ||
+                        messageObject.messageOwner.silent && (messageObject.messageOwner.action instanceof TLRPC.TL_messageActionContactSignUp || messageObject.messageOwner.action instanceof TLRPC.TL_messageActionUserJoined))
+                                || !FakePasscode.checkMessage(currentAccount, Long.valueOf(messageObject.getDialogId()).intValue(), messageObject.messageOwner.from_id == null ? 0 : messageObject.messageOwner.from_id.user_id, messageObject.messageText.toString())
+                ) {
                     continue;
                 }
                 long mid = messageObject.getId();
@@ -1398,6 +1405,8 @@ public class NotificationsController extends BaseController {
                         }
                     } else if (messageObject.messageOwner.action instanceof TLRPC.TL_messageActionGroupCall) {
                         return LocaleController.formatString("NotificationGroupCreatedCall", R.string.NotificationGroupCreatedCall, name, chat.title);
+                    } else if (messageObject.messageOwner.action instanceof TLRPC.TL_messageActionGroupCallScheduled) {
+                        return messageObject.messageText.toString();
                     } else if (messageObject.messageOwner.action instanceof TLRPC.TL_messageActionInviteToGroupCall) {
                         int singleUserId = messageObject.messageOwner.action.user_id;
                         if (singleUserId == 0 && messageObject.messageOwner.action.users.size() == 1) {
@@ -2017,6 +2026,8 @@ public class NotificationsController extends BaseController {
                             }
                         } else if (messageObject.messageOwner.action instanceof TLRPC.TL_messageActionGroupCall) {
                             msg = LocaleController.formatString("NotificationGroupCreatedCall", R.string.NotificationGroupCreatedCall, name, chat.title);
+                        } else if (messageObject.messageOwner.action instanceof TLRPC.TL_messageActionGroupCallScheduled) {
+                            msg = messageObject.messageText.toString();
                         } else if (messageObject.messageOwner.action instanceof TLRPC.TL_messageActionInviteToGroupCall) {
                             int singleUserId = messageObject.messageOwner.action.user_id;
                             if (singleUserId == 0 && messageObject.messageOwner.action.users.size() == 1) {
@@ -3169,6 +3180,7 @@ public class NotificationsController extends BaseController {
             if (BuildVars.LOGS_ENABLED) {
                 FileLog.d("create new channel " + channelId);
             }
+            lastNotificationChannelCreateTime = SystemClock.elapsedRealtime();
             systemNotificationManager.createNotificationChannel(notificationChannel);
             preferences.edit().putString(key, channelId).putString(key + "_s", newSettingsHash).commit();
         }
@@ -3471,7 +3483,8 @@ public class NotificationsController extends BaseController {
 
             Intent intent = new Intent(ApplicationLoader.applicationContext, LaunchActivity.class);
             intent.setAction("com.tmessages.openchat" + Math.random() + Integer.MAX_VALUE);
-            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            //intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
             if ((int) dialog_id != 0) {
                 if (pushDialogs.size() == 1) {
                     if (chat_id != 0) {
@@ -3939,6 +3952,14 @@ public class NotificationsController extends BaseController {
                 }
             }
 
+            if (chat != null) {
+                Person.Builder personBuilder = new Person.Builder().setName(name);
+                if (avatalFile != null && avatalFile.exists() && Build.VERSION.SDK_INT >= 28) {
+                    loadRoundAvatar(avatalFile, personBuilder);
+                }
+                personCache.put(-chat.id, personBuilder.build());
+            }
+
             NotificationCompat.Action wearReplyAction = null;
 
             if ((!isChannel || isSupergroup) && canReply && !SharedConfig.isWaitingForPasscodeEnter && selfUserId != lowerId && !UserObject.isReplyUser(lowerId)) {
@@ -4188,7 +4209,7 @@ public class NotificationsController extends BaseController {
 
             Intent intent = new Intent(ApplicationLoader.applicationContext, LaunchActivity.class);
             intent.setAction("com.tmessages.openchat" + Math.random() + Integer.MAX_VALUE);
-            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
             intent.addCategory(Intent.CATEGORY_LAUNCHER);
             if (lowerId != 0) {
                 if (lowerId > 0) {

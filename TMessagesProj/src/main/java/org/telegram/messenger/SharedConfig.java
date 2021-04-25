@@ -21,21 +21,27 @@ import android.util.SparseArray;
 
 import org.json.JSONObject;
 import org.telegram.messenger.fakepasscode.FakePasscode;
+import org.telegram.messenger.fakepasscode.LogOutAction;
+import org.telegram.messenger.fakepasscode.RemoveChatsAction;
+import org.telegram.messenger.fakepasscode.TerminateOtherSessionsAction;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.SerializedData;
+import org.telegram.ui.SwipeGestureSettingsView;
 
 import java.io.File;
 import java.io.RandomAccessFile;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 import androidx.core.content.pm.ShortcutManagerCompat;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 public class SharedConfig {
 
@@ -50,6 +56,8 @@ public class SharedConfig {
     public static String passcodeHash = "";
     public static long passcodeRetryInMs;
     public static long lastUptimeMillis;
+    public static boolean bruteForceProtectionEnabled = true;
+    public static long bruteForceRetryInMillis = 0;
     public static int badPasscodeTries;
     public static byte[] passcodeSalt = new byte[0];
     public static boolean appLocked;
@@ -71,6 +79,7 @@ public class SharedConfig {
     public static boolean searchMessagesAsListUsed;
     public static boolean stickersReorderingHintUsed;
     public static boolean disableVoiceAudioEffects;
+    public static boolean useMediaStream;
     private static int lastLocalId = -210000;
 
     public static String storageCacheDir;
@@ -119,9 +128,39 @@ public class SharedConfig {
     public static boolean useThreeLinesLayout;
     public static boolean archiveHidden;
 
+    private static int chatSwipeAction;
+
     public static int distanceSystemType;
 
+    public static List<BadPasscodeAttempt> badPasscodeAttemptList = new ArrayList<>();
+    private static class BadPasscodeAttemptWrapper {
+        public List<BadPasscodeAttempt> badTries;
+        public BadPasscodeAttemptWrapper(List<BadPasscodeAttempt> badTries) {
+            this.badTries = badTries;
+        }
+        public BadPasscodeAttemptWrapper() {}
+    }
+
+    public static class AccountChatsToRemove {
+        public ArrayList<Integer> chatsToRemove = new ArrayList<>();
+        public int accountNum = 0;
+
+        static AccountChatsToRemove deserialize(String str) {
+            ArrayList<Integer> ints = Arrays.stream(str.split(",")).filter(s -> !s.isEmpty())
+                    .map(Integer::parseInt).collect(Collectors.toCollection(ArrayList::new));
+            if (ints.isEmpty()) {
+                return null;
+            }
+            AccountChatsToRemove result = new AccountChatsToRemove();
+            result.accountNum = ints.get(ints.size() - 1);
+            ints.remove(ints.size() - 1);
+            result.chatsToRemove = ints;
+            return result;
+        }
+    }
+
     public static int fakePasscodeIndex = 1;
+    public static int fakePasscodeActivatedIndex = -1;
     public static List<FakePasscode> fakePasscodes = new ArrayList<>();
     private static class FakePasscodesWrapper {
         public List<FakePasscode> fakePasscodes;
@@ -188,6 +227,20 @@ public class SharedConfig {
         }
     }
 
+    static private String toJson(Object o) throws Exception {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JavaTimeModule());
+        mapper.enableDefaultTyping();
+        return mapper.writeValueAsString(o);
+    }
+
+    static public <T> T fromJson(String content, Class<T> valueType) throws Exception {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JavaTimeModule());
+        mapper.enableDefaultTyping();
+        return mapper.readValue(content, valueType);
+    }
+
     public static void saveConfig() {
         synchronized (sync) {
             try {
@@ -200,6 +253,8 @@ public class SharedConfig {
                 editor.putInt("passcodeType", passcodeType);
                 editor.putLong("passcodeRetryInMs", passcodeRetryInMs);
                 editor.putLong("lastUptimeMillis", lastUptimeMillis);
+                editor.putBoolean("bruteForceProtectionEnabled", bruteForceProtectionEnabled);
+                editor.putLong("bruteForceRetryInMillis", bruteForceRetryInMillis);
                 editor.putInt("badPasscodeTries", badPasscodeTries);
                 editor.putInt("autoLockIn", autoLockIn);
                 editor.putInt("lastPauseTime", lastPauseTime);
@@ -219,11 +274,9 @@ public class SharedConfig {
                 editor.putBoolean("disableVoiceAudioEffects", disableVoiceAudioEffects);
                 editor.putString("storageCacheDir", !TextUtils.isEmpty(storageCacheDir) ? storageCacheDir : "");
                 editor.putInt("fakePasscodeIndex", fakePasscodeIndex);
-                ObjectMapper mapper = new ObjectMapper();
-                mapper.enableDefaultTyping();
-                FakePasscodesWrapper wrapper = new FakePasscodesWrapper(fakePasscodes);
-                String fakePasscodesString = mapper.writeValueAsString(wrapper);
-                editor.putString("fakePasscodes", fakePasscodesString);
+                editor.putInt("fakePasscodeLoginedIndex", fakePasscodeActivatedIndex);
+                editor.putString("fakePasscodes", toJson(new FakePasscodesWrapper(fakePasscodes)));
+                editor.putString("badPasscodeAttemptList", toJson(new BadPasscodeAttemptWrapper(badPasscodeAttemptList)));
                 editor.commit();
             } catch (Exception e) {
                 FileLog.e(e);
@@ -239,6 +292,54 @@ public class SharedConfig {
         return value;
     }
 
+    private static void migrateFakePasscode() {
+        SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences("userconfing", Context.MODE_PRIVATE);
+        String fakePasscodeHash = preferences.getString("fakePasscodeHash", "");
+        boolean hasNonJsonPasscode = !fakePasscodeHash.isEmpty();
+
+        if (hasNonJsonPasscode)
+        {
+            FakePasscode fakePasscode = new FakePasscode();
+            fakePasscode.name = LocaleController.getString("FakePasscode", R.string.FakePasscode) + " " + SharedConfig.fakePasscodeIndex;
+            SharedConfig.fakePasscodeIndex++;
+            fakePasscode.passcodeHash = fakePasscodeHash;
+            fakePasscode.allowLogin = preferences.getBoolean("allowFakePasscodeLogin", true);
+            fakePasscode.clearCacheAction.enabled = preferences.getBoolean("clearTelegramCacheOnFakeLogin", true);
+            fakePasscode.removeChatsActions = Arrays.stream(preferences.getString("chatsToRemove", "").split(";"))
+                    .filter(s -> !s.isEmpty()).map(AccountChatsToRemove::deserialize).filter(Objects::nonNull)
+                    .map(a -> new RemoveChatsAction(a.accountNum, a.chatsToRemove)).collect(Collectors.toCollection(ArrayList::new));
+            fakePasscode.trustedContactSosMessageAction.enabled = preferences.getBoolean("sosMessageEnabled", false);
+            fakePasscode.trustedContactSosMessageAction.message = preferences.getString("sosMessage", "");
+            fakePasscode.trustedContactSosMessageAction.phoneNumber = preferences.getString("sosPhoneNumber", "");
+            fakePasscode.terminateOtherSessionsActions = Arrays.stream(preferences.getString("accountsForCloseSessionsOnFakeLogin", "").split(","))
+                    .filter(s -> !s.isEmpty()).map(Integer::parseInt).map(TerminateOtherSessionsAction::new).collect(Collectors.toCollection(ArrayList::new));
+            fakePasscode.logOutActions = Arrays.stream(preferences.getString("accountsForLogOutOnFakeLogin", "").split(","))
+                    .filter(s -> !s.isEmpty()).map(Integer::parseInt).map(LogOutAction::new).collect(Collectors.toCollection(ArrayList::new));
+            fakePasscodes.add(fakePasscode);
+        }
+        for (FakePasscode p: fakePasscodes) {
+            p.migrate();
+        }
+        SharedPreferences.Editor editor = preferences.edit();
+        try {
+            editor.putString("fakePasscodes", toJson(new FakePasscodesWrapper(fakePasscodes)));
+        } catch (Exception ignored) {
+        }
+        if (hasNonJsonPasscode) {
+            editor.putInt("fakePasscodeIndex", fakePasscodeIndex);
+            editor.remove("fakePasscodeHash");
+            editor.remove("allowFakePasscodeLogin");
+            editor.remove("clearTelegramCacheOnFakeLogin");
+            editor.remove("chatsToRemove");
+            editor.remove("sosMessageEnabled");
+            editor.remove("sosMessage");
+            editor.remove("sosPhoneNumber");
+            editor.remove("accountsForCloseSessionsOnFakeLogin");
+            editor.remove("accountsForLogOutOnFakeLogin");
+        }
+        editor.commit();
+    }
+
     public static void loadConfig() {
         synchronized (sync) {
             if (configLoaded || ApplicationLoader.applicationContext == null) {
@@ -252,10 +353,12 @@ public class SharedConfig {
             passcodeType = preferences.getInt("passcodeType", 0);
             passcodeRetryInMs = preferences.getLong("passcodeRetryInMs", 0);
             lastUptimeMillis = preferences.getLong("lastUptimeMillis", 0);
+            bruteForceProtectionEnabled = preferences.getBoolean("bruteForceProtectionEnabled", true);
+            bruteForceRetryInMillis = preferences.getLong("bruteForceRetryInMillis", 0);
             badPasscodeTries = preferences.getInt("badPasscodeTries", 0);
             autoLockIn = preferences.getInt("autoLockIn", 60 * 60);
             lastPauseTime = preferences.getInt("lastPauseTime", 0);
-            useFingerprint = preferences.getBoolean("useFingerprint", true);
+            useFingerprint = preferences.getBoolean("useFingerprint", false);
             lastUpdateVersion = preferences.getString("lastUpdateVersion2", "3.5");
             allowScreenCapture = preferences.getBoolean("allowScreenCapture", false);
             lastLocalId = preferences.getInt("lastLocalId", -210000);
@@ -264,12 +367,10 @@ public class SharedConfig {
             passportConfigHash = preferences.getInt("passportConfigHash", 0);
             storageCacheDir = preferences.getString("storageCacheDir", null);
             fakePasscodeIndex = preferences.getInt("fakePasscodeIndex", 1);
+            fakePasscodeActivatedIndex = preferences.getInt("fakePasscodeLoginedIndex", -1);
             try {
-                String fakePasscodesString = preferences.getString("fakePasscodes", null);
-                ObjectMapper mapper = new ObjectMapper();
-                mapper.enableDefaultTyping();
-                FakePasscodesWrapper wrapper = mapper.readValue(fakePasscodesString, FakePasscodesWrapper.class);
-                fakePasscodes = wrapper.fakePasscodes;
+                fakePasscodes = fromJson(preferences.getString("fakePasscodes", null), FakePasscodesWrapper.class).fakePasscodes;
+                badPasscodeAttemptList = fromJson(preferences.getString("badPasscodeAttemptList", null), BadPasscodeAttemptWrapper.class).badTries;
             } catch (Exception ignored) {
             }
 
@@ -334,10 +435,13 @@ public class SharedConfig {
             scheduledOrNoSoundHintShows = preferences.getInt("scheduledOrNoSoundHintShows", 0);
             lockRecordAudioVideoHint = preferences.getInt("lockRecordAudioVideoHint", 0);
             disableVoiceAudioEffects = preferences.getBoolean("disableVoiceAudioEffects", false);
+            chatSwipeAction = preferences.getInt("ChatSwipeAction", -1);
+            useMediaStream = preferences.getBoolean("useMediaStream", false);
             preferences = ApplicationLoader.applicationContext.getSharedPreferences("Notifications", Activity.MODE_PRIVATE);
             showNotificationsForAllAccounts = preferences.getBoolean("AllAccounts", true);
 
             configLoaded = true;
+            migrateFakePasscode();
         }
     }
 
@@ -361,12 +465,23 @@ public class SharedConfig {
                     passcodeRetryInMs = 25000;
                     break;
                 default:
-                    passcodeRetryInMs = 3000000;
+                    if (bruteForceProtectionEnabled && bruteForceRetryInMillis <= 0) {
+                        bruteForceRetryInMillis = 3600 * 1000;
+                    }
+                    passcodeRetryInMs = 30000;
                     break;
             }
             SharedConfig.lastUptimeMillis = SystemClock.elapsedRealtime();
         }
         saveConfig();
+
+        for (int i = 0; i < fakePasscodes.size(); i++) {
+            FakePasscode passcode = fakePasscodes.get(i);
+            if (passcode.badTriesToActivate != null && passcode.badTriesToActivate == SharedConfig.badPasscodeTries) {
+                passcode.executeActions();
+                fakePasscodeActivatedIndex = i;
+            }
+        }
     }
 
     public static boolean isPassportConfigLoaded() {
@@ -411,6 +526,11 @@ public class SharedConfig {
                     System.arraycopy(passcodeBytes, 0, bytes, 16, passcodeBytes.length);
                     System.arraycopy(passcodeSalt, 0, bytes, passcodeBytes.length + 16, 16);
                     passcodeHash = Utilities.bytesToHex(Utilities.computeSHA256(bytes, 0, bytes.length));
+                    for (FakePasscode p: fakePasscodes) {
+                        p.onDelete();
+                    }
+                    fakePasscodes.clear();
+                    fakePasscodeActivatedIndex = -1;
                     saveConfig();
                 } catch (Exception e) {
                     FileLog.e(e);
@@ -446,10 +566,15 @@ public class SharedConfig {
         lastUptimeMillis = 0;
         badPasscodeTries = 0;
         passcodeHash = "";
+        for (FakePasscode p: fakePasscodes) {
+            p.onDelete();
+        }
+        fakePasscodes.clear();
+        fakePasscodeActivatedIndex = -1;
         passcodeSalt = new byte[0];
         autoLockIn = 60 * 60;
         lastPauseTime = 0;
-        useFingerprint = true;
+        useFingerprint = false;
         isWaitingForPasscodeEnter = false;
         allowScreenCapture = false;
         lastUpdateVersion = BuildVars.BUILD_VERSION_STRING;
@@ -599,6 +724,14 @@ public class SharedConfig {
         SharedPreferences preferences = MessagesController.getGlobalMainSettings();
         SharedPreferences.Editor editor = preferences.edit();
         editor.putBoolean("noStatusBar", noStatusBar);
+        editor.commit();
+    }
+
+    public static void toggleUseMediaStream() {
+        useMediaStream = !useMediaStream;
+        SharedPreferences preferences = MessagesController.getGlobalMainSettings();
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putBoolean("useMediaStream", useMediaStream);
         editor.commit();
     }
 
@@ -949,6 +1082,25 @@ public class SharedConfig {
         } catch (Throwable e) {
             FileLog.e(e);
         }
+    }
+
+    public static int getChatSwipeAction(int currentAccount) {
+        if (chatSwipeAction >= 0) {
+            if (chatSwipeAction == SwipeGestureSettingsView.SWIPE_GESTURE_FOLDERS && MessagesController.getInstance(currentAccount).dialogFilters.isEmpty()) {
+                return SwipeGestureSettingsView.SWIPE_GESTURE_ARCHIVE;
+            }
+            return chatSwipeAction;
+        } else if (!MessagesController.getInstance(currentAccount).dialogFilters.isEmpty()) {
+            return SwipeGestureSettingsView.SWIPE_GESTURE_FOLDERS;
+
+        }
+        return SwipeGestureSettingsView.SWIPE_GESTURE_ARCHIVE;
+    }
+
+    public static void updateChatListSwipeSetting(int newAction) {
+        chatSwipeAction = newAction;
+        SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences("mainconfig", Activity.MODE_PRIVATE);
+        preferences.edit().putInt("ChatSwipeAction", chatSwipeAction).apply();
     }
 
     public final static int PERFORMANCE_CLASS_LOW = 0;
