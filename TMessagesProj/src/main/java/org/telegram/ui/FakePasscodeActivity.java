@@ -53,7 +53,6 @@ import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.ActionBar.ThemeDescription;
 import org.telegram.ui.Cells.DrawerUserCell;
 import org.telegram.ui.Cells.HeaderCell;
-import org.telegram.ui.Cells.RadioColorCell;
 import org.telegram.ui.Cells.TextCheckCell;
 import org.telegram.ui.Cells.TextInfoPrivacyCell;
 import org.telegram.ui.Cells.TextSettingsCell;
@@ -66,12 +65,14 @@ import org.telegram.ui.DialogBuilder.DialogType;
 import org.telegram.ui.DialogBuilder.FakePasscodeDialogBuilder;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.core.util.Consumer;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -362,64 +363,38 @@ public class FakePasscodeActivity extends BaseFragment {
                     AlertDialog dialog = FakePasscodeDialogBuilder.build(getParentActivity(), template);
                     showDialog(dialog);
                 } else if (position == badTriesToActivateRow) {
-                    if (getParentActivity() == null) {
-                        return;
-                    }
-
-                    int selected;
+                    String title = LocaleController.getString("BadPasscodeTriesToActivate", R.string.BadPasscodeTriesToActivate);
+                    int selected = -1;
+                    final int[] values = new int[] {1, 2, 3, 4, 5, 7, 10, 15, 20, 25, 30};
                     if (fakePasscode.badTriesToActivate == null) {
                         selected = 0;
-                    } else if (fakePasscode.badTriesToActivate == 1) {
-                        selected = 1;
-                    } else if (fakePasscode.badTriesToActivate <= 3) {
-                        selected = 2;
-                    } else if (fakePasscode.badTriesToActivate <= 5){
-                        selected = 3;
-                    } else if (fakePasscode.badTriesToActivate <= 10){
-                        selected = 4;
-                    } else {
-                        selected = 5;
-                    }
-                    AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
-                    builder.setTitle(LocaleController.getString("DeleteAccountTitle", R.string.DeleteAccountTitle));
-                    String[] items = new String[]{
-                            LocaleController.getString("Disabled", R.string.Disabled),
-                            "1",  "3", "5", "10", "30"
-                    };
-                    final LinearLayout linearLayout = new LinearLayout(getParentActivity());
-                    linearLayout.setOrientation(LinearLayout.VERTICAL);
-                    builder.setView(linearLayout);
-
-                    for (int a = 0; a < items.length; a++) {
-                        RadioColorCell cell = new RadioColorCell(getParentActivity());
-                        cell.setPadding(AndroidUtilities.dp(4), 0, AndroidUtilities.dp(4), 0);
-                        cell.setTag(a);
-                        cell.setCheckColor(Theme.getColor(Theme.key_radioBackground), Theme.getColor(Theme.key_dialogRadioBackgroundChecked));
-                        cell.setTextAndValue(items[a], selected == a);
-                        linearLayout.addView(cell);
-                        cell.setOnClickListener(v -> {
-                            builder.getDismissRunnable().run();
-                            Integer which = (Integer) v.getTag();
-
-                            if (which == 0) {
-                                fakePasscode.badTriesToActivate = null;
-                            } else if (which == 1) {
-                                fakePasscode.badTriesToActivate = 1;
-                            } else if (which == 2) {
-                                fakePasscode.badTriesToActivate = 3;
-                            } else if (which == 3) {
-                                fakePasscode.badTriesToActivate = 5;
-                            } else if (which == 4) {
-                                fakePasscode.badTriesToActivate = 10;
-                            } else if (which == 5) {
-                                fakePasscode.badTriesToActivate = 30;
+                    } else{
+                        for (int i = 0; i < values.length; i++) {
+                            if (fakePasscode.badTriesToActivate <= values[i]) {
+                                selected = i + 1;
+                                break;
                             }
-                            SharedConfig.saveConfig();
-                            listAdapter.notifyDataSetChanged();
-                        });
+                        }
                     }
-                    builder.setNegativeButton(LocaleController.getString("Cancel", R.string.Cancel), null);
-                    showDialog(builder.create());
+                    String[] items = new String[values.length + 1];
+                    items[0] = LocaleController.getString("Disabled", R.string.Disabled);
+                    for (int i = 0; i < values.length; i++) {
+                        items[i + 1] = String.valueOf(values[i]);
+                    }
+                    Consumer<Integer> onClicked = which -> {
+                        if (which == 0) {
+                            fakePasscode.badTriesToActivate = null;
+                        } else {
+                            fakePasscode.badTriesToActivate = values[which - 1];
+                        }
+                        SharedConfig.saveConfig();
+                        listAdapter.notifyDataSetChanged();
+                    };
+                    AlertDialog dialog = EnumDialogBuilder.build(getParentActivity(), title, selected, items, onClicked);
+                    if (dialog == null) {
+                        return;
+                    }
+                    showDialog(dialog);
                 } else if (firstAccountRow <= position && position <= lastAccountRow) {
                     AccountActions actions = fakePasscode.getAccountActions(accountNumbers.get(position - firstAccountRow));
                     presentFragment(new FakePasscodeAccountActionsActivity(actions), false);
@@ -504,6 +479,7 @@ public class FakePasscodeActivity extends BaseFragment {
         accountHeaderRow = rowCount++;
         firstAccountRow = rowCount;
         lastAccountRow = firstAccountRow - 1;
+        accountNumbers.clear();
         for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
             if (UserConfig.getInstance(a).isClientActivated()) {
                 accountNumbers.add(a);
