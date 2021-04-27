@@ -12,7 +12,7 @@ import java.util.HashMap;
 import java.util.List;
 
 public class LogOutAction extends AccountAction {
-    private static final int WAIT_TIME = 10;
+    private static final int WAIT_TIME = 1000;
 
     public LogOutAction() {}
 
