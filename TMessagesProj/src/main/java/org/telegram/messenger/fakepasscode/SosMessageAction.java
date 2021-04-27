@@ -4,8 +4,6 @@ import android.telephony.SmsManager;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import org.telegram.messenger.SharedConfig;
-
 @Deprecated
 public class SosMessageAction implements Action {
     public boolean enabled = false;

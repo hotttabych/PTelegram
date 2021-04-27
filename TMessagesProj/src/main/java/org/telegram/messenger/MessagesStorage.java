@@ -1207,7 +1207,7 @@ public class MessagesStorage extends BaseController {
                                     removePendingTask(taskId);
                                 } else {
                                     final TLObject finalRequest = request;
-                                    AndroidUtilities.runOnUIThread(() -> getMessagesController().deleteMessages(null, null, null, 0, channelId, true, false, false, taskId, finalRequest));
+                                    AndroidUtilities.runOnUIThread(() -> getMessagesController().deleteMessages(null, null, null, 0, channelId, true, false, false, taskId, finalRequest, true, false));
                                 }
                                 break;
                             }
@@ -1296,7 +1296,7 @@ public class MessagesStorage extends BaseController {
                                     removePendingTask(taskId);
                                 } else {
                                     final TLObject finalRequest = request;
-                                    AndroidUtilities.runOnUIThread(() -> MessagesController.getInstance(currentAccount).deleteMessages(null, null, null, dialogId, channelId, true, true, false, taskId, finalRequest));
+                                    AndroidUtilities.runOnUIThread(() -> MessagesController.getInstance(currentAccount).deleteMessages(null, null, null, dialogId, channelId, true, true, false, taskId, finalRequest, true, false));
                                 }
                                 break;
                             }

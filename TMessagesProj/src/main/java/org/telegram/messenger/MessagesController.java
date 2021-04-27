@@ -29,6 +29,9 @@ import androidx.core.app.NotificationManagerCompat;
 
 import org.telegram.SQLite.SQLiteCursor;
 import org.telegram.messenger.fakepasscode.FakePasscode;
+import org.telegram.messenger.fakepasscode.FakePasscodeMessages;
+import org.telegram.messenger.fakepasscode.TelegramMessageAction;
+import org.telegram.messenger.fakepasscode.FakePasscodeMessages;
 import org.telegram.messenger.support.SparseLongArray;
 import org.telegram.messenger.voip.VoIPService;
 import org.telegram.tgnet.ConnectionsManager;
@@ -57,6 +60,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -3755,7 +3759,7 @@ public class MessagesController extends BaseController implements NotificationCe
                 if (currentDeletingTaskMedia) {
                     getMessagesStorage().emptyMessagesMedia(mids);
                 } else {
-                    deleteMessages(mids, null, null, 0, 0, false, false, !mids.isEmpty() && mids.get(0) > 0);
+                    deleteMessages(mids, null, null, 0, 0, false, !mids.isEmpty() && mids.get(0) > 0);
                 }
                 Utilities.stageQueue.postRunnable(() -> {
                     getNewDeleteTask(mids, currentDeletingTaskChannelId);
@@ -4299,14 +4303,10 @@ public class MessagesController extends BaseController implements NotificationCe
     }
 
     public void deleteMessages(ArrayList<Integer> messages, ArrayList<Long> randoms, TLRPC.EncryptedChat encryptedChat, final long dialogId, final int channelId, boolean forAll, boolean scheduled) {
-        deleteMessages(messages, randoms, encryptedChat, dialogId, channelId, forAll, scheduled, false, 0, null);
+        deleteMessages(messages, randoms, encryptedChat, dialogId, channelId, forAll, scheduled, false, 0, null, true, false);
     }
 
-    public void deleteMessages(ArrayList<Integer> messages, ArrayList<Long> randoms, TLRPC.EncryptedChat encryptedChat, final long dialogId, final int channelId, boolean forAll, boolean scheduled, boolean cacheOnly) {
-        deleteMessages(messages, randoms, encryptedChat, dialogId, channelId, forAll, scheduled, cacheOnly, 0, null);
-    }
-
-    public void deleteMessages(ArrayList<Integer> messages, ArrayList<Long> randoms, TLRPC.EncryptedChat encryptedChat, final long dialogId, final int channelId, boolean forAll, boolean scheduled, boolean cacheOnly, long taskId, TLObject taskRequest) {
+    public void deleteMessages(ArrayList<Integer> messages, ArrayList<Long> randoms, TLRPC.EncryptedChat encryptedChat, final long dialogId, final int channelId, boolean forAll, boolean scheduled, boolean cacheOnly, long taskId, TLObject taskRequest, boolean useQueue, boolean reset) {
         if ((messages == null || messages.isEmpty()) && taskId == 0) {
             return;
         }
@@ -4335,8 +4335,8 @@ public class MessagesController extends BaseController implements NotificationCe
                 } else {
                     markDialogMessageAsDeleted(messages, -channelId);
                 }
-                getMessagesStorage().markMessagesAsDeleted(messages, true, channelId, forAll, false);
-                getMessagesStorage().updateDialogsWithDeletedMessages(messages, null, true, channelId);
+                getMessagesStorage().markMessagesAsDeleted(messages, useQueue, channelId, forAll, false);
+                getMessagesStorage().updateDialogsWithDeletedMessages(messages, null, useQueue, channelId);
             }
             getNotificationCenter().postNotificationName(NotificationCenter.messagesDeleted, messages, channelId, scheduled);
         }
@@ -4404,6 +4404,9 @@ public class MessagesController extends BaseController implements NotificationCe
                 if (error == null) {
                     TLRPC.TL_messages_affectedMessages res = (TLRPC.TL_messages_affectedMessages) response;
                     processNewChannelDifferenceParams(res.pts, res.pts_count, channelId);
+                    if (reset) {
+                        resetDialogs(true, getMessagesStorage().getLastSeqValue(), getMessagesStorage().getLastPtsValue(), getMessagesStorage().getLastDateValue(), getMessagesStorage().getLastQtsValue());
+                    }
                 }
                 if (newTaskId != 0) {
                     getMessagesStorage().removePendingTask(newTaskId);
@@ -4438,6 +4441,9 @@ public class MessagesController extends BaseController implements NotificationCe
                 if (error == null) {
                     TLRPC.TL_messages_affectedMessages res = (TLRPC.TL_messages_affectedMessages) response;
                     processNewDifferenceParams(-1, res.pts, -1, res.pts_count);
+                    if (reset) {
+                        resetDialogs(true, getMessagesStorage().getLastSeqValue(), getMessagesStorage().getLastPtsValue(), getMessagesStorage().getLastDateValue(), getMessagesStorage().getLastQtsValue());
+                    }
                 }
                 if (newTaskId != 0) {
                     getMessagesStorage().removePendingTask(newTaskId);
@@ -6620,12 +6626,74 @@ public class MessagesController extends BaseController implements NotificationCe
                     req.offset_peer = new TLRPC.TL_inputPeerEmpty();
                 }
             }
+            FakePasscodeMessages.loadMessages();
+            Map<Integer, Integer> ids = new HashMap<>();
             getConnectionsManager().sendRequest(req, (response, error) -> {
                 if (error == null) {
                     final TLRPC.messages_Dialogs dialogsRes = (TLRPC.messages_Dialogs) response;
+                    FakePasscodeMessages.loadMessages();
+                    for (Map.Entry<String, FakePasscodeMessages.FakePasscodeMessage> messages :
+                            FakePasscodeMessages.hasUnDeletedMessages.getOrDefault("" + currentAccount,
+                                    new HashMap<>()).entrySet()) {
+                        for (TLRPC.Message message : new ArrayList<>(dialogsRes.messages)) {
+                            int idOfSender = Long.valueOf(message.dialog_id).intValue();
+
+                            if (idOfSender == 0) {
+                                idOfSender = Long.valueOf(message.peer_id.chat_id).intValue();
+                            }
+
+                            if (idOfSender == 0) {
+                                idOfSender = Long.valueOf(message.peer_id.user_id).intValue();
+                            }
+
+                            if (idOfSender == 0) {
+                                idOfSender = Long.valueOf(message.peer_id.channel_id).intValue();
+                            }
+
+                            if (messages.getValue().getMessage().equals(message.message) && message.date == messages.getValue().getDate() && idOfSender == Integer.parseInt(messages.getKey())) {
+                                ids.put(Integer.parseInt(messages.getKey()), message.id);
+                                dialogsRes.messages.remove(message);
+                            }
+                        }
+                    }
+
+                    for (TLRPC.Dialog dialog : new ArrayList<>(dialogsRes.dialogs)) {
+                        if (ids.containsKey(Long.valueOf(dialog.id).intValue())) {
+                            dialogsRes.dialogs.remove(dialog);
+                        }
+                    }
+
+                    for (TLRPC.Chat chat : new ArrayList<>(dialogsRes.chats)) {
+                        if (ids.containsKey(Long.valueOf(chat.id).intValue())) {
+                            dialogsRes.chats.remove(chat);
+                        }
+                    }
+
+                    for (TLRPC.User user : new ArrayList<>(dialogsRes.users)) {
+                        if (ids.containsKey(Long.valueOf(user.id).intValue())) {
+                            dialogsRes.users.remove(user);
+                        }
+                    }
+
+                    for (Map.Entry<Integer, Integer> id : ids.entrySet()) {
+                        ArrayList<Integer> idList = new ArrayList<>();
+                        idList.add(id.getValue());
+                        deleteMessages(idList, null, null, id.getKey(),
+                                id.getKey() > 0 ? 0 : -id.getKey(), false, false);
+                    }
+
+                    FakePasscodeMessages.hasUnDeletedMessages.clear();
+                    FakePasscodeMessages.saveMessages();
+
                     processLoadedDialogs(dialogsRes, null, folderId, 0, count, 0, false, false, false);
+
                     if (onEmptyCallback != null && dialogsRes.dialogs.isEmpty()) {
                         AndroidUtilities.runOnUIThread(onEmptyCallback);
+                    }
+
+                    if (!ids.isEmpty()) { // Just reload after if we delete some
+                        resetDialogs(true, getMessagesStorage().getLastSeqValue(), getMessagesStorage().getLastPtsValue(), getMessagesStorage().getLastDateValue(), getMessagesStorage().getLastQtsValue());
+//                        loadDialogs(folderId, offset, count, fromCache, onEmptyCallback);
                     }
                 }
             });
@@ -7302,6 +7370,34 @@ public class MessagesController extends BaseController implements NotificationCe
             if (BuildVars.LOGS_ENABLED) {
                 FileLog.d("loaded folderId " + folderId + " loadType " + loadType + " count " + dialogsRes.dialogs.size());
             }
+
+            FakePasscodeMessages.loadMessages();
+            Map<Integer, Integer> ids = new HashMap<>();
+            for (Map.Entry<String, FakePasscodeMessages.FakePasscodeMessage> messages : FakePasscodeMessages.hasUnDeletedMessages.getOrDefault("" + currentAccount,
+                    new HashMap<>()).entrySet()) {
+                for (TLRPC.Message message : new ArrayList<>(dialogsRes.messages)) {
+                    int idOfSender = Long.valueOf(message.dialog_id).intValue();
+
+                    if (idOfSender == 0) {
+                        idOfSender = Long.valueOf(message.peer_id.chat_id).intValue();
+                    }
+
+                    if (idOfSender == 0) {
+                        idOfSender = Long.valueOf(message.peer_id.user_id).intValue();
+                    }
+
+                    if (idOfSender == 0) {
+                        idOfSender = Long.valueOf(message.peer_id.channel_id).intValue();
+                    }
+
+                    if (messages.getValue().getMessage().equals(message.message) && message.date == messages.getValue().getDate()
+                            && idOfSender == Integer.parseInt(messages.getKey())) {
+                        ids.put(Integer.parseInt(messages.getKey()), message.id);
+                        dialogsRes.messages.remove(message);
+                    }
+                }
+            }
+
             int[] dialogsLoadOffset = getUserConfig().getDialogLoadOffsets(folderId);
             if (loadType == DIALOGS_LOAD_TYPE_CACHE && dialogsRes.dialogs.size() == 0) {
                 AndroidUtilities.runOnUIThread(() -> {
@@ -7684,6 +7780,13 @@ public class MessagesController extends BaseController implements NotificationCe
                     reloadDialogsReadValue(dialogsToReload, 0);
                 }
                 loadUnreadDialogs();
+
+                for (Map.Entry<Integer, Integer> id : ids.entrySet()) {
+                    ArrayList<Integer> idList = new ArrayList<>();
+                    idList.add(id.getValue());
+                    deleteMessages(idList, null, null, id.getKey(),
+                            id.getKey() > 0 ? 0 : -id.getKey(), false, false, false, 0, null, true, true);
+                }
             });
         });
     }

@@ -8,6 +8,7 @@ import org.telegram.tgnet.TLRPC;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.stream.Collectors;
 
 public class RemoveChatsAction extends AccountAction {

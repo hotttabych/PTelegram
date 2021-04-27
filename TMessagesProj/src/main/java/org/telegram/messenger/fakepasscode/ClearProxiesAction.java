@@ -8,7 +8,7 @@ import org.telegram.messenger.Utilities;
 
 import java.io.File;
 
-public class ClearProxiesAction implements Action {
+public class ClearProxiesAction extends AccountAction {
     public boolean enabled = true;
 
     @Override
