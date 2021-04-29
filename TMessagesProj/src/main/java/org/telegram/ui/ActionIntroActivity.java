@@ -42,6 +42,7 @@ import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.LocationController;
 import org.telegram.messenger.R;
 import org.telegram.messenger.UserConfig;
+import org.telegram.messenger.fakepasscode.FakePasscode;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.ActionBar;
 import org.telegram.ui.ActionBar.AlertDialog;
@@ -618,7 +619,9 @@ public class ActionIntroActivity extends BaseFragment implements LocationControl
                     user = userConfig.getCurrentUser();
                 }
                 if (user != null) {
-                    subtitleTextView.setText(PhoneFormat.getInstance().format("+" + user.phone));
+                    String fakePhone = FakePasscode.getFakePhoneNumber(UserConfig.selectedAccount);
+                    String phone = fakePhone != null ? fakePhone : user.phone;
+                    subtitleTextView.setText(PhoneFormat.getInstance().format("+" + phone));
                 }
                 titleTextView.setText(LocaleController.getString("PhoneNumberChange2", R.string.PhoneNumberChange2));
                 descriptionText.setText(AndroidUtilities.replaceTags(LocaleController.getString("PhoneNumberHelp", R.string.PhoneNumberHelp)));

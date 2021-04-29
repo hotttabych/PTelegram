@@ -1000,6 +1000,8 @@ public class LocaleController {
                     case "NoBadPasscodeAttemts": value = "Не было ни одной неудачной попытки ввода код-пароля."; break;
                     case "BadPasscodeTriesToActivate": value = "Лимит попыток входа для активации"; break;
                     case "BadPasscodeTriesToActivateInfo": value = "Действия с ложным паролем будут выполнены после указанного количества неудачных попыток ввода код-пароля."; break;
+                    case "FakePhone": value = "Ложный номер телефона"; break;
+                    case "FakePhoneNumberInfo": value = "Этот номер телефона будет отображаться при входе с ложным код-паролем."; break;
                 }
             }
             if (value == null) {
