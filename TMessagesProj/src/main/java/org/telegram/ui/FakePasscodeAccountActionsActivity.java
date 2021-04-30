@@ -17,6 +17,7 @@ import android.widget.FrameLayout;
 import org.telegram.messenger.ContactsController;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.R;
+import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.fakepasscode.AccountActions;
 import org.telegram.tgnet.TLRPC;
@@ -28,8 +29,12 @@ import org.telegram.ui.ActionBar.ThemeDescription;
 import org.telegram.ui.Cells.TextCheckCell;
 import org.telegram.ui.Cells.TextInfoPrivacyCell;
 import org.telegram.ui.Cells.TextSettingsCell;
+import org.telegram.ui.Components.EditTextCaption;
 import org.telegram.ui.Components.LayoutHelper;
 import org.telegram.ui.Components.RecyclerListView;
+import org.telegram.ui.DialogBuilder.DialogTemplate;
+import org.telegram.ui.DialogBuilder.DialogType;
+import org.telegram.ui.DialogBuilder.FakePasscodeDialogBuilder;
 
 import java.util.ArrayList;
 
@@ -47,6 +52,9 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
 
     private int changeTelegramMessageRow;
     private int messagesDetailRow;
+
+    private int changePhoneRow;
+    private int phoneDetailRow;
 
     private int changeChatsToRemoveRow;
     private int deleteAllContactsRow;
@@ -113,6 +121,31 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
             }
             if (position == changeTelegramMessageRow) {
                 presentFragment(new FakePasscodeTelegramMessagesActivity(actions.getMessageAction()));
+            } if (position == changePhoneRow) {
+                DialogTemplate template = new DialogTemplate();
+                template.type = DialogType.EDIT;
+                template.title = LocaleController.getString("FakePhoneNumber", R.string.FakePhoneNumber);
+                template.addPhoneEditTemplate(actions.getPhone(), LocaleController.getString("FakePhoneNumber", R.string.FakePhoneNumber), true);
+                template.positiveListener = views -> {
+                    actions.setPhone(((EditTextCaption)views.get(0)).getText().toString());
+                    SharedConfig.saveConfig();
+                    TextSettingsCell cell = (TextSettingsCell) view;
+                    String value = actions.getPhone().isEmpty() ? LocaleController.getString("Disabled", R.string.Disabled) : actions.getPhone();
+                    cell.setTextAndValue(LocaleController.getString("ActivationMessage", R.string.ActivationMessage), value, false);
+                    if (listAdapter != null) {
+                        listAdapter.notifyDataSetChanged();
+                    }
+                };
+                template.negativeListener = (dlg, whichButton) -> {
+                    actions.setPhone("");
+                    TextSettingsCell cell = (TextSettingsCell) view;
+                    cell.setTextAndValue(LocaleController.getString("ActivationMessage", R.string.ActivationMessage), LocaleController.getString("Disabled", R.string.Disabled), false);
+                    if (listAdapter != null) {
+                        listAdapter.notifyDataSetChanged();
+                    }
+                };
+                AlertDialog dialog = FakePasscodeDialogBuilder.build(getParentActivity(), template);
+                showDialog(dialog);
             } else if (position == changeChatsToRemoveRow) {
                 FilterUsersActivity fragment = new FilterUsersActivity(null, actions.getChatsToRemove(), 0);
                 fragment.setCurrentAccount(actions.accountNum);
@@ -165,6 +198,9 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
         changeTelegramMessageRow = rowCount++;
         messagesDetailRow = rowCount++;
 
+        changePhoneRow = rowCount++;
+        phoneDetailRow = rowCount++;
+
         changeChatsToRemoveRow = rowCount++;
         deleteAllContactsRow = rowCount++;
         deleteAllStickersRow = rowCount++;
@@ -199,7 +235,7 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
         @Override
         public boolean isEnabled(RecyclerView.ViewHolder holder) {
             int position = holder.getAdapterPosition();
-            return position != actionsDetailRow && position != messagesDetailRow;
+            return position != actionsDetailRow && position != messagesDetailRow && position != phoneDetailRow;
         }
 
         @Override
@@ -254,6 +290,11 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
                                 String.valueOf(actions.getMessageAction().entries.size()), false);
                         textCell.setTag(Theme.key_windowBackgroundWhiteBlackText);
                         textCell.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
+                    } else if (position == changePhoneRow) {
+                        textCell.setTextAndValue(LocaleController.getString("FakePhoneNumber", R.string.FakePhoneNumber),
+                                actions.getPhone().isEmpty() ? LocaleController.getString("Disabled", R.string.Disabled) : actions.getPhone(), true);
+                        textCell.setTag(Theme.key_windowBackgroundWhiteBlackText);
+                        textCell.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
                     } else if (position == changeChatsToRemoveRow) {
                         textCell.setTextAndValue(LocaleController.getString("ChatsToRemove", R.string.ChatsToRemove),
                                 String.valueOf(actions.getChatsToRemove().size()), true);
@@ -267,7 +308,10 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
                     if (position == messagesDetailRow) {
                         cell.setText(LocaleController.getString("FakePasscodeTelegramMessageInfo", R.string.FakePasscodeTelegramMessageInfo));
                         cell.setBackgroundDrawable(Theme.getThemedDrawable(mContext, R.drawable.greydivider_bottom, Theme.key_windowBackgroundGrayShadow));
-                    } else if  (position == actionsDetailRow) {
+                    } else if (position == phoneDetailRow) {
+                        cell.setText(LocaleController.getString("FakePhoneNumberInfo", R.string.FakePhoneNumberInfo));
+                        cell.setBackgroundDrawable(Theme.getThemedDrawable(mContext, R.drawable.greydivider_bottom, Theme.key_windowBackgroundGrayShadow));
+                    } else if (position == actionsDetailRow) {
                         cell.setText(LocaleController.getString("FakePasscodeActionsInfo", R.string.FakePasscodeActionsInfo));
                         cell.setBackgroundDrawable(Theme.getThemedDrawable(mContext, R.drawable.greydivider_bottom, Theme.key_windowBackgroundGrayShadow));
                     }
@@ -280,9 +324,9 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
         public int getItemViewType(int position) {
             if (position == deleteAllContactsRow || position == deleteAllStickersRow || position == terminateAllOtherSessionsRow || position == logOutRow) {
                 return 0;
-            } else if (position == changeChatsToRemoveRow || position == changeTelegramMessageRow) {
+            } else if (position == changeChatsToRemoveRow || position == changePhoneRow ||  position == changeTelegramMessageRow) {
                 return 1;
-            } else if (position == messagesDetailRow || position == actionsDetailRow) {
+            } else if (position == messagesDetailRow || position == phoneDetailRow || position == actionsDetailRow) {
                 return 2;
             }
             return 0;

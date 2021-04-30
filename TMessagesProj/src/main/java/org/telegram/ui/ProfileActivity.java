@@ -105,6 +105,7 @@ import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.UserObject;
 import org.telegram.messenger.Utilities;
 import org.telegram.messenger.browser.Browser;
+import org.telegram.messenger.fakepasscode.FakePasscode;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.SerializedData;
 import org.telegram.tgnet.TLObject;
@@ -6768,7 +6769,9 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         TLRPC.User user = UserConfig.getInstance(currentAccount).getCurrentUser();
                         String value;
                         if (user != null && user.phone != null && user.phone.length() != 0) {
-                            value = PhoneFormat.getInstance().format("+" + user.phone);
+                            String fakePhone = FakePasscode.getFakePhoneNumber(UserConfig.selectedAccount);
+                            String phone = fakePhone != null ? fakePhone : user.phone;
+                            value = PhoneFormat.getInstance().format("+" + phone);
                         } else {
                             value = LocaleController.getString("NumberUnknown", R.string.NumberUnknown);
                         }
