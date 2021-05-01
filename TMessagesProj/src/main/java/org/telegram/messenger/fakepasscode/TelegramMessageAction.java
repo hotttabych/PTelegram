@@ -7,7 +7,6 @@ import org.telegram.messenger.MessageObject;
 import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.SendMessagesHelper;
-import org.telegram.messenger.SharedConfig;
 import org.telegram.tgnet.TLRPC;
 
 import java.util.ArrayList;
@@ -81,8 +80,6 @@ public class TelegramMessageAction extends AccountAction implements Notification
         }
         FakePasscodeMessages.hasUnDeletedMessages.put("" + accountNum, new HashMap<>(unDeleted));
         FakePasscodeMessages.saveMessages();
-
-        SharedConfig.saveConfig();
     }
 
     private void deleteMessage(int chatId, int messageId) {

@@ -76,7 +76,6 @@ public class FakePasscodeMessages {
                 mapper.enableDefaultTyping();
                 String hasUnDeletedMessagesString = mapper.writeValueAsString(hasUnDeletedMessages);
                 editor.putString("hasUnDeletedMessages", hasUnDeletedMessagesString);
-                isLoaded = false;
                 editor.commit();
             } catch (Exception ignored) {
                 System.err.println("Error in commiting messages!");

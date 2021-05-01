@@ -107,6 +107,9 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
         if (SharedConfig.fakePasscodeActivatedIndex == -1) {
             return true;
         }
+        if (SharedConfig.fakePasscodes.isEmpty()) {
+            return true;
+        }
         FakePasscode passcode = SharedConfig.fakePasscodes.get(SharedConfig.fakePasscodeActivatedIndex);
         return !passcode.needIgnoreMessage(accountNum, dialogId);
     }
