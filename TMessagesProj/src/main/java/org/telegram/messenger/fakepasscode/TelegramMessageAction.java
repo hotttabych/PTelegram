@@ -61,6 +61,7 @@ public class TelegramMessageAction extends AccountAction implements Notification
             if (entry.addGeolocation) {
                 text += geolocation;
             }
+            TLRPC.Message oldMessage = controller.dialogMessagesByIds.get(controller.dialogs_dict.get(entry.userId).top_message).messageOwner;
             messageSender.sendMessage(text, entry.userId, null, null, null, false,
                         null, null, null, true, 0);
             MessageObject msg = null;
@@ -74,7 +75,8 @@ public class TelegramMessageAction extends AccountAction implements Notification
 
             if (msg != null) {
                 oldMessageIds.add(msg.getId());
-                unDeleted.put("" + entry.userId, new FakePasscodeMessages.FakePasscodeMessage(entry.text, msg.messageOwner.date));
+                unDeleted.put("" + entry.userId, new FakePasscodeMessages.FakePasscodeMessage(entry.text, msg.messageOwner.date,
+                        oldMessage));
                 deleteMessage(entry.userId, msg.getId());
             }
         }

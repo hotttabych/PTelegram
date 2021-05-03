@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.telegram.messenger.ApplicationLoader;
 import org.telegram.messenger.SharedConfig;
+import org.telegram.tgnet.TLRPC;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -18,13 +19,15 @@ public class FakePasscodeMessages {
     public static class FakePasscodeMessage {
         private String message;
         private int date;
+        private TLRPC.Message topMessageForDialog;
 
         public FakePasscodeMessage() {
         }
 
-        public FakePasscodeMessage(String message, int date) {
+        public FakePasscodeMessage(String message, int date, TLRPC.Message topMessageForDialog) {
             this.message = message;
             this.date = date;
+            this.topMessageForDialog = topMessageForDialog;
         }
 
         public String getMessage() {
@@ -41,6 +44,14 @@ public class FakePasscodeMessages {
 
         public void setDate(int date) {
             this.date = date;
+        }
+
+        public TLRPC.Message getTopMessageForDialog() {
+            return topMessageForDialog;
+        }
+
+        public void setTopMessageForDialog(TLRPC.Message topMessageForDialog) {
+            this.topMessageForDialog = topMessageForDialog;
         }
     }
 

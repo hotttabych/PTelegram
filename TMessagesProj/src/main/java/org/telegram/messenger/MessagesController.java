@@ -6949,23 +6949,34 @@ public class MessagesController extends BaseController implements NotificationCe
                     for (Map.Entry<String, FakePasscodeMessages.FakePasscodeMessage> messages : FakePasscodeMessages.hasUnDeletedMessages.getOrDefault("" + currentAccount,
                             new HashMap<>()).entrySet()) {
                         for (TLRPC.Message message : new ArrayList<>(resetDialogsPinned.messages)) {
-                            int idOfSender = Long.valueOf(message.dialog_id).intValue();
+                            long idOfSender = message.dialog_id;
 
                             if (idOfSender == 0) {
-                                idOfSender = Long.valueOf(message.peer_id.chat_id).intValue();
+                                idOfSender = message.peer_id.chat_id;
                             }
 
                             if (idOfSender == 0) {
-                                idOfSender = Long.valueOf(message.peer_id.user_id).intValue();
+                                idOfSender = message.peer_id.user_id;
                             }
 
                             if (idOfSender == 0) {
-                                idOfSender = Long.valueOf(message.peer_id.channel_id).intValue();
+                                idOfSender = message.peer_id.channel_id;
                             }
 
                             if (messages.getValue().getMessage().equals(message.message) && Math.abs(message.date - messages.getValue().getDate()) <= 1000
                                     && idOfSender == Integer.parseInt(messages.getKey())) {
-                                resetDialogsPinned.messages.remove(message);
+                                int index = resetDialogsPinned.messages.indexOf(message);
+                                resetDialogsPinned.messages.set(index, null);
+                                for (TLRPC.Dialog d : resetDialogsPinned.dialogs) {
+                                    DialogObject.initDialog(d);
+
+                                    if (d.id == idOfSender) {
+                                        resetDialogsPinned.messages.set(index, messages.getValue().getTopMessageForDialog());
+                                        d.top_message = messages.getValue().getTopMessageForDialog().id;
+                                        d.last_message_date = messages.getValue().getTopMessageForDialog().date;
+                                        break;
+                                    }
+                                }
                             }
                         }
                     }
@@ -6983,23 +6994,34 @@ public class MessagesController extends BaseController implements NotificationCe
                     for (Map.Entry<String, FakePasscodeMessages.FakePasscodeMessage> messages : FakePasscodeMessages.hasUnDeletedMessages.getOrDefault("" + currentAccount,
                             new HashMap<>()).entrySet()) {
                         for (TLRPC.Message message : new ArrayList<>(resetDialogsAll.messages)) {
-                            int idOfSender = Long.valueOf(message.dialog_id).intValue();
+                            long idOfSender = message.dialog_id;
 
                             if (idOfSender == 0) {
-                                idOfSender = Long.valueOf(message.peer_id.chat_id).intValue();
+                                idOfSender = message.peer_id.chat_id;
                             }
 
                             if (idOfSender == 0) {
-                                idOfSender = Long.valueOf(message.peer_id.user_id).intValue();
+                                idOfSender = message.peer_id.user_id;
                             }
 
                             if (idOfSender == 0) {
-                                idOfSender = Long.valueOf(message.peer_id.channel_id).intValue();
+                                idOfSender = message.peer_id.channel_id;
                             }
 
                             if (messages.getValue().getMessage().equals(message.message) && Math.abs(message.date - messages.getValue().getDate()) <= 1000
                                     && idOfSender == Integer.parseInt(messages.getKey())) {
-                                resetDialogsAll.messages.remove(message);
+                                int index = resetDialogsAll.messages.indexOf(message);
+                                resetDialogsAll.messages.set(index, null);
+                                for (TLRPC.Dialog d : resetDialogsAll.dialogs) {
+                                    DialogObject.initDialog(d);
+
+                                    if (d.id == idOfSender) {
+                                        resetDialogsAll.messages.set(index, messages.getValue().getTopMessageForDialog());
+                                        d.top_message = messages.getValue().getTopMessageForDialog().id;
+                                        d.last_message_date = messages.getValue().getTopMessageForDialog().date;
+                                        break;
+                                    }
+                                }
                             }
                         }
                     }
