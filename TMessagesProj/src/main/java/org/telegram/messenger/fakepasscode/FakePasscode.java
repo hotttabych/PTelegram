@@ -79,7 +79,7 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
             }
             trustedContactSosMessageAction = null;
         }
-        actions().forEach(Action::migrate);
+        actions().stream().forEach(Action::migrate);
     }
 
     private void removeAccount(int accountNum) {
