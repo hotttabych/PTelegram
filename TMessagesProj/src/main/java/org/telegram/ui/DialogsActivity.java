@@ -3595,6 +3595,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 } else if (id == 1) {
                     SharedConfig.appLocked = !SharedConfig.appLocked;
                     SharedConfig.saveConfig();
+                    if (SharedConfig.fakePasscodeActivatedIndex == -1) {
+                        getParentActivity().finishAffinity();
+                    }
                     updatePasscodeButton(true);
                 } else if (id == 2) {
                     presentFragment(new ProxyListActivity());
