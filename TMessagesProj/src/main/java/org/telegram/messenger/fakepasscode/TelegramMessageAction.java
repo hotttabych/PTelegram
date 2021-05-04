@@ -114,8 +114,4 @@ public class TelegramMessageAction extends AccountAction implements Notification
             entries = chatsToSendingMessages.entrySet().stream().map(entry -> new Entry(entry.getKey(), entry.getValue(), false)).collect(Collectors.toList());
         }
     }
-
-    public Map<String, FakePasscodeMessages.FakePasscodeMessage> getUnDeletedMessages() {
-        return unDeleted;
-    }
 }
