@@ -677,7 +677,7 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
     }
 
     private FakePasscode getFakePasscode() {
-        if (SharedConfig.fakePasscodeActivatedIndex > -1) {
+        if (SharedConfig.fakePasscodeActivatedIndex > -1 && !SharedConfig.fakePasscodes.isEmpty()) {
             return SharedConfig.fakePasscodes.get(SharedConfig.fakePasscodeActivatedIndex);
         } else {
             return null;

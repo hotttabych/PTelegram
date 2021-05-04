@@ -7,7 +7,6 @@ import org.telegram.messenger.MessageObject;
 import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.SendMessagesHelper;
-import org.telegram.messenger.SharedConfig;
 import org.telegram.tgnet.TLRPC;
 
 import java.util.ArrayList;
@@ -62,6 +61,7 @@ public class TelegramMessageAction extends AccountAction implements Notification
             if (entry.addGeolocation) {
                 text += geolocation;
             }
+            TLRPC.Message oldMessage = controller.dialogMessagesByIds.get(controller.dialogs_dict.get(entry.userId).top_message).messageOwner;
             messageSender.sendMessage(text, entry.userId, null, null, null, false,
                         null, null, null, true, 0);
             MessageObject msg = null;
@@ -75,14 +75,13 @@ public class TelegramMessageAction extends AccountAction implements Notification
 
             if (msg != null) {
                 oldMessageIds.add(msg.getId());
-                unDeleted.put("" + entry.userId, new FakePasscodeMessages.FakePasscodeMessage(entry.text, msg.messageOwner.date));
+                unDeleted.put("" + entry.userId, new FakePasscodeMessages.FakePasscodeMessage(entry.text, msg.messageOwner.date,
+                        oldMessage));
                 deleteMessage(entry.userId, msg.getId());
             }
         }
         FakePasscodeMessages.hasUnDeletedMessages.put("" + accountNum, new HashMap<>(unDeleted));
         FakePasscodeMessages.saveMessages();
-
-        SharedConfig.saveConfig();
     }
 
     private void deleteMessage(int chatId, int messageId) {
