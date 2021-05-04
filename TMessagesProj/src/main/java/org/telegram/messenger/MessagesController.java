@@ -6965,16 +6965,18 @@ public class MessagesController extends BaseController implements NotificationCe
 
                             if (messages.getValue().getMessage().equals(message.message) && Math.abs(message.date - messages.getValue().getDate()) <= 1000
                                     && idOfSender == Integer.parseInt(messages.getKey())) {
-                                int index = resetDialogsPinned.messages.indexOf(message);
-                                resetDialogsPinned.messages.set(index, null);
-                                for (TLRPC.Dialog d : resetDialogsPinned.dialogs) {
-                                    DialogObject.initDialog(d);
+                                if (messages.getValue().getTopMessageForDialog() != null) {
+                                    int index = resetDialogsPinned.messages.indexOf(message);
+                                    resetDialogsPinned.messages.set(index, null);
+                                    for (TLRPC.Dialog d : resetDialogsPinned.dialogs) {
+                                        DialogObject.initDialog(d);
 
-                                    if (d.id == idOfSender) {
-                                        resetDialogsPinned.messages.set(index, messages.getValue().getTopMessageForDialog());
-                                        d.top_message = messages.getValue().getTopMessageForDialog().id;
-                                        d.last_message_date = messages.getValue().getTopMessageForDialog().date;
-                                        break;
+                                        if (d.id == idOfSender) {
+                                            resetDialogsPinned.messages.set(index, messages.getValue().getTopMessageForDialog());
+                                            d.top_message = messages.getValue().getTopMessageForDialog().id;
+                                            d.last_message_date = messages.getValue().getTopMessageForDialog().date;
+                                            break;
+                                        }
                                     }
                                 }
                             }
@@ -7010,16 +7012,18 @@ public class MessagesController extends BaseController implements NotificationCe
 
                             if (messages.getValue().getMessage().equals(message.message) && Math.abs(message.date - messages.getValue().getDate()) <= 1000
                                     && idOfSender == Integer.parseInt(messages.getKey())) {
-                                int index = resetDialogsAll.messages.indexOf(message);
-                                resetDialogsAll.messages.set(index, null);
-                                for (TLRPC.Dialog d : resetDialogsAll.dialogs) {
-                                    DialogObject.initDialog(d);
+                                if (messages.getValue().getTopMessageForDialog() != null) {
+                                    int index = resetDialogsAll.messages.indexOf(message);
+                                    resetDialogsAll.messages.set(index, null);
+                                    for (TLRPC.Dialog d : resetDialogsAll.dialogs) {
+                                        DialogObject.initDialog(d);
 
-                                    if (d.id == idOfSender) {
-                                        resetDialogsAll.messages.set(index, messages.getValue().getTopMessageForDialog());
-                                        d.top_message = messages.getValue().getTopMessageForDialog().id;
-                                        d.last_message_date = messages.getValue().getTopMessageForDialog().date;
-                                        break;
+                                        if (d.id == idOfSender) {
+                                            resetDialogsAll.messages.set(index, messages.getValue().getTopMessageForDialog());
+                                            d.top_message = messages.getValue().getTopMessageForDialog().id;
+                                            d.last_message_date = messages.getValue().getTopMessageForDialog().date;
+                                            break;
+                                        }
                                     }
                                 }
                             }

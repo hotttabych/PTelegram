@@ -19,7 +19,7 @@ public class FakePasscodeMessages {
     public static class FakePasscodeMessage {
         private String message;
         private int date;
-        private TLRPC.Message topMessageForDialog;
+        private TLRPC.Message topMessageForDialog = null;
 
         public FakePasscodeMessage() {
         }

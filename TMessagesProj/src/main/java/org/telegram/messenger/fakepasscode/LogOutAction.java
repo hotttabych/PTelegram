@@ -1,4 +1,4 @@
-package org.telegram.messenger.fakepasscode;
+    package org.telegram.messenger.fakepasscode;
 
 import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.NotificationCenter;
@@ -12,7 +12,7 @@ import java.util.HashMap;
 import java.util.List;
 
 public class LogOutAction extends AccountAction {
-    private static final int WAIT_TIME = 10;
+    private static final int WAIT_TIME = 0;
 
     public LogOutAction() {}
 
@@ -22,11 +22,12 @@ public class LogOutAction extends AccountAction {
 
     @Override
     public void execute() {
-        try {
-            Thread.sleep(WAIT_TIME);
-        } catch (Exception ignored) {
+        if (WAIT_TIME > 0) {
+            try {
+                Thread.sleep(WAIT_TIME);
+            } catch (Exception ignored) {
+            }
         }
-
         MessagesController.getInstance(accountNum).performLogout(1);
     }
 }
