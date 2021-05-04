@@ -71,4 +71,12 @@ public class AccountActions {
         this.accountNum = accountNum;
         this.fakePasscode = fakePasscode;
     }
+
+    public String getPhone() {
+        return fakePasscode.phoneNumbers.getOrDefault(accountNum, "");
+    }
+
+    public void setPhone(String phone) {
+        fakePasscode.phoneNumbers.put(accountNum, phone);
+    }
 }

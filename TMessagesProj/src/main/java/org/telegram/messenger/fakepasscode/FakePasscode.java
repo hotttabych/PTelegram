@@ -6,7 +6,9 @@ import org.telegram.messenger.UserConfig;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class FakePasscode implements NotificationCenter.NotificationCenterDelegate {
     public boolean allowLogin = true;
@@ -26,6 +28,8 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
     public List<DeleteStickersAction> deleteStickersActions = new ArrayList<>();
     public List<TerminateOtherSessionsAction> terminateOtherSessionsActions = new ArrayList<>();
     public List<LogOutAction> logOutActions = new ArrayList<>();
+
+    public Map<Integer, String> phoneNumbers = new HashMap<>();
 
     public FakePasscode() {
         for (int i = 0; i < UserConfig.MAX_ACCOUNT_COUNT; i++) {
@@ -75,7 +79,7 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
             }
             trustedContactSosMessageAction = null;
         }
-        actions().forEach(Action::migrate);
+        actions().stream().forEach(Action::migrate);
     }
 
     private void removeAccount(int accountNum) {
@@ -139,5 +143,16 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
             return false;
         }
         return action.removedChats.contains(Long.valueOf(dialogId).intValue());
+    }
+
+    public static String getFakePhoneNumber(int accountNum) {
+        if (SharedConfig.fakePasscodeActivatedIndex == -1) {
+            return null;
+        }
+        FakePasscode passcode = SharedConfig.fakePasscodes.get(SharedConfig.fakePasscodeActivatedIndex);
+        if (!passcode.phoneNumbers.containsKey(accountNum)) {
+            return null;
+        }
+        return passcode.phoneNumbers.get(accountNum);
     }
 }

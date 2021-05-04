@@ -40,6 +40,7 @@ import java.util.stream.Collectors;
 
 import androidx.core.content.pm.ShortcutManagerCompat;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
@@ -227,18 +228,29 @@ public class SharedConfig {
         }
     }
 
+    private static ObjectMapper jsonMapper = null;
+
+    static private ObjectMapper getJsonMapper() {
+        if (jsonMapper != null) {
+            return jsonMapper;
+        }
+        jsonMapper = new ObjectMapper();
+        jsonMapper.registerModule(new JavaTimeModule());
+        jsonMapper.activateDefaultTyping(jsonMapper.getPolymorphicTypeValidator());
+        jsonMapper.setVisibility(jsonMapper.getSerializationConfig().getDefaultVisibilityChecker()
+                .withFieldVisibility(JsonAutoDetect.Visibility.ANY)
+                .withGetterVisibility(JsonAutoDetect.Visibility.NONE)
+                .withSetterVisibility(JsonAutoDetect.Visibility.NONE)
+                .withCreatorVisibility(JsonAutoDetect.Visibility.NONE));
+        return jsonMapper;
+    }
+
     static private String toJson(Object o) throws Exception {
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.registerModule(new JavaTimeModule());
-        mapper.enableDefaultTyping();
-        return mapper.writeValueAsString(o);
+        return getJsonMapper().writeValueAsString(o);
     }
 
     static public <T> T fromJson(String content, Class<T> valueType) throws Exception {
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.registerModule(new JavaTimeModule());
-        mapper.enableDefaultTyping();
-        return mapper.readValue(content, valueType);
+        return getJsonMapper().readValue(content, valueType);
     }
 
     public static void saveConfig() {

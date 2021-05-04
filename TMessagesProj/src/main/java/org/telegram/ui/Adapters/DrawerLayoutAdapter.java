@@ -100,6 +100,25 @@ public class DrawerLayoutAdapter extends RecyclerListView.SelectionAdapter {
         return accountsShown;
     }
 
+    public void checkAccountChanges() {
+        int accountCount = 0;
+        boolean correct = true;
+        for (int a = 0; a < getMaxAccountCount(); a++) {
+            if (UserConfig.getInstance(a).isClientActivated()) {
+                if (!accountNumbers.contains(a)) {
+                    correct = false;
+                    break;
+                }
+                accountCount++;
+                accountNumbers.add(a);
+            }
+        }
+        correct = correct && accountCount == accountNumbers.size();
+        if (!correct) {
+            notifyDataSetChanged();
+        }
+    }
+
     @Override
     public void notifyDataSetChanged() {
         resetItems();
