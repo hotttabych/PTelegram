@@ -1164,7 +1164,7 @@ public class AlertsCreator {
                 imageView.setForUserOrChat(user, avatarDrawable);
             }
         } else {
-            avatarDrawable.setInfo(chat);
+            avatarDrawable.setInfo(chat, account);
             imageView.setForUserOrChat(chat, avatarDrawable);
         }
 
@@ -1332,7 +1332,7 @@ public class AlertsCreator {
                 imageView.setForUserOrChat(user, avatarDrawable);
             }
         } else {
-            avatarDrawable.setInfo(chat);
+            avatarDrawable.setInfo(chat, account);
             imageView.setForUserOrChat(chat, avatarDrawable);
         }
 

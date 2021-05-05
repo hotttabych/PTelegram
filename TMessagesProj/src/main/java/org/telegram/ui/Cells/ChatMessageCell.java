@@ -3167,7 +3167,7 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                                         commentAvatarDrawables[a].setInfo(user);
                                         commentAvatarImages[a].setForUserOrChat(user, commentAvatarDrawables[a]);
                                     } else if (chat != null) {
-                                        commentAvatarDrawables[a].setInfo(chat);
+                                        commentAvatarDrawables[a].setInfo(chat, currentAccount);
                                         commentAvatarImages[a].setForUserOrChat(chat, commentAvatarDrawables[a]);
                                     } else {
                                         commentAvatarDrawables[a].setInfo(id, "", "");
@@ -4767,7 +4767,7 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                             if (currentChat.photo != null) {
                                 currentPhoto = currentChat.photo.photo_small;
                             }
-                            contactAvatarDrawable.setInfo(currentChat);
+                            contactAvatarDrawable.setInfo(currentChat, currentAccount);
                             locationImageReceiver.setForUserOrChat(currentChat, contactAvatarDrawable);
                         } else {
                             locationImageReceiver.setImage(null, null, contactAvatarDrawable, null, null, 0);
@@ -9205,7 +9205,7 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                 } else {
                     currentPhoto = null;
                 }
-                avatarDrawable.setInfo(currentChat);
+                avatarDrawable.setInfo(currentChat, currentAccount);
                 avatarImage.setForUserOrChat(currentChat, avatarDrawable);
             } else {
                 currentPhoto = null;

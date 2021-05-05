@@ -32,6 +32,7 @@ import org.telegram.messenger.ImageLocation;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.MessageObject;
 import org.telegram.messenger.R;
+import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.UserObject;
 import org.telegram.messenger.Utilities;
 import org.telegram.messenger.voip.VoIPService;
@@ -468,10 +469,14 @@ public class GroupCallUserCell extends FrameLayout {
         } else {
             currentChat = accountInstance.getMessagesController().getChat(-id);
             currentUser = null;
-            avatarDrawable.setInfo(currentChat);
+            avatarDrawable.setInfo(currentChat, account.getCurrentAccount());
 
             if (currentChat != null) {
-                nameTextView.setText(currentChat.title);
+                String title = UserConfig.getChatTitleOverride(account.getCurrentAccount(), currentChat.id);
+                if (title == null) {
+                    title = currentChat.title;
+                }
+                nameTextView.setText(title);
                 nameTextView.setRightDrawable(currentChat.verified ? new VerifiedDrawable(getContext()) : null);
                 avatarImageView.getImageReceiver().setCurrentAccount(account.getCurrentAccount());
                 if (uploadingAvatar != null) {

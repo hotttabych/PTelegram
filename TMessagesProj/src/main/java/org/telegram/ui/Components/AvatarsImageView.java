@@ -211,7 +211,7 @@ public class AvatarsImageView extends FrameLayout {
                 animatingStates[index].avatarDrawable.setInfo(currentUser);
             } else {
                 currentChat = MessagesController.getInstance(account).getChat(-id);
-                animatingStates[index].avatarDrawable.setInfo(currentChat);
+                animatingStates[index].avatarDrawable.setInfo(currentChat, account);
             }
             if (currentStyle == 4) {
                 if (id == AccountInstance.getInstance(account).getUserConfig().getClientUserId()) {
@@ -229,7 +229,7 @@ public class AvatarsImageView extends FrameLayout {
             animatingStates[index].id = currentUser.id;
         } else {
             currentChat = (TLRPC.Chat) object;
-            animatingStates[index].avatarDrawable.setInfo(currentChat);
+            animatingStates[index].avatarDrawable.setInfo(currentChat, account);
             animatingStates[index].id = -currentChat.id;
         }
         if (currentUser != null) {

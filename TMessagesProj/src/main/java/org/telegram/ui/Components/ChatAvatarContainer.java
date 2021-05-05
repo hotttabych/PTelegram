@@ -587,7 +587,7 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
     }
 
     public void setChatAvatar(TLRPC.Chat chat) {
-        avatarDrawable.setInfo(chat);
+        avatarDrawable.setInfo(chat, currentAccount);
         if (avatarImageView != null) {
             avatarImageView.setForUserOrChat(chat, avatarDrawable);
         }
@@ -647,7 +647,7 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
                 }
             }
         } else if (chat != null) {
-            avatarDrawable.setInfo(chat);
+            avatarDrawable.setInfo(chat, currentAccount);
             if (avatarImageView != null) {
                 avatarImageView.setForUserOrChat(chat, avatarDrawable);
             }

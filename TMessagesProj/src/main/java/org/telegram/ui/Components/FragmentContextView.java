@@ -523,7 +523,11 @@ public class FragmentContextView extends FrameLayout implements NotificationCent
                     TLRPC.Chat chat = activity.getCurrentChat();
                     TLRPC.User user = activity.getCurrentUser();
                     if (chat != null) {
-                        builder.setMessage(AndroidUtilities.replaceTags(LocaleController.formatString("StopLiveLocationAlertToGroupText", R.string.StopLiveLocationAlertToGroupText, chat.title)));
+                        String title = UserConfig.getChatTitleOverride(account, chat.id);
+                        if (title == null) {
+                            title = chat.title;
+                        }
+                        builder.setMessage(AndroidUtilities.replaceTags(LocaleController.formatString("StopLiveLocationAlertToGroupText", R.string.StopLiveLocationAlertToGroupText, title)));
                     } else if (user != null) {
                         builder.setMessage(AndroidUtilities.replaceTags(LocaleController.formatString("StopLiveLocationAlertToUserText", R.string.StopLiveLocationAlertToUserText, UserObject.getFirstName(user))));
                     } else {
@@ -1195,7 +1199,10 @@ public class FragmentContextView extends FrameLayout implements NotificationCent
                     } else {
                         TLRPC.Chat chat = MessagesController.getInstance(info.messageObject.currentAccount).getChat(-lower_id);
                         if (chat != null) {
-                            param = chat.title;
+                            param = UserConfig.getChatTitleOverride(account, chat.id);
+                            if (param == null) {
+                                param = chat.title;
+                            }
                         } else {
                             param = "";
                         }
@@ -2029,7 +2036,11 @@ public class FragmentContextView extends FrameLayout implements NotificationCent
                     if (fragment instanceof ChatActivity && ((ChatActivity) fragment).getCurrentChat() != null && ((ChatActivity) fragment).getCurrentChat().id == service.getChat().id) {
                         titleTextView.setText(LocaleController.getString("VoipGroupViewVoiceChat", R.string.VoipGroupViewVoiceChat), false);
                     } else {
-                        titleTextView.setText(service.getChat().title, false);
+                        String title = UserConfig.getChatTitleOverride(account, service.getChat().id);
+                        if (title == null) {
+                            title = service.getChat().title;
+                        }
+                        titleTextView.setText(title, false);
                     }
                 }
             } else if (service.getUser() != null) {

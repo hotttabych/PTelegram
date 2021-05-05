@@ -25,6 +25,7 @@ import org.telegram.messenger.ImageLocation;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.R;
+import org.telegram.messenger.UserConfig;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.BaseFragment;
@@ -65,8 +66,11 @@ public class JoinGroupAlert extends BottomSheet {
         linearLayout.addView(avatarImageView, LayoutHelper.createLinear(70, 70, Gravity.TOP | Gravity.CENTER_HORIZONTAL, 0, 29, 0, 0));
 
         if (invite.chat != null) {
-            avatarDrawable = new AvatarDrawable(invite.chat);
-            title = invite.chat.title;
+            avatarDrawable = new AvatarDrawable(invite.chat, false, currentAccount);
+            title = UserConfig.getChatTitleOverride(currentAccount, invite.chat.id);
+            if (title == null) {
+                title = invite.chat.title;
+            }
             participants_count = invite.chat.participants_count;
             avatarImageView.setForUserOrChat(invite.chat, avatarDrawable, invite);
         } else {

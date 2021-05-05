@@ -1325,7 +1325,7 @@ public abstract class VoIPBaseService extends Service implements SensorEventList
 			if (userOrChat instanceof TLRPC.User) {
 				placeholder = new AvatarDrawable((TLRPC.User) userOrChat);
 			} else {
-				placeholder = new AvatarDrawable((TLRPC.Chat) userOrChat);
+				placeholder = new AvatarDrawable((TLRPC.Chat) userOrChat, false, currentAccount);
 			}
 			bitmap = Bitmap.createBitmap(AndroidUtilities.dp(42), AndroidUtilities.dp(42), Bitmap.Config.ARGB_8888);
 			placeholder.setBounds(0, 0, bitmap.getWidth(), bitmap.getHeight());

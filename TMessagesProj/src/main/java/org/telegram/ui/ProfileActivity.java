@@ -140,6 +140,7 @@ import org.telegram.ui.Components.BulletinFactory;
 import org.telegram.ui.Components.CombinedDrawable;
 import org.telegram.ui.Components.CrossfadeDrawable;
 import org.telegram.ui.Components.CubicBezierInterpolator;
+import org.telegram.ui.Components.EditTextCaption;
 import org.telegram.ui.Components.FragmentContextView;
 import org.telegram.ui.Components.IdenticonDrawable;
 import org.telegram.ui.Components.ImageUpdater;
@@ -155,6 +156,9 @@ import org.telegram.ui.Components.StickerEmptyView;
 import org.telegram.ui.Components.TimerDrawable;
 import org.telegram.ui.Components.UndoView;
 import org.telegram.ui.Components.voip.VoIPHelper;
+import org.telegram.ui.DialogBuilder.DialogTemplate;
+import org.telegram.ui.DialogBuilder.DialogType;
+import org.telegram.ui.DialogBuilder.FakePasscodeDialogBuilder;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -336,6 +340,10 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     private final static int edit_avatar = 34;
     private final static int delete_avatar = 35;
     private final static int add_photo = 36;
+
+    private final static int disable_avatar = 100;
+    private final static int enable_avatar = 101;
+    private final static int edit_chat_name = 102;
 
     private Rect rect = new Rect();
 
@@ -1839,6 +1847,43 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     }
                 } else if (id == add_photo) {
                     onWriteButtonClick();
+                } else if (id == disable_avatar || id == enable_avatar) {
+                    UserConfig.ChatInfoOverride item;
+                    if (getUserConfig().chatInfoOverrides.containsKey(String.valueOf(chat_id))) {
+                        item = getUserConfig().chatInfoOverrides.get(String.valueOf(chat_id));
+                    } else {
+                        item = new UserConfig.ChatInfoOverride();
+                        getUserConfig().chatInfoOverrides.put(String.valueOf(chat_id), item);
+                    }
+                    item.avatarEnabled = !item.avatarEnabled;
+                    getUserConfig().saveConfig(true);
+                    updateProfileData();
+                    otherItem.hideSubItem(item.avatarEnabled ? enable_avatar : disable_avatar);
+                    otherItem.showSubItem(item.avatarEnabled ? disable_avatar : enable_avatar);
+                } else if (id == edit_chat_name) {
+                    UserConfig.ChatInfoOverride item;
+                    if (getUserConfig().chatInfoOverrides.containsKey(String.valueOf(chat_id))) {
+                        item = getUserConfig().chatInfoOverrides.get(String.valueOf(chat_id));
+                    } else {
+                        item = new UserConfig.ChatInfoOverride();
+                        getUserConfig().chatInfoOverrides.put(String.valueOf(chat_id), item);
+                    }
+                    DialogTemplate template = new DialogTemplate();
+                    template.type = DialogType.EDIT;
+                    template.title = LocaleController.getString("ActivationMessage", R.string.ActivationMessage);
+                    template.addEditTemplate(item.title, LocaleController.getString("Message", R.string.Message), false);
+                    template.positiveListener = views -> {
+                        item.title = ((EditTextCaption)views.get(0)).getText().toString();
+                        getUserConfig().saveConfig(true);
+                        updateProfileData();
+                    };
+                    template.negativeListener = (dlg, whichButton) -> {
+                        item.title = null;
+                        getUserConfig().saveConfig(true);
+                        updateProfileData();
+                    };
+                    AlertDialog dialog = FakePasscodeDialogBuilder.build(getParentActivity(), template);
+                    showDialog(dialog);
                 }
             }
         });
@@ -2545,10 +2590,14 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     try {
                         Intent intent = new Intent(Intent.ACTION_SEND);
                         intent.setType("text/plain");
+                        String title = UserConfig.getChatTitleOverride(currentAccount, currentChat.id);
+                        if (title == null) {
+                            title = currentChat.title;
+                        }
                         if (!TextUtils.isEmpty(chatInfo.about)) {
-                            intent.putExtra(Intent.EXTRA_TEXT, currentChat.title + "\n" + chatInfo.about + "\nhttps://" + getMessagesController().linkPrefix + "/" + currentChat.username);
+                            intent.putExtra(Intent.EXTRA_TEXT, title + "\n" + chatInfo.about + "\nhttps://" + getMessagesController().linkPrefix + "/" + currentChat.username);
                         } else {
-                            intent.putExtra(Intent.EXTRA_TEXT, currentChat.title + "\nhttps://" + getMessagesController().linkPrefix + "/" + currentChat.username);
+                            intent.putExtra(Intent.EXTRA_TEXT, title + "\nhttps://" + getMessagesController().linkPrefix + "/" + currentChat.username);
                         }
                         getParentActivity().startActivityForResult(Intent.createChooser(intent, LocaleController.getString("BotShare", R.string.BotShare)), 500);
                     } catch (Exception e) {
@@ -5221,7 +5270,11 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             TLRPC.User user = getMessagesController().getUser(uid);
             getMessagesController().deleteParticipantFromChat(chat_id, user, chatInfo);
             if (currentChat != null && user != null && BulletinFactory.canShowBulletin(this)) {
-                BulletinFactory.createRemoveFromChatBulletin(this, user, currentChat.title).show();
+                String title = UserConfig.getChatTitleOverride(currentAccount, currentChat.id);
+                if (title == null) {
+                    title = currentChat.title;
+                }
+                BulletinFactory.createRemoveFromChatBulletin(this, user, title).show();
             }
             if (chatInfo.participants.participants.remove(participant)) {
                 updateListAnimated(true);
@@ -5726,8 +5779,12 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 if (nameTextView[a] == null) {
                     continue;
                 }
-                if (chat.title != null) {
-                    if (nameTextView[a].setText(chat.title)) {
+                String title = UserConfig.getChatTitleOverride(currentAccount, chat.id);
+                if (title == null) {
+                    title = chat.title;
+                }
+                if (title != null) {
+                    if (nameTextView[a].setText(title)) {
                         changed = true;
                     }
                 }
@@ -5783,7 +5840,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             if (chat.photo != null) {
                 photoBig = chat.photo.photo_big;
             }
-            avatarDrawable.setInfo(chat);
+            avatarDrawable.setInfo(chat, currentAccount);
             final ImageLocation imageLocation = ImageLocation.getForUserOrChat(chat, ImageLocation.TYPE_BIG);
             final ImageLocation thumbLocation = ImageLocation.getForUserOrChat(chat, ImageLocation.TYPE_SMALL);
             final ImageLocation videoLocation = avatarsViewPager.getCurrentVideoLocation(thumbLocation, imageLocation);
@@ -5801,7 +5858,15 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 filter = null;
             }
             if (avatarBig == null) {
-                avatarImage.setImage(videoLocation, filter, thumbLocation, "50_50", avatarDrawable, chat);
+                UserConfig.ChatInfoOverride item;
+                boolean avatarEnabled = true;
+                if (SharedConfig.fakePasscodeActivatedIndex == -1) {
+                    if (getUserConfig().chatInfoOverrides.containsKey(String.valueOf(chat_id))) {
+                        item = getUserConfig().chatInfoOverrides.get(String.valueOf(chat_id));
+                        avatarEnabled = item.avatarEnabled;
+                    }
+                }
+                avatarImage.setImage(avatarEnabled ? videoLocation : null, filter, avatarEnabled ? thumbLocation : null, "50_50", avatarDrawable, chat);
             }
             getFileLoader().loadFile(imageLocation, chat, null, 0, 1);
             avatarImage.getImageReceiver().setVisible(!PhotoViewer.isShowingImage(photoBig), false);
@@ -5924,6 +5989,24 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 otherItem.addSubItem(leave_group, R.drawable.msg_leave, LocaleController.getString("DeleteAndExit", R.string.DeleteAndExit));
             }
             otherItem.addSubItem(add_shortcut, R.drawable.msg_home, LocaleController.getString("AddShortcut", R.string.AddShortcut));
+            if (SharedConfig.fakePasscodeActivatedIndex == -1) {
+                otherItem.addSubItem(edit_chat_name, R.drawable.floating_pencil, LocaleController.getString("EditChatName", R.string.EditChatName));
+                if (chat.photo != null && !(chat.photo instanceof TLRPC.TL_chatPhotoEmpty)) {
+                    otherItem.addSubItem(disable_avatar, R.drawable.disable_avatar, LocaleController.getString("DisableAvatar", R.string.DisableAvatar));
+                    otherItem.addSubItem(enable_avatar, R.drawable.profile_photos, LocaleController.getString("EnableAvatar", R.string.EnableAvatar));
+                    UserConfig.ChatInfoOverride item;
+                    boolean avatarEnabled = true;
+                    if (getUserConfig().chatInfoOverrides.containsKey(String.valueOf(chat_id))) {
+                        item = getUserConfig().chatInfoOverrides.get(String.valueOf(chat_id));
+                        avatarEnabled = item.avatarEnabled;
+                    }
+                    if (avatarEnabled) {
+                        otherItem.hideSubItem(enable_avatar);
+                    } else {
+                        otherItem.hideSubItem(disable_avatar);
+                    }
+                }
+            }
         }
 
         if (imageUpdater != null) {

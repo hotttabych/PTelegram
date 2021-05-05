@@ -522,7 +522,11 @@ public class DialogCell extends BaseCell {
             }
             String title;
             if (currentChat != null) {
-                title = currentChat.title.replace('\n', ' ');
+                title = UserConfig.getChatTitleOverride(currentAccount, chat.id);
+                if (title == null) {
+                    title = currentChat.title;
+                }
+                title = title.replace('\n', ' ');
             } else if (currentUser != null) {
                 if (UserObject.isDeleted(currentUser)) {
                     title = LocaleController.getString("HiddenName", R.string.HiddenName);
@@ -1003,7 +1007,11 @@ public class DialogCell extends BaseCell {
                                         messageNameString = UserObject.getFirstName(fromUser).replace("\n", "");
                                     }
                                 } else if (fromChat != null) {
-                                    messageNameString = fromChat.title.replace("\n", "");
+                                    String title = UserConfig.getChatTitleOverride(currentAccount, chat.id);
+                                    if (title == null) {
+                                        title = fromChat.title;
+                                    }
+                                    messageNameString = title.replace("\n", "");
                                 } else {
                                     messageNameString = "DELETED";
                                 }
@@ -1320,7 +1328,10 @@ public class DialogCell extends BaseCell {
                 nameString = LocaleController.getString("ArchivedChats", R.string.ArchivedChats);
             } else {
                 if (chat != null) {
-                    nameString = chat.title;
+                    nameString = UserConfig.getChatTitleOverride(currentAccount, chat.id);
+                    if (nameString == null) {
+                        nameString = chat.title;
+                    }
                 } else if (user != null) {
                     if (UserObject.isReplyUser(user)) {
                         nameString = LocaleController.getString("RepliesTitle", R.string.RepliesTitle);
@@ -1926,7 +1937,8 @@ public class DialogCell extends BaseCell {
             unreadCount = customDialog.unread_count;
             drawPin = customDialog.pinned;
             dialogMuted = customDialog.muted;
-            avatarDrawable.setInfo(customDialog.id, customDialog.name, null);
+            String title = UserConfig.getChatTitleOverride(currentAccount, customDialog.id);
+            avatarDrawable.setInfo(customDialog.id, title != null ? title : customDialog.name, null);
             avatarImage.setImage(null, "50_50", avatarDrawable, null, 0);
             thumbImage.setImageBitmap((BitmapDrawable) null);
         } else {
@@ -2116,7 +2128,7 @@ public class DialogCell extends BaseCell {
                         avatarImage.setForUserOrChat(user, avatarDrawable);
                     }
                 } else if (chat != null) {
-                    avatarDrawable.setInfo(chat);
+                    avatarDrawable.setInfo(chat, currentAccount);
                     avatarImage.setForUserOrChat(chat, avatarDrawable);
                 }
             }

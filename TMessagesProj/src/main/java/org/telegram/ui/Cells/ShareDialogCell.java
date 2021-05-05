@@ -122,11 +122,15 @@ public class ShareDialogCell extends FrameLayout {
             if (name != null) {
                 nameTextView.setText(name);
             } else if (chat != null) {
-                nameTextView.setText(chat.title);
+                String title = UserConfig.getChatTitleOverride(currentAccount, chat.id);
+                if (title == null) {
+                    title = chat.title;
+                }
+                nameTextView.setText(title);
             } else {
                 nameTextView.setText("");
             }
-            avatarDrawable.setInfo(chat);
+            avatarDrawable.setInfo(chat, currentAccount);
             imageView.setForUserOrChat(chat, avatarDrawable);
         }
         currentDialog = uid;

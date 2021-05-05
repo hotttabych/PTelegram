@@ -445,7 +445,11 @@ public class AudioPlayerAlert extends BottomSheet implements NotificationCenter.
                 } else {
                     TLRPC.Chat chat = MessagesController.getInstance(currentAccount).getChat(-lower_id);
                     if (chat != null) {
-                        actionBar.setTitle(chat.title);
+                        String title = UserConfig.getChatTitleOverride(currentAccount, chat.id);
+                        if (title == null) {
+                            title = chat.title;
+                        }
+                        actionBar.setTitle(title);
                     }
                 }
             } else {

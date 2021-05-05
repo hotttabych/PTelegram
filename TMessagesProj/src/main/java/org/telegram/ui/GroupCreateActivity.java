@@ -56,6 +56,7 @@ import org.telegram.messenger.ChatObject;
 import org.telegram.messenger.ContactsController;
 import org.telegram.messenger.FileLog;
 import org.telegram.messenger.LocaleController;
+import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.UserObject;
 import org.telegram.messenger.Utilities;
 import org.telegram.tgnet.TLObject;
@@ -987,7 +988,11 @@ public class GroupCreateActivity extends BaseFragment implements NotificationCen
             }
             TLRPC.Chat chat = getMessagesController().getChat(chatId != 0 ? chatId : channelId);
             if (selectedContacts.size() > 5) {
-                SpannableStringBuilder spannableStringBuilder = new SpannableStringBuilder(AndroidUtilities.replaceTags(LocaleController.formatString("AddMembersAlertNamesText", R.string.AddMembersAlertNamesText, LocaleController.formatPluralString("Members", selectedContacts.size()), chat.title)));
+                String title = UserConfig.getChatTitleOverride(currentAccount, chat.id);
+                if (title == null) {
+                    title = chat.title;
+                }
+                SpannableStringBuilder spannableStringBuilder = new SpannableStringBuilder(AndroidUtilities.replaceTags(LocaleController.formatString("AddMembersAlertNamesText", R.string.AddMembersAlertNamesText, LocaleController.formatPluralString("Members", selectedContacts.size()), title)));
                 String countString = String.format("%d", selectedContacts.size());
                 int index = TextUtils.indexOf(spannableStringBuilder, countString);
                 if (index >= 0) {
@@ -995,7 +1000,11 @@ public class GroupCreateActivity extends BaseFragment implements NotificationCen
                 }
                 builder.setMessage(spannableStringBuilder);
             } else {
-                builder.setMessage(AndroidUtilities.replaceTags(LocaleController.formatString("AddMembersAlertNamesText", R.string.AddMembersAlertNamesText, stringBuilder, chat.title)));
+                String title = UserConfig.getChatTitleOverride(currentAccount, chat.id);
+                if (title == null) {
+                    title = chat.title;
+                }
+                builder.setMessage(AndroidUtilities.replaceTags(LocaleController.formatString("AddMembersAlertNamesText", R.string.AddMembersAlertNamesText, stringBuilder, title)));
             }
             CheckBoxCell[] cells = new CheckBoxCell[1];
             if (!ChatObject.isChannel(chat)) {
@@ -1181,7 +1190,11 @@ public class GroupCreateActivity extends BaseFragment implements NotificationCen
                             return ContactsController.formatName(user.first_name, user.last_name);
                         } else {
                             TLRPC.Chat chat = (TLRPC.Chat) object;
-                            return chat.title;
+                            String title = UserConfig.getChatTitleOverride(currentAccount, chat.id);
+                            if (title == null) {
+                                title = chat.title;
+                            }
+                            return title;
                         }
                     }
 
@@ -1224,7 +1237,10 @@ public class GroupCreateActivity extends BaseFragment implements NotificationCen
                 lastName = user.last_name;
             } else {
                 TLRPC.Chat chat = (TLRPC.Chat) object;
-                firstName = chat.title;
+                firstName = UserConfig.getChatTitleOverride(currentAccount, chat.id);
+                if (firstName == null) {
+                    firstName = chat.title;
+                }
                 lastName = "";
             }
             if (LocaleController.nameDisplayOrder == 1) {
@@ -1508,7 +1524,10 @@ public class GroupCreateActivity extends BaseFragment implements NotificationCen
                                 username = user.username;
                             } else {
                                 TLRPC.Chat chat = (TLRPC.Chat) object;
-                                name = chat.title;
+                                name = UserConfig.getChatTitleOverride(currentAccount, chat.id);
+                                if (name == null) {
+                                    name = chat.title;
+                                }
                                 username = chat.username;
                             }
                             String tName = LocaleController.getInstance().getTranslitString(name);
@@ -1531,7 +1550,11 @@ public class GroupCreateActivity extends BaseFragment implements NotificationCen
                                             resultArrayNames.add(AndroidUtilities.generateSearchName(user.first_name, user.last_name, q));
                                         } else {
                                             TLRPC.Chat chat = (TLRPC.Chat) object;
-                                            resultArrayNames.add(AndroidUtilities.generateSearchName(chat.title, null, q));
+                                            String title = UserConfig.getChatTitleOverride(currentAccount, chat.id);
+                                            if (title == null) {
+                                                title = chat.title;
+                                            }
+                                            resultArrayNames.add(AndroidUtilities.generateSearchName(title, null, q));
                                         }
                                     } else {
                                         resultArrayNames.add(AndroidUtilities.generateSearchName("@" + username, null, "@" + q));
