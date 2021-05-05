@@ -282,7 +282,10 @@ public class EditWidgetActivity extends BaseFragment {
                     } else {
                         chat = getMessagesController().getChat(-lowerId);
                         if (chat != null) {
-                            name = chat.title;
+                            name = UserConfig.getChatTitleOverride(currentAccount, chat.id);
+                            if (name == null) {
+                                name = chat.title;
+                            }
                             if (chat.photo != null && chat.photo.photo_small != null && chat.photo.photo_small.volume_id != 0 && chat.photo.photo_small.local_id != 0) {
                                 photoPath = chat.photo.photo_small;
                             }
@@ -311,7 +314,7 @@ public class EditWidgetActivity extends BaseFragment {
                                     avatarDrawable.setAvatarType(AvatarDrawable.AVATAR_TYPE_SAVED);
                                 }
                             } else {
-                                avatarDrawable = new AvatarDrawable(chat);
+                                avatarDrawable = new AvatarDrawable(chat, false, currentAccount);
                             }
                             avatarDrawable.setBounds(0, 0, size, size);
                             avatarDrawable.draw(canvas);
@@ -558,7 +561,10 @@ public class EditWidgetActivity extends BaseFragment {
                             }
                         } else {
                             chat = getMessagesController().getChat(-lowerId);
-                            name = chat.title;
+                            name = UserConfig.getChatTitleOverride(currentAccount, chat.id);
+                            if (name == null) {
+                                name = chat.title;
+                            }
                             if (chat.photo != null && chat.photo.photo_small != null && chat.photo.photo_small.volume_id != 0 && chat.photo.photo_small.local_id != 0) {
                                 photoPath = chat.photo.photo_small;
                             }
@@ -585,7 +591,7 @@ public class EditWidgetActivity extends BaseFragment {
                                         avatarDrawable.setAvatarType(AvatarDrawable.AVATAR_TYPE_SAVED);
                                     }
                                 } else {
-                                    avatarDrawable = new AvatarDrawable(chat);
+                                    avatarDrawable = new AvatarDrawable(chat, false, currentAccount);
                                 }
                                 avatarDrawable.setBounds(0, 0, size, size);
                                 avatarDrawable.draw(canvas);

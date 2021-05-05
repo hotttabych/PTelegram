@@ -38,6 +38,7 @@ import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.NotificationsController;
 import org.telegram.messenger.R;
+import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.Utilities;
 import org.telegram.tgnet.TLObject;
 import org.telegram.tgnet.TLRPC;
@@ -951,7 +952,11 @@ public class NotificationsCustomSettingsActivity extends BaseFragment {
                                     if (chat.left || chat.kicked || chat.migrated_to != null) {
                                         continue;
                                     }
-                                    names[0] = chat.title;
+                                    String title = UserConfig.getChatTitleOverride(currentAccount, chat.id);
+                                    if (title == null) {
+                                        title = chat.title;
+                                    }
+                                    names[0] = title;
                                     names[1] = chat.username;
                                     object = chat;
                                 }

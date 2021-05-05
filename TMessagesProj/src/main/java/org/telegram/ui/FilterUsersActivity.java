@@ -50,6 +50,7 @@ import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.R;
+import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.UserObject;
 import org.telegram.messenger.Utilities;
 import org.telegram.tgnet.TLObject;
@@ -1330,7 +1331,11 @@ public class FilterUsersActivity extends BaseFragment implements NotificationCen
                                             resultArrayNames.add(AndroidUtilities.generateSearchName(user.first_name, user.last_name, q));
                                         } else {
                                             TLRPC.Chat chat = (TLRPC.Chat) object;
-                                            resultArrayNames.add(AndroidUtilities.generateSearchName(chat.title, null, q));
+                                            String title = UserConfig.getChatTitleOverride(currentAccount, chat.id);
+                                            if (title == null) {
+                                                title = chat.title;
+                                            }
+                                            resultArrayNames.add(AndroidUtilities.generateSearchName(title, null, q));
                                         }
                                     } else {
                                         resultArrayNames.add(AndroidUtilities.generateSearchName("@" + username, null, "@" + q));

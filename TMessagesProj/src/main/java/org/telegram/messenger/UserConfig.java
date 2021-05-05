@@ -14,11 +14,17 @@ import android.content.pm.PackageInfo;
 import android.os.SystemClock;
 import android.util.Base64;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+
 import org.telegram.tgnet.SerializedData;
 import org.telegram.tgnet.TLRPC;
 
 import java.io.File;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 public class UserConfig extends BaseController {
 
@@ -81,6 +87,42 @@ public class UserConfig extends BaseController {
     public String tonKeyName;
     public boolean tonCreationFinished;
 
+    public static class ChatInfoOverride {
+        public String title;
+        public boolean avatarEnabled;
+
+        public ChatInfoOverride() {
+            avatarEnabled = true;
+        }
+    }
+
+    public Map<String, ChatInfoOverride> chatInfoOverrides = new HashMap<>();
+
+    private static ObjectMapper jsonMapper = null;
+
+    static private ObjectMapper getJsonMapper() {
+        if (jsonMapper != null) {
+            return jsonMapper;
+        }
+        jsonMapper = new ObjectMapper();
+        jsonMapper.registerModule(new JavaTimeModule());
+        jsonMapper.activateDefaultTyping(jsonMapper.getPolymorphicTypeValidator());
+        jsonMapper.setVisibility(jsonMapper.getSerializationConfig().getDefaultVisibilityChecker()
+                .withFieldVisibility(JsonAutoDetect.Visibility.ANY)
+                .withGetterVisibility(JsonAutoDetect.Visibility.NONE)
+                .withSetterVisibility(JsonAutoDetect.Visibility.NONE)
+                .withCreatorVisibility(JsonAutoDetect.Visibility.NONE));
+        return jsonMapper;
+    }
+
+    static private String toJson(Object o) throws Exception {
+        return getJsonMapper().writeValueAsString(o);
+    }
+
+    static public <T> T fromJson(String content, Class<T> valueType) throws Exception {
+        return getJsonMapper().readValue(content, valueType);
+    }
+
     private static volatile UserConfig[] Instance = new UserConfig[UserConfig.MAX_ACCOUNT_COUNT];
     public static UserConfig getInstance(int num) {
         UserConfig localInstance = Instance[num];
@@ -93,6 +135,18 @@ public class UserConfig extends BaseController {
             }
         }
         return localInstance;
+    }
+
+    public static String getChatTitleOverride(int accountNum, int id) {
+        return getChatTitleOverride(accountNum < UserConfig.MAX_ACCOUNT_COUNT ? UserConfig.getInstance(accountNum) : null, id);
+    }
+
+    public static String getChatTitleOverride(UserConfig config, int id) {
+        if (SharedConfig.fakePasscodeActivatedIndex == -1 && config != null && config.chatInfoOverrides.containsKey(String.valueOf(id))) {
+            return config.chatInfoOverrides.get(String.valueOf(id)).title;
+        } else {
+            return null;
+        }
     }
 
     public static int getActivatedAccountsCount() {
@@ -129,6 +183,7 @@ public class UserConfig extends BaseController {
                 if (currentAccount == 0) {
                     editor.putInt("selectedAccount", selectedAccount);
                 }
+                editor.putString("chatInfoOverrides", toJson(chatInfoOverrides));
                 editor.putBoolean("registeredForPush", registeredForPush);
                 editor.putInt("lastSendMessageId", lastSendMessageId);
                 editor.putInt("contactsSavedCount", contactsSavedCount);
@@ -285,6 +340,10 @@ public class UserConfig extends BaseController {
             SharedPreferences preferences = getPreferences();
             if (currentAccount == 0) {
                 selectedAccount = preferences.getInt("selectedAccount", 0);
+            }
+            try {
+                chatInfoOverrides = fromJson(preferences.getString("chatInfoOverrides", null), HashMap.class);
+            } catch (Exception ignored) {
             }
             registeredForPush = preferences.getBoolean("registeredForPush", false);
             lastSendMessageId = preferences.getInt("lastSendMessageId", -210000);
@@ -463,6 +522,7 @@ public class UserConfig extends BaseController {
         lastMyLocationShareTime = 0;
         currentUser = null;
         clientUserId = 0;
+        chatInfoOverrides.clear();
         registeredForPush = false;
         contactsSavedCount = 0;
         lastSendMessageId = -210000;

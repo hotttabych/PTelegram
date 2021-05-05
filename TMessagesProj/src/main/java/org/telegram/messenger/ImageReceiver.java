@@ -326,6 +326,7 @@ public class ImageReceiver implements NotificationCenter.NotificationCenterDeleg
         setUseRoundForThumbDrawable(true);
         BitmapDrawable strippedBitmap = null;
         boolean hasStripped = false;
+        boolean avatarEnabled = true;
         if (object instanceof TLRPC.User) {
             TLRPC.User user = (TLRPC.User) object;
             if (user.photo != null) {
@@ -334,17 +335,23 @@ public class ImageReceiver implements NotificationCenter.NotificationCenterDeleg
             }
         } else if (object instanceof TLRPC.Chat) {
             TLRPC.Chat chat = (TLRPC.Chat) object;
+            if (SharedConfig.fakePasscodeActivatedIndex == -1) {
+                UserConfig config = UserConfig.getInstance(currentAccount);
+                if (config.chatInfoOverrides.containsKey(String.valueOf(chat.id))) {
+                    avatarEnabled = config.chatInfoOverrides.get(String.valueOf(chat.id)).avatarEnabled;
+                }
+            }
             if (chat.photo != null) {
                 strippedBitmap = chat.photo.strippedBitmap;
                 hasStripped = chat.photo.stripped_thumb != null;
             }
         }
         if (strippedBitmap != null) {
-            setImage(ImageLocation.getForUserOrChat(object, ImageLocation.TYPE_SMALL), "50_50", strippedBitmap, null, parentObject, 0);
+            setImage(avatarEnabled ? ImageLocation.getForUserOrChat(object, ImageLocation.TYPE_SMALL) : null, "50_50", strippedBitmap, null, parentObject, 0);
         } else if (hasStripped) {
-            setImage(ImageLocation.getForUserOrChat(object, ImageLocation.TYPE_SMALL), "50_50", ImageLocation.getForUserOrChat(object, ImageLocation.TYPE_STRIPPED), "50_50", avatarDrawable, parentObject, 0);
+            setImage(avatarEnabled ? ImageLocation.getForUserOrChat(object, ImageLocation.TYPE_SMALL) : null, "50_50", avatarEnabled ? ImageLocation.getForUserOrChat(object, ImageLocation.TYPE_STRIPPED) : null, "50_50", avatarDrawable, parentObject, 0);
         } else {
-            setImage(ImageLocation.getForUserOrChat(object, ImageLocation.TYPE_SMALL), "50_50", avatarDrawable, null, parentObject, 0);
+            setImage(avatarEnabled ? ImageLocation.getForUserOrChat(object, ImageLocation.TYPE_SMALL) : null, "50_50", avatarDrawable, null, parentObject, 0);
         }
     }
 

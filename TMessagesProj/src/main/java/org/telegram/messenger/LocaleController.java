@@ -1003,6 +1003,9 @@ public class LocaleController {
                         case "BadPasscodeTriesToActivateInfo": value = "Действия с ложным паролем будут выполнены после указанного количества неудачных попыток ввода код-пароля."; break;
                         case "FakePhoneNumber": value = "Ложный номер телефона"; break;
                         case "FakePhoneNumberInfo": value = "Этот номер телефона будет отображаться при входе с ложным код-паролем."; break;
+                        case "DisableAvatar": value = "Отключить аватар"; break;
+                        case "EnableAvatar": value = "Включить аватар"; break;
+                        case "EditChatName": value = "Изменить название чата"; break;
                     }
                 } else if (languageOverride.equals("be")) {
                     switch (key) {
@@ -1062,6 +1065,9 @@ public class LocaleController {
                         case "BadPasscodeTriesToActivateInfo": value = "Дзеянні з несапраўдным кодам блакіроўкі будуць выкананы пасля адзначанай колькасці няўдалых спроб уводу кода блакіроўкі."; break;
                         case "FakePhoneNumber": value = "Несапраўдны нумар тэлефона"; break;
                         case "FakePhoneNumberInfo": value = "Гэты нумар тэлефона будзе паказвацца пры уваходзе з несапраўдным кодам блакіроўкі."; break;
+                        case "DisableAvatar": value = "Адключыць аватар"; break;
+                        case "EnableAvatar": value = "Уключыць аватар"; break;
+                        case "EditChatName": value = "Змяніць назву чата"; break;
                     }
                 }
             }

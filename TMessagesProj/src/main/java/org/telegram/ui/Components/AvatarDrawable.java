@@ -23,6 +23,8 @@ import androidx.core.graphics.ColorUtils;
 
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.FileLog;
+import org.telegram.messenger.SharedConfig;
+import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.UserObject;
 import org.telegram.tgnet.TLObject;
 import org.telegram.tgnet.TLRPC;
@@ -94,6 +96,22 @@ public class AvatarDrawable extends Drawable {
         }
     }
 
+    public AvatarDrawable(TLRPC.Chat chat, boolean profile, int accountNum) {
+        this(chat, profile, UserConfig.getChatTitleOverride(accountNum, chat.id));
+    }
+
+    public AvatarDrawable(TLRPC.Chat chat, boolean profile, UserConfig config) {
+        this(chat, profile, UserConfig.getChatTitleOverride(config, chat.id));
+    }
+
+    public AvatarDrawable(TLRPC.Chat chat, boolean profile, String titleOverride) {
+        this();
+        isProfile = profile;
+        if (chat != null) {
+            setInfo(chat.id, titleOverride != null ? titleOverride : chat.title, null, null);
+        }
+    }
+
     public void setProfile(boolean value) {
         isProfile = value;
     }
@@ -148,6 +166,14 @@ public class AvatarDrawable extends Drawable {
         }
     }
 
+    public void setInfo(TLObject object, int accountNum) {
+        if (object instanceof TLRPC.User) {
+            setInfo((TLRPC.User) object);
+        } else if (object instanceof TLRPC.Chat) {
+            setInfo((TLRPC.Chat) object, accountNum);
+        }
+    }
+
     public void setSmallSize(boolean value) {
         smallSize = value;
     }
@@ -195,6 +221,13 @@ public class AvatarDrawable extends Drawable {
     public void setInfo(TLRPC.Chat chat) {
         if (chat != null) {
             setInfo(chat.id, chat.title, null, null);
+        }
+    }
+
+    public void setInfo(TLRPC.Chat chat, int accountNum) {
+        if (chat != null) {
+            String title = UserConfig.getChatTitleOverride(accountNum, chat.id);
+            setInfo(chat.id, title != null ? title : chat.title, null, null);
         }
     }
 

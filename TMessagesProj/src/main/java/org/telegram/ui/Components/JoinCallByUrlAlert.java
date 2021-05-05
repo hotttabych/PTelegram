@@ -23,6 +23,7 @@ import org.telegram.messenger.ChatObject;
 import org.telegram.messenger.ImageLocation;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.R;
+import org.telegram.messenger.UserConfig;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.BottomSheet;
 import org.telegram.ui.ActionBar.Theme;
@@ -79,7 +80,7 @@ public class JoinCallByUrlAlert extends BottomSheet {
         avatarImageView.setRoundRadius(AndroidUtilities.dp(45));
         linearLayout.addView(avatarImageView, LayoutHelper.createLinear(90, 90, Gravity.TOP | Gravity.CENTER_HORIZONTAL, 0, 29, 0, 0));
 
-        AvatarDrawable avatarDrawable = new AvatarDrawable(chat);
+        AvatarDrawable avatarDrawable = new AvatarDrawable(chat, false, currentAccount);
         avatarImageView.setForUserOrChat(chat, avatarDrawable);
 
         TextView percentTextView = new TextView(context);
@@ -98,7 +99,11 @@ public class JoinCallByUrlAlert extends BottomSheet {
         ChatObject.Call call = AccountInstance.getInstance(currentAccount).getMessagesController().getGroupCall(chat.id, false);
         if (call != null) {
             if (TextUtils.isEmpty(call.call.title)) {
-                percentTextView.setText(chat.title);
+                String title = UserConfig.getChatTitleOverride(currentAccount, chat.id);
+                if (title == null) {
+                    title = chat.title;
+                }
+                percentTextView.setText(title);
             } else {
                 percentTextView.setText(call.call.title);
             }
@@ -108,7 +113,11 @@ public class JoinCallByUrlAlert extends BottomSheet {
                 infoTextView.setText(LocaleController.formatPluralString("Participants", call.call.participants_count));
             }
         } else {
-            percentTextView.setText(chat.title);
+            String title = UserConfig.getChatTitleOverride(currentAccount, chat.id);
+            if (title == null) {
+                title = chat.title;
+            }
+            percentTextView.setText(title);
             infoTextView.setText(LocaleController.getString("NoOneJoinedYet", R.string.NoOneJoinedYet));
         }
 

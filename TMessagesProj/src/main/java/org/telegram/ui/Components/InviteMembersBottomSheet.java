@@ -42,6 +42,7 @@ import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.R;
+import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.Utilities;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.TLObject;
@@ -313,7 +314,11 @@ public class InviteMembersBottomSheet extends UsersAlertBase implements Notifica
                 }
                 TLRPC.Chat chat = MessagesController.getInstance(currentAccount).getChat(chatId);
                 if (selectedContacts.size() > 5) {
-                    SpannableStringBuilder spannableStringBuilder = new SpannableStringBuilder(AndroidUtilities.replaceTags(LocaleController.formatString("AddMembersAlertNamesText", R.string.AddMembersAlertNamesText, LocaleController.formatPluralString("Members", selectedContacts.size()), chat.title)));
+                    String title = UserConfig.getChatTitleOverride(currentAccount, chat.id);
+                    if (title == null) {
+                        title = chat.title;
+                    }
+                    SpannableStringBuilder spannableStringBuilder = new SpannableStringBuilder(AndroidUtilities.replaceTags(LocaleController.formatString("AddMembersAlertNamesText", R.string.AddMembersAlertNamesText, LocaleController.formatPluralString("Members", selectedContacts.size()), title)));
                     String countString = String.format("%d", selectedContacts.size());
                     int index = TextUtils.indexOf(spannableStringBuilder, countString);
                     if (index >= 0) {
@@ -321,7 +326,11 @@ public class InviteMembersBottomSheet extends UsersAlertBase implements Notifica
                     }
                     builder.setMessage(spannableStringBuilder);
                 } else {
-                    builder.setMessage(AndroidUtilities.replaceTags(LocaleController.formatString("AddMembersAlertNamesText", R.string.AddMembersAlertNamesText, stringBuilder, chat.title)));
+                    String title = UserConfig.getChatTitleOverride(currentAccount, chat.id);
+                    if (title == null) {
+                        title = chat.title;
+                    }
+                    builder.setMessage(AndroidUtilities.replaceTags(LocaleController.formatString("AddMembersAlertNamesText", R.string.AddMembersAlertNamesText, stringBuilder, title)));
                 }
                 builder.setPositiveButton(LocaleController.getString("Add", R.string.Add), (dialogInterface, i) -> onAddToGroupDone(0));
                 builder.setNegativeButton(LocaleController.getString("Cancel", R.string.Cancel), null);
@@ -937,7 +946,10 @@ public class InviteMembersBottomSheet extends UsersAlertBase implements Notifica
                                 username = user.username;
                             } else {
                                 TLRPC.Chat chat = (TLRPC.Chat) object;
-                                name = chat.title;
+                                name = UserConfig.getChatTitleOverride(currentAccount, chat.id);
+                                if (name == null) {
+                                    name = chat.title;
+                                }
                                 username = chat.username;
                             }
                             String tName = LocaleController.getInstance().getTranslitString(name);
@@ -960,7 +972,11 @@ public class InviteMembersBottomSheet extends UsersAlertBase implements Notifica
                                             resultArrayNames.add(AndroidUtilities.generateSearchName(user.first_name, user.last_name, q));
                                         } else {
                                             TLRPC.Chat chat = (TLRPC.Chat) object;
-                                            resultArrayNames.add(AndroidUtilities.generateSearchName(chat.title, null, q));
+                                            String title = UserConfig.getChatTitleOverride(currentAccount, chat.id);
+                                            if (title == null) {
+                                                title = chat.title;
+                                            }
+                                            resultArrayNames.add(AndroidUtilities.generateSearchName(title, null, q));
                                         }
                                     } else {
                                         resultArrayNames.add(AndroidUtilities.generateSearchName("@" + username, null, "@" + q));

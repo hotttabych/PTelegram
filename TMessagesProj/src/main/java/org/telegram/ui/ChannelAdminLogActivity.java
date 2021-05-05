@@ -566,7 +566,11 @@ public class ChannelAdminLogActivity extends BaseFragment implements Notificatio
 
         avatarContainer.setEnabled(false);
 
-        avatarContainer.setTitle(currentChat.title);
+        String title = UserConfig.getChatTitleOverride(currentAccount, currentChat.id);
+        if (title == null) {
+            title = currentChat.title;
+        }
+        avatarContainer.setTitle(title);
         avatarContainer.setSubtitle(LocaleController.getString("EventLogAllEvents", R.string.EventLogAllEvents));
         avatarContainer.setChatAvatar(currentChat);
 
@@ -1268,7 +1272,11 @@ public class ChannelAdminLogActivity extends BaseFragment implements Notificatio
                 } else if (fromId < 0) {
                     TLRPC.Chat chat = MessagesController.getInstance(currentAccount).getChat(-fromId);
                     if (chat != null) {
-                        str = chat.title + ":\n";
+                        String title = UserConfig.getChatTitleOverride(currentAccount, chat.id);
+                        if (title == null) {
+                            title = chat.title;
+                        }
+                        str = title + ":\n";
                     }
                 }
             }

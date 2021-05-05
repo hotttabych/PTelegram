@@ -78,6 +78,7 @@ import org.telegram.messenger.MessageObject;
 import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.R;
+import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.UserObject;
 import org.telegram.messenger.Utilities;
 import org.telegram.messenger.voip.VoIPBaseService;
@@ -1322,7 +1323,7 @@ public class GroupCallActivity extends BottomSheet implements NotificationCenter
                     accountSwitchImageView.setForUserOrChat(user, accountSwitchAvatarDrawable);
                 } else {
                     TLRPC.Chat chat = accountInstance.getMessagesController().getChat(-peerId);
-                    accountSwitchAvatarDrawable.setInfo(chat);
+                    accountSwitchAvatarDrawable.setInfo(chat, currentAccount);
                     accountSwitchImageView.setForUserOrChat(chat, accountSwitchAvatarDrawable);
                 }
                 accountSelectCell.setVisibility(View.GONE);
@@ -1652,7 +1653,11 @@ public class GroupCallActivity extends BottomSheet implements NotificationCenter
                     editText.setGravity(Gravity.LEFT | Gravity.TOP);
                     editText.setSingleLine(true);
                     editText.setImeOptions(EditorInfo.IME_ACTION_DONE);
-                    editText.setHint(currentChat.title);
+                    String title = UserConfig.getChatTitleOverride(currentAccount, currentChat.id);
+                    if (title == null) {
+                        title = currentChat.title;
+                    }
+                    editText.setHint(title);
                     editText.setHintTextColor(Theme.getColor(Theme.key_voipgroup_lastSeenText));
                     editText.setCursorColor(Theme.getColor(Theme.key_voipgroup_nameText));
                     editText.setCursorSize(AndroidUtilities.dp(20));
@@ -3626,16 +3631,20 @@ public class GroupCallActivity extends BottomSheet implements NotificationCenter
                 titleTextView.setText(call.call.title, animated);
             }
         } else {
-            if (!currentChat.title.equals(actionBar.getTitle())) {
+            String title = UserConfig.getChatTitleOverride(currentAccount, currentChat.id);
+            if (title == null) {
+                title = currentChat.title;
+            }
+            if (!title.equals(actionBar.getTitle())) {
                 if (animated) {
-                    actionBar.setTitleAnimated(currentChat.title, true, 180);
+                    actionBar.setTitleAnimated(title, true, 180);
                     actionBar.getTitleTextView().setOnClickListener(v -> {
                         if (call != null && call.recording) {
                             showRecordHint(actionBar.getTitleTextView());
                         }
                     });
                 } else {
-                    actionBar.setTitle(currentChat.title);
+                    actionBar.setTitle(title);
                 }
                 titleTextView.setText(LocaleController.getString("VoipGroupVoiceChat", R.string.VoipGroupVoiceChat), animated);
             }
@@ -4503,7 +4512,7 @@ public class GroupCallActivity extends BottomSheet implements NotificationCenter
             imageView.setRoundRadius(AndroidUtilities.dp(20));
             frameLayout.addView(imageView, LayoutHelper.createFrame(40, 40, (LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.TOP, 22, 5, 22, 0));
 
-            avatarDrawable.setInfo(object);
+            avatarDrawable.setInfo(object, currentAccount);
             String name;
             if (object instanceof TLRPC.User) {
                 TLRPC.User user = (TLRPC.User) object;
@@ -4512,7 +4521,10 @@ public class GroupCallActivity extends BottomSheet implements NotificationCenter
             } else {
                 TLRPC.Chat chat = (TLRPC.Chat) object;
                 imageView.setForUserOrChat(chat, avatarDrawable);
-                name = chat.title;
+                name = UserConfig.getChatTitleOverride(currentAccount, chat.id);
+                if (name == null) {
+                    name = chat.title;
+                }
             }
 
             TextView textView = new TextView(getContext());
@@ -4524,12 +4536,16 @@ public class GroupCallActivity extends BottomSheet implements NotificationCenter
             textView.setSingleLine(true);
             textView.setGravity((LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.CENTER_VERTICAL);
             textView.setEllipsize(TextUtils.TruncateAt.END);
+            String title = UserConfig.getChatTitleOverride(currentAccount, currentChat.id);
+            if (title == null) {
+                title = currentChat.title;
+            }
             if (option == 2) {
                 textView.setText(LocaleController.getString("VoipGroupRemoveMemberAlertTitle2", R.string.VoipGroupRemoveMemberAlertTitle2));
-                messageTextView.setText(AndroidUtilities.replaceTags(LocaleController.formatString("VoipGroupRemoveMemberAlertText2", R.string.VoipGroupRemoveMemberAlertText2, name, currentChat.title)));
+                messageTextView.setText(AndroidUtilities.replaceTags(LocaleController.formatString("VoipGroupRemoveMemberAlertText2", R.string.VoipGroupRemoveMemberAlertText2, name, title)));
             } else {
                 textView.setText(LocaleController.getString("VoipGroupAddMemberTitle", R.string.VoipGroupAddMemberTitle));
-                messageTextView.setText(AndroidUtilities.replaceTags(LocaleController.formatString("VoipGroupAddMemberText", R.string.VoipGroupAddMemberText, name, currentChat.title)));
+                messageTextView.setText(AndroidUtilities.replaceTags(LocaleController.formatString("VoipGroupAddMemberText", R.string.VoipGroupAddMemberText, name, title)));
             }
 
             frameLayout.addView(textView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, (LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.TOP, (LocaleController.isRTL ? 21 : 76), 11, (LocaleController.isRTL ? 76 : 21), 0));

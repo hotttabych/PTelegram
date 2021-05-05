@@ -44,6 +44,7 @@ import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.MessagesStorage;
 import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.R;
+import org.telegram.messenger.UserConfig;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.ActionBar;
 import org.telegram.ui.ActionBar.ActionBarMenu;
@@ -205,7 +206,11 @@ public class ChatEditActivity extends BaseFragment implements ImageUpdater.Image
             }
         }
 
-        avatarDrawable.setInfo(5, currentChat.title, null);
+        String title = UserConfig.getChatTitleOverride(currentAccount, currentChat.id);
+        if (title == null) {
+            title = currentChat.title;
+        }
+        avatarDrawable.setInfo(5, title, null);
         isChannel = ChatObject.isChannel(currentChat) && !currentChat.megagroup;
         imageUpdater.parentFragment = this;
         imageUpdater.setDelegate(this);
@@ -914,7 +919,11 @@ public class ChatEditActivity extends BaseFragment implements ImageUpdater.Image
         undoView = new UndoView(context);
         sizeNotifierFrameLayout.addView(undoView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.BOTTOM | Gravity.LEFT, 8, 0, 8, 8));
 
-        nameTextView.setText(currentChat.title);
+        String title = UserConfig.getChatTitleOverride(currentAccount, currentChat.id);
+        if (title == null) {
+            title = currentChat.title;
+        }
+        nameTextView.setText(title);
         nameTextView.setSelection(nameTextView.length());
         if (info != null) {
             descriptionTextView.setText(info.about);
@@ -1259,13 +1268,21 @@ public class ChatEditActivity extends BaseFragment implements ImageUpdater.Image
                     } else {
                         if (isChannel) {
                             if (TextUtils.isEmpty(chat.username)) {
-                                linkedCell.setTextAndValue(LocaleController.getString("Discussion", R.string.Discussion), chat.title, true);
+                                String title = UserConfig.getChatTitleOverride(currentAccount, chat.id);
+                                if (title == null) {
+                                    title = chat.title;
+                                }
+                                linkedCell.setTextAndValue(LocaleController.getString("Discussion", R.string.Discussion), title, true);
                             } else {
                                 linkedCell.setTextAndValue(LocaleController.getString("Discussion", R.string.Discussion), "@" + chat.username, true);
                             }
                         } else {
                             if (TextUtils.isEmpty(chat.username)) {
-                                linkedCell.setTextAndValue(LocaleController.getString("LinkedChannel", R.string.LinkedChannel), chat.title, false);
+                                String title = UserConfig.getChatTitleOverride(currentAccount, chat.id);
+                                if (title == null) {
+                                    title = chat.title;
+                                }
+                                linkedCell.setTextAndValue(LocaleController.getString("LinkedChannel", R.string.LinkedChannel), title, false);
                             } else {
                                 linkedCell.setTextAndValue(LocaleController.getString("LinkedChannel", R.string.LinkedChannel), "@" + chat.username, false);
                             }

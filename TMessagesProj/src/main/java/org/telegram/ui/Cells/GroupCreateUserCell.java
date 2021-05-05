@@ -344,7 +344,10 @@ public class GroupCreateUserCell extends FrameLayout {
                         }
                     }
                     if (!continueUpdate && currentName == null && lastName != null && (mask & MessagesController.UPDATE_MASK_NAME) != 0) {
-                        newName = currentChat.title;
+                        newName = UserConfig.getChatTitleOverride(currentAccount, currentChat.id);
+                        if (newName == null) {
+                            newName = currentChat.title;
+                        }
                         if (!newName.equals(lastName)) {
                             continueUpdate = true;
                         }
@@ -354,13 +357,17 @@ public class GroupCreateUserCell extends FrameLayout {
                     }
                 }
 
-                avatarDrawable.setInfo(currentChat);
+                avatarDrawable.setInfo(currentChat, currentAccount);
 
                 if (currentName != null) {
                     lastName = null;
                     nameTextView.setText(currentName, true);
                 } else {
-                    lastName = newName == null ? currentChat.title : newName;
+                    String title = UserConfig.getChatTitleOverride(currentAccount, currentChat.id);
+                    if (title == null) {
+                        title = currentChat.title;
+                    }
+                    lastName = newName == null ? title : newName;
                     nameTextView.setText(lastName);
                 }
 

@@ -43,6 +43,7 @@ import org.telegram.messenger.MessageObject;
 import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.R;
+import org.telegram.messenger.UserConfig;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.TLObject;
 import org.telegram.tgnet.TLRPC;
@@ -223,7 +224,11 @@ public class MessageStatisticActivity extends BaseFragment implements Notificati
                 TLRPC.Chat chatLocal = getMessagesController().getChat(chatId);
                 if (chatLocal != null) {
                     avatarContainer.setChatAvatar(chatLocal);
-                    avatarContainer.setTitle(chatLocal.title);
+                    String title = UserConfig.getChatTitleOverride(currentAccount, chatLocal.id);
+                    if (title == null) {
+                        title = chatLocal.title;
+                    }
+                    avatarContainer.setTitle(title);
                 }
                 chat = chatFull;
                 loadStat();
@@ -365,7 +370,11 @@ public class MessageStatisticActivity extends BaseFragment implements Notificati
         TLRPC.Chat chatLocal = getMessagesController().getChat(chatId);
         if (chatLocal != null) {
             avatarContainer.setChatAvatar(chatLocal);
-            avatarContainer.setTitle(chatLocal.title);
+            String title = UserConfig.getChatTitleOverride(currentAccount, chatLocal.id);
+            if (title == null) {
+                title = chatLocal.title;
+            }
+            avatarContainer.setTitle(title);
         }
 
         boolean hasThumb = false;

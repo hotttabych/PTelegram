@@ -129,8 +129,11 @@ public class SharingLiveLocationCell extends FrameLayout {
         } else {
             TLRPC.Chat chat = MessagesController.getInstance(currentAccount).getChat(-lowerId);
             if (chat != null) {
-                avatarDrawable = new AvatarDrawable(chat);
-                name = chat.title;
+                avatarDrawable = new AvatarDrawable(chat, false, currentAccount);
+                name = UserConfig.getChatTitleOverride(currentAccount, chat.id);
+                if (name == null) {
+                    name = chat.title;
+                }
                 avatarImageView.setForUserOrChat(chat, avatarDrawable);
             }
         }
@@ -182,8 +185,11 @@ public class SharingLiveLocationCell extends FrameLayout {
             } else {
                 TLRPC.Chat chat = MessagesController.getInstance(currentAccount).getChat(-fromId);
                 if (chat != null) {
-                    avatarDrawable = new AvatarDrawable(chat);
-                    name = chat.title;
+                    avatarDrawable = new AvatarDrawable(chat, false, currentAccount);
+                    name = UserConfig.getChatTitleOverride(currentAccount, chat.id);
+                    if (name == null) {
+                        name = chat.title;
+                    }
                     avatarImageView.setForUserOrChat(chat, avatarDrawable);
                 }
             }
@@ -221,8 +227,12 @@ public class SharingLiveLocationCell extends FrameLayout {
         } else {
             TLRPC.Chat chat = MessagesController.getInstance(currentAccount).getChat(-lower_id);
             if (chat != null) {
-                avatarDrawable.setInfo(chat);
-                nameTextView.setText(chat.title);
+                avatarDrawable.setInfo(chat, currentAccount);
+                String title = UserConfig.getChatTitleOverride(currentAccount, chat.id);
+                if (title == null) {
+                    title = chat.title;
+                }
+                nameTextView.setText(title);
                 avatarImageView.setForUserOrChat(chat, avatarDrawable);
             }
         }
@@ -254,8 +264,12 @@ public class SharingLiveLocationCell extends FrameLayout {
         } else {
             TLRPC.Chat chat = MessagesController.getInstance(currentAccount).getChat(-lower_id);
             if (chat != null) {
-                avatarDrawable.setInfo(chat);
-                nameTextView.setText(chat.title);
+                avatarDrawable.setInfo(chat, currentAccount);
+                String title = UserConfig.getChatTitleOverride(currentAccount, chat.id);
+                if (title == null) {
+                    title = chat.title;
+                }
+                nameTextView.setText(title);
                 avatarImageView.setForUserOrChat(chat, avatarDrawable);
             }
         }
