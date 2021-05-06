@@ -1870,7 +1870,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     }
                     DialogTemplate template = new DialogTemplate();
                     template.type = DialogType.EDIT;
-                    template.title = LocaleController.getString("ActivationMessage", R.string.ActivationMessage);
+                    template.title = LocaleController.getString("EditChatName", R.string.EditChatName);
                     template.addEditTemplate(item.title, LocaleController.getString("Message", R.string.Message), false);
                     template.positiveListener = views -> {
                         item.title = ((EditTextCaption)views.get(0)).getText().toString();
