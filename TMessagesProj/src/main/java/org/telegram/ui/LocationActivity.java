@@ -1208,7 +1208,7 @@ public class LocationActivity extends BaseFragment implements NotificationCenter
 
                 BackupImageView backupImageView = new BackupImageView(context);
                 backupImageView.setRoundRadius(AndroidUtilities.dp(26));
-                backupImageView.setForUserOrChat(chat, new AvatarDrawable(chat));
+                backupImageView.setForUserOrChat(chat, new AvatarDrawable(chat, false, currentAccount));
                 frameLayout1.addView(backupImageView, LayoutHelper.createFrame(52, 52, Gravity.LEFT | Gravity.TOP, 5, 5, 0, 0));
 
                 markerImageView = frameLayout1;
@@ -1400,7 +1400,7 @@ public class LocationActivity extends BaseFragment implements NotificationCenter
                 if (liveLocation.user != null) {
                     avatarDrawable.setInfo(liveLocation.user);
                 } else if (liveLocation.chat != null) {
-                    avatarDrawable.setInfo(liveLocation.chat);
+                    avatarDrawable.setInfo(liveLocation.chat, currentAccount);
                 }
                 canvas.translate(AndroidUtilities.dp(6), AndroidUtilities.dp(6));
                 avatarDrawable.setBounds(0, 0, AndroidUtilities.dp(50), AndroidUtilities.dp(50));

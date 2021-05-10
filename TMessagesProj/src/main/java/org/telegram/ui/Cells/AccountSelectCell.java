@@ -113,8 +113,9 @@ public class AccountSelectCell extends FrameLayout {
             imageView.setForUserOrChat(user, avatarDrawable);
         } else {
             TLRPC.Chat chat = (TLRPC.Chat) object;
-            avatarDrawable.setInfo(chat);
-            infoTextView.setText(chat.title);
+            avatarDrawable.setInfo(chat, accountNumber);
+            String title = UserConfig.getChatTitleOverride(accountNumber, chat.id);
+            infoTextView.setText(title != null ? title : chat.title);
             imageView.setForUserOrChat(chat, avatarDrawable);
         }
     }

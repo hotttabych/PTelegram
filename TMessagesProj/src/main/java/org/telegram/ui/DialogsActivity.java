@@ -4743,7 +4743,11 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 long did;
                 if (item instanceof TLRPC.Chat) {
                     TLRPC.Chat chat = (TLRPC.Chat) item;
-                    builder.setMessage(LocaleController.formatString("ClearSearchSingleChatAlertText", R.string.ClearSearchSingleChatAlertText, chat.title));
+                    String title = UserConfig.getChatTitleOverride(currentAccount, chat.id);
+                    if (title == null) {
+                        title = chat.title;
+                    }
+                    builder.setMessage(LocaleController.formatString("ClearSearchSingleChatAlertText", R.string.ClearSearchSingleChatAlertText, title));
                     did = -chat.id;
                 } else if (item instanceof TLRPC.User) {
                     TLRPC.User user = (TLRPC.User) item;
@@ -6708,13 +6712,17 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     if (chat == null) {
                         return;
                     }
+                    String chatTitle = UserConfig.getChatTitleOverride(currentAccount, chat.id);
+                    if (chatTitle == null) {
+                        chatTitle = chat.title;
+                    }
                     if (addToGroupAlertString != null) {
                         title = LocaleController.getString("AddToTheGroupAlertTitle", R.string.AddToTheGroupAlertTitle);
-                        message = LocaleController.formatStringSimple(addToGroupAlertString, chat.title);
+                        message = LocaleController.formatStringSimple(addToGroupAlertString, chatTitle);
                         buttonText = LocaleController.getString("Add", R.string.Add);
                     } else {
                         title = LocaleController.getString("SendMessageTitle", R.string.SendMessageTitle);
-                        message = LocaleController.formatStringSimple(selectAlertStringGroup, chat.title);
+                        message = LocaleController.formatStringSimple(selectAlertStringGroup, chatTitle);
                         buttonText = LocaleController.getString("Send", R.string.Send);
                     }
                 }

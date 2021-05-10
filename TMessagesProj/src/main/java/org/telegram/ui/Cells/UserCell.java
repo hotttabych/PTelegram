@@ -383,7 +383,10 @@ public class UserCell extends FrameLayout {
                 if (currentUser != null) {
                     newName = UserObject.getUserName(currentUser);
                 } else {
-                    newName = currentChat.title;
+                    newName = UserConfig.getChatTitleOverride(currentAccount, currentChat.id);
+                    if (newName == null) {
+                        newName = currentChat.title;
+                    }
                 }
                 if (!newName.equals(lastName)) {
                     continueUpdate = true;
@@ -443,9 +446,10 @@ public class UserCell extends FrameLayout {
                     lastStatus = 0;
                 }
             } else if (currentChat != null) {
-                avatarDrawable.setInfo(currentChat);
+                avatarDrawable.setInfo(currentChat, currentAccount);
             } else if (currentName != null) {
-                avatarDrawable.setInfo(currentId, currentName.toString(), null);
+                String title = UserConfig.getChatTitleOverride(currentAccount, currentId);
+                avatarDrawable.setInfo(currentId, title != null ? title : currentName.toString(), null);
             } else {
                 avatarDrawable.setInfo(currentId, "#", null);
             }
@@ -458,7 +462,11 @@ public class UserCell extends FrameLayout {
             if (currentUser != null) {
                 lastName = newName == null ? UserObject.getUserName(currentUser) : newName;
             } else if (currentChat != null) {
-                lastName = newName == null ? currentChat.title : newName;
+                String title = UserConfig.getChatTitleOverride(currentAccount, currentChat.id);
+                if (title == null) {
+                    title = currentChat.title;
+                }
+                lastName = newName == null ? title : newName;
             } else {
                 lastName = "";
             }

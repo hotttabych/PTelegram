@@ -51,6 +51,7 @@ import org.telegram.messenger.MessageObject;
 import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.R;
+import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.UserObject;
 import org.telegram.messenger.Utilities;
 import org.telegram.tgnet.TLObject;
@@ -1480,7 +1481,11 @@ public class ChatUsersActivity extends BaseFragment implements NotificationCente
                     } else {
                         TLRPC.Chat chat = getMessagesController().getChat(-peerId);
                         if (chat != null) {
-                            BulletinFactory.createPromoteToAdminBulletin(ChatUsersActivity.this, chat.title).show();
+                            String title = UserConfig.getChatTitleOverride(currentAccount, currentChat.id);
+                            if (title == null) {
+                                title = currentChat.title;
+                            }
+                            BulletinFactory.createPromoteToAdminBulletin(ChatUsersActivity.this, title).show();
                         }
                     }
                 }
@@ -1785,7 +1790,11 @@ public class ChatUsersActivity extends BaseFragment implements NotificationCente
                     getMessagesController().deleteParticipantFromChat(chatId, user, null);
                     removeParticipants(peerId);
                     if (currentChat != null && user != null && BulletinFactory.canShowBulletin(this)) {
-                        BulletinFactory.createRemoveFromChatBulletin(this, user, currentChat.title).show();
+                        String title = UserConfig.getChatTitleOverride(currentAccount, currentChat.id);
+                        if (title == null) {
+                            title = currentChat.title;
+                        }
+                        BulletinFactory.createRemoveFromChatBulletin(this, user, title).show();
                     }
                 } else {
                     if (actions.get(i) == 1 && canEditAdmin && (participant instanceof TLRPC.TL_channelParticipantAdmin || participant instanceof TLRPC.TL_chatParticipantAdmin)) {
@@ -2594,7 +2603,10 @@ public class ChatUsersActivity extends BaseFragment implements NotificationCente
                                     TLRPC.Chat chat = getMessagesController().getChat(-peerId);
                                     name = chat.title.toLowerCase();
                                     username = chat.username;
-                                    firstName = chat.title;
+                                    firstName = UserConfig.getChatTitleOverride(currentAccount, chat.id);
+                                    if (firstName == null) {
+                                        firstName = chat.title;
+                                    }
                                     lastName = null;
                                 }
 

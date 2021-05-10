@@ -161,7 +161,10 @@ public class DialogsSearchAdapter extends RecyclerListView.SelectionAdapter {
             if (user != null) {
                 name = UserObject.getFirstName(user);
             } else if (chat != null) {
-                name = chat.title;
+                name = UserConfig.getChatTitleOverride(currentAccount, chat.id);
+                if (name == null) {
+                    name = chat.title;
+                }
             }
             cell.setDialog(did, true, name);
         }
@@ -986,7 +989,10 @@ public class DialogsSearchAdapter extends RecyclerListView.SelectionAdapter {
                             if (user != null) {
                                 nameSearch = ContactsController.formatName(user.first_name, user.last_name);
                             } else if (chat != null) {
-                                nameSearch = chat.title;
+                                nameSearch = UserConfig.getChatTitleOverride(currentAccount, chat.id);
+                                if (nameSearch == null) {
+                                    nameSearch = chat.title;
+                                }
                             }
                             if (nameSearch != null && (index = AndroidUtilities.indexOfIgnoreCase(nameSearch, foundUserName)) != -1) {
                                 SpannableStringBuilder spannableStringBuilder = new SpannableStringBuilder(nameSearch);

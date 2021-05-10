@@ -3830,7 +3830,11 @@ public class EmojiView extends FrameLayout implements NotificationCenter.Notific
                             icon = groupStickerSet != null ? R.drawable.stickersclose : R.drawable.stickerset_close;
                         }
                         TLRPC.Chat chat = info != null ? MessagesController.getInstance(currentAccount).getChat(info.id) : null;
-                        cell.setText(LocaleController.formatString("CurrentGroupStickers", R.string.CurrentGroupStickers, chat != null ? chat.title : "Group Stickers"), icon);
+                        String title = UserConfig.getChatTitleOverride(currentAccount, chat.id);
+                        if (title == null) {
+                            title = chat.title;
+                        }
+                        cell.setText(LocaleController.formatString("CurrentGroupStickers", R.string.CurrentGroupStickers, chat != null ? title : "Group Stickers"), icon);
                     } else {
                         Object object = cache.get(position);
                         if (object instanceof TLRPC.TL_messages_stickerSet) {

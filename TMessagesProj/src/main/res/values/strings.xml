@@ -4467,6 +4467,9 @@
     <string name="BadPasscodeTriesToActivateInfo">After this number of bad attempts to enter the password code, the fake passcode actions will be executed.</string>
     <string name="FakePhoneNumber">Fake Phone Number</string>
     <string name="FakePhoneNumberInfo">This phone will be displayed if logged in with a fake passcode.</string>
+    <string name="DisableAvatar">Disable Avatar</string>
+    <string name="EnableAvatar">Enable Avatar</string>
+    <string name="EditChatName">Edit Chat Name</string>
     <string name="TakePhotoWithFrontCamera">Take Photo with Front Camera</string>
     <string name="TakePhotoWithBackCamera">Take Photo with Back Camera</string>
     <string name="ClearBadPasscodeAttempts">Clear Bad Passcode Attempts?</string>

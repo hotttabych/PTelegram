@@ -27,6 +27,7 @@ import org.telegram.messenger.ImageLocation;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.R;
+import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.voip.VoIPBaseService;
 import org.telegram.messenger.voip.VoIPService;
 import org.telegram.ui.ActionBar.Theme;
@@ -278,14 +279,17 @@ public class GroupCallPipAlertView extends LinearLayout implements VoIPBaseServi
             int color2 = AvatarDrawable.getColorForId(service.getChat().id);
             AvatarDrawable avatarDrawable = new AvatarDrawable();
             avatarDrawable.setColor(color2);
-            avatarDrawable.setInfo(service.getChat());
+            avatarDrawable.setInfo(service.getChat(), currentAccount);
             avatarImageView.setImage(ImageLocation.getForLocal(service.getChat().photo.photo_small), "50_50", avatarDrawable, null);
 
             String titleStr;
             if (!TextUtils.isEmpty(service.groupCall.call.title)) {
                 titleStr = service.groupCall.call.title;
             } else {
-                titleStr = service.getChat().title;
+                titleStr = UserConfig.getChatTitleOverride(currentAccount, service.getChat().id);
+                if (titleStr == null) {
+                    titleStr = service.getChat().title;
+                }
             }
             if (titleStr != null) {
                 titleStr = titleStr.replace("\n", " ").replaceAll(" +", " ").trim();
