@@ -3533,7 +3533,7 @@ public class MediaDataController extends BaseController {
                         result.eraseColor(Color.TRANSPARENT);
                         Canvas canvas = new Canvas(result);
                         if (overrideAvatar) {
-                            AvatarDrawable avatarDrawable = new AvatarDrawable(user);
+                            AvatarDrawable avatarDrawable = new AvatarDrawable(user, false, currentAccount);
                             if (UserObject.isReplyUser(user)) {
                                 avatarDrawable.setAvatarType(AvatarDrawable.AVATAR_TYPE_REPLIES);
                             } else {

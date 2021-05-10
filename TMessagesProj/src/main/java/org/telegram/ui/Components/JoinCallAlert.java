@@ -590,11 +590,16 @@ public class JoinCallAlert extends BottomSheet {
                 doneButton.setText(LocaleController.formatString("VoipGroupContinueAs", R.string.VoipGroupContinueAs, UserObject.getFirstName(user)), animated);
             } else {
                 TLRPC.Chat chat = MessagesController.getInstance(currentAccount).getChat(-did);
-                String title = UserConfig.getChatTitleOverride(currentAccount, chat.id);
-                if (title == null) {
-                    title = chat.title;
+                String title;
+                if (chat != null) {
+                    title = UserConfig.getChatTitleOverride(currentAccount, chat.id);
+                    if (title == null) {
+                        title = chat.title;
+                    }
+                } else {
+                    title = "";
                 }
-                doneButton.setText(LocaleController.formatString("VoipGroupContinueAs", R.string.VoipGroupContinueAs, chat != null ? title : ""), animated);
+                doneButton.setText(LocaleController.formatString("VoipGroupContinueAs", R.string.VoipGroupContinueAs, title), animated);
             }
         }
     }

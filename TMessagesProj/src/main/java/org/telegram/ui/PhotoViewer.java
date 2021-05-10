@@ -9761,7 +9761,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                         } else if (newMessageObject.isFromUser()) {
                             TLRPC.User user = MessagesController.getInstance(currentAccount).getUser(newMessageObject.messageOwner.from_id.user_id);
                             if (user != null) {
-                                nameTextView.setText(UserObject.getUserName(user), animated);
+                                nameTextView.setText(UserObject.getUserName(user, currentAccount), animated);
                             } else {
                                 nameTextView.setText("", animated);
                             }

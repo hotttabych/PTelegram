@@ -97,7 +97,7 @@ public class ShareDialogCell extends FrameLayout {
     public void setDialog(int uid, boolean checked, CharSequence name) {
         if (uid > 0) {
             user = MessagesController.getInstance(currentAccount).getUser(uid);
-            avatarDrawable.setInfo(user);
+            avatarDrawable.setInfo(user, currentAccount);
             if (currentType != TYPE_CREATE && UserObject.isReplyUser(user)) {
                 nameTextView.setText(LocaleController.getString("RepliesTitle", R.string.RepliesTitle));
                 avatarDrawable.setAvatarType(AvatarDrawable.AVATAR_TYPE_REPLIES);

@@ -2458,7 +2458,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             switchItem.addView(imageView, LayoutHelper.createFrame(36, 36, Gravity.CENTER));
 
             TLRPC.User user = getUserConfig().getCurrentUser();
-            avatarDrawable.setInfo(user);
+            avatarDrawable.setInfo(user, currentAccount);
             imageView.getImageReceiver().setCurrentAccount(currentAccount);
             imageView.setForUserOrChat(user, avatarDrawable);
 
@@ -3407,7 +3407,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         if (inPreviewMode) {
             final TLRPC.User currentUser = getUserConfig().getCurrentUser();
             avatarContainer = new ChatAvatarContainer(actionBar.getContext(), null, false);
-            avatarContainer.setTitle(UserObject.getUserName(currentUser));
+            avatarContainer.setTitle(UserObject.getUserName(currentUser, currentAccount));
             avatarContainer.setSubtitle(LocaleController.formatUserStatus(currentAccount, currentUser));
             avatarContainer.setUserAvatar(currentUser, true);
             avatarContainer.setOccupyStatusBar(false);
@@ -6705,7 +6705,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                         return;
                     }
                     title = LocaleController.getString("SendMessageTitle", R.string.SendMessageTitle);
-                    message = LocaleController.formatStringSimple(selectAlertString, UserObject.getUserName(user));
+                    message = LocaleController.formatStringSimple(selectAlertString, UserObject.getUserName(user, currentAccount));
                     buttonText = LocaleController.getString("Send", R.string.Send);
                 } else {
                     TLRPC.Chat chat = getMessagesController().getChat(-lower_part);
@@ -6733,7 +6733,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     return;
                 }
                 title = LocaleController.getString("SendMessageTitle", R.string.SendMessageTitle);
-                message = LocaleController.formatStringSimple(selectAlertString, UserObject.getUserName(user));
+                message = LocaleController.formatStringSimple(selectAlertString, UserObject.getUserName(user, currentAccount));
                 buttonText = LocaleController.getString("Send", R.string.Send);
             }
             builder.setTitle(title);

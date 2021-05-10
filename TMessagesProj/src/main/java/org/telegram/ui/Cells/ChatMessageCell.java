@@ -3163,8 +3163,8 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                                     } else if (id < 0) {
                                         chat = MessagesController.getInstance(currentAccount).getChat(-id);
                                     }
+                                    commentAvatarDrawables[a].setInfo(user, currentAccount);
                                     if (user != null) {
-                                        commentAvatarDrawables[a].setInfo(user);
                                         commentAvatarImages[a].setForUserOrChat(user, commentAvatarDrawables[a]);
                                     } else if (chat != null) {
                                         commentAvatarDrawables[a].setInfo(chat, currentAccount);
@@ -4228,7 +4228,7 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                 }
                 boolean hasName;
                 if (user != null) {
-                    contactAvatarDrawable.setInfo(user);
+                    contactAvatarDrawable.setInfo(user, currentAccount);
                     hasName = true;
                 } else if (!TextUtils.isEmpty(messageObject.messageOwner.media.first_name) || !TextUtils.isEmpty(messageObject.messageOwner.media.last_name)) {
                     contactAvatarDrawable.setInfo(0, messageObject.messageOwner.media.first_name, messageObject.messageOwner.media.last_name);
@@ -4427,7 +4427,7 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                             Integer id = media.results.recent_voters.get(a);
                             TLRPC.User user = MessagesController.getInstance(currentAccount).getUser(id);
                             if (user != null) {
-                                pollAvatarDrawables[a].setInfo(user);
+                                pollAvatarDrawables[a].setInfo(user, currentAccount);
                                 pollAvatarImages[a].setForUserOrChat(user, pollAvatarDrawables[a]);
                             } else {
                                 pollAvatarDrawables[a].setInfo(id, "", "");
@@ -4761,7 +4761,7 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
 
                         updateCurrentUserAndChat();
                         if (currentUser != null) {
-                            contactAvatarDrawable.setInfo(currentUser);
+                            contactAvatarDrawable.setInfo(currentUser, currentAccount);
                             locationImageReceiver.setForUserOrChat(currentUser, contactAvatarDrawable);
                         } else if (currentChat != null) {
                             if (currentChat.photo != null) {
@@ -9197,7 +9197,7 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                 } else {
                     currentPhoto = null;
                 }
-                avatarDrawable.setInfo(currentUser);
+                avatarDrawable.setInfo(currentUser, currentAccount);
                 avatarImage.setForUserOrChat(currentUser, avatarDrawable);
             } else if (currentChat != null) {
                 if (currentChat.photo != null) {
@@ -9353,12 +9353,12 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
             if (currentForwardUser != null || currentForwardChannel != null || currentForwardName != null) {
                 if (currentForwardChannel != null) {
                     if (currentForwardUser != null) {
-                        currentForwardNameString = String.format("%s (%s)", currentForwardChannel.title, UserObject.getUserName(currentForwardUser));
+                        currentForwardNameString = String.format("%s (%s)", currentForwardChannel.title, UserObject.getUserName(currentForwardUser, currentAccount));
                     } else {
                         currentForwardNameString = currentForwardChannel.title;
                     }
                 } else if (currentForwardUser != null) {
-                    currentForwardNameString = UserObject.getUserName(currentForwardUser);
+                    currentForwardNameString = UserObject.getUserName(currentForwardUser, currentAccount);
                 } else {
                     currentForwardNameString = currentForwardName;
                 }
@@ -9477,7 +9477,7 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                         if (fromId > 0) {
                             TLRPC.User user = MessagesController.getInstance(currentAccount).getUser(fromId);
                             if (user != null) {
-                                name = UserObject.getUserName(user);
+                                name = UserObject.getUserName(user, currentAccount);
                             }
                         } else if (fromId < 0) {
                             TLRPC.Chat chat = MessagesController.getInstance(currentAccount).getChat(-fromId);
@@ -9536,12 +9536,12 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                     if (currentForwardUser != null || currentForwardChannel != null || currentForwardName != null) {
                         if (currentForwardChannel != null) {
                             if (currentForwardUser != null) {
-                                currentForwardNameString = String.format("%s (%s)", currentForwardChannel.title, UserObject.getUserName(currentForwardUser));
+                                currentForwardNameString = String.format("%s (%s)", currentForwardChannel.title, UserObject.getUserName(currentForwardUser, currentAccount));
                             } else {
                                 currentForwardNameString = currentForwardChannel.title;
                             }
                         } else if (currentForwardUser != null) {
-                            currentForwardNameString = UserObject.getUserName(currentForwardUser);
+                            currentForwardNameString = UserObject.getUserName(currentForwardUser, currentAccount);
                         } else {
                             currentForwardNameString = currentForwardName;
                         }
@@ -9620,7 +9620,7 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
 
     private String getAuthorName() {
         if (currentUser != null) {
-            return UserObject.getUserName(currentUser);
+            return UserObject.getUserName(currentUser, currentAccount);
         } else if (currentChat != null) {
             return currentChat.title;
         } else {
@@ -13003,7 +13003,7 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                 onInitializeAccessibilityNodeInfo(info);
                 StringBuilder sb = new StringBuilder();
                 if (isChat && currentUser!=null && !currentMessageObject.isOut()) {
-                    sb.append(UserObject.getUserName(currentUser));
+                    sb.append(UserObject.getUserName(currentUser, currentAccount));
                     sb.append('\n');
                 }
                 if (!TextUtils.isEmpty(currentMessageObject.messageText)) {

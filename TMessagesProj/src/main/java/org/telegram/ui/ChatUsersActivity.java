@@ -1200,7 +1200,7 @@ public class ChatUsersActivity extends BaseFragment implements NotificationCente
                             final String rankFinal = rank;
                             AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
                             builder.setTitle(LocaleController.getString("AppName", R.string.AppName));
-                            builder.setMessage(LocaleController.formatString("AdminWillBeRemoved", R.string.AdminWillBeRemoved, UserObject.getUserName(user)));
+                            builder.setMessage(LocaleController.formatString("AdminWillBeRemoved", R.string.AdminWillBeRemoved, UserObject.getUserName(user, currentAccount)));
                             builder.setPositiveButton(LocaleController.getString("OK", R.string.OK), (dialog, which) -> openRightsEdit(user.id, participant, ar, br, rankFinal, canEdit, selectType == 1 ? 0 : 1, false));
                             builder.setNegativeButton(LocaleController.getString("Cancel", R.string.Cancel), null);
                             showDialog(builder.create());
@@ -1481,9 +1481,9 @@ public class ChatUsersActivity extends BaseFragment implements NotificationCente
                     } else {
                         TLRPC.Chat chat = getMessagesController().getChat(-peerId);
                         if (chat != null) {
-                            String title = UserConfig.getChatTitleOverride(currentAccount, currentChat.id);
+                            String title = UserConfig.getChatTitleOverride(currentAccount, chat.id);
                             if (title == null) {
-                                title = currentChat.title;
+                                title = chat.title;
                             }
                             BulletinFactory.createPromoteToAdminBulletin(ChatUsersActivity.this, title).show();
                         }
@@ -1800,7 +1800,7 @@ public class ChatUsersActivity extends BaseFragment implements NotificationCente
                     if (actions.get(i) == 1 && canEditAdmin && (participant instanceof TLRPC.TL_channelParticipantAdmin || participant instanceof TLRPC.TL_chatParticipantAdmin)) {
                         AlertDialog.Builder builder2 = new AlertDialog.Builder(getParentActivity());
                         builder2.setTitle(LocaleController.getString("AppName", R.string.AppName));
-                        builder2.setMessage(LocaleController.formatString("AdminWillBeRemoved", R.string.AdminWillBeRemoved, UserObject.getUserName(user)));
+                        builder2.setMessage(LocaleController.formatString("AdminWillBeRemoved", R.string.AdminWillBeRemoved, UserObject.getUserName(user, currentAccount)));
                         builder2.setPositiveButton(LocaleController.getString("OK", R.string.OK), (dialog, which) -> openRightsEdit2(peerId, date, participant, adminRights, bannedRights, rank, canEditAdmin, actions.get(i), false));
                         builder2.setNegativeButton(LocaleController.getString("Cancel", R.string.Cancel), null);
                         showDialog(builder2.create());
@@ -2595,7 +2595,7 @@ public class ChatUsersActivity extends BaseFragment implements NotificationCente
                                     if (user.id == getUserConfig().getClientUserId()) {
                                         continue;
                                     }
-                                    name = UserObject.getUserName(user).toLowerCase();
+                                    name = UserObject.getUserName(user, currentAccount).toLowerCase();
                                     username = user.username;
                                     firstName = user.first_name;
                                     lastName = user.last_name;
@@ -2644,7 +2644,7 @@ public class ChatUsersActivity extends BaseFragment implements NotificationCente
                                     continue;
                                 }
 
-                                String name = UserObject.getUserName(user).toLowerCase();
+                                String name = UserObject.getUserName(user, currentAccount).toLowerCase();
                                 String tName = LocaleController.getInstance().getTranslitString(name);
                                 if (name.equals(tName)) {
                                     tName = null;
@@ -3171,7 +3171,7 @@ public class ChatUsersActivity extends BaseFragment implements NotificationCente
                             if (banned) {
                                 TLRPC.User user1 = getMessagesController().getUser(kickedBy);
                                 if (user1 != null) {
-                                    role = LocaleController.formatString("UserRemovedBy", R.string.UserRemovedBy, UserObject.getUserName(user1));
+                                    role = LocaleController.formatString("UserRemovedBy", R.string.UserRemovedBy, UserObject.getUserName(user1, currentAccount));
                                 }
                             }
                             userCell.setData(object, null, role, position != lastRow - 1);
@@ -3185,7 +3185,7 @@ public class ChatUsersActivity extends BaseFragment implements NotificationCente
                                     if (user1.id == peerId) {
                                         role = LocaleController.getString("ChannelAdministrator", R.string.ChannelAdministrator);
                                     } else {
-                                        role = LocaleController.formatString("EditAdminPromotedBy", R.string.EditAdminPromotedBy, UserObject.getUserName(user1));
+                                        role = LocaleController.formatString("EditAdminPromotedBy", R.string.EditAdminPromotedBy, UserObject.getUserName(user1, currentAccount));
                                     }
                                 }
                             }

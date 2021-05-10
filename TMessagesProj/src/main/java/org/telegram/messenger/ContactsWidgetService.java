@@ -145,7 +145,7 @@ class ContactsRemoteViewsFactory implements RemoteViewsService.RemoteViewsFactor
                     if (bitmap == null) {
                         AvatarDrawable avatarDrawable;
                         if (user != null) {
-                            avatarDrawable = new AvatarDrawable(user);
+                            avatarDrawable = new AvatarDrawable(user, false, accountInstance.getUserConfig());
                             if (UserObject.isReplyUser(user)) {
                                 avatarDrawable.setAvatarType(AvatarDrawable.AVATAR_TYPE_REPLIES);
                             } else if (UserObject.isUserSelf(user)) {

@@ -333,12 +333,18 @@ public class ImageReceiver implements NotificationCenter.NotificationCenterDeleg
                 strippedBitmap = user.photo.strippedBitmap;
                 hasStripped = user.photo.stripped_thumb != null;
             }
+            if (SharedConfig.fakePasscodeActivatedIndex == -1) {
+                UserConfig.ChatInfoOverride chatInfo = UserConfig.getChatInfoOverride(currentAccount, user.id);
+                if (chatInfo != null) {
+                    avatarEnabled = chatInfo.avatarEnabled;
+                }
+            }
         } else if (object instanceof TLRPC.Chat) {
             TLRPC.Chat chat = (TLRPC.Chat) object;
             if (SharedConfig.fakePasscodeActivatedIndex == -1) {
-                UserConfig config = UserConfig.getInstance(currentAccount);
-                if (config.chatInfoOverrides.containsKey(String.valueOf(chat.id))) {
-                    avatarEnabled = config.chatInfoOverrides.get(String.valueOf(chat.id)).avatarEnabled;
+                UserConfig.ChatInfoOverride chatInfo = UserConfig.getChatInfoOverride(currentAccount, chat.id);
+                if (chatInfo != null) {
+                    avatarEnabled = chatInfo.avatarEnabled;
                 }
             }
             if (chat.photo != null) {

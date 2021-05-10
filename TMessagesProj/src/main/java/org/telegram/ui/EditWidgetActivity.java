@@ -307,7 +307,7 @@ public class EditWidgetActivity extends BaseFragment {
                         if (bitmap == null) {
                             AvatarDrawable avatarDrawable;
                             if (user != null) {
-                                avatarDrawable = new AvatarDrawable(user);
+                                avatarDrawable = new AvatarDrawable(user, false, currentAccount);
                                 if (UserObject.isReplyUser(user)) {
                                     avatarDrawable.setAvatarType(AvatarDrawable.AVATAR_TYPE_REPLIES);
                                 } else if (UserObject.isUserSelf(user)) {
@@ -584,7 +584,7 @@ public class EditWidgetActivity extends BaseFragment {
                             if (bitmap == null) {
                                 AvatarDrawable avatarDrawable;
                                 if (user != null) {
-                                    avatarDrawable = new AvatarDrawable(user);
+                                    avatarDrawable = new AvatarDrawable(user, false, currentAccount);
                                     if (UserObject.isReplyUser(user)) {
                                         avatarDrawable.setAvatarType(AvatarDrawable.AVATAR_TYPE_REPLIES);
                                     } else if (UserObject.isUserSelf(user)) {

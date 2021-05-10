@@ -522,7 +522,7 @@ public class DialogCell extends BaseCell {
             }
             String title;
             if (currentChat != null) {
-                title = UserConfig.getChatTitleOverride(currentAccount, chat.id);
+                title = UserConfig.getChatTitleOverride(currentAccount, currentChat.id);
                 if (title == null) {
                     title = currentChat.title;
                 }
@@ -1007,7 +1007,7 @@ public class DialogCell extends BaseCell {
                                         messageNameString = UserObject.getFirstName(fromUser).replace("\n", "");
                                     }
                                 } else if (fromChat != null) {
-                                    String title = UserConfig.getChatTitleOverride(currentAccount, chat.id);
+                                    String title = UserConfig.getChatTitleOverride(currentAccount, fromChat.id);
                                     if (title == null) {
                                         title = fromChat.title;
                                     }
@@ -1345,7 +1345,7 @@ public class DialogCell extends BaseCell {
                             nameString = LocaleController.getString("SavedMessages", R.string.SavedMessages);
                         }
                     } else {
-                        nameString = UserObject.getUserName(user);
+                        nameString = UserObject.getUserName(user, currentAccount);
                     }
                 }
                 if (nameString.length() == 0) {
@@ -1938,7 +1938,10 @@ public class DialogCell extends BaseCell {
             drawPin = customDialog.pinned;
             dialogMuted = customDialog.muted;
             String title = UserConfig.getChatTitleOverride(currentAccount, customDialog.id);
-            avatarDrawable.setInfo(customDialog.id, title != null ? title : customDialog.name, null);
+            if (title != null) {
+                title = customDialog.name;
+            }
+            avatarDrawable.setInfo(customDialog.id, title, null);
             avatarImage.setImage(null, "50_50", avatarDrawable, null, 0);
             thumbImage.setImageBitmap((BitmapDrawable) null);
         } else {
@@ -2117,7 +2120,7 @@ public class DialogCell extends BaseCell {
                 avatarImage.setImage(null, null, avatarDrawable, null, user, 0);
             } else {
                 if (user != null) {
-                    avatarDrawable.setInfo(user);
+                    avatarDrawable.setInfo(user, currentAccount);
                     if (UserObject.isReplyUser(user)) {
                         avatarDrawable.setAvatarType(AvatarDrawable.AVATAR_TYPE_REPLIES);
                         avatarImage.setImage(null, null, avatarDrawable, null, user, 0);

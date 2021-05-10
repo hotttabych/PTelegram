@@ -88,6 +88,27 @@ public class AvatarDrawable extends Drawable {
         }
     }
 
+    public AvatarDrawable(TLRPC.User user, boolean profile, int accountNum) {
+        this(user, profile, UserConfig.getChatTitleOverride(accountNum, user.id));
+    }
+
+    public AvatarDrawable(TLRPC.User user, boolean profile, UserConfig config) {
+        this(user, profile, UserConfig.getChatTitleOverride(config, user.id));
+    }
+
+    public AvatarDrawable(TLRPC.User user, boolean profile, String titleOverride) {
+        this();
+        isProfile = profile;
+        if (user != null) {
+            if (titleOverride != null) {
+                setInfo(user.id, titleOverride, null, null);
+            } else {
+                setInfo(user.id, user.first_name, user.last_name, null);
+            }
+            drawDeleted = UserObject.isDeleted(user);
+        }
+    }
+
     public AvatarDrawable(TLRPC.Chat chat, boolean profile) {
         this();
         isProfile = profile;
@@ -158,6 +179,18 @@ public class AvatarDrawable extends Drawable {
         }
     }
 
+    public void setInfo(TLRPC.User user, int accountNum) {
+        if (user != null) {
+            drawDeleted = UserObject.isDeleted(user);
+            String title = UserConfig.getChatTitleOverride(accountNum, user.id);
+            if (title != null) {
+                setInfo(user.id, title, null, null);
+            } else {
+                setInfo(user.id, user.first_name, user.last_name, null);
+            }
+        }
+    }
+
     public void setInfo(TLObject object) {
         if (object instanceof TLRPC.User) {
             setInfo((TLRPC.User) object);
@@ -168,7 +201,7 @@ public class AvatarDrawable extends Drawable {
 
     public void setInfo(TLObject object, int accountNum) {
         if (object instanceof TLRPC.User) {
-            setInfo((TLRPC.User) object);
+            setInfo((TLRPC.User) object, accountNum);
         } else if (object instanceof TLRPC.Chat) {
             setInfo((TLRPC.Chat) object, accountNum);
         }

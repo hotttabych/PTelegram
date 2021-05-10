@@ -9668,7 +9668,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                         if (user == null) {
                             return;
                         }
-                        name = UserObject.getUserName(user);
+                        name = UserObject.getUserName(user, currentAccount);
                     }
                 } else {
                     TLRPC.Chat chat;
@@ -9769,7 +9769,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                     }
                     if (uids.size() == 1) {
                         if (user != null) {
-                            userNames.append(UserObject.getUserName(user));
+                            userNames.append(UserObject.getUserName(user, currentAccount));
                         } else {
                             String title = UserConfig.getChatTitleOverride(currentAccount, chat.id);
                             if (title == null) {
@@ -11696,10 +11696,10 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                 if (!TextUtils.isEmpty(currentUser.phone)) {
                     avatarContainer.setTitle(PhoneFormat.getInstance().format("+" + currentUser.phone));
                 } else {
-                    avatarContainer.setTitle(UserObject.getUserName(currentUser), currentUser.scam, currentUser.fake);
+                    avatarContainer.setTitle(UserObject.getUserName(currentUser, currentAccount), currentUser.scam, currentUser.fake);
                 }
             } else {
-                avatarContainer.setTitle(UserObject.getUserName(currentUser), currentUser.scam, currentUser.fake);
+                avatarContainer.setTitle(UserObject.getUserName(currentUser, currentAccount), currentUser.scam, currentUser.fake);
             }
         }
         setParentActivityTitle(avatarContainer.getTitleTextView().getText());

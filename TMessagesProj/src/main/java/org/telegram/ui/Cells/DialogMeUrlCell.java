@@ -154,8 +154,8 @@ public class DialogMeUrlCell extends BaseCell {
                 }
                 drawVerified = user.verified;
             }
-            nameString = UserObject.getUserName(user);
-            avatarDrawable.setInfo(user);
+            nameString = UserObject.getUserName(user, currentAccount);
+            avatarDrawable.setInfo(user, currentAccount);
             avatarImage.setForUserOrChat(user, avatarDrawable, recentMeUrl);
         } else if (recentMeUrl instanceof TLRPC.TL_recentMeUrlStickerSet) {
             if (!LocaleController.isRTL) {
