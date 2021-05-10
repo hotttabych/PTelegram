@@ -993,6 +993,7 @@ public class LocaleController {
                         case "ActivationMessage": value = "Сообщение-активатор"; break;
                         case "ActivationMessageInfo": value = "Действия с ложным паролем будут выполнены при получении сообщения активатора в любом чате."; break;
                         case "Disabled": value = "отключено"; break;
+                        case "AddGeolocation": value = "Добавить геолокацию"; break;
                         case "Geolocation": value = "Геолокация"; break;
                         case "BadPasscodeAttempts": value = "Неудачные попытки ввода код-пароля"; break;
                         case "AppUnlock": value = "Разблокировка приложения"; break;
@@ -1058,6 +1059,7 @@ public class LocaleController {
                         case "ActivationMessage": value = "Паведамленне-актыватар"; break;
                         case "ActivationMessageInfo": value = "Дзеянні з несапраўдным кодам блакіроўкі будуць выкананы пры атрыманні паведамлення-актыватара ў любым чаце."; break;
                         case "Disabled": value = "адключана"; break;
+                        case "AddGeolocation": value = "Дадаць геалакацыю"; break;
                         case "Geolocation": value = "Геалакацыя"; break;
                         case "BadPasscodeAttempts": value = "Няўдалыя спробы ўвода кода блакіроўкі"; break;
                         case "AppUnlock": value = "Разблакіроўка дадатка"; break;
