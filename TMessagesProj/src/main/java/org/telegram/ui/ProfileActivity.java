@@ -1596,7 +1596,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     Bundle args = new Bundle();
                     args.putBoolean("onlySelect", true);
                     args.putInt("dialogsType", 2);
-                    args.putString("addToGroupAlertString", LocaleController.formatString("AddToTheGroupAlertText", R.string.AddToTheGroupAlertText, UserObject.getUserName(user), "%1$s"));
+                    args.putString("addToGroupAlertString", LocaleController.formatString("AddToTheGroupAlertText", R.string.AddToTheGroupAlertText, UserObject.getUserName(user, currentAccount), "%1$s"));
                     DialogsActivity fragment = new DialogsActivity(args);
                     fragment.setDelegate((fragment1, dids, message, param) -> {
                         long did = dids.get(0);
@@ -1849,11 +1849,12 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     onWriteButtonClick();
                 } else if (id == disable_avatar || id == enable_avatar) {
                     UserConfig.ChatInfoOverride item;
-                    if (getUserConfig().chatInfoOverrides.containsKey(String.valueOf(chat_id))) {
-                        item = getUserConfig().chatInfoOverrides.get(String.valueOf(chat_id));
+                    int correct_id = chat_id != 0 ? chat_id : user_id;
+                    if (getUserConfig().chatInfoOverrides.containsKey(String.valueOf(correct_id))) {
+                        item = getUserConfig().chatInfoOverrides.get(String.valueOf(correct_id));
                     } else {
                         item = new UserConfig.ChatInfoOverride();
-                        getUserConfig().chatInfoOverrides.put(String.valueOf(chat_id), item);
+                        getUserConfig().chatInfoOverrides.put(String.valueOf(correct_id), item);
                     }
                     item.avatarEnabled = !item.avatarEnabled;
                     getUserConfig().saveConfig(true);
@@ -1862,11 +1863,12 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     otherItem.showSubItem(item.avatarEnabled ? disable_avatar : enable_avatar);
                 } else if (id == edit_chat_name) {
                     UserConfig.ChatInfoOverride item;
-                    if (getUserConfig().chatInfoOverrides.containsKey(String.valueOf(chat_id))) {
-                        item = getUserConfig().chatInfoOverrides.get(String.valueOf(chat_id));
+                    int correct_id = chat_id != 0 ? chat_id : user_id;
+                    if (getUserConfig().chatInfoOverrides.containsKey(String.valueOf(correct_id))) {
+                        item = getUserConfig().chatInfoOverrides.get(String.valueOf(correct_id));
                     } else {
                         item = new UserConfig.ChatInfoOverride();
-                        getUserConfig().chatInfoOverrides.put(String.valueOf(chat_id), item);
+                        getUserConfig().chatInfoOverrides.put(String.valueOf(correct_id), item);
                     }
                     DialogTemplate template = new DialogTemplate();
                     template.type = DialogType.EDIT;
@@ -5628,7 +5630,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             if (user.photo != null) {
                 photoBig = user.photo.photo_big;
             }
-            avatarDrawable.setInfo(user);
+            avatarDrawable.setInfo(user, currentAccount);
 
             final ImageLocation imageLocation = ImageLocation.getForUserOrChat(user, ImageLocation.TYPE_BIG);
             final ImageLocation thumbLocation = ImageLocation.getForUserOrChat(user, ImageLocation.TYPE_SMALL);
@@ -5641,7 +5643,12 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 filter = null;
             }
             if (avatarBig == null) {
-                avatarImage.setImage(videoLocation, filter, thumbLocation, "50_50", avatarDrawable, user);
+                boolean avatarEnabled = true;
+                UserConfig.ChatInfoOverride chatInfo = UserConfig.getChatInfoOverride(currentAccount, user.id);
+                if (chatInfo != null) {
+                    avatarEnabled = chatInfo.avatarEnabled;
+                }
+                avatarImage.setImage(avatarEnabled ? videoLocation : null, filter, avatarEnabled ? thumbLocation : null, "50_50", avatarDrawable, user);
             }
             if (thumbLocation != null && setAvatarRow != -1 || thumbLocation == null && setAvatarRow == -1) {
                 updateListAnimated(false);
@@ -5649,7 +5656,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             }
             getFileLoader().loadFile(imageLocation, user, null, 0, 1);
 
-            String newString = UserObject.getUserName(user);
+            String newString = UserObject.getUserName(user, currentAccount);
             String newString2;
             if (user.id == getUserConfig().getClientUserId()) {
                 newString2 = LocaleController.getString("Online", R.string.Online);
@@ -5858,13 +5865,10 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 filter = null;
             }
             if (avatarBig == null) {
-                UserConfig.ChatInfoOverride item;
                 boolean avatarEnabled = true;
-                if (SharedConfig.fakePasscodeActivatedIndex == -1) {
-                    if (getUserConfig().chatInfoOverrides.containsKey(String.valueOf(chat_id))) {
-                        item = getUserConfig().chatInfoOverrides.get(String.valueOf(chat_id));
-                        avatarEnabled = item.avatarEnabled;
-                    }
+                UserConfig.ChatInfoOverride chatInfo = UserConfig.getChatInfoOverride(currentAccount, chat.id);
+                if (chatInfo != null) {
+                    avatarEnabled = chatInfo.avatarEnabled;
                 }
                 avatarImage.setImage(avatarEnabled ? videoLocation : null, filter, avatarEnabled ? thumbLocation : null, "50_50", avatarDrawable, chat);
             }
@@ -5932,6 +5936,27 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 }
                 if (!UserObject.isDeleted(user) && !isBot && currentEncryptedChat == null && !userBlocked && user_id != 333000 && user_id != 777000 && user_id != 42777) {
                     otherItem.addSubItem(start_secret_chat, R.drawable.msg_start_secret, LocaleController.getString("StartEncryptedChat", R.string.StartEncryptedChat));
+                }
+                if (SharedConfig.fakePasscodeActivatedIndex == -1) {
+                    if (isBot) {
+                        otherItem.addSubItem(edit_chat_name, R.drawable.floating_pencil, LocaleController.getString("EditChatName", R.string.EditChatName));
+                    }
+                    if (user.photo != null) {
+                        otherItem.addSubItem(disable_avatar, R.drawable.disable_avatar, LocaleController.getString("DisableAvatar", R.string.DisableAvatar));
+                        otherItem.addSubItem(enable_avatar, R.drawable.profile_photos, LocaleController.getString("EnableAvatar", R.string.EnableAvatar));
+                        UserConfig.ChatInfoOverride item;
+                        boolean avatarEnabled = true;
+                        int correct_id = chat_id != 0 ? chat_id : user_id;
+                        if (getUserConfig().chatInfoOverrides.containsKey(String.valueOf(correct_id))) {
+                            item = getUserConfig().chatInfoOverrides.get(String.valueOf(correct_id));
+                            avatarEnabled = item.avatarEnabled;
+                        }
+                        if (avatarEnabled) {
+                            otherItem.hideSubItem(enable_avatar);
+                        } else {
+                            otherItem.hideSubItem(disable_avatar);
+                        }
+                    }
                 }
                 otherItem.addSubItem(add_shortcut, R.drawable.msg_home, LocaleController.getString("AddShortcut", R.string.AddShortcut));
             }

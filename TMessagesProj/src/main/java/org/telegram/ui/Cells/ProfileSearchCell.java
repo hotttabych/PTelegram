@@ -300,7 +300,7 @@ public class ProfileSearchCell extends BaseCell {
                     nameString2 = chat.title;
                 }
             } else if (user != null) {
-                nameString2 = UserObject.getUserName(user);
+                nameString2 = UserObject.getUserName(user, currentAccount);
             }
             nameString = nameString2.replace('\n', ' ');
         }
@@ -493,7 +493,7 @@ public class ProfileSearchCell extends BaseCell {
     public void update(int mask) {
         TLRPC.FileLocation photo = null;
         if (user != null) {
-            avatarDrawable.setInfo(user);
+            avatarDrawable.setInfo(user, currentAccount);
             if (UserObject.isReplyUser(user)) {
                 avatarDrawable.setAvatarType(AvatarDrawable.AVATAR_TYPE_REPLIES);
                 avatarImage.setImage(null, null, avatarDrawable, null, null, 0);

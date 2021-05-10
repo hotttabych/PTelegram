@@ -627,7 +627,7 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
         TLRPC.User user = parentFragment.getCurrentUser();
         TLRPC.Chat chat = parentFragment.getCurrentChat();
         if (user != null) {
-            avatarDrawable.setInfo(user);
+            avatarDrawable.setInfo(user, currentAccount);
             if (UserObject.isReplyUser(user)) {
                 avatarDrawable.setSmallSize(true);
                 avatarDrawable.setAvatarType(AvatarDrawable.AVATAR_TYPE_REPLIES);

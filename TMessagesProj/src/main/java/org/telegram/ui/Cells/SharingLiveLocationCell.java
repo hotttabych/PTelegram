@@ -122,8 +122,8 @@ public class SharingLiveLocationCell extends FrameLayout {
         if (lowerId > 0) {
             TLRPC.User user = MessagesController.getInstance(currentAccount).getUser(lowerId);
             if (user != null) {
-                avatarDrawable = new AvatarDrawable(user);
-                name = UserObject.getUserName(user);
+                avatarDrawable = new AvatarDrawable(user, false, currentAccount);
+                name = UserObject.getUserName(user, currentAccount);
                 avatarImageView.setForUserOrChat(user, avatarDrawable);
             }
         } else {
@@ -178,8 +178,8 @@ public class SharingLiveLocationCell extends FrameLayout {
             if (fromId > 0) {
                 TLRPC.User user = MessagesController.getInstance(currentAccount).getUser(fromId);
                 if (user != null) {
-                    avatarDrawable = new AvatarDrawable(user);
-                    name = UserObject.getUserName(user);
+                    avatarDrawable = new AvatarDrawable(user, false, currentAccount);
+                    name = UserObject.getUserName(user, currentAccount);
                     avatarImageView.setForUserOrChat(user, avatarDrawable);
                 }
             } else {
@@ -220,7 +220,7 @@ public class SharingLiveLocationCell extends FrameLayout {
         if (lower_id > 0) {
             TLRPC.User user = MessagesController.getInstance(currentAccount).getUser(lower_id);
             if (user != null) {
-                avatarDrawable.setInfo(user);
+                avatarDrawable.setInfo(user, currentAccount);
                 nameTextView.setText(ContactsController.formatName(user.first_name, user.last_name));
                 avatarImageView.setForUserOrChat(user, avatarDrawable);
             }
@@ -257,7 +257,7 @@ public class SharingLiveLocationCell extends FrameLayout {
         if (lower_id > 0) {
             TLRPC.User user = MessagesController.getInstance(currentAccount).getUser(lower_id);
             if (user != null) {
-                avatarDrawable.setInfo(user);
+                avatarDrawable.setInfo(user, currentAccount);
                 nameTextView.setText(ContactsController.formatName(user.first_name, user.last_name));
                 avatarImageView.setForUserOrChat(user, avatarDrawable);
             }

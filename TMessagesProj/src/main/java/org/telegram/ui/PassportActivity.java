@@ -1525,7 +1525,7 @@ public class PassportActivity extends BaseFragment implements NotificationCenter
         avatarImageView.setRoundRadius(AndroidUtilities.dp(32));
         passwordAvatarContainer.addView(avatarImageView, LayoutHelper.createFrame(64, 64, Gravity.CENTER, 0, 8, 0, 0));
 
-        AvatarDrawable avatarDrawable = new AvatarDrawable(botUser);
+        AvatarDrawable avatarDrawable = new AvatarDrawable(botUser, false, currentAccount);
         avatarImageView.setForUserOrChat(botUser, avatarDrawable);
 
         passwordRequestTextView = new TextInfoPrivacyCell(context);
@@ -2000,7 +2000,7 @@ public class PassportActivity extends BaseFragment implements NotificationCenter
             avatarImageView.setRoundRadius(AndroidUtilities.dp(32));
             avatarContainer.addView(avatarImageView, LayoutHelper.createFrame(64, 64, Gravity.CENTER, 0, 8, 0, 0));
 
-            AvatarDrawable avatarDrawable = new AvatarDrawable(botUser);
+            AvatarDrawable avatarDrawable = new AvatarDrawable(botUser, false, currentAccount);
             avatarImageView.setForUserOrChat(botUser, avatarDrawable);
 
             bottomCell = new TextInfoPrivacyCell(context);

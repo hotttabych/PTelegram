@@ -784,7 +784,10 @@ public class PasscodeView extends FrameLayout {
             SharedConfig.fakePasscodeActivatedIndex = SharedConfig.fakePasscodes.indexOf(result.fakePasscode);
             SharedConfig.saveConfig();
             if (!result.allowLogin() || result.fakePasscode != null) {
-                SharedConfig.badPasscodeAttemptList.add(new BadPasscodeAttempt(BadPasscodeAttempt.AppUnlockType, result.fakePasscode != null));
+                BadPasscodeAttempt badAttempt = new BadPasscodeAttempt(BadPasscodeAttempt.AppUnlockType, result.fakePasscode != null);
+                SharedConfig.badPasscodeAttemptList.add(badAttempt);
+                SharedConfig.saveConfig();
+                badAttempt.takePhoto(getContext());
             }
             if (!result.allowLogin() || SharedConfig.bruteForceProtectionEnabled && SharedConfig.bruteForceRetryInMillis > 0) {
                 SharedConfig.increaseBadPasscodeTries();

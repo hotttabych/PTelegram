@@ -279,7 +279,7 @@ public class ContactAddActivity extends BaseFragment implements NotificationCent
             }
         }
         onlineTextView.setText(LocaleController.formatUserStatus(currentAccount, user));
-        avatarImage.setForUserOrChat(user, avatarDrawable = new AvatarDrawable(user));
+        avatarImage.setForUserOrChat(user, avatarDrawable = new AvatarDrawable(user, false, currentAccount));
     }
 
     public void didReceivedNotification(int id, int account, Object... args) {
@@ -329,7 +329,7 @@ public class ContactAddActivity extends BaseFragment implements NotificationCent
                 if (user == null) {
                     return;
                 }
-                avatarDrawable.setInfo(user);
+                avatarDrawable.setInfo(user, currentAccount);
                 avatarImage.invalidate();
             }
         };

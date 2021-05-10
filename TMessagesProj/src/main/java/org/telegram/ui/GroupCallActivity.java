@@ -1319,7 +1319,7 @@ public class GroupCallActivity extends BottomSheet implements NotificationCenter
                 int peerId = MessageObject.getPeerId(selfPeer);
                 if (peerId > 0) {
                     TLRPC.User user = accountInstance.getMessagesController().getUser(peerId);
-                    accountSwitchAvatarDrawable.setInfo(user);
+                    accountSwitchAvatarDrawable.setInfo(user, currentAccount);
                     accountSwitchImageView.setForUserOrChat(user, accountSwitchAvatarDrawable);
                 } else {
                     TLRPC.Chat chat = accountInstance.getMessagesController().getChat(-peerId);

@@ -381,7 +381,7 @@ public class UserCell extends FrameLayout {
             }
             if (!continueUpdate && currentName == null && lastName != null && (mask & MessagesController.UPDATE_MASK_NAME) != 0) {
                 if (currentUser != null) {
-                    newName = UserObject.getUserName(currentUser);
+                    newName = UserObject.getUserName(currentUser, currentAccount);
                 } else {
                     newName = UserConfig.getChatTitleOverride(currentAccount, currentChat.id);
                     if (newName == null) {
@@ -439,7 +439,7 @@ public class UserCell extends FrameLayout {
                     ((LayoutParams) nameTextView.getLayoutParams()).topMargin = AndroidUtilities.dp(19);
                     return;
                 }
-                avatarDrawable.setInfo(currentUser);
+                avatarDrawable.setInfo(currentUser, currentAccount);
                 if (currentUser.status != null) {
                     lastStatus = currentUser.status.expires;
                 } else {
@@ -449,7 +449,10 @@ public class UserCell extends FrameLayout {
                 avatarDrawable.setInfo(currentChat, currentAccount);
             } else if (currentName != null) {
                 String title = UserConfig.getChatTitleOverride(currentAccount, currentId);
-                avatarDrawable.setInfo(currentId, title != null ? title : currentName.toString(), null);
+                if (title != null) {
+                    title = currentName.toString();
+                }
+                avatarDrawable.setInfo(currentId, title, null);
             } else {
                 avatarDrawable.setInfo(currentId, "#", null);
             }
@@ -460,7 +463,7 @@ public class UserCell extends FrameLayout {
             nameTextView.setText(currentName);
         } else {
             if (currentUser != null) {
-                lastName = newName == null ? UserObject.getUserName(currentUser) : newName;
+                lastName = newName == null ? UserObject.getUserName(currentUser, currentAccount) : newName;
             } else if (currentChat != null) {
                 String title = UserConfig.getChatTitleOverride(currentAccount, currentChat.id);
                 if (title == null) {

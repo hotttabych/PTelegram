@@ -104,7 +104,7 @@ public class HintDialogCell extends FrameLayout {
         TLRPC.FileLocation photo = null;
         if (uid > 0) {
             currentUser = MessagesController.getInstance(currentAccount).getUser(uid);
-            avatarDrawable.setInfo(currentUser);
+            avatarDrawable.setInfo(currentUser, currentAccount);
         } else {
             TLRPC.Chat chat = MessagesController.getInstance(currentAccount).getChat(-uid);
             avatarDrawable.setInfo(chat, currentAccount);
@@ -127,7 +127,7 @@ public class HintDialogCell extends FrameLayout {
             } else {
                 nameTextView.setText("");
             }
-            avatarDrawable.setInfo(currentUser);
+            avatarDrawable.setInfo(currentUser, currentAccount);
             imageView.setForUserOrChat(currentUser, avatarDrawable);
         } else {
             TLRPC.Chat chat = MessagesController.getInstance(currentAccount).getChat(-uid);

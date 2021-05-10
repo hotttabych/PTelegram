@@ -2743,7 +2743,7 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
                             Bundle args = new Bundle();
                             args.putBoolean("onlySelect", true);
                             args.putInt("dialogsType", 2);
-                            args.putString("addToGroupAlertString", LocaleController.formatString("AddToTheGroupAlertText", R.string.AddToTheGroupAlertText, UserObject.getUserName(user), "%1$s"));
+                            args.putString("addToGroupAlertString", LocaleController.formatString("AddToTheGroupAlertText", R.string.AddToTheGroupAlertText, UserObject.getUserName(user, currentAccount), "%1$s"));
                             DialogsActivity fragment = new DialogsActivity(args);
                             fragment.setDelegate((fragment12, dids, message1, param) -> {
                                 long did = dids.get(0);

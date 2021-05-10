@@ -697,7 +697,7 @@ public class ContactsActivity extends BaseFragment implements NotificationCenter
             }
             AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
             builder.setTitle(LocaleController.getString("AppName", R.string.AppName));
-            String message = LocaleController.formatStringSimple(selectAlertString, UserObject.getUserName(user));
+            String message = LocaleController.formatStringSimple(selectAlertString, UserObject.getUserName(user, currentAccount));
             EditTextBoldCursor editText = null;
             if (!user.bot && needForwardCount) {
                 message = String.format("%s\n\n%s", message, LocaleController.getString("AddToTheGroupForwardCount", R.string.AddToTheGroupForwardCount));

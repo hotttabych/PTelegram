@@ -214,7 +214,7 @@ public class ManageChatUserCell extends FrameLayout {
                     }
                 }
                 if (!continueUpdate && currentName == null && lastName != null && (mask & MessagesController.UPDATE_MASK_NAME) != 0) {
-                    newName = UserObject.getUserName(currentUser);
+                    newName = UserObject.getUserName(currentUser, currentAccount);
                     if (!newName.equals(lastName)) {
                         continueUpdate = true;
                     }
@@ -224,7 +224,7 @@ public class ManageChatUserCell extends FrameLayout {
                 }
             }
 
-            avatarDrawable.setInfo(currentUser);
+            avatarDrawable.setInfo(currentUser, currentAccount);
             if (currentUser.status != null) {
                 lastStatus = currentUser.status.expires;
             } else {
@@ -235,7 +235,7 @@ public class ManageChatUserCell extends FrameLayout {
                 lastName = null;
                 nameTextView.setText(currentName);
             } else {
-                lastName = newName == null ? UserObject.getUserName(currentUser) : newName;
+                lastName = newName == null ? UserObject.getUserName(currentUser, currentAccount) : newName;
                 nameTextView.setText(lastName);
             }
             if (currrntStatus != null) {

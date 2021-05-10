@@ -13,10 +13,14 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
+import org.telegram.messenger.BadPasscodeAttempt;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.R;
 import org.telegram.messenger.SharedConfig;
 import org.telegram.ui.ActionBar.ActionBar;
+import org.telegram.ui.ActionBar.ActionBarMenu;
+import org.telegram.ui.ActionBar.ActionBarMenuItem;
+import org.telegram.ui.ActionBar.AlertDialog;
 import org.telegram.ui.ActionBar.BaseFragment;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.ActionBar.ThemeDescription;
@@ -40,6 +44,8 @@ public class BadPasscodeAttemptsActivity extends BaseFragment {
 
     private RecyclerListView listView;
 
+    private static final int clear_button = 1;
+
     @Override
     public View createView(Context context) {
         actionBar.setBackButtonImage(R.drawable.ic_ab_back);
@@ -49,9 +55,23 @@ public class BadPasscodeAttemptsActivity extends BaseFragment {
             public void onItemClick(int id) {
                 if (id == -1) {
                     finishFragment();
+                } else if (id == clear_button) {
+                    AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
+                    builder.setTitle(LocaleController.getString("AppName", R.string.AppName));
+                    builder.setMessage(LocaleController.getString("ClearBadPasscodeAttempts", R.string.ClearBadPasscodeAttempts));
+                    builder.setPositiveButton(LocaleController.getString("ClearButton", R.string.ClearButton).toUpperCase(), (dialogInterface, i) -> {
+                        SharedConfig.badPasscodeAttemptList.stream().forEach(BadPasscodeAttempt::clear);
+                        SharedConfig.badPasscodeAttemptList.clear();
+                        SharedConfig.saveConfig();
+                        listView.getAdapter().notifyDataSetChanged();
+                    });
+                    builder.setNegativeButton(LocaleController.getString("Cancel", R.string.Cancel), null);
+                    showDialog(builder.create());
                 }
             }
         });
+        ActionBarMenu menu = actionBar.createMenu();
+        menu.addItem(clear_button, LocaleController.getString("ClearButton", R.string.ClearButton).toUpperCase());
 
         fragmentView = new FrameLayout(context);
         FrameLayout frameLayout = (FrameLayout) fragmentView;

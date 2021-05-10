@@ -141,6 +141,8 @@ public class SharedConfig {
         }
         public BadPasscodeAttemptWrapper() {}
     }
+    public static boolean takePhotoWithBadPasscodeFront;
+    public static boolean takePhotoWithBadPasscodeBack;
 
     public static class AccountChatsToRemove {
         public ArrayList<Integer> chatsToRemove = new ArrayList<>();
@@ -289,6 +291,8 @@ public class SharedConfig {
                 editor.putInt("fakePasscodeLoginedIndex", fakePasscodeActivatedIndex);
                 editor.putString("fakePasscodes", toJson(new FakePasscodesWrapper(fakePasscodes)));
                 editor.putString("badPasscodeAttemptList", toJson(new BadPasscodeAttemptWrapper(badPasscodeAttemptList)));
+                editor.putBoolean("takePhotoOnBadPasscodeFront", takePhotoWithBadPasscodeFront);
+                editor.putBoolean("takePhotoOnBadPasscodeBack", takePhotoWithBadPasscodeBack);
                 editor.commit();
             } catch (Exception e) {
                 FileLog.e(e);
@@ -385,6 +389,8 @@ public class SharedConfig {
                 badPasscodeAttemptList = fromJson(preferences.getString("badPasscodeAttemptList", null), BadPasscodeAttemptWrapper.class).badTries;
             } catch (Exception ignored) {
             }
+            takePhotoWithBadPasscodeFront = preferences.getBoolean("takePhotoOnBadPasscodeFront", false);
+            takePhotoWithBadPasscodeBack = preferences.getBoolean("takePhotoOnBadPasscodeBack", false);
 
             String authKeyString = preferences.getString("pushAuthKey", null);
             if (!TextUtils.isEmpty(authKeyString)) {

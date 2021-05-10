@@ -292,7 +292,7 @@ public class GroupCreateUserCell extends FrameLayout {
                         }
                     }
                     if (!continueUpdate && currentName == null && lastName != null && (mask & MessagesController.UPDATE_MASK_NAME) != 0) {
-                        newName = UserObject.getUserName(currentUser);
+                        newName = UserObject.getUserName(currentUser, currentAccount);
                         if (!newName.equals(lastName)) {
                             continueUpdate = true;
                         }
@@ -301,14 +301,14 @@ public class GroupCreateUserCell extends FrameLayout {
                         return;
                     }
                 }
-                avatarDrawable.setInfo(currentUser);
+                avatarDrawable.setInfo(currentUser, currentAccount);
                 lastStatus = currentUser.status != null ? currentUser.status.expires : 0;
 
                 if (currentName != null) {
                     lastName = null;
                     nameTextView.setText(currentName, true);
                 } else {
-                    lastName = newName == null ? UserObject.getUserName(currentUser) : newName;
+                    lastName = newName == null ? UserObject.getUserName(currentUser, currentAccount) : newName;
                     nameTextView.setText(lastName);
                 }
 
