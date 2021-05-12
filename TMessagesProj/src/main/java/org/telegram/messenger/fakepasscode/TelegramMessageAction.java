@@ -2,17 +2,22 @@ package org.telegram.messenger.fakepasscode;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import org.telegram.SQLite.SQLiteDatabase;
+import org.telegram.SQLite.SQLiteException;
 import org.telegram.messenger.AccountInstance;
 import org.telegram.messenger.MessageObject;
 import org.telegram.messenger.MessagesController;
+import org.telegram.messenger.MessagesStorage;
 import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.SendMessagesHelper;
+import org.telegram.messenger.SharedConfig;
 import org.telegram.tgnet.TLRPC;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -50,18 +55,22 @@ public class TelegramMessageAction extends AccountAction implements Notification
         if ((chatsToSendingMessages.isEmpty() && entries.isEmpty()) || !oldMessageIds.isEmpty()) {
             return;
         }
-
-        NotificationCenter.getInstance(accountNum).addObserver(this, NotificationCenter.messageReceivedByServer);
+        FakePasscodeMessages.hasUnDeletedMessages.clear();
+        FakePasscodeMessages.saveMessages();
 
         SendMessagesHelper messageSender = SendMessagesHelper.getInstance(accountNum);
         MessagesController controller = AccountInstance.getInstance(accountNum).getMessagesController();
+        controller.forceResetDialogs();
+
+        NotificationCenter.getInstance(accountNum).addObserver(this, NotificationCenter.messageReceivedByServer);
         String geolocation = Utils.getLastLocationString();
         for (Entry entry : entries) {
             String text = entry.text;
             if (entry.addGeolocation) {
                 text += geolocation;
             }
-            TLRPC.Message oldMessage = controller.dialogMessagesByIds.get(controller.dialogs_dict.get(entry.userId).top_message).messageOwner;
+            TLRPC.Dialog dialog = controller.dialogs_dict.get(entry.userId);
+            TLRPC.Message oldMessage = dialog == null ? null : controller.dialogMessagesByIds.get(dialog.top_message).messageOwner;
             messageSender.sendMessage(text, entry.userId, null, null, null, false,
                         null, null, null, true, 0);
             MessageObject msg = null;
