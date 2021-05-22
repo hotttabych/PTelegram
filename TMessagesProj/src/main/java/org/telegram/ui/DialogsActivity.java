@@ -3597,7 +3597,11 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     SharedConfig.appLocked = !SharedConfig.appLocked;
                     SharedConfig.saveConfig();
                     if (SharedConfig.fakePasscodeActivatedIndex == -1) {
-                        getParentActivity().finishAffinity();
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                            getParentActivity().finishAndRemoveTask();
+                        } else {
+                            getParentActivity().finishAffinity();
+                        }
                     }
                     updatePasscodeButton(true);
                 } else if (id == 2) {
