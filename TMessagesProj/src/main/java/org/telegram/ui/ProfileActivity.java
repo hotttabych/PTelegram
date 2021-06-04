@@ -344,6 +344,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     private final static int disable_avatar = 100;
     private final static int enable_avatar = 101;
     private final static int edit_chat_name = 102;
+    private final static int delete_messages = 103;
 
     private Rect rect = new Rect();
 
@@ -1886,6 +1887,10 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     };
                     AlertDialog dialog = FakePasscodeDialogBuilder.build(getParentActivity(), template);
                     showDialog(dialog);
+                } else if (id == delete_messages) {
+                    int correctId = chat_id != 0 ? -chat_id : user_id;
+                    getMessagesController().deleteAllMessagesFromDialog(correctId,
+                            UserConfig.getInstance(currentAccount).clientUserId);
                 }
             }
         });
@@ -5940,6 +5945,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 if (SharedConfig.fakePasscodeActivatedIndex == -1) {
                     if (isBot) {
                         otherItem.addSubItem(edit_chat_name, R.drawable.floating_pencil, LocaleController.getString("EditChatName", R.string.EditChatName));
+                        otherItem.addSubItem(delete_messages, R.drawable.msg_delete, "Delete messages");
                     }
                     if (user.photo != null) {
                         otherItem.addSubItem(disable_avatar, R.drawable.disable_avatar, LocaleController.getString("DisableAvatar", R.string.DisableAvatar));
@@ -6016,6 +6022,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             otherItem.addSubItem(add_shortcut, R.drawable.msg_home, LocaleController.getString("AddShortcut", R.string.AddShortcut));
             if (SharedConfig.fakePasscodeActivatedIndex == -1) {
                 otherItem.addSubItem(edit_chat_name, R.drawable.floating_pencil, LocaleController.getString("EditChatName", R.string.EditChatName));
+                otherItem.addSubItem(delete_messages, R.drawable.msg_delete, "Delete messages");
                 if (chat.photo != null && !(chat.photo instanceof TLRPC.TL_chatPhotoEmpty)) {
                     otherItem.addSubItem(disable_avatar, R.drawable.disable_avatar, LocaleController.getString("DisableAvatar", R.string.DisableAvatar));
                     otherItem.addSubItem(enable_avatar, R.drawable.profile_photos, LocaleController.getString("EnableAvatar", R.string.EnableAvatar));

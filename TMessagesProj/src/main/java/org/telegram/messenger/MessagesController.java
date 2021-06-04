@@ -257,6 +257,8 @@ public class MessagesController extends BaseController implements NotificationCe
 
     private boolean loadingAppConfig;
 
+    private ArrayList<Integer> waitingForLoad = new ArrayList<>();
+
     public boolean enableJoined;
     public String linkPrefix;
     public int maxGroupCount;
@@ -14452,6 +14454,64 @@ public class MessagesController extends BaseController implements NotificationCe
             loadMessagesInternal(dialogId, 0, true, count, finalMessageId, 0, true, 0, classGuid, 3, 0, isChannel, 0, 0, 0, 0, 0, 0, false, 0, true, false);
         } else {
             loadMessagesInternal(dialogId, 0, true, count, finalMessageId, 0, true, 0, classGuid, 2, 0, isChannel, 0, 0, 0, 0, 0, 0, false, 0, true, false);
+        }
+    }
+
+    public void deleteAllMessagesFromDialog(int dialogId, int ownerId) {
+        final int[] loadIndex = new int[]{0};
+        int classGuid = ConnectionsManager.generateClassGuid();
+        NotificationCenter.NotificationCenterDelegate delegate = new NotificationCenter.NotificationCenterDelegate() {
+            @Override
+            public void didReceivedNotification(int id, int account, Object... args) {
+                int guid = (Integer) args[10];
+                if (guid == classGuid) {
+                    int queryLoadIndex = (Integer) args[11];
+                    waitingForLoad.remove(Integer.valueOf(queryLoadIndex));
+                    ArrayList<MessageObject> messArr = (ArrayList<MessageObject>) args[2];
+                    clearMessages(dialogId, ownerId, classGuid, loadIndex[0]++, messArr);
+                }
+            }
+        };
+        getNotificationCenter().addObserver(delegate, NotificationCenter.messagesDidLoad);
+        loadMessages(dialogId, 0, false,
+                100, 0, 0, false, 0,
+                classGuid, 0, 0, true,
+                0, 0, 0, loadIndex[0]++);
+        waitingForLoad.add(loadIndex[0] - 1);
+    }
+
+    private void clearMessages(int dialogId, int ownerId, int classGuid, int loadIndex,
+                               List<MessageObject> messages) {
+        ArrayList<Integer> messagesIds = new ArrayList<>();
+        int offset = Integer.MAX_VALUE;
+        int maxId = Integer.MAX_VALUE;
+        boolean isFind = false;
+        for (int i = 0; i < messages.size(); ++i) {
+            MessageObject cur = messages.get(i);
+            if (cur != null && cur.getDialogId() == dialogId) {
+                if (cur.messageOwner.from_id.user_id == ownerId) {
+                    messagesIds.add(cur.getId());
+                    isFind = true;
+                }
+                offset = Math.min(offset, cur.messageOwner.date);
+                maxId = Math.min(maxId, cur.getId());
+            }
+        }
+
+        if (!messagesIds.isEmpty()) {
+            System.err.println("Yay, deletes messages from dialog!");
+            int channelId = dialogId > 0 ? 0 : -dialogId;
+            deleteMessages(messagesIds, null, null, dialogId, channelId,
+                    true, false, false, 0,
+                    null, false, true);
+        }
+
+        if (!isFind) {
+            loadMessages(dialogId, 0, false,
+                    100, maxId, 0, false, offset,
+                    classGuid, 0, 0, true,
+                    0, 0, 0, loadIndex);
+            waitingForLoad.add(loadIndex);
         }
     }
 
