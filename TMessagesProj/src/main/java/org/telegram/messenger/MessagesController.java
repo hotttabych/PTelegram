@@ -14469,6 +14469,7 @@ public class MessagesController extends BaseController implements NotificationCe
         }
 
         final int[] prevMaxId = new int[]{0};
+        forceResetDialogs();
         deleteMessagesDelegate = new NotificationCenter.NotificationCenterDelegate() {
             @Override
             public void didReceivedNotification(int id, int account, Object... args) {
