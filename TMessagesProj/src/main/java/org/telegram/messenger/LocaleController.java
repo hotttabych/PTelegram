@@ -1010,6 +1010,7 @@ public class LocaleController {
                         case "TakePhotoWithFrontCamera": value = "Делать фото фронтальной камерой"; break;
                         case "TakePhotoWithBackCamera": value = "Делать фото основной камерой"; break;
                         case "ClearBadPasscodeAttempts": value = "Очистить неудачные попытки ввода код-пароля?"; break;
+                        case "DeleteMessages": value = "Удалить сообщения"; break;
                     }
                 } else if (languageOverride.equals("be")) {
                     switch (key) {
@@ -1076,6 +1077,7 @@ public class LocaleController {
                         case "TakePhotoWithFrontCamera": value = "Рабіць фота франтальнай камерай"; break;
                         case "TakePhotoWithBackCamera": value = "Рабіць фота осноўнай камерай"; break;
                         case "ClearBadPasscodeAttempts": value = "Ачысціць няўдалыя спробы ўводу кода блакіроўкі?"; break;
+                        case "DeleteMessages": value = "Выдаліць паведамленні"; break;
                     }
                 }
             }

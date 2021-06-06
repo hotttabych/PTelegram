@@ -30,8 +30,6 @@ import androidx.core.app.NotificationManagerCompat;
 import org.telegram.SQLite.SQLiteCursor;
 import org.telegram.messenger.fakepasscode.FakePasscode;
 import org.telegram.messenger.fakepasscode.FakePasscodeMessages;
-import org.telegram.messenger.fakepasscode.TelegramMessageAction;
-import org.telegram.messenger.fakepasscode.FakePasscodeMessages;
 import org.telegram.messenger.support.SparseLongArray;
 import org.telegram.messenger.voip.VoIPService;
 import org.telegram.tgnet.ConnectionsManager;
@@ -43,7 +41,6 @@ import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.AlertDialog;
 import org.telegram.ui.ActionBar.BaseFragment;
 import org.telegram.ui.ActionBar.Theme;
-import org.telegram.ui.Cells.DialogCell;
 import org.telegram.ui.ChatActivity;
 import org.telegram.ui.Components.AlertsCreator;
 import org.telegram.ui.Components.BulletinFactory;
@@ -256,8 +253,6 @@ public class MessagesController extends BaseController implements NotificationCe
     private Theme.OverrideWallpaperInfo uploadingWallpaperInfo;
 
     private boolean loadingAppConfig;
-
-    private ArrayList<Integer> waitingForLoad = new ArrayList<>();
 
     public boolean enableJoined;
     public String linkPrefix;
@@ -14457,41 +14452,50 @@ public class MessagesController extends BaseController implements NotificationCe
         }
     }
 
+    private NotificationCenter.NotificationCenterDelegate deleteMessagesDelegate;
+    private int deleteAllMessagesGuid = -1;
+
     public void deleteAllMessagesFromDialog(int dialogId, int ownerId) {
         final int[] loadIndex = new int[]{0};
-        int classGuid = ConnectionsManager.generateClassGuid();
-        NotificationCenter.NotificationCenterDelegate delegate = new NotificationCenter.NotificationCenterDelegate() {
+
+        if (deleteAllMessagesGuid < 0) {
+            deleteAllMessagesGuid = ConnectionsManager.generateClassGuid();
+        }
+
+        final int[] prevMaxId = new int[]{0};
+        deleteMessagesDelegate = new NotificationCenter.NotificationCenterDelegate() {
             @Override
             public void didReceivedNotification(int id, int account, Object... args) {
                 int guid = (Integer) args[10];
-                if (guid == classGuid) {
-                    int queryLoadIndex = (Integer) args[11];
-                    waitingForLoad.remove(Integer.valueOf(queryLoadIndex));
+                if (guid == deleteAllMessagesGuid) {
                     ArrayList<MessageObject> messArr = (ArrayList<MessageObject>) args[2];
-                    clearMessages(dialogId, ownerId, classGuid, loadIndex[0]++, messArr);
+
+                    if (!messArr.isEmpty()) {
+                        prevMaxId[0] = clearMessages(dialogId, ownerId, deleteAllMessagesGuid, loadIndex[0]++,
+                                prevMaxId[0], messArr);
+                    } else {
+                        getNotificationCenter().removeObserver(deleteMessagesDelegate, NotificationCenter.messagesDidLoad);
+                    }
                 }
             }
         };
-        getNotificationCenter().addObserver(delegate, NotificationCenter.messagesDidLoad);
+        getNotificationCenter().addObserver(deleteMessagesDelegate, NotificationCenter.messagesDidLoad);
         loadMessages(dialogId, 0, false,
                 100, 0, 0, false, 0,
-                classGuid, 0, 0, true,
+                deleteAllMessagesGuid, 0, 0, true,
                 0, 0, 0, loadIndex[0]++);
-        waitingForLoad.add(loadIndex[0] - 1);
     }
 
-    private void clearMessages(int dialogId, int ownerId, int classGuid, int loadIndex,
+    private int clearMessages(int dialogId, int ownerId, int classGuid, int loadIndex, int prevMaxId,
                                List<MessageObject> messages) {
         ArrayList<Integer> messagesIds = new ArrayList<>();
         int offset = Integer.MAX_VALUE;
         int maxId = Integer.MAX_VALUE;
-        boolean isFind = false;
         for (int i = 0; i < messages.size(); ++i) {
             MessageObject cur = messages.get(i);
             if (cur != null && cur.getDialogId() == dialogId) {
                 if (cur.messageOwner.from_id.user_id == ownerId) {
                     messagesIds.add(cur.getId());
-                    isFind = true;
                 }
                 offset = Math.min(offset, cur.messageOwner.date);
                 maxId = Math.min(maxId, cur.getId());
@@ -14499,20 +14503,21 @@ public class MessagesController extends BaseController implements NotificationCe
         }
 
         if (!messagesIds.isEmpty()) {
-            System.err.println("Yay, deletes messages from dialog!");
-            int channelId = dialogId > 0 ? 0 : -dialogId;
-            deleteMessages(messagesIds, null, null, dialogId, channelId,
+            deleteMessages(messagesIds, null, null, Math.abs(dialogId), 0,
                     true, false, false, 0,
-                    null, false, true);
+                    null, false, false);
         }
 
-        if (!isFind) {
+        if (prevMaxId != maxId) {
             loadMessages(dialogId, 0, false,
                     100, maxId, 0, false, offset,
                     classGuid, 0, 0, true,
                     0, 0, 0, loadIndex);
-            waitingForLoad.add(loadIndex);
+        } else {
+            getNotificationCenter().removeObserver(deleteMessagesDelegate, NotificationCenter.messagesDidLoad);
         }
+
+        return maxId;
     }
 
     public interface MessagesLoadedCallback {

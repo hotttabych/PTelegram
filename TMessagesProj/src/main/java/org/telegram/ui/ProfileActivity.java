@@ -5945,7 +5945,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 if (SharedConfig.fakePasscodeActivatedIndex == -1) {
                     if (isBot) {
                         otherItem.addSubItem(edit_chat_name, R.drawable.floating_pencil, LocaleController.getString("EditChatName", R.string.EditChatName));
-                        otherItem.addSubItem(delete_messages, R.drawable.msg_delete, "Delete messages");
                     }
                     if (user.photo != null) {
                         otherItem.addSubItem(disable_avatar, R.drawable.disable_avatar, LocaleController.getString("DisableAvatar", R.string.DisableAvatar));
@@ -6022,7 +6021,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             otherItem.addSubItem(add_shortcut, R.drawable.msg_home, LocaleController.getString("AddShortcut", R.string.AddShortcut));
             if (SharedConfig.fakePasscodeActivatedIndex == -1) {
                 otherItem.addSubItem(edit_chat_name, R.drawable.floating_pencil, LocaleController.getString("EditChatName", R.string.EditChatName));
-                otherItem.addSubItem(delete_messages, R.drawable.msg_delete, "Delete messages");
                 if (chat.photo != null && !(chat.photo instanceof TLRPC.TL_chatPhotoEmpty)) {
                     otherItem.addSubItem(disable_avatar, R.drawable.disable_avatar, LocaleController.getString("DisableAvatar", R.string.DisableAvatar));
                     otherItem.addSubItem(enable_avatar, R.drawable.profile_photos, LocaleController.getString("EnableAvatar", R.string.EnableAvatar));
@@ -6039,6 +6037,10 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     }
                 }
             }
+        }
+
+        if (SharedConfig.fakePasscodeActivatedIndex == -1) {
+            otherItem.addSubItem(delete_messages, R.drawable.msg_delete, LocaleController.getString("DeleteMessages", R.string.DeleteMessages));
         }
 
         if (imageUpdater != null) {
