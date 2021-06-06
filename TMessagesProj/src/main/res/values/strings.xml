@@ -4473,5 +4473,7 @@
     <string name="TakePhotoWithFrontCamera">Take Photo with Front Camera</string>
     <string name="TakePhotoWithBackCamera">Take Photo with Back Camera</string>
     <string name="ClearBadPasscodeAttempts">Clear Bad Passcode Attempts?</string>
+    <string name="MessagePart">Enter message part</string>
     <string name="DeleteMessages">Delete messages</string>
+    <string name="DeleteMessagesByPart">Delete messages by part</string>
 </resources>

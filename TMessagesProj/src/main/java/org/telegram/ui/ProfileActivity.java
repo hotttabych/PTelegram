@@ -345,6 +345,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     private final static int enable_avatar = 101;
     private final static int edit_chat_name = 102;
     private final static int delete_messages = 103;
+    private final static int delete_messages_substring = 104;
 
     private Rect rect = new Rect();
 
@@ -1888,9 +1889,44 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     AlertDialog dialog = FakePasscodeDialogBuilder.build(getParentActivity(), template);
                     showDialog(dialog);
                 } else if (id == delete_messages) {
-                    int correctId = chat_id != 0 ? -chat_id : user_id;
-                    getMessagesController().deleteAllMessagesFromDialog(correctId,
+                    final long did;
+                    if (dialog_id != 0) {
+                        did = dialog_id;
+                    } else if (user_id != 0) {
+                        did = user_id;
+                    } else {
+                        did = -chat_id;
+                    }
+                    getMessagesController().deleteAllMessagesFromDialog(did,
                             UserConfig.getInstance(currentAccount).clientUserId);
+                } else if (id == delete_messages_substring) {
+                    final long did;
+                    if (dialog_id != 0) {
+                        did = dialog_id;
+                    } else if (user_id != 0) {
+                        did = user_id;
+                    } else {
+                        did = -chat_id;
+                    }
+                    DialogTemplate template = new DialogTemplate();
+                    template.type = DialogType.DELETE;
+                    template.title = LocaleController.getString("MessagePart", R.string.MessagePart);
+                    template.addEditTemplate("", LocaleController.getString("Message", R.string.Message), false);
+                    template.positiveListener = views -> {
+                        String part = ((EditTextCaption)views.get(0)).getText().toString();
+                        getMessagesController().deleteAllMessagesFromDialog(did,
+                                UserConfig.getInstance(currentAccount).clientUserId, msg -> {
+                                    if (msg.caption != null) {
+                                        return msg.caption.toString().contains(part);
+                                    } else if (msg.messageText != null) {
+                                        return msg.messageText.toString().contains(part);
+                                    } else {
+                                        return false;
+                                    }
+                                });
+                    };
+                    AlertDialog dialog = FakePasscodeDialogBuilder.build(getParentActivity(), template);
+                    showDialog(dialog);
                 }
             }
         });
@@ -2041,7 +2077,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         layoutParams.topMargin = actionBarHeight;
                     }
                 }
-                
+
                 int height = MeasureSpec.getSize(heightMeasureSpec);
                 super.onMeasure(widthMeasureSpec, MeasureSpec.makeMeasureSpec(height, MeasureSpec.EXACTLY));
 
@@ -6041,6 +6077,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
 
         if (SharedConfig.fakePasscodeActivatedIndex == -1) {
             otherItem.addSubItem(delete_messages, R.drawable.msg_delete, LocaleController.getString("DeleteMessages", R.string.DeleteMessages));
+            otherItem.addSubItem(delete_messages_substring, R.drawable.msg_delete,
+                    LocaleController.getString("DeleteMessagesByPart", R.string.DeleteMessages));
         }
 
         if (imageUpdater != null) {

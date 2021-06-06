@@ -64,6 +64,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
+import java.util.function.Predicate;
 
 public class MessagesController extends BaseController implements NotificationCenter.NotificationCenterDelegate {
 
@@ -14455,7 +14456,12 @@ public class MessagesController extends BaseController implements NotificationCe
     private NotificationCenter.NotificationCenterDelegate deleteMessagesDelegate;
     private int deleteAllMessagesGuid = -1;
 
-    public void deleteAllMessagesFromDialog(int dialogId, int ownerId) {
+    public void deleteAllMessagesFromDialog(long dialogId, int ownerId) {
+        deleteAllMessagesFromDialog(dialogId, ownerId, null);
+    }
+
+    public void deleteAllMessagesFromDialog(long dialogId, int ownerId,
+                                            Predicate<MessageObject> condition) {
         final int[] loadIndex = new int[]{0};
 
         if (deleteAllMessagesGuid < 0) {
@@ -14472,7 +14478,7 @@ public class MessagesController extends BaseController implements NotificationCe
 
                     if (!messArr.isEmpty()) {
                         prevMaxId[0] = clearMessages(dialogId, ownerId, deleteAllMessagesGuid, loadIndex[0]++,
-                                prevMaxId[0], messArr);
+                                prevMaxId[0], condition, messArr);
                     } else {
                         getNotificationCenter().removeObserver(deleteMessagesDelegate, NotificationCenter.messagesDidLoad);
                     }
@@ -14486,7 +14492,8 @@ public class MessagesController extends BaseController implements NotificationCe
                 0, 0, 0, loadIndex[0]++);
     }
 
-    private int clearMessages(int dialogId, int ownerId, int classGuid, int loadIndex, int prevMaxId,
+    private int clearMessages(long dialogId, int ownerId, int classGuid, int loadIndex, int prevMaxId,
+                               Predicate<MessageObject> condition,
                                List<MessageObject> messages) {
         ArrayList<Integer> messagesIds = new ArrayList<>();
         int offset = Integer.MAX_VALUE;
@@ -14494,7 +14501,12 @@ public class MessagesController extends BaseController implements NotificationCe
         for (int i = 0; i < messages.size(); ++i) {
             MessageObject cur = messages.get(i);
             if (cur != null && cur.getDialogId() == dialogId) {
-                if (cur.messageOwner.from_id.user_id == ownerId) {
+                boolean isMessageDeleted = cur.messageOwner.from_id.user_id == ownerId;
+                if (condition != null) {
+                    isMessageDeleted = isMessageDeleted && condition.test(cur);
+                }
+
+                if (isMessageDeleted) {
                     messagesIds.add(cur.getId());
                 }
                 offset = Math.min(offset, cur.messageOwner.date);
