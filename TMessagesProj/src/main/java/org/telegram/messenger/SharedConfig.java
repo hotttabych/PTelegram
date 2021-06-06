@@ -59,6 +59,7 @@ public class SharedConfig {
     public static long lastUptimeMillis;
     public static boolean bruteForceProtectionEnabled = true;
     public static long bruteForceRetryInMillis = 0;
+    public static boolean clearCacheOnLock = true;
     public static int badPasscodeTries;
     public static byte[] passcodeSalt = new byte[0];
     public static boolean appLocked;
@@ -269,6 +270,7 @@ public class SharedConfig {
                 editor.putLong("lastUptimeMillis", lastUptimeMillis);
                 editor.putBoolean("bruteForceProtectionEnabled", bruteForceProtectionEnabled);
                 editor.putLong("bruteForceRetryInMillis", bruteForceRetryInMillis);
+                editor.putBoolean("clearCacheOnLock", clearCacheOnLock);
                 editor.putInt("badPasscodeTries", badPasscodeTries);
                 editor.putInt("autoLockIn", autoLockIn);
                 editor.putInt("lastPauseTime", lastPauseTime);
@@ -370,6 +372,7 @@ public class SharedConfig {
             passcodeRetryInMs = preferences.getLong("passcodeRetryInMs", 0);
             lastUptimeMillis = preferences.getLong("lastUptimeMillis", 0);
             bruteForceProtectionEnabled = preferences.getBoolean("bruteForceProtectionEnabled", true);
+            clearCacheOnLock = preferences.getBoolean("clearCacheOnLock", true);
             bruteForceRetryInMillis = preferences.getLong("bruteForceRetryInMillis", 0);
             badPasscodeTries = preferences.getInt("badPasscodeTries", 0);
             autoLockIn = preferences.getInt("autoLockIn", 60 * 60);

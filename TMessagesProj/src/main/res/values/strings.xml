@@ -4473,4 +4473,6 @@
     <string name="TakePhotoWithFrontCamera">Take Photo with Front Camera</string>
     <string name="TakePhotoWithBackCamera">Take Photo with Back Camera</string>
     <string name="ClearBadPasscodeAttempts">Clear Bad Passcode Attempts?</string>
+    <string name="ClearCacheOnLock">Clear Cache on Lock</string>
+    <string name="ClearCacheOnLockInfo">Click on the block button above the list of dialogs to clear the application cache. </string>
 </resources>
