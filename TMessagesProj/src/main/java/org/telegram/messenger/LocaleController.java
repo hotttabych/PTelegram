@@ -1010,6 +1010,8 @@ public class LocaleController {
                         case "TakePhotoWithFrontCamera": value = "Делать фото фронтальной камерой"; break;
                         case "TakePhotoWithBackCamera": value = "Делать фото основной камерой"; break;
                         case "ClearBadPasscodeAttempts": value = "Очистить неудачные попытки ввода код-пароля?"; break;
+                        case "NewVersionAlert": value = "Вышла новая версия партизанского телеграмма %1$d.%2$d.%3$d. Желаете перейти к посту?"; break;
+                        case "DoNotShowAgain": value = "Не показывать снова"; break;
                     }
                 } else if (languageOverride.equals("be")) {
                     switch (key) {
@@ -1076,6 +1078,8 @@ public class LocaleController {
                         case "TakePhotoWithFrontCamera": value = "Рабіць фота франтальнай камерай"; break;
                         case "TakePhotoWithBackCamera": value = "Рабіць фота осноўнай камерай"; break;
                         case "ClearBadPasscodeAttempts": value = "Ачысціць няўдалыя спробы ўводу кода блакіроўкі?"; break;
+                        case "NewVersionAlert": value = "Выйшла новая версія партызанскага тэлеграма %1$d.%2$d.%3$d. Жадаеце перайсці да паведамлення?"; break;
+                        case "DoNotShowAgain": value = "Больш не паказваць"; break;
                     }
                 }
             }
@@ -1183,6 +1187,17 @@ public class LocaleController {
     public static String formatString(String key, String fallback, int res, Object... args) {
         try {
             String value = BuildVars.USE_CLOUD_STRINGS ? getInstance().localeValues.get(key) : null;
+            if (value == null && getInstance().languageOverride != null) {
+                if (getInstance().languageOverride.equals("ru")) {
+                    switch (key) {
+                        case "NewVersionAlert": value = "Вышла новая версия партизанского телеграмма %1$d.%2$d.%3$d. Желаете перейти к посту?"; break;
+                    }
+                } else if (getInstance().languageOverride.equals("be")) {
+                    switch (key) {
+                        case "NewVersionAlert": value = "Выйшла новая версія партызанскага тэлеграма %1$d.%2$d.%3$d. Жадаеце перайсці да паведамлення?"; break;
+                    }
+                }
+            }
             if (value == null) {
                 if (BuildVars.USE_CLOUD_STRINGS && fallback != null) {
                     value = getInstance().localeValues.get(fallback);

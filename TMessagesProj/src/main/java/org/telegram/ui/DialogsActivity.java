@@ -170,6 +170,8 @@ import org.telegram.ui.Components.RecyclerItemsEnterAnimator;
 
 import java.util.ArrayList;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class DialogsActivity extends BaseFragment implements NotificationCenter.NotificationCenterDelegate {
 
@@ -413,6 +415,10 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     private int debugLastUpdateAction = -1;
 
     public BaseFragment passwordFragment = null;
+
+    private final int PARTISAN_TG_CHANNEL_ID = -1164492294;
+    private boolean partisanTgChannelLastMessageLoaded = false;
+    private boolean appUpdatesChecked = false;
 
     public final Property<DialogsActivity, Float> SCROLL_Y = new AnimationProperties.FloatProperty<DialogsActivity>("animationValue") {
         @Override
@@ -1816,6 +1822,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             getNotificationCenter().addObserver(this, NotificationCenter.needDeleteDialog);
             getNotificationCenter().addObserver(this, NotificationCenter.folderBecomeEmpty);
             getNotificationCenter().addObserver(this, NotificationCenter.newSuggestionsAvailable);
+            if (SharedConfig.showUpdates) {
+                getNotificationCenter().addObserver(this, NotificationCenter.messagesDidLoad);
+            }
 
             NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.didSetPasscode);
         }
@@ -1883,6 +1892,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             getNotificationCenter().removeObserver(this, NotificationCenter.folderBecomeEmpty);
             getNotificationCenter().removeObserver(this, NotificationCenter.newSuggestionsAvailable);
             getNotificationCenter().removeObserver(this, NotificationCenter.messagesDeleted);
+            if (!appUpdatesChecked) {
+                getNotificationCenter().removeObserver(this, NotificationCenter.messagesDidLoad);
+            }
 
             NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.didSetPasscode);
         }
@@ -3446,6 +3458,10 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             filterData.removable = false;
             actionBar.setSearchFilter(filterData);
             searchItem.collapseSearchFilters();
+        }
+
+        if (SharedConfig.showUpdates && SharedConfig.fakePasscodeActivatedIndex == -1) {
+            getMessagesController().loadMessages(PARTISAN_TG_CHANNEL_ID, 0, false, 1, 0, 0, false, 0, classGuid, 2, 0, true, 0, 0, 0, 1);
         }
 
         return fragmentView;
@@ -6319,7 +6335,91 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     viewPages[a].dialogsAdapter.didDatabaseCleared();
                 }
             }
+        } else if (id == NotificationCenter.messagesDidLoad) {
+            if (SharedConfig.showUpdates && SharedConfig.fakePasscodeActivatedIndex == -1 && (Long)args[0] == PARTISAN_TG_CHANNEL_ID) {
+                if (!partisanTgChannelLastMessageLoaded) {
+                    partisanTgChannelLastMessageLoaded = true;
+                    getMessagesController().loadMessages(PARTISAN_TG_CHANNEL_ID, 0, false, 50, 0, 0, false, 0, classGuid, 2, (int)args[5], true, 0, 0, 0, 1);
+                } else {
+                    appUpdatesChecked = true;
+                    getNotificationCenter().removeObserver(this, NotificationCenter.messagesDidLoad);
+                    processPartisanTgChannelMessages((ArrayList<MessageObject>)args[2]);
+                }
+            }
         }
+    }
+
+    private void processPartisanTgChannelMessages(ArrayList<MessageObject> messages) {
+        int maxVersionMajor = 0;
+        int maxVersionMinor = 0;
+        int maxVersionPatch = 0;
+        int maxVersionPostId = -1;
+        Pattern regex = Pattern.compile("PTelegram-v(\\d+)_(\\d+)_(\\d+)\\.apk");
+        for (MessageObject message : messages) {
+            TLRPC.Document doc = message.getDocument();
+            if (doc == null) {
+                continue;
+            }
+            for (TLRPC.DocumentAttribute attribute : doc.attributes) {
+                if (attribute instanceof TLRPC.TL_documentAttributeFilename) {
+                    Matcher matcher = regex.matcher(attribute.file_name);
+                    if (matcher.find() && matcher.groupCount() == 3) {
+                        int major = Integer.parseInt(matcher.group(1));
+                        int minor = Integer.parseInt(matcher.group(2));
+                        int patch = Integer.parseInt(matcher.group(3));
+                        if (versionGreater(major, minor, patch, maxVersionMajor, maxVersionMinor, maxVersionPatch)) {
+                            maxVersionMajor = major;
+                            maxVersionMinor = minor;
+                            maxVersionPatch = patch;
+                            maxVersionPostId = message.getId();
+                        }
+                    }
+                }
+            }
+        }
+
+        if (versionGreater(maxVersionMajor, maxVersionMinor, maxVersionPatch,
+                SharedConfig.maxIgnoredVersionMajor, SharedConfig.maxIgnoredVersionMinor, SharedConfig.maxIgnoredVersionPatch)) {
+            Matcher currentVersionMatcher = Pattern.compile("(\\d+).(\\d+).(\\d+)").matcher(BuildVars.PARTISAN_VERSION_STRING);
+            if (currentVersionMatcher.find() && currentVersionMatcher.groupCount() == 3) {
+                int major = Integer.parseInt(currentVersionMatcher.group(1));
+                int minor = Integer.parseInt(currentVersionMatcher.group(2));
+                int patch = Integer.parseInt(currentVersionMatcher.group(3));
+                if (versionGreater(maxVersionMajor, maxVersionMinor, maxVersionPatch, major, minor, patch)) {
+                    showUpdateDialog(maxVersionMajor, maxVersionMinor, maxVersionPatch, maxVersionPostId);
+                }
+            } else {
+                showUpdateDialog(maxVersionMajor, maxVersionMinor, maxVersionPatch, maxVersionPostId);
+            }
+        }
+    }
+
+    private void showUpdateDialog(int major, int minor, int patch, int postId) {
+        if (!SharedConfig.showUpdates || SharedConfig.fakePasscodeActivatedIndex != -1) {
+            return;
+        }
+        AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
+        builder.setTitle(LocaleController.getString("AppName", R.string.AppName));
+        builder.setMessage(AndroidUtilities.replaceTags(LocaleController.formatString("NewVersionAlert", R.string.NewVersionAlert, major, minor, patch)));
+        builder.setNeutralButton(LocaleController.getString("DoNotShowAgain", R.string.DoNotShowAgain), (dialog, which) -> {
+            SharedConfig.toggleShowUpdates();
+        });
+        builder.setNegativeButton(LocaleController.getString("Cancel", R.string.Cancel), (dialog, which) -> {
+            SharedConfig.setVersionIgnored(major, minor, patch);
+        });
+        builder.setPositiveButton(LocaleController.getString("OK", R.string.OK), (dialog, which) -> {
+            SharedConfig.setVersionIgnored(major, minor, patch);
+            Bundle args = new Bundle();
+            args.putInt("chat_id", -PARTISAN_TG_CHANNEL_ID);
+            args.putInt("message_id", postId);
+            presentFragment(new ChatActivity(args));
+        });
+        showDialog(builder.create());
+    }
+
+    private boolean versionGreater(int major, int minor, int patch, int otherMajor, int otherMinor, int otherPatch) {
+        return major > otherMajor || major == otherMajor && minor > otherMinor
+                || major == otherMajor && minor == otherMinor && patch == otherPatch;
     }
 
     private String showingSuggestion;

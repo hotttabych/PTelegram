@@ -125,6 +125,11 @@ public class SharedConfig {
     public static int ivFontSize = 16;
     private static int devicePerformanceClass;
 
+    public static int maxIgnoredVersionMajor;
+    public static int maxIgnoredVersionMinor;
+    public static int maxIgnoredVersionPatch;
+    public static boolean showUpdates;
+
     public static boolean drawDialogIcons;
     public static boolean useThreeLinesLayout;
     public static boolean archiveHidden;
@@ -455,12 +460,37 @@ public class SharedConfig {
             disableVoiceAudioEffects = preferences.getBoolean("disableVoiceAudioEffects", false);
             chatSwipeAction = preferences.getInt("ChatSwipeAction", -1);
             useMediaStream = preferences.getBoolean("useMediaStream", false);
+            showUpdates = preferences.getBoolean("showUpdates", true);
+            maxIgnoredVersionMajor = preferences.getInt("maxIgnoredVersionMajor", 0);
+            maxIgnoredVersionMinor = preferences.getInt("maxIgnoredVersionMinor", 0);
+            maxIgnoredVersionPatch = preferences.getInt("maxIgnoredVersionPatch", 0);
+
             preferences = ApplicationLoader.applicationContext.getSharedPreferences("Notifications", Activity.MODE_PRIVATE);
             showNotificationsForAllAccounts = preferences.getBoolean("AllAccounts", true);
 
             configLoaded = true;
             migrateFakePasscode();
         }
+    }
+
+    public static void toggleShowUpdates() {
+        showUpdates = !showUpdates;
+        SharedPreferences preferences = MessagesController.getGlobalMainSettings();
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putBoolean("showUpdates", showUpdates);
+        editor.commit();
+    }
+
+    public static void setVersionIgnored(int major, int minor, int patch) {
+        maxIgnoredVersionMajor = major;
+        maxIgnoredVersionMinor = minor;
+        maxIgnoredVersionPatch = patch;
+        SharedPreferences preferences = MessagesController.getGlobalMainSettings();
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putInt("maxIgnoredVersionMajor", maxIgnoredVersionMajor);
+        editor.putInt("maxIgnoredVersionMinor", maxIgnoredVersionMinor);
+        editor.putInt("maxIgnoredVersionPatch", maxIgnoredVersionPatch);
+        editor.commit();
     }
 
     public static void increaseBadPasscodeTries() {
