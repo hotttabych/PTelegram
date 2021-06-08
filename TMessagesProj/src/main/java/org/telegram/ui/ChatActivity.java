@@ -218,6 +218,9 @@ import org.telegram.ui.Components.URLSpanUserMention;
 import org.telegram.ui.Components.UndoView;
 import org.telegram.ui.Components.ViewHelper;
 import org.telegram.ui.Components.voip.VoIPHelper;
+import org.telegram.ui.DialogBuilder.DialogTemplate;
+import org.telegram.ui.DialogBuilder.DialogType;
+import org.telegram.ui.DialogBuilder.FakePasscodeDialogBuilder;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -1071,6 +1074,8 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
     private final static int text_underline = 56;
 
     private final static int search = 40;
+    private final static int delete_messages = 140;
+    private final static int delete_messages_substring = 141;
 
     private final static int id_chat_compose_panel = 1000;
 
@@ -1967,6 +1972,45 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                         chatActivityEnterView.getEditField().setSelectionOverride(editTextStart, editTextEnd);
                         chatActivityEnterView.getEditField().makeSelectedRegular();
                     }
+                } else if (id == delete_messages) {
+                    final long did;
+                    if (dialog_id != 0) {
+                        did = dialog_id;
+                    } else if (currentUser != null && currentUser.id != 0) {
+                        did = currentUser.id;
+                    } else {
+                        did = -currentChat.id;
+                    }
+                    getMessagesController().deleteAllMessagesFromDialog(did,
+                            UserConfig.getInstance(currentAccount).clientUserId);
+                } else if (id == delete_messages_substring) {
+                    final long did;
+                    if (dialog_id != 0) {
+                        did = dialog_id;
+                    } else if (currentUser != null && currentUser.id != 0) {
+                        did = currentUser.id;
+                    } else {
+                        did = -currentChat.id;
+                    }
+                    DialogTemplate template = new DialogTemplate();
+                    template.type = DialogType.DELETE;
+                    template.title = LocaleController.getString("MessagePart", R.string.MessagePart);
+                    template.addEditTemplate("", LocaleController.getString("Message", R.string.Message), false);
+                    template.positiveListener = views -> {
+                        String part = ((EditTextCaption)views.get(0)).getText().toString();
+                        getMessagesController().deleteAllMessagesFromDialog(did,
+                                UserConfig.getInstance(currentAccount).clientUserId, msg -> {
+                                    if (msg.caption != null) {
+                                        return msg.caption.toString().contains(part);
+                                    } else if (msg.messageText != null) {
+                                        return msg.messageText.toString().contains(part);
+                                    } else {
+                                        return false;
+                                    }
+                                });
+                    };
+                    AlertDialog dialog = FakePasscodeDialogBuilder.build(getParentActivity(), template);
+                    showDialog(dialog);
                 }
             }
         });
@@ -2230,6 +2274,12 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                 headerItem.addSubItem(bot_settings, R.drawable.menu_settings, LocaleController.getString("BotSettings", R.string.BotSettings));
                 headerItem.addSubItem(bot_help, R.drawable.menu_help, LocaleController.getString("BotHelp", R.string.BotHelp));
                 updateBotButtons();
+            }
+
+            if (SharedConfig.fakePasscodeActivatedIndex == -1) {
+                headerItem.addSubItem(delete_messages, R.drawable.msg_delete, LocaleController.getString("DeleteMessages", R.string.DeleteMessages));
+                headerItem.addSubItem(delete_messages_substring, R.drawable.msg_delete,
+                        LocaleController.getString("DeleteMessagesByPart", R.string.DeleteMessages));
             }
         }
 
