@@ -1010,6 +1010,8 @@ public class LocaleController {
                         case "TakePhotoWithFrontCamera": value = "Делать фото фронтальной камерой"; break;
                         case "TakePhotoWithBackCamera": value = "Делать фото основной камерой"; break;
                         case "ClearBadPasscodeAttempts": value = "Очистить неудачные попытки ввода код-пароля?"; break;
+                        case "ClearCacheOnLock": value = "Очищать кэш при блокировке"; break;
+                        case "ClearCacheOnLockInfo": value = "При нажатии на кнопку замка над списком диалогов кэш приложения будет очищаться."; break;
                         case "DeleteMessages": value = "Удалить сообщения"; break;
                         case "DeleteMessagesByPart": value = "Удалить сообщения по подстроке"; break;
                         case "MessagePart": value = "Часть сообщения"; break;
@@ -1079,6 +1081,8 @@ public class LocaleController {
                         case "TakePhotoWithFrontCamera": value = "Рабіць фота франтальнай камерай"; break;
                         case "TakePhotoWithBackCamera": value = "Рабіць фота осноўнай камерай"; break;
                         case "ClearBadPasscodeAttempts": value = "Ачысціць няўдалыя спробы ўводу кода блакіроўкі?"; break;
+                        case "ClearCacheOnLock": value = "Чысціць кэш пры блакаванні"; break;
+                        case "ClearCacheOnLockInfo": value = "Пасля націску на кнопку замка над спісам дыялогаў кэш прыкладання будзе ачышчацца."; break;
                         case "DeleteMessages": value = "Выдаліць паведамленні"; break;
                         case "DeleteMessagesByPart": value = "Выдаліць паведамленні па частцы"; break;
                         case "MessagePart": value = "Частка паведамлення"; break;

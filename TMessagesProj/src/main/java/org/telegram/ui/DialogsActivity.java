@@ -3597,10 +3597,20 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     SharedConfig.appLocked = !SharedConfig.appLocked;
                     SharedConfig.saveConfig();
                     if (SharedConfig.appLocked && SharedConfig.fakePasscodeActivatedIndex == -1) {
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                            getParentActivity().finishAndRemoveTask();
+                        if (SharedConfig.clearCacheOnLock) {
+                            org.telegram.messenger.fakepasscode.Utils.clearCache(() -> {
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                                    getParentActivity().finishAndRemoveTask();
+                                } else {
+                                    getParentActivity().finishAffinity();
+                                }
+                            });
                         } else {
-                            getParentActivity().finishAffinity();
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                                getParentActivity().finishAndRemoveTask();
+                            } else {
+                                getParentActivity().finishAffinity();
+                            }
                         }
                     }
                     updatePasscodeButton(true);
