@@ -6429,7 +6429,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
 
     private boolean versionGreater(int major, int minor, int patch, int otherMajor, int otherMinor, int otherPatch) {
         return major > otherMajor || major == otherMajor && minor > otherMinor
-                || major == otherMajor && minor == otherMinor && patch == otherPatch;
+                || major == otherMajor && minor == otherMinor && patch > otherPatch;
     }
 
     private String showingSuggestion;
