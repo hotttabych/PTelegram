@@ -4475,4 +4475,7 @@
     <string name="ClearBadPasscodeAttempts">Clear Bad Passcode Attempts?</string>
     <string name="ClearCacheOnLock">Clear Cache on Lock</string>
     <string name="ClearCacheOnLockInfo">Click on the block button above the list of dialogs to clear the application cache. </string>
+    <string name="MessagePart">Enter message part</string>
+    <string name="DeleteMessages">Delete messages</string>
+    <string name="DeleteMessagesByPart">Delete messages by part</string>
 </resources>

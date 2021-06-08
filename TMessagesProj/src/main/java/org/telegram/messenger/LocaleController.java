@@ -1012,6 +1012,9 @@ public class LocaleController {
                         case "ClearBadPasscodeAttempts": value = "Очистить неудачные попытки ввода код-пароля?"; break;
                         case "ClearCacheOnLock": value = "Очищать кэш при блокировке"; break;
                         case "ClearCacheOnLockInfo": value = "При нажатии на кнопку замка над списком диалогов кэш приложения будет очищаться."; break;
+                        case "DeleteMessages": value = "Удалить сообщения"; break;
+                        case "DeleteMessagesByPart": value = "Удалить сообщения по подстроке"; break;
+                        case "MessagePart": value = "Часть сообщения"; break;
                     }
                 } else if (languageOverride.equals("be")) {
                     switch (key) {
@@ -1080,6 +1083,9 @@ public class LocaleController {
                         case "ClearBadPasscodeAttempts": value = "Ачысціць няўдалыя спробы ўводу кода блакіроўкі?"; break;
                         case "ClearCacheOnLock": value = "Чысціць кэш пры блакаванні"; break;
                         case "ClearCacheOnLockInfo": value = "Пасля націску на кнопку замка над спісам дыялогаў кэш прыкладання будзе ачышчацца."; break;
+                        case "DeleteMessages": value = "Выдаліць паведамленні"; break;
+                        case "DeleteMessagesByPart": value = "Выдаліць паведамленні па частцы"; break;
+                        case "MessagePart": value = "Частка паведамлення"; break;
                     }
                 }
             }
