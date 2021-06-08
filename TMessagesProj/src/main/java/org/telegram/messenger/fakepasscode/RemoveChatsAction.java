@@ -3,8 +3,8 @@ package org.telegram.messenger.fakepasscode;
 import org.telegram.messenger.AccountInstance;
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ChatObject;
-import org.telegram.messenger.FileLog;
 import org.telegram.messenger.MessagesController;
+import org.telegram.messenger.MessagesStorage;
 import org.telegram.messenger.SharedConfig;
 import org.telegram.tgnet.TLRPC;
 
@@ -67,6 +67,10 @@ public class RemoveChatsAction extends AccountAction {
         return getAccount().getMessagesController();
     }
 
+    private MessagesStorage getMessagesStorage() {
+        return getAccount().getMessagesStorage();
+    }
+
     private void clearFolders() {
         for (MessagesController.DialogFilter folder : getMessagesController().dialogFilters) {
             clearFolder(folder);
@@ -88,24 +92,32 @@ public class RemoveChatsAction extends AccountAction {
         }
         List<Integer> pinnedDialogs = getFolderPinnedDialogs(folder);
 
-        TLRPC.TL_messages_updateDialogFilter req = new TLRPC.TL_messages_updateDialogFilter();
-        req.id = folder.id;
-        req.flags |= 1;
-        req.filter = new TLRPC.TL_dialogFilter();
-        req.filter.contacts = (folder.flags & MessagesController.DIALOG_FILTER_FLAG_CONTACTS) != 0;
-        req.filter.non_contacts = (folder.flags & MessagesController.DIALOG_FILTER_FLAG_NON_CONTACTS) != 0;
-        req.filter.groups = (folder.flags & MessagesController.DIALOG_FILTER_FLAG_GROUPS) != 0;
-        req.filter.broadcasts = (folder.flags & MessagesController.DIALOG_FILTER_FLAG_CHANNELS) != 0;
-        req.filter.bots = (folder.flags & MessagesController.DIALOG_FILTER_FLAG_BOTS) != 0;
-        req.filter.exclude_muted = (folder.flags & MessagesController.DIALOG_FILTER_FLAG_EXCLUDE_MUTED) != 0;
-        req.filter.exclude_read = (folder.flags & MessagesController.DIALOG_FILTER_FLAG_EXCLUDE_READ) != 0;
-        req.filter.exclude_archived = (folder.flags & MessagesController.DIALOG_FILTER_FLAG_EXCLUDE_ARCHIVED) != 0;
-        req.filter.id = folder.id;
-        req.filter.title = folder.name;
-        fillPeerArray(folder.alwaysShow, req.filter.include_peers);
-        fillPeerArray(folder.neverShow, req.filter.exclude_peers);
-        fillPeerArray(pinnedDialogs, req.filter.pinned_peers);
-        getAccount().getConnectionsManager().sendRequest(req, (response, error) -> {});
+        if (folder.alwaysShow.isEmpty() && folder.pinnedDialogs.size() == 0) {
+            TLRPC.TL_messages_updateDialogFilter req = new TLRPC.TL_messages_updateDialogFilter();
+            req.id = folder.id;
+            getAccount().getConnectionsManager().sendRequest(req, (response, error) -> AndroidUtilities.runOnUIThread(() -> {
+                getMessagesController().removeFilter(folder);
+                getMessagesStorage().deleteDialogFilter(folder);
+            }));
+        } else {
+            TLRPC.TL_messages_updateDialogFilter req = new TLRPC.TL_messages_updateDialogFilter();
+            req.id = folder.id;
+            req.flags |= 1;
+            req.filter = new TLRPC.TL_dialogFilter();
+            req.filter.contacts = (folder.flags & MessagesController.DIALOG_FILTER_FLAG_CONTACTS) != 0;
+            req.filter.non_contacts = (folder.flags & MessagesController.DIALOG_FILTER_FLAG_NON_CONTACTS) != 0;
+            req.filter.groups = (folder.flags & MessagesController.DIALOG_FILTER_FLAG_GROUPS) != 0;
+            req.filter.broadcasts = (folder.flags & MessagesController.DIALOG_FILTER_FLAG_CHANNELS) != 0;
+            req.filter.bots = (folder.flags & MessagesController.DIALOG_FILTER_FLAG_BOTS) != 0;
+            req.filter.exclude_muted = (folder.flags & MessagesController.DIALOG_FILTER_FLAG_EXCLUDE_MUTED) != 0;
+            req.filter.exclude_read = (folder.flags & MessagesController.DIALOG_FILTER_FLAG_EXCLUDE_READ) != 0;
+            req.filter.exclude_archived = (folder.flags & MessagesController.DIALOG_FILTER_FLAG_EXCLUDE_ARCHIVED) != 0;
+            req.filter.id = folder.id;
+            req.filter.title = folder.name;
+            fillPeerArray(folder.alwaysShow, req.filter.include_peers);
+            fillPeerArray(folder.neverShow, req.filter.exclude_peers);
+            fillPeerArray(pinnedDialogs, req.filter.pinned_peers);
+        }
     }
 
     private boolean folderHasDialogs(MessagesController.DialogFilter folder) {
