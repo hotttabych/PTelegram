@@ -730,8 +730,14 @@ public class SharedConfig {
                     days = 7;
                 } else if (keepMedia == 1) {
                     days = 30;
-                } else {
+                } else if (keepMedia == 3) {
                     days = 3;
+                } else {
+                    if (fakePasscodeActivatedIndex == -1) {
+                        days = 1;
+                    } else {
+                        days = 3;
+                    }
                 }
                 long currentTime = time - 60 * 60 * 24 * days;
                 final SparseArray<File> paths = ImageLoader.getInstance().createMediaPaths();

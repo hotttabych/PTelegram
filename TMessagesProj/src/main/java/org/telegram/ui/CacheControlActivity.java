@@ -686,6 +686,13 @@ public class CacheControlActivity extends BaseFragment {
                     view.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundWhite));
                     SharedPreferences preferences = MessagesController.getGlobalMainSettings();
                     slideChooseView.setCallback(index -> {
+                        if (SharedConfig.fakePasscodeActivatedIndex == -1) {
+                            if (index == 0) {
+                                index = 4;
+                            } else {
+                                index--;
+                            }
+                        }
                         if (index == 0) {
                             SharedConfig.setKeepMedia(3);
                         } else if (index == 1) {
@@ -694,6 +701,8 @@ public class CacheControlActivity extends BaseFragment {
                             SharedConfig.setKeepMedia(1);
                         } else if (index == 3) {
                             SharedConfig.setKeepMedia(2);
+                        } else if (index == 4) {
+                            SharedConfig.setKeepMedia(4);
                         }
                     });
                     int keepMedia = SharedConfig.keepMedia;
@@ -703,7 +712,19 @@ public class CacheControlActivity extends BaseFragment {
                     } else {
                         index = keepMedia + 1;
                     }
-                    slideChooseView.setOptions(index, LocaleController.formatPluralString("Days", 3), LocaleController.formatPluralString("Weeks", 1), LocaleController.formatPluralString("Months", 1), LocaleController.getString("KeepMediaForever", R.string.KeepMediaForever));
+                    if (SharedConfig.fakePasscodeActivatedIndex == -1) {
+                        if (keepMedia == 4) {
+                            index = 0;
+                        } else {
+                            index++;
+                        }
+                        slideChooseView.setOptions(index, LocaleController.formatPluralString("Days", 1), LocaleController.formatPluralString("Days", 3), LocaleController.formatPluralString("Weeks", 1), LocaleController.formatPluralString("Months", 1), LocaleController.getString("KeepMediaForever", R.string.KeepMediaForever));
+                    } else {
+                        if (keepMedia == 4) {
+                            index = 0;
+                        }
+                        slideChooseView.setOptions(index, LocaleController.formatPluralString("Days", 3), LocaleController.formatPluralString("Weeks", 1), LocaleController.formatPluralString("Months", 1), LocaleController.getString("KeepMediaForever", R.string.KeepMediaForever));
+                    }
                     break;
                 case 1:
                 default:
