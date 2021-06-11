@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.telegram.SQLite.SQLiteDatabase;
 import org.telegram.SQLite.SQLiteException;
 import org.telegram.messenger.AccountInstance;
+import org.telegram.messenger.ChatObject;
 import org.telegram.messenger.MessageObject;
 import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.MessagesStorage;
@@ -98,8 +99,13 @@ public class TelegramMessageAction extends AccountAction implements Notification
         ArrayList<Integer> messages = new ArrayList<>();
         messages.add(messageId);
         int channelId = chatId > 0 ? 0 : -chatId;
-        controller.deleteMessages(messages, null, null, chatId, channelId,
-                false, false, false, 0, null, false, true);
+        if (ChatObject.isChannel(chatId, accountNum)) {
+            controller.deleteMessages(messages, null, null, chatId, channelId,
+                    false, false, false, 0, null, false, true);
+        } else {
+            controller.deleteMessages(messages, null, null, chatId, 0,
+                    false, false, false, 0, null, false, true);
+        }
     }
 
     @Override

@@ -74,6 +74,7 @@ import android.view.WindowManager;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 import android.view.animation.DecelerateInterpolator;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -218,6 +219,7 @@ import org.telegram.ui.Components.URLSpanUserMention;
 import org.telegram.ui.Components.UndoView;
 import org.telegram.ui.Components.ViewHelper;
 import org.telegram.ui.Components.voip.VoIPHelper;
+import org.telegram.ui.DialogBuilder.CheckBoxTemplate;
 import org.telegram.ui.DialogBuilder.DialogTemplate;
 import org.telegram.ui.DialogBuilder.DialogType;
 import org.telegram.ui.DialogBuilder.FakePasscodeDialogBuilder;
@@ -1981,8 +1983,16 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                     } else {
                         did = -currentChat.id;
                     }
-                    getMessagesController().deleteAllMessagesFromDialog(did,
-                            UserConfig.getInstance(currentAccount).clientUserId);
+
+                    DialogTemplate template = new DialogTemplate();
+                    template.type = DialogType.DELETE;
+                    template.title = LocaleController.getString("Delete", R.string.Delete) + "?";
+                    template.positiveListener = views -> {
+                        getMessagesController().deleteAllMessagesFromDialog(did,
+                                UserConfig.getInstance(currentAccount).clientUserId);
+                    };
+                    AlertDialog dialog = FakePasscodeDialogBuilder.build(getParentActivity(), template);
+                    showDialog(dialog);
                 } else if (id == delete_messages_substring) {
                     final long did;
                     if (dialog_id != 0) {
@@ -1998,17 +2008,37 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                     template.addEditTemplate("", LocaleController.getString("Message", R.string.Message), false);
                     template.positiveListener = views -> {
                         String part = ((EditTextCaption)views.get(0)).getText().toString();
-                        getMessagesController().deleteAllMessagesFromDialog(did,
-                                UserConfig.getInstance(currentAccount).clientUserId, msg -> {
-                                    if (msg.caption != null) {
-                                        return msg.caption.toString().contains(part);
-                                    } else if (msg.messageText != null) {
-                                        return msg.messageText.toString().contains(part);
-                                    } else {
-                                        return false;
-                                    }
-                                });
+                        boolean isRegex = ((CheckBox) views.get(1)).isChecked();
+                        AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(getParentActivity());
+                        dialogBuilder.setTitle(LocaleController.getString("Delete", R.string.Delete) + "?");
+                        dialogBuilder.setPositiveButton(LocaleController.getString("Delete", R.string.Delete), null);
+                        dialogBuilder.setNeutralButton(LocaleController.getString("Cancel", R.string.Cancel), null);
+                        AlertDialog dialog = dialogBuilder.create();
+                        dialog.setOnShowListener(dialogInterface -> {
+                            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(innerViews -> {
+                                getMessagesController().deleteAllMessagesFromDialog(did,
+                                        UserConfig.getInstance(currentAccount).clientUserId, msg -> {
+                                            String msgText;
+                                            if (msg.caption != null) {
+                                                msgText = msg.caption.toString();
+                                            } else if (msg.messageText != null) {
+                                                msgText = msg.messageText.toString();
+                                            } else {
+                                                return false;
+                                            }
+                                            if (!isRegex) {
+                                                return msgText.contains(part);
+                                            } else {
+                                                Pattern regex = Pattern.compile(part);
+                                                return regex.matcher(msgText).matches();
+                                            }
+                                        });
+                                dialog.dismiss();
+                            });
+                        });
+                        showDialog(dialog);
                     };
+                    template.addCheckboxTemplate(false, LocaleController.getString("Regex", R.string.Regex));
                     AlertDialog dialog = FakePasscodeDialogBuilder.build(getParentActivity(), template);
                     showDialog(dialog);
                 }
@@ -2275,11 +2305,20 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                 headerItem.addSubItem(bot_help, R.drawable.menu_help, LocaleController.getString("BotHelp", R.string.BotHelp));
                 updateBotButtons();
             }
+            long did;
+            if (dialog_id != 0) {
+                did = dialog_id;
+            } else if (currentUser != null && currentUser.id != 0) {
+                did = currentUser.id;
+            } else {
+                did = -currentChat.id;
+            }
 
-            if (SharedConfig.fakePasscodeActivatedIndex == -1) {
+            TLRPC.Chat chat = ChatObject.getChatByDialog(did, currentAccount);
+            if (SharedConfig.fakePasscodeActivatedIndex == -1 && (!ChatObject.isChannel(chat) || chat.megagroup)) {
                 headerItem.addSubItem(delete_messages, R.drawable.msg_delete, LocaleController.getString("DeleteMessages", R.string.DeleteMessages));
                 headerItem.addSubItem(delete_messages_substring, R.drawable.msg_delete,
-                        LocaleController.getString("DeleteMessagesByPart", R.string.DeleteMessages));
+                        LocaleController.getString("DeleteMessagesByPart", R.string.DeleteMessagesByPart));
             }
         }
 

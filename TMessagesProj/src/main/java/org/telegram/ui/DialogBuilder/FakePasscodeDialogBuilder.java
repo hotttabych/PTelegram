@@ -29,7 +29,7 @@ public class FakePasscodeDialogBuilder {
         } else if (template.type == DialogType.DELETE) {
             dialogBuilder.setPositiveButton(LocaleController.getString("Delete", R.string.Delete), null);
             dialogBuilder.setNeutralButton(LocaleController.getString("Cancel", R.string.Cancel), null);
-        } else {
+        } else if (template.type == DialogType.EDIT) {
             dialogBuilder.setPositiveButton(LocaleController.getString("Change", R.string.Change), null);
             dialogBuilder.setNeutralButton(LocaleController.getString("Cancel", R.string.Cancel), null);
             dialogBuilder.setNegativeButton(LocaleController.getString("Delete", R.string.Delete), template.negativeListener);

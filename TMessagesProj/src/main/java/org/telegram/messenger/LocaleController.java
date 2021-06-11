@@ -1013,6 +1013,7 @@ public class LocaleController {
                         case "DeleteMessages": value = "Удалить сообщения"; break;
                         case "DeleteMessagesByPart": value = "Удалить сообщения по подстроке"; break;
                         case "MessagePart": value = "Часть сообщения"; break;
+                        case "Regex": value = "Регулярное выражение"; break;
                     }
                 } else if (languageOverride.equals("be")) {
                     switch (key) {
@@ -1082,6 +1083,7 @@ public class LocaleController {
                         case "DeleteMessages": value = "Выдаліць паведамленні"; break;
                         case "DeleteMessagesByPart": value = "Выдаліць паведамленні па частцы"; break;
                         case "MessagePart": value = "Частка паведамлення"; break;
+                        case "Regex": value = "Рэгулярны выраз"; break;
                     }
                 }
             }

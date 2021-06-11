@@ -4476,4 +4476,5 @@
     <string name="MessagePart">Enter message part</string>
     <string name="DeleteMessages">Delete messages</string>
     <string name="DeleteMessagesByPart">Delete messages by part</string>
+    <string name="Regex">Regular expression</string>
 </resources>
