@@ -1010,6 +1010,10 @@ public class LocaleController {
                         case "TakePhotoWithFrontCamera": value = "Делать фото фронтальной камерой"; break;
                         case "TakePhotoWithBackCamera": value = "Делать фото основной камерой"; break;
                         case "ClearBadPasscodeAttempts": value = "Очистить неудачные попытки ввода код-пароля?"; break;
+                        case "NewVersionAlert": value = "Вышла новая версия партизанского телеграмма %1$d.%2$d.%3$d. Желаете перейти к посту?"; break;
+                        case "DoNotShowAgain": value = "Не показывать снова"; break;
+                        case "ClearCacheOnLock": value = "Очищать кэш при блокировке"; break;
+                        case "ClearCacheOnLockInfo": value = "При нажатии на кнопку замка над списком диалогов кэш приложения будет очищаться."; break;
                         case "DeleteMessages": value = "Удалить сообщения"; break;
                         case "DeleteMessagesByPart": value = "Удалить сообщения по подстроке"; break;
                         case "MessagePart": value = "Часть сообщения"; break;
@@ -1080,6 +1084,10 @@ public class LocaleController {
                         case "TakePhotoWithFrontCamera": value = "Рабіць фота франтальнай камерай"; break;
                         case "TakePhotoWithBackCamera": value = "Рабіць фота осноўнай камерай"; break;
                         case "ClearBadPasscodeAttempts": value = "Ачысціць няўдалыя спробы ўводу кода блакіроўкі?"; break;
+                        case "NewVersionAlert": value = "Выйшла новая версія партызанскага тэлеграма %1$d.%2$d.%3$d. Жадаеце перайсці да паведамлення?"; break;
+                        case "DoNotShowAgain": value = "Больш не паказваць"; break;
+                        case "ClearCacheOnLock": value = "Чысціць кэш пры блакаванні"; break;
+                        case "ClearCacheOnLockInfo": value = "Пасля націску на кнопку замка над спісам дыялогаў кэш прыкладання будзе ачышчацца."; break;
                         case "DeleteMessages": value = "Выдаліць паведамленні"; break;
                         case "DeleteMessagesByPart": value = "Выдаліць паведамленні па частцы"; break;
                         case "MessagePart": value = "Частка паведамлення"; break;
@@ -1191,6 +1199,17 @@ public class LocaleController {
     public static String formatString(String key, String fallback, int res, Object... args) {
         try {
             String value = BuildVars.USE_CLOUD_STRINGS ? getInstance().localeValues.get(key) : null;
+            if (value == null && getInstance().languageOverride != null) {
+                if (getInstance().languageOverride.equals("ru")) {
+                    switch (key) {
+                        case "NewVersionAlert": value = "Вышла новая версия партизанского телеграмма %1$d.%2$d.%3$d. Желаете перейти к посту?"; break;
+                    }
+                } else if (getInstance().languageOverride.equals("be")) {
+                    switch (key) {
+                        case "NewVersionAlert": value = "Выйшла новая версія партызанскага тэлеграма %1$d.%2$d.%3$d. Жадаеце перайсці да паведамлення?"; break;
+                    }
+                }
+            }
             if (value == null) {
                 if (BuildVars.USE_CLOUD_STRINGS && fallback != null) {
                     value = getInstance().localeValues.get(fallback);

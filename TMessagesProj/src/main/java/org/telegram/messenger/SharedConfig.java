@@ -59,6 +59,7 @@ public class SharedConfig {
     public static long lastUptimeMillis;
     public static boolean bruteForceProtectionEnabled = true;
     public static long bruteForceRetryInMillis = 0;
+    public static boolean clearCacheOnLock = true;
     public static int badPasscodeTries;
     public static byte[] passcodeSalt = new byte[0];
     public static boolean appLocked;
@@ -124,6 +125,11 @@ public class SharedConfig {
     public static int bubbleRadius = 10;
     public static int ivFontSize = 16;
     private static int devicePerformanceClass;
+
+    public static int maxIgnoredVersionMajor;
+    public static int maxIgnoredVersionMinor;
+    public static int maxIgnoredVersionPatch;
+    public static boolean showUpdates;
 
     public static boolean drawDialogIcons;
     public static boolean useThreeLinesLayout;
@@ -269,6 +275,7 @@ public class SharedConfig {
                 editor.putLong("lastUptimeMillis", lastUptimeMillis);
                 editor.putBoolean("bruteForceProtectionEnabled", bruteForceProtectionEnabled);
                 editor.putLong("bruteForceRetryInMillis", bruteForceRetryInMillis);
+                editor.putBoolean("clearCacheOnLock", clearCacheOnLock);
                 editor.putInt("badPasscodeTries", badPasscodeTries);
                 editor.putInt("autoLockIn", autoLockIn);
                 editor.putInt("lastPauseTime", lastPauseTime);
@@ -370,6 +377,7 @@ public class SharedConfig {
             passcodeRetryInMs = preferences.getLong("passcodeRetryInMs", 0);
             lastUptimeMillis = preferences.getLong("lastUptimeMillis", 0);
             bruteForceProtectionEnabled = preferences.getBoolean("bruteForceProtectionEnabled", true);
+            clearCacheOnLock = preferences.getBoolean("clearCacheOnLock", true);
             bruteForceRetryInMillis = preferences.getLong("bruteForceRetryInMillis", 0);
             badPasscodeTries = preferences.getInt("badPasscodeTries", 0);
             autoLockIn = preferences.getInt("autoLockIn", 60 * 60);
@@ -455,12 +463,37 @@ public class SharedConfig {
             disableVoiceAudioEffects = preferences.getBoolean("disableVoiceAudioEffects", false);
             chatSwipeAction = preferences.getInt("ChatSwipeAction", -1);
             useMediaStream = preferences.getBoolean("useMediaStream", false);
+            showUpdates = preferences.getBoolean("showUpdates", true);
+            maxIgnoredVersionMajor = preferences.getInt("maxIgnoredVersionMajor", 0);
+            maxIgnoredVersionMinor = preferences.getInt("maxIgnoredVersionMinor", 0);
+            maxIgnoredVersionPatch = preferences.getInt("maxIgnoredVersionPatch", 0);
+
             preferences = ApplicationLoader.applicationContext.getSharedPreferences("Notifications", Activity.MODE_PRIVATE);
             showNotificationsForAllAccounts = preferences.getBoolean("AllAccounts", true);
 
             configLoaded = true;
             migrateFakePasscode();
         }
+    }
+
+    public static void toggleShowUpdates() {
+        showUpdates = !showUpdates;
+        SharedPreferences preferences = MessagesController.getGlobalMainSettings();
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putBoolean("showUpdates", showUpdates);
+        editor.commit();
+    }
+
+    public static void setVersionIgnored(int major, int minor, int patch) {
+        maxIgnoredVersionMajor = major;
+        maxIgnoredVersionMinor = minor;
+        maxIgnoredVersionPatch = patch;
+        SharedPreferences preferences = MessagesController.getGlobalMainSettings();
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putInt("maxIgnoredVersionMajor", maxIgnoredVersionMajor);
+        editor.putInt("maxIgnoredVersionMinor", maxIgnoredVersionMinor);
+        editor.putInt("maxIgnoredVersionPatch", maxIgnoredVersionPatch);
+        editor.commit();
     }
 
     public static void increaseBadPasscodeTries() {
