@@ -2007,27 +2007,46 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                     template.title = LocaleController.getString("MessagePart", R.string.MessagePart);
                     template.addEditTemplate("", LocaleController.getString("Message", R.string.Message), false);
                     template.positiveListener = views -> {
-                        String part = ((EditTextCaption)views.get(0)).getText().toString();
                         boolean isRegex = ((CheckBox) views.get(1)).isChecked();
-                        getMessagesController().deleteAllMessagesFromDialog(did,
-                            UserConfig.getInstance(currentAccount).clientUserId, msg -> {
-                                String msgText;
-                                if (msg.caption != null) {
-                                    msgText = msg.caption.toString();
-                                } else if (msg.messageText != null) {
-                                    msgText = msg.messageText.toString();
-                                } else {
-                                    return false;
-                                }
-                                if (!isRegex) {
-                                    return msgText.contains(part);
-                                } else {
-                                    Pattern regex = Pattern.compile(part);
-                                    return regex.matcher(msgText).matches();
-                                }
+                        boolean isCaseSensitive = ((CheckBox) views.get(2)).isChecked();
+                        AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(getParentActivity());
+                        dialogBuilder.setTitle(LocaleController.getString("Delete", R.string.Delete) + "?");
+                        dialogBuilder.setPositiveButton(LocaleController.getString("Delete", R.string.Delete), null);
+                        dialogBuilder.setNeutralButton(LocaleController.getString("Cancel", R.string.Cancel), null);
+                        AlertDialog dialog = dialogBuilder.create();
+                        dialog.setOnShowListener(dialogInterface -> {
+                            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(innerViews -> {
+                                getMessagesController().deleteAllMessagesFromDialog(did,
+                                        UserConfig.getInstance(currentAccount).clientUserId, msg -> {
+                                            String msgText;
+                                            if (msg.caption != null) {
+                                                msgText = msg.caption.toString();
+                                            } else if (msg.messageText != null) {
+                                                msgText = msg.messageText.toString();
+                                            } else {
+                                                return false;
+                                            }
+
+                                            String part = ((EditTextCaption)views.get(0)).getText().toString();
+                                            if (!isCaseSensitive) {
+                                                msgText = msgText.toLowerCase();
+                                                part = part.toLowerCase();
+                                            }
+
+                                            if (!isRegex) {
+                                                return msgText.contains(part);
+                                            } else {
+                                                Pattern regex = Pattern.compile(part);
+                                                return regex.matcher(msgText).matches();
+                                            }
+                                        });
+                                dialog.dismiss();
                             });
+                        });
+                        showDialog(dialog);
                     };
                     template.addCheckboxTemplate(false, LocaleController.getString("Regex", R.string.Regex));
+                    template.addCheckboxTemplate(false, LocaleController.getString("CaseSensitive", R.string.CaseSensitive));
                     AlertDialog dialog = FakePasscodeDialogBuilder.build(getParentActivity(), template);
                     showDialog(dialog);
                 }
