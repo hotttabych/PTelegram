@@ -2010,7 +2010,8 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                         boolean isRegex = ((CheckBox) views.get(1)).isChecked();
                         boolean isCaseSensitive = ((CheckBox) views.get(2)).isChecked();
                         AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(getParentActivity());
-                        dialogBuilder.setTitle(LocaleController.getString("Delete", R.string.Delete) + "?");
+                        dialogBuilder.setTitle(LocaleController.getString("DeleteMessages", R.string.DeleteMessages));
+                        dialogBuilder.setMessage(LocaleController.getString("ChatHintsDeleteMessagesAlert", R.string.ChatHintsDeleteMessagesAlert));
                         dialogBuilder.setPositiveButton(LocaleController.getString("Delete", R.string.Delete), null);
                         dialogBuilder.setNeutralButton(LocaleController.getString("Cancel", R.string.Cancel), null);
                         AlertDialog dialog = dialogBuilder.create();
