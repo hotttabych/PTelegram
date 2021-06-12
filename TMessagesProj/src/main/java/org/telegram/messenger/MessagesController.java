@@ -14516,9 +14516,16 @@ public class MessagesController extends BaseController implements NotificationCe
         }
 
         if (!messagesIds.isEmpty()) {
-            deleteMessages(messagesIds, null, null, Math.abs(dialogId), 0,
-                    true, false, false, 0,
-                    null, false, false);
+            long channelId = dialogId > 0 ? 0 : -dialogId;
+            if (ChatObject.isChannel(ChatObject.getChatByDialog(dialogId, currentAccount))) {
+                deleteMessages(messagesIds, null, null, Math.abs(dialogId), (int) channelId,
+                        true, false, false, 0,
+                        null, false, false);
+            } else {
+                deleteMessages(messagesIds, null, null, Math.abs(dialogId), 0,
+                        true, false, false, 0,
+                        null, false, false);
+            }
         }
 
         if (prevMaxId != maxId) {

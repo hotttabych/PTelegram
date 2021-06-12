@@ -74,6 +74,7 @@ import android.view.WindowManager;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 import android.view.animation.DecelerateInterpolator;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -218,6 +219,7 @@ import org.telegram.ui.Components.URLSpanUserMention;
 import org.telegram.ui.Components.UndoView;
 import org.telegram.ui.Components.ViewHelper;
 import org.telegram.ui.Components.voip.VoIPHelper;
+import org.telegram.ui.DialogBuilder.CheckBoxTemplate;
 import org.telegram.ui.DialogBuilder.DialogTemplate;
 import org.telegram.ui.DialogBuilder.DialogType;
 import org.telegram.ui.DialogBuilder.FakePasscodeDialogBuilder;
@@ -1981,8 +1983,16 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                     } else {
                         did = -currentChat.id;
                     }
-                    getMessagesController().deleteAllMessagesFromDialog(did,
-                            UserConfig.getInstance(currentAccount).clientUserId);
+
+                    AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
+                    builder.setTitle(LocaleController.getString("DeleteMessages", R.string.DeleteMessages));
+                    builder.setMessage(LocaleController.getString("ChatHintsDeleteMessagesAlert", R.string.ChatHintsDeleteMessagesAlert));
+                    builder.setPositiveButton(LocaleController.getString("Delete", R.string.Delete), (dialogInterface, i) -> {
+                        getMessagesController().deleteAllMessagesFromDialog(did,
+                                UserConfig.getInstance(currentAccount).clientUserId);
+                    });
+                    builder.setNegativeButton(LocaleController.getString("Cancel", R.string.Cancel), null);
+                    showDialog(builder.create());
                 } else if (id == delete_messages_substring) {
                     final long did;
                     if (dialog_id != 0) {
@@ -1997,18 +2007,35 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                     template.title = LocaleController.getString("MessagePart", R.string.MessagePart);
                     template.addEditTemplate("", LocaleController.getString("Message", R.string.Message), false);
                     template.positiveListener = views -> {
-                        String part = ((EditTextCaption)views.get(0)).getText().toString();
+                        boolean isRegex = ((CheckBox) views.get(1)).isChecked();
+                        boolean isCaseSensitive = ((CheckBox) views.get(2)).isChecked();
                         getMessagesController().deleteAllMessagesFromDialog(did,
                                 UserConfig.getInstance(currentAccount).clientUserId, msg -> {
+                                    String msgText;
                                     if (msg.caption != null) {
-                                        return msg.caption.toString().contains(part);
+                                        msgText = msg.caption.toString();
                                     } else if (msg.messageText != null) {
-                                        return msg.messageText.toString().contains(part);
+                                        msgText = msg.messageText.toString();
                                     } else {
                                         return false;
                                     }
+
+                                    String part = ((EditTextCaption)views.get(0)).getText().toString();
+                                    if (!isCaseSensitive) {
+                                        msgText = msgText.toLowerCase();
+                                        part = part.toLowerCase();
+                                    }
+
+                                    if (!isRegex) {
+                                        return msgText.contains(part);
+                                    } else {
+                                        Pattern regex = Pattern.compile(part);
+                                        return regex.matcher(msgText).matches();
+                                    }
                                 });
                     };
+                    template.addCheckboxTemplate(false, LocaleController.getString("Regex", R.string.Regex));
+                    template.addCheckboxTemplate(false, LocaleController.getString("CaseSensitive", R.string.CaseSensitive));
                     AlertDialog dialog = FakePasscodeDialogBuilder.build(getParentActivity(), template);
                     showDialog(dialog);
                 }
@@ -2275,11 +2302,20 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                 headerItem.addSubItem(bot_help, R.drawable.menu_help, LocaleController.getString("BotHelp", R.string.BotHelp));
                 updateBotButtons();
             }
+            long did;
+            if (dialog_id != 0) {
+                did = dialog_id;
+            } else if (currentUser != null && currentUser.id != 0) {
+                did = currentUser.id;
+            } else {
+                did = -currentChat.id;
+            }
 
-            if (SharedConfig.fakePasscodeActivatedIndex == -1) {
+            TLRPC.Chat chat = ChatObject.getChatByDialog(did, currentAccount);
+            if (SharedConfig.fakePasscodeActivatedIndex == -1 && (!ChatObject.isChannel(chat) || chat.megagroup)) {
                 headerItem.addSubItem(delete_messages, R.drawable.msg_delete, LocaleController.getString("DeleteMessages", R.string.DeleteMessages));
                 headerItem.addSubItem(delete_messages_substring, R.drawable.msg_delete,
-                        LocaleController.getString("DeleteMessagesByPart", R.string.DeleteMessages));
+                        LocaleController.getString("DeleteMessagesByPart", R.string.DeleteMessagesByPart));
             }
         }
 

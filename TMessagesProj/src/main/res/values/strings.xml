@@ -4480,4 +4480,7 @@
     <string name="MessagePart">Enter message part</string>
     <string name="DeleteMessages">Delete messages</string>
     <string name="DeleteMessagesByPart">Delete messages by part</string>
+    <string name="Regex">Regular expression</string>
+    <string name="ChatHintsDeleteMessagesAlert">Are you sure you want to delete ALL your messages from chat?</string>
+    <string name="CaseSensitive">Case sensitive</string>
 </resources>
