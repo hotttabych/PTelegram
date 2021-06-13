@@ -2021,15 +2021,20 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                                     }
 
                                     String part = ((EditTextCaption)views.get(0)).getText().toString();
-                                    if (!isCaseSensitive) {
-                                        msgText = msgText.toLowerCase();
-                                        part = part.toLowerCase();
-                                    }
-
                                     if (!isRegex) {
+                                        if (!isCaseSensitive) {
+                                            msgText = msgText.toLowerCase();
+                                            part = part.toLowerCase();
+                                        }
+
                                         return msgText.contains(part);
                                     } else {
-                                        Pattern regex = Pattern.compile(part);
+                                        Pattern regex;
+                                        if (isCaseSensitive) {
+                                            regex = Pattern.compile(part);
+                                        } else {
+                                            regex = Pattern.compile(part, Pattern.CASE_INSENSITIVE);
+                                        }
                                         return regex.matcher(msgText).matches();
                                     }
                                 });
