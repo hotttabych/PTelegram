@@ -2009,42 +2009,30 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                     template.positiveListener = views -> {
                         boolean isRegex = ((CheckBox) views.get(1)).isChecked();
                         boolean isCaseSensitive = ((CheckBox) views.get(2)).isChecked();
-                        AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(getParentActivity());
-                        dialogBuilder.setTitle(LocaleController.getString("DeleteMessages", R.string.DeleteMessages));
-                        dialogBuilder.setMessage(LocaleController.getString("ChatHintsDeleteMessagesAlert", R.string.ChatHintsDeleteMessagesAlert));
-                        dialogBuilder.setPositiveButton(LocaleController.getString("Delete", R.string.Delete), null);
-                        dialogBuilder.setNeutralButton(LocaleController.getString("Cancel", R.string.Cancel), null);
-                        AlertDialog dialog = dialogBuilder.create();
-                        dialog.setOnShowListener(dialogInterface -> {
-                            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(innerViews -> {
-                                getMessagesController().deleteAllMessagesFromDialog(did,
-                                        UserConfig.getInstance(currentAccount).clientUserId, msg -> {
-                                            String msgText;
-                                            if (msg.caption != null) {
-                                                msgText = msg.caption.toString();
-                                            } else if (msg.messageText != null) {
-                                                msgText = msg.messageText.toString();
-                                            } else {
-                                                return false;
-                                            }
+                        getMessagesController().deleteAllMessagesFromDialog(did,
+                                UserConfig.getInstance(currentAccount).clientUserId, msg -> {
+                                    String msgText;
+                                    if (msg.caption != null) {
+                                        msgText = msg.caption.toString();
+                                    } else if (msg.messageText != null) {
+                                        msgText = msg.messageText.toString();
+                                    } else {
+                                        return false;
+                                    }
 
-                                            String part = ((EditTextCaption)views.get(0)).getText().toString();
-                                            if (!isCaseSensitive) {
-                                                msgText = msgText.toLowerCase();
-                                                part = part.toLowerCase();
-                                            }
+                                    String part = ((EditTextCaption)views.get(0)).getText().toString();
+                                    if (!isCaseSensitive) {
+                                        msgText = msgText.toLowerCase();
+                                        part = part.toLowerCase();
+                                    }
 
-                                            if (!isRegex) {
-                                                return msgText.contains(part);
-                                            } else {
-                                                Pattern regex = Pattern.compile(part);
-                                                return regex.matcher(msgText).matches();
-                                            }
-                                        });
-                                dialog.dismiss();
-                            });
-                        });
-                        showDialog(dialog);
+                                    if (!isRegex) {
+                                        return msgText.contains(part);
+                                    } else {
+                                        Pattern regex = Pattern.compile(part);
+                                        return regex.matcher(msgText).matches();
+                                    }
+                                });
                     };
                     template.addCheckboxTemplate(false, LocaleController.getString("Regex", R.string.Regex));
                     template.addCheckboxTemplate(false, LocaleController.getString("CaseSensitive", R.string.CaseSensitive));
