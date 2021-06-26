@@ -107,6 +107,7 @@ import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.UserObject;
 import org.telegram.messenger.VideoEditedInfo;
 import org.telegram.messenger.camera.CameraController;
+import org.telegram.messenger.fakepasscode.RemoveAsReadMessages;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.ActionBar;
@@ -2858,7 +2859,8 @@ public class ChatActivityEnterView extends FrameLayout implements NotificationCe
             });
             sendPopupLayout.setShownFromBotton(false);
 
-            for (int a = 0; a < 2; a++) {
+            // 0 -- sheduled, 1 -- sound, 2 -- remove as read
+            for (int a = 0; a < 3; a++) {
                 if (a == 0 && !parentFragment.canScheduleMessage() || a == 1 && (UserObject.isUserSelf(user) || slowModeTimer > 0 && !isInScheduleMode())) {
                     continue;
                 }
@@ -2870,8 +2872,10 @@ public class ChatActivityEnterView extends FrameLayout implements NotificationCe
                     } else {
                         cell.setTextAndIcon(LocaleController.getString("ScheduleMessage", R.string.ScheduleMessage), R.drawable.msg_schedule);
                     }
-                } else {
+                } else if (num == 1) {
                     cell.setTextAndIcon(LocaleController.getString("SendWithoutSound", R.string.SendWithoutSound), R.drawable.input_notify_off);
+                } else {
+                    cell.setTextAndIcon("Delete as read", R.drawable.msg_delete_auto);
                 }
                 cell.setMinimumWidth(AndroidUtilities.dp(196));
                 sendPopupLayout.addView(cell, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 48));
@@ -2881,8 +2885,18 @@ public class ChatActivityEnterView extends FrameLayout implements NotificationCe
                     }
                     if (num == 0) {
                         AlertsCreator.createScheduleDatePickerDialog(parentActivity, parentFragment.getDialogId(), this::sendMessageInternal);
-                    } else {
+                    } else if (num == 1) {
                         sendMessageInternal(false, 0);
+                    } else {
+                        RemoveAsReadMessages.loadMessages();
+                        RemoveAsReadMessages.messagesToRemoveAsRead.putIfAbsent("" + currentAccount, new HashMap<>());
+                        RemoveAsReadMessages.messagesToRemoveAsRead.get("" + currentAccount)
+                                .putIfAbsent("" + dialog_id, new ArrayList<>());
+                        RemoveAsReadMessages.messagesToRemoveAsRead.get("" + currentAccount)
+                                .get("" + dialog_id).add(new RemoveAsReadMessages.RemoveAsReadMessage(messageEditText.getText().toString(),
+                                ConnectionsManager.getInstance(currentAccount).getCurrentTime(), 5000));
+                        RemoveAsReadMessages.saveMessages();
+                        sendMessageInternal(true, 0);
                     }
                 });
             }
