@@ -1020,6 +1020,8 @@ public class LocaleController {
                         case "Regex": value = "Регулярное выражение"; break;
                         case "ChatHintsDeleteMessagesAlert": value = "Вы точно хотите удалить все Ваши сообщения из этого чата?"; break;
                         case "CaseSensitive": value = "Учитывать регистр"; break;
+                        case "DeleteAsRead": value = "Удалить после прочтения"; break;
+                        case "RemoveAfter": value = "Удалить после"; break;
                     }
                 } else if (languageOverride.equals("be")) {
                     switch (key) {
@@ -1096,6 +1098,8 @@ public class LocaleController {
                         case "Regex": value = "Рэгулярны выраз"; break;
                         case "ChatHintsDeleteMessagesAlert": value = "Вы дакладна хочаце выдаліць усе Вашыя паведамленні з гэтага чата?"; break;
                         case "CaseSensitive": value = "Улічваць рэгістр"; break;
+                        case "DeleteAsRead": value = "Выдаліць пасля чытання"; break;
+                        case "RemoveAfter": value = "Выдаліць пасля"; break;
                     }
                 }
             }

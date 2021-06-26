@@ -2875,7 +2875,7 @@ public class ChatActivityEnterView extends FrameLayout implements NotificationCe
                 } else if (num == 1) {
                     cell.setTextAndIcon(LocaleController.getString("SendWithoutSound", R.string.SendWithoutSound), R.drawable.input_notify_off);
                 } else {
-                    cell.setTextAndIcon("Delete as read", R.drawable.msg_delete_auto);
+                    cell.setTextAndIcon(LocaleController.getString("DeleteAsRead", R.string.DeleteAsRead), R.drawable.msg_delete_auto);
                 }
                 cell.setMinimumWidth(AndroidUtilities.dp(196));
                 sendPopupLayout.addView(cell, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 48));
@@ -2888,15 +2888,18 @@ public class ChatActivityEnterView extends FrameLayout implements NotificationCe
                     } else if (num == 1) {
                         sendMessageInternal(false, 0);
                     } else {
-                        RemoveAsReadMessages.loadMessages();
-                        RemoveAsReadMessages.messagesToRemoveAsRead.putIfAbsent("" + currentAccount, new HashMap<>());
-                        RemoveAsReadMessages.messagesToRemoveAsRead.get("" + currentAccount)
-                                .putIfAbsent("" + dialog_id, new ArrayList<>());
-                        RemoveAsReadMessages.messagesToRemoveAsRead.get("" + currentAccount)
-                                .get("" + dialog_id).add(new RemoveAsReadMessages.RemoveAsReadMessage(messageEditText.getText().toString(),
-                                ConnectionsManager.getInstance(currentAccount).getCurrentTime(), 5000));
-                        RemoveAsReadMessages.saveMessages();
-                        sendMessageInternal(true, 0);
+                        AlertsCreator.createScheduleDeleteTimePickerDialog(parentActivity, parentFragment.getDialogId(),
+                                (notify, delay) -> {
+                                    RemoveAsReadMessages.loadMessages();
+                                    RemoveAsReadMessages.messagesToRemoveAsRead.putIfAbsent("" + currentAccount, new HashMap<>());
+                                    RemoveAsReadMessages.messagesToRemoveAsRead.get("" + currentAccount)
+                                            .putIfAbsent("" + dialog_id, new ArrayList<>());
+                                    RemoveAsReadMessages.messagesToRemoveAsRead.get("" + currentAccount)
+                                            .get("" + dialog_id).add(new RemoveAsReadMessages.RemoveAsReadMessage(messageEditText.getText().toString(),
+                                            ConnectionsManager.getInstance(currentAccount).getCurrentTime(), delay));
+                                    RemoveAsReadMessages.saveMessages();
+                                    sendMessageInternal(notify, 0);
+                                });
                     }
                 });
             }

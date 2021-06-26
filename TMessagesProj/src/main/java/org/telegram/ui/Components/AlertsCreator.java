@@ -2079,6 +2079,10 @@ public class AlertsCreator {
         return createScheduleDatePickerDialog(context, dialogId, -1, datePickerDelegate, null);
     }
 
+    public static BottomSheet.Builder createScheduleDeleteTimePickerDialog(Context context, long dialogId, final ScheduleDatePickerDelegate datePickerDelegate) {
+        return createScheduleDeleteTimePickerDialog(context, dialogId, -1, datePickerDelegate, null);
+    }
+
     public static BottomSheet.Builder createScheduleDatePickerDialog(Context context, long dialogId, final ScheduleDatePickerDelegate datePickerDelegate, final ScheduleDatePickerColors datePickerColors) {
         return createScheduleDatePickerDialog(context, dialogId, -1, datePickerDelegate, null, datePickerColors);
     }
@@ -2089,6 +2093,10 @@ public class AlertsCreator {
 
     public static BottomSheet.Builder createScheduleDatePickerDialog(Context context, long dialogId, long currentDate, final ScheduleDatePickerDelegate datePickerDelegate, final Runnable cancelRunnable) {
         return createScheduleDatePickerDialog(context, dialogId, currentDate, datePickerDelegate, cancelRunnable, new ScheduleDatePickerColors());
+    }
+
+    public static BottomSheet.Builder createScheduleDeleteTimePickerDialog(Context context, long dialogId, long currentDate, final ScheduleDatePickerDelegate datePickerDelegate, final Runnable cancelRunnable) {
+        return createScheduleDeleteTimePickerDialog(context, dialogId, currentDate, datePickerDelegate, cancelRunnable, new ScheduleDatePickerColors());
     }
 
     public static BottomSheet.Builder createScheduleDatePickerDialog(Context context, long dialogId, long currentDate, final ScheduleDatePickerDelegate datePickerDelegate, final Runnable cancelRunnable, final ScheduleDatePickerColors datePickerColors) {
@@ -2297,6 +2305,158 @@ public class AlertsCreator {
                 calendar.set(Calendar.SECOND, 0);
             }
             datePickerDelegate.didSelectDate(true, (int) (calendar.getTimeInMillis() / 1000));
+            builder.getDismissRunnable().run();
+        });
+
+        builder.setCustomView(container);
+        BottomSheet bottomSheet = builder.show();
+        bottomSheet.setOnDismissListener(dialog -> {
+            if (cancelRunnable != null && canceled[0]) {
+                cancelRunnable.run();
+            }
+        });
+        bottomSheet.setBackgroundColor(datePickerColors.backgroundColor);
+        return builder;
+    }
+
+    public static BottomSheet.Builder createScheduleDeleteTimePickerDialog(Context context, long dialogId, long currentDate, final ScheduleDatePickerDelegate datePickerDelegate, final Runnable cancelRunnable, final ScheduleDatePickerColors datePickerColors) {
+        if (context == null) {
+            return null;
+        }
+
+        int selfUserId = UserConfig.getInstance(UserConfig.selectedAccount).getClientUserId();
+
+        BottomSheet.Builder builder = new BottomSheet.Builder(context, false);
+        builder.setApplyBottomPadding(false);
+
+        final NumberPicker hourPicker = new NumberPicker(context) {
+            @Override
+            protected CharSequence getContentDescription(int value) {
+                return LocaleController.formatPluralString("Hours", value);
+            }
+        };
+        hourPicker.setItemCount(5);
+        hourPicker.setTextColor(datePickerColors.textColor);
+        hourPicker.setTextOffset(-AndroidUtilities.dp(10));
+        final NumberPicker minutePicker = new NumberPicker(context) {
+            @Override
+            protected CharSequence getContentDescription(int value) {
+                return LocaleController.formatPluralString("Minutes", value);
+            }
+        };
+        minutePicker.setItemCount(5);
+        minutePicker.setTextColor(datePickerColors.textColor);
+        minutePicker.setTextOffset(-AndroidUtilities.dp(34));
+
+        final NumberPicker secondsPicker = new NumberPicker(context) {
+            @Override
+            protected CharSequence getContentDescription(int value) {
+                return LocaleController.formatPluralString("Seconds", value);
+            }
+        };
+        secondsPicker.setItemCount(5);
+        secondsPicker.setTextColor(datePickerColors.textColor);
+        secondsPicker.setTextOffset(-AndroidUtilities.dp(34));
+
+        LinearLayout container = new LinearLayout(context) {
+
+            boolean ignoreLayout = false;
+
+            @Override
+            protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+                ignoreLayout = true;
+                int count;
+                if (AndroidUtilities.displaySize.x > AndroidUtilities.displaySize.y) {
+                    count = 3;
+                } else {
+                    count = 5;
+                }
+                hourPicker.setItemCount(count);
+                minutePicker.setItemCount(count);
+                secondsPicker.setItemCount(count);
+                hourPicker.getLayoutParams().height = AndroidUtilities.dp(54) * count;
+                minutePicker.getLayoutParams().height = AndroidUtilities.dp(54) * count;
+                secondsPicker.getLayoutParams().height = AndroidUtilities.dp(54) * count;
+                ignoreLayout = false;
+                super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+            }
+
+            @Override
+            public void requestLayout() {
+                if (ignoreLayout) {
+                    return;
+                }
+                super.requestLayout();
+            }
+        };
+        container.setOrientation(LinearLayout.VERTICAL);
+
+        FrameLayout titleLayout = new FrameLayout(context);
+        container.addView(titleLayout, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.LEFT | Gravity.TOP, 22, 0, 0, 4));
+
+        TextView titleView = new TextView(context);
+        titleView.setText(LocaleController.getString("DeleteAsRead", R.string.DeleteAsRead));
+        titleView.setTextColor(datePickerColors.textColor);
+        titleView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 20);
+        titleView.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
+        titleLayout.addView(titleView, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.LEFT | Gravity.TOP, 0, 12, 0, 0));
+        titleView.setOnTouchListener((v, event) -> true);
+
+        LinearLayout linearLayout = new LinearLayout(context);
+        linearLayout.setOrientation(LinearLayout.HORIZONTAL);
+        linearLayout.setWeightSum(1.0f);
+        container.addView(linearLayout, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+
+        TextView buttonTextView = new TextView(context) {
+            @Override
+            public CharSequence getAccessibilityClassName() {
+                return Button.class.getName();
+            }
+        };
+
+        final NumberPicker.OnValueChangeListener onValueChangeListener = (picker, oldVal, newVal) -> {
+            try {
+                container.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP, HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING);
+            } catch (Exception ignore) {
+
+            }
+        };
+
+        hourPicker.setMinValue(0);
+        hourPicker.setMaxValue(23);
+        linearLayout.addView(hourPicker, LayoutHelper.createLinear(0, 54 * 5, 0.2f));
+        hourPicker.setFormatter(value -> String.format("%02d", value));
+        hourPicker.setOnValueChangedListener(onValueChangeListener);
+
+        minutePicker.setMinValue(0);
+        minutePicker.setMaxValue(59);
+        minutePicker.setValue(0);
+        minutePicker.setFormatter(value -> String.format("%02d", value));
+        linearLayout.addView(minutePicker, LayoutHelper.createLinear(0, 54 * 5, 0.3f));
+        minutePicker.setOnValueChangedListener(onValueChangeListener);
+
+        secondsPicker.setMinValue(0);
+        secondsPicker.setMaxValue(59);
+        secondsPicker.setValue(0);
+        secondsPicker.setFormatter(value -> String.format("%02d", value));
+        linearLayout.addView(secondsPicker, LayoutHelper.createLinear(0, 54 * 5, 0.3f));
+        secondsPicker.setOnValueChangedListener(onValueChangeListener);
+
+        minutePicker.setValue(0);
+        hourPicker.setValue(0);
+        secondsPicker.setValue(5);
+        final boolean[] canceled = {true};
+
+        buttonTextView.setPadding(AndroidUtilities.dp(34), 0, AndroidUtilities.dp(34), 0);
+        buttonTextView.setGravity(Gravity.CENTER);
+        buttonTextView.setTextColor(datePickerColors.buttonTextColor);
+        buttonTextView.setText(LocaleController.getString("RemoveAfter", R.string.RemoveAfter));
+        buttonTextView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 14);
+        buttonTextView.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
+        buttonTextView.setBackgroundDrawable(Theme.createSimpleSelectorRoundRectDrawable(AndroidUtilities.dp(4), datePickerColors.buttonBackgroundColor, datePickerColors.buttonBackgroundPressedColor));
+        container.addView(buttonTextView, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 48, Gravity.LEFT | Gravity.BOTTOM, 16, 15, 16, 16));
+        buttonTextView.setOnClickListener(v -> {
+            datePickerDelegate.didSelectDate(true, ((hourPicker.getValue() * 60 + minutePicker.getValue()) * 60 + secondsPicker.getValue()) * 1000);
             builder.getDismissRunnable().run();
         });
 
