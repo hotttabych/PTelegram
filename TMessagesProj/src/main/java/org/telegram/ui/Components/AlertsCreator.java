@@ -2079,8 +2079,8 @@ public class AlertsCreator {
         return createScheduleDatePickerDialog(context, dialogId, -1, datePickerDelegate, null);
     }
 
-    public static BottomSheet.Builder createScheduleDeleteTimePickerDialog(Context context, long dialogId, final ScheduleDatePickerDelegate datePickerDelegate) {
-        return createScheduleDeleteTimePickerDialog(context, dialogId, -1, datePickerDelegate, null);
+    public static BottomSheet.Builder createScheduleDeleteTimePickerDialog(Context context, final ScheduleDatePickerDelegate datePickerDelegate) {
+        return createScheduleDeleteTimePickerDialog(context, datePickerDelegate, null, new ScheduleDatePickerColors());
     }
 
     public static BottomSheet.Builder createScheduleDatePickerDialog(Context context, long dialogId, final ScheduleDatePickerDelegate datePickerDelegate, final ScheduleDatePickerColors datePickerColors) {
@@ -2093,10 +2093,6 @@ public class AlertsCreator {
 
     public static BottomSheet.Builder createScheduleDatePickerDialog(Context context, long dialogId, long currentDate, final ScheduleDatePickerDelegate datePickerDelegate, final Runnable cancelRunnable) {
         return createScheduleDatePickerDialog(context, dialogId, currentDate, datePickerDelegate, cancelRunnable, new ScheduleDatePickerColors());
-    }
-
-    public static BottomSheet.Builder createScheduleDeleteTimePickerDialog(Context context, long dialogId, long currentDate, final ScheduleDatePickerDelegate datePickerDelegate, final Runnable cancelRunnable) {
-        return createScheduleDeleteTimePickerDialog(context, dialogId, currentDate, datePickerDelegate, cancelRunnable, new ScheduleDatePickerColors());
     }
 
     public static BottomSheet.Builder createScheduleDatePickerDialog(Context context, long dialogId, long currentDate, final ScheduleDatePickerDelegate datePickerDelegate, final Runnable cancelRunnable, final ScheduleDatePickerColors datePickerColors) {
@@ -2319,12 +2315,10 @@ public class AlertsCreator {
         return builder;
     }
 
-    public static BottomSheet.Builder createScheduleDeleteTimePickerDialog(Context context, long dialogId, long currentDate, final ScheduleDatePickerDelegate datePickerDelegate, final Runnable cancelRunnable, final ScheduleDatePickerColors datePickerColors) {
+    public static BottomSheet.Builder createScheduleDeleteTimePickerDialog(Context context, final ScheduleDatePickerDelegate datePickerDelegate, final Runnable cancelRunnable, final ScheduleDatePickerColors datePickerColors) {
         if (context == null) {
             return null;
         }
-
-        int selfUserId = UserConfig.getInstance(UserConfig.selectedAccount).getClientUserId();
 
         BottomSheet.Builder builder = new BottomSheet.Builder(context, false);
         builder.setApplyBottomPadding(false);
@@ -2420,24 +2414,26 @@ public class AlertsCreator {
             } catch (Exception ignore) {
 
             }
+            buttonTextView.setText(String.format(LocaleController.getString("RemoveAfter", R.string.RemoveAfter),
+                    hourPicker.getContentDescription(hourPicker.getValue()),
+                    minutePicker.getContentDescription(minutePicker.getValue()),
+                    secondsPicker.getContentDescription(secondsPicker.getValue())));
         };
 
         hourPicker.setMinValue(0);
         hourPicker.setMaxValue(23);
-        linearLayout.addView(hourPicker, LayoutHelper.createLinear(0, 54 * 5, 0.2f));
+        linearLayout.addView(hourPicker, LayoutHelper.createLinear(0, 54 * 5, 0.4f));
         hourPicker.setFormatter(value -> String.format("%02d", value));
         hourPicker.setOnValueChangedListener(onValueChangeListener);
 
         minutePicker.setMinValue(0);
         minutePicker.setMaxValue(59);
-        minutePicker.setValue(0);
         minutePicker.setFormatter(value -> String.format("%02d", value));
         linearLayout.addView(minutePicker, LayoutHelper.createLinear(0, 54 * 5, 0.3f));
         minutePicker.setOnValueChangedListener(onValueChangeListener);
 
         secondsPicker.setMinValue(0);
         secondsPicker.setMaxValue(59);
-        secondsPicker.setValue(0);
         secondsPicker.setFormatter(value -> String.format("%02d", value));
         linearLayout.addView(secondsPicker, LayoutHelper.createLinear(0, 54 * 5, 0.3f));
         secondsPicker.setOnValueChangedListener(onValueChangeListener);
@@ -2447,10 +2443,14 @@ public class AlertsCreator {
         secondsPicker.setValue(5);
         final boolean[] canceled = {true};
 
+        buttonTextView.setText(String.format(LocaleController.getString("RemoveAfter", R.string.RemoveAfter),
+                hourPicker.getContentDescription(hourPicker.getValue()),
+                minutePicker.getContentDescription(minutePicker.getValue()),
+                secondsPicker.getContentDescription(secondsPicker.getValue())));
+
         buttonTextView.setPadding(AndroidUtilities.dp(34), 0, AndroidUtilities.dp(34), 0);
         buttonTextView.setGravity(Gravity.CENTER);
         buttonTextView.setTextColor(datePickerColors.buttonTextColor);
-        buttonTextView.setText(LocaleController.getString("RemoveAfter", R.string.RemoveAfter));
         buttonTextView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 14);
         buttonTextView.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
         buttonTextView.setBackgroundDrawable(Theme.createSimpleSelectorRoundRectDrawable(AndroidUtilities.dp(4), datePickerColors.buttonBackgroundColor, datePickerColors.buttonBackgroundPressedColor));

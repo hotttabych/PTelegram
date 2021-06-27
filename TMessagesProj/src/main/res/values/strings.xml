@@ -4484,5 +4484,5 @@
     <string name="ChatHintsDeleteMessagesAlert">Are you sure you want to delete ALL your messages from chat?</string>
     <string name="CaseSensitive">Case sensitive</string>
     <string name="DeleteAsRead">Delete as read</string>
-    <string name="RemoveAfter">Remove after</string>
+    <string name="RemoveAfter">Remove after %s %s %s after read</string>
 </resources>
