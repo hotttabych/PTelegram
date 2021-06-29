@@ -1580,7 +1580,6 @@ public class GroupCallActivity extends BottomSheet implements NotificationCenter
         int margin = 48;
         if (VoIPService.getSharedInstance() != null && VoIPService.getSharedInstance().hasFewPeers || scheduleHasFewPeers) {
             if (!anyVisible) {
-                anyVisible = true;
                 accountSelectCell.setVisibility(View.VISIBLE);
                 accountGap.setVisibility(View.VISIBLE);
                 int peerId = MessageObject.getPeerId(selfPeer);
@@ -1592,8 +1591,8 @@ public class GroupCallActivity extends BottomSheet implements NotificationCenter
                 }
                 accountSelectCell.setObject(object);
                 margin += 48;
+                anyVisible = true;
             } else {
-                accountSwitchImageView.setVisibility(View.GONE);
                 accountSelectCell.setVisibility(View.VISIBLE);
                 accountGap.setVisibility(View.VISIBLE);
                 int peerId = MessageObject.getPeerId(selfPeer);
