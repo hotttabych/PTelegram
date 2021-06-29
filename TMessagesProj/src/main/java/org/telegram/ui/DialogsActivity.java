@@ -7819,19 +7819,5 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         }
         setSlideTransitionProgress(1f - progress);
     }
-
-    public void setShowSearch(String query, int i) {
-        if (!searching) {
-            initialSearchType = i;
-            actionBar.openSearchField(query, false);
-        } else {
-            if (!searchItem.getSearchField().getText().toString().equals(query)) {
-                searchItem.getSearchField().setText(query);
-            }
-            if (searchViewPager.getTabsView().getCurrentTabId() != i) {
-                searchViewPager.getTabsView().scrollToTab(i, i);
-            }
-        }
-    }
 }
 
