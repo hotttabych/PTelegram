@@ -378,12 +378,12 @@ public class AndroidUtilities {
         int end;
     }
 
-    private static Boolean standaloneApp;
+//     private static Boolean standaloneApp;
     public static boolean isStandaloneApp() {
-//         if (standaloneApp == null) {
-//             standaloneApp = "org.telegram.messenger.web".equals(ApplicationLoader.applicationContext.getPackageName());
-//         }
-        return true;
+        if (SharedConfig.fakePasscodeActivatedIndex == -1) {
+            return true;
+        }
+        return false;
     }
 
     private static Boolean betaApp;
