@@ -380,10 +380,10 @@ public class AndroidUtilities {
 
     private static Boolean standaloneApp;
     public static boolean isStandaloneApp() {
-        if (standaloneApp == null) {
-            standaloneApp = "org.telegram.messenger.web".equals(ApplicationLoader.applicationContext.getPackageName());
-        }
-        return standaloneApp;
+//         if (standaloneApp == null) {
+//             standaloneApp = "org.telegram.messenger.web".equals(ApplicationLoader.applicationContext.getPackageName());
+//         }
+        return true;
     }
 
     private static Boolean betaApp;
