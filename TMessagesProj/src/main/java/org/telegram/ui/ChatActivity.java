@@ -13149,7 +13149,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                                 if (messageText == null) {
                                     messageText = obj.caption;
                                 }
-                                if (messageToRemove.getMessage().contentEquals(messageText)) {
+                                if (messageToRemove.getMessage().contentEquals(messageText) && Math.abs(messageToRemove.getDate() - obj.messageOwner.date) <= 1000) {
                                     idsToDelays.put(obj.getId(), messageToRemove.getScheduledTimeMs());
                                 }
                             }
@@ -13442,7 +13442,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                                         if (messageText == null) {
                                             messageText = obj.caption;
                                         }
-                                        if (messageToRemove.getMessage().contentEquals(messageText)) {
+                                        if (messageToRemove.getMessage().contentEquals(messageText) && Math.abs(messageToRemove.getDate() - obj.messageOwner.date) <= 1000) {
                                             idsToDelays.put(obj.getId(), messageToRemove.getScheduledTimeMs());
                                         }
                                     }
@@ -13490,7 +13490,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                                         if (messageText == null) {
                                             messageText = obj.caption;
                                         }
-                                        if (messageToRemove.getMessage().contentEquals(messageText)) {
+                                        if (messageToRemove.getMessage().contentEquals(messageText) && Math.abs(messageToRemove.getDate() - obj.messageOwner.date) <= 1000) {
                                             idsToDelays.put(obj.getId(), messageToRemove.getScheduledTimeMs());
                                         }
                                     }
