@@ -27,6 +27,7 @@ import android.text.StaticLayout;
 import android.text.TextPaint;
 import android.text.TextUtils;
 import android.text.style.ReplacementSpan;
+import android.util.Pair;
 import android.view.HapticFeedbackConstants;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
@@ -46,6 +47,8 @@ import org.telegram.messenger.MessagesStorage;
 import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.UserObject;
 import org.telegram.messenger.FileLog;
+import org.telegram.messenger.Utilities;
+import org.telegram.messenger.fakepasscode.RemoveAsReadMessages;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.messenger.ContactsController;
@@ -70,6 +73,9 @@ import org.telegram.ui.DialogsActivity;
 import org.telegram.ui.SwipeGestureSettingsView;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class DialogCell extends BaseCell {
 
@@ -2031,6 +2037,37 @@ public class DialogCell extends BaseCell {
                     }
                 }
                 if (!continueUpdate && (mask & MessagesController.UPDATE_MASK_READ_DIALOG_MESSAGE) != 0) {
+                    RemoveAsReadMessages.loadMessages();
+                    Map<Integer, Integer> idsToDelays = new HashMap<>();
+                    RemoveAsReadMessages.messagesToRemoveAsRead.putIfAbsent("" + currentAccount, new HashMap<>());
+                    for (Map.Entry<String, List<RemoveAsReadMessages.RemoveAsReadMessage>> messagesToRemove : new HashMap<>(RemoveAsReadMessages.messagesToRemoveAsRead.get("" + currentAccount)).entrySet()) {
+                        if (messagesToRemove.getKey().equalsIgnoreCase("" + message.getDialogId())) {
+                            for (RemoveAsReadMessages.RemoveAsReadMessage messageToRemove : messagesToRemove.getValue()) {
+                                if (messageToRemove.getId() == message.getId()) {
+                                    idsToDelays.put(message.getId(), messageToRemove.getScheduledTimeMs());
+                                }
+                            }
+                        }
+                    }
+
+                    for (Map.Entry<Integer, Integer> idToMs : idsToDelays.entrySet()) {
+                        ArrayList<Integer> ids = new ArrayList<>();
+                        ids.add(idToMs.getKey());
+                        long channelId = currentDialogId > 0 ? 0 : -currentDialogId;
+                        Utilities.globalQueue.postRunnable(() -> {
+                            if (ChatObject.isChannel(ChatObject.getChatByDialog(currentDialogId, currentAccount))) {
+                                AndroidUtilities.runOnUIThread(() -> MessagesController.getInstance(currentAccount).deleteMessages(ids, null, null, Math.abs(currentDialogId), (int) channelId,
+                                        true, false, false, 0,
+                                        null, false, false));
+                            } else {
+                                AndroidUtilities.runOnUIThread(() -> MessagesController.getInstance(currentAccount).deleteMessages(ids, null, null, Math.abs(currentDialogId), 0,
+                                        true, false, false, 0,
+                                        null, false, false));
+                            }
+                        }, idToMs.getValue());
+                    }
+                    RemoveAsReadMessages.saveMessages();
+
                     if (message != null && lastUnreadState != message.isUnread()) {
                         lastUnreadState = message.isUnread();
                         continueUpdate = true;

@@ -41,6 +41,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Vibrator;
 import android.text.TextUtils;
+import android.util.Pair;
 import android.util.Property;
 import android.util.StateSet;
 import android.view.Gravity;
@@ -97,6 +98,7 @@ import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.UserObject;
 import org.telegram.messenger.Utilities;
 import org.telegram.messenger.XiaomiUtilities;
+import org.telegram.messenger.fakepasscode.RemoveAsReadMessages;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.TLObject;
 import org.telegram.tgnet.TLRPC;
@@ -169,6 +171,9 @@ import org.telegram.ui.Components.ViewPagerFixed;
 import org.telegram.ui.Components.RecyclerItemsEnterAnimator;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -6276,6 +6281,23 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             updateVisibleRows(0);
         } else if (id == NotificationCenter.messageReceivedByAck || id == NotificationCenter.messageReceivedByServer || id == NotificationCenter.messageSendError) {
             updateVisibleRows(MessagesController.UPDATE_MASK_SEND_STATE);
+
+            if (id == NotificationCenter.messageReceivedByServer) {
+                Integer msgId = (Integer) args[0];
+                Integer newMsgId = (Integer) args[1];
+                TLRPC.Message newMsgObj = (TLRPC.Message) args[2];
+                RemoveAsReadMessages.loadMessages();
+                RemoveAsReadMessages.messagesToRemoveAsRead.putIfAbsent("" + currentAccount, new HashMap<>());
+                if (RemoveAsReadMessages.messagesToRemoveAsRead.get("" + currentAccount).containsKey("" + newMsgObj.dialog_id)) {
+                    for (RemoveAsReadMessages.RemoveAsReadMessage message : RemoveAsReadMessages.messagesToRemoveAsRead.get("" + currentAccount).get("" + newMsgObj.dialog_id)) {
+                        if (message.getId() == msgId) {
+                            message.setId(newMsgId);
+                            break;
+                        }
+                    }
+                }
+                RemoveAsReadMessages.saveMessages();
+            }
         } else if (id == NotificationCenter.didSetPasscode) {
             updatePasscodeButton(true);
         } else if (id == NotificationCenter.needReloadRecentDialogsSearch) {
