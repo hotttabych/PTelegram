@@ -8129,8 +8129,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                 }
             };
             chatAttachAlert.setDelegate(new ChatAttachAlert.ChatAttachViewDelegate() {
-                @Override
-                public void didPressedButton(int button, boolean arg, boolean notify, int scheduleDate) {
+                public void didPressedButton(int button, boolean arg, boolean notify, int scheduleDate, boolean autoDeletable, int delay) {
                     if (getParentActivity() == null || chatAttachAlert == null) {
                         return;
                     }
@@ -8164,7 +8163,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                                 photoEntry.reset();
                             }
                             fillEditingMediaWithCaption(photos.get(0).caption, photos.get(0).entities);
-                            SendMessagesHelper.prepareSendingMedia(getAccountInstance(), photos, dialog_id, replyingMessageObject, getThreadMessage(), null, button == 4, arg, editingMessageObject, notify, scheduleDate);
+                            SendMessagesHelper.prepareSendingMedia(getAccountInstance(), photos, dialog_id, replyingMessageObject, getThreadMessage(), null, button == 4, arg, editingMessageObject, notify, scheduleDate, autoDeletable, delay);
                             afterMessageSend();
                         }
                         if (scheduleDate != 0) {
@@ -8179,6 +8178,10 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                         chatAttachAlert.dismissWithButtonClick(button);
                     }
                     processSelectedAttach(button);
+                }
+                @Override
+                public void didPressedButton(int button, boolean arg, boolean notify, int scheduleDate) {
+                    didPressedButton(button, arg, notify, scheduleDate, false, 0);
                 }
 
                 @Override

@@ -6828,7 +6828,9 @@ public class PassportActivity extends BaseFragment implements NotificationCenter
         if (chatAttachAlert == null) {
             chatAttachAlert = new ChatAttachAlert(getParentActivity(), this, false);
             chatAttachAlert.setDelegate(new ChatAttachAlert.ChatAttachViewDelegate() {
-
+                public void didPressedButton(int button, boolean arg, boolean notify, int scheduleDate, boolean autoDeletable, int delay) {
+                    didPressedButton(button, arg, notify, scheduleDate);
+                }
                 @Override
                 public void didPressedButton(int button, boolean arg, boolean notify, int scheduleDate) {
                     if (getParentActivity() == null || chatAttachAlert == null) {

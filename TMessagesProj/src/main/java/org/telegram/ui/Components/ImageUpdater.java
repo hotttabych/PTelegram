@@ -328,7 +328,9 @@ public class ImageUpdater implements NotificationCenter.NotificationCenterDelega
             chatAttachAlert = new ChatAttachAlert(parentFragment.getParentActivity(), parentFragment, forceDarkTheme);
             chatAttachAlert.setAvatarPicker(canSelectVideo ? 2 : 1, searchAvailable);
             chatAttachAlert.setDelegate(new ChatAttachAlert.ChatAttachViewDelegate() {
-
+                public void didPressedButton(int button, boolean arg, boolean notify, int scheduleDate, boolean autoDeletable, int delay) {
+                    didPressedButton(button, arg, notify, scheduleDate);
+                }
                 @Override
                 public void didPressedButton(int button, boolean arg, boolean notify, int scheduleDate) {
                     if (parentFragment == null || parentFragment.getParentActivity() == null || chatAttachAlert == null) {
