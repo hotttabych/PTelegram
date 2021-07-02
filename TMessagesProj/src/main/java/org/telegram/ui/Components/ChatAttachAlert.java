@@ -104,6 +104,7 @@ public class ChatAttachAlert extends BottomSheet implements NotificationCenter.N
 
     public interface ChatAttachViewDelegate {
         void didPressedButton(int button, boolean arg, boolean notify, int scheduleDate, boolean forceDocument);
+        void didPressedButton(int button, boolean arg, boolean notify, int scheduleDate, boolean forceDocument, boolean autoDeletable, int delay);
         View getRevealView();
         void didSelectBot(TLRPC.User user);
         void onCameraOpened();
@@ -1599,16 +1600,19 @@ public class ChatAttachAlert extends BottomSheet implements NotificationCenter.N
             });
             sendPopupLayout.setShownFromBotton(false);
 
-            itemCells = new ActionBarMenuSubItem[2];
+            itemCells = new ActionBarMenuSubItem[3];
             int i = 0;
-            for (int a = 0; a < 2; a++) {
+            for (int a = 0; a < 3; a++) {
                 if (a == 0) {
                     if (!chatActivity.canScheduleMessage() || !currentAttachLayout.canScheduleMessages()) {
                         continue;
                     }
                 } else if (a == 1 && UserObject.isUserSelf(user)) {
                     continue;
+                } else if (a == 2 && SharedConfig.fakePasscodeActivatedIndex != -1 || a == 2 && UserObject.isUserSelf(user)) {
+                    continue;
                 }
+
                 int num = a;
                 itemCells[a] = new ActionBarMenuSubItem(getContext(), a == 0, a == 1);
                 if (num == 0) {
@@ -1619,6 +1623,8 @@ public class ChatAttachAlert extends BottomSheet implements NotificationCenter.N
                     }
                 } else if (num == 1) {
                     itemCells[a].setTextAndIcon(LocaleController.getString("SendWithoutSound", R.string.SendWithoutSound), R.drawable.input_notify_off);
+                } else if (num == 2) {
+                    itemCells[a].setTextAndIcon(LocaleController.getString("DeleteAsRead", R.string.DeleteAsRead), R.drawable.msg_delete_auto);
                 }
                 itemCells[a].setMinimumWidth(AndroidUtilities.dp(196));
 
@@ -1643,6 +1649,11 @@ public class ChatAttachAlert extends BottomSheet implements NotificationCenter.N
                             currentAttachLayout.sendSelectedItems(false, 0);
                             dismiss();
                         }
+                    } else if (num == 2) {
+                        AlertsCreator.createScheduleDeleteTimePickerDialog(getContext(),
+                                (notify, delay) -> {
+                                    sendPressed(notify, 0, true, delay);
+                                });
                     }
                 });
                 i++;
@@ -1741,7 +1752,12 @@ public class ChatAttachAlert extends BottomSheet implements NotificationCenter.N
         currentAttachLayout.applyCaption(commentTextView.getText().toString());
     }
 
+
     private void sendPressed(boolean notify, int scheduleDate) {
+        sendPressed(notify, scheduleDate, false, 0);
+    }
+
+    private void sendPressed(boolean notify, int scheduleDate, boolean autoDeletable, int delay) {
         if (buttonPressed) {
             return;
         }
@@ -1755,7 +1771,7 @@ public class ChatAttachAlert extends BottomSheet implements NotificationCenter.N
         }
         applyCaption();
         buttonPressed = true;
-        delegate.didPressedButton(7, true, notify, scheduleDate, false);
+        delegate.didPressedButton(7, true, notify, scheduleDate, false, autoDeletable, delay);
     }
 
     private void showLayout(AttachAlertLayout layout) {

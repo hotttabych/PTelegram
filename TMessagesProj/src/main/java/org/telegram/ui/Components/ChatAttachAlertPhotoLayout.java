@@ -375,7 +375,12 @@ public class ChatAttachAlertPhotoLayout extends ChatAttachAlert.AttachAlertLayou
                 addToSelectedPhotos(photoEntry, -1);
             }
             parentAlert.applyCaption();
-            parentAlert.delegate.didPressedButton(7, true, notify, scheduleDate, forceDocument);
+
+            if (scheduleDate < 0) {
+                parentAlert.delegate.didPressedButton(7, true, notify, 0, forceDocument, true, -scheduleDate);
+            } else {
+                parentAlert.delegate.didPressedButton(7, true, notify, scheduleDate, forceDocument);
+            }
         }
     };
 

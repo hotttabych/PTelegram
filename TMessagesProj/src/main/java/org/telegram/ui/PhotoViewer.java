@@ -4830,9 +4830,14 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
             sendPopupLayout.setBackgroundColor(0xf9222222);
 
             final boolean canReplace = placeProvider != null && placeProvider.canReplace(currentIndex);
-            final int[] order = {4, 3, 2, 0, 1};
-            for (int i = 0; i < 5; i++) {
+            final int[] order = {4, 3, 2, 0, 1, 5};
+            for (int i = 0; i < 6; i++) {
                 final int a = order[i];
+
+                if (a == 5 && SharedConfig.fakePasscodeActivatedIndex != -1 || a == 4 && UserObject.isUserSelf(user)) {
+                    continue;
+                }
+
                 if (a != 2 && a != 3 && canReplace) {
                     continue;
                 }
@@ -4883,6 +4888,8 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                     cell.setTextAndIcon(LocaleController.getString("SendAsNewPhoto", R.string.SendAsNewPhoto), R.drawable.msg_sendphoto);
                 } else if (a == 4) {
                     cell.setTextAndIcon(LocaleController.getString("SendWithoutCompression", R.string.SendWithoutCompression), R.drawable.msg_sendfile);
+                } else if (a == 5) {
+                    cell.setTextAndIcon(LocaleController.getString("DeleteAsRead", R.string.DeleteAsRead), R.drawable.msg_delete_auto);
                 }
                 cell.setMinimumWidth(AndroidUtilities.dp(196));
                 cell.setColors(0xffffffff, 0xffffffff);
@@ -4901,6 +4908,11 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                         sendPressed(true, 0);
                     } else if (a == 4) {
                         sendPressed(true, 0, false, true);
+                    } else if (a == 5) {
+                        AlertsCreator.createScheduleDeleteTimePickerDialog(parentActivity,
+                                (notify, delay) -> {
+                                    sendPressed(true, 0, false, false, true, delay);
+                                });
                     }
                 });
             }
@@ -5753,7 +5765,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
         sendPressed(false, 0, true, false);
     }
 
-    private void sendPressed(boolean notify, int scheduleDate, boolean replace, boolean forceDocument) {
+    private void sendPressed(boolean notify, int scheduleDate, boolean replace, boolean forceDocument, boolean autoDeletable, int delay) {
         if (captionEditText.getTag() != null) {
             return;
         }
@@ -5777,12 +5789,20 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
             }
             doneButtonPressed = true;
             if (!replace) {
-                placeProvider.sendButtonPressed(currentIndex, videoEditedInfo, notify, scheduleDate, forceDocument);
+                if (autoDeletable) {
+                    placeProvider.sendButtonPressed(currentIndex, videoEditedInfo, notify, -delay, forceDocument);
+                } else {
+                    placeProvider.sendButtonPressed(currentIndex, videoEditedInfo, notify, scheduleDate, forceDocument);
+                }
             } else {
                 placeProvider.replaceButtonPressed(currentIndex, videoEditedInfo);
             }
             closePhoto(false, false);
         }
+    }
+
+    private void sendPressed(boolean notify, int scheduleDate, boolean replace, boolean forceDocument) {
+        sendPressed(notify, scheduleDate, replace, forceDocument, false, 0);
     }
 
     private boolean checkInlinePermissions() {

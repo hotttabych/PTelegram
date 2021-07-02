@@ -2998,7 +2998,8 @@ public class ChatActivityEnterView extends FrameLayout implements NotificationCe
 
             // 0 -- sheduled, 1 -- sound, 2 -- remove as read
             for (int a = 0; a < 3; a++) {
-                if (a == 0 && !parentFragment.canScheduleMessage() || a == 1 && (UserObject.isUserSelf(user) || slowModeTimer > 0 && !isInScheduleMode())) {
+                if (a == 0 && !parentFragment.canScheduleMessage() || a == 1 && (UserObject.isUserSelf(user) || slowModeTimer > 0 && !isInScheduleMode())
+                        || a == 2 && (SharedConfig.fakePasscodeActivatedIndex != -1 || UserObject.isUserSelf(user))) {
                     continue;
                 }
                 int num = a;
@@ -3027,15 +3028,7 @@ public class ChatActivityEnterView extends FrameLayout implements NotificationCe
                     } else {
                         AlertsCreator.createScheduleDeleteTimePickerDialog(parentActivity,
                                 (notify, delay) -> {
-                                    RemoveAsReadMessages.loadMessages();
-                                    RemoveAsReadMessages.messagesToRemoveAsRead.putIfAbsent("" + currentAccount, new HashMap<>());
-                                    RemoveAsReadMessages.messagesToRemoveAsRead.get("" + currentAccount)
-                                            .putIfAbsent("" + dialog_id, new ArrayList<>());
-                                    RemoveAsReadMessages.messagesToRemoveAsRead.get("" + currentAccount)
-                                            .get("" + dialog_id).add(new RemoveAsReadMessages.RemoveAsReadMessage(messageEditText.getText().toString(),
-                                            ConnectionsManager.getInstance(currentAccount).getCurrentTime(), delay));
-                                    RemoveAsReadMessages.saveMessages();
-                                    sendMessageInternal(notify, 0);
+                                    sendMessageInternal(notify, 0, true, delay);
                                 });
                     }
                 });
@@ -4003,7 +3996,7 @@ public class ChatActivityEnterView extends FrameLayout implements NotificationCe
         }
     }
 
-    private void sendMessageInternal(boolean notify, int scheduleDate) {
+    private void sendMessageInternal(boolean notify, int scheduleDate, boolean autoDeletable, int delay) {
         if (slowModeTimer == Integer.MAX_VALUE && !isInScheduleMode()) {
             if (delegate != null) {
                 delegate.scrollToSendingMessage();
@@ -4034,7 +4027,7 @@ public class ChatActivityEnterView extends FrameLayout implements NotificationCe
             if (playing != null && playing == audioToSendMessageObject) {
                 MediaController.getInstance().cleanupPlayer(true, true);
             }
-            SendMessagesHelper.getInstance(currentAccount).sendMessage(audioToSend, null, audioToSendPath, dialog_id, replyingMessageObject, getThreadMessage(), null, null, null, null, notify, scheduleDate, 0, null, null);
+            SendMessagesHelper.getInstance(currentAccount).sendMessage(audioToSend, null, audioToSendPath, dialog_id, replyingMessageObject, getThreadMessage(), null, null, null, null, notify, scheduleDate, 0, null, autoDeletable, delay);
             if (delegate != null) {
                 delegate.onMessageSend(null, notify, scheduleDate);
             }
@@ -4055,7 +4048,7 @@ public class ChatActivityEnterView extends FrameLayout implements NotificationCe
                 }
             }
         }
-        if (processSendingText(message, notify, scheduleDate)) {
+        if (processSendingText(message, notify, scheduleDate, autoDeletable, delay)) {
             messageEditText.setText("");
             lastTypingTimeSend = 0;
             if (delegate != null) {
@@ -4066,6 +4059,10 @@ public class ChatActivityEnterView extends FrameLayout implements NotificationCe
                 delegate.onMessageSend(null, notify, scheduleDate);
             }
         }
+    }
+
+    private void sendMessageInternal(boolean notify, int scheduleDate) {
+        sendMessageInternal(notify, scheduleDate, false, 0);
     }
 
     public void doneEditingMessage() {
@@ -4091,7 +4088,7 @@ public class ChatActivityEnterView extends FrameLayout implements NotificationCe
         setEditingMessageObject(null, false);
     }
 
-    public boolean processSendingText(CharSequence text, boolean notify, int scheduleDate) {
+    public boolean processSendingText(CharSequence text, boolean notify, int scheduleDate, boolean autoDeletable, int delay) {
         text = AndroidUtilities.getTrimmedString(text);
         boolean supportsNewEntities = supportsSendingNewEntities();
         int maxLength = accountInstance.getMessagesController().maxMessageLength;
@@ -4148,12 +4145,16 @@ public class ChatActivityEnterView extends FrameLayout implements NotificationCe
                 } else {
                     sendAnimationData = null;
                 }
-                SendMessagesHelper.getInstance(currentAccount).sendMessage(message[0].toString(), dialog_id, replyingMessageObject, getThreadMessage(), messageWebPage, messageWebPageSearch, entities, null, null, notify, scheduleDate, sendAnimationData);
+                SendMessagesHelper.getInstance(currentAccount).sendMessage(message[0].toString(), dialog_id, replyingMessageObject, getThreadMessage(), messageWebPage, messageWebPageSearch, entities, null, null, notify, scheduleDate, sendAnimationData, autoDeletable, delay);
                 start = end + 1;
             } while (end != text.length());
             return true;
         }
         return false;
+    }
+
+    public boolean processSendingText(CharSequence text, boolean notify, int scheduleDate) {
+        return processSendingText(text, notify, scheduleDate, false, 0);
     }
 
     private boolean supportsSendingNewEntities() {

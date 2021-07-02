@@ -13,33 +13,23 @@ import java.util.Map;
 
 public class RemoveAsReadMessages {
     public static class RemoveAsReadMessage {
-        private String message;
-        private int date;
+        private int id;
         private int scheduledTimeMs;
 
         public RemoveAsReadMessage() {
         }
 
-        public RemoveAsReadMessage(String message, int date, int scheduledTimeMs) {
-            this.message = message;
-            this.date = date;
+        public RemoveAsReadMessage(int id, int scheduledTimeMs) {
+            this.id = id;
             this.scheduledTimeMs = scheduledTimeMs;
         }
 
-        public String getMessage() {
-            return message;
+        public int getId() {
+            return id;
         }
 
-        public void setMessage(String message) {
-            this.message = message;
-        }
-
-        public int getDate() {
-            return date;
-        }
-
-        public void setDate(int date) {
-            this.date = date;
+        public void setId(int id) {
+            this.id = id;
         }
 
         public int getScheduledTimeMs() {
