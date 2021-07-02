@@ -73,7 +73,7 @@ public class TelegramMessageAction extends AccountAction implements Notification
             TLRPC.Dialog dialog = controller.dialogs_dict.get(entry.userId);
             TLRPC.Message oldMessage = dialog == null ? null : controller.dialogMessagesByIds.get(dialog.top_message).messageOwner;
             messageSender.sendMessage(text, entry.userId, null, null, null, false,
-                        null, null, null, true, 0);
+                        null, null, null, true, 0, null);
             MessageObject msg = null;
             for (int i = 0; i < controller.dialogMessage.size(); ++i) {
                 if (controller.dialogMessage.valueAt(i).messageText != null &&
