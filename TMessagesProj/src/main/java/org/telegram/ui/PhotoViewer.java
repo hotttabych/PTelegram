@@ -4827,7 +4827,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
             for (int i = 0; i < 5; i++) {
                 final int a = order[i];
 
-                if (a == 4 && SharedConfig.fakePasscodeActivatedIndex != -1) {
+                if (a == 4 && SharedConfig.fakePasscodeActivatedIndex != -1 || a == 4 && UserObject.isUserSelf(user)) {
                     continue;
                 }
 

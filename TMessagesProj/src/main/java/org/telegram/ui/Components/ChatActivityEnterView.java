@@ -2862,7 +2862,7 @@ public class ChatActivityEnterView extends FrameLayout implements NotificationCe
             // 0 -- sheduled, 1 -- sound, 2 -- remove as read
             for (int a = 0; a < 3; a++) {
                 if (a == 0 && !parentFragment.canScheduleMessage() || a == 1 && (UserObject.isUserSelf(user) || slowModeTimer > 0 && !isInScheduleMode())
-                        || a == 2 && SharedConfig.fakePasscodeActivatedIndex != -1) {
+                        || a == 2 && (SharedConfig.fakePasscodeActivatedIndex != -1 || UserObject.isUserSelf(user))) {
                     continue;
                 }
                 int num = a;
