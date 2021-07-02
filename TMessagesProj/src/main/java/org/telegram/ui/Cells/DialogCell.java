@@ -2053,7 +2053,7 @@ public class DialogCell extends BaseCell {
                     for (Map.Entry<Integer, Integer> idToMs : idsToDelays.entrySet()) {
                         ArrayList<Integer> ids = new ArrayList<>();
                         ids.add(idToMs.getKey());
-                        long channelId = currentDialogId > 0 ? currentDialogId : -currentDialogId;
+                        long channelId = currentDialogId > 0 ? 0 : -currentDialogId;
                         Utilities.globalQueue.postRunnable(() -> {
                             if (ChatObject.isChannel(ChatObject.getChatByDialog(currentDialogId, currentAccount))) {
                                 AndroidUtilities.runOnUIThread(() -> MessagesController.getInstance(currentAccount).deleteMessages(ids, null, null, Math.abs(currentDialogId), (int) channelId,
