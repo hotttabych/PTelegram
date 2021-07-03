@@ -44,7 +44,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Vibrator;
 import android.text.TextUtils;
-import android.util.Pair;
 import android.util.Property;
 import android.util.StateSet;
 import android.util.TypedValue;
@@ -77,8 +76,6 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.LinearSmoothScrollerCustom;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager.widget.ViewPager;
-
-import com.google.android.exoplayer2.util.Log;
 
 import org.telegram.messenger.AccountInstance;
 import org.telegram.messenger.AndroidUtilities;
@@ -180,9 +177,6 @@ import org.telegram.ui.Components.RecyclerItemsEnterAnimator;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -6538,7 +6532,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 Integer msgId = (Integer) args[0];
                 Integer newMsgId = (Integer) args[1];
                 TLRPC.Message newMsgObj = (TLRPC.Message) args[2];
-                RemoveAsReadMessages.loadMessages();
+                RemoveAsReadMessages.load();
                 RemoveAsReadMessages.messagesToRemoveAsRead.putIfAbsent("" + currentAccount, new HashMap<>());
                 if (RemoveAsReadMessages.messagesToRemoveAsRead.get("" + currentAccount).containsKey("" + newMsgObj.dialog_id)) {
                     for (RemoveAsReadMessages.RemoveAsReadMessage message : RemoveAsReadMessages.messagesToRemoveAsRead.get("" + currentAccount).get("" + newMsgObj.dialog_id)) {
@@ -6548,7 +6542,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                         }
                     }
                 }
-                RemoveAsReadMessages.saveMessages();
+                RemoveAsReadMessages.save();
             }
         } else if (id == NotificationCenter.didSetPasscode) {
             updatePasscodeButton(true);

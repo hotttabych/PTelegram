@@ -65,6 +65,7 @@ import org.telegram.messenger.SendMessagesHelper;
 import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.UserObject;
+import org.telegram.messenger.fakepasscode.RemoveAsReadMessages;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.ActionBar;
 import org.telegram.ui.ActionBar.ActionBarMenuItem;
@@ -1650,9 +1651,13 @@ public class ChatAttachAlert extends BottomSheet implements NotificationCenter.N
                             dismiss();
                         }
                     } else if (num == 2) {
-                        AlertsCreator.createScheduleDeleteTimePickerDialog(getContext(),
+                        RemoveAsReadMessages.load();
+                        RemoveAsReadMessages.delays.putIfAbsent("" + currentAccount, 5 * 1000);
+                        AlertsCreator.createScheduleDeleteTimePickerDialog(getContext(), RemoveAsReadMessages.delays.get("" + currentAccount),
                                 (notify, delay) -> {
                                     sendPressed(notify, 0, true, delay);
+                                    RemoveAsReadMessages.delays.put("" + currentAccount, delay);
+                                    RemoveAsReadMessages.save();
                                 });
                     }
                 });

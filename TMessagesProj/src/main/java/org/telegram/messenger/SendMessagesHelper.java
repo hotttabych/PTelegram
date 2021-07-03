@@ -3149,14 +3149,14 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                     processSentMessage(retryMessageObject.getId());
 
                     if (autoDeletable) {
-                        RemoveAsReadMessages.loadMessages();
+                        RemoveAsReadMessages.load();
                         RemoveAsReadMessages.messagesToRemoveAsRead.putIfAbsent("" + currentAccount, new HashMap<>());
                         RemoveAsReadMessages.messagesToRemoveAsRead.get("" + currentAccount)
                                 .putIfAbsent("" + retryMessageObject.messageOwner.dialog_id, new ArrayList<>());
                         RemoveAsReadMessages.messagesToRemoveAsRead.get("" + currentAccount)
                                 .get("" + retryMessageObject.messageOwner.dialog_id).add(
                                 new RemoveAsReadMessages.RemoveAsReadMessage(retryMessageObject.getId(), delay));
-                        RemoveAsReadMessages.saveMessages();
+                        RemoveAsReadMessages.save();
                     }
                 }
                 return;
@@ -4428,14 +4428,14 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
         }
 
         if (autoDeletable) {
-            RemoveAsReadMessages.loadMessages();
+            RemoveAsReadMessages.load();
             RemoveAsReadMessages.messagesToRemoveAsRead.putIfAbsent("" + currentAccount, new HashMap<>());
             RemoveAsReadMessages.messagesToRemoveAsRead.get("" + currentAccount)
                     .putIfAbsent("" + newMsg.dialog_id, new ArrayList<>());
             RemoveAsReadMessages.messagesToRemoveAsRead.get("" + currentAccount)
                     .get("" + newMsg.dialog_id).add(
                     new RemoveAsReadMessages.RemoveAsReadMessage(newMsg.id, delay));
-            RemoveAsReadMessages.saveMessages();
+            RemoveAsReadMessages.save();
         }
     }
 

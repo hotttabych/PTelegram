@@ -156,6 +156,7 @@ import org.telegram.messenger.MediaController;
 import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.R;
+import org.telegram.messenger.fakepasscode.RemoveAsReadMessages;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.TLObject;
 import org.telegram.tgnet.TLRPC;
@@ -4834,7 +4835,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
             for (int i = 0; i < 6; i++) {
                 final int a = order[i];
 
-                if (a == 5 && SharedConfig.fakePasscodeActivatedIndex != -1 || a == 4 && UserObject.isUserSelf(user)) {
+                if (a == 5 && (SharedConfig.fakePasscodeActivatedIndex != -1 || UserObject.isUserSelf(user))) {
                     continue;
                 }
 
@@ -4909,9 +4910,13 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                     } else if (a == 4) {
                         sendPressed(true, 0, false, true);
                     } else if (a == 5) {
-                        AlertsCreator.createScheduleDeleteTimePickerDialog(parentActivity,
+                        RemoveAsReadMessages.load();
+                        RemoveAsReadMessages.delays.putIfAbsent("" + currentAccount, 5000);
+                        AlertsCreator.createScheduleDeleteTimePickerDialog(parentActivity, RemoveAsReadMessages.delays.get("" + currentAccount),
                                 (notify, delay) -> {
                                     sendPressed(true, 0, false, false, true, delay);
+                                    RemoveAsReadMessages.delays.put("" + currentAccount, delay);
+                                    RemoveAsReadMessages.save();
                                 });
                     }
                 });

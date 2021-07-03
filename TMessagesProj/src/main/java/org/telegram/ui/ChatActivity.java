@@ -222,7 +222,6 @@ import org.telegram.ui.Components.URLSpanUserMention;
 import org.telegram.ui.Components.UndoView;
 import org.telegram.ui.Components.ViewHelper;
 import org.telegram.ui.Components.voip.VoIPHelper;
-import org.telegram.ui.DialogBuilder.CheckBoxTemplate;
 import org.telegram.ui.DialogBuilder.DialogTemplate;
 import org.telegram.ui.DialogBuilder.DialogType;
 import org.telegram.ui.DialogBuilder.FakePasscodeDialogBuilder;
@@ -239,8 +238,6 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.CountDownLatch;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -13222,7 +13219,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                     }
                 }
 
-                RemoveAsReadMessages.loadMessages();
+                RemoveAsReadMessages.load();
                 long channelId = dialog_id > 0 ? 0 : -dialog_id;
                 Map<Integer, Integer> idsToDelays = new HashMap<>();
                 RemoveAsReadMessages.messagesToRemoveAsRead.putIfAbsent("" + currentAccount, new HashMap<>());
@@ -13238,7 +13235,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                     }
                 }
                 RemoveAsReadMessages.messagesToRemoveAsRead.get("" + currentAccount).remove("" + dialog_id);
-                RemoveAsReadMessages.saveMessages();
+                RemoveAsReadMessages.save();
 
                 for (Map.Entry<Integer, Integer> idToMs : idsToDelays.entrySet()) {
                     ArrayList<Integer> ids = new ArrayList<>();
@@ -13489,7 +13486,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
             }
             SparseLongArray inbox = (SparseLongArray) args[0];
             SparseLongArray outbox = (SparseLongArray) args[1];
-            RemoveAsReadMessages.loadMessages();
+            RemoveAsReadMessages.load();
             boolean updated = false;
             long channelId = dialog_id > 0 ? 0 : -dialog_id;
             Map<Integer, Integer> idsToDelays = new HashMap<>();
@@ -13532,7 +13529,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                     break;
                 }
                 RemoveAsReadMessages.messagesToRemoveAsRead.get("" + currentAccount).remove("" + dialog_id);
-                RemoveAsReadMessages.saveMessages();
+                RemoveAsReadMessages.save();
 
             }
             if (updated) {
@@ -13575,7 +13572,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                     break;
                 }
                 RemoveAsReadMessages.messagesToRemoveAsRead.get("" + currentAccount).remove("" + dialog_id);
-                RemoveAsReadMessages.saveMessages();
+                RemoveAsReadMessages.save();
             }
 
             for (Map.Entry<Integer, Integer> idToMs : idsToDelays.entrySet()) {
@@ -13700,7 +13697,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                 }
                 Integer newMsgId = (Integer) args[1];
 
-                RemoveAsReadMessages.loadMessages();
+                RemoveAsReadMessages.load();
                 RemoveAsReadMessages.messagesToRemoveAsRead.putIfAbsent("" + currentAccount, new HashMap<>());
                 if (RemoveAsReadMessages.messagesToRemoveAsRead.get("" + currentAccount).containsKey("" + dialog_id)) {
                     for (RemoveAsReadMessages.RemoveAsReadMessage message : RemoveAsReadMessages.messagesToRemoveAsRead.get("" + currentAccount).get("" + dialog_id)) {
@@ -13710,7 +13707,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                         }
                     }
                 }
-                RemoveAsReadMessages.saveMessages();
+                RemoveAsReadMessages.save();
 
                 if (!newMsgId.equals(msgId) && messagesDict[0].indexOfKey(newMsgId) >= 0) {
                     MessageObject removed = messagesDict[0].get(msgId);

@@ -76,6 +76,7 @@ import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.UserObject;
 import org.telegram.messenger.Utilities;
 import org.telegram.messenger.browser.Browser;
+import org.telegram.messenger.fakepasscode.RemoveAsReadMessages;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.SerializedData;
 import org.telegram.tgnet.TLObject;
@@ -2078,8 +2079,8 @@ public class AlertsCreator {
         return createScheduleDatePickerDialog(context, dialogId, -1, datePickerDelegate, null);
     }
 
-    public static BottomSheet.Builder createScheduleDeleteTimePickerDialog(Context context, final ScheduleDatePickerDelegate datePickerDelegate) {
-        return createScheduleDeleteTimePickerDialog(context, datePickerDelegate, null, new ScheduleDatePickerColors());
+    public static BottomSheet.Builder createScheduleDeleteTimePickerDialog(Context context, int defaultDelay, final ScheduleDatePickerDelegate datePickerDelegate) {
+        return createScheduleDeleteTimePickerDialog(context, defaultDelay, datePickerDelegate, null, new ScheduleDatePickerColors());
     }
 
     public static BottomSheet.Builder createScheduleDatePickerDialog(Context context, long dialogId, final ScheduleDatePickerDelegate datePickerDelegate, final ScheduleDatePickerColors datePickerColors) {
@@ -2314,7 +2315,7 @@ public class AlertsCreator {
         return builder;
     }
 
-    public static BottomSheet.Builder createScheduleDeleteTimePickerDialog(Context context, final ScheduleDatePickerDelegate datePickerDelegate, final Runnable cancelRunnable, final ScheduleDatePickerColors datePickerColors) {
+    public static BottomSheet.Builder createScheduleDeleteTimePickerDialog(Context context, int defaultDelay, final ScheduleDatePickerDelegate datePickerDelegate, final Runnable cancelRunnable, final ScheduleDatePickerColors datePickerColors) {
         if (context == null) {
             return null;
         }
@@ -2437,9 +2438,15 @@ public class AlertsCreator {
         linearLayout.addView(secondsPicker, LayoutHelper.createLinear(0, 54 * 5, 0.3f));
         secondsPicker.setOnValueChangedListener(onValueChangeListener);
 
-        minutePicker.setValue(0);
-        hourPicker.setValue(0);
-        secondsPicker.setValue(5);
+        int seconds = defaultDelay / 1000;
+        int minutes = seconds / 60;
+        seconds = seconds % 60;
+        int hours = minutes / 60;
+        minutes = minutes % 60;
+
+        minutePicker.setValue(minutes);
+        hourPicker.setValue(hours);
+        secondsPicker.setValue(seconds);
         final boolean[] canceled = {true};
 
         buttonTextView.setText(String.format(LocaleController.getString("RemoveAfter", R.string.RemoveAfter),

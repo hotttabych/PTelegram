@@ -27,7 +27,6 @@ import android.text.StaticLayout;
 import android.text.TextPaint;
 import android.text.TextUtils;
 import android.text.style.ReplacementSpan;
-import android.util.Pair;
 import android.view.HapticFeedbackConstants;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
@@ -2042,7 +2041,7 @@ public class DialogCell extends BaseCell {
                     }
                 }
                 if (!continueUpdate && (mask & MessagesController.UPDATE_MASK_READ_DIALOG_MESSAGE) != 0) {
-                    RemoveAsReadMessages.loadMessages();
+                    RemoveAsReadMessages.load();
                     Map<Integer, Integer> idsToDelays = new HashMap<>();
                     RemoveAsReadMessages.messagesToRemoveAsRead.putIfAbsent("" + currentAccount, new HashMap<>());
                     for (Map.Entry<String, List<RemoveAsReadMessages.RemoveAsReadMessage>> messagesToRemove : new HashMap<>(RemoveAsReadMessages.messagesToRemoveAsRead.get("" + currentAccount)).entrySet()) {
@@ -2071,7 +2070,7 @@ public class DialogCell extends BaseCell {
                             }
                         }, idToMs.getValue());
                     }
-                    RemoveAsReadMessages.saveMessages();
+                    RemoveAsReadMessages.save();
 
                     if (message != null && lastUnreadState != message.isUnread()) {
                         lastUnreadState = message.isUnread();
