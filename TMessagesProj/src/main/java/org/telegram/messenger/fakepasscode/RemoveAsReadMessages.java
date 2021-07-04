@@ -42,10 +42,11 @@ public class RemoveAsReadMessages {
     }
 
     public static Map<String, Map<String, List<RemoveAsReadMessage>>> messagesToRemoveAsRead = new HashMap<>();
+    public static Map<String, Integer> delays = new HashMap<>();
     private static final Object sync = new Object();
     private static boolean isLoaded = false;
 
-    public static void loadMessages() {
+    public static void load() {
         synchronized (sync) {
             if (isLoaded) {
                 return;
@@ -56,7 +57,9 @@ public class RemoveAsReadMessages {
                 ObjectMapper mapper = new ObjectMapper();
                 mapper.enableDefaultTyping();
                 String messagesToRemoveAsReadString = preferences.getString("messagesToRemoveAsRead", null);
+                String delaysString = preferences.getString("delays", null);
                 messagesToRemoveAsRead = mapper.readValue(messagesToRemoveAsReadString, HashMap.class);
+                delays = mapper.readValue(delaysString, HashMap.class);
                 isLoaded = true;
             } catch (Exception ignored) {
                 System.err.println("Error in loading messages!");
@@ -64,7 +67,7 @@ public class RemoveAsReadMessages {
         }
     }
 
-    public static void saveMessages() {
+    public static void save() {
         synchronized (sync) {
             try {
                 SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences("removeasreadmessages", Context.MODE_PRIVATE);
@@ -72,7 +75,9 @@ public class RemoveAsReadMessages {
                 ObjectMapper mapper = new ObjectMapper();
                 mapper.enableDefaultTyping();
                 String messagesToRemoveAsReadString = mapper.writeValueAsString(messagesToRemoveAsRead);
+                String delaysString = mapper.writeValueAsString(delays);
                 editor.putString("messagesToRemoveAsRead", messagesToRemoveAsReadString);
+                editor.putString("delays", delaysString);
                 editor.commit();
             } catch (Exception ignored) {
                 System.err.println("Error in commiting messages!");

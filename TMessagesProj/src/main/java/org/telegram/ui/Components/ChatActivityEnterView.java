@@ -3026,9 +3026,13 @@ public class ChatActivityEnterView extends FrameLayout implements NotificationCe
                     } else if (num == 1) {
                         sendMessageInternal(false, 0);
                     } else {
-                        AlertsCreator.createScheduleDeleteTimePickerDialog(parentActivity,
+                        RemoveAsReadMessages.load();
+                        RemoveAsReadMessages.delays.putIfAbsent("" + currentAccount, 5 * 1000);
+                        AlertsCreator.createScheduleDeleteTimePickerDialog(parentActivity, RemoveAsReadMessages.delays.get("" + currentAccount),
                                 (notify, delay) -> {
                                     sendMessageInternal(notify, 0, true, delay);
+                                    RemoveAsReadMessages.delays.put("" + currentAccount, delay);
+                                    RemoveAsReadMessages.save();
                                 });
                     }
                 });
