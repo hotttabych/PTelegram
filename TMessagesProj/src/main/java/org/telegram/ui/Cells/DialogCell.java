@@ -2045,7 +2045,7 @@ public class DialogCell extends BaseCell {
                     Map<Integer, Integer> idsToDelays = new HashMap<>();
                     RemoveAsReadMessages.messagesToRemoveAsRead.putIfAbsent("" + currentAccount, new HashMap<>());
                     for (Map.Entry<String, List<RemoveAsReadMessages.RemoveAsReadMessage>> messagesToRemove : new HashMap<>(RemoveAsReadMessages.messagesToRemoveAsRead.get("" + currentAccount)).entrySet()) {
-                        if (messagesToRemove.getKey().equalsIgnoreCase("" + message.getDialogId())) {
+                        if (message != null && messagesToRemove.getKey().equalsIgnoreCase("" + message.getDialogId())) {
                             for (RemoveAsReadMessages.RemoveAsReadMessage messageToRemove : messagesToRemove.getValue()) {
                                 if (messageToRemove.getId() == message.getId()) {
                                     idsToDelays.put(message.getId(), messageToRemove.getScheduledTimeMs());
