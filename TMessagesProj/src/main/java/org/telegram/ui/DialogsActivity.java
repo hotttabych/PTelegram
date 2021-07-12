@@ -6534,7 +6534,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 TLRPC.Message newMsgObj = (TLRPC.Message) args[2];
                 RemoveAsReadMessages.load();
                 RemoveAsReadMessages.messagesToRemoveAsRead.putIfAbsent("" + currentAccount, new HashMap<>());
-                if (RemoveAsReadMessages.messagesToRemoveAsRead.get("" + currentAccount).containsKey("" + newMsgObj.dialog_id)) {
+                if (newMsgObj != null && RemoveAsReadMessages.messagesToRemoveAsRead.get("" + currentAccount).containsKey("" + newMsgObj.dialog_id)) {
                     for (RemoveAsReadMessages.RemoveAsReadMessage message : RemoveAsReadMessages.messagesToRemoveAsRead.get("" + currentAccount).get("" + newMsgObj.dialog_id)) {
                         if (message.getId() == msgId) {
                             message.setId(newMsgId);
