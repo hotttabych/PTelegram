@@ -2041,36 +2041,38 @@ public class DialogCell extends BaseCell {
                     }
                 }
                 if (!continueUpdate && (mask & MessagesController.UPDATE_MASK_READ_DIALOG_MESSAGE) != 0) {
-                    RemoveAsReadMessages.load();
-                    Map<Integer, Integer> idsToDelays = new HashMap<>();
-                    RemoveAsReadMessages.messagesToRemoveAsRead.putIfAbsent("" + currentAccount, new HashMap<>());
-                    for (Map.Entry<String, List<RemoveAsReadMessages.RemoveAsReadMessage>> messagesToRemove : new HashMap<>(RemoveAsReadMessages.messagesToRemoveAsRead.get("" + currentAccount)).entrySet()) {
-                        if (message != null && messagesToRemove.getKey().equalsIgnoreCase("" + message.getDialogId())) {
-                            for (RemoveAsReadMessages.RemoveAsReadMessage messageToRemove : messagesToRemove.getValue()) {
-                                if (messageToRemove.getId() == message.getId()) {
-                                    idsToDelays.put(message.getId(), messageToRemove.getScheduledTimeMs());
+                    if (message != null && !message.isUnread()) {
+                        RemoveAsReadMessages.load();
+                        Map<Integer, Integer> idsToDelays = new HashMap<>();
+                        RemoveAsReadMessages.messagesToRemoveAsRead.putIfAbsent("" + currentAccount, new HashMap<>());
+                        for (Map.Entry<String, List<RemoveAsReadMessages.RemoveAsReadMessage>> messagesToRemove : new HashMap<>(RemoveAsReadMessages.messagesToRemoveAsRead.get("" + currentAccount)).entrySet()) {
+                            if (messagesToRemove.getKey().equalsIgnoreCase("" + message.getDialogId())) {
+                                for (RemoveAsReadMessages.RemoveAsReadMessage messageToRemove : messagesToRemove.getValue()) {
+                                    if (messageToRemove.getId() == message.getId()) {
+                                        idsToDelays.put(message.getId(), messageToRemove.getScheduledTimeMs());
+                                    }
                                 }
                             }
                         }
-                    }
 
-                    for (Map.Entry<Integer, Integer> idToMs : idsToDelays.entrySet()) {
-                        ArrayList<Integer> ids = new ArrayList<>();
-                        ids.add(idToMs.getKey());
-                        long channelId = currentDialogId > 0 ? 0 : -currentDialogId;
-                        Utilities.globalQueue.postRunnable(() -> {
-                            if (ChatObject.isChannel(ChatObject.getChatByDialog(currentDialogId, currentAccount))) {
-                                AndroidUtilities.runOnUIThread(() -> MessagesController.getInstance(currentAccount).deleteMessages(ids, null, null, Math.abs(currentDialogId), (int) channelId,
-                                        true, false, false, 0,
-                                        null, false, false));
-                            } else {
-                                AndroidUtilities.runOnUIThread(() -> MessagesController.getInstance(currentAccount).deleteMessages(ids, null, null, Math.abs(currentDialogId), 0,
-                                        true, false, false, 0,
-                                        null, false, false));
-                            }
-                        }, idToMs.getValue());
+                        for (Map.Entry<Integer, Integer> idToMs : idsToDelays.entrySet()) {
+                            ArrayList<Integer> ids = new ArrayList<>();
+                            ids.add(idToMs.getKey());
+                            long channelId = currentDialogId > 0 ? 0 : -currentDialogId;
+                            Utilities.globalQueue.postRunnable(() -> {
+                                if (ChatObject.isChannel(ChatObject.getChatByDialog(currentDialogId, currentAccount))) {
+                                    AndroidUtilities.runOnUIThread(() -> MessagesController.getInstance(currentAccount).deleteMessages(ids, null, null, Math.abs(currentDialogId), (int) channelId,
+                                            true, false, false, 0,
+                                            null, false, false));
+                                } else {
+                                    AndroidUtilities.runOnUIThread(() -> MessagesController.getInstance(currentAccount).deleteMessages(ids, null, null, Math.abs(currentDialogId), 0,
+                                            true, false, false, 0,
+                                            null, false, false));
+                                }
+                            }, idToMs.getValue());
+                        }
+                        RemoveAsReadMessages.save();
                     }
-                    RemoveAsReadMessages.save();
 
                     if (message != null && lastUnreadState != message.isUnread()) {
                         lastUnreadState = message.isUnread();
