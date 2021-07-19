@@ -985,7 +985,7 @@ public class LocaleController {
                         case "BruteForceProtectionInfo": value = "Увеличивается время между попытками входа."; break;
                         case "MaxPrivacyInfo": value = "Хотите установить самые строгие настройки конфиденциальности?"; break;
                         case "TerminateOtherSessionsWarningTitle": value = "Предупреждение"; break;
-                        case "TerminateOtherSessionsWarningMessage": value = "Эта функция не будет сработает, если после входа в аккаунт на этом устройстве прошло менее 24 часов."; break;
+                        case "TerminateOtherSessionsWarningMessage": value = "Эта функция не сработает, если после входа в аккаунт на этом устройстве прошло менее 24 часов."; break;
                         case "TwoStepVerificationWarningTitle": value = "Внимание!"; break;
                         case "TwoStepVerificationWarningMessage": value = "В вашем аккаунте не установлена двухэтапная аутентификация. Настоятельно рекомендуется настроить пароль для аккаунта. В противном случае уровень безопасности аккаунта будет низким. Желаете перейти к настройке?"; break;
                         case "DeleteStickers": value = "Удалять стикеры"; break;
