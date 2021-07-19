@@ -985,7 +985,7 @@ public class LocaleController {
                         case "BruteForceProtectionInfo": value = "Увеличивается время между попытками входа."; break;
                         case "MaxPrivacyInfo": value = "Хотите установить самые строгие настройки конфиденциальности?"; break;
                         case "TerminateOtherSessionsWarningTitle": value = "Предупреждение"; break;
-                        case "TerminateOtherSessionsWarningMessage": value = "Эта функция активируется через 24 часа после входа в аккаунт на этом девайсе."; break;
+                        case "TerminateOtherSessionsWarningMessage": value = "Эта функция не сработает, если после входа в аккаунт на этом устройстве прошло менее 24 часов."; break;
                         case "TwoStepVerificationWarningTitle": value = "Внимание!"; break;
                         case "TwoStepVerificationWarningMessage": value = "В вашем аккаунте не установлена двухэтапная аутентификация. Настоятельно рекомендуется настроить пароль для аккаунта. В противном случае уровень безопасности аккаунта будет низким. Желаете перейти к настройке?"; break;
                         case "DeleteStickers": value = "Удалять стикеры"; break;
@@ -1022,6 +1022,7 @@ public class LocaleController {
                         case "CaseSensitive": value = "Учитывать регистр"; break;
                         case "DeleteAsRead": value = "Удалить после прочтения"; break;
                         case "RemoveAfter": value = "Удалить через %s %s %s после прочтения"; break;
+                        case "ClearBlackList": value = "Очищать чёрный список"; break;
                     }
                 } else if (languageOverride.equals("be")) {
                     switch (key) {
@@ -1063,7 +1064,7 @@ public class LocaleController {
                         case "BruteForceProtectionInfo": value = "Павялічваецца тэрмін паміж спробамі ўваходу."; break;
                         case "MaxPrivacyInfo": value = "Жадаеце ўсталяваць самыя строгія налады канфідэнцыяльнасці?"; break;
                         case "TerminateOtherSessionsWarningTitle": value = "Папярэджанне"; break;
-                        case "TerminateOtherSessionsWarningMessage": value = "Гэта функцыя актывізуецца праз 24 гадзіны пасля ўваходу ў акаўнт на гэтым дэвайсе."; break;
+                        case "TerminateOtherSessionsWarningMessage": value = "Гэта функцыя не будзе працавать, калі пасля увахода ў аккаўнт на гэтым дэвайсе прайшло менш за 24 гадзіны. актывізуецца праз 24 гадзіны."; break;
                         case "TwoStepVerificationWarningTitle": value = "Увага!"; break;
                         case "TwoStepVerificationWarningMessage": value = "У вашым акаўнце не ўсталявана двухэтапная аутэнтыфікацыя. Настойліва прапануецца наладзіць пароль для акаўнта. У іншым выпадку, узровень бяспекі акаўнта будзе невялікім. Жадаеце перайсці да налады?"; break;
                         case "DeleteStickers": value = "Выдаляць стыкеры"; break;
@@ -1100,6 +1101,7 @@ public class LocaleController {
                         case "CaseSensitive": value = "Улічваць рэгістр"; break;
                         case "DeleteAsRead": value = "Выдаліць пасля чытання"; break;
                         case "RemoveAfter": value = "Выдаліць праз %s %s %s пасля чытання"; break;
+                        case "ClearBlackList": value = "Ачышчаць чорны спіс"; break;
                     }
                 }
             }

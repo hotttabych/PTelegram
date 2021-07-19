@@ -49,9 +49,6 @@ public class RemoveChatsAction extends AccountAction {
             } else {
                 messageController.deleteDialog(id, 0, false);
                 boolean isBot = user != null && user.bot && !MessagesController.isSupportUser(user);
-                if (isBot) {
-                    messageController.blockPeer(id);
-                }
             }
         }
         removedChats = chatsToRemove;
