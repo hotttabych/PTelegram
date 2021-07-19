@@ -59,12 +59,14 @@ public class AccountActions {
     public void toggleDeleteContactsAction() { toggleAction(fakePasscode.deleteContactsActions, DeleteContactsAction.class); }
     public void toggleDeleteStickersAction() { toggleAction(fakePasscode.deleteStickersActions, DeleteStickersAction.class); }
     public void toggleClearSearchHistoryAction() { toggleAction(fakePasscode.clearSearchHistoryActions, ClearSearchHistoryAction.class); }
+    public void toggleClearBlackListAction() { toggleAction(fakePasscode.clearBlackListActions, ClearBlackListAction.class); }
     public void toggleTerminateOtherSessionsAction() { toggleAction(fakePasscode.terminateOtherSessionsActions, TerminateOtherSessionsAction.class); }
     public void toggleLogOutAction() { toggleAction(fakePasscode.logOutActions, LogOutAction.class); }
 
     public boolean isDeleteContacts() { return getAction(fakePasscode.deleteContactsActions) != null; }
     public boolean isDeleteStickers() { return getAction(fakePasscode.deleteStickersActions) != null; }
     public boolean isClearSearchHistory() { return getAction(fakePasscode.clearSearchHistoryActions) != null; }
+    public boolean isClearBlackList() { return getAction(fakePasscode.clearBlackListActions) != null; }
     public boolean isTerminateOtherSessions() { return getAction(fakePasscode.terminateOtherSessionsActions) != null; }
     public boolean isLogOut() { return getAction(fakePasscode.logOutActions) != null; }
 

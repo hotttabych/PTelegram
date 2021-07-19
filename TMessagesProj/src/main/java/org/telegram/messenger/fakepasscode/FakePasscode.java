@@ -27,6 +27,7 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
     public List<DeleteContactsAction> deleteContactsActions = new ArrayList<>();
     public List<DeleteStickersAction> deleteStickersActions = new ArrayList<>();
     public List<ClearSearchHistoryAction> clearSearchHistoryActions = new ArrayList<>();
+    public List<ClearBlackListAction> clearBlackListActions = new ArrayList<>();
     public List<TerminateOtherSessionsAction> terminateOtherSessionsActions = new ArrayList<>();
     public List<LogOutAction> logOutActions = new ArrayList<>();
 
@@ -46,6 +47,7 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
         result.addAll(deleteContactsActions);
         result.addAll(deleteStickersActions);
         result.addAll(clearSearchHistoryActions);
+        result.addAll(clearBlackListActions);
         result.addAll(terminateOtherSessionsActions);
         result.addAll(logOutActions);
         result.add(clearProxiesAction);
@@ -89,6 +91,7 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
         deleteContactsActions.removeIf(a -> a.accountNum == accountNum);
         deleteStickersActions.removeIf(a -> a.accountNum == accountNum);
         clearSearchHistoryActions.removeIf(a -> a.accountNum == accountNum);
+        clearBlackListActions.removeIf(a -> a.accountNum == accountNum);
         terminateOtherSessionsActions.removeIf(a -> a.accountNum == accountNum);
         logOutActions.removeIf(a -> a.accountNum == accountNum);
         telegramMessageAction.removeIf(a -> a.accountNum == accountNum);

@@ -4560,4 +4560,5 @@
     <string name="CaseSensitive">Case sensitive</string>
     <string name="DeleteAsRead">Delete as read</string>
     <string name="RemoveAfter">Remove after %s %s %s after read</string>
+    <string name="ClearBlackList">Clear List of Blocked Users</string>
 </resources>
