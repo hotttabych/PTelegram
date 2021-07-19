@@ -21,8 +21,10 @@ public class ClearBlackListAction extends AccountAction implements NotificationC
             return;
         }
 
-        NotificationCenter.getInstance(accountNum).removeObserver(this, NotificationCenter.blockedUsersDidLoad);
         MessagesController controller = AccountInstance.getInstance(accountNum).getMessagesController();
+        if (controller.blockedEndReached) {
+            NotificationCenter.getInstance(accountNum).removeObserver(this, NotificationCenter.blockedUsersDidLoad);
+        }
         for (int i = 0; i < controller.blockePeers.size(); i++) {
             int userId = controller.blockePeers.keyAt(i);
             int blocked = controller.blockePeers.get(userId);
