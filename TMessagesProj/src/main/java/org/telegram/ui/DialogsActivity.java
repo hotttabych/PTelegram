@@ -3787,7 +3787,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                         if (SharedConfig.appLocked && SharedConfig.fakePasscodeActivatedIndex == -1 && SharedConfig.clearCacheOnLock) {
                             org.telegram.messenger.fakepasscode.Utils.clearCache(null);
                         }
-                        updatePasscodeButton(true);
+                        updatePasscodeButton();
                     } else if (id == 2) {
                         presentFragment(new ProxyListActivity());
                     } else if (id >= 10 && id < 10 + UserConfig.MAX_ACCOUNT_COUNT) {
