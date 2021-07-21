@@ -9,11 +9,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-
-      # Runs a single command using the runners shell
-      - name: Run a one-line script
-        run: echo Hello, world!
-
       - name: Build docker image
         run: docker build -t telegram-build .
       - name: Build app
@@ -30,7 +25,7 @@ jobs:
           tag_name: 2.8.2
           release_name: 2.8.2
           body: |
-            Empty blocked list, prevent bot blocking
+            Add Spanish, fix other sessions termination, fix serialization, add backward compatibility comment
           draft: false
           prerelease: false
       - name: Upload APK
