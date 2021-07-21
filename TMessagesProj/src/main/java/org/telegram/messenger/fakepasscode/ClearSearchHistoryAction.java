@@ -3,6 +3,8 @@ package org.telegram.messenger.fakepasscode;
 import org.telegram.messenger.MessagesStorage;
 
 public class ClearSearchHistoryAction extends AccountAction {
+    // Required for backward compatibility
+    public boolean enabled = false;
 
     @Override
     public void execute() {

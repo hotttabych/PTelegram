@@ -971,7 +971,6 @@ public class LocaleController {
                         case "ChangeFakePasscodeInfo": value = "Вы можете изменить ложный код-пароль, не удаляя его."; break;
                         case "AllowFakePasscodeLoginInfo": value = "Вы можете запретить вход с этим ложным код-паролем. В таком случае злоумышленник не получит доступ к аккаунтам, но указанные действия будут выполнены."; break;
                         case "DeleteFakePasscodeInfo": value = "Если Вы удалите ложный код-пароль, все действия будут очищены. Вы можете изменить код-пароль, если не хотите удалять его."; break;
-                        case "FakePasscodeAccountActionsInfo": value = "Вы можете настроить некоторые действия для конкретных аккаунтов."; break;
                         case "FakePasscodeActionsHeader": value = "Действия"; break;
                         case "FakePasscodeAccountsHeader": value = "Действия для аккаунтов"; break;
                         case "FakePasscodes": value = "Ложные код-пароли"; break;
@@ -1050,7 +1049,6 @@ public class LocaleController {
                         case "ChangeFakePasscodeInfo": value = "Вы можаце змяніць несапраўдны код блакіроўкі, не выдаляя яго."; break;
                         case "AllowFakePasscodeLoginInfo": value = "Вы можаце забараніць уваход з гэтым несапраўдным кодам блакіроўкі. У такім выпадку зламыснік не атрымае доступ да акаунтаў, але зазначанныя дзеянні будуць выкананы."; break;
                         case "DeleteFakePasscodeInfo": value = "Калі Вы выдаліце несапраўдны код блакіроўкі, усе дзеянні будуць ачышчаны. Вы можаце змяніць код блакіроўкі, калі не хочаце выдаляць яго."; break;
-                        case "FakePasscodeAccountActionsInfo": value = "Вы можаце наладзіць некаторыя дзеянні для пэўных акаўнтаў."; break;
                         case "FakePasscodeActionsHeader": value = "Дзеянні"; break;
                         case "FakePasscodeAccountsHeader": value = "Дзеянні для акаунтаў"; break;
                         case "FakePasscodes": value = "Несапраўдныя кады блакіроўкі"; break;
