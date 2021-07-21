@@ -4542,7 +4542,6 @@
     <string name="ChangeFakePasscodeInfo">You can change the fake passcode without deleting it.</string>
     <string name="AllowFakePasscodeLoginInfo">You can deny login with this fake passcode. In this case, the attacker will not gain access to the accounts, but the actions will be performed.</string>
     <string name="DeleteFakePasscodeInfo">If you delete the fake passcode, all actions will be cleared. You can change the passcode if you don\'t want to delete it.</string>
-    <string name="FakePasscodeAccountActionsInfo">You can setup some actions for specific accounts.</string>
     <string name="FakePasscodeActionsHeader">Actions</string>
     <string name="FakePasscodeAccountsHeader">Account-specific Actions</string>
     <string name="FakePasscodes">Fake Passcodes</string>
