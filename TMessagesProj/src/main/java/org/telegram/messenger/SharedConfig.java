@@ -418,8 +418,13 @@ public class SharedConfig {
             fakePasscodeIndex = preferences.getInt("fakePasscodeIndex", 1);
             fakePasscodeActivatedIndex = preferences.getInt("fakePasscodeLoginedIndex", -1);
             try {
-                fakePasscodes = fromJson(preferences.getString("fakePasscodes", null), FakePasscodesWrapper.class).fakePasscodes;
-                badPasscodeAttemptList = fromJson(preferences.getString("badPasscodeAttemptList", null), BadPasscodeAttemptWrapper.class).badTries;
+                if (preferences.contains("fakePasscodes"))
+                    fakePasscodes = fromJson(preferences.getString("fakePasscodes", null), FakePasscodesWrapper.class).fakePasscodes;
+            } catch (Exception ignored) {
+            }
+            try {
+                if (preferences.contains("badPasscodeAttemptList"))
+                    badPasscodeAttemptList = fromJson(preferences.getString("badPasscodeAttemptList", null), BadPasscodeAttemptWrapper.class).badTries;
             } catch (Exception ignored) {
             }
             takePhotoWithBadPasscodeFront = preferences.getBoolean("takePhotoOnBadPasscodeFront", false);
