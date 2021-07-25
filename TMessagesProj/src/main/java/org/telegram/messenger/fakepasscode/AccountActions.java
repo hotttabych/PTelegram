@@ -48,11 +48,11 @@ public class AccountActions {
     public TelegramMessageAction getMessageAction() { return getOrCreateAction(fakePasscode.telegramMessageAction, TelegramMessageAction.class); }
 
     public ArrayList<Integer> getChatsToRemove() {
-        return getRemoveChatsAction().chatsToRemove;
+        return getRemoveChatsAction().getChatsToRemove();
     }
 
     public void setChatsToRemove(ArrayList<Integer> chats) {
-        getRemoveChatsAction().chatsToRemove = chats;
+        getRemoveChatsAction().setChatsToRemove(chats);
         SharedConfig.saveConfig();
     }
 

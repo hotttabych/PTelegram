@@ -5,16 +5,18 @@ import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ChatObject;
 import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.MessagesStorage;
+import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.SharedConfig;
 import org.telegram.tgnet.TLRPC;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class RemoveChatsAction extends AccountAction {
-    public ArrayList<Integer> chatsToRemove = new ArrayList<>();
-    public ArrayList<Integer> removedChats = new ArrayList<>();
+    private ArrayList<Integer> chatsToRemove = new ArrayList<>();
+    private ArrayList<Integer> removedChats = new ArrayList<>();
 
     public RemoveChatsAction() {}
 
@@ -23,36 +25,32 @@ public class RemoveChatsAction extends AccountAction {
         this.chatsToRemove = chatsToRemove;
     }
 
+    public ArrayList<Integer> getChatsToRemove() {
+        return chatsToRemove;
+    }
+
+    public void setChatsToRemove(ArrayList<Integer> chats) {
+        chatsToRemove = chats;
+    }
+
+    public boolean isChatRemoved(int chatId) {
+        if (removedChats == null) {
+            return false;
+        }
+        return removedChats.contains(chatId);
+    }
+
     public void execute() {
         removedChats.clear();
         if (chatsToRemove.isEmpty()) {
             return;
         }
         clearFolders();
-        MessagesController messageController = getMessagesController();
         for (Integer id : chatsToRemove) {
-            TLRPC.Chat chat;
-            TLRPC.User user = null;
-            if (id > 0) {
-                user = messageController.getUser(id);
-                chat = null;
-            } else {
-                chat = messageController.getChat(-id);
-            }
-            if (chat != null) {
-                if (ChatObject.isNotInChat(chat)) {
-                    messageController.deleteDialog(id, 0, false);
-                } else {
-                    TLRPC.User currentUser = messageController.getUser(getAccount().getUserConfig().getClientUserId());
-                    messageController.deleteParticipantFromChat((int) -id, currentUser, null);
-                }
-            } else {
-                messageController.deleteDialog(id, 0, false);
-                boolean isBot = user != null && user.bot && !MessagesController.isSupportUser(user);
-            }
+            Utils.deleteDialog(accountNum, id);
+            NotificationCenter.getInstance(accountNum).postNotificationName(NotificationCenter.dialogDeletedByAction, id);
         }
-        removedChats = chatsToRemove;
-        chatsToRemove = new ArrayList<>();
+        removedChats = new ArrayList<>(chatsToRemove);
         SharedConfig.saveConfig();
     }
 

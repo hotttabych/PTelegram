@@ -3,6 +3,7 @@ package org.telegram.messenger.fakepasscode;
 import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.UserConfig;
+import org.telegram.tgnet.TLRPC;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -42,8 +43,8 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
     List<Action> actions()
     {
         List<Action> result = new ArrayList<>(Arrays.asList(clearCacheAction, smsAction));
-        result.addAll(removeChatsActions);
         result.addAll(telegramMessageAction);
+        result.addAll(removeChatsActions);
         result.addAll(deleteContactsActions);
         result.addAll(deleteStickersActions);
         result.addAll(clearSearchHistoryActions);
@@ -145,10 +146,9 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
     private boolean needIgnoreMessage(int accountNum, int dialogId) {
         AccountActions accountActions = getAccountActions(accountNum);
         RemoveChatsAction action = accountActions.getRemoveChatsAction();
-        if (action == null || action.removedChats == null) {
+        if (action == null)
             return false;
-        }
-        return action.removedChats.contains(Long.valueOf(dialogId).intValue());
+        return action.isChatRemoved(Long.valueOf(dialogId).intValue());
     }
 
     public static String getFakePhoneNumber(int accountNum) {
