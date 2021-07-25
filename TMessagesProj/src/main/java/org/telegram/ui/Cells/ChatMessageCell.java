@@ -9612,7 +9612,10 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                         name = messageObject.customReplyName;
                     } else {
                         int fromId = messageObject.replyMessageObject.getFromChatId();
-                        if (fromId > 0) {
+                        String title = UserConfig.getChatTitleOverride(currentAccount, Math.abs(fromId));
+                        if (title != null) {
+                            name = title;
+                        } else if (fromId > 0) {
                             TLRPC.User user = MessagesController.getInstance(currentAccount).getUser(fromId);
                             if (user != null) {
                                 name = UserObject.getUserName(user, currentAccount);
