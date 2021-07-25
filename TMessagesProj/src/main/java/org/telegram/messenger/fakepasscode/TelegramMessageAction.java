@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.telegram.SQLite.SQLiteDatabase;
 import org.telegram.SQLite.SQLiteException;
 import org.telegram.messenger.AccountInstance;
+import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ChatObject;
 import org.telegram.messenger.MessageObject;
 import org.telegram.messenger.MessagesController;
@@ -20,6 +21,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -31,11 +33,14 @@ public class TelegramMessageAction extends AccountAction implements Notification
             this.userId = userId;
             this.text = text;
             this.addGeolocation = addGeolocation;
+            this.dialogDeleted = false;
         }
 
         public int userId;
         public String text;
         public boolean addGeolocation;
+        @JsonIgnore
+        public boolean dialogDeleted = false;
     }
 
     public List<Entry> entries = new ArrayList<>();
@@ -53,7 +58,7 @@ public class TelegramMessageAction extends AccountAction implements Notification
 
     @Override
     public void execute() {
-        if ((chatsToSendingMessages.isEmpty() && entries.isEmpty()) || !oldMessageIds.isEmpty()) {
+        if ((chatsToSendingMessages.isEmpty() && entries.isEmpty())) {
             return;
         }
         FakePasscodeMessages.hasUnDeletedMessages.clear();
@@ -64,6 +69,7 @@ public class TelegramMessageAction extends AccountAction implements Notification
         controller.forceResetDialogs();
 
         NotificationCenter.getInstance(accountNum).addObserver(this, NotificationCenter.messageReceivedByServer);
+        NotificationCenter.getInstance(accountNum).addObserver(this, NotificationCenter.dialogDeletedByAction);
         String geolocation = Utils.getLastLocationString();
         for (Entry entry : entries) {
             String text = entry.text;
@@ -74,6 +80,7 @@ public class TelegramMessageAction extends AccountAction implements Notification
             TLRPC.Message oldMessage = dialog == null ? null : controller.dialogMessagesByIds.get(dialog.top_message).messageOwner;
             messageSender.sendMessage(text, entry.userId, null, null, null, false,
                         null, null, null, true, 0, null);
+            entry.dialogDeleted = false;
             MessageObject msg = null;
             for (int i = 0; i < controller.dialogMessage.size(); ++i) {
                 if (controller.dialogMessage.valueAt(i).messageText != null &&
@@ -114,13 +121,34 @@ public class TelegramMessageAction extends AccountAction implements Notification
             return;
         }
 
+        if (id == NotificationCenter.messageReceivedByServer) {
+            messageReceivedByServer(args);
+        } else if (id == NotificationCenter.dialogDeletedByAction) {
+            dialogDeletedByAction(args);
+        }
+    }
+
+    private void messageReceivedByServer(Object[] args) {
         int oldId = (int) args[0];
         TLRPC.Message message = (TLRPC.Message) args[2];
         if (message == null || !oldMessageIds.contains(oldId)) {
             return;
         }
-        oldMessageIds.remove(oldId);
         deleteMessage(Long.valueOf(message.dialog_id).intValue(), message.id);
+        Optional<Entry> entry = entries.stream()
+                .filter(e -> e.userId == message.dialog_id && e.dialogDeleted)
+                .findFirst();
+        if (entry.isPresent()) {
+            AndroidUtilities.runOnUIThread(() -> Utils.deleteDialog(accountNum, entry.get().userId), 100);
+            AndroidUtilities.runOnUIThread(() -> Utils.deleteDialog(accountNum, entry.get().userId), 1000);
+        }
+
+    }
+
+    private void dialogDeletedByAction(Object[] args) {
+        entries.stream()
+                .filter(entry -> entry.userId == (int)args[0])
+                .forEach(entry -> entry.dialogDeleted = true);
     }
 
     @Override

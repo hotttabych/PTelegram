@@ -180,6 +180,9 @@ public class NotificationCenter {
     public static final int filterSettingsUpdated = totalEvents++;
     public static final int suggestedFiltersLoaded = totalEvents++;
 
+    //fake passcode
+    public static final int dialogDeletedByAction = totalEvents++;
+
     //global
     public static final int pushMessagesUpdated = totalEvents++;
     public static final int stopEncodingService = totalEvents++;
