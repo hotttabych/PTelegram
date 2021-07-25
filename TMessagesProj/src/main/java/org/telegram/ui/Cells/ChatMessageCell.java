@@ -9760,7 +9760,8 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
         if (currentUser != null) {
             return UserObject.getUserName(currentUser, currentAccount);
         } else if (currentChat != null) {
-            return currentChat.title;
+            String title = UserConfig.getChatTitleOverride(currentAccount, currentChat.id);
+            return title == null ? currentChat.title : title;
         } else {
             return "DELETED";
         }
