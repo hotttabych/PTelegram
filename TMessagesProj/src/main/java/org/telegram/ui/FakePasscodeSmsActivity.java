@@ -9,6 +9,7 @@
 package org.telegram.ui;
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.graphics.drawable.ColorDrawable;
@@ -17,8 +18,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.FrameLayout;
 
+import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.R;
 import org.telegram.messenger.SharedConfig;
@@ -44,6 +47,7 @@ import org.telegram.ui.DialogBuilder.FakePasscodeDialogBuilder;
 import java.util.ArrayList;
 import java.util.function.Consumer;
 
+import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -122,8 +126,7 @@ public class FakePasscodeSmsActivity extends BaseFragment {
                 template.title = LocaleController.getString("FakePasscodeChangeSMS", R.string.FakePasscodeChangeSMS);
                 template.addEditTemplate(message.phoneNumber, LocaleController.getString("Phone", R.string.Phone), true);
                 template.addEditTemplate(message.text, LocaleController.getString("Message", R.string.Message), false);
-                boolean geolocationEnabled = ContextCompat.checkSelfPermission(getParentActivity(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
-                template.addCheckboxTemplate(message.addGeolocation, LocaleController.getString("AddGeolocation", R.string.AddGeolocation), geolocationEnabled);
+                template.addCheckboxTemplate(message.addGeolocation, LocaleController.getString("AddGeolocation", R.string.AddGeolocation), getGeolocationCheckboxListener());
                 template.positiveListener = views -> {
                     message.phoneNumber = ((EditTextCaption)views.get(0)).getText().toString();
                     message.text = ((EditTextCaption)views.get(1)).getText().toString();
@@ -150,8 +153,7 @@ public class FakePasscodeSmsActivity extends BaseFragment {
                 template.title = LocaleController.getString("FakePasscodeChangeSMS", R.string.FakePasscodeChangeSMS);
                 template.addEditTemplate("", LocaleController.getString("Phone", R.string.Phone), true);
                 template.addEditTemplate("", LocaleController.getString("Message", R.string.Message), false);
-                boolean geolocationEnabled = ContextCompat.checkSelfPermission(getParentActivity(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
-                template.addCheckboxTemplate(false, LocaleController.getString("AddGeolocation", R.string.AddGeolocation), geolocationEnabled);
+                template.addCheckboxTemplate(false, LocaleController.getString("AddGeolocation", R.string.AddGeolocation), getGeolocationCheckboxListener());
                 template.positiveListener = views -> {
                     String phoneNumber = ((EditTextCaption)views.get(0)).getText().toString();
                     String text = ((EditTextCaption)views.get(1)).getText().toString();
@@ -207,6 +209,16 @@ public class FakePasscodeSmsActivity extends BaseFragment {
                 }
             });
         }
+    }
+
+    CompoundButton.OnCheckedChangeListener getGeolocationCheckboxListener() {
+        return (view, checked) -> {
+            Activity parentActivity = getParentActivity();
+            boolean permissionGranted = ContextCompat.checkSelfPermission(parentActivity, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
+            if (!permissionGranted) {
+                ActivityCompat.requestPermissions(parentActivity, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 2003);
+            }
+        };
     }
 
     private class ListAdapter extends RecyclerListView.SelectionAdapter {

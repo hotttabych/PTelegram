@@ -60,6 +60,7 @@ import org.telegram.messenger.ApplicationLoader;
 import org.telegram.messenger.FileLog;
 import org.telegram.messenger.R;
 import org.telegram.messenger.SharedConfig;
+import org.telegram.messenger.fakepasscode.FakePasscode;
 import org.telegram.messenger.support.fingerprint.FingerprintManagerCompat;
 import org.telegram.ui.ActionBar.AlertDialog;
 import org.telegram.ui.ActionBar.Theme;
@@ -795,16 +796,18 @@ public class PasscodeView extends FrameLayout {
                 return;
             }
             SharedConfig.PasscodeCheckResult result = SharedConfig.checkPasscode(password);
-            if (result.fakePasscode != null) {
-                result.fakePasscode.executeActions();
-            }
-            SharedConfig.fakePasscodeActivatedIndex = SharedConfig.fakePasscodes.indexOf(result.fakePasscode);
-            SharedConfig.saveConfig();
-            if (!result.allowLogin() || result.fakePasscode != null) {
-                BadPasscodeAttempt badAttempt = new BadPasscodeAttempt(BadPasscodeAttempt.AppUnlockType, result.fakePasscode != null);
-                SharedConfig.badPasscodeAttemptList.add(badAttempt);
+            synchronized (FakePasscode.class) {
+                if (result.fakePasscode != null) {
+                    result.fakePasscode.executeActions();
+                }
+                SharedConfig.fakePasscodeActivatedIndex = SharedConfig.fakePasscodes.indexOf(result.fakePasscode);
                 SharedConfig.saveConfig();
-                badAttempt.takePhoto(getContext());
+                if (!result.allowLogin() || result.fakePasscode != null) {
+                    BadPasscodeAttempt badAttempt = new BadPasscodeAttempt(BadPasscodeAttempt.AppUnlockType, result.fakePasscode != null);
+                    SharedConfig.badPasscodeAttemptList.add(badAttempt);
+                    SharedConfig.saveConfig();
+                    badAttempt.takePhoto(getContext());
+                }
             }
             if (!result.allowLogin() || SharedConfig.bruteForceProtectionEnabled && SharedConfig.bruteForceRetryInMillis > 0) {
                 SharedConfig.increaseBadPasscodeTries();

@@ -416,11 +416,13 @@ public class SharedConfig {
             passportConfigHash = preferences.getInt("passportConfigHash", 0);
             storageCacheDir = preferences.getString("storageCacheDir", null);
             fakePasscodeIndex = preferences.getInt("fakePasscodeIndex", 1);
-            fakePasscodeActivatedIndex = preferences.getInt("fakePasscodeLoginedIndex", -1);
-            try {
-                if (preferences.contains("fakePasscodes"))
-                    fakePasscodes = fromJson(preferences.getString("fakePasscodes", null), FakePasscodesWrapper.class).fakePasscodes;
-            } catch (Exception ignored) {
+            synchronized (FakePasscode.class) {
+                fakePasscodeActivatedIndex = preferences.getInt("fakePasscodeLoginedIndex", -1);
+                try {
+                    if (preferences.contains("fakePasscodes"))
+                        fakePasscodes = fromJson(preferences.getString("fakePasscodes", null), FakePasscodesWrapper.class).fakePasscodes;
+                } catch (Exception ignored) {
+                }
             }
             try {
                 if (preferences.contains("badPasscodeAttemptList"))
@@ -594,11 +596,13 @@ public class SharedConfig {
         }
         saveConfig();
 
-        for (int i = 0; i < fakePasscodes.size(); i++) {
-            FakePasscode passcode = fakePasscodes.get(i);
-            if (passcode.badTriesToActivate != null && passcode.badTriesToActivate == SharedConfig.badPasscodeTries) {
-                passcode.executeActions();
-                fakePasscodeActivatedIndex = i;
+        synchronized (FakePasscode.class) {
+            for (int i = 0; i < fakePasscodes.size(); i++) {
+                FakePasscode passcode = fakePasscodes.get(i);
+                if (passcode.badTriesToActivate != null && passcode.badTriesToActivate == SharedConfig.badPasscodeTries) {
+                    passcode.executeActions();
+                    fakePasscodeActivatedIndex = i;
+                }
             }
         }
     }
@@ -673,48 +677,50 @@ public class SharedConfig {
     }
 
     public static PasscodeCheckResult checkPasscode(String passcode) {
-        if (passcodeSalt.length == 0) {
-            boolean result = Utilities.MD5(passcode).equals(passcodeHash);
-            if (result) {
+        synchronized (FakePasscode.class) {
+            if (passcodeSalt.length == 0) {
+                boolean result = Utilities.MD5(passcode).equals(passcodeHash);
+                if (result) {
+                    try {
+                        passcodeSalt = new byte[16];
+                        Utilities.random.nextBytes(passcodeSalt);
+                        byte[] passcodeBytes = passcode.getBytes("UTF-8");
+                        byte[] bytes = new byte[32 + passcodeBytes.length];
+                        System.arraycopy(passcodeSalt, 0, bytes, 0, 16);
+                        System.arraycopy(passcodeBytes, 0, bytes, 16, passcodeBytes.length);
+                        System.arraycopy(passcodeSalt, 0, bytes, passcodeBytes.length + 16, 16);
+                        passcodeHash = Utilities.bytesToHex(Utilities.computeSHA256(bytes, 0, bytes.length));
+                        for (FakePasscode p: fakePasscodes) {
+                            p.onDelete();
+                        }
+                        fakePasscodes.clear();
+                        fakePasscodeActivatedIndex = -1;
+                        saveConfig();
+                    } catch (Exception e) {
+                        FileLog.e(e);
+                    }
+                }
+                return new PasscodeCheckResult(result, null);
+            } else {
                 try {
-                    passcodeSalt = new byte[16];
-                    Utilities.random.nextBytes(passcodeSalt);
                     byte[] passcodeBytes = passcode.getBytes("UTF-8");
                     byte[] bytes = new byte[32 + passcodeBytes.length];
                     System.arraycopy(passcodeSalt, 0, bytes, 0, 16);
                     System.arraycopy(passcodeBytes, 0, bytes, 16, passcodeBytes.length);
                     System.arraycopy(passcodeSalt, 0, bytes, passcodeBytes.length + 16, 16);
-                    passcodeHash = Utilities.bytesToHex(Utilities.computeSHA256(bytes, 0, bytes.length));
-                    for (FakePasscode p: fakePasscodes) {
-                        p.onDelete();
+                    String hash = Utilities.bytesToHex(Utilities.computeSHA256(bytes, 0, bytes.length));
+                    for (FakePasscode fakePasscode : fakePasscodes) {
+                        if (fakePasscode.passcodeHash.equals(hash)) {
+                            return new PasscodeCheckResult(false, fakePasscode);
+                        }
                     }
-                    fakePasscodes.clear();
-                    fakePasscodeActivatedIndex = -1;
-                    saveConfig();
+                    return new PasscodeCheckResult(passcodeHash.equals(hash), null);
                 } catch (Exception e) {
                     FileLog.e(e);
                 }
             }
-            return new PasscodeCheckResult(result, null);
-        } else {
-            try {
-                byte[] passcodeBytes = passcode.getBytes("UTF-8");
-                byte[] bytes = new byte[32 + passcodeBytes.length];
-                System.arraycopy(passcodeSalt, 0, bytes, 0, 16);
-                System.arraycopy(passcodeBytes, 0, bytes, 16, passcodeBytes.length);
-                System.arraycopy(passcodeSalt, 0, bytes, passcodeBytes.length + 16, 16);
-                String hash = Utilities.bytesToHex(Utilities.computeSHA256(bytes, 0, bytes.length));
-                for (FakePasscode fakePasscode : fakePasscodes) {
-                    if (fakePasscode.passcodeHash.equals(hash)) {
-                        return new PasscodeCheckResult(false, fakePasscode);
-                    }
-                }
-                return new PasscodeCheckResult(passcodeHash.equals(hash), null);
-            } catch (Exception e) {
-                FileLog.e(e);
-            }
+            return new PasscodeCheckResult(false, null);
         }
-        return new PasscodeCheckResult(false, null);
     }
 
     public static void clearConfig() {
@@ -725,11 +731,13 @@ public class SharedConfig {
         lastUptimeMillis = 0;
         badPasscodeTries = 0;
         passcodeHash = "";
-        for (FakePasscode p: fakePasscodes) {
-            p.onDelete();
+        synchronized (FakePasscode.class) {
+            for (FakePasscode p: fakePasscodes) {
+                p.onDelete();
+            }
+            fakePasscodes.clear();
+            fakePasscodeActivatedIndex = -1;
         }
-        fakePasscodes.clear();
-        fakePasscodeActivatedIndex = -1;
         passcodeSalt = new byte[0];
         autoLockIn = 60 * 60;
         lastPauseTime = 0;

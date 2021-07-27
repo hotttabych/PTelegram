@@ -2,6 +2,7 @@ package org.telegram.ui.DialogBuilder;
 
 import android.content.DialogInterface;
 import android.view.View;
+import android.widget.CompoundButton;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,10 +36,19 @@ public class DialogTemplate {
     }
 
     public void addCheckboxTemplate(boolean checked, String name, boolean enabled) {
+        addCheckboxTemplate(checked, name, enabled, null);
+    }
+
+    public void addCheckboxTemplate(boolean checked, String name, CompoundButton.OnCheckedChangeListener onCheckedChangeListener) {
+        addCheckboxTemplate(checked, name, true, onCheckedChangeListener);
+    }
+
+    public void addCheckboxTemplate(boolean checked, String name, boolean enabled, CompoundButton.OnCheckedChangeListener onCheckedChangeListener) {
         CheckBoxTemplate checkBoxTemplate = new CheckBoxTemplate();
         checkBoxTemplate.name = name;
         checkBoxTemplate.checked = checked;
         checkBoxTemplate.enabled = enabled;
+        checkBoxTemplate.onCheckedChangeListener = onCheckedChangeListener;
         viewTemplates.add(checkBoxTemplate);
     }
 }

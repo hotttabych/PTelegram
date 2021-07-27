@@ -11,7 +11,8 @@ import org.telegram.messenger.R;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.Components.EditTextCaption;
 
-public class EditTemplate implements ViewTemplate {
+public class
+EditTemplate implements ViewTemplate {
     String text;
     String name;
     boolean singleLine;

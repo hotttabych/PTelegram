@@ -4,6 +4,7 @@ import android.Manifest;
 import android.animation.ObjectAnimator;
 import android.animation.StateListAnimator;
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.graphics.Canvas;
@@ -32,6 +33,7 @@ import android.view.ViewGroup;
 import android.view.ViewOutlineProvider;
 import android.view.inputmethod.EditorInfo;
 import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.ScrollView;
 
@@ -72,6 +74,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import androidx.annotation.Keep;
+import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -447,8 +450,7 @@ public class FakePasscodeTelegramMessagesActivity extends BaseFragment implement
                     template.type = DialogType.EDIT;
                     template.title = LocaleController.getString("ChangeMessage", R.string.ChangeMessage);
                     template.addEditTemplate(entry.text, LocaleController.getString("Message", R.string.Message), false);
-                    boolean geolocationEnabled = ContextCompat.checkSelfPermission(getParentActivity(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
-                    template.addCheckboxTemplate(entry.addGeolocation, LocaleController.getString("AddGeolocation", R.string.AddGeolocation), geolocationEnabled);
+                    template.addCheckboxTemplate(entry.addGeolocation, LocaleController.getString("AddGeolocation", R.string.AddGeolocation), getGeolocationCheckboxListener());
                     template.positiveListener = views -> {
                         entry.text = ((EditTextCaption)views.get(0)).getText().toString();
                         entry.addGeolocation = ((CheckBox)views.get(1)).isChecked();
@@ -477,8 +479,7 @@ public class FakePasscodeTelegramMessagesActivity extends BaseFragment implement
                     template.type = DialogType.ADD;
                     template.title = LocaleController.getString("ChangeMessage", R.string.ChangeMessage);
                     template.addEditTemplate("", LocaleController.getString("Message", R.string.Message), false);
-                    boolean geolocationEnabled = ContextCompat.checkSelfPermission(getParentActivity(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
-                    template.addCheckboxTemplate(false, LocaleController.getString("AddGeolocation", R.string.AddGeolocation), geolocationEnabled);
+                    template.addCheckboxTemplate(false, LocaleController.getString("AddGeolocation", R.string.AddGeolocation), getGeolocationCheckboxListener());
                     template.positiveListener = views -> {
                         String message = ((EditTextCaption)views.get(0)).getText().toString();
                         boolean addGeolocation = ((CheckBox)views.get(1)).isChecked();
@@ -639,6 +640,16 @@ public class FakePasscodeTelegramMessagesActivity extends BaseFragment implement
         } else {
             actionBar.setSubtitle(String.format(LocaleController.getPluralString("MembersCountSelected", action.entries.size()), action.entries.size(), 100));
         }
+    }
+
+    CompoundButton.OnCheckedChangeListener getGeolocationCheckboxListener() {
+        return (view, checked) -> {
+            Activity parentActivity = getParentActivity();
+            boolean permissionGranted = ContextCompat.checkSelfPermission(parentActivity, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
+            if (!permissionGranted) {
+                ActivityCompat.requestPermissions(parentActivity, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 2004);
+            }
+        };
     }
 
     public class GroupCreateAdapter extends RecyclerListView.FastScrollAdapter {
