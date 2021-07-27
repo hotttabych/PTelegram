@@ -690,21 +690,23 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
                 return;
             }
             SharedConfig.PasscodeCheckResult result = SharedConfig.checkPasscode(passwordEditText.getText().toString());
-            if (!result.allowLogin() || result.fakePasscode != null) {
-                BadPasscodeAttempt badAttempt = new BadPasscodeAttempt(BadPasscodeAttempt.PasscodeSettingsType, result.fakePasscode != null);
-                SharedConfig.badPasscodeAttemptList.add(badAttempt);
+            synchronized (FakePasscode.class) {
+                if (!result.allowLogin() || result.fakePasscode != null) {
+                    BadPasscodeAttempt badAttempt = new BadPasscodeAttempt(BadPasscodeAttempt.PasscodeSettingsType, result.fakePasscode != null);
+                    SharedConfig.badPasscodeAttemptList.add(badAttempt);
+                    SharedConfig.saveConfig();
+                    badAttempt.takePhoto(getParentActivity());
+                }
+                if (!result.allowLogin()) {
+                    SharedConfig.increaseBadPasscodeTries();
+                    passwordEditText.setText("");
+                    onPasscodeError();
+                    return;
+                }
+                SharedConfig.fakePasscodeActivatedIndex = SharedConfig.fakePasscodes.indexOf(result.fakePasscode);
+                SharedConfig.badPasscodeTries = 0;
                 SharedConfig.saveConfig();
-                badAttempt.takePhoto(getParentActivity());
             }
-            if (!result.allowLogin()) {
-                SharedConfig.increaseBadPasscodeTries();
-                passwordEditText.setText("");
-                onPasscodeError();
-                return;
-            }
-            SharedConfig.fakePasscodeActivatedIndex = SharedConfig.fakePasscodes.indexOf(result.fakePasscode);
-            SharedConfig.badPasscodeTries = 0;
-            SharedConfig.saveConfig();
             passwordEditText.clearFocus();
             AndroidUtilities.hideKeyboard(passwordEditText);
             PasscodeActivity passcodeActivity = new PasscodeActivity(0);
