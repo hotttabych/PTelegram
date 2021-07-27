@@ -419,7 +419,7 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
                         SharedConfig.saveConfig();
                         ((TextCheckCell) view).setChecked(SharedConfig.takePhotoWithBadPasscodeFront);
                     } else {
-                        ActivityCompat.requestPermissions(parentActivity, new String[]{Manifest.permission.CAMERA}, 1000);
+                        ActivityCompat.requestPermissions(parentActivity, new String[]{Manifest.permission.CAMERA}, 2000);
                     }
                 } else if (position == badPasscodePhotoBackRow) {
                     Activity parentActivity = getParentActivity();
@@ -428,7 +428,7 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
                         SharedConfig.saveConfig();
                         ((TextCheckCell) view).setChecked(SharedConfig.takePhotoWithBadPasscodeBack);
                     } else {
-                        ActivityCompat.requestPermissions(parentActivity, new String[]{Manifest.permission.CAMERA}, 1001);
+                        ActivityCompat.requestPermissions(parentActivity, new String[]{Manifest.permission.CAMERA}, 2001);
                     }
                 } else if (position == fingerprintRow) {
                     SharedConfig.useFingerprint = !SharedConfig.useFingerprint;
@@ -457,13 +457,13 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
 
     @Override
     public void onRequestPermissionsResultFragment(int requestCode, String[] permissions, int[] grantResults) {
-        if (requestCode == 1000 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+        if (requestCode == 2000 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             AndroidUtilities.runOnUIThread(() -> {
                 SharedConfig.takePhotoWithBadPasscodeFront = !SharedConfig.takePhotoWithBadPasscodeFront;
                 SharedConfig.saveConfig();
                 frontPhotoTextCell.setChecked(SharedConfig.takePhotoWithBadPasscodeFront);
             });
-        } else if (requestCode == 1001 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+        } else if (requestCode == 2001 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             AndroidUtilities.runOnUIThread(() -> {
                 SharedConfig.takePhotoWithBadPasscodeBack = !SharedConfig.takePhotoWithBadPasscodeBack;
                 SharedConfig.saveConfig();
