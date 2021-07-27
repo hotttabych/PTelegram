@@ -6,6 +6,7 @@ import org.telegram.messenger.UserConfig;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,18 +19,18 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
     public Integer badTriesToActivate;
 
     public ClearCacheAction clearCacheAction = new ClearCacheAction();
-    public List<RemoveChatsAction> removeChatsActions = new ArrayList<>();
+    public List<RemoveChatsAction> removeChatsActions = Collections.synchronizedList(new ArrayList<>());
     public SosMessageAction familySosMessageAction = new SosMessageAction();
     public SosMessageAction trustedContactSosMessageAction = new SosMessageAction();
     public SmsAction smsAction = new SmsAction();
     public ClearProxiesAction clearProxiesAction = new ClearProxiesAction();
-    public List<TelegramMessageAction> telegramMessageAction = new ArrayList<>();
-    public List<DeleteContactsAction> deleteContactsActions = new ArrayList<>();
-    public List<DeleteStickersAction> deleteStickersActions = new ArrayList<>();
-    public List<ClearSearchHistoryAction> clearSearchHistoryActions = new ArrayList<>();
-    public List<ClearBlackListAction> clearBlackListActions = new ArrayList<>();
-    public List<TerminateOtherSessionsAction> terminateOtherSessionsActions = new ArrayList<>();
-    public List<LogOutAction> logOutActions = new ArrayList<>();
+    public List<TelegramMessageAction> telegramMessageAction = Collections.synchronizedList(new ArrayList<>());
+    public List<DeleteContactsAction> deleteContactsActions = Collections.synchronizedList(new ArrayList<>());
+    public List<DeleteStickersAction> deleteStickersActions = Collections.synchronizedList(new ArrayList<>());
+    public List<ClearSearchHistoryAction> clearSearchHistoryActions = Collections.synchronizedList(new ArrayList<>());
+    public List<ClearBlackListAction> clearBlackListActions = Collections.synchronizedList(new ArrayList<>());
+    public List<TerminateOtherSessionsAction> terminateOtherSessionsActions = Collections.synchronizedList(new ArrayList<>());
+    public List<LogOutAction> logOutActions = Collections.synchronizedList(new ArrayList<>());
 
     public Map<Integer, String> phoneNumbers = new HashMap<>();
 
