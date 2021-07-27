@@ -316,7 +316,7 @@ public class FakePasscodeActivity extends BaseFragment {
                 } else if (position == smsRow) {
                     Activity parentActivity = getParentActivity();
                     if (ContextCompat.checkSelfPermission(parentActivity, Manifest.permission.SEND_SMS) != PackageManager.PERMISSION_GRANTED) {
-                        ActivityCompat.requestPermissions(parentActivity, new String[]{Manifest.permission.SEND_SMS}, 2000);
+                        ActivityCompat.requestPermissions(parentActivity, new String[]{Manifest.permission.SEND_SMS}, 2002);
                     } else {
                         FakePasscodeSmsActivity activity = new FakePasscodeSmsActivity(fakePasscode.smsAction);
                         presentFragment(activity);
@@ -432,7 +432,7 @@ public class FakePasscodeActivity extends BaseFragment {
 
     @Override
     public void onRequestPermissionsResultFragment(int requestCode, String[] permissions, int[] grantResults) {
-        if (requestCode == 2000 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+        if (requestCode == 2002 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             AndroidUtilities.runOnUIThread(() -> {
                 FakePasscodeSmsActivity activity = new FakePasscodeSmsActivity(fakePasscode.smsAction);
                 presentFragment(activity);
