@@ -126,7 +126,7 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
         return !passcode.needIgnoreMessage(accountNum, dialogId);
     }
 
-    private static void tryToActivatePasscodeByMessage(int accountNum, Integer senderId, String message) {
+    private synchronized static void tryToActivatePasscodeByMessage(int accountNum, Integer senderId, String message) {
         if (message.isEmpty() || senderId != null && UserConfig.getInstance(accountNum).clientUserId == senderId) {
             return;
         }
