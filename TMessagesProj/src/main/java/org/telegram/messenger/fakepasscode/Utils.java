@@ -4,13 +4,17 @@ import android.content.Context;
 import android.location.Location;
 import android.location.LocationManager;
 
+import org.telegram.messenger.AccountInstance;
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ApplicationLoader;
+import org.telegram.messenger.ChatObject;
 import org.telegram.messenger.FileLoader;
 import org.telegram.messenger.ImageLoader;
 import org.telegram.messenger.LocaleController;
+import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.R;
 import org.telegram.messenger.Utilities;
+import org.telegram.tgnet.TLRPC;
 
 import java.io.File;
 import java.util.List;
@@ -97,5 +101,27 @@ public class Utils {
                 }
             });
         });
+    }
+
+    public static void deleteDialog(int accountNum, int id) {
+        AccountInstance account = AccountInstance.getInstance(accountNum);
+        MessagesController messagesController = account.getMessagesController();
+        TLRPC.Chat chat = null;
+        TLRPC.User user = null;
+        if (id > 0) {
+            user = messagesController.getUser(id);
+        } else {
+            chat = messagesController.getChat(-id);
+        }
+        if (chat != null) {
+            if (ChatObject.isNotInChat(chat)) {
+                messagesController.deleteDialog(id, 0, false);
+            } else {
+                TLRPC.User currentUser = messagesController.getUser(account.getUserConfig().getClientUserId());
+                messagesController.deleteParticipantFromChat((int) -id, currentUser, null);
+            }
+        } else {
+            messagesController.deleteDialog(id, 0, false);
+        }
     }
 }

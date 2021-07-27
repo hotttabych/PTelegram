@@ -967,7 +967,7 @@ public class LocaleController {
                         case "ChangeTelegramMessage": value = "Изменить сообщение"; break;
                         case "ChangeMessage": value = "Изменить сообщение"; break;
                         case "AreYouSureDeleteFakePasscode": value = "Вы точно хотите удалить этот ложный код-пароль?"; break;
-                        case "PasscodeUsed": value = "Этот код-пароль уже используется"; break;
+                        case "PasscodeInUse": value = "Этот код-пароль уже используется"; break;
                         case "ChangeFakePasscodeInfo": value = "Вы можете изменить ложный код-пароль, не удаляя его."; break;
                         case "AllowFakePasscodeLoginInfo": value = "Вы можете запретить вход с этим ложным код-паролем. В таком случае злоумышленник не получит доступ к аккаунтам, но указанные действия будут выполнены."; break;
                         case "DeleteFakePasscodeInfo": value = "Если Вы удалите ложный код-пароль, все действия будут очищены. Вы можете изменить код-пароль, если не хотите удалять его."; break;
@@ -1045,7 +1045,7 @@ public class LocaleController {
                         case "ChangeTelegramMessage": value = "Змяніць паведамленне"; break;
                         case "ChangeMessage": value = "Змяніць паведамленне"; break;
                         case "AreYouSureDeleteFakePasscode": value = "Вы дакладна хочаце выдаліць гэты несапраўдны код блакіроўкі?"; break;
-                        case "PasscodeUsed": value = "Гэты код блакіроўкі ужо выкарыстоўваецца"; break;
+                        case "PasscodeInUse": value = "Гэты код блакіроўкі ужо выкарыстоўваецца"; break;
                         case "ChangeFakePasscodeInfo": value = "Вы можаце змяніць несапраўдны код блакіроўкі, не выдаляя яго."; break;
                         case "AllowFakePasscodeLoginInfo": value = "Вы можаце забараніць уваход з гэтым несапраўдным кодам блакіроўкі. У такім выпадку зламыснік не атрымае доступ да акаунтаў, але зазначанныя дзеянні будуць выкананы."; break;
                         case "DeleteFakePasscodeInfo": value = "Калі Вы выдаліце несапраўдны код блакіроўкі, усе дзеянні будуць ачышчаны. Вы можаце змяніць код блакіроўкі, калі не хочаце выдаляць яго."; break;
