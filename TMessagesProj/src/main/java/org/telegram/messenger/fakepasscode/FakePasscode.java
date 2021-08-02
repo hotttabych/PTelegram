@@ -4,6 +4,7 @@ import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.UserConfig;
 import org.telegram.tgnet.TLRPC;
+import org.telegram.messenger.AndroidUtilities;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -66,7 +67,7 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
         }
         for (Action action : actions()) {
             try {
-                action.execute();
+                AndroidUtilities.runOnUIThread(() -> action.execute());
             } catch (Exception ignored) {
             }
         }
