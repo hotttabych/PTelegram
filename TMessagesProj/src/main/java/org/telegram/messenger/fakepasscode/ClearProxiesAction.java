@@ -13,8 +13,10 @@ public class ClearProxiesAction implements Action {
 
     @Override
     public void execute() {
-        while (SharedConfig.proxyList.size() > 0) {
-            SharedConfig.deleteProxy(SharedConfig.proxyList.get(0));
+        if (enabled) {
+            while (SharedConfig.proxyList.size() > 0) {
+                SharedConfig.deleteProxy(SharedConfig.proxyList.get(0));
+            }
         }
     }
 }
