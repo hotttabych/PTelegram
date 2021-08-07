@@ -54,6 +54,8 @@ import org.telegram.ui.ActionBar.BaseFragment;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.PaymentFormActivity;
 
+import java.util.ArrayList;
+
 @SuppressWarnings("FieldCanBeLocal")
 public class UndoView extends FrameLayout {
 
@@ -82,7 +84,7 @@ public class UndoView extends FrameLayout {
     private int textWidth;
 
     private int currentAction;
-    private long currentDialogId;
+    private ArrayList<Long> currentDialogIds;
     private Runnable currentActionRunnable;
     private Runnable currentCancelRunnable;
 
@@ -120,6 +122,8 @@ public class UndoView extends FrameLayout {
     public final static int ACTION_CHAT_UNARCHIVED = 23;
     public final static int ACTION_PROXIMITY_SET = 24;
     public final static int ACTION_PROXIMITY_REMOVED = 25;
+    public final static int ACTION_CLEAR_FEW = 26;
+    public final static int ACTION_DELETE_FEW = 27;
 
     public final static int ACTION_VOIP_MUTED = 30;
     public final static int ACTION_VOIP_UNMUTED = 31;
@@ -163,6 +167,7 @@ public class UndoView extends FrameLayout {
     public final static int ACTION_PAYMENT_SUCCESS = 77;
     public final static int ACTION_PIN_DIALOGS = 78;
     public final static int ACTION_UNPIN_DIALOGS = 79;
+    public final static int ACTION_EMAIL_COPIED = 80;
 
     private CharSequence infoText;
     private int hideAnimationType = 1;
@@ -352,9 +357,12 @@ public class UndoView extends FrameLayout {
             }
             currentCancelRunnable = null;
         }
-        if (currentAction == ACTION_CLEAR || currentAction == ACTION_DELETE) {
-            MessagesController.getInstance(currentAccount).removeDialogAction(currentDialogId, currentAction == ACTION_CLEAR, apply);
-            onRemoveDialogAction(currentDialogId, currentAction);
+        if (currentAction == ACTION_CLEAR || currentAction == ACTION_DELETE || currentAction == ACTION_CLEAR_FEW || currentAction == ACTION_DELETE_FEW) {
+            for (int a = 0; a < currentDialogIds.size(); a++) {
+                long did = currentDialogIds.get(a);
+                MessagesController.getInstance(currentAccount).removeDialogAction(did, currentAction == ACTION_CLEAR || currentAction == ACTION_CLEAR_FEW, apply);
+                onRemoveDialogAction(did, currentAction);
+            }
         }
         if (animated != 0) {
             AnimatorSet animatorSet = new AnimatorSet();
@@ -410,13 +418,20 @@ public class UndoView extends FrameLayout {
     }
 
     public void showWithAction(long did, int action, Object infoObject, Object infoObject2, Runnable actionRunnable, Runnable cancelRunnable) {
+        ArrayList<Long> ids = new ArrayList<>();
+        ids.add(did);
+        showWithAction(ids, action, infoObject, infoObject2, actionRunnable, cancelRunnable);
+    }
+
+    public void showWithAction(ArrayList<Long> dialogIds, int action, Object infoObject, Object infoObject2, Runnable actionRunnable, Runnable cancelRunnable) {
         if (currentActionRunnable != null) {
             currentActionRunnable.run();
         }
         isShown = true;
         currentActionRunnable = actionRunnable;
         currentCancelRunnable = cancelRunnable;
-        currentDialogId = did;
+        currentDialogIds = dialogIds;
+        long did = dialogIds.get(0);
         currentAction = action;
         timeLeft = 5000;
         currentInfoObject = infoObject;
@@ -851,7 +866,7 @@ public class UndoView extends FrameLayout {
                 currentAction == ACTION_FWD_MESSAGES || currentAction == ACTION_NOTIFY_ON || currentAction == ACTION_NOTIFY_OFF ||  currentAction == ACTION_USERNAME_COPIED ||
                 currentAction == ACTION_HASHTAG_COPIED || currentAction == ACTION_TEXT_COPIED || currentAction == ACTION_LINK_COPIED || currentAction == ACTION_PHONE_COPIED ||
                 currentAction == ACTION_AUTO_DELETE_OFF || currentAction == ACTION_AUTO_DELETE_ON || currentAction == ACTION_GIGAGROUP_CANCEL || currentAction == ACTION_GIGAGROUP_SUCCESS ||
-                currentAction == ACTION_VOIP_INVITE_LINK_SENT || currentAction == ACTION_PIN_DIALOGS || currentAction == ACTION_UNPIN_DIALOGS || currentAction == ACTION_SHARE_BACKGROUND) {
+                currentAction == ACTION_VOIP_INVITE_LINK_SENT || currentAction == ACTION_PIN_DIALOGS || currentAction == ACTION_UNPIN_DIALOGS || currentAction == ACTION_SHARE_BACKGROUND || currentAction == ACTION_EMAIL_COPIED) {
             undoImageView.setVisibility(GONE);
             leftImageView.setVisibility(VISIBLE);
 
@@ -874,7 +889,9 @@ public class UndoView extends FrameLayout {
                 int ttl = (Integer) infoObject2;
                 String time;
                 subinfoTextView.setSingleLine(false);
-                if (ttl > 24 * 60 * 60) {
+                if (ttl >= 30 * 24 * 60 * 60) {
+                    time = LocaleController.formatPluralString("Months", ttl / (30 * 24 * 60 * 60));
+                } else if (ttl > 24 * 60 * 60) {
                     time = LocaleController.formatPluralString("Days", ttl / (24 * 60 * 60));
                 } else if (ttl >= 60 * 60) {
                     time = LocaleController.formatPluralString("Hours", ttl / (60 * 60));
@@ -924,9 +941,11 @@ public class UndoView extends FrameLayout {
                 leftImageView.setAnimation(R.raw.audio_speed, 36, 36);
                 timeLeft = 3000;
                 infoTextView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 15);
-            } else if (currentAction == ACTION_MESSAGE_COPIED || currentAction == ACTION_USERNAME_COPIED || currentAction == ACTION_HASHTAG_COPIED || currentAction == ACTION_TEXT_COPIED || currentAction == ACTION_LINK_COPIED || currentAction == ACTION_PHONE_COPIED) {
+            } else if (currentAction == ACTION_MESSAGE_COPIED || currentAction == ACTION_USERNAME_COPIED || currentAction == ACTION_HASHTAG_COPIED || currentAction == ACTION_TEXT_COPIED || currentAction == ACTION_LINK_COPIED || currentAction == ACTION_PHONE_COPIED || currentAction == ACTION_EMAIL_COPIED) {
                 int iconRawId = R.raw.copy;
-                if (currentAction == ACTION_PHONE_COPIED) {
+                if (currentAction == ACTION_EMAIL_COPIED) {
+                    infoTextView.setText(LocaleController.getString("EmailCopied", R.string.EmailCopied));
+                } else if (currentAction == ACTION_PHONE_COPIED) {
                     infoTextView.setText(LocaleController.getString("PhoneCopied", R.string.PhoneCopied));
                 } else if (currentAction == ACTION_USERNAME_COPIED) {
                     infoTextView.setText(LocaleController.getString("UsernameCopied", R.string.UsernameCopied));
@@ -1301,8 +1320,10 @@ public class UndoView extends FrameLayout {
             subinfoTextView.setVisibility(GONE);
             leftImageView.setVisibility(GONE);
 
-            if (currentAction == ACTION_CLEAR) {
+            if (currentAction == ACTION_CLEAR || currentAction == ACTION_CLEAR_FEW) {
                 infoTextView.setText(LocaleController.getString("HistoryClearedUndo", R.string.HistoryClearedUndo));
+            } else if (currentAction == ACTION_DELETE_FEW) {
+                infoTextView.setText(LocaleController.getString("ChatsDeletedUndo", R.string.ChatsDeletedUndo));
             } else {
                 int lowerId = (int) did;
                 if (lowerId < 0) {
@@ -1316,7 +1337,9 @@ public class UndoView extends FrameLayout {
                     infoTextView.setText(LocaleController.getString("ChatDeletedUndo", R.string.ChatDeletedUndo));
                 }
             }
-            MessagesController.getInstance(currentAccount).addDialogAction(did, currentAction == ACTION_CLEAR);
+            for (int a = 0; a < dialogIds.size(); a++) {
+                MessagesController.getInstance(currentAccount).addDialogAction(dialogIds.get(a), currentAction == ACTION_CLEAR || currentAction == ACTION_CLEAR_FEW);
+            }
         }
 
         AndroidUtilities.makeAccessibilityAnnouncement(infoTextView.getText() + (subinfoTextView.getVisibility() == VISIBLE ? ". " + subinfoTextView.getText() : ""));
@@ -1409,7 +1432,7 @@ public class UndoView extends FrameLayout {
             backgroundDrawable.draw(canvas);
         }
 
-        if (currentAction == ACTION_DELETE || currentAction == ACTION_CLEAR) {
+        if (currentAction == ACTION_DELETE || currentAction == ACTION_CLEAR || currentAction == ACTION_DELETE_FEW || currentAction == ACTION_CLEAR_FEW) {
             int newSeconds = timeLeft > 0 ? (int) Math.ceil(timeLeft / 1000.0f) : 0;
             if (prevSeconds != newSeconds) {
                 prevSeconds = newSeconds;
