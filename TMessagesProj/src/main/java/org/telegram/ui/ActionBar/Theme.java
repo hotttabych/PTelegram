@@ -100,6 +100,7 @@ import org.telegram.ui.Components.StatusDrawable;
 import org.telegram.messenger.SvgHelper;
 import org.telegram.ui.Components.ThemeEditorView;
 import org.telegram.ui.Components.TypingDotsDrawable;
+import org.telegram.ui.RoundVideoProgressShadow;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -2218,6 +2219,9 @@ public class Theme {
     public static Paint chat_composeBackgroundPaint;
     public static Paint chat_radialProgressPaint;
     public static Paint chat_radialProgress2Paint;
+    public static Paint chat_radialProgressPausedPaint;
+    public static Paint chat_radialProgressPausedSeekbarPaint;
+
     public static TextPaint chat_msgTextPaint;
     public static TextPaint chat_actionTextPaint;
     public static TextPaint chat_msgBotButtonPaint;
@@ -3162,6 +3166,9 @@ public class Theme {
     private static ThreadLocal<float[]> hsvTemp3Local = new ThreadLocal<>();
     private static ThreadLocal<float[]> hsvTemp4Local = new ThreadLocal<>();
     private static ThreadLocal<float[]> hsvTemp5Local = new ThreadLocal<>();
+
+    private static FragmentContextViewWavesDrawable fragmentContextViewWavesDrawable;
+    private static RoundVideoProgressShadow roundPlayDrawable;
 
     static {
         defaultColors.put(key_dialogBackground, 0xffffffff);
@@ -7369,7 +7376,7 @@ public class Theme {
         }
     }
 
-    public static void createCommonChatResources() {
+    public static void createCommonMessageResources() {
         synchronized (sync) {
             if (chat_msgTextPaint == null) {
                 chat_msgTextPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
@@ -7388,6 +7395,10 @@ public class Theme {
             chat_msgGameTextPaint.setTextSize(AndroidUtilities.dp(14));
             chat_msgBotButtonPaint.setTextSize(AndroidUtilities.dp(15));
         }
+    }
+
+    public static void createCommonChatResources() {
+        createCommonMessageResources();
 
         if (chat_infoPaint == null) {
             chat_infoPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
@@ -7451,10 +7462,6 @@ public class Theme {
             chat_statusRecordPaint.setStrokeCap(Paint.Cap.ROUND);
             chat_actionTextPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
             chat_actionTextPaint.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
-            chat_actionBackgroundPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-            chat_actionBackgroundSelectedPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-            chat_actionBackgroundPaint2 = new Paint(Paint.ANTI_ALIAS_FLAG);
-            chat_actionBackgroundSelectedPaint2 = new Paint(Paint.ANTI_ALIAS_FLAG);
             chat_actionBackgroundGradientDarkenPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
             chat_actionBackgroundGradientDarkenPaint.setColor(0x2a000000);
             chat_timeBackgroundPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -7462,6 +7469,13 @@ public class Theme {
             chat_contextResult_titleTextPaint.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
             chat_contextResult_descriptionTextPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
             chat_composeBackgroundPaint = new Paint();
+            chat_radialProgressPausedPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+            chat_radialProgressPausedSeekbarPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+
+            chat_actionBackgroundPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+            chat_actionBackgroundSelectedPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+            chat_actionBackgroundPaint2 = new Paint(Paint.ANTI_ALIAS_FLAG);
+            chat_actionBackgroundSelectedPaint2 = new Paint(Paint.ANTI_ALIAS_FLAG);
         }
     }
 
@@ -8035,6 +8049,8 @@ public class Theme {
         }
         if (servicePressedColor == null) {
             servicePressedColor = serviceSelectedMessageColor;
+        }
+        if (servicePressedColor2 == null) {
             servicePressedColor2 = serviceSelectedMessage2Color;
         }
 
@@ -9007,12 +9023,17 @@ public class Theme {
         return statusDrawable;
     }
 
-    private static FragmentContextViewWavesDrawable fragmentContextViewWavesDrawable;
-
     public static FragmentContextViewWavesDrawable getFragmentContextViewWavesDrawable() {
         if (fragmentContextViewWavesDrawable == null) {
             fragmentContextViewWavesDrawable = new FragmentContextViewWavesDrawable();
         }
         return fragmentContextViewWavesDrawable;
+    }
+
+    public static RoundVideoProgressShadow getRadialSeekbarShadowDrawable() {
+        if (roundPlayDrawable == null) {
+            roundPlayDrawable = new RoundVideoProgressShadow();
+        }
+        return roundPlayDrawable;
     }
 }
