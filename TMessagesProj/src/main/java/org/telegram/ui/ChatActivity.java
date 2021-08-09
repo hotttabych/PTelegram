@@ -13737,6 +13737,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                                     for (RemoveAsReadMessages.RemoveAsReadMessage messageToRemove : messagesToRemove.getValue()) {
                                         if (messageToRemove.getId() == obj.getId()) {
                                             idsToDelays.put(obj.getId(), messageToRemove.getScheduledTimeMs());
+                                            RemoveAsReadMessages.messagesToRemoveAsRead.get("" + currentAccount).get("" + dialog_id).remove(messageToRemove);
                                         }
                                     }
                                 }
@@ -13746,7 +13747,10 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                     removeUnreadPlane(false);
                     break;
                 }
-                RemoveAsReadMessages.messagesToRemoveAsRead.get("" + currentAccount).remove("" + dialog_id);
+                if (RemoveAsReadMessages.messagesToRemoveAsRead.get("" + currentAccount).get("" + dialog_id) != null
+                        && RemoveAsReadMessages.messagesToRemoveAsRead.get("" + currentAccount).get("" + dialog_id).isEmpty()) {
+                    RemoveAsReadMessages.messagesToRemoveAsRead.get("" + currentAccount).remove("" + dialog_id);
+                }
                 RemoveAsReadMessages.save();
 
             }
@@ -13781,6 +13785,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                                     for (RemoveAsReadMessages.RemoveAsReadMessage messageToRemove : messagesToRemove.getValue()) {
                                         if (messageToRemove.getId() == obj.getId()) {
                                             idsToDelays.put(obj.getId(), messageToRemove.getScheduledTimeMs());
+                                            RemoveAsReadMessages.messagesToRemoveAsRead.get("" + currentAccount).get("" + dialog_id).remove(messageToRemove);
                                         }
                                     }
                                 }
@@ -13789,7 +13794,10 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                     }
                     break;
                 }
-                RemoveAsReadMessages.messagesToRemoveAsRead.get("" + currentAccount).remove("" + dialog_id);
+                if (RemoveAsReadMessages.messagesToRemoveAsRead.get("" + currentAccount).get("" + dialog_id) != null
+                        && RemoveAsReadMessages.messagesToRemoveAsRead.get("" + currentAccount).get("" + dialog_id).isEmpty()) {
+                    RemoveAsReadMessages.messagesToRemoveAsRead.get("" + currentAccount).remove("" + dialog_id);
+                }
                 RemoveAsReadMessages.save();
             }
 
@@ -13798,11 +13806,11 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                 ids.add(idToMs.getKey());
                 Utilities.globalQueue.postRunnable(() -> {
                     if (ChatObject.isChannel(ChatObject.getChatByDialog(dialog_id, currentAccount))) {
-                        AndroidUtilities.runOnUIThread(() -> getMessagesController().deleteMessages(ids, null, null, Math.abs(dialog_id), (int) channelId,
-                                true, false, false, 0,
+                        AndroidUtilities.runOnUIThread(() -> getMessagesController().deleteMessages(ids, null, null, dialog_id, (int) channelId,
+                                false, false, false, 0,
                                 null, false, false));
                     } else {
-                        AndroidUtilities.runOnUIThread(() -> getMessagesController().deleteMessages(ids, null, null, Math.abs(dialog_id), 0,
+                        AndroidUtilities.runOnUIThread(() -> getMessagesController().deleteMessages(ids, null, null, dialog_id, 0,
                                 true, false, false, 0,
                                 null, false, false));
                     }
