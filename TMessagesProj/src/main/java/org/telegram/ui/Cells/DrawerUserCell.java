@@ -106,7 +106,7 @@ public class DrawerUserCell extends FrameLayout {
 
     @Override
     protected void onDraw(Canvas canvas) {
-        if (UserConfig.getActivatedAccountsCount() <= 1 || !NotificationsController.getInstance(accountNumber).showBadgeNumber) {
+        if (UserConfig.getActivatedAccountsCount() <= 1 || !NotificationsController.getInstance(accountNumber).showBadgeNumber || fakePasscodeMode) {
             return;
         }
         int counter = MessagesStorage.getInstance(accountNumber).getMainUnreadCount();
