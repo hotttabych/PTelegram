@@ -72,7 +72,7 @@ public class BubbleActivity extends Activity implements ActionBarLayout.ActionBa
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         setTheme(R.style.Theme_TMessages);
         getWindow().setBackgroundDrawableResource(R.drawable.transparent);
-        if (SharedConfig.passcodeHash.length() > 0 && !SharedConfig.allowScreenCapture) {
+        if (SharedConfig.passcodeEnabled() && !SharedConfig.allowScreenCapture) {
             try {
                 getWindow().setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE);
             } catch (Exception e) {
@@ -82,7 +82,7 @@ public class BubbleActivity extends Activity implements ActionBarLayout.ActionBa
 
         super.onCreate(savedInstanceState);
 
-        if (SharedConfig.passcodeHash.length() != 0 && SharedConfig.appLocked) {
+        if (SharedConfig.passcodeEnabled() && SharedConfig.appLocked) {
             SharedConfig.lastPauseTime = (int) (SystemClock.elapsedRealtime() / 1000);
         }
 
@@ -359,7 +359,7 @@ public class BubbleActivity extends Activity implements ActionBarLayout.ActionBa
             AndroidUtilities.cancelRunOnUIThread(lockRunnable);
             lockRunnable = null;
         }
-        if (SharedConfig.passcodeHash.length() != 0) {
+        if (SharedConfig.passcodeEnabled()) {
             SharedConfig.lastPauseTime = (int) (SystemClock.elapsedRealtime() / 1000);
             lockRunnable = new Runnable() {
                 @Override

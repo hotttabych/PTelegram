@@ -318,7 +318,7 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
                     presentFragment(new TwoStepVerificationSetupActivity(type, currentPassword));
                 }
             } else if (position == passcodeRow) {
-                if (SharedConfig.passcodeHash.length() > 0) {
+                if (SharedConfig.passcodeEnabled()) {
                     presentFragment(new PasscodeActivity(2));
                 } else {
                     presentFragment(new PasscodeActivity(0));

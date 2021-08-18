@@ -2152,10 +2152,10 @@ public class AndroidUtilities {
             ForegroundDetector.getInstance().resetBackgroundVar();
         }
         int uptime = (int) (SystemClock.elapsedRealtime() / 1000);
-        if (BuildVars.LOGS_ENABLED && reset && SharedConfig.passcodeHash.length() > 0) {
+        if (BuildVars.LOGS_ENABLED && reset && SharedConfig.passcodeEnabled()) {
             FileLog.d("wasInBackground = " + wasInBackground + " appLocked = " + SharedConfig.appLocked + " autoLockIn = " + SharedConfig.autoLockIn + " lastPauseTime = " + SharedConfig.lastPauseTime + " uptime = " + uptime);
         }
-        return SharedConfig.passcodeHash.length() > 0 && wasInBackground &&
+        return SharedConfig.passcodeEnabled() && wasInBackground &&
                 (SharedConfig.appLocked ||
                         SharedConfig.autoLockIn != 0 && SharedConfig.lastPauseTime != 0 && !SharedConfig.appLocked && (SharedConfig.lastPauseTime + SharedConfig.autoLockIn) <= uptime ||
                         uptime + 5 < SharedConfig.lastPauseTime);
@@ -3512,7 +3512,7 @@ public class AndroidUtilities {
     }
 
     public static boolean allowScreenCapture() {
-        return SharedConfig.passcodeHash.length() == 0 || SharedConfig.allowScreenCapture;
+        return !SharedConfig.passcodeEnabled() || SharedConfig.allowScreenCapture;
     }
 
     public static File getSharingDirectory() {

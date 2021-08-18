@@ -980,7 +980,7 @@ public class EditWidgetActivity extends BaseFragment {
                         } else if (widgetType == TYPE_CONTACTS) {
                             builder.append(LocaleController.getString("EditWidgetContactsInfo", R.string.EditWidgetContactsInfo));
                         }
-                        if (SharedConfig.passcodeHash.length() > 0) {
+                        if (SharedConfig.passcodeEnabled()) {
                             builder.append("\n\n").append(AndroidUtilities.replaceTags(LocaleController.getString("WidgetPasscode2", R.string.WidgetPasscode2)));
                         }
                         cell.setText(builder);

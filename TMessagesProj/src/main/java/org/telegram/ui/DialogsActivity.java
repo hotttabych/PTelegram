@@ -6834,7 +6834,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         if (passcodeItem == null) {
             return;
         }
-        if (SharedConfig.passcodeHash.length() != 0 && !searching) {
+        if (SharedConfig.passcodeEnabled() && !searching) {
             if (doneItem == null || doneItem.getVisibility() != View.VISIBLE) {
                 passcodeItem.setVisibility(View.VISIBLE);
             }

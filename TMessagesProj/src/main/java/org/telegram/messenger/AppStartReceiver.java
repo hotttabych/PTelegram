@@ -18,7 +18,7 @@ public class AppStartReceiver extends BroadcastReceiver {
         if (intent != null && Intent.ACTION_BOOT_COMPLETED.equals(intent.getAction())) {
             AndroidUtilities.runOnUIThread(() -> {
                 SharedConfig.loadConfig();
-                if (SharedConfig.passcodeHash.length() > 0) {
+                if (SharedConfig.passcodeEnabled()) {
                     SharedConfig.appLocked = true;
                     SharedConfig.saveConfig();
                 }
