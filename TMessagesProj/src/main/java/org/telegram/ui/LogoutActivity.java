@@ -72,7 +72,7 @@ public class LogoutActivity extends BaseFragment {
         } else {
             addAccountRow = -1;
         }
-        if (SharedConfig.passcodeHash.length() <= 0) {
+        if (!SharedConfig.passcodeEnabled()) {
             passcodeRow = rowCount++;
         } else {
             passcodeRow = -1;

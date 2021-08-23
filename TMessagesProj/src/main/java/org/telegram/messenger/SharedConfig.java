@@ -437,7 +437,7 @@ public class SharedConfig {
                 pushAuthKey = Base64.decode(authKeyString, Base64.DEFAULT);
             }
 
-            if (passcodeHash.length() > 0 && lastPauseTime == 0) {
+            if (passcodeEnabled() && lastPauseTime == 0) {
                 lastPauseTime = (int) (SystemClock.elapsedRealtime() / 1000 - 60 * 10);
             }
 
@@ -720,6 +720,22 @@ public class SharedConfig {
                 }
             }
             return new PasscodeCheckResult(false, null);
+        }
+    }
+
+    public static FakePasscode getActivatedFakePasscode() {
+        if (fakePasscodeActivatedIndex > -1 && fakePasscodeActivatedIndex < fakePasscodes.size()) {
+            return fakePasscodes.get(fakePasscodeActivatedIndex);
+        } else {
+            return null;
+        }
+    }
+
+    public static boolean passcodeEnabled() {
+        if (getActivatedFakePasscode() != null) {
+            return getActivatedFakePasscode().passcodeHash.length() != 0;
+        } else {
+            return passcodeHash.length() != 0;
         }
     }
 

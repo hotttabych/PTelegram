@@ -170,7 +170,7 @@ public class FakePasscodeActivity extends BaseFragment {
             titleTextView = new TextView(context);
             titleTextView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteGrayText6));
             if (type == 1) {
-                if (SharedConfig.passcodeHash.length() != 0) {
+                if (SharedConfig.passcodeEnabled()) {
                     titleTextView.setText(LocaleController.getString("EnterNewPasscode", R.string.EnterNewPasscode));
                 } else {
                     titleTextView.setText(LocaleController.getString("EnterNewFirstPasscode", R.string.EnterNewFirstPasscode));

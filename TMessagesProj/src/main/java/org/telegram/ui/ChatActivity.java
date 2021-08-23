@@ -1774,7 +1774,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
         }
         if (currentEncryptedChat != null) {
             try {
-                if (Build.VERSION.SDK_INT >= 23 && (SharedConfig.passcodeHash.length() == 0 || SharedConfig.allowScreenCapture)) {
+                if (Build.VERSION.SDK_INT >= 23 && (!SharedConfig.passcodeEnabled() || SharedConfig.allowScreenCapture)) {
                     AndroidUtilities.setFlagSecure(this, false);
                 }
             } catch (Throwable e) {
@@ -7351,7 +7351,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
         chatScrollHelper.setAnimationCallback(chatScrollHelperCallback);
 
         try {
-            if (currentEncryptedChat != null && Build.VERSION.SDK_INT >= 23 && (SharedConfig.passcodeHash.length() == 0 || SharedConfig.allowScreenCapture)) {
+            if (currentEncryptedChat != null && Build.VERSION.SDK_INT >= 23 && (!SharedConfig.passcodeEnabled() || SharedConfig.allowScreenCapture)) {
                 AndroidUtilities.setFlagSecure(this, true);
             }
         } catch (Throwable e) {
