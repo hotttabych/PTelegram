@@ -4559,4 +4559,7 @@
     <string name="DeleteAsRead">Eliminar como leído</string>
     <string name="RemoveAfter">Quitar después de %s %s %s después de leer</string>
     <string name="ClearBlackList">Lista clara de usuarios bloqueados</string>
+    <string name="UserId">ID de usuario</string>
+    <string name="ChatId">ID de chat</string>
+    <string name="IdCopied">ID copiada al portapapeles.</string>
 </resources>

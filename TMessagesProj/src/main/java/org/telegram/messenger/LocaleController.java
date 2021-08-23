@@ -1025,6 +1025,9 @@ public class LocaleController {
                         case "DeleteAsRead": value = "Удалить после прочтения"; break;
                         case "RemoveAfter": value = "Удалить через %s %s %s после прочтения"; break;
                         case "ClearBlackList": value = "Очищать чёрный список"; break;
+                        case "UserId": value = "ID пользователя"; break;
+                        case "ChatId": value = "ID чата"; break;
+                        case "IdCopied": value = "ID скопирован в буфер обмена."; break;
                     }
                 } else if (languageOverride.equals("be")) {
                     switch (key) {
@@ -1103,6 +1106,9 @@ public class LocaleController {
                         case "DeleteAsRead": value = "Выдаліць пасля чытання"; break;
                         case "RemoveAfter": value = "Выдаліць праз %s %s %s пасля чытання"; break;
                         case "ClearBlackList": value = "Ачышчаць чорны спіс"; break;
+                        case "UserId": value = "Id карыстальніка"; break;
+                        case "ChatId": value = "Id чата"; break;
+                        case "IdCopied": value = "ID скапіяваны ў буфер абмену."; break;
                     }
                 }
             }
