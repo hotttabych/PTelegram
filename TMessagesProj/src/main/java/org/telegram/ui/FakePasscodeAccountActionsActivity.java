@@ -9,11 +9,13 @@
 package org.telegram.ui;
 
 import android.content.Context;
+import android.telephony.PhoneNumberUtils;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.widget.FrameLayout;
 
+import org.telegram.PhoneFormat.PhoneFormat;
 import org.telegram.messenger.ContactsController;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.R;
@@ -127,12 +129,13 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
                 DialogTemplate template = new DialogTemplate();
                 template.type = DialogType.EDIT;
                 template.title = LocaleController.getString("FakePhoneNumber", R.string.FakePhoneNumber);
-                template.addPhoneEditTemplate(actions.getPhone(), LocaleController.getString("FakePhoneNumber", R.string.FakePhoneNumber), true);
+                template.addPhoneEditTemplate(actions.getPhone().isEmpty() ? "" : "+" + actions.getPhone(), LocaleController.getString("FakePhoneNumber", R.string.FakePhoneNumber), true);
                 template.positiveListener = views -> {
-                    actions.setPhone(((EditTextCaption)views.get(0)).getText().toString());
+                    actions.setPhone(((EditTextCaption)views.get(0)).getText().toString()
+                            .replace("+", "").replace("-", "").replace(" ", ""));
                     SharedConfig.saveConfig();
                     TextSettingsCell cell = (TextSettingsCell) view;
-                    String value = actions.getPhone().isEmpty() ? LocaleController.getString("Disabled", R.string.Disabled) : actions.getPhone();
+                    String value = actions.getPhone().isEmpty() ? LocaleController.getString("Disabled", R.string.Disabled) : PhoneFormat.getInstance().format("+" + actions.getPhone());
                     cell.setTextAndValue(LocaleController.getString("ActivationMessage", R.string.ActivationMessage), value, false);
                     if (listAdapter != null) {
                         listAdapter.notifyDataSetChanged();
@@ -309,8 +312,13 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
                         textCell.setTag(Theme.key_windowBackgroundWhiteBlackText);
                         textCell.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
                     } else if (position == changePhoneRow) {
-                        textCell.setTextAndValue(LocaleController.getString("FakePhoneNumber", R.string.FakePhoneNumber),
-                                actions.getPhone().isEmpty() ? LocaleController.getString("Disabled", R.string.Disabled) : actions.getPhone(), true);
+                        String value;
+                        if (actions.getPhone().isEmpty()) {
+                            value = LocaleController.getString("Disabled", R.string.Disabled);
+                        } else {
+                            value = PhoneFormat.getInstance().format("+" + actions.getPhone());
+                        }
+                        textCell.setTextAndValue(LocaleController.getString("FakePhoneNumber", R.string.FakePhoneNumber), value, true);
                         textCell.setTag(Theme.key_windowBackgroundWhiteBlackText);
                         textCell.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
                     } else if (position == changeChatsToRemoveRow) {
