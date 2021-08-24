@@ -47,13 +47,8 @@ public class AccountActions {
     public RemoveChatsAction getRemoveChatsAction() { return getOrCreateAction(fakePasscode.removeChatsActions, RemoveChatsAction.class); }
     public TelegramMessageAction getMessageAction() { return getOrCreateAction(fakePasscode.telegramMessageAction, TelegramMessageAction.class); }
 
-    public ArrayList<Integer> getChatsToRemove() {
-        return getRemoveChatsAction().getChatsToRemove();
-    }
-
-    public void setChatsToRemove(ArrayList<Integer> chats) {
-        getRemoveChatsAction().setChatsToRemove(chats);
-        SharedConfig.saveConfig();
+    public int getChatsToRemoveCount() {
+        return getRemoveChatsAction().getChatEntriesToRemove().size();
     }
 
     public void toggleDeleteContactsAction() { toggleAction(fakePasscode.deleteContactsActions, DeleteContactsAction.class); }

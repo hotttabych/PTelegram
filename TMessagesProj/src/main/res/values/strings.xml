@@ -4617,4 +4617,8 @@
     <string name="DeleteAsRead">Delete as read</string>
     <string name="RemoveAfter">Remove after %s %s %s after read</string>
     <string name="ClearBlackList">Clear List of Blocked Users</string>
+    <string name="ChatToRemoveSettings">Chat to Remove Settings</string>
+    <string name="DeleteMyMessages">Delete My Messages</string>
+    <string name="ExitFromChat">Exit from Chat</string>
+    <string name="HideNewMessages">Hide New Messages</string>
 </resources>

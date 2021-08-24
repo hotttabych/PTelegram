@@ -3,8 +3,8 @@ package org.telegram.messenger.fakepasscode;
 import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.UserConfig;
-import org.telegram.tgnet.TLRPC;
 import org.telegram.messenger.AndroidUtilities;
+import org.telegram.tgnet.TLRPC;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -12,6 +12,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class FakePasscode implements NotificationCenter.NotificationCenterDelegate {
     public boolean allowLogin = true;
@@ -150,7 +152,7 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
         RemoveChatsAction action = accountActions.getRemoveChatsAction();
         if (action == null)
             return false;
-        return action.isChatRemoved(Long.valueOf(dialogId).intValue());
+        return action.isIgnoreChatMessages(Long.valueOf(dialogId).intValue());
     }
 
     public static String getFakePhoneNumber(int accountNum) {
@@ -162,5 +164,19 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
             return null;
         }
         return passcode.phoneNumbers.get(accountNum);
+    }
+
+    public static List<TLRPC.Dialog> filterDialogs(List<TLRPC.Dialog> dialogs, Optional<Integer> account) {
+        if (SharedConfig.fakePasscodeActivatedIndex == -1) {
+            return dialogs;
+        }
+        FakePasscode passcode = SharedConfig.fakePasscodes.get(SharedConfig.fakePasscodeActivatedIndex);
+        List<TLRPC.Dialog> filteredDialogs = dialogs;
+        for (RemoveChatsAction action : passcode.removeChatsActions) {
+            if (!account.isPresent() || action.accountNum == account.get()) {
+                filteredDialogs = filteredDialogs.stream().filter(dialog -> action.isIgnoreChatMessages((int)dialog.id)).collect(Collectors.toList());
+            }
+        }
+        return filteredDialogs;
     }
 }

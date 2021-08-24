@@ -15,7 +15,25 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class RemoveChatsAction extends AccountAction {
+    public static class RemoveChatEntry {
+        public int chatId;
+        public boolean isClearChat;
+        public boolean isExitFromChat;
+        public boolean isHideNewMessages;
+
+        public RemoveChatEntry() {}
+        public RemoveChatEntry(int chatId) {
+            this.chatId = chatId;
+            isClearChat = false;
+            isExitFromChat = true;
+            isHideNewMessages = true;
+        }
+    }
+
+    @Deprecated
     private ArrayList<Integer> chatsToRemove = new ArrayList<>();
+    private List<RemoveChatEntry> chatEntriesToRemove = new ArrayList<>();
+    // Chats to ignore
     private ArrayList<Integer> removedChats = new ArrayList<>();
 
     public RemoveChatsAction() {}
@@ -25,32 +43,46 @@ public class RemoveChatsAction extends AccountAction {
         this.chatsToRemove = chatsToRemove;
     }
 
-    public ArrayList<Integer> getChatsToRemove() {
-        return chatsToRemove;
+    public List<RemoveChatEntry> getChatEntriesToRemove() {
+        return chatEntriesToRemove;
     }
 
-    public void setChatsToRemove(ArrayList<Integer> chats) {
-        chatsToRemove = chats;
-    }
-
-    public boolean isChatRemoved(int chatId) {
+    public boolean isIgnoreChatMessages(int chatId) {
         if (removedChats == null) {
             return false;
         }
         return removedChats.contains(chatId);
     }
 
+    public boolean contains(int chatId) {
+        return chatEntriesToRemove.stream().anyMatch(e -> e.chatId == chatId);
+    }
+
+    public void add(int chatId) {
+        chatEntriesToRemove.add(new RemoveChatEntry(chatId));
+    }
+
+    public void remove(int chatId) {
+        chatEntriesToRemove.removeIf(e -> e.chatId == chatId);
+    }
+
+    public RemoveChatEntry get(int chatId) {
+        return chatEntriesToRemove.stream().filter(e -> e.chatId == chatId).findAny().orElse(null);
+    }
+
     public void execute() {
         removedChats.clear();
-        if (chatsToRemove.isEmpty()) {
+        if (chatEntriesToRemove.isEmpty()) {
             return;
         }
         clearFolders();
-        for (Integer id : chatsToRemove) {
-            Utils.deleteDialog(accountNum, id);
-            NotificationCenter.getInstance(accountNum).postNotificationName(NotificationCenter.dialogDeletedByAction, id);
+        for (RemoveChatEntry entry : chatEntriesToRemove) {
+            if (entry.isExitFromChat) {
+                Utils.deleteDialog(accountNum, entry.chatId);
+                NotificationCenter.getInstance(accountNum).postNotificationName(NotificationCenter.dialogDeletedByAction, entry.chatId);
+            }
         }
-        removedChats = new ArrayList<>(chatsToRemove);
+        removedChats = chatEntriesToRemove.stream().filter(e -> e.isHideNewMessages).map(e -> e.chatId).collect(Collectors.toCollection(ArrayList::new));
         SharedConfig.saveConfig();
     }
 
@@ -77,9 +109,10 @@ public class RemoveChatsAction extends AccountAction {
             return;
         }
 
-        folder.alwaysShow.removeAll(chatsToRemove);
-        folder.neverShow.removeAll(chatsToRemove);
-        for (Integer chatId : chatsToRemove) {
+        List<Integer> idsToRemove = chatEntriesToRemove.stream().map(e -> e.chatId).collect(Collectors.toList());
+        folder.alwaysShow.removeAll(idsToRemove);
+        folder.neverShow.removeAll(idsToRemove);
+        for (Integer chatId : idsToRemove) {
             if (folder.pinnedDialogs.get(chatId) == null) {
                 continue;
             }
@@ -116,13 +149,14 @@ public class RemoveChatsAction extends AccountAction {
     }
 
     private boolean folderHasDialogs(MessagesController.DialogFilter folder) {
-        if (!Collections.disjoint(folder.alwaysShow, chatsToRemove)) {
+        List<Integer> idsToRemove = chatEntriesToRemove.stream().map(e -> e.chatId).collect(Collectors.toList());
+        if (!Collections.disjoint(folder.alwaysShow, idsToRemove)) {
             return true;
         }
-        if (!Collections.disjoint(folder.neverShow, chatsToRemove)) {
+        if (!Collections.disjoint(folder.neverShow, idsToRemove)) {
             return true;
         }
-        if (!Collections.disjoint(getFolderPinnedDialogs(folder), chatsToRemove)) {
+        if (!Collections.disjoint(getFolderPinnedDialogs(folder), idsToRemove)) {
             return true;
         }
         return false;
@@ -171,5 +205,13 @@ public class RemoveChatsAction extends AccountAction {
                 }
             }
         }
+    }
+
+    @Override
+    public void migrate() {
+        for (Integer chatId : chatsToRemove) {
+            chatEntriesToRemove.add(new RemoveChatEntry(chatId));
+        }
+        chatsToRemove.clear();
     }
 }

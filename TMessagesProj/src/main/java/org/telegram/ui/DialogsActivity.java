@@ -100,6 +100,7 @@ import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.UserObject;
 import org.telegram.messenger.Utilities;
 import org.telegram.messenger.XiaomiUtilities;
+import org.telegram.messenger.fakepasscode.FakePasscode;
 import org.telegram.messenger.fakepasscode.RemoveAsReadMessages;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.TLObject;
@@ -177,6 +178,7 @@ import org.telegram.ui.Components.RecyclerItemsEnterAnimator;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -6794,32 +6796,32 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     @NonNull
     public ArrayList<TLRPC.Dialog> getDialogsArray(int currentAccount, int dialogsType, int folderId, boolean frozen) {
         if (frozen && frozenDialogsList != null) {
-            return frozenDialogsList;
+            return new ArrayList<>(FakePasscode.filterDialogs(frozenDialogsList, Optional.of(currentAccount)));
         }
         MessagesController messagesController = AccountInstance.getInstance(currentAccount).getMessagesController();
         if (dialogsType == 0) {
-            return messagesController.getDialogs(folderId);
+            return new ArrayList<>(FakePasscode.filterDialogs(messagesController.getDialogs(folderId), Optional.of(currentAccount)));
         } else if (dialogsType == 1 || dialogsType == 10 || dialogsType == 13) {
-            return messagesController.dialogsServerOnly;
+            return new ArrayList<>(FakePasscode.filterDialogs(messagesController.dialogsServerOnly, Optional.of(currentAccount)));
         } else if (dialogsType == 2) {
-            return messagesController.dialogsCanAddUsers;
+            return new ArrayList<>(FakePasscode.filterDialogs(messagesController.dialogsCanAddUsers, Optional.of(currentAccount)));
         } else if (dialogsType == 3) {
-            return messagesController.dialogsForward;
+            return new ArrayList<>(FakePasscode.filterDialogs(messagesController.dialogsForward, Optional.of(currentAccount)));
         } else if (dialogsType == 4 || dialogsType == 12) {
-            return messagesController.dialogsUsersOnly;
+            return new ArrayList<>(FakePasscode.filterDialogs(messagesController.dialogsUsersOnly, Optional.of(currentAccount)));
         } else if (dialogsType == 5) {
-            return messagesController.dialogsChannelsOnly;
+            return new ArrayList<>(FakePasscode.filterDialogs(messagesController.dialogsChannelsOnly, Optional.of(currentAccount)));
         } else if (dialogsType == 6 || dialogsType == 11) {
-            return messagesController.dialogsGroupsOnly;
+            return new ArrayList<>(FakePasscode.filterDialogs(messagesController.dialogsGroupsOnly, Optional.of(currentAccount)));
         } else if (dialogsType == 7 || dialogsType == 8) {
             MessagesController.DialogFilter dialogFilter = messagesController.selectedDialogFilter[dialogsType == 7 ? 0 : 1];
             if (dialogFilter == null) {
-                return messagesController.getDialogs(folderId);
+                return new ArrayList<>(FakePasscode.filterDialogs(messagesController.getDialogs(folderId), Optional.of(currentAccount)));
             } else {
-                return dialogFilter.dialogs;
+                return new ArrayList<>(FakePasscode.filterDialogs(dialogFilter.dialogs, Optional.of(currentAccount)));
             }
         } else if (dialogsType == 9) {
-            return messagesController.dialogsForBlock;
+            return new ArrayList<>(FakePasscode.filterDialogs(messagesController.dialogsForBlock, Optional.of(currentAccount)));
         }
         return new ArrayList<>();
     }

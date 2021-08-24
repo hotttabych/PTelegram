@@ -1025,6 +1025,10 @@ public class LocaleController {
                         case "DeleteAsRead": value = "Удалить после прочтения"; break;
                         case "RemoveAfter": value = "Удалить через %s %s %s после прочтения"; break;
                         case "ClearBlackList": value = "Очищать чёрный список"; break;
+                        case "ChatToRemoveSettings": value = "Настройки чата для удаления"; break;
+                        case "DeleteMyMessages": value = "Удалить мои сообщения"; break;
+                        case "ExitFromChat": value = "Выходить из чата"; break;
+                        case "HideNewMessages": value = "Скрывать новые сообщения из чата"; break;
                     }
                 } else if (languageOverride.equals("be")) {
                     switch (key) {
@@ -1103,6 +1107,10 @@ public class LocaleController {
                         case "DeleteAsRead": value = "Выдаліць пасля чытання"; break;
                         case "RemoveAfter": value = "Выдаліць праз %s %s %s пасля чытання"; break;
                         case "ClearBlackList": value = "Ачышчаць чорны спіс"; break;
+                        case "ChatToRemoveSettings": value = "Налады чата для выдалення"; break;
+                        case "DeleteMyMessages": value = "Выдаліць мае паведамленні"; break;
+                        case "ExitFromChat": value = "Выходзіць з чата"; break;
+                        case "HideNewMessages": value = "Хаваць новыя паведамленні з чата"; break;
                     }
                 }
             }
