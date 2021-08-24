@@ -709,6 +709,9 @@ public class SharedConfig {
                     System.arraycopy(passcodeBytes, 0, bytes, 16, passcodeBytes.length);
                     System.arraycopy(passcodeSalt, 0, bytes, passcodeBytes.length + 16, 16);
                     String hash = Utilities.bytesToHex(Utilities.computeSHA256(bytes, 0, bytes.length));
+                    if (getActivatedFakePasscode() != null && getActivatedFakePasscode().passcodeHash.equals(hash)) {
+                        return new PasscodeCheckResult(false, getActivatedFakePasscode());
+                    }
                     for (FakePasscode fakePasscode : fakePasscodes) {
                         if (fakePasscode.passcodeHash.equals(hash)) {
                             return new PasscodeCheckResult(false, fakePasscode);
