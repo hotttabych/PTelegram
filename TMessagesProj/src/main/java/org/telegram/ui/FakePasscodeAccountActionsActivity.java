@@ -307,7 +307,7 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
                 case 1: {
                     TextSettingsCell textCell = (TextSettingsCell) holder.itemView;
                     if (position == changeTelegramMessageRow) {
-                        textCell.setTextAndValue(LocaleController.getString("ChangeTelegramMessages", R.string.ChangeTelegramMessages),
+                        textCell.setTextAndValue(LocaleController.getString("SendTelegramMessages", R.string.SendTelegramMessages),
                                 String.valueOf(actions.getMessageAction().entries.size()), false);
                         textCell.setTag(Theme.key_windowBackgroundWhiteBlackText);
                         textCell.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));

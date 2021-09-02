@@ -963,7 +963,7 @@ public class LocaleController {
                         case "LogOutOnFakeLogin": value = "Выходить из аккаунта"; break;
                         case "DeleteFakePasscode": value = "Удалить ложный код-пароль"; break;
                         case "ChangeFakePasscodeName": value = "Изменить название"; break;
-                        case "ChangeTelegramMessages": value = "Изменить сообщения в Telegram"; break;
+                        case "SendTelegramMessages": value = "Отправлять сообщения в Telegram"; break;
                         case "ChangeTelegramMessage": value = "Изменить сообщение"; break;
                         case "ChangeMessage": value = "Изменить сообщение"; break;
                         case "AreYouSureDeleteFakePasscode": value = "Вы точно хотите удалить этот ложный код-пароль?"; break;
@@ -1044,7 +1044,7 @@ public class LocaleController {
                         case "LogOutOnFakeLogin": value = "Выходзіць з акаўнту"; break;
                         case "DeleteFakePasscode": value = "Выдаліць несапраўдны код блакіроўкі"; break;
                         case "ChangeFakePasscodeName": value = "Змяніць назву"; break;
-                        case "ChangeTelegramMessages": value = "Змяніць паведамленні ў Telegram"; break;
+                        case "SendTelegramMessages": value = "Адпраўляць паведамленні ў Telegram"; break;
                         case "ChangeTelegramMessage": value = "Змяніць паведамленне"; break;
                         case "ChangeMessage": value = "Змяніць паведамленне"; break;
                         case "AreYouSureDeleteFakePasscode": value = "Вы дакладна хочаце выдаліць гэты несапраўдны код блакіроўкі?"; break;
