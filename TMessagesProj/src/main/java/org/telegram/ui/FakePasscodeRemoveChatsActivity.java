@@ -949,15 +949,15 @@ public class FakePasscodeRemoveChatsActivity extends BaseFragment implements Not
             template.title = LocaleController.getString("ChatToRemoveSettings", R.string.ChatToRemoveSettings);
             List<View> dialogViews = new ArrayList<>();
             template.addCheckboxTemplate(entry.isExitFromChat, LocaleController.getString("ExitFromChat", R.string.ExitFromChat), (CompoundButton checkbox, boolean checked) -> {
-                CheckBox hideMessagesCheckbox = (CheckBox)dialogViews.get(1);
+                CheckBox hideChatCheckbox = (CheckBox)dialogViews.get(1);
                 if (!checked) {
-                    hideMessagesCheckbox.setChecked(true);
-                    hideMessagesCheckbox.setEnabled(false);
+                    hideChatCheckbox.setChecked(true);
+                    hideChatCheckbox.setEnabled(false);
                 } else {
-                    hideMessagesCheckbox.setEnabled(true);
+                    hideChatCheckbox.setEnabled(true);
                 }
             });
-            template.addCheckboxTemplate(entry.isHideNewMessages, LocaleController.getString("HideChat", R.string.HideChat));
+            template.addCheckboxTemplate(entry.isHideNewMessages, LocaleController.getString("HideChat", R.string.HideChat), entry.isExitFromChat);
             template.addCheckboxTemplate(entry.isClearChat, LocaleController.getString("DeleteMyMessages", R.string.DeleteMyMessages));
             template.positiveListener = views -> {
                 entry.isExitFromChat = ((CheckBox) views.get(0)).isChecked();
