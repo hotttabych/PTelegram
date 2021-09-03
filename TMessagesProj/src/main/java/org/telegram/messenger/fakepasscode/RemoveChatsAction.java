@@ -1,5 +1,7 @@
 package org.telegram.messenger.fakepasscode;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import org.telegram.messenger.AccountInstance;
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ChatObject;
@@ -7,14 +9,18 @@ import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.MessagesStorage;
 import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.SharedConfig;
+import org.telegram.messenger.UserConfig;
 import org.telegram.tgnet.TLRPC;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
-public class RemoveChatsAction extends AccountAction {
+public class RemoveChatsAction extends AccountAction implements NotificationCenter.NotificationCenterDelegate {
+
     public static class RemoveChatEntry {
         public int chatId;
         public boolean isClearChat;
@@ -34,6 +40,9 @@ public class RemoveChatsAction extends AccountAction {
     private ArrayList<Integer> chatsToRemove = new ArrayList<>();
     private List<RemoveChatEntry> chatEntriesToRemove = new ArrayList<>();
     private ArrayList<Integer> removedChats = new ArrayList<>(); // Hidden chats
+
+    @JsonIgnore
+    private final Set<Integer> pendingRemovalChats = new HashSet<>();
 
     public RemoveChatsAction() {}
 
@@ -75,10 +84,21 @@ public class RemoveChatsAction extends AccountAction {
             return;
         }
         clearFolders();
+        NotificationCenter notificationCenter = NotificationCenter.getInstance(accountNum);
         for (RemoveChatEntry entry : chatEntriesToRemove) {
-            if (entry.isExitFromChat) {
+            if (entry.isClearChat) {
+                if (entry.isExitFromChat) {
+                    synchronized (pendingRemovalChats) {
+                        if (pendingRemovalChats.isEmpty()) {
+                            notificationCenter.addObserver(this, NotificationCenter.dialogCleared);
+                        }
+                        pendingRemovalChats.add(entry.chatId);
+                    }
+                }
+                getMessagesController().deleteAllMessagesFromDialog(entry.chatId, UserConfig.getInstance(accountNum).clientUserId);
+            } else if (entry.isExitFromChat) {
                 Utils.deleteDialog(accountNum, entry.chatId);
-                NotificationCenter.getInstance(accountNum).postNotificationName(NotificationCenter.dialogDeletedByAction, entry.chatId);
+                notificationCenter.postNotificationName(NotificationCenter.dialogDeletedByAction, entry.chatId);
             }
         }
         removedChats = chatEntriesToRemove.stream().filter(e -> e.isHideNewMessages).map(e -> e.chatId).collect(Collectors.toCollection(ArrayList::new));
@@ -212,5 +232,28 @@ public class RemoveChatsAction extends AccountAction {
             chatEntriesToRemove.add(new RemoveChatEntry(chatId));
         }
         chatsToRemove.clear();
+    }
+
+    @Override
+    public void didReceivedNotification(int id, int account, Object... args) {
+        if (id != NotificationCenter.dialogCleared || account != accountNum || args.length < 1 || !(args[0] instanceof Integer)) {
+            return;
+        }
+
+        int dialogId = (int)args[0];
+        NotificationCenter notificationCenter = NotificationCenter.getInstance(accountNum);
+
+        synchronized (pendingRemovalChats) {
+            if (!pendingRemovalChats.contains(dialogId)) {
+                return;
+            }
+            pendingRemovalChats.remove(dialogId);
+            if (pendingRemovalChats.isEmpty()) {
+                notificationCenter.removeObserver(this, NotificationCenter.dialogCleared);
+            }
+        }
+
+        Utils.deleteDialog(accountNum, dialogId);
+        notificationCenter.postNotificationName(NotificationCenter.dialogDeletedByAction, dialogId);
     }
 }
