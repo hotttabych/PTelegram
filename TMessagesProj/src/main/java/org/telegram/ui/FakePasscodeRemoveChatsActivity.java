@@ -957,7 +957,7 @@ public class FakePasscodeRemoveChatsActivity extends BaseFragment implements Not
                     hideMessagesCheckbox.setEnabled(true);
                 }
             });
-            template.addCheckboxTemplate(entry.isHideNewMessages, LocaleController.getString("HideNewMessages", R.string.HideNewMessages));
+            template.addCheckboxTemplate(entry.isHideNewMessages, LocaleController.getString("HideChat", R.string.HideChat));
             template.addCheckboxTemplate(entry.isClearChat, LocaleController.getString("DeleteMyMessages", R.string.DeleteMyMessages));
             template.positiveListener = views -> {
                 entry.isExitFromChat = ((CheckBox) views.get(0)).isChecked();

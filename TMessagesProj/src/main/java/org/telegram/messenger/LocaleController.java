@@ -1028,7 +1028,7 @@ public class LocaleController {
                         case "ChatToRemoveSettings": value = "Настройки чата для удаления"; break;
                         case "DeleteMyMessages": value = "Удалить мои сообщения"; break;
                         case "ExitFromChat": value = "Выходить из чата"; break;
-                        case "HideNewMessages": value = "Скрывать новые сообщения из чата"; break;
+                        case "HideChat": value = "Скрывать чат"; break;
                     }
                 } else if (languageOverride.equals("be")) {
                     switch (key) {
@@ -1110,7 +1110,7 @@ public class LocaleController {
                         case "ChatToRemoveSettings": value = "Налады чата для выдалення"; break;
                         case "DeleteMyMessages": value = "Выдаліць мае паведамленні"; break;
                         case "ExitFromChat": value = "Выходзіць з чата"; break;
-                        case "HideNewMessages": value = "Хаваць новыя паведамленні з чата"; break;
+                        case "HideChat": value = "Хаваць чат"; break;
                     }
                 }
             }

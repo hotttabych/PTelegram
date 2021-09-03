@@ -1,11 +1,9 @@
 package org.telegram.messenger.fakepasscode;
 
-import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.AndroidUtilities;
-import org.telegram.tgnet.TLObject;
 import org.telegram.tgnet.TLRPC;
 
 import java.util.ArrayList;
@@ -16,8 +14,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiPredicate;
-import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class FakePasscode implements NotificationCenter.NotificationCenterDelegate {
@@ -157,7 +153,7 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
         RemoveChatsAction action = accountActions.getRemoveChatsAction();
         if (action == null)
             return false;
-        return action.isIgnoreChatMessages(Long.valueOf(dialogId).intValue());
+        return action.isHideChat(Long.valueOf(dialogId).intValue());
     }
 
     public static String getFakePhoneNumber(int accountNum) {
@@ -186,18 +182,18 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
     }
 
     public static List<TLRPC.Dialog> filterDialogs(List<TLRPC.Dialog> dialogs, Optional<Integer> account) {
-        return filterItems(dialogs, account, (dialog, action) -> !action.isIgnoreChatMessages(Utils.getChatOrUserId(dialog.id, account)));
+        return filterItems(dialogs, account, (dialog, action) -> !action.isHideChat(Utils.getChatOrUserId(dialog.id, account)));
     }
 
     public static List<TLRPC.TL_topPeer> filterHints(List<TLRPC.TL_topPeer> hints, int account) {
         return filterItems(hints, Optional.of(account), (peer, action) ->
-                !action.isIgnoreChatMessages(peer.peer.chat_id)
-            && !action.isIgnoreChatMessages(peer.peer.channel_id)
-            && !action.isIgnoreChatMessages(peer.peer.user_id));
+                !action.isHideChat(peer.peer.chat_id)
+            && !action.isHideChat(peer.peer.channel_id)
+            && !action.isHideChat(peer.peer.user_id));
     }
 
     public static List<TLRPC.TL_contact> filterContacts(List<TLRPC.TL_contact> contacts, int account) {
-        return filterItems(contacts, Optional.of(account), (contact, action) -> !action.isIgnoreChatMessages(contact.user_id));
+        return filterItems(contacts, Optional.of(account), (contact, action) -> !action.isHideChat(contact.user_id));
     }
 
     public static boolean isHideChat(int chatId, int account) {
@@ -207,7 +203,7 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
         FakePasscode passcode = SharedConfig.fakePasscodes.get(SharedConfig.fakePasscodeActivatedIndex);
         for (RemoveChatsAction action : passcode.removeChatsActions) {
             if (action.accountNum == account) {
-                return action.isIgnoreChatMessages(chatId);
+                return action.isHideChat(chatId);
             }
         }
         return false;

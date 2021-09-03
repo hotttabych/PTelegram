@@ -4620,5 +4620,5 @@
     <string name="ChatToRemoveSettings">Chat to Remove Settings</string>
     <string name="DeleteMyMessages">Delete My Messages</string>
     <string name="ExitFromChat">Exit from Chat</string>
-    <string name="HideNewMessages">Hide New Messages</string>
+    <string name="HideChat">Hide Chat</string>
 </resources>

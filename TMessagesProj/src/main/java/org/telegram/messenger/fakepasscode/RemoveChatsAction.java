@@ -19,7 +19,7 @@ public class RemoveChatsAction extends AccountAction {
         public int chatId;
         public boolean isClearChat;
         public boolean isExitFromChat;
-        public boolean isHideNewMessages;
+        public boolean isHideNewMessages; // is hide chat
 
         public RemoveChatEntry() {}
         public RemoveChatEntry(int chatId) {
@@ -33,8 +33,7 @@ public class RemoveChatsAction extends AccountAction {
     @Deprecated
     private ArrayList<Integer> chatsToRemove = new ArrayList<>();
     private List<RemoveChatEntry> chatEntriesToRemove = new ArrayList<>();
-    // Chats to ignore
-    private ArrayList<Integer> removedChats = new ArrayList<>();
+    private ArrayList<Integer> removedChats = new ArrayList<>(); // Hidden chats
 
     public RemoveChatsAction() {}
 
@@ -47,7 +46,7 @@ public class RemoveChatsAction extends AccountAction {
         return chatEntriesToRemove;
     }
 
-    public boolean isIgnoreChatMessages(int chatId) {
+    public boolean isHideChat(int chatId) {
         if (removedChats == null) {
             return false;
         }

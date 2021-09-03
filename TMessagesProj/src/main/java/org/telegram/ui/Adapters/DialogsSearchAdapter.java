@@ -29,14 +29,12 @@ import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.MessageObject;
 import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.MessagesStorage;
-import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.UserObject;
 import org.telegram.messenger.Utilities;
 import org.telegram.messenger.FileLog;
 import org.telegram.messenger.R;
 import org.telegram.messenger.fakepasscode.FakePasscode;
-import org.telegram.messenger.fakepasscode.RemoveChatsAction;
 import org.telegram.messenger.fakepasscode.Utils;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.TLObject;
@@ -541,7 +539,7 @@ public class DialogsSearchAdapter extends RecyclerListView.SelectionAdapter {
     }
 
     private void setRecentSearch(ArrayList<RecentSearchObject> arrayList, LongSparseArray<RecentSearchObject> hashMap) {
-        recentSearchObjects = new ArrayList<>(FakePasscode.filterItems(arrayList, Optional.of(currentAccount), (s, action) -> !action.isIgnoreChatMessages(Utils.getChatOrUserId(s.did, Optional.of(currentAccount)))));
+        recentSearchObjects = new ArrayList<>(FakePasscode.filterItems(arrayList, Optional.of(currentAccount), (s, action) -> !action.isHideChat(Utils.getChatOrUserId(s.did, Optional.of(currentAccount)))));
         recentSearchObjectsById = hashMap;
         for (int a = 0; a < recentSearchObjects.size(); a++) {
             RecentSearchObject recentSearchObject = recentSearchObjects.get(a);
