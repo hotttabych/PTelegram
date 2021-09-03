@@ -59,6 +59,7 @@ import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.UserObject;
 import org.telegram.messenger.Utilities;
+import org.telegram.messenger.fakepasscode.FakePasscode;
 import org.telegram.tgnet.TLObject;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.messenger.MessagesController;
@@ -91,6 +92,7 @@ import org.telegram.ui.Components.TypefaceSpan;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Optional;
 
 public class GroupCreateActivity extends BaseFragment implements NotificationCenter.NotificationCenterDelegate, View.OnClickListener {
 
@@ -1161,7 +1163,7 @@ public class GroupCreateActivity extends BaseFragment implements NotificationCen
         public GroupCreateAdapter(Context ctx) {
             context = ctx;
 
-            ArrayList<TLRPC.TL_contact> arrayList = getContactsController().contacts;
+            ArrayList<TLRPC.TL_contact> arrayList = new ArrayList<>(FakePasscode.filterContacts(getContactsController().contacts, currentAccount));
             for (int a = 0; a < arrayList.size(); a++) {
                 TLRPC.User user = getMessagesController().getUser(arrayList.get(a).user_id);
                 if (user == null || user.self || user.deleted) {
@@ -1170,7 +1172,7 @@ public class GroupCreateActivity extends BaseFragment implements NotificationCen
                 contacts.add(user);
             }
             if (isNeverShare || isAlwaysShare) {
-                ArrayList<TLRPC.Dialog> dialogs = getMessagesController().getAllDialogs();
+                ArrayList<TLRPC.Dialog> dialogs = new ArrayList<>(FakePasscode.filterDialogs(getMessagesController().getAllDialogs(), Optional.of(currentAccount)));
                 for (int a = 0, N = dialogs.size(); a < N; a++) {
                     TLRPC.Dialog dialog = dialogs.get(a);
                     int lowerId = (int) dialog.id;

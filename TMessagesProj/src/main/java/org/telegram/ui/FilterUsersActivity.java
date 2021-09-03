@@ -52,6 +52,7 @@ import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.R;
 import org.telegram.messenger.UserObject;
 import org.telegram.messenger.Utilities;
+import org.telegram.messenger.fakepasscode.FakePasscode;
 import org.telegram.tgnet.TLObject;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.ActionBar;
@@ -978,7 +979,7 @@ public class FilterUsersActivity extends BaseFragment implements NotificationCen
                 }
                 if (lowerId > 0) {
                     TLRPC.User user = getMessagesController().getUser(lowerId);
-                    if (user != null) {
+                    if (user != null && !FakePasscode.isHideChat(user.id, currentAccount)) {
                         contacts.add(user);
                         if (UserObject.isUserSelf(user)) {
                             hasSelf = true;
@@ -986,14 +987,16 @@ public class FilterUsersActivity extends BaseFragment implements NotificationCen
                     }
                 } else {
                     TLRPC.Chat chat = getMessagesController().getChat(-lowerId);
-                    if (chat != null) {
+                    if (chat != null && !FakePasscode.isHideChat(lowerId, currentAccount)) {
                         contacts.add(chat);
                     }
                 }
             }
             if (!hasSelf) {
                 TLRPC.User user = getMessagesController().getUser(getUserConfig().clientUserId);
-                contacts.add(0, user);
+                if (!FakePasscode.isHideChat(user.id, currentAccount)) {
+                    contacts.add(0, user);
+                }
             }
 
             searchAdapterHelper = new SearchAdapterHelper(false);

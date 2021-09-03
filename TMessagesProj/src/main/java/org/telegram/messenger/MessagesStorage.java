@@ -11710,12 +11710,14 @@ public class MessagesStorage extends BaseController {
 
             if (dialogsType != 4 && (savedMessages).startsWith(search1) || savedMessages2.startsWith(search1)) {
                 TLRPC.User user = UserConfig.getInstance(currentAccount).getCurrentUser();
-                DialogsSearchAdapter.DialogSearchResult dialogSearchResult = new DialogsSearchAdapter.DialogSearchResult();
-                dialogSearchResult.date = Integer.MAX_VALUE;
-                dialogSearchResult.name = savedMessages;
-                dialogSearchResult.object = user;
-                dialogsResult.put(user.id, dialogSearchResult);
-                resultCount++;
+                if (!FakePasscode.isHideChat(user.id, currentAccount)) {
+                    DialogsSearchAdapter.DialogSearchResult dialogSearchResult = new DialogsSearchAdapter.DialogSearchResult();
+                    dialogSearchResult.date = Integer.MAX_VALUE;
+                    dialogSearchResult.name = savedMessages;
+                    dialogSearchResult.object = user;
+                    dialogsResult.put(user.id, dialogSearchResult);
+                    resultCount++;
+                }
             }
 
             if (!usersToLoad.isEmpty()) {
@@ -11743,17 +11745,19 @@ public class MessagesStorage extends BaseController {
                             if (data != null) {
                                 TLRPC.User user = TLRPC.User.TLdeserialize(data, data.readInt32(false), false);
                                 data.reuse();
-                                DialogsSearchAdapter.DialogSearchResult dialogSearchResult = dialogsResult.get(user.id);
-                                if (user.status != null) {
-                                    user.status.expires = cursor.intValue(1);
+                                if (!FakePasscode.isHideChat(user.id, currentAccount)) {
+                                    DialogsSearchAdapter.DialogSearchResult dialogSearchResult = dialogsResult.get(user.id);
+                                    if (user.status != null) {
+                                        user.status.expires = cursor.intValue(1);
+                                    }
+                                    if (found == 1) {
+                                        dialogSearchResult.name = AndroidUtilities.generateSearchName(user.first_name, user.last_name, q);
+                                    } else {
+                                        dialogSearchResult.name = AndroidUtilities.generateSearchName("@" + user.username, null, "@" + q);
+                                    }
+                                    dialogSearchResult.object = user;
+                                    resultCount++;
                                 }
-                                if (found == 1) {
-                                    dialogSearchResult.name = AndroidUtilities.generateSearchName(user.first_name, user.last_name, q);
-                                } else {
-                                    dialogSearchResult.name = AndroidUtilities.generateSearchName("@" + user.username, null, "@" + q);
-                                }
-                                dialogSearchResult.object = user;
-                                resultCount++;
                             }
                             break;
                         }
@@ -11778,10 +11782,12 @@ public class MessagesStorage extends BaseController {
                                 data.reuse();
                                 if (!(chat == null || chat.deactivated || ChatObject.isChannel(chat) && ChatObject.isNotInChat(chat))) {
                                     long dialog_id = -chat.id;
-                                    DialogsSearchAdapter.DialogSearchResult dialogSearchResult = dialogsResult.get(dialog_id);
-                                    dialogSearchResult.name = AndroidUtilities.generateSearchName(chat.title, null, q);
-                                    dialogSearchResult.object = chat;
-                                    resultCount++;
+                                    if (!FakePasscode.isHideChat(-chat.id, currentAccount)) {
+                                        DialogsSearchAdapter.DialogSearchResult dialogSearchResult = dialogsResult.get(dialog_id);
+                                        dialogSearchResult.name = AndroidUtilities.generateSearchName(chat.title, null, q);
+                                        dialogSearchResult.object = chat;
+                                        resultCount++;
+                                    }
                                 }
                             }
                             break;
@@ -11827,7 +11833,7 @@ public class MessagesStorage extends BaseController {
                                 user = TLRPC.User.TLdeserialize(data, data.readInt32(false), false);
                                 data.reuse();
                             }
-                            if (chat != null && user != null) {
+                            if (chat != null && user != null && !FakePasscode.isHideChat(user.id, currentAccount)) {
                                 DialogsSearchAdapter.DialogSearchResult dialogSearchResult = dialogsResult.get((long) chat.id << 32);
                                 chat.user_id = cursor.intValue(2);
                                 chat.a_or_b = cursor.byteArrayValue(3);
