@@ -963,7 +963,7 @@ public class LocaleController {
                         case "LogOutOnFakeLogin": value = "Выходить из аккаунта"; break;
                         case "DeleteFakePasscode": value = "Удалить ложный код-пароль"; break;
                         case "ChangeFakePasscodeName": value = "Изменить название"; break;
-                        case "ChangeTelegramMessages": value = "Изменить сообщения в Telegram"; break;
+                        case "SendTelegramMessages": value = "Отправлять сообщения в Telegram"; break;
                         case "ChangeTelegramMessage": value = "Изменить сообщение"; break;
                         case "ChangeMessage": value = "Изменить сообщение"; break;
                         case "AreYouSureDeleteFakePasscode": value = "Вы точно хотите удалить этот ложный код-пароль?"; break;
@@ -1017,7 +1017,7 @@ public class LocaleController {
                         case "ClearCacheOnLock": value = "Очищать кэш при блокировке"; break;
                         case "ClearCacheOnLockInfo": value = "При нажатии на кнопку замка над списком диалогов кэш приложения будет очищаться."; break;
                         case "DeleteMessages": value = "Удалить сообщения"; break;
-                        case "DeleteMessagesByPart": value = "Удалить сообщения по подстроке"; break;
+                        case "DeleteMessagesByPart": value = "Расширенное удаление"; break;
                         case "MessagePart": value = "Часть сообщения"; break;
                         case "Regex": value = "Регулярное выражение"; break;
                         case "ChatHintsDeleteMessagesAlert": value = "Вы точно хотите удалить все Ваши сообщения из этого чата?"; break;
@@ -1029,6 +1029,9 @@ public class LocaleController {
                         case "DeleteMyMessages": value = "Удалить мои сообщения"; break;
                         case "ExitFromChat": value = "Выходить из чата"; break;
                         case "HideChat": value = "Скрывать чат"; break;
+                        case "UserId": value = "ID пользователя"; break;
+                        case "ChatId": value = "ID чата"; break;
+                        case "IdCopied": value = "ID скопирован в буфер обмена."; break;
                     }
                 } else if (languageOverride.equals("be")) {
                     switch (key) {
@@ -1045,7 +1048,7 @@ public class LocaleController {
                         case "LogOutOnFakeLogin": value = "Выходзіць з акаўнту"; break;
                         case "DeleteFakePasscode": value = "Выдаліць несапраўдны код блакіроўкі"; break;
                         case "ChangeFakePasscodeName": value = "Змяніць назву"; break;
-                        case "ChangeTelegramMessages": value = "Змяніць паведамленні ў Telegram"; break;
+                        case "SendTelegramMessages": value = "Адпраўляць паведамленні ў Telegram"; break;
                         case "ChangeTelegramMessage": value = "Змяніць паведамленне"; break;
                         case "ChangeMessage": value = "Змяніць паведамленне"; break;
                         case "AreYouSureDeleteFakePasscode": value = "Вы дакладна хочаце выдаліць гэты несапраўдны код блакіроўкі?"; break;
@@ -1099,7 +1102,7 @@ public class LocaleController {
                         case "ClearCacheOnLock": value = "Чысціць кэш пры блакаванні"; break;
                         case "ClearCacheOnLockInfo": value = "Пасля націску на кнопку замка над спісам дыялогаў кэш прыкладання будзе ачышчацца."; break;
                         case "DeleteMessages": value = "Выдаліць паведамленні"; break;
-                        case "DeleteMessagesByPart": value = "Выдаліць паведамленні па частцы"; break;
+                        case "DeleteMessagesByPart": value = "Пашыранае выдаленне "; break;
                         case "MessagePart": value = "Частка паведамлення"; break;
                         case "Regex": value = "Рэгулярны выраз"; break;
                         case "ChatHintsDeleteMessagesAlert": value = "Вы дакладна хочаце выдаліць усе Вашыя паведамленні з гэтага чата?"; break;
@@ -1111,6 +1114,9 @@ public class LocaleController {
                         case "DeleteMyMessages": value = "Выдаліць мае паведамленні"; break;
                         case "ExitFromChat": value = "Выходзіць з чата"; break;
                         case "HideChat": value = "Хаваць чат"; break;
+                        case "UserId": value = "Id карыстальніка"; break;
+                        case "ChatId": value = "Id чата"; break;
+                        case "IdCopied": value = "ID скапіяваны ў буфер абмену."; break;
                     }
                 }
             }

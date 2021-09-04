@@ -437,7 +437,7 @@ public class SharedConfig {
                 pushAuthKey = Base64.decode(authKeyString, Base64.DEFAULT);
             }
 
-            if (passcodeHash.length() > 0 && lastPauseTime == 0) {
+            if (passcodeEnabled() && lastPauseTime == 0) {
                 lastPauseTime = (int) (SystemClock.elapsedRealtime() / 1000 - 60 * 10);
             }
 
@@ -709,6 +709,9 @@ public class SharedConfig {
                     System.arraycopy(passcodeBytes, 0, bytes, 16, passcodeBytes.length);
                     System.arraycopy(passcodeSalt, 0, bytes, passcodeBytes.length + 16, 16);
                     String hash = Utilities.bytesToHex(Utilities.computeSHA256(bytes, 0, bytes.length));
+                    if (getActivatedFakePasscode() != null && getActivatedFakePasscode().passcodeHash.equals(hash)) {
+                        return new PasscodeCheckResult(false, getActivatedFakePasscode());
+                    }
                     for (FakePasscode fakePasscode : fakePasscodes) {
                         if (fakePasscode.passcodeHash.equals(hash)) {
                             return new PasscodeCheckResult(false, fakePasscode);
@@ -720,6 +723,22 @@ public class SharedConfig {
                 }
             }
             return new PasscodeCheckResult(false, null);
+        }
+    }
+
+    public static FakePasscode getActivatedFakePasscode() {
+        if (fakePasscodeActivatedIndex > -1 && fakePasscodeActivatedIndex < fakePasscodes.size()) {
+            return fakePasscodes.get(fakePasscodeActivatedIndex);
+        } else {
+            return null;
+        }
+    }
+
+    public static boolean passcodeEnabled() {
+        if (getActivatedFakePasscode() != null) {
+            return getActivatedFakePasscode().passcodeHash.length() != 0;
+        } else {
+            return passcodeHash.length() != 0;
         }
     }
 

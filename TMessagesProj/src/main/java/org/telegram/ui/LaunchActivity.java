@@ -296,7 +296,7 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
             }
         }
         getWindow().setBackgroundDrawableResource(R.drawable.transparent);
-        if (SharedConfig.passcodeHash.length() > 0 && !SharedConfig.allowScreenCapture) {
+        if (SharedConfig.passcodeEnabled() && !SharedConfig.allowScreenCapture) {
             try {
                 getWindow().setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE);
             } catch (Exception e) {
@@ -310,7 +310,7 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
         }
         Theme.createCommonChatResources();
         Theme.createDialogsResources(this);
-        if (SharedConfig.passcodeHash.length() != 0 && SharedConfig.appLocked) {
+        if (SharedConfig.passcodeEnabled() && SharedConfig.appLocked) {
             SharedConfig.lastPauseTime = (int) (SystemClock.elapsedRealtime() / 1000);
         }
         AndroidUtilities.fillStatusBarHeight(this);
@@ -3999,7 +3999,7 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (SharedConfig.passcodeHash.length() != 0 && SharedConfig.lastPauseTime != 0) {
+        if (SharedConfig.passcodeEnabled() && SharedConfig.lastPauseTime != 0) {
             SharedConfig.lastPauseTime = 0;
             if (BuildVars.LOGS_ENABLED) {
                 FileLog.d("reset lastPauseTime onActivityResult");
@@ -4464,7 +4464,7 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
                 backgroundTablet.setBackgroundImage(Theme.getCachedWallpaper(), Theme.isWallpaperMotion());
             }
         } else if (id == NotificationCenter.didSetPasscode) {
-            if (SharedConfig.passcodeHash.length() > 0 && !SharedConfig.allowScreenCapture) {
+            if (SharedConfig.passcodeEnabled() && !SharedConfig.allowScreenCapture) {
                 try {
                     getWindow().setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE);
                 } catch (Exception e) {
@@ -5090,7 +5090,7 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
             AndroidUtilities.cancelRunOnUIThread(lockRunnable);
             lockRunnable = null;
         }
-        if (SharedConfig.passcodeHash.length() != 0) {
+        if (SharedConfig.passcodeEnabled()) {
             SharedConfig.lastPauseTime = (int) (SystemClock.elapsedRealtime() / 1000);
             lockRunnable = new Runnable() {
                 @Override

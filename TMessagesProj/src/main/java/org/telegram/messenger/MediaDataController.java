@@ -2914,7 +2914,7 @@ public class MediaDataController extends BaseController {
             maxShortcuts = 5;
         }
         final ArrayList<TLRPC.TL_topPeer> hintsFinal = new ArrayList<>();
-        if (SharedConfig.passcodeHash.length() <= 0) {
+        if (!SharedConfig.passcodeEnabled()) {
             for (int a = 0; a < hints.size(); a++) {
                 hintsFinal.add(hints.get(a));
                 if (hintsFinal.size() == maxShortcuts - 2) {

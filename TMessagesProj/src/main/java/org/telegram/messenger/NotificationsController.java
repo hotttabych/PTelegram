@@ -3713,7 +3713,7 @@ public class NotificationsController extends BaseController {
                 }
             }
 
-            if (!hasCallback && Build.VERSION.SDK_INT < 24 && SharedConfig.passcodeHash.length() == 0 && hasMessagesToReply()) {
+            if (!hasCallback && Build.VERSION.SDK_INT < 24 && !SharedConfig.passcodeEnabled() && hasMessagesToReply()) {
                 Intent replyIntent = new Intent(ApplicationLoader.applicationContext, PopupReplyReceiver.class);
                 replyIntent.putExtra("currentAccount", currentAccount);
                 if (Build.VERSION.SDK_INT <= 19) {

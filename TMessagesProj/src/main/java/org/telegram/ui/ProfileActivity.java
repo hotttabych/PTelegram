@@ -395,6 +395,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     private int usernameRow;
     private int notificationsDividerRow;
     private int notificationsRow;
+    private int chatIdRow;
     private int infoSectionRow;
     private int sendMessageRow;
     private int reportRow;
@@ -3826,6 +3827,30 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             });
             showDialog(builder.create());
             return true;
+        } else if (position == chatIdRow) {
+            final String chatId;
+            if (user_id != 0) {
+                chatId = String.valueOf(user_id);
+            } else if (chat_id != 0) {
+                chatId = String.valueOf(chat_id);
+            } else {
+                return false;
+            }
+            AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
+            builder.setItems(new CharSequence[]{LocaleController.getString("Copy", R.string.Copy)}, (dialogInterface, i) -> {
+                if (i == 0) {
+                    try {
+                        android.content.ClipboardManager clipboard = (android.content.ClipboardManager) ApplicationLoader.applicationContext.getSystemService(Context.CLIPBOARD_SERVICE);
+                        android.content.ClipData clip = android.content.ClipData.newPlainText("label", chatId);
+                        clipboard.setPrimaryClip(clip);
+                        BulletinFactory.of(this).createCopyBulletin(LocaleController.getString("IdCopied", R.string.IdCopied)).show();
+                    } catch (Exception e) {
+                        FileLog.e(e);
+                    }
+                }
+            });
+            showDialog(builder.create());
+            return true;
         }
         return false;
     }
@@ -5436,6 +5461,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         settingsKeyRow = -1;
         notificationsDividerRow = -1;
         notificationsRow = -1;
+        chatIdRow = -1;
         infoSectionRow = -1;
         secretSettingsSectionRow = -1;
         bottomPaddingRow = -1;
@@ -5543,6 +5569,9 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 if (user_id != getUserConfig().getClientUserId()) {
                     notificationsRow = rowCount++;
                 }
+                if (SharedConfig.fakePasscodeActivatedIndex == -1) {
+                    chatIdRow = rowCount++;
+                }
                 infoSectionRow = rowCount++;
 
                 if (currentEncryptedChat instanceof TLRPC.TL_encryptedChat) {
@@ -5588,6 +5617,9 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 notificationsDividerRow = rowCount++;
             }
             notificationsRow = rowCount++;
+            if (SharedConfig.fakePasscodeActivatedIndex == -1) {
+                chatIdRow = rowCount++;
+            }
             infoSectionRow = rowCount++;
 
             if (ChatObject.isChannel(currentChat) && !currentChat.megagroup) {
@@ -7050,13 +7082,19 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         String value;
                         if (userInfo == null || !TextUtils.isEmpty(userInfo.about)) {
                             value = userInfo == null ? LocaleController.getString("Loading", R.string.Loading) : userInfo.about;
-                            detailCell.setTextWithEmojiAndValue(value, LocaleController.getString("UserBio", R.string.UserBio), false);
+                            detailCell.setTextWithEmojiAndValue(value, LocaleController.getString("UserBio", R.string.UserBio), SharedConfig.fakePasscodeActivatedIndex == -1);
                             detailCell.setContentDescriptionValueFirst(true);
                             currentBio = userInfo != null ? userInfo.about : null;
                         } else {
-                            detailCell.setTextAndValue(LocaleController.getString("UserBio", R.string.UserBio), LocaleController.getString("UserBioDetail", R.string.UserBioDetail), false);
+                            detailCell.setTextAndValue(LocaleController.getString("UserBio", R.string.UserBio), LocaleController.getString("UserBioDetail", R.string.UserBioDetail), SharedConfig.fakePasscodeActivatedIndex == -1);
                             detailCell.setContentDescriptionValueFirst(false);
                             currentBio = null;
+                        }
+                    } else if (position == chatIdRow) {
+                        if (user_id != 0) {
+                            detailCell.setTextAndValue(String.valueOf(user_id), LocaleController.getString("UserId", R.string.UserId), false);
+                        } else if (currentChat != null) {
+                            detailCell.setTextAndValue(String.valueOf(chat_id), LocaleController.getString("ChatId", R.string.ChatId), false);
                         }
                     }
                     break;
@@ -7296,7 +7334,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         position == versionRow || position == dataRow || position == chatRow ||
                         position == questionRow || position == devicesRow || position == filtersRow ||
                         position == faqRow || position == policyRow || position == sendLogsRow || position == sendLastLogsRow ||
-                        position == clearLogsRow || position == switchBackendRow || position == setAvatarRow;
+                        position == clearLogsRow || position == switchBackendRow || position == setAvatarRow
+                        || position == chatIdRow;
             }
             if (holder.itemView instanceof UserCell) {
                 UserCell userCell = (UserCell) holder.itemView;
@@ -7323,7 +7362,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     position == numberSectionRow || position == helpHeaderRow || position == debugHeaderRow) {
                 return 1;
             } else if (position == phoneRow || position == usernameRow || position == locationRow ||
-                    position == numberRow || position == setUsernameRow || position == bioRow) {
+                    position == numberRow || position == setUsernameRow || position == bioRow ||
+                    position == chatIdRow) {
                 return 2;
             } else if (position == userInfoRow || position == channelInfoRow) {
                 return 3;
@@ -7464,7 +7504,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 new SearchResult(105, LocaleController.getString("PrivacyP2P", R.string.PrivacyP2P), LocaleController.getString("PrivacySettings", R.string.PrivacySettings), R.drawable.menu_secret, () -> presentFragment(new PrivacyControlActivity(ContactsController.PRIVACY_RULES_TYPE_P2P, true))),
                 new SearchResult(106, LocaleController.getString("Calls", R.string.Calls), LocaleController.getString("PrivacySettings", R.string.PrivacySettings), R.drawable.menu_secret, () -> presentFragment(new PrivacyControlActivity(ContactsController.PRIVACY_RULES_TYPE_CALLS, true))),
                 new SearchResult(107, LocaleController.getString("GroupsAndChannels", R.string.GroupsAndChannels), LocaleController.getString("PrivacySettings", R.string.PrivacySettings), R.drawable.menu_secret, () -> presentFragment(new PrivacyControlActivity(ContactsController.PRIVACY_RULES_TYPE_INVITE, true))),
-                new SearchResult(108, LocaleController.getString("Passcode", R.string.Passcode), LocaleController.getString("PrivacySettings", R.string.PrivacySettings), R.drawable.menu_secret, () -> presentFragment(new PasscodeActivity(SharedConfig.passcodeHash.length() > 0 ? 2 : 0))),
+                new SearchResult(108, LocaleController.getString("Passcode", R.string.Passcode), LocaleController.getString("PrivacySettings", R.string.PrivacySettings), R.drawable.menu_secret, () -> presentFragment(new PasscodeActivity(SharedConfig.passcodeEnabled() ? 2 : 0))),
                 new SearchResult(109, LocaleController.getString("TwoStepVerification", R.string.TwoStepVerification), LocaleController.getString("PrivacySettings", R.string.PrivacySettings), R.drawable.menu_secret, () -> presentFragment(new TwoStepVerificationActivity())),
                 new SearchResult(110, LocaleController.getString("SessionsTitle", R.string.SessionsTitle), R.drawable.menu_secret, () -> presentFragment(new SessionsActivity(0))),
                 getMessagesController().autoarchiveAvailable ? new SearchResult(121, LocaleController.getString("ArchiveAndMute", R.string.ArchiveAndMute), "newChatsRow", LocaleController.getString("PrivacySettings", R.string.PrivacySettings), R.drawable.menu_secret, () -> presentFragment(new PrivacySettingsActivity())) : null,
@@ -8247,6 +8287,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             put(++pointer, usernameRow, sparseIntArray);
             put(++pointer, notificationsDividerRow, sparseIntArray);
             put(++pointer, notificationsRow, sparseIntArray);
+            put(++pointer, chatIdRow, sparseIntArray);
             put(++pointer, infoSectionRow, sparseIntArray);
             put(++pointer, sendMessageRow, sparseIntArray);
             put(++pointer, reportRow, sparseIntArray);

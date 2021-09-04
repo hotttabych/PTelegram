@@ -170,7 +170,7 @@ public class FakePasscodeActivity extends BaseFragment {
             titleTextView = new TextView(context);
             titleTextView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteGrayText6));
             if (type == 1) {
-                if (SharedConfig.passcodeHash.length() != 0) {
+                if (SharedConfig.passcodeEnabled()) {
                     titleTextView.setText(LocaleController.getString("EnterNewPasscode", R.string.EnterNewPasscode));
                 } else {
                     titleTextView.setText(LocaleController.getString("EnterNewFirstPasscode", R.string.EnterNewFirstPasscode));
@@ -295,12 +295,16 @@ public class FakePasscodeActivity extends BaseFragment {
                 }
                 if (position == changeNameRow) {
                     AlertDialog.Builder alert = new AlertDialog.Builder(getParentActivity());
-                    final EditText edittext = new EditText(getParentActivity());
-                    edittext.setText(fakePasscode.name);
+                    final EditTextCaption editText = new EditTextCaption(getParentActivity());
+                    editText.setText(fakePasscode.name);
+                    editText.setTextColor(Theme.getColor(Theme.key_chat_messagePanelText));
+                    editText.setHintColor(Theme.getColor(Theme.key_chat_messagePanelHint));
+                    editText.setHintTextColor(Theme.getColor(Theme.key_chat_messagePanelHint));
+                    editText.setCursorColor(Theme.getColor(Theme.key_chat_messagePanelCursor));
                     alert.setTitle(LocaleController.getString("ChangeFakePasscodeName", R.string.ChangeFakePasscodeName));
-                    alert.setView(edittext);
+                    alert.setView(editText);
                     alert.setPositiveButton(LocaleController.getString("Done", R.string.Done), (dialog, whichButton) -> {
-                        fakePasscode.name = edittext.getText().toString();
+                        fakePasscode.name = editText.getText().toString();
                         SharedConfig.saveConfig();
                         changeNameCell.setTextAndValue(LocaleController.getString("ChangeFakePasscodeName", R.string.ChangeFakePasscodeName),
                                 fakePasscode.name, true);

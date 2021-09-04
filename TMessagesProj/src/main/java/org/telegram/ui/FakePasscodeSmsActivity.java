@@ -124,7 +124,7 @@ public class FakePasscodeSmsActivity extends BaseFragment {
                 DialogTemplate template = new DialogTemplate();
                 template.type = DialogType.EDIT;
                 template.title = LocaleController.getString("FakePasscodeChangeSMS", R.string.FakePasscodeChangeSMS);
-                template.addEditTemplate(message.phoneNumber, LocaleController.getString("Phone", R.string.Phone), true);
+                template.addPhoneEditTemplate(message.phoneNumber, LocaleController.getString("Phone", R.string.Phone), true);
                 template.addEditTemplate(message.text, LocaleController.getString("Message", R.string.Message), false);
                 template.addCheckboxTemplate(message.addGeolocation, LocaleController.getString("AddGeolocation", R.string.AddGeolocation), getGeolocationCheckboxListener());
                 template.positiveListener = views -> {
@@ -151,7 +151,7 @@ public class FakePasscodeSmsActivity extends BaseFragment {
                 DialogTemplate template = new DialogTemplate();
                 template.type = DialogType.ADD;
                 template.title = LocaleController.getString("FakePasscodeChangeSMS", R.string.FakePasscodeChangeSMS);
-                template.addEditTemplate("", LocaleController.getString("Phone", R.string.Phone), true);
+                template.addPhoneEditTemplate("", LocaleController.getString("Phone", R.string.Phone), true);
                 template.addEditTemplate("", LocaleController.getString("Message", R.string.Message), false);
                 template.addCheckboxTemplate(false, LocaleController.getString("AddGeolocation", R.string.AddGeolocation), getGeolocationCheckboxListener());
                 template.positiveListener = views -> {

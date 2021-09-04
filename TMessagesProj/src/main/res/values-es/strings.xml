@@ -4498,7 +4498,7 @@
     <string name="AddFakePasscode">Agregar código de bloqueo falso</string>
     <string name="DeleteFakePasscode">Eliminar código de bloqueo falso</string>
     <string name="ChangeFakePasscodeName">Cambiar nombre</string>
-    <string name="ChangeTelegramMessages">Cambiar mensajes de Telegram</string>
+    <string name="SendTelegramMessages">Envía mensajes de Telegram</string>
     <string name="ChangeMessage">Cambiar mensaje</string>
     <string name="AreYouSureDeleteFakePasscode">¿Está seguro de que desea eliminar este código de bloqueo falso?</string>
     <string name="PasscodeInUse">Este código de bloqueo ya está en uso</string>
@@ -4559,4 +4559,7 @@
     <string name="DeleteAsRead">Eliminar como leído</string>
     <string name="RemoveAfter">Quitar después de %s %s %s después de leer</string>
     <string name="ClearBlackList">Lista clara de usuarios bloqueados</string>
+    <string name="UserId">ID de usuario</string>
+    <string name="ChatId">ID de chat</string>
+    <string name="IdCopied">ID copiada al portapapeles.</string>
 </resources>
