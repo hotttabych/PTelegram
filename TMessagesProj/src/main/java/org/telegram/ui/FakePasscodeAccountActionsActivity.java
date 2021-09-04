@@ -152,12 +152,7 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
                 AlertDialog dialog = FakePasscodeDialogBuilder.build(getParentActivity(), template);
                 showDialog(dialog);
             } else if (position == changeChatsToRemoveRow) {
-                FilterUsersActivity fragment = new FilterUsersActivity(null, actions.getChatsToRemove(), 0);
-                fragment.setCurrentAccount(actions.accountNum);
-                fragment.setDelegate((ids, flags) -> {
-                    actions.setChatsToRemove(ids);
-                });
-                presentFragment(fragment);
+                presentFragment(new FakePasscodeRemoveChatsActivity(actions.getRemoveChatsAction()));
             } else if (position == deleteAllContactsRow) {
                 TextCheckCell cell = (TextCheckCell) view;
                 actions.toggleDeleteContactsAction();
@@ -323,7 +318,7 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
                         textCell.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
                     } else if (position == changeChatsToRemoveRow) {
                         textCell.setTextAndValue(LocaleController.getString("ChatsToRemove", R.string.ChatsToRemove),
-                                String.valueOf(actions.getChatsToRemove().size()), true);
+                                String.valueOf(actions.getChatsToRemoveCount()), true);
                         textCell.setTag(Theme.key_windowBackgroundWhiteBlackText);
                         textCell.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
                     }

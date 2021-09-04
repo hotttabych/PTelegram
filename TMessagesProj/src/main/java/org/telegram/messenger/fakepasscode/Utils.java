@@ -18,6 +18,7 @@ import org.telegram.tgnet.TLRPC;
 
 import java.io.File;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.Callable;
 
 public class Utils {
@@ -122,6 +123,15 @@ public class Utils {
             }
         } else {
             messagesController.deleteDialog(id, 0, false);
+        }
+    }
+
+    public static int getChatOrUserId(long id, Optional<Integer> account) {
+        if (id >= Integer.MIN_VALUE || !account.isPresent()) {
+            return (int)id;
+        } else {
+            MessagesController controller = MessagesController.getInstance(account.get());
+            return controller.getEncryptedChat((int)(id >> 32)).user_id;
         }
     }
 }

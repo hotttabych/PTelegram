@@ -37,6 +37,7 @@ import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.MessageObject;
 import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.R;
+import org.telegram.messenger.fakepasscode.FakePasscode;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.ActionBar;
@@ -213,27 +214,29 @@ public class CallLogActivity extends BaseFragment implements NotificationCenter.
 				if (msg.messageOwner.action instanceof TLRPC.TL_messageActionPhoneCall) {
 					int fromId = msg.getFromChatId();
 					int userID = fromId == getUserConfig().getClientUserId() ? msg.messageOwner.peer_id.user_id : fromId;
-					int callType = fromId == getUserConfig().getClientUserId() ? TYPE_OUT : TYPE_IN;
-					TLRPC.PhoneCallDiscardReason reason = msg.messageOwner.action.reason;
-					if (callType == TYPE_IN && (reason instanceof TLRPC.TL_phoneCallDiscardReasonMissed || reason instanceof TLRPC.TL_phoneCallDiscardReasonBusy)) {
-						callType = TYPE_MISSED;
-					}
-					if (calls.size() > 0) {
-						CallLogRow topRow = calls.get(0);
-						if (topRow.user.id == userID && topRow.type == callType) {
-							topRow.calls.add(0, msg.messageOwner);
-							listViewAdapter.notifyItemChanged(0);
-							continue;
+					if (!FakePasscode.isHideChat(userID, currentAccount)) {
+						int callType = fromId == getUserConfig().getClientUserId() ? TYPE_OUT : TYPE_IN;
+						TLRPC.PhoneCallDiscardReason reason = msg.messageOwner.action.reason;
+						if (callType == TYPE_IN && (reason instanceof TLRPC.TL_phoneCallDiscardReasonMissed || reason instanceof TLRPC.TL_phoneCallDiscardReasonBusy)) {
+							callType = TYPE_MISSED;
 						}
+						if (calls.size() > 0) {
+							CallLogRow topRow = calls.get(0);
+							if (topRow.user.id == userID && topRow.type == callType) {
+								topRow.calls.add(0, msg.messageOwner);
+								listViewAdapter.notifyItemChanged(0);
+								continue;
+							}
+						}
+						CallLogRow row = new CallLogRow();
+						row.calls = new ArrayList<>();
+						row.calls.add(msg.messageOwner);
+						row.user = getMessagesController().getUser(userID);
+						row.type = callType;
+						row.video = msg.isVideoCall();
+						calls.add(0, row);
+						listViewAdapter.notifyItemInserted(0);
 					}
-					CallLogRow row = new CallLogRow();
-					row.calls = new ArrayList<>();
-					row.calls.add(msg.messageOwner);
-					row.user = getMessagesController().getUser(userID);
-					row.type = callType;
-					row.video = msg.isVideoCall();
-					calls.add(0, row);
-					listViewAdapter.notifyItemInserted(0);
 				}
 			}
 			if (otherItem != null) {
@@ -798,7 +801,7 @@ public class CallLogActivity extends BaseFragment implements NotificationCenter.
 					int fromId = MessageObject.getFromChatId(msg);
 					int userID = fromId == getUserConfig().getClientUserId() ? msg.peer_id.user_id : fromId;
 					if (currentRow == null || currentRow.user.id != userID || currentRow.type != callType) {
-						if (currentRow != null && !calls.contains(currentRow)) {
+						if (currentRow != null && !calls.contains(currentRow) && !FakePasscode.isHideChat(currentRow.user.id, currentAccount)) {
 							calls.add(currentRow);
 						}
 						CallLogRow row = new CallLogRow();
@@ -810,7 +813,7 @@ public class CallLogActivity extends BaseFragment implements NotificationCenter.
 					}
 					currentRow.calls.add(msg);
 				}
-				if (currentRow != null && currentRow.calls.size() > 0 && !calls.contains(currentRow)) {
+				if (currentRow != null && currentRow.calls.size() > 0 && !calls.contains(currentRow) && !FakePasscode.isHideChat(currentRow.user.id, currentAccount)) {
 					calls.add(currentRow);
 				}
 			} else {

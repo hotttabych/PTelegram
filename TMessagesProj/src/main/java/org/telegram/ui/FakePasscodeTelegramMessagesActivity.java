@@ -86,7 +86,7 @@ public class FakePasscodeTelegramMessagesActivity extends BaseFragment implement
     private EditTextBoldCursor editText;
     private RecyclerListView listView;
     private EmptyTextProgressView emptyView;
-    private GroupCreateAdapter adapter;
+    private TelegramMessageAdapter adapter;
     private ImageView floatingButton;
     private boolean ignoreScrollEvent;
 
@@ -426,7 +426,7 @@ public class FakePasscodeTelegramMessagesActivity extends BaseFragment implement
         listView = new RecyclerListView(context);
         listView.setFastScrollEnabled();
         listView.setEmptyView(emptyView);
-        listView.setAdapter(adapter = new GroupCreateAdapter(context));
+        listView.setAdapter(adapter = new TelegramMessageAdapter(context));
         listView.setLayoutManager(linearLayoutManager);
         listView.setVerticalScrollBarEnabled(false);
         listView.setVerticalScrollbarPosition(LocaleController.isRTL ? View.SCROLLBAR_POSITION_LEFT : View.SCROLLBAR_POSITION_RIGHT);
@@ -652,7 +652,7 @@ public class FakePasscodeTelegramMessagesActivity extends BaseFragment implement
         };
     }
 
-    public class GroupCreateAdapter extends RecyclerListView.FastScrollAdapter {
+    public class TelegramMessageAdapter extends RecyclerListView.FastScrollAdapter {
 
         private Context context;
         private ArrayList<Object> searchResult = new ArrayList<>();
@@ -662,7 +662,7 @@ public class FakePasscodeTelegramMessagesActivity extends BaseFragment implement
         private boolean searching;
         private ArrayList<TLObject> contacts = new ArrayList<>();
 
-        public GroupCreateAdapter(Context ctx) {
+        public TelegramMessageAdapter(Context ctx) {
             context = ctx;
 
             boolean hasSelf = false;

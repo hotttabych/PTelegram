@@ -1,16 +1,5 @@
-/*
- * This is the source code of Telegram for Android v. 5.x.x.
- * It is licensed under GNU GPL v. 2 or later.
- * You should have received a copy of the license in this archive (see LICENSE).
- *
- * Copyright Nikolai Kudashov, 2013-2018.
- */
-
 package org.telegram.ui;
 
-import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
-import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.animation.StateListAnimator;
 import android.annotation.SuppressLint;
@@ -29,7 +18,6 @@ import android.text.Spanned;
 import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.text.style.ForegroundColorSpan;
-import android.util.SparseArray;
 import android.util.TypedValue;
 import android.view.ActionMode;
 import android.view.Gravity;
@@ -41,66 +29,67 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewOutlineProvider;
 import android.view.inputmethod.EditorInfo;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.ScrollView;
 
+import androidx.annotation.Keep;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import org.telegram.messenger.AccountInstance;
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ContactsController;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.R;
+import org.telegram.messenger.SharedConfig;
+import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.UserObject;
 import org.telegram.messenger.Utilities;
-import org.telegram.messenger.fakepasscode.FakePasscode;
+import org.telegram.messenger.fakepasscode.RemoveChatsAction;
 import org.telegram.tgnet.TLObject;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.ActionBar;
+import org.telegram.ui.ActionBar.AlertDialog;
 import org.telegram.ui.ActionBar.BaseFragment;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.ActionBar.ThemeDescription;
 import org.telegram.ui.Adapters.SearchAdapterHelper;
+import org.telegram.ui.Cells.ChatRemoveCell;
 import org.telegram.ui.Cells.GraySectionCell;
-import org.telegram.ui.Cells.GroupCreateUserCell;
 import org.telegram.ui.Components.CombinedDrawable;
 import org.telegram.ui.Components.EditTextBoldCursor;
 import org.telegram.ui.Components.EmptyTextProgressView;
 import org.telegram.ui.Components.GroupCreateSpan;
 import org.telegram.ui.Components.LayoutHelper;
 import org.telegram.ui.Components.RecyclerListView;
+import org.telegram.ui.DialogBuilder.DialogTemplate;
+import org.telegram.ui.DialogBuilder.DialogType;
+import org.telegram.ui.DialogBuilder.FakePasscodeDialogBuilder;
 
 import java.util.ArrayList;
+import java.util.List;
 
-import androidx.annotation.Keep;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-
-public class FilterUsersActivity extends BaseFragment implements NotificationCenter.NotificationCenterDelegate, View.OnClickListener {
+public class FakePasscodeRemoveChatsActivity extends BaseFragment implements NotificationCenter.NotificationCenterDelegate {
 
     private ScrollView scrollView;
     private SpansContainer spansContainer;
     private EditTextBoldCursor editText;
     private RecyclerListView listView;
     private EmptyTextProgressView emptyView;
-    private GroupCreateAdapter adapter;
-    private FilterUsersActivityDelegate delegate;
-    private AnimatorSet currentDoneButtonAnimation;
+    private RemoveChatsAdapter adapter;
     private ImageView floatingButton;
     private boolean ignoreScrollEvent;
-    private int selectedCount;
 
     private int containerHeight;
 
-    //private boolean doneButtonVisible;
-
-    private boolean isInclude;
-    private int filterFlags;
-    private ArrayList<Integer> initialIds;
+    RemoveChatsAction action;
 
     private boolean searchWas;
     private boolean searching;
-    private SparseArray<GroupCreateSpan> selectedContacts = new SparseArray<>();
-    private ArrayList<GroupCreateSpan> allSpans = new ArrayList<>();
     private GroupCreateSpan currentDeletingSpan;
 
     private int fieldY;
@@ -110,7 +99,6 @@ public class FilterUsersActivity extends BaseFragment implements NotificationCen
     private static class ItemDecoration extends RecyclerView.ItemDecoration {
 
         private boolean single;
-        private int skipRows;
 
         public void setSingle(boolean value) {
             single = value;
@@ -125,7 +113,7 @@ public class FilterUsersActivity extends BaseFragment implements NotificationCen
                 View child = parent.getChildAt(i);
                 View nextChild = i < childCount - 1 ? parent.getChildAt(i + 1) : null;
                 int position = parent.getChildAdapterPosition(child);
-                if (position < skipRows || child instanceof GraySectionCell || nextChild instanceof GraySectionCell) {
+                if (child instanceof GraySectionCell || nextChild instanceof GraySectionCell) {
                     continue;
                 }
                 top = child.getBottom();
@@ -136,26 +124,11 @@ public class FilterUsersActivity extends BaseFragment implements NotificationCen
         @Override
         public void getItemOffsets(android.graphics.Rect outRect, View view, RecyclerView parent, RecyclerView.State state) {
             super.getItemOffsets(outRect, view, parent, state);
-            /*int position = parent.getChildAdapterPosition(view);
-            if (position == 0 || !searching && position == 1) {
-                return;
-            }*/
             outRect.top = 1;
         }
     }
 
-    public interface FilterUsersActivityDelegate {
-        void didSelectChats(ArrayList<Integer> ids, int flags);
-    }
-
     private class SpansContainer extends ViewGroup {
-
-        private AnimatorSet currentAnimation;
-        private boolean animationStarted;
-        private ArrayList<Animator> animators = new ArrayList<>();
-        private View addingSpan;
-        private View removingSpan;
-
         public SpansContainer(Context context) {
             super(context);
         }
@@ -176,7 +149,7 @@ public class FilterUsersActivity extends BaseFragment implements NotificationCen
                     continue;
                 }
                 child.measure(MeasureSpec.makeMeasureSpec(width, MeasureSpec.AT_MOST), MeasureSpec.makeMeasureSpec(AndroidUtilities.dp(32), MeasureSpec.EXACTLY));
-                if (child != removingSpan && currentLineWidth + child.getMeasuredWidth() > maxWidth) {
+                if (currentLineWidth + child.getMeasuredWidth() > maxWidth) {
                     y += child.getMeasuredHeight() + AndroidUtilities.dp(8);
                     currentLineWidth = 0;
                 }
@@ -185,25 +158,9 @@ public class FilterUsersActivity extends BaseFragment implements NotificationCen
                     allCurrentLineWidth = 0;
                 }
                 x = AndroidUtilities.dp(13) + currentLineWidth;
-                if (!animationStarted) {
-                    if (child == removingSpan) {
-                        child.setTranslationX(AndroidUtilities.dp(13) + allCurrentLineWidth);
-                        child.setTranslationY(allY);
-                    } else if (removingSpan != null) {
-                        if (child.getTranslationX() != x) {
-                            animators.add(ObjectAnimator.ofFloat(child, View.TRANSLATION_X, x));
-                        }
-                        if (child.getTranslationY() != y) {
-                            animators.add(ObjectAnimator.ofFloat(child, View.TRANSLATION_Y, y));
-                        }
-                    } else {
-                        child.setTranslationX(x);
-                        child.setTranslationY(y);
-                    }
-                }
-                if (child != removingSpan) {
-                    currentLineWidth += child.getMeasuredWidth() + AndroidUtilities.dp(9);
-                }
+                child.setTranslationX(x);
+                child.setTranslationY(y);
+                currentLineWidth += child.getMeasuredWidth() + AndroidUtilities.dp(9);
                 allCurrentLineWidth += child.getMeasuredWidth() + AndroidUtilities.dp(9);
             }
             int minWidth;
@@ -220,35 +177,12 @@ public class FilterUsersActivity extends BaseFragment implements NotificationCen
                 allY += AndroidUtilities.dp(32 + 8);
             }
             editText.measure(MeasureSpec.makeMeasureSpec(maxWidth - currentLineWidth, MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(AndroidUtilities.dp(32), MeasureSpec.EXACTLY));
-            if (!animationStarted) {
-                int currentHeight = allY + AndroidUtilities.dp(32 + 10);
-                int fieldX = currentLineWidth + AndroidUtilities.dp(16);
-                fieldY = y;
-                if (currentAnimation != null) {
-                    int resultHeight = y + AndroidUtilities.dp(32 + 10);
-                    if (containerHeight != resultHeight) {
-                        animators.add(ObjectAnimator.ofInt(FilterUsersActivity.this, "containerHeight", resultHeight));
-                    }
-                    if (editText.getTranslationX() != fieldX) {
-                        animators.add(ObjectAnimator.ofFloat(editText, View.TRANSLATION_X, fieldX));
-                    }
-                    if (editText.getTranslationY() != fieldY) {
-                        animators.add(ObjectAnimator.ofFloat(editText, View.TRANSLATION_Y, fieldY));
-                    }
-                    editText.setAllowDrawCursor(false);
-                    currentAnimation.playTogether(animators);
-                    currentAnimation.start();
-                    animationStarted = true;
-                } else {
-                    containerHeight = currentHeight;
-                    editText.setTranslationX(fieldX);
-                    editText.setTranslationY(fieldY);
-                }
-            } else if (currentAnimation != null) {
-                if (!ignoreScrollEvent && removingSpan == null) {
-                    editText.bringPointIntoView(editText.getSelectionStart());
-                }
-            }
+            int currentHeight = allY + AndroidUtilities.dp(32 + 10);
+            int fieldX = currentLineWidth + AndroidUtilities.dp(16);
+            fieldY = y;
+            containerHeight = currentHeight;
+            editText.setTranslationX(fieldX);
+            editText.setTranslationY(fieldY);
             setMeasuredDimension(width, containerHeight);
         }
 
@@ -260,160 +194,45 @@ public class FilterUsersActivity extends BaseFragment implements NotificationCen
                 child.layout(0, 0, child.getMeasuredWidth(), child.getMeasuredHeight());
             }
         }
-
-        public void addSpan(final GroupCreateSpan span, boolean animated) {
-            allSpans.add(span);
-            int uid = span.getUid();
-            if (uid > Integer.MIN_VALUE + 7) {
-                selectedCount++;
-            }
-            selectedContacts.put(uid, span);
-
-            editText.setHintVisible(false);
-            if (currentAnimation != null) {
-                currentAnimation.setupEndValues();
-                currentAnimation.cancel();
-            }
-            animationStarted = false;
-            if (animated) {
-                currentAnimation = new AnimatorSet();
-                currentAnimation.addListener(new AnimatorListenerAdapter() {
-                    @Override
-                    public void onAnimationEnd(Animator animator) {
-                        addingSpan = null;
-                        currentAnimation = null;
-                        animationStarted = false;
-                        editText.setAllowDrawCursor(true);
-                    }
-                });
-                currentAnimation.setDuration(150);
-                addingSpan = span;
-                animators.clear();
-                animators.add(ObjectAnimator.ofFloat(addingSpan, View.SCALE_X, 0.01f, 1.0f));
-                animators.add(ObjectAnimator.ofFloat(addingSpan, View.SCALE_Y, 0.01f, 1.0f));
-                animators.add(ObjectAnimator.ofFloat(addingSpan, View.ALPHA, 0.0f, 1.0f));
-            }
-            addView(span);
-        }
-
-        public void removeSpan(final GroupCreateSpan span) {
-            ignoreScrollEvent = true;
-            int uid = span.getUid();
-            if (uid > Integer.MIN_VALUE + 7) {
-                selectedCount--;
-            }
-            selectedContacts.remove(uid);
-            allSpans.remove(span);
-            span.setOnClickListener(null);
-
-            if (currentAnimation != null) {
-                currentAnimation.setupEndValues();
-                currentAnimation.cancel();
-            }
-            animationStarted = false;
-            currentAnimation = new AnimatorSet();
-            currentAnimation.addListener(new AnimatorListenerAdapter() {
-                @Override
-                public void onAnimationEnd(Animator animator) {
-                    removeView(span);
-                    removingSpan = null;
-                    currentAnimation = null;
-                    animationStarted = false;
-                    editText.setAllowDrawCursor(true);
-                    if (allSpans.isEmpty()) {
-                        editText.setHintVisible(true);
-                    }
-                }
-            });
-            currentAnimation.setDuration(150);
-            removingSpan = span;
-            animators.clear();
-            animators.add(ObjectAnimator.ofFloat(removingSpan, View.SCALE_X, 1.0f, 0.01f));
-            animators.add(ObjectAnimator.ofFloat(removingSpan, View.SCALE_Y, 1.0f, 0.01f));
-            animators.add(ObjectAnimator.ofFloat(removingSpan, View.ALPHA, 1.0f, 0.0f));
-            requestLayout();
-        }
     }
 
-    public FilterUsersActivity(boolean include, ArrayList<Integer> arrayList, int flags) {
+    public FakePasscodeRemoveChatsActivity(RemoveChatsAction action) {
         super();
-        isInclude = include;
-        filterFlags = flags;
-        initialIds = arrayList;
+        this.action = action;
     }
 
     @Override
     public boolean onFragmentCreate() {
-        NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.contactsDidLoad);
-        NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.updateInterfaces);
-        NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.chatDidCreated);
+        NotificationCenter.getInstance(action.accountNum).addObserver(this, NotificationCenter.contactsDidLoad);
+        NotificationCenter.getInstance(action.accountNum).addObserver(this, NotificationCenter.updateInterfaces);
+        NotificationCenter.getInstance(action.accountNum).addObserver(this, NotificationCenter.chatDidCreated);
         return super.onFragmentCreate();
     }
 
     @Override
     public void onFragmentDestroy() {
         super.onFragmentDestroy();
-        NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.contactsDidLoad);
-        NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.updateInterfaces);
-        NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.chatDidCreated);
-    }
-
-    @Override
-    public void onClick(View v) {
-        GroupCreateSpan span = (GroupCreateSpan) v;
-        if (span.isDeleting()) {
-            currentDeletingSpan = null;
-            spansContainer.removeSpan(span);
-            if (span.getUid() == Integer.MIN_VALUE) {
-                filterFlags &=~ MessagesController.DIALOG_FILTER_FLAG_CONTACTS;
-            } else if (span.getUid() == Integer.MIN_VALUE + 1) {
-                filterFlags &=~ MessagesController.DIALOG_FILTER_FLAG_NON_CONTACTS;
-            } else if (span.getUid() == Integer.MIN_VALUE + 2) {
-                filterFlags &=~ MessagesController.DIALOG_FILTER_FLAG_GROUPS;
-            } else if (span.getUid() == Integer.MIN_VALUE + 3) {
-                filterFlags &=~ MessagesController.DIALOG_FILTER_FLAG_CHANNELS;
-            } else if (span.getUid() == Integer.MIN_VALUE + 4) {
-                filterFlags &=~ MessagesController.DIALOG_FILTER_FLAG_BOTS;
-            } else if (span.getUid() == Integer.MIN_VALUE + 5) {
-                filterFlags &=~ MessagesController.DIALOG_FILTER_FLAG_EXCLUDE_MUTED;
-            } else if (span.getUid() == Integer.MIN_VALUE + 6) {
-                filterFlags &=~ MessagesController.DIALOG_FILTER_FLAG_EXCLUDE_READ;
-            } else if (span.getUid() == Integer.MIN_VALUE + 7) {
-                filterFlags &=~ MessagesController.DIALOG_FILTER_FLAG_EXCLUDE_ARCHIVED;
-            }
-            updateHint();
-            checkVisibleRows();
-        } else {
-            if (currentDeletingSpan != null) {
-                currentDeletingSpan.cancelDeleteAnimation();
-            }
-            currentDeletingSpan = span;
-            span.startDeleteAnimation();
-        }
+        NotificationCenter.getInstance(action.accountNum).removeObserver(this, NotificationCenter.contactsDidLoad);
+        NotificationCenter.getInstance(action.accountNum).removeObserver(this, NotificationCenter.updateInterfaces);
+        NotificationCenter.getInstance(action.accountNum).removeObserver(this, NotificationCenter.chatDidCreated);
     }
 
     @Override
     public View createView(Context context) {
         searching = false;
         searchWas = false;
-        allSpans.clear();
-        selectedContacts.clear();
         currentDeletingSpan = null;
 
         actionBar.setBackButtonImage(R.drawable.ic_ab_back);
         actionBar.setAllowOverlayTitle(true);
-        if (isInclude) {
-            actionBar.setTitle(LocaleController.getString("FilterAlwaysShow", R.string.FilterAlwaysShow));
-        } else {
-            actionBar.setTitle(LocaleController.getString("FilterNeverShow", R.string.FilterNeverShow));
-        }
+        actionBar.setTitle(LocaleController.getString("ChatsToRemove", R.string.ChatsToRemove));
         actionBar.setActionBarMenuOnItemClick(new ActionBar.ActionBarMenuOnItemClick() {
             @Override
             public void onItemClick(int id) {
                 if (id == -1) {
                     finishFragment();
                 } else if (id == done_button) {
-                    onDonePressed(true);
+                    onDonePressed();
                 }
             }
         });
@@ -539,7 +358,6 @@ public class FilterUsersActivity extends BaseFragment implements NotificationCen
                 return false;
             }
         });
-        //editText.setOnEditorActionListener((v, actionId, event) -> actionId == EditorInfo.IME_ACTION_DONE && onDonePressed(true));
         editText.setOnKeyListener(new View.OnKeyListener() {
 
             private boolean wasEmpty;
@@ -549,26 +367,7 @@ public class FilterUsersActivity extends BaseFragment implements NotificationCen
                 if (keyCode == KeyEvent.KEYCODE_DEL) {
                     if (event.getAction() == KeyEvent.ACTION_DOWN) {
                         wasEmpty = editText.length() == 0;
-                    } else if (event.getAction() == KeyEvent.ACTION_UP && wasEmpty && !allSpans.isEmpty()) {
-                        GroupCreateSpan span = allSpans.get(allSpans.size() - 1);
-                        spansContainer.removeSpan(span);
-                        if (span.getUid() == Integer.MIN_VALUE) {
-                            filterFlags &=~ MessagesController.DIALOG_FILTER_FLAG_CONTACTS;
-                        } else if (span.getUid() == Integer.MIN_VALUE + 1) {
-                            filterFlags &=~ MessagesController.DIALOG_FILTER_FLAG_NON_CONTACTS;
-                        } else if (span.getUid() == Integer.MIN_VALUE + 2) {
-                            filterFlags &=~ MessagesController.DIALOG_FILTER_FLAG_GROUPS;
-                        } else if (span.getUid() == Integer.MIN_VALUE + 3) {
-                            filterFlags &=~ MessagesController.DIALOG_FILTER_FLAG_CHANNELS;
-                        } else if (span.getUid() == Integer.MIN_VALUE + 4) {
-                            filterFlags &=~ MessagesController.DIALOG_FILTER_FLAG_BOTS;
-                        } else if (span.getUid() == Integer.MIN_VALUE + 5) {
-                            filterFlags &=~ MessagesController.DIALOG_FILTER_FLAG_EXCLUDE_MUTED;
-                        } else if (span.getUid() == Integer.MIN_VALUE + 6) {
-                            filterFlags &=~ MessagesController.DIALOG_FILTER_FLAG_EXCLUDE_READ;
-                        } else if (span.getUid() == Integer.MIN_VALUE + 7) {
-                            filterFlags &=~ MessagesController.DIALOG_FILTER_FLAG_EXCLUDE_ARCHIVED;
-                        }
+                    } else if (event.getAction() == KeyEvent.ACTION_UP && wasEmpty) {
                         updateHint();
                         checkVisibleRows();
                         return true;
@@ -608,7 +407,7 @@ public class FilterUsersActivity extends BaseFragment implements NotificationCen
         });
 
         emptyView = new EmptyTextProgressView(context);
-        if (ContactsController.getInstance(currentAccount).isLoadingContacts()) {
+        if (ContactsController.getInstance(action.accountNum).isLoadingContacts()) {
             emptyView.showProgress();
         } else {
             emptyView.showTextView();
@@ -622,81 +421,41 @@ public class FilterUsersActivity extends BaseFragment implements NotificationCen
         listView = new RecyclerListView(context);
         listView.setFastScrollEnabled();
         listView.setEmptyView(emptyView);
-        listView.setAdapter(adapter = new GroupCreateAdapter(context));
+        listView.setAdapter(adapter = new RemoveChatsAdapter(context));
         listView.setLayoutManager(linearLayoutManager);
         listView.setVerticalScrollBarEnabled(false);
         listView.setVerticalScrollbarPosition(LocaleController.isRTL ? View.SCROLLBAR_POSITION_LEFT : View.SCROLLBAR_POSITION_RIGHT);
         listView.addItemDecoration(new ItemDecoration());
         frameLayout.addView(listView);
         listView.setOnItemClickListener((view, position) -> {
-            if (view instanceof GroupCreateUserCell) {
-                GroupCreateUserCell cell = (GroupCreateUserCell) view;
-                Object object = cell.getObject();
+            if (view instanceof ChatRemoveCell) {
+                ChatRemoveCell cell = (ChatRemoveCell) view;
+                TLObject object = cell.getObject();
                 int id;
-                if (object instanceof String) {
-                    int flag;
-                    if (isInclude) {
-                        if (position == 1) {
-                            flag = MessagesController.DIALOG_FILTER_FLAG_CONTACTS;
-                            id = Integer.MIN_VALUE;
-                        } else if (position == 2) {
-                            flag = MessagesController.DIALOG_FILTER_FLAG_NON_CONTACTS;
-                            id = Integer.MIN_VALUE + 1;
-                        } else if (position == 3) {
-                            flag = MessagesController.DIALOG_FILTER_FLAG_GROUPS;
-                            id = Integer.MIN_VALUE + 2;
-                        } else if (position == 4) {
-                            flag = MessagesController.DIALOG_FILTER_FLAG_CHANNELS;
-                            id = Integer.MIN_VALUE + 3;
-                        } else {
-                            flag = MessagesController.DIALOG_FILTER_FLAG_BOTS;
-                            id = Integer.MIN_VALUE + 4;
-                        }
-                    } else {
-                        if (position == 1) {
-                            flag = MessagesController.DIALOG_FILTER_FLAG_EXCLUDE_MUTED;
-                            id = Integer.MIN_VALUE + 5;
-                        } else if (position == 2) {
-                            flag = MessagesController.DIALOG_FILTER_FLAG_EXCLUDE_READ;
-                            id = Integer.MIN_VALUE + 6;
-                        } else {
-                            flag = MessagesController.DIALOG_FILTER_FLAG_EXCLUDE_ARCHIVED;
-                            id = Integer.MIN_VALUE + 7;
-                        }
-                    }
-                    if (cell.isChecked()) {
-                        filterFlags &=~ flag;
-                    } else {
-                        filterFlags |= flag;
-                    }
+                if (object instanceof TLRPC.User) {
+                    id = ((TLRPC.User) object).id;
+                } else if (object instanceof TLRPC.Chat) {
+                    id = -((TLRPC.Chat) object).id;
                 } else {
-                    if (object instanceof TLRPC.User) {
-                        id = ((TLRPC.User) object).id;
-                    } else if (object instanceof TLRPC.Chat) {
-                        id = -((TLRPC.Chat) object).id;
-                    } else {
-                        return;
-                    }
+                    return;
                 }
                 boolean exists;
-                if (exists = selectedContacts.indexOfKey(id) >= 0) {
-                    GroupCreateSpan span = selectedContacts.get(id);
-                    spansContainer.removeSpan(span);
+                if (exists = action.contains(id)) {
+                    action.remove(id);
                 } else {
-                    if (!(object instanceof String) && selectedCount >= 100) {
+                    if (action.getChatEntriesToRemove().size() >= 100) {
                         return;
                     }
                     if (object instanceof TLRPC.User) {
                         TLRPC.User user = (TLRPC.User) object;
-                        MessagesController.getInstance(currentAccount).putUser(user, !searching);
+                        MessagesController.getInstance(action.accountNum).putUser(user, !searching);
                     } else if (object instanceof TLRPC.Chat) {
                         TLRPC.Chat chat = (TLRPC.Chat) object;
-                        MessagesController.getInstance(currentAccount).putChat(chat, !searching);
+                        MessagesController.getInstance(action.accountNum).putChat(chat, !searching);
                     }
-                    GroupCreateSpan span = new GroupCreateSpan(editText.getContext(), object);
-                    spansContainer.addSpan(span, true);
-                    span.setOnClickListener(FilterUsersActivity.this);
+                    action.add(id);
                 }
+                SharedConfig.saveConfig();
                 updateHint();
                 if (searching || searchWas) {
                     AndroidUtilities.showKeyboard(editText);
@@ -745,70 +504,8 @@ public class FilterUsersActivity extends BaseFragment implements NotificationCen
             });
         }
         frameLayout.addView(floatingButton);
-        floatingButton.setOnClickListener(v -> onDonePressed(true));
-        /*floatingButton.setVisibility(View.INVISIBLE);
-        floatingButton.setScaleX(0.0f);
-        floatingButton.setScaleY(0.0f);
-        floatingButton.setAlpha(0.0f);*/
+        floatingButton.setOnClickListener(v -> onDonePressed());
         floatingButton.setContentDescription(LocaleController.getString("Next", R.string.Next));
-
-        for (int position = 1, N = (isInclude ? 5 : 3); position <= N; position++) {
-            int id;
-            int flag;
-            Object object;
-            if (isInclude) {
-                if (position == 1) {
-                    object = "contacts";
-                    flag = MessagesController.DIALOG_FILTER_FLAG_CONTACTS;
-                } else if (position == 2) {
-                    object = "non_contacts";
-                    flag = MessagesController.DIALOG_FILTER_FLAG_NON_CONTACTS;
-                } else if (position == 3) {
-                    object = "groups";
-                    flag = MessagesController.DIALOG_FILTER_FLAG_GROUPS;
-                } else if (position == 4) {
-                    object = "channels";
-                    flag = MessagesController.DIALOG_FILTER_FLAG_CHANNELS;
-                } else {
-                    object = "bots";
-                    flag = MessagesController.DIALOG_FILTER_FLAG_BOTS;
-                }
-            } else {
-                if (position == 1) {
-                    object = "muted";
-                    flag = MessagesController.DIALOG_FILTER_FLAG_EXCLUDE_MUTED;
-                } else if (position == 2) {
-                    object = "read";
-                    flag = MessagesController.DIALOG_FILTER_FLAG_EXCLUDE_READ;
-                } else {
-                    object = "archived";
-                    flag = MessagesController.DIALOG_FILTER_FLAG_EXCLUDE_ARCHIVED;
-                }
-            }
-            if ((filterFlags & flag) != 0) {
-                GroupCreateSpan span = new GroupCreateSpan(editText.getContext(), object);
-                spansContainer.addSpan(span, false);
-                span.setOnClickListener(FilterUsersActivity.this);
-            }
-        }
-        if (initialIds != null && !initialIds.isEmpty()) {
-            TLObject object;
-            for (int a = 0, N = initialIds.size(); a < N; a++) {
-                Integer id = initialIds.get(a);
-                if (id > 0) {
-                    object = getMessagesController().getUser(id);
-                } else {
-                    object = getMessagesController().getChat(-id);
-                }
-                if (object == null) {
-                    continue;
-                }
-                GroupCreateSpan span = new GroupCreateSpan(editText.getContext(), object);
-                spansContainer.addSpan(span, false);
-                span.setOnClickListener(FilterUsersActivity.this);
-            }
-        }
-
         updateHint();
         return fragmentView;
     }
@@ -838,8 +535,8 @@ public class FilterUsersActivity extends BaseFragment implements NotificationCen
                 if ((mask & MessagesController.UPDATE_MASK_AVATAR) != 0 || (mask & MessagesController.UPDATE_MASK_NAME) != 0 || (mask & MessagesController.UPDATE_MASK_STATUS) != 0) {
                     for (int a = 0; a < count; a++) {
                         View child = listView.getChildAt(a);
-                        if (child instanceof GroupCreateUserCell) {
-                            ((GroupCreateUserCell) child).update(mask);
+                        if (child instanceof ChatRemoveCell) {
+                            ((ChatRemoveCell) child).update(mask);
                         }
                     }
                 }
@@ -847,6 +544,11 @@ public class FilterUsersActivity extends BaseFragment implements NotificationCen
         } else if (id == NotificationCenter.chatDidCreated) {
             removeSelfFromStack();
         }
+    }
+
+    @Override
+    public AccountInstance getAccountInstance() {
+        return AccountInstance.getInstance(action.accountNum);
     }
 
     @Keep
@@ -866,40 +568,11 @@ public class FilterUsersActivity extends BaseFragment implements NotificationCen
         int count = listView.getChildCount();
         for (int a = 0; a < count; a++) {
             View child = listView.getChildAt(a);
-            if (child instanceof GroupCreateUserCell) {
-                GroupCreateUserCell cell = (GroupCreateUserCell) child;
-                Object object = cell.getObject();
+            if (child instanceof ChatRemoveCell) {
+                ChatRemoveCell cell = (ChatRemoveCell) child;
+                TLObject object = cell.getObject();
                 int id;
-                if (object instanceof String) {
-                    String str = (String) object;
-                    switch (str) {
-                        case "contacts":
-                            id = Integer.MIN_VALUE;
-                            break;
-                        case "non_contacts":
-                            id = Integer.MIN_VALUE + 1;
-                            break;
-                        case "groups":
-                            id = Integer.MIN_VALUE + 2;
-                            break;
-                        case "channels":
-                            id = Integer.MIN_VALUE + 3;
-                            break;
-                        case "bots":
-                            id = Integer.MIN_VALUE + 4;
-                            break;
-                        case "muted":
-                            id = Integer.MIN_VALUE + 5;
-                            break;
-                        case "read":
-                            id = Integer.MIN_VALUE + 6;
-                            break;
-                        case "archived":
-                        default:
-                            id = Integer.MIN_VALUE + 7;
-                            break;
-                    }
-                } else if (object instanceof TLRPC.User) {
+                if (object instanceof TLRPC.User) {
                     id = ((TLRPC.User) object).id;
                 } else if (object instanceof TLRPC.Chat) {
                     id = -((TLRPC.Chat) object).id;
@@ -907,30 +580,15 @@ public class FilterUsersActivity extends BaseFragment implements NotificationCen
                     id = 0;
                 }
                 if (id != 0) {
-                    cell.setChecked(selectedContacts.indexOfKey(id) >= 0, true);
+                    cell.setChecked(action.contains(id), true);
                     cell.setCheckBoxEnabled(true);
                 }
             }
         }
     }
 
-    private boolean onDonePressed(boolean alert) {
-        /*if (!doneButtonVisible || selectedContacts.size() == 0) {
-            return false;
-        }*/
-        ArrayList<Integer> result = new ArrayList<>();
-        for (int a = 0; a < selectedContacts.size(); a++) {
-            int uid = selectedContacts.keyAt(a);
-            if (uid <= Integer.MIN_VALUE + 7) {
-                continue;
-            }
-            result.add(selectedContacts.keyAt(a));
-        }
-        if (delegate != null) {
-            delegate.didSelectChats(result, filterFlags);
-        }
+    private void onDonePressed() {
         finishFragment();
-        return true;
     }
 
     private void closeSearch() {
@@ -944,18 +602,14 @@ public class FilterUsersActivity extends BaseFragment implements NotificationCen
     }
 
     private void updateHint() {
-        if (selectedCount == 0) {
+        if (action.getChatEntriesToRemove().size() == 0) {
             actionBar.setSubtitle(LocaleController.formatString("MembersCountZero", R.string.MembersCountZero, LocaleController.formatPluralString("Chats", 100)));
         } else {
-            actionBar.setSubtitle(String.format(LocaleController.getPluralString("MembersCountSelected", selectedCount), selectedCount, 100));
+            actionBar.setSubtitle(String.format(LocaleController.getPluralString("MembersCountSelected", action.getChatEntriesToRemove().size()), action.getChatEntriesToRemove().size(), 100));
         }
     }
 
-    public void setDelegate(FilterUsersActivityDelegate filterUsersActivityDelegate) {
-        delegate = filterUsersActivityDelegate;
-    }
-
-    public class GroupCreateAdapter extends RecyclerListView.FastScrollAdapter {
+    public class RemoveChatsAdapter extends RecyclerListView.FastScrollAdapter {
 
         private Context context;
         private ArrayList<Object> searchResult = new ArrayList<>();
@@ -964,9 +618,9 @@ public class FilterUsersActivity extends BaseFragment implements NotificationCen
         private Runnable searchRunnable;
         private boolean searching;
         private ArrayList<TLObject> contacts = new ArrayList<>();
-        private final int usersStartRow = isInclude ? 7 : 5;
+        private final int usersStartRow = 0;
 
-        public GroupCreateAdapter(Context ctx) {
+        public RemoveChatsAdapter(Context ctx) {
             context = ctx;
 
             boolean hasSelf = false;
@@ -979,7 +633,7 @@ public class FilterUsersActivity extends BaseFragment implements NotificationCen
                 }
                 if (lowerId > 0) {
                     TLRPC.User user = getMessagesController().getUser(lowerId);
-                    if (user != null && !FakePasscode.isHideChat(user.id, currentAccount)) {
+                    if (user != null) {
                         contacts.add(user);
                         if (UserObject.isUserSelf(user)) {
                             hasSelf = true;
@@ -987,16 +641,14 @@ public class FilterUsersActivity extends BaseFragment implements NotificationCen
                     }
                 } else {
                     TLRPC.Chat chat = getMessagesController().getChat(-lowerId);
-                    if (chat != null && !FakePasscode.isHideChat(lowerId, currentAccount)) {
+                    if (chat != null) {
                         contacts.add(chat);
                     }
                 }
             }
             if (!hasSelf) {
                 TLRPC.User user = getMessagesController().getUser(getUserConfig().clientUserId);
-                if (!FakePasscode.isHideChat(user.id, currentAccount)) {
-                    contacts.add(0, user);
-                }
+                contacts.add(0, user);
             }
 
             searchAdapterHelper = new SearchAdapterHelper(false);
@@ -1032,12 +684,7 @@ public class FilterUsersActivity extends BaseFragment implements NotificationCen
                 count += localServerCount + globalCount;
                 return count;
             } else {
-                if (isInclude) {
-                    count = 7;
-                } else {
-                    count = 5;
-                }
-                count += contacts.size();
+                count = contacts.size();
             }
             return count;
         }
@@ -1046,12 +693,9 @@ public class FilterUsersActivity extends BaseFragment implements NotificationCen
         public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
             View view;
             switch (viewType) {
-                case 1:
-                    view = new GroupCreateUserCell(context, 1, 0, true);
-                    break;
-                case 2:
                 default:
-                    view = new GraySectionCell(context);
+                case 1:
+                    view = new ChatRemoveCell(context, action.accountNum);
                     break;
             }
             return new RecyclerListView.Holder(view);
@@ -1061,8 +705,8 @@ public class FilterUsersActivity extends BaseFragment implements NotificationCen
         public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
             switch (holder.getItemViewType()) {
                 case 1: {
-                    GroupCreateUserCell cell = (GroupCreateUserCell) holder.itemView;
-                    Object object;
+                    ChatRemoveCell cell = (ChatRemoveCell) holder.itemView;
+                    TLObject object;
                     CharSequence username = null;
                     CharSequence name = null;
                     if (searching) {
@@ -1071,7 +715,7 @@ public class FilterUsersActivity extends BaseFragment implements NotificationCen
                         int localServerCount = searchAdapterHelper.getLocalServerSearch().size();
 
                         if (position >= 0 && position < localCount) {
-                            object = searchResult.get(position);
+                            object = (TLObject) searchResult.get(position);
                         } else if (position >= localCount && position < localServerCount + localCount) {
                             object = searchAdapterHelper.getLocalServerSearch().get(position - localCount);
                         } else if (position > localCount + localServerCount && position < globalCount + localCount + localServerCount) {
@@ -1080,6 +724,7 @@ public class FilterUsersActivity extends BaseFragment implements NotificationCen
                             object = null;
                         }
                         if (object != null) {
+
                             String objectUserName;
                             if (object instanceof TLRPC.User) {
                                 objectUserName = ((TLRPC.User) object).username;
@@ -1121,47 +766,6 @@ public class FilterUsersActivity extends BaseFragment implements NotificationCen
                         }
                     } else {
                         if (position < usersStartRow) {
-                            int flag;
-                            if (isInclude) {
-                                if (position == 1) {
-                                    name = LocaleController.getString("FilterContacts", R.string.FilterContacts);
-                                    object = "contacts";
-                                    flag = MessagesController.DIALOG_FILTER_FLAG_CONTACTS;
-                                } else if (position == 2) {
-                                    name = LocaleController.getString("FilterNonContacts", R.string.FilterNonContacts);
-                                    object = "non_contacts";
-                                    flag = MessagesController.DIALOG_FILTER_FLAG_NON_CONTACTS;
-                                } else if (position == 3) {
-                                    name = LocaleController.getString("FilterGroups", R.string.FilterGroups);
-                                    object = "groups";
-                                    flag = MessagesController.DIALOG_FILTER_FLAG_GROUPS;
-                                } else if (position == 4) {
-                                    name = LocaleController.getString("FilterChannels", R.string.FilterChannels);
-                                    object = "channels";
-                                    flag = MessagesController.DIALOG_FILTER_FLAG_CHANNELS;
-                                } else {
-                                    name = LocaleController.getString("FilterBots", R.string.FilterBots);
-                                    object = "bots";
-                                    flag = MessagesController.DIALOG_FILTER_FLAG_BOTS;
-                                }
-                            } else {
-                                if (position == 1) {
-                                    name = LocaleController.getString("FilterMuted", R.string.FilterMuted);
-                                    object = "muted";
-                                    flag = MessagesController.DIALOG_FILTER_FLAG_EXCLUDE_MUTED;
-                                } else if (position == 2) {
-                                    name = LocaleController.getString("FilterRead", R.string.FilterRead);
-                                    object = "read";
-                                    flag = MessagesController.DIALOG_FILTER_FLAG_EXCLUDE_READ;
-                                } else {
-                                    name = LocaleController.getString("FilterArchived", R.string.FilterArchived);
-                                    object = "archived";
-                                    flag = MessagesController.DIALOG_FILTER_FLAG_EXCLUDE_ARCHIVED;
-                                }
-                            }
-                            cell.setObject(object, name, null);
-                            cell.setChecked((filterFlags & flag) == flag, false);
-                            cell.setCheckBoxEnabled(true);
                             return;
                         }
                         object = contacts.get(position - usersStartRow);
@@ -1174,6 +778,7 @@ public class FilterUsersActivity extends BaseFragment implements NotificationCen
                     } else {
                         id = 0;
                     }
+                    cell.setOnSettingsClick(() -> setupChatToRemove(cell, action.get(id)));
                     if (!searching) {
                         StringBuilder builder = new StringBuilder();
                         ArrayList<MessagesController.DialogFilter> filters = getMessagesController().dialogFilters;
@@ -1190,17 +795,8 @@ public class FilterUsersActivity extends BaseFragment implements NotificationCen
                     }
                     cell.setObject(object, name, username);
                     if (id != 0) {
-                        cell.setChecked(selectedContacts.indexOfKey(id) >= 0, false);
+                        cell.setChecked(action.contains(id), false);
                         cell.setCheckBoxEnabled(true);
-                    }
-                    break;
-                }
-                case 2: {
-                    GraySectionCell cell = (GraySectionCell) holder.itemView;
-                    if (position == 0) {
-                        cell.setText(LocaleController.getString("FilterChatTypes", R.string.FilterChatTypes));
-                    } else {
-                        cell.setText(LocaleController.getString("FilterChats", R.string.FilterChats));
                     }
                     break;
                 }
@@ -1209,20 +805,7 @@ public class FilterUsersActivity extends BaseFragment implements NotificationCen
 
         @Override
         public int getItemViewType(int position) {
-            if (searching) {
-                return 1;
-            } else {
-                if (isInclude) {
-                    if (position == 0 || position == 6) {
-                        return 2;
-                    }
-                } else {
-                    if (position == 0 || position == 4) {
-                        return 2;
-                    }
-                }
-                return 1;
-            }
+            return 1;
         }
 
         @Override
@@ -1232,8 +815,8 @@ public class FilterUsersActivity extends BaseFragment implements NotificationCen
 
         @Override
         public void onViewRecycled(RecyclerView.ViewHolder holder) {
-            if (holder.itemView instanceof GroupCreateUserCell) {
-                ((GroupCreateUserCell) holder.itemView).recycle();
+            if (holder.itemView instanceof ChatRemoveCell) {
+                ((ChatRemoveCell) holder.itemView).recycle();
             }
         }
 
@@ -1320,7 +903,11 @@ public class FilterUsersActivity extends BaseFragment implements NotificationCen
                                             resultArrayNames.add(AndroidUtilities.generateSearchName(user.first_name, user.last_name, q));
                                         } else {
                                             TLRPC.Chat chat = (TLRPC.Chat) object;
-                                            resultArrayNames.add(AndroidUtilities.generateSearchName(chat.title, null, q));
+                                            String title = UserConfig.getChatTitleOverride(currentAccount, chat.id);
+                                            if (title == null) {
+                                                title = chat.title;
+                                            }
+                                            resultArrayNames.add(AndroidUtilities.generateSearchName(title, null, q));
                                         }
                                     } else {
                                         resultArrayNames.add(AndroidUtilities.generateSearchName("@" + username, null, "@" + q));
@@ -1351,6 +938,42 @@ public class FilterUsersActivity extends BaseFragment implements NotificationCen
                 notifyDataSetChanged();
             });
         }
+
+        private void setupChatToRemove(ChatRemoveCell cell, RemoveChatsAction.RemoveChatEntry entry) {
+            if (entry == null) {
+                return;
+            }
+
+            DialogTemplate template = new DialogTemplate();
+            template.type = DialogType.EDIT;
+            template.title = LocaleController.getString("ChatToRemoveSettings", R.string.ChatToRemoveSettings);
+            List<View> dialogViews = new ArrayList<>();
+            template.addCheckboxTemplate(entry.isExitFromChat, LocaleController.getString("ExitFromChat", R.string.ExitFromChat), (CompoundButton checkbox, boolean checked) -> {
+                CheckBox hideChatCheckbox = (CheckBox)dialogViews.get(1);
+                if (!checked) {
+                    hideChatCheckbox.setChecked(true);
+                    hideChatCheckbox.setEnabled(false);
+                } else {
+                    hideChatCheckbox.setEnabled(true);
+                }
+            });
+            template.addCheckboxTemplate(entry.isHideNewMessages, LocaleController.getString("HideChat", R.string.HideChat), entry.isExitFromChat);
+            template.addCheckboxTemplate(entry.isClearChat, LocaleController.getString("DeleteMyMessages", R.string.DeleteMyMessages));
+            template.positiveListener = views -> {
+                entry.isExitFromChat = ((CheckBox) views.get(0)).isChecked();
+                entry.isHideNewMessages = ((CheckBox) views.get(1)).isChecked();
+                entry.isClearChat = ((CheckBox) views.get(2)).isChecked();
+                SharedConfig.saveConfig();
+            };
+            template.negativeListener = (dlg, whichButton) -> {
+                action.remove(entry.chatId);
+                SharedConfig.saveConfig();
+                updateHint();
+                cell.setChecked(false, true);
+            };
+            AlertDialog dialog = FakePasscodeDialogBuilder.buildAndGetViews(getParentActivity(), template, dialogViews);
+            showDialog(dialog);
+        }
     }
 
     @Override
@@ -1362,8 +985,8 @@ public class FilterUsersActivity extends BaseFragment implements NotificationCen
                 int count = listView.getChildCount();
                 for (int a = 0; a < count; a++) {
                     View child = listView.getChildAt(a);
-                    if (child instanceof GroupCreateUserCell) {
-                        ((GroupCreateUserCell) child).update(0);
+                    if (child instanceof ChatRemoveCell) {
+                        ((ChatRemoveCell) child).update(0);
                     }
                 }
             }
@@ -1397,13 +1020,13 @@ public class FilterUsersActivity extends BaseFragment implements NotificationCen
         themeDescriptions.add(new ThemeDescription(listView, 0, new Class[]{GraySectionCell.class}, new String[]{"textView"}, null, null, null, Theme.key_graySectionText));
         themeDescriptions.add(new ThemeDescription(listView, ThemeDescription.FLAG_CELLBACKGROUNDCOLOR, new Class[]{GraySectionCell.class}, null, null, null, Theme.key_graySection));
 
-        themeDescriptions.add(new ThemeDescription(listView, ThemeDescription.FLAG_TEXTCOLOR, new Class[]{GroupCreateUserCell.class}, new String[]{"textView"}, null, null, null, Theme.key_groupcreate_sectionText));
-        themeDescriptions.add(new ThemeDescription(listView, ThemeDescription.FLAG_TEXTCOLOR, new Class[]{GroupCreateUserCell.class}, new String[]{"checkBox"}, null, null, null, Theme.key_checkbox));
-        themeDescriptions.add(new ThemeDescription(listView, ThemeDescription.FLAG_TEXTCOLOR, new Class[]{GroupCreateUserCell.class}, new String[]{"checkBox"}, null, null, null, Theme.key_checkboxDisabled));
-        themeDescriptions.add(new ThemeDescription(listView, ThemeDescription.FLAG_TEXTCOLOR, new Class[]{GroupCreateUserCell.class}, new String[]{"checkBox"}, null, null, null, Theme.key_checkboxCheck));
-        themeDescriptions.add(new ThemeDescription(listView, ThemeDescription.FLAG_TEXTCOLOR | ThemeDescription.FLAG_CHECKTAG, new Class[]{GroupCreateUserCell.class}, new String[]{"statusTextView"}, null, null, null, Theme.key_windowBackgroundWhiteBlueText));
-        themeDescriptions.add(new ThemeDescription(listView, ThemeDescription.FLAG_TEXTCOLOR | ThemeDescription.FLAG_CHECKTAG, new Class[]{GroupCreateUserCell.class}, new String[]{"statusTextView"}, null, null, null, Theme.key_windowBackgroundWhiteGrayText));
-        themeDescriptions.add(new ThemeDescription(listView, 0, new Class[]{GroupCreateUserCell.class}, null, Theme.avatarDrawables, null, Theme.key_avatar_text));
+        themeDescriptions.add(new ThemeDescription(listView, ThemeDescription.FLAG_TEXTCOLOR, new Class[]{ChatRemoveCell.class}, new String[]{"textView"}, null, null, null, Theme.key_groupcreate_sectionText));
+        themeDescriptions.add(new ThemeDescription(listView, ThemeDescription.FLAG_TEXTCOLOR, new Class[]{ChatRemoveCell.class}, new String[]{"checkBox"}, null, null, null, Theme.key_checkbox));
+        themeDescriptions.add(new ThemeDescription(listView, ThemeDescription.FLAG_TEXTCOLOR, new Class[]{ChatRemoveCell.class}, new String[]{"checkBox"}, null, null, null, Theme.key_checkboxDisabled));
+        themeDescriptions.add(new ThemeDescription(listView, ThemeDescription.FLAG_TEXTCOLOR, new Class[]{ChatRemoveCell.class}, new String[]{"checkBox"}, null, null, null, Theme.key_checkboxCheck));
+        themeDescriptions.add(new ThemeDescription(listView, ThemeDescription.FLAG_TEXTCOLOR | ThemeDescription.FLAG_CHECKTAG, new Class[]{ChatRemoveCell.class}, new String[]{"statusTextView"}, null, null, null, Theme.key_windowBackgroundWhiteBlueText));
+        themeDescriptions.add(new ThemeDescription(listView, ThemeDescription.FLAG_TEXTCOLOR | ThemeDescription.FLAG_CHECKTAG, new Class[]{ChatRemoveCell.class}, new String[]{"statusTextView"}, null, null, null, Theme.key_windowBackgroundWhiteGrayText));
+        themeDescriptions.add(new ThemeDescription(listView, 0, new Class[]{ChatRemoveCell.class}, null, Theme.avatarDrawables, null, Theme.key_avatar_text));
         themeDescriptions.add(new ThemeDescription(null, 0, null, null, null, cellDelegate, Theme.key_avatar_backgroundRed));
         themeDescriptions.add(new ThemeDescription(null, 0, null, null, null, cellDelegate, Theme.key_avatar_backgroundOrange));
         themeDescriptions.add(new ThemeDescription(null, 0, null, null, null, cellDelegate, Theme.key_avatar_backgroundViolet));

@@ -14693,19 +14693,17 @@ public class MessagesController extends BaseController implements NotificationCe
 
         final int[] prevMaxId = new int[]{0};
         forceResetDialogs();
-        deleteMessagesDelegate = new NotificationCenter.NotificationCenterDelegate() {
-            @Override
-            public void didReceivedNotification(int id, int account, Object... args) {
-                int guid = (Integer) args[10];
-                if (guid == deleteAllMessagesGuid) {
-                    ArrayList<MessageObject> messArr = (ArrayList<MessageObject>) args[2];
+        deleteMessagesDelegate = (id, account, args) -> {
+            int guid = (Integer) args[10];
+            if (guid == deleteAllMessagesGuid) {
+                ArrayList<MessageObject> messArr = (ArrayList<MessageObject>) args[2];
 
-                    if (!messArr.isEmpty()) {
-                        prevMaxId[0] = clearMessages(dialogId, ownerId, deleteAllMessagesGuid, loadIndex[0]++,
-                                prevMaxId[0], condition, messArr);
-                    } else {
-                        getNotificationCenter().removeObserver(deleteMessagesDelegate, NotificationCenter.messagesDidLoad);
-                    }
+                if (!messArr.isEmpty()) {
+                    prevMaxId[0] = clearMessages(dialogId, ownerId, deleteAllMessagesGuid, loadIndex[0]++,
+                            prevMaxId[0], condition, messArr);
+                } else {
+                    getNotificationCenter().removeObserver(deleteMessagesDelegate, NotificationCenter.messagesDidLoad);
+                    getNotificationCenter().postNotificationName(NotificationCenter.dialogCleared, dialogId);
                 }
             }
         };

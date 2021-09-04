@@ -13,14 +13,17 @@ import java.util.List;
 
 public class FakePasscodeDialogBuilder {
     public static AlertDialog build(Context context, DialogTemplate template) {
+        return buildAndGetViews(context, template, new ArrayList<>());
+    }
+
+    public static AlertDialog buildAndGetViews(Context context, DialogTemplate template, List<View> viewsOutput) {
         AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(context);
         dialogBuilder.setTitle(template.title);
 
-        List<View> views = new ArrayList<>();
         for (ViewTemplate viewTemplate: template.viewTemplates) {
-            views.add(viewTemplate.create(context));
+            viewsOutput.add(viewTemplate.create(context));
         }
-        LinearLayout layout = createLayout(dialogBuilder.getContext(), views);
+        LinearLayout layout = createLayout(dialogBuilder.getContext(), viewsOutput);
         dialogBuilder.setView(layout);
 
         if (template.type == DialogType.ADD) {
@@ -35,7 +38,7 @@ public class FakePasscodeDialogBuilder {
             dialogBuilder.setNegativeButton(LocaleController.getString("Delete", R.string.Delete), template.negativeListener);
         }
         AlertDialog dialog = dialogBuilder.create();
-        addPositiveButtonListener(dialog, template, views);
+        addPositiveButtonListener(dialog, template, viewsOutput);
         return dialog;
     }
 
