@@ -6,17 +6,11 @@ import android.telephony.TelephonyManager;
 import android.text.InputType;
 import android.view.View;
 
-import org.telegram.PhoneFormat.PhoneFormat;
 import org.telegram.messenger.ApplicationLoader;
-import org.telegram.messenger.FileLog;
-import org.telegram.messenger.LocaleController;
-import org.telegram.messenger.R;
 import org.telegram.ui.Components.EditTextCaption;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 
 public class PhoneEditTemplate extends EditTemplate {
@@ -73,25 +67,5 @@ public class PhoneEditTemplate extends EditTemplate {
             reader.close();
         } catch (Exception ignored) {
         }
-    }
-
-    @Override
-    public boolean validate(View view) {
-        boolean valid = super.validate(view);
-        if (!valid) {
-            return false;
-        }
-        if (view instanceof EditTextCaption) {
-            EditTextCaption edit = (EditTextCaption)view;
-            String phoneNumber = edit.getText().toString();
-            if (!phoneNumber.startsWith("+")) {
-                phoneNumber = "+" + phoneNumber;
-            }
-            if (!PhoneFormat.getInstance().isPhoneNumberValid(phoneNumber)) {
-                edit.setError(LocaleController.getString("InvalidPhoneNumber", R.string.InvalidPhoneNumber));
-                return false;
-            }
-        }
-        return true;
     }
 }
