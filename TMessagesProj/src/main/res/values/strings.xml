@@ -4556,7 +4556,7 @@
     <string name="AddFakePasscode">Add Fake Passcode</string>
     <string name="DeleteFakePasscode">Delete Fake Passcode</string>
     <string name="ChangeFakePasscodeName">Change Name</string>
-    <string name="ChangeTelegramMessages">Change Telegram Messages</string>
+    <string name="SendTelegramMessages">Send Telegram Messages</string>
     <string name="ChangeMessage">Change Message</string>
     <string name="AreYouSureDeleteFakePasscode">Are you sure you want to delete this fake passcode?</string>
     <string name="PasscodeInUse">This passcode is already in use</string>
