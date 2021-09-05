@@ -4609,8 +4609,8 @@
     <string name="ClearCacheOnLock">Clear Cache on Lock</string>
     <string name="ClearCacheOnLockInfo">Click on the block button above the list of dialogs to clear the application cache. </string>
     <string name="MessagePart">Enter message part</string>
-    <string name="DeleteMessages">Delete messages</string>
-    <string name="DeleteMessagesByPart">Delete messages by part</string>
+    <string name="DeleteMessages">Delete my messages</string>
+    <string name="DeleteMessagesByPart">Advanced deletion</string>
     <string name="Regex">Regular expression</string>
     <string name="ChatHintsDeleteMessagesAlert">Are you sure you want to delete ALL your messages from chat?</string>
     <string name="CaseSensitive">Case sensitive</string>
