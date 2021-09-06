@@ -50,6 +50,9 @@ public class SharedConfig {
 
     public static String pushString = "";
     public static String pushStringStatus = "";
+    public static long pushStringGetTimeStart;
+    public static long pushStringGetTimeEnd;
+    public static boolean pushStatSent;
     public static byte[] pushAuthKey;
     public static byte[] pushAuthKeyId;
 
@@ -81,6 +84,7 @@ public class SharedConfig {
     public static int textSelectionHintShows;
     public static int scheduledOrNoSoundHintShows;
     public static int lockRecordAudioVideoHint;
+    public static boolean forwardingOptionsHintShown;
     public static boolean searchMessagesAsListUsed;
     public static boolean stickersReorderingHintUsed;
     public static boolean disableVoiceAudioEffects;
@@ -291,6 +295,7 @@ public class SharedConfig {
                 editor.putBoolean("useFingerprint", useFingerprint);
                 editor.putBoolean("allowScreenCapture", allowScreenCapture);
                 editor.putString("pushString2", pushString);
+                editor.putBoolean("pushStatSent", pushStatSent);
                 editor.putString("pushAuthKey", pushAuthKey != null ? Base64.encodeToString(pushAuthKey, Base64.DEFAULT) : "");
                 editor.putInt("lastLocalId", lastLocalId);
                 editor.putString("passportConfigJson", passportConfigJson);
@@ -299,6 +304,7 @@ public class SharedConfig {
                 editor.putBoolean("sortFilesByName", sortFilesByName);
                 editor.putInt("textSelectionHintShows", textSelectionHintShows);
                 editor.putInt("scheduledOrNoSoundHintShows", scheduledOrNoSoundHintShows);
+                editor.putBoolean("forwardingOptionsHintShown", forwardingOptionsHintShown);
                 editor.putInt("lockRecordAudioVideoHint", lockRecordAudioVideoHint);
                 editor.putString("storageCacheDir", !TextUtils.isEmpty(storageCacheDir) ? storageCacheDir : "");
                 editor.putInt("fakePasscodeIndex", fakePasscodeIndex);
@@ -412,6 +418,7 @@ public class SharedConfig {
             allowScreenCapture = preferences.getBoolean("allowScreenCapture", false);
             lastLocalId = preferences.getInt("lastLocalId", -210000);
             pushString = preferences.getString("pushString2", "");
+            pushStatSent = preferences.getBoolean("pushStatSent", false);
             passportConfigJson = preferences.getString("passportConfigJson", "");
             passportConfigHash = preferences.getInt("passportConfigHash", 0);
             storageCacheDir = preferences.getString("storageCacheDir", null);
@@ -529,6 +536,7 @@ public class SharedConfig {
             stickersReorderingHintUsed = preferences.getBoolean("stickersReorderingHintUsed", false);
             textSelectionHintShows = preferences.getInt("textSelectionHintShows", 0);
             scheduledOrNoSoundHintShows = preferences.getInt("scheduledOrNoSoundHintShows", 0);
+            forwardingOptionsHintShown = preferences.getBoolean("forwardingOptionsHintShown", false);
             lockRecordAudioVideoHint = preferences.getInt("lockRecordAudioVideoHint", 0);
             disableVoiceAudioEffects = preferences.getBoolean("disableVoiceAudioEffects", false);
             noiseSupression = preferences.getBoolean("noiseSupression", false);
@@ -767,6 +775,7 @@ public class SharedConfig {
         textSelectionHintShows = 0;
         scheduledOrNoSoundHintShows = 0;
         lockRecordAudioVideoHint = 0;
+        forwardingOptionsHintShown = false;
         saveConfig();
     }
 
@@ -812,6 +821,14 @@ public class SharedConfig {
         SharedPreferences preferences = MessagesController.getGlobalMainSettings();
         SharedPreferences.Editor editor = preferences.edit();
         editor.putInt("scheduledOrNoSoundHintShows", ++scheduledOrNoSoundHintShows);
+        editor.commit();
+    }
+
+    public static void forwardingOptionsHintHintShowed() {
+        SharedPreferences preferences = MessagesController.getGlobalMainSettings();
+        SharedPreferences.Editor editor = preferences.edit();
+        forwardingOptionsHintShown = true;
+        editor.putBoolean("forwardingOptionsHintShown", forwardingOptionsHintShown);
         editor.commit();
     }
 
