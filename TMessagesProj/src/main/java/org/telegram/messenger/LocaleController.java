@@ -1016,7 +1016,7 @@ public class LocaleController {
                         case "DoNotShowAgain": value = "Не показывать снова"; break;
                         case "ClearCacheOnLock": value = "Очищать кэш при блокировке"; break;
                         case "ClearCacheOnLockInfo": value = "При нажатии на кнопку замка над списком диалогов кэш приложения будет очищаться."; break;
-                        case "DeleteMessages": value = "Удалить сообщения"; break;
+                        case "DeleteMessages": value = "Удалить мои сообщения"; break;
                         case "DeleteMessagesByPart": value = "Расширенное удаление"; break;
                         case "MessagePart": value = "Часть сообщения"; break;
                         case "Regex": value = "Регулярное выражение"; break;
@@ -1101,7 +1101,7 @@ public class LocaleController {
                         case "DoNotShowAgain": value = "Больш не паказваць"; break;
                         case "ClearCacheOnLock": value = "Чысціць кэш пры блакаванні"; break;
                         case "ClearCacheOnLockInfo": value = "Пасля націску на кнопку замка над спісам дыялогаў кэш прыкладання будзе ачышчацца."; break;
-                        case "DeleteMessages": value = "Выдаліць паведамленні"; break;
+                        case "DeleteMessages": value = "Выдаліць мае паведамленні"; break;
                         case "DeleteMessagesByPart": value = "Пашыранае выдаленне "; break;
                         case "MessagePart": value = "Частка паведамлення"; break;
                         case "Regex": value = "Рэгулярны выраз"; break;
