@@ -4493,6 +4493,10 @@ public class MessagesController extends BaseController implements NotificationCe
         deleteMessages(messages, randoms, encryptedChat, dialogId, channelId, forAll, scheduled, false, 0, null, true, false);
     }
 
+    public void deleteMessages(ArrayList<Integer> messages, ArrayList<Long> randoms, TLRPC.EncryptedChat encryptedChat, final long dialogId, final int channelId, boolean forAll, boolean scheduled, boolean cacheOnly) {
+        deleteMessages(messages, randoms, encryptedChat, dialogId, channelId, forAll, scheduled, cacheOnly, 0, null, true, false);
+    }
+
     public void deleteMessages(ArrayList<Integer> messages, ArrayList<Long> randoms, TLRPC.EncryptedChat encryptedChat, final long dialogId, final int channelId, boolean forAll, boolean scheduled, boolean cacheOnly, long taskId, TLObject taskRequest, boolean useQueue, boolean reset) {
         if ((messages == null || messages.isEmpty()) && taskId == 0) {
             return;
