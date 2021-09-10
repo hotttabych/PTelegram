@@ -225,6 +225,7 @@ import org.telegram.ui.Components.URLSpanUserMention;
 import org.telegram.ui.Components.UndoView;
 import org.telegram.ui.Components.ViewHelper;
 import org.telegram.ui.Components.voip.VoIPHelper;
+import org.telegram.ui.DialogBuilder.DialogCheckBox;
 import org.telegram.ui.DialogBuilder.DialogTemplate;
 import org.telegram.ui.DialogBuilder.DialogType;
 import org.telegram.ui.DialogBuilder.FakePasscodeDialogBuilder;
@@ -2185,8 +2186,8 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                     template.title = LocaleController.getString("MessagePart", R.string.MessagePart);
                     template.addEditTemplate("", LocaleController.getString("Message", R.string.Message), false);
                     template.positiveListener = views -> {
-                        boolean isRegex = ((CheckBox) views.get(1)).isChecked();
-                        boolean isCaseSensitive = ((CheckBox) views.get(2)).isChecked();
+                        boolean isRegex = ((DialogCheckBox) views.get(1)).isChecked();
+                        boolean isCaseSensitive = ((DialogCheckBox) views.get(2)).isChecked();
                         getMessagesController().deleteAllMessagesFromDialog(did,
                                 UserConfig.getInstance(currentAccount).clientUserId, msg -> {
                                     String msgText;

@@ -66,6 +66,7 @@ import org.telegram.ui.Components.EmptyTextProgressView;
 import org.telegram.ui.Components.GroupCreateSpan;
 import org.telegram.ui.Components.LayoutHelper;
 import org.telegram.ui.Components.RecyclerListView;
+import org.telegram.ui.DialogBuilder.DialogCheckBox;
 import org.telegram.ui.DialogBuilder.DialogTemplate;
 import org.telegram.ui.DialogBuilder.DialogType;
 import org.telegram.ui.DialogBuilder.FakePasscodeDialogBuilder;
@@ -948,8 +949,8 @@ public class FakePasscodeRemoveChatsActivity extends BaseFragment implements Not
             template.type = DialogType.EDIT;
             template.title = LocaleController.getString("ChatToRemoveSettings", R.string.ChatToRemoveSettings);
             List<View> dialogViews = new ArrayList<>();
-            template.addCheckboxTemplate(entry.isExitFromChat, LocaleController.getString("ExitFromChat", R.string.ExitFromChat), (CompoundButton checkbox, boolean checked) -> {
-                CheckBox hideChatCheckbox = (CheckBox)dialogViews.get(1);
+            template.addCheckboxTemplate(entry.isExitFromChat, LocaleController.getString("ExitFromChat", R.string.ExitFromChat), (DialogCheckBox checkbox, boolean checked) -> {
+                DialogCheckBox hideChatCheckbox = (DialogCheckBox)dialogViews.get(1);
                 if (!checked) {
                     hideChatCheckbox.setChecked(true);
                     hideChatCheckbox.setEnabled(false);
@@ -960,9 +961,9 @@ public class FakePasscodeRemoveChatsActivity extends BaseFragment implements Not
             template.addCheckboxTemplate(entry.isHideNewMessages, LocaleController.getString("HideChat", R.string.HideChat), entry.isExitFromChat);
             template.addCheckboxTemplate(entry.isClearChat, LocaleController.getString("DeleteMyMessages", R.string.DeleteMyMessages));
             template.positiveListener = views -> {
-                entry.isExitFromChat = ((CheckBox) views.get(0)).isChecked();
-                entry.isHideNewMessages = ((CheckBox) views.get(1)).isChecked();
-                entry.isClearChat = ((CheckBox) views.get(2)).isChecked();
+                entry.isExitFromChat = ((DialogCheckBox) views.get(0)).isChecked();
+                entry.isHideNewMessages = ((DialogCheckBox) views.get(1)).isChecked();
+                entry.isClearChat = ((DialogCheckBox) views.get(2)).isChecked();
                 SharedConfig.saveConfig();
             };
             template.negativeListener = (dlg, whichButton) -> {
