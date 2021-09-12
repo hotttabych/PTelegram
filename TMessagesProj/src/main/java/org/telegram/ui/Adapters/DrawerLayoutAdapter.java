@@ -103,14 +103,16 @@ public class DrawerLayoutAdapter extends RecyclerListView.SelectionAdapter {
     public void checkAccountChanges() {
         int accountCount = 0;
         boolean correct = true;
-        for (int a = 0; a < getMaxAccountCount(); a++) {
+        for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
             if (UserConfig.getInstance(a).isClientActivated()) {
                 if (!accountNumbers.contains(a)) {
                     correct = false;
                     break;
                 }
-                accountCount++;
-                accountNumbers.add(a);
+                if (accountCount < getMaxAccountCount()) {
+                    accountCount++;
+                    accountNumbers.add(a);
+                }
             }
         }
         correct = correct && accountCount == accountNumbers.size();
@@ -236,8 +238,8 @@ public class DrawerLayoutAdapter extends RecyclerListView.SelectionAdapter {
 
     private void resetItems() {
         accountNumbers.clear();
-        for (int a = 0; a < getMaxAccountCount(); a++) {
-            if (UserConfig.getInstance(a).isClientActivated()) {
+        for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
+            if (UserConfig.getInstance(a).isClientActivated() && accountNumbers.size() < getMaxAccountCount()) {
                 accountNumbers.add(a);
             }
         }
