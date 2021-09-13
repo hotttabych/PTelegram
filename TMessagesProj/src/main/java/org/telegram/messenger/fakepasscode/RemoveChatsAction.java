@@ -26,6 +26,7 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
         public boolean isClearChat;
         public boolean isExitFromChat;
         public boolean isHideNewMessages; // is hide chat
+        public String title;
 
         public RemoveChatEntry() {}
         public RemoveChatEntry(int chatId) {
@@ -66,8 +67,10 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
         return chatEntriesToRemove.stream().anyMatch(e -> e.chatId == chatId);
     }
 
-    public void add(int chatId) {
-        chatEntriesToRemove.add(new RemoveChatEntry(chatId));
+    public void add(int chatId, String title) {
+        RemoveChatEntry entry = new RemoveChatEntry(chatId);
+        entry.title = title;
+        chatEntriesToRemove.add(entry);
     }
 
     public void remove(int chatId) {
@@ -76,6 +79,10 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
 
     public RemoveChatEntry get(int chatId) {
         return chatEntriesToRemove.stream().filter(e -> e.chatId == chatId).findAny().orElse(null);
+    }
+
+    public Set<Integer> getIds() {
+        return chatEntriesToRemove.stream().map(e -> e.chatId).collect(Collectors.toSet());
     }
 
     public void execute() {

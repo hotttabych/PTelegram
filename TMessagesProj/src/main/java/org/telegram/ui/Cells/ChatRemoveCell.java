@@ -25,8 +25,8 @@ import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.R;
 import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.UserObject;
+import org.telegram.messenger.fakepasscode.RemoveChatsAction;
 import org.telegram.tgnet.ConnectionsManager;
-import org.telegram.tgnet.TLObject;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.SimpleTextView;
 import org.telegram.ui.ActionBar.Theme;
@@ -35,7 +35,7 @@ import org.telegram.ui.Components.BackupImageView;
 import org.telegram.ui.Components.CheckBox2;
 import org.telegram.ui.Components.LayoutHelper;
 
-import java.util.function.Consumer;
+import java.util.ArrayList;
 
 public class ChatRemoveCell extends FrameLayout {
 
@@ -44,7 +44,7 @@ public class ChatRemoveCell extends FrameLayout {
     private final SimpleTextView statusTextView;
     private final CheckBox2 checkBox;
     private final AvatarDrawable avatarDrawable;
-    private TLObject currentObject;
+    private Object currentObject;
     private CharSequence currentName;
     private CharSequence currentStatus;
     private final ImageView settingsButton;
@@ -107,7 +107,7 @@ public class ChatRemoveCell extends FrameLayout {
         setWillNotDraw(false);
     }
 
-    public void setObject(TLObject object, CharSequence name, CharSequence status) {
+    public void setObject(Object object, CharSequence name, CharSequence status) {
         currentObject = object;
         currentStatus = status;
         currentName = name;
@@ -131,7 +131,7 @@ public class ChatRemoveCell extends FrameLayout {
         return checkBox.isChecked();
     }
 
-    public TLObject getObject() {
+    public Object getObject() {
         return currentObject;
     }
 
@@ -149,10 +149,6 @@ public class ChatRemoveCell extends FrameLayout {
     }
 
     public void update(int mask) {
-        if (currentObject == null) {
-            return;
-        }
-
         if (currentStatus != null && TextUtils.isEmpty(currentStatus)) {
             ((LayoutParams) nameTextView.getLayoutParams()).topMargin = AndroidUtilities.dp(19);
         } else {
@@ -168,8 +164,10 @@ public class ChatRemoveCell extends FrameLayout {
 
         if (currentObject instanceof TLRPC.User) {
             updateUser(mask);
-        } else {
+        } else if (currentObject instanceof TLRPC.Chat){
             updateChat(mask);
+        } else if (currentObject instanceof RemoveChatsAction.RemoveChatEntry) {
+            updateRemoveChatEntry(mask);
         }
 
         if (currentStatus != null) {
@@ -248,6 +246,10 @@ public class ChatRemoveCell extends FrameLayout {
                     statusTextView.setText(LocaleController.formatUserStatus(currentAccount, currentUser));
                 }
             }
+        } else if (currentStatus.toString().equals("")) {
+            if (MessagesController.getInstance(currentAccount).getAllDialogs().stream().noneMatch(d -> d.id == currentUser.id)){
+                currentStatus = LocaleController.getString("ChatRemoved", R.string.ChatRemoved);
+            }
         }
 
         avatarImageView.setForUserOrChat(currentUser, avatarDrawable);
@@ -300,9 +302,58 @@ public class ChatRemoveCell extends FrameLayout {
             statusTextView.setTag(Theme.key_windowBackgroundWhiteGrayText);
             statusTextView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteGrayText));
             statusTextView.setText(getChatStatus(currentChat));
+        } else if (currentStatus.toString().equals("") && currentChat.left) {
+            currentStatus = LocaleController.getString("ChatRemoved", R.string.ChatRemoved);
         }
 
         avatarImageView.setForUserOrChat(currentChat, avatarDrawable);
+    }
+
+    private void updateRemoveChatEntry(int mask) {
+        TLRPC.FileLocation photo = null;
+        String newName = null;
+
+        RemoveChatsAction.RemoveChatEntry entry = (RemoveChatsAction.RemoveChatEntry) currentObject;
+        if (mask != 0) {
+            boolean continueUpdate = false;
+            if ((mask & MessagesController.UPDATE_MASK_AVATAR) != 0) {
+                if (photo != null) {
+                    continueUpdate = true;
+                }
+            }
+            if (!continueUpdate && currentName == null && lastName != null && (mask & MessagesController.UPDATE_MASK_NAME) != 0) {
+                newName = UserConfig.getChatTitleOverride(currentAccount, entry.chatId);
+                if (newName == null) {
+                    newName = entry.title;
+                }
+                if (!newName.equals(lastName)) {
+                    continueUpdate = true;
+                }
+            }
+            if (!continueUpdate) {
+                return;
+            }
+        }
+
+        avatarDrawable.setInfo(entry.chatId, entry.title, "");
+
+        if (currentName != null) {
+            lastName = null;
+            nameTextView.setText(currentName, true);
+        } else {
+            lastName = newName == null ? entry.title : newName;
+            nameTextView.setText(lastName);
+        }
+
+        if (currentStatus == null) {
+            statusTextView.setTag(Theme.key_windowBackgroundWhiteGrayText);
+            statusTextView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteGrayText));
+            statusTextView.setText(LocaleController.getString("ChatRemoved", R.string.ChatRemoved));
+        } else if (currentStatus.toString().equals("")) {
+            currentStatus = LocaleController.getString("ChatRemoved", R.string.ChatRemoved);
+        }
+
+        avatarImageView.setForUserOrChat(null, avatarDrawable);
     }
 
     private String getChatStatus(TLRPC.Chat currentChat) {
@@ -327,6 +378,10 @@ public class ChatRemoveCell extends FrameLayout {
                 return LocaleController.getString("MegaPublic", R.string.MegaPublic);
             }
         }
+    }
+
+    public String getName() {
+        return currentName != null ? currentName.toString() : lastName;
     }
 
     @Override

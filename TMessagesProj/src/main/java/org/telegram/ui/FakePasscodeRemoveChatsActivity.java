@@ -50,7 +50,6 @@ import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.UserObject;
 import org.telegram.messenger.Utilities;
 import org.telegram.messenger.fakepasscode.RemoveChatsAction;
-import org.telegram.tgnet.TLObject;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.ActionBar;
 import org.telegram.ui.ActionBar.AlertDialog;
@@ -72,9 +71,9 @@ import org.telegram.ui.DialogBuilder.FakePasscodeDialogBuilder;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 public class FakePasscodeRemoveChatsActivity extends BaseFragment implements NotificationCenter.NotificationCenterDelegate {
-
     private ScrollView scrollView;
     private SpansContainer spansContainer;
     private EditTextBoldCursor editText;
@@ -203,18 +202,18 @@ public class FakePasscodeRemoveChatsActivity extends BaseFragment implements Not
 
     @Override
     public boolean onFragmentCreate() {
-        NotificationCenter.getInstance(action.accountNum).addObserver(this, NotificationCenter.contactsDidLoad);
-        NotificationCenter.getInstance(action.accountNum).addObserver(this, NotificationCenter.updateInterfaces);
-        NotificationCenter.getInstance(action.accountNum).addObserver(this, NotificationCenter.chatDidCreated);
+        getNotificationCenter().addObserver(this, NotificationCenter.contactsDidLoad);
+        getNotificationCenter().addObserver(this, NotificationCenter.updateInterfaces);
+        getNotificationCenter().addObserver(this, NotificationCenter.chatDidCreated);
         return super.onFragmentCreate();
     }
 
     @Override
     public void onFragmentDestroy() {
         super.onFragmentDestroy();
-        NotificationCenter.getInstance(action.accountNum).removeObserver(this, NotificationCenter.contactsDidLoad);
-        NotificationCenter.getInstance(action.accountNum).removeObserver(this, NotificationCenter.updateInterfaces);
-        NotificationCenter.getInstance(action.accountNum).removeObserver(this, NotificationCenter.chatDidCreated);
+        getNotificationCenter().removeObserver(this, NotificationCenter.contactsDidLoad);
+        getNotificationCenter().removeObserver(this, NotificationCenter.updateInterfaces);
+        getNotificationCenter().removeObserver(this, NotificationCenter.chatDidCreated);
     }
 
     @Override
@@ -407,7 +406,7 @@ public class FakePasscodeRemoveChatsActivity extends BaseFragment implements Not
         });
 
         emptyView = new EmptyTextProgressView(context);
-        if (ContactsController.getInstance(action.accountNum).isLoadingContacts()) {
+        if (getContactsController().isLoadingContacts()) {
             emptyView.showProgress();
         } else {
             emptyView.showTextView();
@@ -430,12 +429,14 @@ public class FakePasscodeRemoveChatsActivity extends BaseFragment implements Not
         listView.setOnItemClickListener((view, position) -> {
             if (view instanceof ChatRemoveCell) {
                 ChatRemoveCell cell = (ChatRemoveCell) view;
-                TLObject object = cell.getObject();
+                Object object = cell.getObject();
                 int id;
                 if (object instanceof TLRPC.User) {
                     id = ((TLRPC.User) object).id;
                 } else if (object instanceof TLRPC.Chat) {
                     id = -((TLRPC.Chat) object).id;
+                } else if (object instanceof RemoveChatsAction.RemoveChatEntry) {
+                    id = ((RemoveChatsAction.RemoveChatEntry)object).chatId;
                 } else {
                     return;
                 }
@@ -448,12 +449,12 @@ public class FakePasscodeRemoveChatsActivity extends BaseFragment implements Not
                     }
                     if (object instanceof TLRPC.User) {
                         TLRPC.User user = (TLRPC.User) object;
-                        MessagesController.getInstance(action.accountNum).putUser(user, !searching);
+                        getMessagesController().putUser(user, !searching);
                     } else if (object instanceof TLRPC.Chat) {
                         TLRPC.Chat chat = (TLRPC.Chat) object;
-                        MessagesController.getInstance(action.accountNum).putChat(chat, !searching);
+                        getMessagesController().putChat(chat, !searching);
                     }
-                    action.add(id);
+                    action.add(id, cell.getName());
                 }
                 SharedConfig.saveConfig();
                 updateHint();
@@ -570,12 +571,14 @@ public class FakePasscodeRemoveChatsActivity extends BaseFragment implements Not
             View child = listView.getChildAt(a);
             if (child instanceof ChatRemoveCell) {
                 ChatRemoveCell cell = (ChatRemoveCell) child;
-                TLObject object = cell.getObject();
+                Object object = cell.getObject();
                 int id;
                 if (object instanceof TLRPC.User) {
                     id = ((TLRPC.User) object).id;
                 } else if (object instanceof TLRPC.Chat) {
                     id = -((TLRPC.Chat) object).id;
+                } else if (object instanceof RemoveChatsAction.RemoveChatEntry) {
+                    id = ((RemoveChatsAction.RemoveChatEntry)object).chatId;
                 } else {
                     id = 0;
                 }
@@ -617,7 +620,7 @@ public class FakePasscodeRemoveChatsActivity extends BaseFragment implements Not
         private SearchAdapterHelper searchAdapterHelper;
         private Runnable searchRunnable;
         private boolean searching;
-        private ArrayList<TLObject> contacts = new ArrayList<>();
+        private ArrayList<Object> contacts = new ArrayList<>();
         private final int usersStartRow = 0;
 
         public RemoveChatsAdapter(Context ctx) {
@@ -625,10 +628,35 @@ public class FakePasscodeRemoveChatsActivity extends BaseFragment implements Not
 
             boolean hasSelf = false;
             ArrayList<TLRPC.Dialog> dialogs = getMessagesController().getAllDialogs();
+
+            Set<Integer> selectedIds = action.getIds();
+            for (Integer id: selectedIds) {
+                boolean added = false;
+                if (id > 0) {
+                    TLRPC.User user = getMessagesController().getUser(id);
+                    if (user != null) {
+                        added = true;
+                        contacts.add(user);
+                        if (user != null && UserObject.isUserSelf(user)) {
+                            hasSelf = true;
+                        }
+                    }
+                } else {
+                    TLRPC.Chat chat = getMessagesController().getChat(-id);
+                    if (chat != null) {
+                        added = true;
+                        contacts.add(chat);
+                    }
+                }
+                if (!added) {
+                    contacts.add(action.get(id));
+                }
+            }
+
             for (int a = 0, N = dialogs.size(); a < N; a++) {
                 TLRPC.Dialog dialog = dialogs.get(a);
                 int lowerId = (int) dialog.id;
-                if (lowerId == 0) {
+                if (lowerId == 0 || selectedIds.contains(lowerId)) {
                     continue;
                 }
                 if (lowerId > 0) {
@@ -706,7 +734,7 @@ public class FakePasscodeRemoveChatsActivity extends BaseFragment implements Not
             switch (holder.getItemViewType()) {
                 case 1: {
                     ChatRemoveCell cell = (ChatRemoveCell) holder.itemView;
-                    TLObject object;
+                    Object object;
                     CharSequence username = null;
                     CharSequence name = null;
                     if (searching) {
@@ -715,7 +743,7 @@ public class FakePasscodeRemoveChatsActivity extends BaseFragment implements Not
                         int localServerCount = searchAdapterHelper.getLocalServerSearch().size();
 
                         if (position >= 0 && position < localCount) {
-                            object = (TLObject) searchResult.get(position);
+                            object = searchResult.get(position);
                         } else if (position >= localCount && position < localServerCount + localCount) {
                             object = searchAdapterHelper.getLocalServerSearch().get(position - localCount);
                         } else if (position > localCount + localServerCount && position < globalCount + localCount + localServerCount) {
@@ -728,8 +756,10 @@ public class FakePasscodeRemoveChatsActivity extends BaseFragment implements Not
                             String objectUserName;
                             if (object instanceof TLRPC.User) {
                                 objectUserName = ((TLRPC.User) object).username;
-                            } else {
+                            } else if (object instanceof TLRPC.Chat){
                                 objectUserName = ((TLRPC.Chat) object).username;
+                            } else {
+                                objectUserName = null;
                             }
                             if (position < localCount) {
                                 name = searchResultNames.get(position);
@@ -775,6 +805,8 @@ public class FakePasscodeRemoveChatsActivity extends BaseFragment implements Not
                         id = ((TLRPC.User) object).id;
                     } else if (object instanceof TLRPC.Chat) {
                         id = -((TLRPC.Chat) object).id;
+                    } else if (object instanceof RemoveChatsAction.RemoveChatEntry) {
+                        id = ((RemoveChatsAction.RemoveChatEntry)object).chatId;
                     } else {
                         id = 0;
                     }
@@ -791,7 +823,9 @@ public class FakePasscodeRemoveChatsActivity extends BaseFragment implements Not
                                 builder.append(filter.name);
                             }
                         }
-                        username = builder;
+                        if (object != null) {
+                            username = builder;
+                        }
                     }
                     cell.setObject(object, name, username);
                     if (id != 0) {
@@ -859,7 +893,7 @@ public class FakePasscodeRemoveChatsActivity extends BaseFragment implements Not
                         ArrayList<CharSequence> resultArrayNames = new ArrayList<>();
 
                         for (int a = 0; a < contacts.size(); a++) {
-                            TLObject object = contacts.get(a);
+                            Object object = contacts.get(a);
 
                             String username;
                             final String[] names = new String[3];
@@ -873,10 +907,14 @@ public class FakePasscodeRemoveChatsActivity extends BaseFragment implements Not
                                 } else if (user.self) {
                                     names[2] = LocaleController.getString("SavedMessages", R.string.SavedMessages).toLowerCase();
                                 }
-                            } else {
+                            } else if (object instanceof  TLRPC.Chat) {
                                 TLRPC.Chat chat = (TLRPC.Chat) object;
                                 names[0] = chat.title.toLowerCase();
                                 username = chat.username;
+                            } else {
+                                RemoveChatsAction.RemoveChatEntry entry = (RemoveChatsAction.RemoveChatEntry) object;
+                                names[0] = entry.title.toLowerCase();
+                                username = null;
                             }
                             names[1] = LocaleController.getInstance().getTranslitString(names[0]);
                             if (names[0].equals(names[1])) {
@@ -901,13 +939,16 @@ public class FakePasscodeRemoveChatsActivity extends BaseFragment implements Not
                                         if (object instanceof TLRPC.User) {
                                             TLRPC.User user = (TLRPC.User) object;
                                             resultArrayNames.add(AndroidUtilities.generateSearchName(user.first_name, user.last_name, q));
-                                        } else {
+                                        } else if (object instanceof TLRPC.Chat){
                                             TLRPC.Chat chat = (TLRPC.Chat) object;
                                             String title = UserConfig.getChatTitleOverride(currentAccount, chat.id);
                                             if (title == null) {
                                                 title = chat.title;
                                             }
                                             resultArrayNames.add(AndroidUtilities.generateSearchName(title, null, q));
+                                        } else {
+                                            RemoveChatsAction.RemoveChatEntry entry = (RemoveChatsAction.RemoveChatEntry) object;
+                                            resultArrayNames.add(AndroidUtilities.generateSearchName(entry.title, null, q));
                                         }
                                     } else {
                                         resultArrayNames.add(AndroidUtilities.generateSearchName("@" + username, null, "@" + q));

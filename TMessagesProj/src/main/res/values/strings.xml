@@ -4785,4 +4785,5 @@
     <string name="UserId">User ID</string>
     <string name="ChatId">Chat ID</string>
     <string name="IdCopied">ID copied to clipboard.</string>
+    <string name="ChatRemoved">removed</string>
 </resources>

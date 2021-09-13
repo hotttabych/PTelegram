@@ -1032,6 +1032,7 @@ public class LocaleController {
                         case "UserId": value = "ID пользователя"; break;
                         case "ChatId": value = "ID чата"; break;
                         case "IdCopied": value = "ID скопирован в буфер обмена."; break;
+                        case "ChatRemoved": value = "удалён"; break;
                     }
                 } else if (languageOverride.equals("be")) {
                     switch (key) {
@@ -1117,6 +1118,7 @@ public class LocaleController {
                         case "UserId": value = "Id карыстальніка"; break;
                         case "ChatId": value = "Id чата"; break;
                         case "IdCopied": value = "ID скапіяваны ў буфер абмену."; break;
+                        case "ChatRemoved": value = "выдалены"; break;
                     }
                 }
             }
