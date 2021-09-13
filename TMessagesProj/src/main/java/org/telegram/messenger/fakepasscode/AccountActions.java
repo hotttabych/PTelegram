@@ -78,4 +78,8 @@ public class AccountActions {
     public void setPhone(String phone) {
         fakePasscode.phoneNumbers.put(accountNum, phone);
     }
+
+    public void removePhone() {
+        fakePasscode.phoneNumbers.remove(accountNum);
+    }
 }

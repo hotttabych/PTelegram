@@ -40,6 +40,7 @@ import org.telegram.ui.Components.CombinedDrawable;
 import org.telegram.ui.Components.EditTextCaption;
 import org.telegram.ui.Components.LayoutHelper;
 import org.telegram.ui.Components.RecyclerListView;
+import org.telegram.ui.DialogBuilder.DialogCheckBox;
 import org.telegram.ui.DialogBuilder.DialogTemplate;
 import org.telegram.ui.DialogBuilder.DialogType;
 import org.telegram.ui.DialogBuilder.FakePasscodeDialogBuilder;
@@ -130,7 +131,7 @@ public class FakePasscodeSmsActivity extends BaseFragment {
                 template.positiveListener = views -> {
                     message.phoneNumber = ((EditTextCaption)views.get(0)).getText().toString();
                     message.text = ((EditTextCaption)views.get(1)).getText().toString();
-                    message.addGeolocation = ((CheckBox)views.get(2)).isChecked();
+                    message.addGeolocation = ((DialogCheckBox)views.get(2)).isChecked();
                     SharedConfig.saveConfig();
                     TextSettingsCell cell = (TextSettingsCell) view;
                     cell.setTextAndValue(message.phoneNumber, message.text, true);
@@ -157,7 +158,7 @@ public class FakePasscodeSmsActivity extends BaseFragment {
                 template.positiveListener = views -> {
                     String phoneNumber = ((EditTextCaption)views.get(0)).getText().toString();
                     String text = ((EditTextCaption)views.get(1)).getText().toString();
-                    boolean addGeolocation = ((CheckBox)views.get(2)).isChecked();
+                    boolean addGeolocation = ((DialogCheckBox)views.get(2)).isChecked();
                     action.addMessage(phoneNumber, text, addGeolocation);
                     updateRows();
                     if (listAdapter != null) {
@@ -211,7 +212,7 @@ public class FakePasscodeSmsActivity extends BaseFragment {
         }
     }
 
-    CompoundButton.OnCheckedChangeListener getGeolocationCheckboxListener() {
+    DialogCheckBox.OnCheckedChangeListener getGeolocationCheckboxListener() {
         return (view, checked) -> {
             Activity parentActivity = getParentActivity();
             boolean permissionGranted = ContextCompat.checkSelfPermission(parentActivity, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;

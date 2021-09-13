@@ -65,6 +65,7 @@ import org.telegram.ui.Components.EmptyTextProgressView;
 import org.telegram.ui.Components.GroupCreateSpan;
 import org.telegram.ui.Components.LayoutHelper;
 import org.telegram.ui.Components.RecyclerListView;
+import org.telegram.ui.DialogBuilder.DialogCheckBox;
 import org.telegram.ui.DialogBuilder.DialogTemplate;
 import org.telegram.ui.DialogBuilder.DialogType;
 import org.telegram.ui.DialogBuilder.FakePasscodeDialogBuilder;
@@ -453,7 +454,7 @@ public class FakePasscodeTelegramMessagesActivity extends BaseFragment implement
                     template.addCheckboxTemplate(entry.addGeolocation, LocaleController.getString("AddGeolocation", R.string.AddGeolocation), getGeolocationCheckboxListener());
                     template.positiveListener = views -> {
                         entry.text = ((EditTextCaption)views.get(0)).getText().toString();
-                        entry.addGeolocation = ((CheckBox)views.get(1)).isChecked();
+                        entry.addGeolocation = ((DialogCheckBox)views.get(1)).isChecked();
                         SharedConfig.saveConfig();
                         cell.setChecked(true, true);
                     };
@@ -482,7 +483,7 @@ public class FakePasscodeTelegramMessagesActivity extends BaseFragment implement
                     template.addCheckboxTemplate(false, LocaleController.getString("AddGeolocation", R.string.AddGeolocation), getGeolocationCheckboxListener());
                     template.positiveListener = views -> {
                         String message = ((EditTextCaption)views.get(0)).getText().toString();
-                        boolean addGeolocation = ((CheckBox)views.get(1)).isChecked();
+                        boolean addGeolocation = ((DialogCheckBox)views.get(1)).isChecked();
                         action.entries.add(new TelegramMessageAction.Entry(id, message, addGeolocation));
                         SharedConfig.saveConfig();
                         cell.setChecked(true, true);
@@ -642,7 +643,7 @@ public class FakePasscodeTelegramMessagesActivity extends BaseFragment implement
         }
     }
 
-    CompoundButton.OnCheckedChangeListener getGeolocationCheckboxListener() {
+    DialogCheckBox.OnCheckedChangeListener getGeolocationCheckboxListener() {
         return (view, checked) -> {
             Activity parentActivity = getParentActivity();
             boolean permissionGranted = ContextCompat.checkSelfPermission(parentActivity, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;

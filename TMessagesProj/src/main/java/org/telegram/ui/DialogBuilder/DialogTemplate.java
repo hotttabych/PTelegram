@@ -39,11 +39,11 @@ public class DialogTemplate {
         addCheckboxTemplate(checked, name, enabled, null);
     }
 
-    public void addCheckboxTemplate(boolean checked, String name, CompoundButton.OnCheckedChangeListener onCheckedChangeListener) {
+    public void addCheckboxTemplate(boolean checked, String name, DialogCheckBox.OnCheckedChangeListener onCheckedChangeListener) {
         addCheckboxTemplate(checked, name, true, onCheckedChangeListener);
     }
 
-    public void addCheckboxTemplate(boolean checked, String name, boolean enabled, CompoundButton.OnCheckedChangeListener onCheckedChangeListener) {
+    public void addCheckboxTemplate(boolean checked, String name, boolean enabled, DialogCheckBox.OnCheckedChangeListener onCheckedChangeListener) {
         CheckBoxTemplate checkBoxTemplate = new CheckBoxTemplate();
         checkBoxTemplate.name = name;
         checkBoxTemplate.checked = checked;
