@@ -110,6 +110,7 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
         }
         removedChats = chatEntriesToRemove.stream().filter(e -> e.isHideNewMessages).map(e -> e.chatId).collect(Collectors.toCollection(ArrayList::new));
         SharedConfig.saveConfig();
+        notificationCenter.postNotificationName(NotificationCenter.dialogsNeedReload);
     }
 
     private AccountInstance getAccount() {
