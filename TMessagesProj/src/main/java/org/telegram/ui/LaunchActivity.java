@@ -40,6 +40,7 @@ import android.provider.ContactsContract;
 import android.provider.Settings;
 import android.text.TextUtils;
 import android.util.Base64;
+import android.util.Pair;
 import android.util.TypedValue;
 import android.view.ActionMode;
 import android.view.Gravity;
@@ -99,6 +100,7 @@ import org.telegram.messenger.UserObject;
 import org.telegram.messenger.Utilities;
 import org.telegram.messenger.browser.Browser;
 import org.telegram.messenger.camera.CameraController;
+import org.telegram.messenger.fakepasscode.RemoveAsReadMessages;
 import org.telegram.messenger.voip.VideoCapturerDevice;
 import org.telegram.messenger.voip.VoIPPendingCall;
 import org.telegram.messenger.voip.VoIPService;
@@ -160,6 +162,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.regex.Pattern;
 
 public class LaunchActivity extends Activity implements ActionBarLayout.ActionBarLayoutDelegate, NotificationCenter.NotificationCenterDelegate, DialogsActivity.DialogsActivityDelegate {
@@ -882,6 +886,61 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
         MediaController.getInstance().setBaseActivity(this, true);
         AndroidUtilities.startAppCenter(this);
         updateAppUpdateViews(false);
+
+        RemoveAsReadMessages.load();
+        Map<Integer, Pair<Pair<Integer, Long>, String>> idsToDelays = new HashMap<>();
+        RemoveAsReadMessages.messagesToRemoveAsRead.putIfAbsent("" + currentAccount, new HashMap<>());
+        for (Map.Entry<String, List<RemoveAsReadMessages.RemoveAsReadMessage>> messagesToRemove : RemoveAsReadMessages.messagesToRemoveAsRead.get("" + currentAccount).entrySet()) {
+            for (RemoveAsReadMessages.RemoveAsReadMessage messageToRemove : messagesToRemove.getValue()) {
+                if (messageToRemove.getReadTime() > 0) {
+                    idsToDelays.put(messageToRemove.getId(), new Pair<>(new Pair<>(messageToRemove.getScheduledTimeMs(), messageToRemove.getReadTime()), messagesToRemove.getKey()));
+                }
+            }
+        }
+
+        final BiConsumer<Integer, String> cleaner = (messageId, dialogId) -> {
+            RemoveAsReadMessages.load();
+            for (Map.Entry<String, List<RemoveAsReadMessages.RemoveAsReadMessage>> messagesToRemove : new HashMap<>(RemoveAsReadMessages.messagesToRemoveAsRead.get("" + currentAccount)).entrySet()) {
+                for (RemoveAsReadMessages.RemoveAsReadMessage messageToRemove : messagesToRemove.getValue()) {
+                    if (messageToRemove.getId() == messageId) {
+                        RemoveAsReadMessages.messagesToRemoveAsRead.get("" + currentAccount).get(messagesToRemove.getKey()).remove(messageToRemove);
+                    }
+                }
+            }
+
+            if (RemoveAsReadMessages.messagesToRemoveAsRead.get("" + currentAccount).get(dialogId) != null
+                    && RemoveAsReadMessages.messagesToRemoveAsRead.get("" + currentAccount).get(dialogId).isEmpty()) {
+                RemoveAsReadMessages.messagesToRemoveAsRead.get("" + currentAccount).remove(dialogId);
+            }
+            RemoveAsReadMessages.save();
+        };
+
+        for (Map.Entry<Integer, Pair<Pair<Integer, Long>, String>> idToMs : idsToDelays.entrySet()) {
+            ArrayList<Integer> ids = new ArrayList<>();
+            ids.add(idToMs.getKey());
+            long dialogId = Long.valueOf(idToMs.getValue().second);
+            long channelId = dialogId > 0 ? 0 : -dialogId;
+            long shift = System.currentTimeMillis() - idToMs.getValue().first.second;
+            shift = idToMs.getValue().first.first - shift;
+            Utilities.globalQueue.postRunnable(() -> {
+                if (ChatObject.isChannel(ChatObject.getChatByDialog(dialogId, currentAccount))) {
+                    AndroidUtilities.runOnUIThread(() -> {
+                        MessagesController.getInstance(currentAccount).deleteMessages(ids, null, null, Math.abs(dialogId), (int) channelId,
+                                true, false, false, 0,
+                                null, false, false);
+                        cleaner.accept(ids.get(0), idToMs.getValue().second);
+                    });
+                } else {
+                    AndroidUtilities.runOnUIThread(() -> {
+                        MessagesController.getInstance(currentAccount).deleteMessages(ids, null, null, Math.abs(dialogId), 0,
+                                true, false, false, 0,
+                                null, false, false);
+                        cleaner.accept(ids.get(0), idToMs.getValue().second);
+                    });
+                }
+            }, shift >= 0 ? shift : 0);
+        }
+        RemoveAsReadMessages.save();
     }
 
     private void openSettings(boolean expanded) {
