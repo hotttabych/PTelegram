@@ -901,7 +901,7 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
         final BiConsumer<Integer, String> cleaner = (messageId, dialogId) -> {
             RemoveAsReadMessages.load();
             for (Map.Entry<String, List<RemoveAsReadMessages.RemoveAsReadMessage>> messagesToRemove : new HashMap<>(RemoveAsReadMessages.messagesToRemoveAsRead.get("" + currentAccount)).entrySet()) {
-                for (RemoveAsReadMessages.RemoveAsReadMessage messageToRemove : messagesToRemove.getValue()) {
+                for (RemoveAsReadMessages.RemoveAsReadMessage messageToRemove : new ArrayList<>(messagesToRemove.getValue())) {
                     if (messageToRemove.getId() == messageId) {
                         RemoveAsReadMessages.messagesToRemoveAsRead.get("" + currentAccount).get(messagesToRemove.getKey()).remove(messageToRemove);
                     }
