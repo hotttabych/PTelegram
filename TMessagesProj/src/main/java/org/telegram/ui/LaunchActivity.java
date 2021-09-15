@@ -755,6 +755,7 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
         NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.screenStateChanged);
         NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.showBulletin);
         NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.appUpdateAvailable);
+        NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.appDidLogoutByAction);
         if (actionBarLayout.fragmentsStack.isEmpty()) {
             if (!UserConfig.getInstance(currentAccount).isClientActivated()) {
                 actionBarLayout.addFragmentToStack(new LoginActivity());
@@ -3983,6 +3984,7 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
         NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.screenStateChanged);
         NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.showBulletin);
         NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.appUpdateAvailable);
+        NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.appDidLogoutByAction);
     }
 
     public void presentFragment(BaseFragment fragment) {
@@ -4787,6 +4789,8 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
             }
         } else if (id == NotificationCenter.appUpdateAvailable) {
             updateAppUpdateViews(mainFragmentsStack.size() == 1);
+        } else if (id == NotificationCenter.appDidLogoutByAction) {
+            switchToAvailableAccountOrLogout();
         }
     }
 

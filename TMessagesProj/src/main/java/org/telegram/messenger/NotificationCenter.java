@@ -184,6 +184,7 @@ public class NotificationCenter {
     //fake passcode
     public static final int dialogDeletedByAction = totalEvents++;
     public static final int dialogCleared = totalEvents++;
+    public static final int appDidLogoutByAction = totalEvents++;
 
     //global
     public static final int pushMessagesUpdated = totalEvents++;
