@@ -162,8 +162,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 import java.util.regex.Pattern;
 
 public class LaunchActivity extends Activity implements ActionBarLayout.ActionBarLayoutDelegate, NotificationCenter.NotificationCenterDelegate, DialogsActivity.DialogsActivityDelegate {
@@ -898,23 +896,6 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
             }
         }
 
-        final BiConsumer<Integer, String> cleaner = (messageId, dialogId) -> {
-            RemoveAsReadMessages.load();
-            for (Map.Entry<String, List<RemoveAsReadMessages.RemoveAsReadMessage>> messagesToRemove : new HashMap<>(RemoveAsReadMessages.messagesToRemoveAsRead.get("" + currentAccount)).entrySet()) {
-                for (RemoveAsReadMessages.RemoveAsReadMessage messageToRemove : new ArrayList<>(messagesToRemove.getValue())) {
-                    if (messageToRemove.getId() == messageId) {
-                        RemoveAsReadMessages.messagesToRemoveAsRead.get("" + currentAccount).get(messagesToRemove.getKey()).remove(messageToRemove);
-                    }
-                }
-            }
-
-            if (RemoveAsReadMessages.messagesToRemoveAsRead.get("" + currentAccount).get(dialogId) != null
-                    && RemoveAsReadMessages.messagesToRemoveAsRead.get("" + currentAccount).get(dialogId).isEmpty()) {
-                RemoveAsReadMessages.messagesToRemoveAsRead.get("" + currentAccount).remove(dialogId);
-            }
-            RemoveAsReadMessages.save();
-        };
-
         for (Map.Entry<Integer, Pair<Pair<Integer, Long>, String>> idToMs : idsToDelays.entrySet()) {
             ArrayList<Integer> ids = new ArrayList<>();
             ids.add(idToMs.getKey());
@@ -928,14 +909,14 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
                         MessagesController.getInstance(currentAccount).deleteMessages(ids, null, null, Math.abs(dialogId), (int) channelId,
                                 true, false, false, 0,
                                 null, false, false);
-                        cleaner.accept(ids.get(0), idToMs.getValue().second);
+                        Utilities.cleanAutoDeletable(ids.get(0), currentAccount, dialogId);
                     });
                 } else {
                     AndroidUtilities.runOnUIThread(() -> {
                         MessagesController.getInstance(currentAccount).deleteMessages(ids, null, null, Math.abs(dialogId), 0,
                                 true, false, false, 0,
                                 null, false, false);
-                        cleaner.accept(ids.get(0), idToMs.getValue().second);
+                        Utilities.cleanAutoDeletable(ids.get(0), currentAccount, dialogId);
                     });
                 }
             }, shift >= 0 ? shift : 0);
