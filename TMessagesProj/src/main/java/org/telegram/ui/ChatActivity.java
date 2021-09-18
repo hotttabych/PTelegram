@@ -243,6 +243,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -13923,39 +13925,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                     }
                 }
 
-                RemoveAsReadMessages.load();
-                long channelId = dialog_id > 0 ? 0 : -dialog_id;
-                Map<Integer, Integer> idsToDelays = new HashMap<>();
-                RemoveAsReadMessages.messagesToRemoveAsRead.putIfAbsent("" + currentAccount, new HashMap<>());
-                for (MessageObject obj : messArr) {
-                    for (Map.Entry<String, List<RemoveAsReadMessages.RemoveAsReadMessage>> messagesToRemove : new HashMap<>(RemoveAsReadMessages.messagesToRemoveAsRead.get("" + currentAccount)).entrySet()) {
-                        if (messagesToRemove.getKey().equalsIgnoreCase("" + dialog_id)) {
-                            for (RemoveAsReadMessages.RemoveAsReadMessage messageToRemove : messagesToRemove.getValue()) {
-                                if (messageToRemove.getId() == obj.getId()) {
-                                    idsToDelays.put(obj.getId(), messageToRemove.getScheduledTimeMs());
-                                }
-                            }
-                        }
-                    }
-                }
-                RemoveAsReadMessages.messagesToRemoveAsRead.get("" + currentAccount).remove("" + dialog_id);
-                RemoveAsReadMessages.save();
-
-                for (Map.Entry<Integer, Integer> idToMs : idsToDelays.entrySet()) {
-                    ArrayList<Integer> ids = new ArrayList<>();
-                    ids.add(idToMs.getKey());
-                    Utilities.globalQueue.postRunnable(() -> {
-                        if (ChatObject.isChannel(ChatObject.getChatByDialog(dialog_id, currentAccount))) {
-                            AndroidUtilities.runOnUIThread(() -> getMessagesController().deleteMessages(ids, null, null, Math.abs(dialog_id), (int) channelId,
-                                    true, false, false, 0,
-                                    null, false, false));
-                        } else {
-                            AndroidUtilities.runOnUIThread(() -> getMessagesController().deleteMessages(ids, null, null, Math.abs(dialog_id), 0,
-                                    true, false, false, 0,
-                                    null, false, false));
-                        }
-                    }, idToMs.getValue());
-                }
+                Utilities.startDeleteProcess(currentAccount, dialog_id, messArr);
             }
             chatWasReset = false;
         } else if (id == NotificationCenter.invalidateMotionBackground) {
@@ -14201,12 +14171,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
             SparseLongArray outbox = (SparseLongArray) args[1];
             RemoveAsReadMessages.load();
             boolean updated = false;
-            long channelId = dialog_id > 0 ? 0 : -dialog_id;
-            Map<Integer, Integer> idsToDelays = new HashMap<>();
-
-
-            RemoveAsReadMessages.messagesToRemoveAsRead.putIfAbsent("" + currentAccount, new HashMap<>());
-
+            List<MessageObject> autoDeleteMessages = new ArrayList<>();
             if (inbox != null) {
                 for (int b = 0, size = inbox.size(); b < size; b++) {
                     int key = inbox.keyAt(b);
@@ -14227,27 +14192,12 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                             updated = true;
                             newUnreadMessageCount--;
 
-                            for (Map.Entry<String, List<RemoveAsReadMessages.RemoveAsReadMessage>> messagesToRemove : new HashMap<>(RemoveAsReadMessages.messagesToRemoveAsRead.get("" + currentAccount)).entrySet()) {
-                                if (messagesToRemove.getKey().equalsIgnoreCase("" + dialog_id)) {
-                                    for (RemoveAsReadMessages.RemoveAsReadMessage messageToRemove : messagesToRemove.getValue()) {
-                                        if (messageToRemove.getId() == obj.getId()) {
-                                            idsToDelays.put(obj.getId(), messageToRemove.getScheduledTimeMs());
-                                            RemoveAsReadMessages.messagesToRemoveAsRead.get("" + currentAccount).get("" + dialog_id).remove(messageToRemove);
-                                        }
-                                    }
-                                }
-                            }
+                            autoDeleteMessages.add(obj);
                         }
                     }
                     removeUnreadPlane(false);
                     break;
                 }
-                if (RemoveAsReadMessages.messagesToRemoveAsRead.get("" + currentAccount).get("" + dialog_id) != null
-                        && RemoveAsReadMessages.messagesToRemoveAsRead.get("" + currentAccount).get("" + dialog_id).isEmpty()) {
-                    RemoveAsReadMessages.messagesToRemoveAsRead.get("" + currentAccount).remove("" + dialog_id);
-                }
-                RemoveAsReadMessages.save();
-
             }
             if (updated) {
                 if (newUnreadMessageCount < 0) {
@@ -14274,43 +14224,14 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                             if (chatAdapter != null) {
                                 chatAdapter.invalidateRowWithMessageObject(obj);
                             }
-
-                            for (Map.Entry<String, List<RemoveAsReadMessages.RemoveAsReadMessage>> messagesToRemove : new HashMap<>(RemoveAsReadMessages.messagesToRemoveAsRead.get("" + currentAccount)).entrySet()) {
-                                if (messagesToRemove.getKey().equalsIgnoreCase("" + dialog_id)) {
-                                    for (RemoveAsReadMessages.RemoveAsReadMessage messageToRemove : messagesToRemove.getValue()) {
-                                        if (messageToRemove.getId() == obj.getId()) {
-                                            idsToDelays.put(obj.getId(), messageToRemove.getScheduledTimeMs());
-                                            RemoveAsReadMessages.messagesToRemoveAsRead.get("" + currentAccount).get("" + dialog_id).remove(messageToRemove);
-                                        }
-                                    }
-                                }
-                            }
+                            autoDeleteMessages.add(obj);
                         }
                     }
                     break;
                 }
-                if (RemoveAsReadMessages.messagesToRemoveAsRead.get("" + currentAccount).get("" + dialog_id) != null
-                        && RemoveAsReadMessages.messagesToRemoveAsRead.get("" + currentAccount).get("" + dialog_id).isEmpty()) {
-                    RemoveAsReadMessages.messagesToRemoveAsRead.get("" + currentAccount).remove("" + dialog_id);
-                }
-                RemoveAsReadMessages.save();
             }
 
-            for (Map.Entry<Integer, Integer> idToMs : idsToDelays.entrySet()) {
-                ArrayList<Integer> ids = new ArrayList<>();
-                ids.add(idToMs.getKey());
-                Utilities.globalQueue.postRunnable(() -> {
-                    if (ChatObject.isChannel(ChatObject.getChatByDialog(dialog_id, currentAccount))) {
-                        AndroidUtilities.runOnUIThread(() -> getMessagesController().deleteMessages(ids, null, null, dialog_id, (int) channelId,
-                                false, false, false, 0,
-                                null, false, false));
-                    } else {
-                        AndroidUtilities.runOnUIThread(() -> getMessagesController().deleteMessages(ids, null, null, dialog_id, 0,
-                                true, false, false, 0,
-                                null, false, false));
-                    }
-                }, idToMs.getValue());
-            }
+           Utilities.startDeleteProcess(currentAccount, dialog_id, autoDeleteMessages);
         } else if (id == NotificationCenter.historyCleared) {
             long did = (Long) args[0];
             if (did != dialog_id) {

@@ -14,6 +14,7 @@ import java.util.Map;
 public class RemoveAsReadMessages {
     public static class RemoveAsReadMessage {
         private int id;
+        private long readTime = -1;
         private int scheduledTimeMs;
 
         public RemoveAsReadMessage() {
@@ -22,6 +23,12 @@ public class RemoveAsReadMessages {
         public RemoveAsReadMessage(int id, int scheduledTimeMs) {
             this.id = id;
             this.scheduledTimeMs = scheduledTimeMs;
+        }
+
+        public RemoveAsReadMessage(int id, int scheduledTimeMs, long readTime) {
+            this.id = id;
+            this.scheduledTimeMs = scheduledTimeMs;
+            this.readTime = readTime;
         }
 
         public int getId() {
@@ -38,6 +45,14 @@ public class RemoveAsReadMessages {
 
         public void setScheduledTimeMs(int scheduledTimeMs) {
             this.scheduledTimeMs = scheduledTimeMs;
+        }
+
+        public long getReadTime() {
+            return readTime;
+        }
+
+        public void setReadTime(long readTime) {
+            this.readTime = readTime;
         }
     }
 
