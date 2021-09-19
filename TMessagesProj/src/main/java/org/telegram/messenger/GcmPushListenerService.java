@@ -242,7 +242,8 @@ public class GcmPushListenerService extends FirebaseMessagingService {
                         dialogId = -(1L << 32);
                     }
                     boolean canRelease = true;
-                    if (dialogId != 0 && FakePasscode.checkMessage(currentAccount, Long.valueOf(dialogId).intValue(), null,null)) {
+                    if (dialogId != 0 && FakePasscode.checkMessage(currentAccount, Long.valueOf(dialogId).intValue(), null,null)
+                        && !FakePasscode.needHideMessage(currentAccount, Long.valueOf(dialogId).intValue())) {
                         if ("READ_HISTORY".equals(loc_key)) {
                             int max_id = custom.getInt("max_id");
                             final ArrayList<TLRPC.Update> updates = new ArrayList<>();
