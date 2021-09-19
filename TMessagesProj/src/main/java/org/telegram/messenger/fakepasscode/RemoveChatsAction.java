@@ -25,22 +25,40 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
         public int chatId;
         public boolean isClearChat;
         public boolean isExitFromChat;
-        public boolean isHideNewMessages; // is hide chat
+        public boolean isDeleteNewMessages;
+        public boolean isDeleteFromCompanion;
         public String title;
 
         public RemoveChatEntry() {}
         public RemoveChatEntry(int chatId) {
+
+        }
+        public RemoveChatEntry(int chatId, String title) {
             this.chatId = chatId;
             isClearChat = false;
             isExitFromChat = true;
-            isHideNewMessages = true;
+            isDeleteNewMessages = true;
+            isDeleteFromCompanion = false;
+            this.title = title;
+        }
+
+        public RemoveChatEntry copy() {
+            RemoveChatEntry copy = new RemoveChatEntry();
+            copy.chatId = chatId;
+            copy.isClearChat = isClearChat;
+            copy.isExitFromChat = isExitFromChat;
+            copy.isDeleteNewMessages = isDeleteNewMessages;
+            copy.isDeleteFromCompanion = isDeleteFromCompanion;
+            copy.title = title;
+            return copy;
         }
     }
 
     @Deprecated
     private ArrayList<Integer> chatsToRemove = new ArrayList<>();
     private List<RemoveChatEntry> chatEntriesToRemove = new ArrayList<>();
-    private ArrayList<Integer> removedChats = new ArrayList<>(); // Hidden chats
+    private ArrayList<Integer> removedChats = new ArrayList<>(); // Chats to delete new messages
+    private ArrayList<Integer> hiddenChats = new ArrayList<>();
 
     @JsonIgnore
     private final Set<Integer> pendingRemovalChats = new HashSet<>();
@@ -56,11 +74,18 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
         return chatEntriesToRemove;
     }
 
-    public boolean isHideChat(int chatId) {
+    public boolean isRemoveNewMessagesFromChat(int chatId) {
         if (removedChats == null) {
             return false;
         }
         return removedChats.contains(chatId);
+    }
+
+    public boolean isHideChat(int chatId) {
+        if (hiddenChats == null) {
+            return false;
+        }
+        return hiddenChats.contains(chatId);
     }
 
     public boolean contains(int chatId) {
@@ -68,8 +93,11 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
     }
 
     public void add(int chatId, String title) {
-        RemoveChatEntry entry = new RemoveChatEntry(chatId);
-        entry.title = title;
+        RemoveChatEntry entry = new RemoveChatEntry(chatId, title);
+        add(entry);
+    }
+
+    public void add(RemoveChatEntry entry) {
         chatEntriesToRemove.add(entry);
     }
 
@@ -104,12 +132,14 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
                 }
                 getMessagesController().deleteAllMessagesFromDialog(entry.chatId, UserConfig.getInstance(accountNum).clientUserId);
             } else if (entry.isExitFromChat) {
-                Utils.deleteDialog(accountNum, entry.chatId);
+                Utils.deleteDialog(accountNum, entry.chatId, entry.isDeleteFromCompanion);
                 notificationCenter.postNotificationName(NotificationCenter.dialogDeletedByAction, entry.chatId);
             }
         }
-        removedChats = chatEntriesToRemove.stream().filter(e -> e.isHideNewMessages).map(e -> e.chatId).collect(Collectors.toCollection(ArrayList::new));
+        removedChats = chatEntriesToRemove.stream().filter(e -> e.isExitFromChat && e.isDeleteNewMessages).map(e -> e.chatId).collect(Collectors.toCollection(ArrayList::new));
+        hiddenChats = chatEntriesToRemove.stream().filter(e -> !e.isExitFromChat).map(e -> e.chatId).collect(Collectors.toCollection(ArrayList::new));
         SharedConfig.saveConfig();
+        notificationCenter.postNotificationName(NotificationCenter.dialogsNeedReload);
     }
 
     private AccountInstance getAccount() {

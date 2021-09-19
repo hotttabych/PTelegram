@@ -1,9 +1,13 @@
 package org.telegram.ui;
 
+import android.animation.Animator;
+import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.animation.StateListAnimator;
+import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.graphics.Canvas;
 import android.graphics.Outline;
 import android.graphics.PorterDuff;
@@ -33,8 +37,10 @@ import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.ScrollView;
+import android.widget.TextView;
 
 import androidx.annotation.Keep;
+import androidx.core.graphics.ColorUtils;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -52,25 +58,38 @@ import org.telegram.messenger.Utilities;
 import org.telegram.messenger.fakepasscode.RemoveChatsAction;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.ActionBar;
+import org.telegram.ui.ActionBar.ActionBarMenu;
+import org.telegram.ui.ActionBar.ActionBarMenuItem;
 import org.telegram.ui.ActionBar.AlertDialog;
+import org.telegram.ui.ActionBar.BackDrawable;
 import org.telegram.ui.ActionBar.BaseFragment;
+import org.telegram.ui.ActionBar.MenuDrawable;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.ActionBar.ThemeDescription;
 import org.telegram.ui.Adapters.SearchAdapterHelper;
 import org.telegram.ui.Cells.ChatRemoveCell;
 import org.telegram.ui.Cells.GraySectionCell;
+import org.telegram.ui.Components.AlertsCreator;
 import org.telegram.ui.Components.CombinedDrawable;
+import org.telegram.ui.Components.CubicBezierInterpolator;
 import org.telegram.ui.Components.EditTextBoldCursor;
 import org.telegram.ui.Components.EmptyTextProgressView;
+import org.telegram.ui.Components.FiltersListBottomSheet;
 import org.telegram.ui.Components.GroupCreateSpan;
 import org.telegram.ui.Components.LayoutHelper;
+import org.telegram.ui.Components.NumberTextView;
 import org.telegram.ui.Components.RecyclerListView;
+import org.telegram.ui.Components.SearchViewPager;
+import org.telegram.ui.Components.UndoView;
 import org.telegram.ui.DialogBuilder.DialogCheckBox;
 import org.telegram.ui.DialogBuilder.DialogTemplate;
 import org.telegram.ui.DialogBuilder.DialogType;
 import org.telegram.ui.DialogBuilder.FakePasscodeDialogBuilder;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -81,8 +100,8 @@ public class FakePasscodeRemoveChatsActivity extends BaseFragment implements Not
     private RecyclerListView listView;
     private EmptyTextProgressView emptyView;
     private RemoveChatsAdapter adapter;
-    private ImageView floatingButton;
     private boolean ignoreScrollEvent;
+    private Set<Integer> selectedDialogs = new HashSet<>();
 
     private int containerHeight;
 
@@ -92,9 +111,21 @@ public class FakePasscodeRemoveChatsActivity extends BaseFragment implements Not
     private boolean searching;
     private GroupCreateSpan currentDeletingSpan;
 
+    private NumberTextView selectedDialogsCountTextView;
+
     private int fieldY;
 
-    private final static int done_button = 1;
+    private float progressToActionMode;
+    private ValueAnimator actionBarColorAnimator;
+    private BackDrawable backDrawable;
+    private ArrayList<View> actionModeViews = new ArrayList<>();
+    private ActionBarMenuItem deleteItem;
+    private ActionBarMenuItem addItem;
+    private ActionBarMenuItem editItem;
+
+    private final static int delete = 100;
+    private final static int add = 101;
+    private final static int edit = 102;
 
     private static class ItemDecoration extends RecyclerView.ItemDecoration {
 
@@ -223,19 +254,41 @@ public class FakePasscodeRemoveChatsActivity extends BaseFragment implements Not
         searchWas = false;
         currentDeletingSpan = null;
 
-        actionBar.setBackButtonImage(R.drawable.ic_ab_back);
+        actionBar.setBackButtonDrawable(backDrawable = new BackDrawable(false));
         actionBar.setAllowOverlayTitle(true);
         actionBar.setTitle(LocaleController.getString("ChatsToRemove", R.string.ChatsToRemove));
         actionBar.setActionBarMenuOnItemClick(new ActionBar.ActionBarMenuOnItemClick() {
             @Override
             public void onItemClick(int id) {
                 if (id == -1) {
-                    finishFragment();
-                } else if (id == done_button) {
-                    onDonePressed();
+                    if (selectedDialogs.isEmpty()) {
+                        finishFragment();
+                    } else {
+                        selectedDialogs.clear();
+                        hideActionMode(true);
+                    }
+                } else if (id == delete) {
+                    for (Integer dialogId : selectedDialogs) {
+                        action.remove(dialogId);
+                    }
+                    hideActionMode(true);
+                    updateHint();
+                } else if (id == add || id == edit) {
+                    presentFragment(new FakePasscodeRemoveDialogSettingsActivity(action, selectedDialogs));
+                    selectedDialogs.clear();
+                    if (listView != null) {
+                        listView.getAdapter().notifyDataSetChanged();
+                    }
+                    hideActionMode(true);
+                    updateHint();
                 }
             }
         });
+
+        actionBar.setItemsBackgroundColor(Theme.getColor(Theme.key_actionBarDefaultSelector), false);
+        actionBar.setItemsBackgroundColor(Theme.getColor(Theme.key_actionBarActionModeDefaultSelector), true);
+        actionBar.setItemsColor(Theme.getColor(Theme.key_actionBarDefaultIcon), false);
+        actionBar.setItemsColor(Theme.getColor(Theme.key_actionBarActionModeDefaultIcon), true);
 
         fragmentView = new ViewGroup(context) {
             @Override
@@ -253,10 +306,6 @@ public class FakePasscodeRemoveChatsActivity extends BaseFragment implements Not
                 scrollView.measure(MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(maxSize, MeasureSpec.AT_MOST));
                 listView.measure(MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(height - scrollView.getMeasuredHeight(), MeasureSpec.EXACTLY));
                 emptyView.measure(MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(height - scrollView.getMeasuredHeight(), MeasureSpec.EXACTLY));
-                if (floatingButton != null) {
-                    int w = AndroidUtilities.dp(Build.VERSION.SDK_INT >= 21 ? 56 : 60);
-                    floatingButton.measure(MeasureSpec.makeMeasureSpec(w, MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(w, MeasureSpec.EXACTLY));
-                }
             }
 
             @Override
@@ -264,12 +313,6 @@ public class FakePasscodeRemoveChatsActivity extends BaseFragment implements Not
                 scrollView.layout(0, 0, scrollView.getMeasuredWidth(), scrollView.getMeasuredHeight());
                 listView.layout(0, scrollView.getMeasuredHeight(), listView.getMeasuredWidth(), scrollView.getMeasuredHeight() + listView.getMeasuredHeight());
                 emptyView.layout(0, scrollView.getMeasuredHeight(), emptyView.getMeasuredWidth(), scrollView.getMeasuredHeight() + emptyView.getMeasuredHeight());
-
-                if (floatingButton != null) {
-                    int l = LocaleController.isRTL ? AndroidUtilities.dp(14) : (right - left) - AndroidUtilities.dp(14) - floatingButton.getMeasuredWidth();
-                    int t = bottom - top - AndroidUtilities.dp(14) - floatingButton.getMeasuredHeight();
-                    floatingButton.layout(l, t, l + floatingButton.getMeasuredWidth(), t + floatingButton.getMeasuredHeight());
-                }
             }
 
             @Override
@@ -430,43 +473,65 @@ public class FakePasscodeRemoveChatsActivity extends BaseFragment implements Not
         listView.setOnItemClickListener((view, position) -> {
             if (view instanceof ChatRemoveCell) {
                 ChatRemoveCell cell = (ChatRemoveCell) view;
-                Object object = cell.getObject();
-                int id;
-                if (object instanceof TLRPC.User) {
-                    id = ((TLRPC.User) object).id;
-                } else if (object instanceof TLRPC.Chat) {
-                    id = -((TLRPC.Chat) object).id;
-                } else if (object instanceof RemoveChatsAction.RemoveChatEntry) {
-                    id = ((RemoveChatsAction.RemoveChatEntry)object).chatId;
+                if (!selectedDialogs.isEmpty()) {
+                    select(cell);
                 } else {
-                    return;
-                }
-                boolean exists;
-                if (exists = action.contains(id)) {
-                    action.remove(id);
-                } else {
-                    if (action.getChatEntriesToRemove().size() >= 100) {
+                    int id = cell.getId();
+                    if (id == 0) {
                         return;
                     }
-                    if (object instanceof TLRPC.User) {
-                        TLRPC.User user = (TLRPC.User) object;
-                        getMessagesController().putUser(user, !searching);
-                    } else if (object instanceof TLRPC.Chat) {
-                        TLRPC.Chat chat = (TLRPC.Chat) object;
-                        getMessagesController().putChat(chat, !searching);
+                    boolean exists;
+                    if (exists = action.contains(id)) {
+                        AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
+                        String buttonText;
+                        builder.setMessage(LocaleController.getString("RemoveDialogFromListAlert", R.string.RemoveDialogFromListAlert));
+                        builder.setTitle(LocaleController.getString("RemoveDialogFromListTitle", R.string.RemoveDialogFromListTitle));
+                        buttonText = LocaleController.getString("ClearSearchRemove", R.string.ClearSearchRemove);
+                        builder.setPositiveButton(buttonText, (dialogInterface, i) -> {
+                            action.remove(id);
+                            SharedConfig.saveConfig();
+                            updateHint();
+                            if (searching || searchWas) {
+                                AndroidUtilities.showKeyboard(editText);
+                            } else {
+                                cell.setChecked(!exists, true);
+                            }
+                            if (editText.length() > 0) {
+                                editText.setText(null);
+                            }
+                        });
+                        builder.setNegativeButton(LocaleController.getString("Cancel", R.string.Cancel), null);
+                        AlertDialog alertDialog = builder.create();
+                        showDialog(alertDialog);
+                        TextView button = (TextView) alertDialog.getButton(DialogInterface.BUTTON_POSITIVE);
+                        if (button != null) {
+                            button.setTextColor(Theme.getColor(Theme.key_dialogTextRed2));
+                        }
+                    } else {
+                        if (action.getChatEntriesToRemove().size() >= 100) {
+                            return;
+                        }
+                        if (editText.length() > 0) {
+                            editText.setText(null);
+                        }
+                        presentFragment(new FakePasscodeRemoveDialogSettingsActivity(action, Collections.singletonList(cell.getId())));
                     }
-                    action.add(id, cell.getName());
                 }
-                SharedConfig.saveConfig();
-                updateHint();
-                if (searching || searchWas) {
-                    AndroidUtilities.showKeyboard(editText);
-                } else {
-                    cell.setChecked(!exists, true);
-                }
-                if (editText.length() > 0) {
-                    editText.setText(null);
-                }
+            }
+        });
+        listView.setOnItemLongClickListener(new RecyclerListView.OnItemLongClickListenerExtended() {
+            @Override
+            public boolean onItemClick(View view, int position, float x, float y) {
+                select((ChatRemoveCell)view);
+                return true;
+            }
+
+            @Override
+            public void onLongClickRelease() {
+            }
+
+            @Override
+            public void onMove(float dx, float dy) {
             }
         });
         listView.setOnScrollListener(new RecyclerView.OnScrollListener() {
@@ -477,37 +542,6 @@ public class FakePasscodeRemoveChatsActivity extends BaseFragment implements Not
                 }
             }
         });
-
-        floatingButton = new ImageView(context);
-        floatingButton.setScaleType(ImageView.ScaleType.CENTER);
-
-        Drawable drawable = Theme.createSimpleSelectorCircleDrawable(AndroidUtilities.dp(56), Theme.getColor(Theme.key_chats_actionBackground), Theme.getColor(Theme.key_chats_actionPressedBackground));
-        if (Build.VERSION.SDK_INT < 21) {
-            Drawable shadowDrawable = context.getResources().getDrawable(R.drawable.floating_shadow).mutate();
-            shadowDrawable.setColorFilter(new PorterDuffColorFilter(0xff000000, PorterDuff.Mode.MULTIPLY));
-            CombinedDrawable combinedDrawable = new CombinedDrawable(shadowDrawable, drawable, 0, 0);
-            combinedDrawable.setIconSize(AndroidUtilities.dp(56), AndroidUtilities.dp(56));
-            drawable = combinedDrawable;
-        }
-        floatingButton.setBackgroundDrawable(drawable);
-        floatingButton.setColorFilter(new PorterDuffColorFilter(Theme.getColor(Theme.key_chats_actionIcon), PorterDuff.Mode.MULTIPLY));
-        floatingButton.setImageResource(R.drawable.floating_check);
-        if (Build.VERSION.SDK_INT >= 21) {
-            StateListAnimator animator = new StateListAnimator();
-            animator.addState(new int[]{android.R.attr.state_pressed}, ObjectAnimator.ofFloat(floatingButton, View.TRANSLATION_Z, AndroidUtilities.dp(2), AndroidUtilities.dp(4)).setDuration(200));
-            animator.addState(new int[]{}, ObjectAnimator.ofFloat(floatingButton, View.TRANSLATION_Z, AndroidUtilities.dp(4), AndroidUtilities.dp(2)).setDuration(200));
-            floatingButton.setStateListAnimator(animator);
-            floatingButton.setOutlineProvider(new ViewOutlineProvider() {
-                @SuppressLint("NewApi")
-                @Override
-                public void getOutline(View view, Outline outline) {
-                    outline.setOval(0, 0, AndroidUtilities.dp(56), AndroidUtilities.dp(56));
-                }
-            });
-        }
-        frameLayout.addView(floatingButton);
-        floatingButton.setOnClickListener(v -> onDonePressed());
-        floatingButton.setContentDescription(LocaleController.getString("Next", R.string.Next));
         updateHint();
         return fragmentView;
     }
@@ -518,6 +552,10 @@ public class FakePasscodeRemoveChatsActivity extends BaseFragment implements Not
         if (editText != null) {
             editText.requestFocus();
         }
+        if (adapter != null) {
+            adapter.notifyDataSetChanged();
+        }
+        updateHint();
         AndroidUtilities.requestAdjustResize(getParentActivity(), classGuid);
     }
 
@@ -572,27 +610,13 @@ public class FakePasscodeRemoveChatsActivity extends BaseFragment implements Not
             View child = listView.getChildAt(a);
             if (child instanceof ChatRemoveCell) {
                 ChatRemoveCell cell = (ChatRemoveCell) child;
-                Object object = cell.getObject();
-                int id;
-                if (object instanceof TLRPC.User) {
-                    id = ((TLRPC.User) object).id;
-                } else if (object instanceof TLRPC.Chat) {
-                    id = -((TLRPC.Chat) object).id;
-                } else if (object instanceof RemoveChatsAction.RemoveChatEntry) {
-                    id = ((RemoveChatsAction.RemoveChatEntry)object).chatId;
-                } else {
-                    id = 0;
-                }
+                int id = cell.getId();
                 if (id != 0) {
                     cell.setChecked(action.contains(id), true);
                     cell.setCheckBoxEnabled(true);
                 }
             }
         }
-    }
-
-    private void onDonePressed() {
-        finishFragment();
     }
 
     private void closeSearch() {
@@ -611,6 +635,126 @@ public class FakePasscodeRemoveChatsActivity extends BaseFragment implements Not
         } else {
             actionBar.setSubtitle(String.format(LocaleController.getPluralString("MembersCountSelected", action.getChatEntriesToRemove().size()), action.getChatEntriesToRemove().size(), 100));
         }
+    }
+
+    private void select(ChatRemoveCell cell) {
+        int id = cell.getId();
+
+        if (selectedDialogs.contains(id)) {
+            selectedDialogs.remove(id);
+            cell.setSelected(false);
+        } else {
+            selectedDialogs.add(id);
+            cell.setSelected(true);
+        }
+        if (selectedDialogs.isEmpty()) {
+            hideActionMode(true);
+        } else {
+            showOrUpdateActionMode();
+        }
+    }
+
+    private void showOrUpdateActionMode() {
+        boolean updateAnimated = false;
+        if (actionBar.isActionModeShowed()) {
+            if (selectedDialogs.isEmpty()) {
+                hideActionMode(true);
+                return;
+            }
+
+            updateEditItemsVisibility();
+            updateAnimated = true;
+        } else {
+            createActionMode(null);
+            updateEditItemsVisibility();
+            AndroidUtilities.hideKeyboard(fragmentView.findFocus());
+            actionBar.setActionModeOverrideColor(Theme.getColor(Theme.key_windowBackgroundWhite));
+            actionBar.showActionMode();
+
+            AnimatorSet animatorSet = new AnimatorSet();
+            ArrayList<Animator> animators = new ArrayList<>();
+            for (int a = 0; a < actionModeViews.size(); a++) {
+                View view = actionModeViews.get(a);
+                view.setPivotY(ActionBar.getCurrentActionBarHeight() / 2);
+                AndroidUtilities.clearDrawableAnimation(view);
+                animators.add(ObjectAnimator.ofFloat(view, View.SCALE_Y, 0.1f, 1.0f));
+            }
+            animatorSet.playTogether(animators);
+            animatorSet.setDuration(200);
+            animatorSet.start();
+
+            animateActionBarColor(true);
+            if (backDrawable != null) {
+                backDrawable.setRotation(1, true);
+            }
+        }
+        selectedDialogsCountTextView.setNumber(selectedDialogs.size(), updateAnimated);
+    }
+
+    private void updateEditItemsVisibility() {
+        boolean isEdit = selectedDialogs.stream().anyMatch(id -> action.contains(id));
+        addItem.setVisibility(isEdit ? View.GONE : View.VISIBLE);
+        editItem.setVisibility(isEdit ? View.VISIBLE : View.GONE);
+    }
+
+    private void animateActionBarColor(boolean forward) {
+        if (actionBarColorAnimator != null) {
+            actionBarColorAnimator.cancel();
+        }
+        if (forward) {
+            actionBarColorAnimator = ValueAnimator.ofFloat(progressToActionMode, 1f);
+        } else {
+            actionBarColorAnimator = ValueAnimator.ofFloat(progressToActionMode, 0f);
+        }
+        actionBarColorAnimator.addUpdateListener(valueAnimator -> {
+            progressToActionMode = (float) valueAnimator.getAnimatedValue();
+            actionBar.setBackgroundColor(ColorUtils.blendARGB(Theme.getColor(Theme.key_actionBarDefault), Theme.getColor(Theme.key_windowBackgroundWhite), progressToActionMode));
+            for (int i = 0; i < actionBar.getChildCount(); i++) {
+                if (actionBar.getChildAt(i).getVisibility() == View.VISIBLE && actionBar.getChildAt(i) != actionBar.getActionMode() && actionBar.getChildAt(i) != actionBar.getBackButton()) {
+                    actionBar.getChildAt(i).setAlpha(1f - progressToActionMode);
+                }
+            }
+            if (fragmentView != null) {
+                fragmentView.invalidate();
+            }
+        });
+        actionBarColorAnimator.setInterpolator(CubicBezierInterpolator.DEFAULT);
+        actionBarColorAnimator.setDuration(200);
+        actionBarColorAnimator.start();
+    }
+
+    private void createActionMode(String tag) {
+        if (actionBar.actionModeIsExist(tag)) {
+            return;
+        }
+        final ActionBarMenu actionMode = actionBar.createActionMode(false, tag);
+        actionMode.setBackground(null);
+
+        selectedDialogsCountTextView = new NumberTextView(actionMode.getContext());
+        selectedDialogsCountTextView.setTextSize(18);
+        selectedDialogsCountTextView.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
+        selectedDialogsCountTextView.setTextColor(Theme.getColor(Theme.key_actionBarActionModeDefaultIcon));
+        actionMode.addView(selectedDialogsCountTextView, LayoutHelper.createLinear(0, LayoutHelper.MATCH_PARENT, 1.0f, 72, 0, 0, 0));
+        selectedDialogsCountTextView.setOnTouchListener((v, event) -> true);
+
+        deleteItem = actionMode.addItemWithWidth(delete, R.drawable.msg_delete, AndroidUtilities.dp(54), LocaleController.getString("Delete", R.string.Delete));
+        addItem = actionMode.addItemWithWidth(add, R.drawable.add, AndroidUtilities.dp(54), LocaleController.getString("Add", R.string.Add));
+        editItem = actionMode.addItemWithWidth(edit, R.drawable.msg_edit, AndroidUtilities.dp(54), LocaleController.getString("Edit", R.string.Edit));
+
+        actionModeViews.add(deleteItem);
+        actionModeViews.add(addItem);
+        actionModeViews.add(editItem);
+        updateEditItemsVisibility();
+    }
+
+    private void hideActionMode(boolean animateCheck) {
+        actionBar.hideActionMode();
+        selectedDialogs.clear();
+        if (backDrawable != null) {
+            backDrawable.setRotation(0, true);
+        }
+        animateActionBarColor(false);
+        adapter.notifyDataSetChanged();
     }
 
     public class RemoveChatsAdapter extends RecyclerListView.FastScrollAdapter {
@@ -811,6 +955,7 @@ public class FakePasscodeRemoveChatsActivity extends BaseFragment implements Not
                     } else {
                         id = 0;
                     }
+                    cell.setSelected(selectedDialogs.contains(id));
                     cell.setOnSettingsClick(() -> setupChatToRemove(cell, action.get(id)));
                     if (!searching) {
                         StringBuilder builder = new StringBuilder();
@@ -985,36 +1130,13 @@ public class FakePasscodeRemoveChatsActivity extends BaseFragment implements Not
             if (entry == null) {
                 return;
             }
-
-            DialogTemplate template = new DialogTemplate();
-            template.type = DialogType.EDIT;
-            template.title = LocaleController.getString("ChatToRemoveSettings", R.string.ChatToRemoveSettings);
-            List<View> dialogViews = new ArrayList<>();
-            template.addCheckboxTemplate(entry.isExitFromChat, LocaleController.getString("ExitFromChat", R.string.ExitFromChat), (DialogCheckBox checkbox, boolean checked) -> {
-                DialogCheckBox hideChatCheckbox = (DialogCheckBox)dialogViews.get(1);
-                if (!checked) {
-                    hideChatCheckbox.setChecked(true);
-                    hideChatCheckbox.setEnabled(false);
-                } else {
-                    hideChatCheckbox.setEnabled(true);
-                }
-            });
-            template.addCheckboxTemplate(entry.isHideNewMessages, LocaleController.getString("HideChat", R.string.HideChat), entry.isExitFromChat);
-            template.addCheckboxTemplate(entry.isClearChat, LocaleController.getString("DeleteMyMessages", R.string.DeleteMyMessages));
-            template.positiveListener = views -> {
-                entry.isExitFromChat = ((DialogCheckBox) views.get(0)).isChecked();
-                entry.isHideNewMessages = ((DialogCheckBox) views.get(1)).isChecked();
-                entry.isClearChat = ((DialogCheckBox) views.get(2)).isChecked();
-                SharedConfig.saveConfig();
-            };
-            template.negativeListener = (dlg, whichButton) -> {
-                action.remove(entry.chatId);
-                SharedConfig.saveConfig();
-                updateHint();
-                cell.setChecked(false, true);
-            };
-            AlertDialog dialog = FakePasscodeDialogBuilder.buildAndGetViews(getParentActivity(), template, dialogViews);
-            showDialog(dialog);
+            selectedDialogs.clear();
+            if (listView != null) {
+                listView.getAdapter().notifyDataSetChanged();
+            }
+            hideActionMode(true);
+            updateHint();
+            presentFragment(new FakePasscodeRemoveDialogSettingsActivity(action, entry));
         }
     }
 

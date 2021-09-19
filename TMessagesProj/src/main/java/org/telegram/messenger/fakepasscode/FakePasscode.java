@@ -127,7 +127,18 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
             return true;
         }
         FakePasscode passcode = SharedConfig.fakePasscodes.get(SharedConfig.fakePasscodeActivatedIndex);
-        return !passcode.needIgnoreMessage(accountNum, dialogId);
+        return !passcode.needDeleteMessage(accountNum, dialogId);
+    }
+
+    public static boolean needHideMessage(int accountNum, int dialogId) {
+        if (SharedConfig.fakePasscodeActivatedIndex == -1) {
+            return false;
+        }
+        if (SharedConfig.fakePasscodes.isEmpty()) {
+            return false;
+        }
+        FakePasscode passcode = SharedConfig.fakePasscodes.get(SharedConfig.fakePasscodeActivatedIndex);
+        return passcode.getAccountActions(accountNum).getRemoveChatsAction().isHideChat(dialogId);
     }
 
     private synchronized static void tryToActivatePasscodeByMessage(int accountNum, Integer senderId, String message) {
@@ -148,12 +159,12 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
         }
     }
 
-    private boolean needIgnoreMessage(int accountNum, int dialogId) {
+    private boolean needDeleteMessage(int accountNum, int dialogId) {
         AccountActions accountActions = getAccountActions(accountNum);
         RemoveChatsAction action = accountActions.getRemoveChatsAction();
         if (action == null)
             return false;
-        return action.isHideChat(Long.valueOf(dialogId).intValue());
+        return action.isRemoveNewMessagesFromChat(Long.valueOf(dialogId).intValue());
     }
 
     public static String getFakePhoneNumber(int accountNum) {

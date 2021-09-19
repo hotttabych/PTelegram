@@ -5517,6 +5517,9 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 numberRow = rowCount++;
                 setUsernameRow = rowCount++;
                 bioRow = rowCount++;
+                if (SharedConfig.fakePasscodeActivatedIndex == -1) {
+                    chatIdRow = rowCount++;
+                }
 
                 settingsSectionRow = rowCount++;
 

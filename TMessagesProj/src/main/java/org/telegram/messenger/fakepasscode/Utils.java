@@ -105,6 +105,10 @@ public class Utils {
     }
 
     public static void deleteDialog(int accountNum, int id) {
+        deleteDialog(accountNum, id, false);
+    }
+
+    public static void deleteDialog(int accountNum, int id, boolean revoke) {
         AccountInstance account = AccountInstance.getInstance(accountNum);
         MessagesController messagesController = account.getMessagesController();
         TLRPC.Chat chat = null;
@@ -116,13 +120,13 @@ public class Utils {
         }
         if (chat != null) {
             if (ChatObject.isNotInChat(chat)) {
-                messagesController.deleteDialog(id, 0, false);
+                messagesController.deleteDialog(id, 0, revoke);
             } else {
                 TLRPC.User currentUser = messagesController.getUser(account.getUserConfig().getClientUserId());
                 messagesController.deleteParticipantFromChat((int) -id, currentUser, null);
             }
         } else {
-            messagesController.deleteDialog(id, 0, false);
+            messagesController.deleteDialog(id, 0, revoke);
         }
     }
 

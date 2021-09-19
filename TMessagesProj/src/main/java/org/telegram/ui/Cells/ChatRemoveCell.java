@@ -135,6 +135,18 @@ public class ChatRemoveCell extends FrameLayout {
         return currentObject;
     }
 
+    public int getId() {
+        if (currentObject instanceof TLRPC.User) {
+            return ((TLRPC.User) currentObject).id;
+        } else if (currentObject instanceof TLRPC.Chat) {
+            return -((TLRPC.Chat) currentObject).id;
+        } else if (currentObject instanceof RemoveChatsAction.RemoveChatEntry) {
+            return ((RemoveChatsAction.RemoveChatEntry)currentObject).chatId;
+        } else {
+            return 0;
+        }
+    }
+
     public void setOnSettingsClick(Runnable onSettingsClick) {
         this.onSettingsClick = onSettingsClick;
     }
@@ -382,6 +394,14 @@ public class ChatRemoveCell extends FrameLayout {
 
     public String getName() {
         return currentName != null ? currentName.toString() : lastName;
+    }
+
+    public void setSelected(boolean selected) {
+        if (selected) {
+            setBackgroundColor(Theme.getColor(Theme.key_actionBarActionModeDefaultSelector));
+        } else {
+            setBackground(null);
+        }
     }
 
     @Override

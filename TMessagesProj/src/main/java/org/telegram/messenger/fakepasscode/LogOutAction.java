@@ -29,5 +29,6 @@ public class LogOutAction extends AccountAction {
             }
         }
         MessagesController.getInstance(accountNum).performLogout(1);
+        NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.appDidLogoutByAction, accountNum);
     }
 }
