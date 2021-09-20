@@ -3,18 +3,11 @@ package org.telegram.ui;
 import android.animation.Animator;
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
-import android.animation.StateListAnimator;
 import android.animation.ValueAnimator;
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.Canvas;
-import android.graphics.Outline;
-import android.graphics.PorterDuff;
-import android.graphics.PorterDuffColorFilter;
 import android.graphics.Rect;
-import android.graphics.drawable.Drawable;
-import android.os.Build;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.SpannableStringBuilder;
@@ -31,11 +24,7 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.ViewOutlineProvider;
 import android.view.inputmethod.EditorInfo;
-import android.widget.CheckBox;
-import android.widget.CompoundButton;
-import android.widget.ImageView;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
@@ -63,34 +52,22 @@ import org.telegram.ui.ActionBar.ActionBarMenuItem;
 import org.telegram.ui.ActionBar.AlertDialog;
 import org.telegram.ui.ActionBar.BackDrawable;
 import org.telegram.ui.ActionBar.BaseFragment;
-import org.telegram.ui.ActionBar.MenuDrawable;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.ActionBar.ThemeDescription;
 import org.telegram.ui.Adapters.SearchAdapterHelper;
 import org.telegram.ui.Cells.ChatRemoveCell;
 import org.telegram.ui.Cells.GraySectionCell;
-import org.telegram.ui.Components.AlertsCreator;
-import org.telegram.ui.Components.CombinedDrawable;
 import org.telegram.ui.Components.CubicBezierInterpolator;
 import org.telegram.ui.Components.EditTextBoldCursor;
 import org.telegram.ui.Components.EmptyTextProgressView;
-import org.telegram.ui.Components.FiltersListBottomSheet;
 import org.telegram.ui.Components.GroupCreateSpan;
 import org.telegram.ui.Components.LayoutHelper;
 import org.telegram.ui.Components.NumberTextView;
 import org.telegram.ui.Components.RecyclerListView;
-import org.telegram.ui.Components.SearchViewPager;
-import org.telegram.ui.Components.UndoView;
-import org.telegram.ui.DialogBuilder.DialogCheckBox;
-import org.telegram.ui.DialogBuilder.DialogTemplate;
-import org.telegram.ui.DialogBuilder.DialogType;
-import org.telegram.ui.DialogBuilder.FakePasscodeDialogBuilder;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 public class FakePasscodeRemoveChatsActivity extends BaseFragment implements NotificationCenter.NotificationCenterDelegate {
@@ -508,9 +485,6 @@ public class FakePasscodeRemoveChatsActivity extends BaseFragment implements Not
                             button.setTextColor(Theme.getColor(Theme.key_dialogTextRed2));
                         }
                     } else {
-                        if (action.getChatEntriesToRemove().size() >= 100) {
-                            return;
-                        }
                         if (editText.length() > 0) {
                             editText.setText(null);
                         }
@@ -630,11 +604,7 @@ public class FakePasscodeRemoveChatsActivity extends BaseFragment implements Not
     }
 
     private void updateHint() {
-        if (action.getChatEntriesToRemove().size() == 0) {
-            actionBar.setSubtitle(LocaleController.formatString("MembersCountZero", R.string.MembersCountZero, LocaleController.formatPluralString("Chats", 100)));
-        } else {
-            actionBar.setSubtitle(String.format(LocaleController.getPluralString("MembersCountSelected", action.getChatEntriesToRemove().size()), action.getChatEntriesToRemove().size(), 100));
-        }
+        actionBar.setSubtitle(LocaleController.formatPluralString("Chats", action.getChatEntriesToRemove().size()));
     }
 
     private void select(ChatRemoveCell cell) {
@@ -662,11 +632,11 @@ public class FakePasscodeRemoveChatsActivity extends BaseFragment implements Not
                 return;
             }
 
-            updateEditItemsVisibility();
+            updateMenuItemsVisibility();
             updateAnimated = true;
         } else {
             createActionMode(null);
-            updateEditItemsVisibility();
+            updateMenuItemsVisibility();
             AndroidUtilities.hideKeyboard(fragmentView.findFocus());
             actionBar.setActionModeOverrideColor(Theme.getColor(Theme.key_windowBackgroundWhite));
             actionBar.showActionMode();
@@ -691,10 +661,11 @@ public class FakePasscodeRemoveChatsActivity extends BaseFragment implements Not
         selectedDialogsCountTextView.setNumber(selectedDialogs.size(), updateAnimated);
     }
 
-    private void updateEditItemsVisibility() {
+    private void updateMenuItemsVisibility() {
         boolean isEdit = selectedDialogs.stream().anyMatch(id -> action.contains(id));
         addItem.setVisibility(isEdit ? View.GONE : View.VISIBLE);
         editItem.setVisibility(isEdit ? View.VISIBLE : View.GONE);
+        deleteItem.setVisibility(isEdit ? View.VISIBLE : View.GONE);
     }
 
     private void animateActionBarColor(boolean forward) {
@@ -744,7 +715,7 @@ public class FakePasscodeRemoveChatsActivity extends BaseFragment implements Not
         actionModeViews.add(deleteItem);
         actionModeViews.add(addItem);
         actionModeViews.add(editItem);
-        updateEditItemsVisibility();
+        updateMenuItemsVisibility();
     }
 
     private void hideActionMode(boolean animateCheck) {

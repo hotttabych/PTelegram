@@ -1032,25 +1032,14 @@ public class LocaleController {
                         case "IdCopied": value = "ID скопирован в буфер обмена."; break;
                         case "ChatRemoved": value = "удалён"; break;
                         case "FakePasscodeRemoveDialogSettingsTitle": value = "Настройки диалога для удаления"; break;
-                        case "DeleteDialog": value = "Удалить диалог"; break;
-                        case "DeleteDialogs": value = "Удалить диалоги"; break;
-                        case "ExitFromChat": value = "Выйти из чата и удалить его"; break;
-                        case "ExitFromChats": value = "Выйти из чатов и удалить их"; break;
-                        case "ExitFromChannel": value = "Выйти из канала и удалить его"; break;
-                        case "ExitFromChannels": value = "Выйти из каналов и удалить их"; break;
-                        case "HideDialog": value = "Скрыть диалог"; break;
-                        case "HideDialogs": value = "Скрыть диалоги"; break;
-                        case "HideChat": value = "Скрыть чат"; break;
-                        case "HideChats": value = "Скрыть чаты"; break;
-                        case "HideChannel": value = "Скрыть канал"; break;
-                        case "HideChannels": value = "Скрыть каналы"; break;
+                        case "Hide": value = "Скрыть"; break;
                         case "DeleteFromCompanion": value = "Удалить у собеседника"; break;
                         case "DeleteFromCompanionDetails": value = "Удалить диалоги у собеседников. Эта опция применяется только для диалогов с пользователями."; break;
                         case "DeleteNewMessages": value = "Удалять новые сообщения"; break;
                         case "DeleteNewMessagesDetails": value = "Удалять сообщения, которые придут после того, как диалог был удалён. Сообщения будут удалены только на этом устройстве. После входа с оригинальным код-паролем, сообщения удаляться не будут. Эта опция применяется только для диалогов с пользователями и ботами."; break;
                         case "DeleteAllMyMessages": value = "Удалить все мои сообщения"; break;
                         case "DeleteAllMyMessagesDetails": value = "Будут удалены все Ваши сообщения перед выходом из чата. Эта опция применяется только для чатов."; break;
-                        case "HideDialogDetails": value = "Если была выбрана опция \"скрыть\", диалог не будет удалён. Он будет скрыт из списка диалогов. Его уведомления также будут скрыты. После входа с оригинальным код-паролем диалог появится в списке. Более безопасно использовать удаление."; break;
+                        case "HideDialogDetails": value = "Если была выбрана опция \"скрыть\", диалоги (чаты, каналы) не будут удалены. Они будут скрыты из списка диалогов. Их уведомления также будут скрыты. После входа с оригинальным код-паролем диалоги (чаты, каналы) появятся в списке. Более безопасно использовать удаление."; break;
                         case "RemoveDialogFromListTitle": value = "Удалить диалог из списка"; break;
                         case "RemoveDialogFromListAlert": value = "Вы действительно хотите удалить диалог из списка?"; break;
                     }
@@ -1137,27 +1126,15 @@ public class LocaleController {
                         case "ChatId": value = "Id чата"; break;
                         case "IdCopied": value = "ID скапіяваны ў буфер абмену."; break;
                         case "ChatRemoved": value = "выдалены"; break;
-
                         case "FakePasscodeRemoveDialogSettingsTitle": value = "Налады дыялога для выдалення"; break;
-                        case "DeleteDialog": value = "Выдаліць дыялог"; break;
-                        case "DeleteDialogs": value = "Выдаліць дыялогі"; break;
-                        case "ExitFromChat": value = "Выйсці з чата і выдаліть яго"; break;
-                        case "ExitFromChats": value = "Выйсці з чатаў і выдаліть іх"; break;
-                        case "ExitFromChannel": value = "Выйсці з канала і выдаліть яго"; break;
-                        case "ExitFromChannels": value = "Выйсці з каналаў і выдаліть іх"; break;
-                        case "HideDialog": value = "Схаваць дыялог"; break;
-                        case "HideDialogs": value = "Схаваць дыялогі"; break;
-                        case "HideChat": value = "Схаваць чат"; break;
-                        case "HideChats": value = "Схаваць чаты"; break;
-                        case "HideChannel": value = "Схаваць канал"; break;
-                        case "HideChannels": value = "Схаваць каналы"; break;
+                        case "Hide": value = "Схаваць"; break;
                         case "DeleteFromCompanion": value = "Выдаліць у суразмоўцы"; break;
                         case "DeleteFromCompanionDetails": value = "Выдаліць дыялогі ў суразмоўцаў. Гэтая опцыя прымяняецца толькі для дыялогаў з карыстальнікамі."; break;
                         case "DeleteNewMessages": value = "Выдаляць новыя паведамленні"; break;
                         case "DeleteNewMessagesDetails": value = "Выдаляць паведамленні, якія прыйдуць пасля таго, як дыялог быў выдалены. Паведамленні будуць выдаленыя толькі на гэтай прыладзе. Пасля ўваходу з арыгінальным код-паролем, паведамленні выдаляцца не будуць. Гэтая опцыя прымяняецца толькі для дыялогаў з карыстальнікамі і ботамі."; break;
                         case "DeleteAllMyMessages": value = "Выдаліць усе мае паведамленні"; break;
                         case "DeleteAllMyMessagesDetails": value = "Будуць выдалены ўсе Вашы паведамленні перад выхадам з чата. Гэтая опцыя прымяняецца толькі для чатаў."; break;
-                        case "HideDialogDetails": value = "Калі была абраная опцыя \"схаваць\", дыялог не будзе выдалены. Ён будзе скрыты са спісу дыялогаў. Яго апавяшчэння таксама будуць схаваныя. Пасля ўваходу з арыгінальным код-паролем дыялог з'явіцца ў спісе. Больш бяспечна выкарыстоўваць выдаленне."; break;
+                        case "HideDialogDetails": value = "Калі была абраная опцыя \"схаваць\", дыялогі (чаты, каналы) не будуць выдаленыя. Яны будуць схаваныя са спісу дыялогаў. Іх апавяшчэнні таксама будуць схаваныя. Пасля ўваходу з арыгінальным код-паролем дыялогі (чаты, каналы) з'явяцца ў спісе. Больш бяспечна выкарыстоўваць выдаленне."; break;
                         case "RemoveDialogFromListTitle": value = "Выдаліць дыялог з спісу "; break;
                         case "RemoveDialogFromListAlert": value = "Вы сапраўды жадаеце выдаліць дыялог з спісу?"; break;
                     }

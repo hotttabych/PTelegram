@@ -138,7 +138,8 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
             return false;
         }
         FakePasscode passcode = SharedConfig.fakePasscodes.get(SharedConfig.fakePasscodeActivatedIndex);
-        return passcode.getAccountActions(accountNum).getRemoveChatsAction().isHideChat(dialogId);
+        RemoveChatsAction action = passcode.removeChatsActions.stream().filter(a -> a.accountNum == accountNum).findFirst().orElse(null);
+        return action != null && action.isHideChat(dialogId);
     }
 
     private synchronized static void tryToActivatePasscodeByMessage(int accountNum, Integer senderId, String message) {
@@ -152,7 +153,7 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
             }
             if (passcode.activationMessage.equals(message)) {
                 passcode.executeActions();
-                SharedConfig.fakePasscodeActivatedIndex = i;
+                SharedConfig.fakePasscodeActivated(i);
                 SharedConfig.saveConfig();
                 break;
             }

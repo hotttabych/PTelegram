@@ -462,9 +462,9 @@ public class FakePasscodeRemoveDialogSettingsActivity extends BaseFragment {
                 case 0: {
                     SimpleRadioButtonCell radioButtonCell = (SimpleRadioButtonCell) holder.itemView;
                     if (position == deleteDialogRow) {
-                        radioButtonCell.setTextAndValue(getDeleteDialogTitle(), false, hasDeleteDialog());
+                        radioButtonCell.setTextAndValue(LocaleController.getString("Delete", R.string.Delete), false, hasDeleteDialog());
                     } else if (position == hideDialogRow) {
-                        radioButtonCell.setTextAndValue(getHideDialogTitle(), false, hasHideDialog());
+                        radioButtonCell.setTextAndValue(LocaleController.getString("Hide", R.string.Hide), false, hasHideDialog());
                     }
                     break;
                 }
@@ -494,46 +494,6 @@ public class FakePasscodeRemoveDialogSettingsActivity extends BaseFragment {
                         textCell.setText(LocaleController.getString("HideDialogDetails", R.string.HideDialogDetails));
                     }
                     break;
-                }
-            }
-        }
-
-        private String getDeleteDialogTitle() {
-            if (entries.size() == 1) {
-                if (hasOnlyChats()) {
-                    return LocaleController.getString("ExitFromChat", R.string.ExitFromChat);
-                } else if (hasOnlyChannels()) {
-                    return LocaleController.getString("ExitFromChannel", R.string.ExitFromChannel);
-                } else {
-                    return LocaleController.getString("DeleteDialog", R.string.DeleteDialog);
-                }
-            } else {
-                if (hasOnlyChats()) {
-                    return LocaleController.getString("ExitFromChats", R.string.ExitFromChats);
-                } else if (hasOnlyChannels()) {
-                    return LocaleController.getString("ExitFromChannels", R.string.ExitFromChannels);
-                } else {
-                    return LocaleController.getString("DeleteDialogs", R.string.DeleteDialogs);
-                }
-            }
-        }
-
-        private String getHideDialogTitle() {
-            if (entries.size() == 1) {
-                if (hasOnlyChats()) {
-                    return LocaleController.getString("HideChat", R.string.HideChat);
-                } else if (hasOnlyChannels()) {
-                    return LocaleController.getString("HideChannel", R.string.HideChannel);
-                } else {
-                    return LocaleController.getString("HideDialog", R.string.HideDialog);
-                }
-            } else {
-                if (hasOnlyChats()) {
-                    return LocaleController.getString("HideChats", R.string.HideChats);
-                } else if (hasOnlyChannels()) {
-                    return LocaleController.getString("HideChannels", R.string.HideChannels);
-                } else {
-                    return LocaleController.getString("HideDialogs", R.string.HideDialogs);
                 }
             }
         }

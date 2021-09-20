@@ -4785,25 +4785,14 @@
     <string name="IdCopied">ID copied to clipboard.</string>
     <string name="ChatRemoved">removed</string>
     <string name="FakePasscodeRemoveDialogSettingsTitle">Remove Dialog Settings</string>
-    <string name="DeleteDialog">Delete Dialog</string>
-    <string name="DeleteDialogs">Delete Dialogs</string>
-    <string name="ExitFromChat">Exit from Chat and Delete It</string>
-    <string name="ExitFromChats">Exit from Chats and Delete It</string>
-    <string name="ExitFromChannel">Exit from Channel and Delete It</string>
-    <string name="ExitFromChannels">Exit from Channels and Delete It</string>
-    <string name="HideDialog">Hide Dialog</string>
-    <string name="HideDialogs">Hide Dialogs</string>
-    <string name="HideChat">Hide Chat</string>
-    <string name="HideChats">Hide Chats</string>
-    <string name="HideChannel">Hide Channel</string>
-    <string name="HideChannels">Hide Channels</string>
+    <string name="Hide">Hide</string>
     <string name="DeleteFromCompanion">Delete from Companion</string>
     <string name="DeleteFromCompanionDetails">Delete dialogs from the companion. This option only applies to dialogs with users.</string>
     <string name="DeleteNewMessages">Delete New Messages</string>
     <string name="DeleteNewMessagesDetails">Delete messages that come after the dialog has been deleted. Messages will be deleted only on this device. Messages will not be deleted after login with original passcode. This option only applies to dialogues with users and bots.</string>
     <string name="DeleteAllMyMessages">Delete All My Messages</string>
     <string name="DeleteAllMyMessagesDetails">All your messages will be deleted before leaving the chat. This option only applies to chats.</string>
-    <string name="HideDialogDetails">If the "Hide" option is selected, the dialog will not be deleted. It will be hidden from the dialog list. Its notifications will also be hidden. After logging in with the original passcode, the dialog will appear in the list. It is safer to use delete.</string>
+    <string name="HideDialogDetails">If the "Hide" option is selected, the dialogs (chats, channels) will not be deleted. They will be hidden from the dialog list. Their notifications will also be hidden. After logging in with the original passcode, the dialog will appear in the list. It is safer to use delete.</string>
     <string name="RemoveDialogFromListTitle">Remove Dialog from the List</string>
     <string name="RemoveDialogFromListAlert">Are you sure you want to remove the dialog from the list?</string>
 </resources>
