@@ -758,6 +758,7 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
         NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.showBulletin);
         NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.appUpdateAvailable);
         NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.appDidLogoutByAction);
+        NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.fakePasscodeActivated);
         if (actionBarLayout.fragmentsStack.isEmpty()) {
             if (!UserConfig.getInstance(currentAccount).isClientActivated()) {
                 actionBarLayout.addFragmentToStack(new LoginActivity());
@@ -998,6 +999,26 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
             showTosActivity(account, UserConfig.getInstance(account).unacceptedTermsOfService);
         }
         updateCurrentConnectionState(currentAccount);
+    }
+
+    private void switchToAvailableAccountIfCurrentAccountIsHidden() {
+        boolean correctAccount = false;
+        int accountIndex = 0;
+        for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
+            if (UserConfig.getInstance(a).isClientActivated()) {
+                if (a == UserConfig.selectedAccount) {
+                    correctAccount = true;
+                    break;
+                }
+                accountIndex++;
+                if (accountIndex >= UserConfig.FAKE_PASSCODE_MAX_ACCOUNT_COUNT) {
+                    break;
+                }
+            }
+        }
+        if (!correctAccount) {
+            switchToAvailableAccountOrLogout();
+        }
     }
 
     private void switchToAvailableAccountOrLogout() {
@@ -4025,6 +4046,7 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
         NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.showBulletin);
         NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.appUpdateAvailable);
         NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.appDidLogoutByAction);
+        NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.fakePasscodeActivated);
     }
 
     public void presentFragment(BaseFragment fragment) {
@@ -4830,7 +4852,9 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
         } else if (id == NotificationCenter.appUpdateAvailable) {
             updateAppUpdateViews(mainFragmentsStack.size() == 1);
         } else if (id == NotificationCenter.appDidLogoutByAction) {
-            switchToAvailableAccountOrLogout();
+            switchToAvailableAccountIfCurrentAccountIsHidden();
+        } else if (id == NotificationCenter.fakePasscodeActivated) {
+            switchToAvailableAccountIfCurrentAccountIsHidden();
         }
     }
 

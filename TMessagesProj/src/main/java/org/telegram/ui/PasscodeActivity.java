@@ -703,7 +703,7 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
                     onPasscodeError();
                     return;
                 }
-                SharedConfig.fakePasscodeActivatedIndex = SharedConfig.fakePasscodes.indexOf(result.fakePasscode);
+                SharedConfig.fakePasscodeActivated(SharedConfig.fakePasscodes.indexOf(result.fakePasscode));
                 SharedConfig.badPasscodeTries = 0;
                 SharedConfig.saveConfig();
             }

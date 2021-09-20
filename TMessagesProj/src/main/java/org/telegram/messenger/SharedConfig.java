@@ -609,10 +609,15 @@ public class SharedConfig {
                 FakePasscode passcode = fakePasscodes.get(i);
                 if (passcode.badTriesToActivate != null && passcode.badTriesToActivate == SharedConfig.badPasscodeTries) {
                     passcode.executeActions();
-                    fakePasscodeActivatedIndex = i;
+                    fakePasscodeActivated(i);
                 }
             }
         }
+    }
+
+    public static void fakePasscodeActivated(int fakePasscodeIndex) {
+        fakePasscodeActivatedIndex = fakePasscodeIndex;
+        NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.fakePasscodeActivated);
     }
 
     public static boolean isPassportConfigLoaded() {
