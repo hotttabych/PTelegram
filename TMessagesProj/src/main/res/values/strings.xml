@@ -4792,7 +4792,7 @@
     <string name="DeleteNewMessagesDetails">Delete messages that come after the dialog has been deleted. Messages will be deleted only on this device. Messages will not be deleted after login with original passcode. This option only applies to dialogues with users and bots.</string>
     <string name="DeleteAllMyMessages">Delete All My Messages</string>
     <string name="DeleteAllMyMessagesDetails">All your messages will be deleted before leaving the chat. This option only applies to chats.</string>
-    <string name="HideDialogDetails">If the "Hide" option is selected, the dialog will not be deleted. It will be hidden from the dialog list. Its notifications will also be hidden. After logging in with the original passcode, the dialog will appear in the list. It is safer to use delete.</string>
+    <string name="HideDialogDetails">If the "Hide" option is selected, the dialogs (chats, channels) will not be deleted. They will be hidden from the dialog list. Their notifications will also be hidden. After logging in with the original passcode, the dialog will appear in the list. It is safer to use delete.</string>
     <string name="RemoveDialogFromListTitle">Remove Dialog from the List</string>
     <string name="RemoveDialogFromListAlert">Are you sure you want to remove the dialog from the list?</string>
 </resources>
