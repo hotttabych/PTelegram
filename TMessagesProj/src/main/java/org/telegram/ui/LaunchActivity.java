@@ -1002,6 +1002,9 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
     }
 
     private void switchToAvailableAccountIfCurrentAccountIsHidden() {
+        if (SharedConfig.fakePasscodeActivatedIndex == -1) {
+            return;
+        }
         boolean correctAccount = false;
         int accountIndex = 0;
         for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
