@@ -101,6 +101,7 @@ import org.telegram.messenger.Utilities;
 import org.telegram.messenger.browser.Browser;
 import org.telegram.messenger.camera.CameraController;
 import org.telegram.messenger.fakepasscode.RemoveAsReadMessages;
+import org.telegram.messenger.fakepasscode.Utils;
 import org.telegram.messenger.voip.VideoCapturerDevice;
 import org.telegram.messenger.voip.VoIPPendingCall;
 import org.telegram.messenger.voip.VoIPService;
@@ -891,9 +892,10 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
         RemoveAsReadMessages.messagesToRemoveAsRead.putIfAbsent("" + currentAccount, new HashMap<>());
         for (Map.Entry<String, List<RemoveAsReadMessages.RemoveAsReadMessage>> messagesToRemove : RemoveAsReadMessages.messagesToRemoveAsRead.get("" + currentAccount).entrySet()) {
             for (RemoveAsReadMessages.RemoveAsReadMessage messageToRemove : messagesToRemove.getValue()) {
-                if (messageToRemove.getReadTime() > 0) {
-                    idsToDelays.put(messageToRemove.getId(), new Pair<>(new Pair<>(messageToRemove.getScheduledTimeMs(), messageToRemove.getReadTime()), messagesToRemove.getKey()));
+                if (messageToRemove.getReadTime() <= 0) {
+                    messageToRemove.setReadTime(System.currentTimeMillis());
                 }
+                idsToDelays.put(messageToRemove.getId(), new Pair<>(new Pair<>(messageToRemove.getScheduledTimeMs(), messageToRemove.getReadTime()), messagesToRemove.getKey()));
             }
         }
 
@@ -910,17 +912,17 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
                         MessagesController.getInstance(currentAccount).deleteMessages(ids, null, null, Math.abs(dialogId), (int) channelId,
                                 true, false, false, 0,
                                 null, false, false);
-                        Utilities.cleanAutoDeletable(ids.get(0), currentAccount, dialogId);
+                        Utils.cleanAutoDeletable(ids.get(0), currentAccount, dialogId);
                     });
                 } else {
                     AndroidUtilities.runOnUIThread(() -> {
                         MessagesController.getInstance(currentAccount).deleteMessages(ids, null, null, Math.abs(dialogId), 0,
                                 true, false, false, 0,
                                 null, false, false);
-                        Utilities.cleanAutoDeletable(ids.get(0), currentAccount, dialogId);
+                        Utils.cleanAutoDeletable(ids.get(0), currentAccount, dialogId);
                     });
                 }
-            }, shift >= 0 ? shift : 0);
+            }, Math.max(shift, 0));
         }
         RemoveAsReadMessages.save();
     }
