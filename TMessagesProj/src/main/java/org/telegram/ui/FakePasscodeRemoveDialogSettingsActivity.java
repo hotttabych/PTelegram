@@ -176,6 +176,9 @@ public class FakePasscodeRemoveDialogSettingsActivity extends BaseFragment {
                 }
                 for (RemoveChatsAction.RemoveChatEntry entry : entries) {
                     entry.isExitFromChat = false;
+                    entry.isClearChat = false;
+                    entry.isDeleteFromCompanion = false;
+                    entry.isDeleteNewMessages = false;
                 }
                 updateRows();
                 listAdapter.notifyDataSetChanged();
