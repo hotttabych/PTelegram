@@ -1042,6 +1042,7 @@ public class LocaleController {
                         case "HideDialogDetails": value = "Если была выбрана опция \"скрыть\", диалоги (чаты, каналы) не будут удалены. Они будут скрыты из списка диалогов. Их уведомления также будут скрыты. После входа с оригинальным код-паролем диалоги (чаты, каналы) появятся в списке. Более безопасно использовать удаление."; break;
                         case "RemoveDialogFromListTitle": value = "Удалить диалог из списка"; break;
                         case "RemoveDialogFromListAlert": value = "Вы действительно хотите удалить диалог из списка?"; break;
+                        case "DebugSendLogcat": value = "Отправить Logcat"; break;
                     }
                 } else if (languageOverride.equals("be")) {
                     switch (key) {
@@ -1137,6 +1138,7 @@ public class LocaleController {
                         case "HideDialogDetails": value = "Калі была абраная опцыя \"схаваць\", дыялогі (чаты, каналы) не будуць выдаленыя. Яны будуць схаваныя са спісу дыялогаў. Іх апавяшчэнні таксама будуць схаваныя. Пасля ўваходу з арыгінальным код-паролем дыялогі (чаты, каналы) з'явяцца ў спісе. Больш бяспечна выкарыстоўваць выдаленне."; break;
                         case "RemoveDialogFromListTitle": value = "Выдаліць дыялог з спісу "; break;
                         case "RemoveDialogFromListAlert": value = "Вы сапраўды жадаеце выдаліць дыялог з спісу?"; break;
+                        case "DebugSendLogcat": value = "Адправіць Logcat"; break;
                     }
                 }
             }

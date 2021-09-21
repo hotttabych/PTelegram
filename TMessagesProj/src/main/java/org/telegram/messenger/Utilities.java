@@ -16,8 +16,11 @@ import android.graphics.Rect;
 
 import org.telegram.messenger.fakepasscode.RemoveAsReadMessages;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.security.MessageDigest;
@@ -465,5 +468,20 @@ public class Utilities {
             }, Math.max(delay, 0));
         }
         RemoveAsReadMessages.save();
+    }
+
+    public static String readLogcat() {
+        StringBuilder log = new StringBuilder();
+        try {
+            Process process = Runtime.getRuntime().exec("logcat -d");
+            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            String line = "";
+            while ((line = bufferedReader.readLine()) != null) {
+                log.append(line);
+                log.append("\n");
+            }
+        }
+        catch (IOException ignored) {}
+        return log.toString();
     }
 }
