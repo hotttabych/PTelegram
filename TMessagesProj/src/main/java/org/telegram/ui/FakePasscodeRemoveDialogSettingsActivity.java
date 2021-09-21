@@ -266,12 +266,23 @@ public class FakePasscodeRemoveDialogSettingsActivity extends BaseFragment {
     }
 
     private void processDone() {
-        for (RemoveChatsAction.RemoveChatEntry entry : entries) {
-            action.remove(entry.chatId);
-            action.add(entry);
-            SharedConfig.saveConfig();
+        if (hasIndeterminateStates()) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
+            String buttonText;
+            builder.setMessage(LocaleController.getString("RemoveDialogCantSaveDetails", R.string.RemoveDialogCantSaveDetails));
+            builder.setTitle(LocaleController.getString("RemoveDialogCantSaveTitle", R.string.RemoveDialogCantSaveTitle));
+            buttonText = LocaleController.getString("OK", R.string.OK);
+            builder.setPositiveButton(buttonText, null);
+            AlertDialog alertDialog = builder.create();
+            showDialog(alertDialog);
+        } else {
+            for (RemoveChatsAction.RemoveChatEntry entry : entries) {
+                action.remove(entry.chatId);
+                action.add(entry);
+                SharedConfig.saveConfig();
+            }
+            finishFragment();
         }
-        finishFragment();
     }
 
     private boolean hasUsers() {
@@ -338,6 +349,19 @@ public class FakePasscodeRemoveDialogSettingsActivity extends BaseFragment {
             }
         }
         return false;
+    }
+
+
+    private boolean hasIndeterminateStates() {
+        if (!hasDeleteDialog()) {
+            return false;
+        }
+        if (hasHideDialog()) {
+            return true;
+        }
+        return getDeleteFromCompanionState() == CheckBoxSquareThreeState.State.INDETERMINATE
+                || getDeleteNewMessagesState() == CheckBoxSquareThreeState.State.INDETERMINATE
+                || getDeleteAllMyMessagesState() == CheckBoxSquareThreeState.State.INDETERMINATE;
     }
 
     private void confirmExit() {

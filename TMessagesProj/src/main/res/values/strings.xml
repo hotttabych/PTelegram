@@ -4796,4 +4796,6 @@
     <string name="RemoveDialogFromListTitle">Remove Dialog from the List</string>
     <string name="RemoveDialogFromListAlert">Are you sure you want to remove the dialog from the list?</string>
     <string name="DebugSendLogcat">Send Logcat</string>
+    <string name="RemoveDialogCantSaveTitle">Can\'t Save</string>
+    <string name="RemoveDialogCantSaveDetails">Get rid of ambiguities in settings</string>
 </resources>
