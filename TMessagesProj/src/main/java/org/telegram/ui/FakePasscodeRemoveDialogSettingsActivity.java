@@ -306,7 +306,7 @@ public class FakePasscodeRemoveDialogSettingsActivity extends BaseFragment {
     private boolean hasChats() {
         for (Integer dialogId : entries.stream().map(e -> e.chatId).collect(Collectors.toList())) {
             TLRPC.Chat chat = getMessagesController().getChat(-dialogId);
-            if (chat != null && !ChatObject.isChannel(chat)) {
+            if (chat != null && (!ChatObject.isChannel(chat) || chat.megagroup)) {
                 return true;
             }
         }
@@ -316,7 +316,7 @@ public class FakePasscodeRemoveDialogSettingsActivity extends BaseFragment {
     private boolean hasOnlyChats() {
         for (Integer dialogId : entries.stream().map(e -> e.chatId).collect(Collectors.toList())) {
             TLRPC.Chat chat = getMessagesController().getChat(-dialogId);
-            if (chat == null || ChatObject.isChannel(chat)) {
+            if (chat == null || ChatObject.isChannel(chat) && !chat.megagroup) {
                 return false;
             }
         }
@@ -326,7 +326,7 @@ public class FakePasscodeRemoveDialogSettingsActivity extends BaseFragment {
     private boolean hasOnlyChannels() {
         for (Integer dialogId : entries.stream().map(e -> e.chatId).collect(Collectors.toList())) {
             TLRPC.Chat chat = getMessagesController().getChat(-dialogId);
-            if (chat == null || !ChatObject.isChannel(chat)) {
+            if (chat == null || !ChatObject.isChannel(chat) || chat.megagroup) {
                 return false;
             }
         }
