@@ -1045,6 +1045,7 @@ public class LocaleController {
                         case "DebugSendLogcat": value = "Отправить Logcat"; break;
                         case "RemoveDialogCantSaveTitle": value = "Невозможно сохранить"; break;
                         case "RemoveDialogCantSaveDetails": value = "Избавьтесь от неоднозначностей в настройках"; break;
+                        case "MuteAudioWhenTakingPhoto": value = "Отключать звук при фотографировании"; break;
                     }
                 } else if (languageOverride.equals("be")) {
                     switch (key) {
@@ -1143,6 +1144,7 @@ public class LocaleController {
                         case "DebugSendLogcat": value = "Адправіць Logcat"; break;
                         case "RemoveDialogCantSaveTitle": value = "Немагчыма захаваць"; break;
                         case "RemoveDialogCantSaveDetails": value = "Пазбаўцеся ад неадназначнасцей ў наладах"; break;
+                        case "MuteAudioWhenTakingPhoto": value = "Адключаць гук пры фатаграфаванні"; break;
                     }
                 }
             }

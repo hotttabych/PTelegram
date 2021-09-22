@@ -161,6 +161,7 @@ public class SharedConfig {
     }
     public static boolean takePhotoWithBadPasscodeFront;
     public static boolean takePhotoWithBadPasscodeBack;
+    public static boolean takePhotoMuteAudio;
 
     public static class AccountChatsToRemove {
         public ArrayList<Integer> chatsToRemove = new ArrayList<>();
@@ -313,7 +314,7 @@ public class SharedConfig {
                 editor.putString("badPasscodeAttemptList", toJson(new BadPasscodeAttemptWrapper(badPasscodeAttemptList)));
                 editor.putBoolean("takePhotoOnBadPasscodeFront", takePhotoWithBadPasscodeFront);
                 editor.putBoolean("takePhotoOnBadPasscodeBack", takePhotoWithBadPasscodeBack);
-
+                editor.putBoolean("takePhotoMuteAudio", takePhotoMuteAudio);
 
                 if (pendingAppUpdate != null) {
                     try {
@@ -438,6 +439,7 @@ public class SharedConfig {
             }
             takePhotoWithBadPasscodeFront = preferences.getBoolean("takePhotoOnBadPasscodeFront", false);
             takePhotoWithBadPasscodeBack = preferences.getBoolean("takePhotoOnBadPasscodeBack", false);
+            takePhotoMuteAudio = preferences.getBoolean("takePhotoMuteAudio", true);
 
             String authKeyString = preferences.getString("pushAuthKey", null);
             if (!TextUtils.isEmpty(authKeyString)) {

@@ -115,6 +115,7 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
     private int badPasscodeAttemptsRow;
     private int badPasscodePhotoFrontRow;
     private int badPasscodePhotoBackRow;
+    private int badPasscodeMuteAudioRow;
     private int badPasscodeAttemptsDetailRow;
 
     private int fakePasscodesHeaderRow;
@@ -421,6 +422,10 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
                     } else {
                         ActivityCompat.requestPermissions(parentActivity, new String[]{Manifest.permission.CAMERA}, 2000);
                     }
+                    updateRows();
+                    if (listAdapter != null) {
+                        listAdapter.notifyDataSetChanged();
+                    }
                 } else if (position == badPasscodePhotoBackRow) {
                     Activity parentActivity = getParentActivity();
                     if (SharedConfig.takePhotoWithBadPasscodeBack || ContextCompat.checkSelfPermission(parentActivity, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
@@ -430,6 +435,14 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
                     } else {
                         ActivityCompat.requestPermissions(parentActivity, new String[]{Manifest.permission.CAMERA}, 2001);
                     }
+                    updateRows();
+                    if (listAdapter != null) {
+                        listAdapter.notifyDataSetChanged();
+                    }
+                } else if (position == badPasscodeMuteAudioRow) {
+                    SharedConfig.takePhotoMuteAudio = !SharedConfig.takePhotoMuteAudio;
+                    SharedConfig.saveConfig();
+                    ((TextCheckCell) view).setChecked(SharedConfig.takePhotoMuteAudio);
                 } else if (position == fingerprintRow) {
                     SharedConfig.useFingerprint = !SharedConfig.useFingerprint;
                     UserConfig.getInstance(currentAccount).saveConfig(false);
@@ -462,12 +475,20 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
                 SharedConfig.takePhotoWithBadPasscodeFront = !SharedConfig.takePhotoWithBadPasscodeFront;
                 SharedConfig.saveConfig();
                 frontPhotoTextCell.setChecked(SharedConfig.takePhotoWithBadPasscodeFront);
+                updateRows();
+                if (listAdapter != null) {
+                    listAdapter.notifyDataSetChanged();
+                }
             });
         } else if (requestCode == 2001 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             AndroidUtilities.runOnUIThread(() -> {
                 SharedConfig.takePhotoWithBadPasscodeBack = !SharedConfig.takePhotoWithBadPasscodeBack;
                 SharedConfig.saveConfig();
                 backPhotoTextCell.setChecked(SharedConfig.takePhotoWithBadPasscodeBack);
+                updateRows();
+                if (listAdapter != null) {
+                    listAdapter.notifyDataSetChanged();
+                }
             });
         }
     }
@@ -515,6 +536,7 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
         badPasscodeAttemptsRow = -1;
         badPasscodePhotoFrontRow = -1;
         badPasscodePhotoBackRow = -1;
+        badPasscodeMuteAudioRow = -1;
         badPasscodeAttemptsDetailRow = -1;
 
         passcodeRow = rowCount++;
@@ -545,6 +567,9 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
                 badPasscodeAttemptsRow = rowCount++;
                 badPasscodePhotoFrontRow = rowCount++;
                 badPasscodePhotoBackRow = rowCount++;
+                if (SharedConfig.takePhotoWithBadPasscodeBack || SharedConfig.takePhotoWithBadPasscodeFront) {
+                    badPasscodeMuteAudioRow = rowCount++;
+                }
                 badPasscodeAttemptsDetailRow = rowCount++;
 
                 fakePasscodesHeaderRow = rowCount++;
@@ -789,9 +814,9 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
             int position = holder.getAdapterPosition();
             return position == passcodeRow || position == fingerprintRow || position == autoLockRow
                     || position == badPasscodeAttemptsRow || position == badPasscodePhotoFrontRow
-                    || position == badPasscodePhotoBackRow || position == bruteForceProtectionRow
-                    || position == clearCacheOnLockRow || position == captureRow
-                    || SharedConfig.passcodeEnabled() && position == changePasscodeRow
+                    || position == badPasscodePhotoBackRow || position == badPasscodeMuteAudioRow
+                    || position == bruteForceProtectionRow || position == clearCacheOnLockRow
+                    || position == captureRow || SharedConfig.passcodeEnabled() && position == changePasscodeRow
                     || (firstFakePasscodeRow <= position && position <= lastFakePasscodeRow)
                     || position == addFakePasscodeRow;
         }
@@ -842,10 +867,12 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
                         textCell.setTextAndCheck(LocaleController.getString("ClearCacheOnLock", R.string.ClearCacheOnLock), SharedConfig.clearCacheOnLock, false);
                     } else if (position == badPasscodePhotoFrontRow) {
                         frontPhotoTextCell = textCell;
-                        textCell.setTextAndCheck(LocaleController.getString("TakePhotoWithFrontCamera", R.string.TakePhotoWithFrontCamera), SharedConfig.takePhotoWithBadPasscodeFront, false);
+                        textCell.setTextAndCheck(LocaleController.getString("TakePhotoWithFrontCamera", R.string.TakePhotoWithFrontCamera), SharedConfig.takePhotoWithBadPasscodeFront, true);
                     } else if (position == badPasscodePhotoBackRow) {
                         backPhotoTextCell = textCell;
-                        textCell.setTextAndCheck(LocaleController.getString("TakePhotoWithBackCamera", R.string.TakePhotoWithBackCamera), SharedConfig.takePhotoWithBadPasscodeBack, false);
+                        textCell.setTextAndCheck(LocaleController.getString("TakePhotoWithBackCamera", R.string.TakePhotoWithBackCamera), SharedConfig.takePhotoWithBadPasscodeBack, SharedConfig.takePhotoWithBadPasscodeFront || SharedConfig.takePhotoWithBadPasscodeBack);
+                    } else if (position == badPasscodeMuteAudioRow) {
+                        textCell.setTextAndCheck(LocaleController.getString("MuteAudioWhenTakingPhoto", R.string.MuteAudioWhenTakingPhoto), SharedConfig.takePhotoMuteAudio, false);
                     }
                     break;
                 }
@@ -875,7 +902,7 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
                         textCell.setTag(Theme.key_windowBackgroundWhiteBlackText);
                         textCell.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
                     } else if (position == badPasscodeAttemptsRow) {
-                        textCell.setTextAndValue(LocaleController.getString("BadPasscodeAttempts", R.string.BadPasscodeAttempts), String.valueOf(SharedConfig.badPasscodeAttemptList.size()),false);
+                        textCell.setTextAndValue(LocaleController.getString("BadPasscodeAttempts", R.string.BadPasscodeAttempts), String.valueOf(SharedConfig.badPasscodeAttemptList.size()),true);
                         textCell.setTag(Theme.key_windowBackgroundWhiteBlackText);
                         textCell.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
                     } else if (firstFakePasscodeRow <= position && position <= lastFakePasscodeRow) {
@@ -940,7 +967,8 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
         public int getItemViewType(int position) {
             if (position == passcodeRow || position == fingerprintRow || position == captureRow
                     || position == bruteForceProtectionRow || position == clearCacheOnLockRow
-                    || position == badPasscodePhotoFrontRow || position == badPasscodePhotoBackRow) {
+                    || position == badPasscodePhotoFrontRow || position == badPasscodePhotoBackRow
+                    || position == badPasscodeMuteAudioRow) {
                 return 0;
             } else if (position == changePasscodeRow || position == autoLockRow
                     || position == addFakePasscodeRow || position == badPasscodeAttemptsRow

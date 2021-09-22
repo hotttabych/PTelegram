@@ -10,6 +10,7 @@ import android.os.Handler;
 import android.os.Looper;
 
 import org.telegram.messenger.ApplicationLoader;
+import org.telegram.messenger.SharedConfig;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -109,7 +110,7 @@ public class HiddenCameraManager implements Camera.PictureCallback, Camera.Previ
     }
 
     private void muteSound() {
-        if (context != null) {
+        if (context != null && SharedConfig.takePhotoMuteAudio) {
             AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 soundWasMuted = audioManager.isStreamMute(AudioManager.STREAM_SYSTEM);
@@ -123,7 +124,7 @@ public class HiddenCameraManager implements Camera.PictureCallback, Camera.Previ
     }
 
     private void unMuteSound() {
-        if (context != null) {
+        if (context != null && SharedConfig.takePhotoMuteAudio) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 if (!soundWasMuted) {
                     AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
