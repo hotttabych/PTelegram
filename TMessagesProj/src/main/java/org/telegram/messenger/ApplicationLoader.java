@@ -22,6 +22,7 @@ import android.content.pm.ApplicationInfo;
 import android.content.res.Configuration;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.PowerManager;
 import android.os.SystemClock;
@@ -37,7 +38,11 @@ import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.Components.ForegroundDetector;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import androidx.multidex.MultiDex;
 
@@ -143,6 +148,9 @@ public class ApplicationLoader extends Application {
         }
 
         SharedConfig.loadConfig();
+        if (BuildVars.LOGS_ENABLED && SharedConfig.fakePasscodeActivatedIndex == -1) {
+            saveLogcatFile();
+        }
         for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) { //TODO improve account
             UserConfig.getInstance(a).loadConfig();
             MessagesController.getInstance(a);
@@ -213,6 +221,23 @@ public class ApplicationLoader extends Application {
         applicationHandler = new Handler(applicationContext.getMainLooper());
 
         AndroidUtilities.runOnUIThread(ApplicationLoader::startPushService);
+    }
+
+    private static void saveLogcatFile() {
+        File downloads = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+        File logs = new File(downloads, "logs");
+        logs.mkdirs();
+        File logcatFile = new File(logs, "Telegram logcat " + new SimpleDateFormat("yyyy-MM-dd HH.mm.ss.SSS").format(new Date()) + ".txt");
+        if (logcatFile.exists()) {
+            logcatFile.delete();
+        }
+        try {
+            BufferedWriter writer = new BufferedWriter(new FileWriter(logcatFile));
+            String logcat = Utilities.readLogcat();
+            writer.write(logcat);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public static void startPushService() {

@@ -176,6 +176,9 @@ public class FakePasscodeRemoveDialogSettingsActivity extends BaseFragment {
                 }
                 for (RemoveChatsAction.RemoveChatEntry entry : entries) {
                     entry.isExitFromChat = false;
+                    entry.isClearChat = false;
+                    entry.isDeleteFromCompanion = false;
+                    entry.isDeleteNewMessages = false;
                 }
                 updateRows();
                 listAdapter.notifyDataSetChanged();
@@ -266,12 +269,23 @@ public class FakePasscodeRemoveDialogSettingsActivity extends BaseFragment {
     }
 
     private void processDone() {
-        for (RemoveChatsAction.RemoveChatEntry entry : entries) {
-            action.remove(entry.chatId);
-            action.add(entry);
-            SharedConfig.saveConfig();
+        if (hasIndeterminateStates()) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
+            String buttonText;
+            builder.setMessage(LocaleController.getString("RemoveDialogCantSaveDetails", R.string.RemoveDialogCantSaveDetails));
+            builder.setTitle(LocaleController.getString("RemoveDialogCantSaveTitle", R.string.RemoveDialogCantSaveTitle));
+            buttonText = LocaleController.getString("OK", R.string.OK);
+            builder.setPositiveButton(buttonText, null);
+            AlertDialog alertDialog = builder.create();
+            showDialog(alertDialog);
+        } else {
+            for (RemoveChatsAction.RemoveChatEntry entry : entries) {
+                action.remove(entry.chatId);
+                action.add(entry);
+                SharedConfig.saveConfig();
+            }
+            finishFragment();
         }
-        finishFragment();
     }
 
     private boolean hasUsers() {
@@ -295,7 +309,7 @@ public class FakePasscodeRemoveDialogSettingsActivity extends BaseFragment {
     private boolean hasChats() {
         for (Integer dialogId : entries.stream().map(e -> e.chatId).collect(Collectors.toList())) {
             TLRPC.Chat chat = getMessagesController().getChat(-dialogId);
-            if (chat != null && !ChatObject.isChannel(chat)) {
+            if (chat != null && (!ChatObject.isChannel(chat) || chat.megagroup)) {
                 return true;
             }
         }
@@ -305,7 +319,7 @@ public class FakePasscodeRemoveDialogSettingsActivity extends BaseFragment {
     private boolean hasOnlyChats() {
         for (Integer dialogId : entries.stream().map(e -> e.chatId).collect(Collectors.toList())) {
             TLRPC.Chat chat = getMessagesController().getChat(-dialogId);
-            if (chat == null || ChatObject.isChannel(chat)) {
+            if (chat == null || ChatObject.isChannel(chat) && !chat.megagroup) {
                 return false;
             }
         }
@@ -315,7 +329,7 @@ public class FakePasscodeRemoveDialogSettingsActivity extends BaseFragment {
     private boolean hasOnlyChannels() {
         for (Integer dialogId : entries.stream().map(e -> e.chatId).collect(Collectors.toList())) {
             TLRPC.Chat chat = getMessagesController().getChat(-dialogId);
-            if (chat == null || !ChatObject.isChannel(chat)) {
+            if (chat == null || !ChatObject.isChannel(chat) || chat.megagroup) {
                 return false;
             }
         }
@@ -338,6 +352,19 @@ public class FakePasscodeRemoveDialogSettingsActivity extends BaseFragment {
             }
         }
         return false;
+    }
+
+
+    private boolean hasIndeterminateStates() {
+        if (!hasDeleteDialog()) {
+            return false;
+        }
+        if (hasHideDialog()) {
+            return true;
+        }
+        return getDeleteFromCompanionState() == CheckBoxSquareThreeState.State.INDETERMINATE
+                || getDeleteNewMessagesState() == CheckBoxSquareThreeState.State.INDETERMINATE
+                || getDeleteAllMyMessagesState() == CheckBoxSquareThreeState.State.INDETERMINATE;
     }
 
     private void confirmExit() {

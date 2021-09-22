@@ -164,9 +164,11 @@ import org.telegram.ui.DialogBuilder.FakePasscodeDialogBuilder;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -383,6 +385,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     private int sendLogsRow;
     private int sendLastLogsRow;
     private int clearLogsRow;
+    private int sendLogcatRow;
     private int switchBackendRow;
     private int versionRow;
     private int emptyRow;
@@ -2679,6 +2682,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 sendLogs(true);
             } else if (position == clearLogsRow) {
                 FileLog.cleanupLogs();
+            } else if (position == sendLogcatRow) {
+                sendLogcat();
             } else if (position == switchBackendRow) {
                 if (getParentActivity() == null) {
                     return;
@@ -5454,6 +5459,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         sendLogsRow = -1;
         sendLastLogsRow = -1;
         clearLogsRow = -1;
+        sendLogcatRow = -1;
         switchBackendRow = -1;
         versionRow = -1;
 
@@ -5556,6 +5562,9 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     sendLogsRow = rowCount++;
                     sendLastLogsRow = rowCount++;
                     clearLogsRow = rowCount++;
+                    if (SharedConfig.fakePasscodeActivatedIndex == -1) {
+                        sendLogcatRow = rowCount++;
+                    }
                 }
                 if (BuildVars.DEBUG_PRIVATE_VERSION) {
                     switchBackendRow = rowCount++;
@@ -6802,6 +6811,73 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         });
     }
 
+    private void sendLogcat() {
+        if (getParentActivity() == null) {
+            return;
+        }
+        AlertDialog progressDialog = new AlertDialog(getParentActivity(), 3);
+        progressDialog.setCanCacnel(false);
+        progressDialog.show();
+        Utilities.globalQueue.postRunnable(() -> {
+            try {
+                File sdCard = ApplicationLoader.applicationContext.getExternalFilesDir(null);
+                File dir = new File(sdCard.getAbsolutePath() + "/logs");
+
+                File logcatFile = new File(dir, "logcat.txt");
+                if (logcatFile.exists()) {
+                    logcatFile.delete();
+                }
+                boolean[] finished = new boolean[1];
+                try {
+                    BufferedWriter writer = new BufferedWriter(new FileWriter(logcatFile));
+                    String logcat = Utilities.readLogcat();
+                    writer.write(logcat);
+                    finished[0] = true;
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+                AndroidUtilities.runOnUIThread(() -> {
+                    try {
+                        progressDialog.dismiss();
+                    } catch (Exception ignore) {
+
+                    }
+                    if (finished[0]) {
+                        Uri uri;
+                        if (Build.VERSION.SDK_INT >= 24) {
+                            uri = FileProvider.getUriForFile(getParentActivity(), BuildConfig.APPLICATION_ID + ".provider", logcatFile);
+                        } else {
+                            uri = Uri.fromFile(logcatFile);
+                        }
+
+                        Intent i = new Intent(Intent.ACTION_SEND);
+                        if (Build.VERSION.SDK_INT >= 24) {
+                            i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                        }
+                        i.setType("message/rfc822");
+                        i.putExtra(Intent.EXTRA_EMAIL, "");
+                        i.putExtra(Intent.EXTRA_SUBJECT, "Logcat from " + LocaleController.getInstance().formatterStats.format(System.currentTimeMillis()));
+                        i.putExtra(Intent.EXTRA_STREAM, uri);
+                        if (getParentActivity() != null) {
+                            try {
+                                getParentActivity().startActivityForResult(Intent.createChooser(i, "Select email application."), 500);
+                            } catch (Exception e) {
+                                FileLog.e(e);
+                            }
+                        }
+                    } else {
+                        if (getParentActivity() != null) {
+                            Toast.makeText(getParentActivity(), LocaleController.getString("ErrorOccurred", R.string.ErrorOccurred), Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                });
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+    }
+
     private class ListAdapter extends RecyclerListView.SelectionAdapter {
 
         private Context mContext;
@@ -7208,6 +7284,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         textCell.setText(LocaleController.getString("DebugSendLastLogs", R.string.DebugSendLastLogs), true);
                     } else if (position == clearLogsRow) {
                         textCell.setText(LocaleController.getString("DebugClearLogs", R.string.DebugClearLogs), switchBackendRow != -1);
+                    } else if (position == sendLogcatRow) {
+                        textCell.setText(LocaleController.getString("DebugSendLogcat", R.string.DebugSendLogcat), switchBackendRow != -1);
                     } else if (position == switchBackendRow) {
                         textCell.setText("Switch Backend", false);
                     } else if (position == devicesRow) {
@@ -7346,7 +7424,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         position == versionRow || position == dataRow || position == chatRow ||
                         position == questionRow || position == devicesRow || position == filtersRow ||
                         position == faqRow || position == policyRow || position == sendLogsRow || position == sendLastLogsRow ||
-                        position == clearLogsRow || position == switchBackendRow || position == setAvatarRow
+                        position == clearLogsRow || position == sendLogcatRow || position == switchBackendRow || position == setAvatarRow
                         || position == chatIdRow;
             }
             if (holder.itemView instanceof UserCell) {
@@ -7386,7 +7464,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     position == languageRow || position == dataRow || position == chatRow ||
                     position == questionRow || position == devicesRow || position == filtersRow ||
                     position == faqRow || position == policyRow || position == sendLogsRow || position == sendLastLogsRow ||
-                    position == clearLogsRow || position == switchBackendRow || position == setAvatarRow) {
+                    position == clearLogsRow || position == sendLogcatRow || position == switchBackendRow ||
+                    position == setAvatarRow) {
                 return 4;
             } else if (position == notificationsDividerRow) {
                 return 5;
@@ -8287,6 +8366,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             put(++pointer, sendLogsRow, sparseIntArray);
             put(++pointer, sendLastLogsRow, sparseIntArray);
             put(++pointer, clearLogsRow, sparseIntArray);
+            put(++pointer, sendLogcatRow, sparseIntArray);
             put(++pointer, switchBackendRow, sparseIntArray);
             put(++pointer, versionRow, sparseIntArray);
             put(++pointer, emptyRow, sparseIntArray);
