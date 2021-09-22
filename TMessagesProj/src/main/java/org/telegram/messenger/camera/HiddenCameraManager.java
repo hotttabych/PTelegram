@@ -2,18 +2,12 @@ package org.telegram.messenger.camera;
 
 import android.content.Context;
 import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Matrix;
 import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
 import android.media.AudioManager;
 import android.os.Build;
-
 import android.os.Handler;
 import android.os.Looper;
-
-import androidx.exifinterface.media.ExifInterface;
 
 import org.telegram.messenger.ApplicationLoader;
 
@@ -24,7 +18,6 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
-import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
@@ -35,6 +28,7 @@ public class HiddenCameraManager implements Camera.PictureCallback, Camera.Previ
     private Camera camera;
     private SurfaceTexture surface;
     private Consumer<String> onPhotoTaken;
+    private boolean soundWasMuted;
 
     public HiddenCameraManager(Context context) {
         this.context = context;
@@ -116,11 +110,25 @@ public class HiddenCameraManager implements Camera.PictureCallback, Camera.Previ
 
     private void muteSound() {
         if (context != null) {
-            AudioManager mgr = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
+            AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                mgr.adjustStreamVolume(AudioManager.STREAM_SYSTEM, AudioManager.ADJUST_MUTE, 0);
+                soundWasMuted = audioManager.isStreamMute(AudioManager.STREAM_SYSTEM);
+                if (!soundWasMuted) {
+                    audioManager.adjustStreamVolume(AudioManager.STREAM_SYSTEM, AudioManager.ADJUST_MUTE, 0);
+                }
             } else {
-                mgr.setStreamMute(AudioManager.STREAM_SYSTEM, true);
+                audioManager.setStreamMute(AudioManager.STREAM_SYSTEM, true);
+            }
+        }
+    }
+
+    private void unMuteSound() {
+        if (context != null) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                if (!soundWasMuted) {
+                    AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
+                    audioManager.adjustStreamVolume(AudioManager.STREAM_SYSTEM, AudioManager.ADJUST_UNMUTE, 0);
+                }
             }
         }
     }
@@ -132,7 +140,7 @@ public class HiddenCameraManager implements Camera.PictureCallback, Camera.Previ
             camera = null;
             surface = null;
         }
-        muteSound();
+        unMuteSound();
     }
 
     @Override
@@ -170,9 +178,11 @@ public class HiddenCameraManager implements Camera.PictureCallback, Camera.Previ
             File pictureFileDir = ApplicationLoader.getFilesDirFixed();
             if (bytes == null) {
                 onPhotoTaken.accept(null);
+                return;
             }
             if (!pictureFileDir.exists() && !pictureFileDir.mkdirs()) {
                 onPhotoTaken.accept(null);
+                return;
             }
             SimpleDateFormat dateFormat = new SimpleDateFormat("(hh:mm:ss)(dd.MM.yyyy)", Locale.US);
             String date = dateFormat.format(new Date());
