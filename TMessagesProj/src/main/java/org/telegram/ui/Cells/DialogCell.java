@@ -48,6 +48,7 @@ import org.telegram.messenger.UserObject;
 import org.telegram.messenger.FileLog;
 import org.telegram.messenger.Utilities;
 import org.telegram.messenger.fakepasscode.RemoveAsReadMessages;
+import org.telegram.messenger.fakepasscode.Utils;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.messenger.ContactsController;
@@ -2075,7 +2076,7 @@ public class DialogCell extends BaseCell {
                     if (message != null && !message.isUnread()) {
                         List<MessageObject> messages = new ArrayList<>();
                         messages.add(message);
-                        Utilities.startDeleteProcess(currentAccount, currentDialogId, messages);
+                        Utils.startDeleteProcess(currentAccount, currentDialogId, messages);
                     }
 
                     if (message != null && lastUnreadState != message.isUnread()) {

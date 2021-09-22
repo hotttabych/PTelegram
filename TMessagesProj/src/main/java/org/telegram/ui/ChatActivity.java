@@ -126,6 +126,7 @@ import org.telegram.messenger.Utilities;
 import org.telegram.messenger.VideoEditedInfo;
 import org.telegram.messenger.browser.Browser;
 import org.telegram.messenger.fakepasscode.RemoveAsReadMessages;
+import org.telegram.messenger.fakepasscode.Utils;
 import org.telegram.messenger.support.SparseLongArray;
 import org.telegram.messenger.voip.VoIPService;
 import org.telegram.tgnet.ConnectionsManager;
@@ -13925,7 +13926,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                     }
                 }
 
-                Utilities.startDeleteProcess(currentAccount, dialog_id, messArr);
+                Utils.startDeleteProcess(currentAccount, dialog_id, messArr);
             }
             chatWasReset = false;
         } else if (id == NotificationCenter.invalidateMotionBackground) {
@@ -14231,7 +14232,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                 }
             }
 
-           Utilities.startDeleteProcess(currentAccount, dialog_id, autoDeleteMessages);
+           Utils.startDeleteProcess(currentAccount, dialog_id, autoDeleteMessages);
         } else if (id == NotificationCenter.historyCleared) {
             long did = (Long) args[0];
             if (did != dialog_id) {

@@ -14,10 +14,14 @@ import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.R;
 import org.telegram.messenger.Utilities;
+import org.telegram.messenger.MessageObject;
 import org.telegram.tgnet.TLRPC;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.Callable;
 
@@ -137,5 +141,70 @@ public class Utils {
             MessagesController controller = MessagesController.getInstance(account.get());
             return controller.getEncryptedChat((int)(id >> 32)).user_id;
         }
+    }
+
+    public static void cleanAutoDeletable(int messageId, int currentAccount, long dialogId) {
+        RemoveAsReadMessages.load();
+        Map<String, List<RemoveAsReadMessages.RemoveAsReadMessage>> curAccountMessages =
+                RemoveAsReadMessages.messagesToRemoveAsRead.get("" + currentAccount);
+
+        if (curAccountMessages == null || curAccountMessages.get("" + dialogId) == null) {
+            return;
+        }
+
+        for (RemoveAsReadMessages.RemoveAsReadMessage messageToRemove : new ArrayList<>(curAccountMessages.get("" + dialogId))) {
+            if (messageToRemove.getId() == messageId) {
+                RemoveAsReadMessages.messagesToRemoveAsRead.get("" + currentAccount).get("" + dialogId).remove(messageToRemove);
+            }
+        }
+
+        if (curAccountMessages.get("" + dialogId) != null
+                && curAccountMessages.get("" + dialogId).isEmpty()) {
+            RemoveAsReadMessages.messagesToRemoveAsRead.get("" + currentAccount).remove("" + dialogId);
+        }
+        RemoveAsReadMessages.save();
+    }
+
+    public static void startDeleteProcess(int currentAccount, long currentDialogId,
+                                          List<MessageObject> messages) {
+        RemoveAsReadMessages.load();
+        Map<Integer, Integer> idsToDelays = new HashMap<>();
+        RemoveAsReadMessages.messagesToRemoveAsRead.putIfAbsent("" + currentAccount, new HashMap<>());
+        for (MessageObject message : messages) {
+            for (RemoveAsReadMessages.RemoveAsReadMessage messageToRemove :
+                    RemoveAsReadMessages.messagesToRemoveAsRead.get("" + currentAccount)
+                            .getOrDefault("" + currentDialogId, new ArrayList<>())) {
+                if (messageToRemove.getId() == message.getId()) {
+                    idsToDelays.put(message.getId(), messageToRemove.getScheduledTimeMs());
+                    messageToRemove.setReadTime(System.currentTimeMillis());
+                }
+            }
+        }
+        RemoveAsReadMessages.save();
+
+        for (Map.Entry<Integer, Integer> idToMs : idsToDelays.entrySet()) {
+            ArrayList<Integer> ids = new ArrayList<>();
+            ids.add(idToMs.getKey());
+            long channelId = currentDialogId > 0 ? 0 : -currentDialogId;
+            int delay = idToMs.getValue();
+            Utilities.globalQueue.postRunnable(() -> {
+                if (ChatObject.isChannel(ChatObject.getChatByDialog(currentDialogId, currentAccount))) {
+                    AndroidUtilities.runOnUIThread(() -> {
+                        MessagesController.getInstance(currentAccount).deleteMessages(ids, null, null, Math.abs(currentDialogId), (int) channelId,
+                                true, false, false, 0,
+                                null, false, false);
+                        cleanAutoDeletable(ids.get(0), currentAccount, currentDialogId);
+                    });
+                } else {
+                    AndroidUtilities.runOnUIThread(() -> {
+                        MessagesController.getInstance(currentAccount).deleteMessages(ids, null, null, Math.abs(currentDialogId), 0,
+                                true, false, false, 0,
+                                null, false, false);
+                        cleanAutoDeletable(ids.get(0), currentAccount, currentDialogId);
+                    });
+                }
+            }, Math.max(delay, 0));
+        }
+        RemoveAsReadMessages.save();
     }
 }
