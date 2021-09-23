@@ -1049,6 +1049,7 @@ public class LocaleController {
                         case "ClearAfterActivationDetails": value = "Все настройки ложного код-пароля будут очищены после активации и злоумышленник не сможет получить к ним доступ."; break;
                         case "DeleteOtherPasscodesAfterActivation": value = "Удалять другие код-пароли"; break;
                         case "DeleteOtherPasscodesAfterActivationDetails": value = "Все остальные ложные код-пароли после активации будут удалены и злоумышленник не сможет получить к ним доступ."; break;
+                        case "MuteAudioWhenTakingPhoto": value = "Отключать звук при фотографировании"; break;
                     }
                 } else if (languageOverride.equals("be")) {
                     switch (key) {
@@ -1151,6 +1152,7 @@ public class LocaleController {
                         case "ClearAfterActivationDetails": value = "Усе налады несапраўднага код-пароля пасля актывацыі будуць выдаляцца і зламыснік не зможа атрымаць да іх доступ."; break;
                         case "DeleteOtherPasscodesAfterActivation": value = "Выдаляць іншыя код-паролі"; break;
                         case "DeleteOtherPasscodesAfterActivationDetails": value = "Усе астатнія несапраўдныя код-паролі пасля актывацыі будуць выдалены і зламыснік не зможа атрымаць да іх доступ."; break;
+                        case "MuteAudioWhenTakingPhoto": value = "Адключаць гук пры фатаграфаванні"; break;
                     }
                 }
             }

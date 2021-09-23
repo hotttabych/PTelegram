@@ -4802,4 +4802,5 @@
     <string name="ClearAfterActivationDetails">All fake passcode settings will be cleared after activation and an attacker will not be able to access them.</string>
     <string name="DeleteOtherPasscodesAfterActivation">Delete Other Passcodes After Activation</string>
     <string name="DeleteOtherPasscodesAfterActivationDetails">All other fake passwords will be deleted after activation and an attacker will not be able to access them.</string>
+    <string name="MuteAudioWhenTakingPhoto">Mute Audio When Taking Photo</string>
 </resources>
