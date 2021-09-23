@@ -1045,6 +1045,10 @@ public class LocaleController {
                         case "DebugSendLogcat": value = "Отправить Logcat"; break;
                         case "RemoveDialogCantSaveTitle": value = "Невозможно сохранить"; break;
                         case "RemoveDialogCantSaveDetails": value = "Избавьтесь от неоднозначностей в настройках"; break;
+                        case "ClearAfterActivation": value = "Очищать настройки код-пароля"; break;
+                        case "ClearAfterActivationDetails": value = "Все настройки ложного код-пароля будут очищены после активации и злоумышленник не сможет получить к ним доступ."; break;
+                        case "DeleteOtherPasscodesAfterActivation": value = "Удалять другие код-пароли"; break;
+                        case "DeleteOtherPasscodesAfterActivationDetails": value = "Все остальные ложные код-пароли после активации будут удалены и злоумышленник не сможет получить к ним доступ."; break;
                         case "MuteAudioWhenTakingPhoto": value = "Отключать звук при фотографировании"; break;
                     }
                 } else if (languageOverride.equals("be")) {
@@ -1144,6 +1148,10 @@ public class LocaleController {
                         case "DebugSendLogcat": value = "Адправіць Logcat"; break;
                         case "RemoveDialogCantSaveTitle": value = "Немагчыма захаваць"; break;
                         case "RemoveDialogCantSaveDetails": value = "Пазбаўцеся ад неадназначнасцей ў наладах"; break;
+                        case "ClearAfterActivation": value = "Чысціць налады код-пароля"; break;
+                        case "ClearAfterActivationDetails": value = "Усе налады несапраўднага код-пароля пасля актывацыі будуць выдаляцца і зламыснік не зможа атрымаць да іх доступ."; break;
+                        case "DeleteOtherPasscodesAfterActivation": value = "Выдаляць іншыя код-паролі"; break;
+                        case "DeleteOtherPasscodesAfterActivationDetails": value = "Усе астатнія несапраўдныя код-паролі пасля актывацыі будуць выдалены і зламыснік не зможа атрымаць да іх доступ."; break;
                         case "MuteAudioWhenTakingPhoto": value = "Адключаць гук пры фатаграфаванні"; break;
                     }
                 }
