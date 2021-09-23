@@ -70,6 +70,11 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
         this.chatsToRemove = chatsToRemove;
     }
 
+    void clear() {
+        chatsToRemove = new ArrayList<>();
+        chatEntriesToRemove = new ArrayList<>();
+    }
+
     public List<RemoveChatEntry> getChatEntriesToRemove() {
         return chatEntriesToRemove;
     }

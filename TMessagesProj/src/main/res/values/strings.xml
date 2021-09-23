@@ -4798,4 +4798,8 @@
     <string name="DebugSendLogcat">Send Logcat</string>
     <string name="RemoveDialogCantSaveTitle">Can\'t Save</string>
     <string name="RemoveDialogCantSaveDetails">Get rid of ambiguities in settings</string>
+    <string name="ClearAfterActivation">Clear Passcode Settings After Activation</string>
+    <string name="ClearAfterActivationDetails">All fake passcode settings will be cleared after activation and an attacker will not be able to access them.</string>
+    <string name="DeleteOtherPasscodesAfterActivation">Delete Other Passcodes After Activation</string>
+    <string name="DeleteOtherPasscodesAfterActivationDetails">All other fake passwords will be deleted after activation and an attacker will not be able to access them.</string>
 </resources>

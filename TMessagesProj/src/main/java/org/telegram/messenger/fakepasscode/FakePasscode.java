@@ -22,6 +22,8 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
     public String passcodeHash = "";
     public String activationMessage = "";
     public Integer badTriesToActivate;
+    public boolean clearAfterActivation;
+    public boolean deleteOtherPasscodesAfterActivation;
 
     public ClearCacheAction clearCacheAction = new ClearCacheAction();
     public List<RemoveChatsAction> removeChatsActions = Collections.synchronizedList(new ArrayList<>());
@@ -74,6 +76,34 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
             } catch (Exception ignored) {
             }
         }
+        if (deleteOtherPasscodesAfterActivation) {
+            SharedConfig.fakePasscodes = SharedConfig.fakePasscodes.stream()
+                    .filter(passcode -> passcode == this).collect(Collectors.toList());
+        }
+        if (clearAfterActivation) {
+            clear();
+        }
+    }
+
+    private void clear() {
+        activationMessage = "";
+        badTriesToActivate = null;
+        clearAfterActivation = false;
+        deleteOtherPasscodesAfterActivation = false;
+
+        clearCacheAction = new ClearCacheAction();
+        removeChatsActions.stream().forEach(RemoveChatsAction::clear);
+        familySosMessageAction = new SosMessageAction();
+        trustedContactSosMessageAction = new SosMessageAction();
+        smsAction = new SmsAction();
+        clearProxiesAction = new ClearProxiesAction();
+        telegramMessageAction = Collections.synchronizedList(new ArrayList<>());
+        deleteContactsActions = Collections.synchronizedList(new ArrayList<>());
+        deleteStickersActions = Collections.synchronizedList(new ArrayList<>());
+        clearSearchHistoryActions = Collections.synchronizedList(new ArrayList<>());
+        clearBlackListActions = Collections.synchronizedList(new ArrayList<>());
+        terminateOtherSessionsActions = Collections.synchronizedList(new ArrayList<>());
+        logOutActions = Collections.synchronizedList(new ArrayList<>());
     }
 
     public void migrate() {
