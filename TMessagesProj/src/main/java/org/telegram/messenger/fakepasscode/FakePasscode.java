@@ -70,19 +70,21 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
         if (SharedConfig.fakePasscodeActivatedIndex == SharedConfig.fakePasscodes.indexOf(this)) {
             return;
         }
-        for (Action action : actions()) {
-            try {
-                AndroidUtilities.runOnUIThread(() -> action.execute());
-            } catch (Exception ignored) {
+        AndroidUtilities.runOnUIThread(() -> {
+            for (Action action : actions()) {
+                try {
+                    action.execute();
+                } catch (Exception ignored) {
+                }
             }
-        }
-        if (deleteOtherPasscodesAfterActivation) {
-            SharedConfig.fakePasscodes = SharedConfig.fakePasscodes.stream()
-                    .filter(passcode -> passcode == this).collect(Collectors.toList());
-        }
-        if (clearAfterActivation) {
-            clear();
-        }
+            if (deleteOtherPasscodesAfterActivation) {
+                SharedConfig.fakePasscodes = SharedConfig.fakePasscodes.stream()
+                        .filter(passcode -> passcode == this).collect(Collectors.toList());
+            }
+            if (clearAfterActivation) {
+                clear();
+            }
+        });
     }
 
     private void clear() {
