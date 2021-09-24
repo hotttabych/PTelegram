@@ -120,6 +120,7 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
 
     public void execute() {
         removedChats.clear();
+        hiddenChats.clear();
         if (chatEntriesToRemove.isEmpty()) {
             return;
         }
