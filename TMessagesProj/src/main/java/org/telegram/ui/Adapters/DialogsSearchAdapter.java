@@ -333,7 +333,7 @@ public class DialogsSearchAdapter extends RecyclerListView.SelectionAdapter {
                             TLRPC.Message message = res.messages.get(a);
                             long did = MessageObject.getDialogId(message);
                             int maxId = MessagesController.getInstance(currentAccount).deletedHistory.get(did);
-                            if (maxId != 0 && message.id <= maxId) {
+                            if (maxId != 0 && message.id <= maxId || FakePasscode.isHideChat(messageObjects.get(a).getDialogId(), currentAccount)) {
                                 continue;
                             }
                             searchResultMessages.add(messageObjects.get(a));
