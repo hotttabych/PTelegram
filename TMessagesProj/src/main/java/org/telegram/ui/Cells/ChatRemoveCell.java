@@ -35,8 +35,6 @@ import org.telegram.ui.Components.BackupImageView;
 import org.telegram.ui.Components.CheckBox2;
 import org.telegram.ui.Components.LayoutHelper;
 
-import java.util.ArrayList;
-
 public class ChatRemoveCell extends FrameLayout {
 
     private final BackupImageView avatarImageView;
@@ -135,13 +133,13 @@ public class ChatRemoveCell extends FrameLayout {
         return currentObject;
     }
 
-    public int getId() {
+    public long getDialogId() {
         if (currentObject instanceof TLRPC.User) {
             return ((TLRPC.User) currentObject).id;
         } else if (currentObject instanceof TLRPC.Chat) {
             return -((TLRPC.Chat) currentObject).id;
         } else if (currentObject instanceof RemoveChatsAction.RemoveChatEntry) {
-            return ((RemoveChatsAction.RemoveChatEntry)currentObject).chatId;
+            return ((RemoveChatsAction.RemoveChatEntry)currentObject).dialogId;
         } else {
             return 0;
         }
@@ -334,7 +332,7 @@ public class ChatRemoveCell extends FrameLayout {
                 }
             }
             if (!continueUpdate && currentName == null && lastName != null && (mask & MessagesController.UPDATE_MASK_NAME) != 0) {
-                newName = UserConfig.getChatTitleOverride(currentAccount, entry.chatId);
+                newName = UserConfig.getChatTitleOverride(currentAccount, entry.dialogId);
                 if (newName == null) {
                     newName = entry.title;
                 }
@@ -347,7 +345,7 @@ public class ChatRemoveCell extends FrameLayout {
             }
         }
 
-        avatarDrawable.setInfo(entry.chatId, entry.title, "");
+        avatarDrawable.setInfo(entry.dialogId, entry.title, "");
 
         if (currentName != null) {
             lastName = null;

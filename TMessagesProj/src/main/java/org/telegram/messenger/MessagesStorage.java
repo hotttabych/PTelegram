@@ -1714,8 +1714,7 @@ public class MessagesStorage extends BaseController {
                                     removePendingTask(taskId);
                                 } else {
                                     TLObject finalRequest = request;
-                                    /* MERGR_CONFLICT */
-                                    AndroidUtilities.runOnUIThread(() -> getMessagesController().deleteMessages(null, null, null, -channelId, true, false, false, taskId, finalRequest, true, false));
+                                    AndroidUtilities.runOnUIThread(() -> getMessagesController().deleteMessages(null, null, null, -channelId, true, false, false, taskId, finalRequest));
                                 }
                                 break;
                             }
@@ -1831,8 +1830,7 @@ public class MessagesStorage extends BaseController {
                                 if (request == null) {
                                     removePendingTask(taskId);
                                 } else {
-                                    /* MERGE_CONFLICT */
-                                    AndroidUtilities.runOnUIThread(() -> getMessagesController().deleteMessages(null, null, null, dialogId, true, true, false, taskId, request, true, false));
+                                    AndroidUtilities.runOnUIThread(() -> getMessagesController().deleteMessages(null, null, null, dialogId, true, true, false, taskId, request));
                                 }
                                 break;
                             }

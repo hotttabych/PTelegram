@@ -2572,7 +2572,12 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                 did = -currentChat.id;
             }
 
-            TLRPC.Chat chat = ChatObject.getChatByDialog(did, currentAccount);
+            TLRPC.Chat chat;
+            if (DialogObject.isChatDialog(did)) {
+                chat = getMessagesController().getChat(-did);
+            } else {
+                chat = null;
+            }
             if (SharedConfig.fakePasscodeActivatedIndex == -1 && (!ChatObject.isChannel(chat) || chat.megagroup)) {
                 headerItem.addSubItem(delete_messages, R.drawable.msg_delete, LocaleController.getString("DeleteMessages", R.string.DeleteMessages));
                 headerItem.addSubItem(delete_messages_substring, R.drawable.msg_delete,

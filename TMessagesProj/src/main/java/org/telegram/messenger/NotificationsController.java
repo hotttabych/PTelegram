@@ -1063,8 +1063,9 @@ public class NotificationsController extends BaseController {
                     if (message == null) {
                         continue;
                     }
-                    /* MERGE_CONFLICT */
-                    if (message != null && (message.fwd_from != null && message.fwd_from.imported || message.silent && (message.action instanceof TLRPC.TL_messageActionContactSignUp || message.action instanceof TLRPC.TL_messageActionUserJoined))) {
+                    if (message.fwd_from != null && message.fwd_from.imported ||
+                            message.action instanceof TLRPC.TL_messageActionSetMessagesTTL ||
+                            message.silent && (message.action instanceof TLRPC.TL_messageActionContactSignUp || message.action instanceof TLRPC.TL_messageActionUserJoined)) {
                         continue;
                     }
                     long did;

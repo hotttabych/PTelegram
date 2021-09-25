@@ -78,7 +78,7 @@ public class FakePasscodeRemoveChatsActivity extends BaseFragment implements Not
     private EmptyTextProgressView emptyView;
     private RemoveChatsAdapter adapter;
     private boolean ignoreScrollEvent;
-    private Set<Integer> selectedDialogs = new HashSet<>();
+    private Set<Long> selectedDialogs = new HashSet<>();
 
     private int containerHeight;
 
@@ -245,7 +245,7 @@ public class FakePasscodeRemoveChatsActivity extends BaseFragment implements Not
                         hideActionMode(true);
                     }
                 } else if (id == delete) {
-                    for (Integer dialogId : selectedDialogs) {
+                    for (Long dialogId : selectedDialogs) {
                         action.remove(dialogId);
                     }
                     hideActionMode(true);
@@ -453,7 +453,7 @@ public class FakePasscodeRemoveChatsActivity extends BaseFragment implements Not
                 if (!selectedDialogs.isEmpty()) {
                     select(cell);
                 } else {
-                    int id = cell.getId();
+                    long id = cell.getDialogId();
                     if (id == 0) {
                         return;
                     }
@@ -488,7 +488,7 @@ public class FakePasscodeRemoveChatsActivity extends BaseFragment implements Not
                         if (editText.length() > 0) {
                             editText.setText(null);
                         }
-                        presentFragment(new FakePasscodeRemoveDialogSettingsActivity(action, Collections.singletonList(cell.getId())));
+                        presentFragment(new FakePasscodeRemoveDialogSettingsActivity(action, Collections.singletonList(cell.getDialogId())));
                     }
                 }
             }
@@ -584,7 +584,7 @@ public class FakePasscodeRemoveChatsActivity extends BaseFragment implements Not
             View child = listView.getChildAt(a);
             if (child instanceof ChatRemoveCell) {
                 ChatRemoveCell cell = (ChatRemoveCell) child;
-                int id = cell.getId();
+                long id = cell.getDialogId();
                 if (id != 0) {
                     cell.setChecked(action.contains(id), true);
                     cell.setCheckBoxEnabled(true);
@@ -608,7 +608,7 @@ public class FakePasscodeRemoveChatsActivity extends BaseFragment implements Not
     }
 
     private void select(ChatRemoveCell cell) {
-        int id = cell.getId();
+        long id = cell.getDialogId();
 
         if (selectedDialogs.contains(id)) {
             selectedDialogs.remove(id);
@@ -745,8 +745,8 @@ public class FakePasscodeRemoveChatsActivity extends BaseFragment implements Not
             boolean hasSelf = false;
             ArrayList<TLRPC.Dialog> dialogs = getMessagesController().getAllDialogs();
 
-            Set<Integer> selectedIds = action.getIds();
-            for (Integer id: selectedIds) {
+            Set<Long> selectedIds = action.getIds();
+            for (Long id: selectedIds) {
                 boolean added = false;
                 if (id > 0) {
                     TLRPC.User user = getMessagesController().getUser(id);
@@ -771,12 +771,11 @@ public class FakePasscodeRemoveChatsActivity extends BaseFragment implements Not
 
             for (int a = 0, N = dialogs.size(); a < N; a++) {
                 TLRPC.Dialog dialog = dialogs.get(a);
-                int lowerId = (int) dialog.id;
-                if (lowerId == 0 || selectedIds.contains(lowerId)) {
+                if (dialog.id == 0 || selectedIds.contains(dialog.id)) {
                     continue;
                 }
-                if (lowerId > 0) {
-                    TLRPC.User user = getMessagesController().getUser(lowerId);
+                if (dialog.id > 0) {
+                    TLRPC.User user = getMessagesController().getUser(dialog.id);
                     if (user != null) {
                         contacts.add(user);
                         if (UserObject.isUserSelf(user)) {
@@ -784,7 +783,7 @@ public class FakePasscodeRemoveChatsActivity extends BaseFragment implements Not
                         }
                     }
                 } else {
-                    TLRPC.Chat chat = getMessagesController().getChat(-lowerId);
+                    TLRPC.Chat chat = getMessagesController().getChat(-dialog.id);
                     if (chat != null) {
                         contacts.add(chat);
                     }
@@ -916,15 +915,15 @@ public class FakePasscodeRemoveChatsActivity extends BaseFragment implements Not
                         }
                         object = contacts.get(position - usersStartRow);
                     }
-                    int id;
+                    Long id;
                     if (object instanceof TLRPC.User) {
                         id = ((TLRPC.User) object).id;
                     } else if (object instanceof TLRPC.Chat) {
                         id = -((TLRPC.Chat) object).id;
                     } else if (object instanceof RemoveChatsAction.RemoveChatEntry) {
-                        id = ((RemoveChatsAction.RemoveChatEntry)object).chatId;
+                        id = ((RemoveChatsAction.RemoveChatEntry)object).dialogId;
                     } else {
-                        id = 0;
+                        id = 0L;
                     }
                     cell.setSelected(selectedDialogs.contains(id));
                     cell.setOnSettingsClick(() -> setupChatToRemove(cell, action.get(id)));

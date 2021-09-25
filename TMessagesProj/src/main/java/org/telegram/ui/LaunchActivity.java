@@ -905,25 +905,13 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
             ArrayList<Integer> ids = new ArrayList<>();
             ids.add(idToMs.getKey());
             long dialogId = Long.valueOf(idToMs.getValue().second);
-            long channelId = dialogId > 0 ? 0 : -dialogId;
             long shift = System.currentTimeMillis() - idToMs.getValue().first.second;
             shift = idToMs.getValue().first.first - shift;
             Utilities.globalQueue.postRunnable(() -> {
-                if (ChatObject.isChannel(ChatObject.getChatByDialog(dialogId, currentAccount))) {
-                    AndroidUtilities.runOnUIThread(() -> {
-                        MessagesController.getInstance(currentAccount).deleteMessages(ids, null, null, Math.abs(dialogId), (int) channelId,
-                                true, false, false, 0,
-                                null, false, false);
-                        Utils.cleanAutoDeletable(ids.get(0), currentAccount, dialogId);
-                    });
-                } else {
-                    AndroidUtilities.runOnUIThread(() -> {
-                        MessagesController.getInstance(currentAccount).deleteMessages(ids, null, null, Math.abs(dialogId), 0,
-                                true, false, false, 0,
-                                null, false, false);
-                        Utils.cleanAutoDeletable(ids.get(0), currentAccount, dialogId);
-                    });
-                }
+                MessagesController.getInstance(currentAccount).deleteMessages(ids, null, null, Math.abs(dialogId),
+                        true, false, false, 0,
+                        null, false, false);
+                Utils.cleanAutoDeletable(ids.get(0), currentAccount, dialogId);
             }, Math.max(shift, 0));
         }
         RemoveAsReadMessages.save();

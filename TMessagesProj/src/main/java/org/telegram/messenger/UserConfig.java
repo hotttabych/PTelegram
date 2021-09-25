@@ -128,11 +128,11 @@ public class UserConfig extends BaseController {
         return localInstance;
     }
 
-    public static ChatInfoOverride getChatInfoOverride(int accountNum, int id) {
+    public static ChatInfoOverride getChatInfoOverride(int accountNum, long id) {
         return  getChatInfoOverride(accountNum < UserConfig.MAX_ACCOUNT_COUNT ? UserConfig.getInstance(accountNum) : null, id);
     }
 
-    public static ChatInfoOverride getChatInfoOverride(UserConfig config, int id) {
+    public static ChatInfoOverride getChatInfoOverride(UserConfig config, long id) {
         if (SharedConfig.fakePasscodeActivatedIndex == -1 && config != null && config.chatInfoOverrides.containsKey(String.valueOf(id))) {
             return config.chatInfoOverrides.get(String.valueOf(id));
         } else {
@@ -140,11 +140,11 @@ public class UserConfig extends BaseController {
         }
     }
 
-    public static String getChatTitleOverride(int accountNum, int id) {
+    public static String getChatTitleOverride(int accountNum, long id) {
         return getChatTitleOverride(accountNum < UserConfig.MAX_ACCOUNT_COUNT ? UserConfig.getInstance(accountNum) : null, id);
     }
 
-    public static String getChatTitleOverride(UserConfig config, int id) {
+    public static String getChatTitleOverride(UserConfig config, long id) {
         ChatInfoOverride chatInfo = getChatInfoOverride(config, id);
         if (chatInfo != null) {
             return chatInfo.title;

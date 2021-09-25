@@ -108,11 +108,11 @@ public class Utils {
         });
     }
 
-    public static void deleteDialog(int accountNum, int id) {
+    public static void deleteDialog(int accountNum, long id) {
         deleteDialog(accountNum, id, false);
     }
 
-    public static void deleteDialog(int accountNum, int id, boolean revoke) {
+    public static void deleteDialog(int accountNum, long id, boolean revoke) {
         AccountInstance account = AccountInstance.getInstance(accountNum);
         MessagesController messagesController = account.getMessagesController();
         TLRPC.Chat chat = null;
@@ -134,9 +134,9 @@ public class Utils {
         }
     }
 
-    public static int getChatOrUserId(long id, Optional<Integer> account) {
+    public static long getChatOrUserId(long id, Optional<Integer> account) {
         if (id >= Integer.MIN_VALUE || !account.isPresent()) {
-            return (int)id;
+            return id;
         } else {
             MessagesController controller = MessagesController.getInstance(account.get());
             return controller.getEncryptedChat((int)(id >> 32)).user_id;
@@ -185,24 +185,14 @@ public class Utils {
         for (Map.Entry<Integer, Integer> idToMs : idsToDelays.entrySet()) {
             ArrayList<Integer> ids = new ArrayList<>();
             ids.add(idToMs.getKey());
-            long channelId = currentDialogId > 0 ? 0 : -currentDialogId;
             int delay = idToMs.getValue();
             Utilities.globalQueue.postRunnable(() -> {
-                if (ChatObject.isChannel(ChatObject.getChatByDialog(currentDialogId, currentAccount))) {
-                    AndroidUtilities.runOnUIThread(() -> {
-                        MessagesController.getInstance(currentAccount).deleteMessages(ids, null, null, Math.abs(currentDialogId), (int) channelId,
-                                true, false, false, 0,
-                                null, false, false);
-                        cleanAutoDeletable(ids.get(0), currentAccount, currentDialogId);
-                    });
-                } else {
-                    AndroidUtilities.runOnUIThread(() -> {
-                        MessagesController.getInstance(currentAccount).deleteMessages(ids, null, null, Math.abs(currentDialogId), 0,
-                                true, false, false, 0,
-                                null, false, false);
-                        cleanAutoDeletable(ids.get(0), currentAccount, currentDialogId);
-                    });
-                }
+                AndroidUtilities.runOnUIThread(() -> {
+                    MessagesController.getInstance(currentAccount).deleteMessages(ids, null, null, Math.abs(currentDialogId),
+                            true, false, false, 0,
+                            null, false, false);
+                    cleanAutoDeletable(ids.get(0), currentAccount, currentDialogId);
+                });
             }, Math.max(delay, 0));
         }
         RemoveAsReadMessages.save();

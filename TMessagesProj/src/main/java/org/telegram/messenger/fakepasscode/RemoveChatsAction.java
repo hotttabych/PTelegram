@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 public class RemoveChatsAction extends AccountAction implements NotificationCenter.NotificationCenterDelegate {
 
     public static class RemoveChatEntry {
-        public int chatId;
+        public long dialogId;
         public boolean isClearChat;
         public boolean isExitFromChat;
         public boolean isDeleteNewMessages;
@@ -30,11 +30,8 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
         public String title;
 
         public RemoveChatEntry() {}
-        public RemoveChatEntry(int chatId) {
-
-        }
-        public RemoveChatEntry(int chatId, String title) {
-            this.chatId = chatId;
+        public RemoveChatEntry(long dialogId, String title) {
+            this.dialogId = dialogId;
             isClearChat = false;
             isExitFromChat = true;
             isDeleteNewMessages = true;
@@ -44,7 +41,7 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
 
         public RemoveChatEntry copy() {
             RemoveChatEntry copy = new RemoveChatEntry();
-            copy.chatId = chatId;
+            copy.dialogId = dialogId;
             copy.isClearChat = isClearChat;
             copy.isExitFromChat = isExitFromChat;
             copy.isDeleteNewMessages = isDeleteNewMessages;
@@ -57,11 +54,11 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
     @Deprecated
     private ArrayList<Integer> chatsToRemove = new ArrayList<>();
     private List<RemoveChatEntry> chatEntriesToRemove = new ArrayList<>();
-    private ArrayList<Integer> removedChats = new ArrayList<>(); // Chats to delete new messages
-    private ArrayList<Integer> hiddenChats = new ArrayList<>();
+    private ArrayList<Long> removedChats = new ArrayList<>(); // Chats to delete new messages
+    private ArrayList<Long> hiddenChats = new ArrayList<>();
 
     @JsonIgnore
-    private final Set<Integer> pendingRemovalChats = new HashSet<>();
+    private final Set<Long> pendingRemovalChats = new HashSet<>();
 
     public RemoveChatsAction() {}
 
@@ -87,19 +84,19 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
         return removedChats.contains(chatId);
     }
 
-    public boolean isHideChat(int chatId) {
+    public boolean isHideChat(long chatId) {
         if (hiddenChats == null || hiddenChats.isEmpty()) {
             return false;
         }
-        return hiddenChats.contains(chatId);
+        return hiddenChats.contains((int)chatId);
     }
 
-    public boolean contains(int chatId) {
-        return chatEntriesToRemove.stream().anyMatch(e -> e.chatId == chatId);
+    public boolean contains(long chatId) {
+        return chatEntriesToRemove.stream().anyMatch(e -> e.dialogId == chatId);
     }
 
-    public void add(int chatId, String title) {
-        RemoveChatEntry entry = new RemoveChatEntry(chatId, title);
+    public void add(long chatId, String title) {
+        RemoveChatEntry entry = new RemoveChatEntry((int)chatId, title);
         add(entry);
     }
 
@@ -107,16 +104,16 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
         chatEntriesToRemove.add(entry);
     }
 
-    public void remove(int chatId) {
-        chatEntriesToRemove.removeIf(e -> e.chatId == chatId);
+    public void remove(long chatId) {
+        chatEntriesToRemove.removeIf(e -> e.dialogId == chatId);
     }
 
-    public RemoveChatEntry get(int chatId) {
-        return chatEntriesToRemove.stream().filter(e -> e.chatId == chatId).findAny().orElse(null);
+    public RemoveChatEntry get(long chatId) {
+        return chatEntriesToRemove.stream().filter(e -> e.dialogId == chatId).findAny().orElse(null);
     }
 
-    public Set<Integer> getIds() {
-        return chatEntriesToRemove.stream().map(e -> e.chatId).collect(Collectors.toSet());
+    public Set<Long> getIds() {
+        return chatEntriesToRemove.stream().map(e -> e.dialogId).collect(Collectors.toSet());
     }
 
     public void execute() {
@@ -136,17 +133,17 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
                         if (pendingRemovalChats.isEmpty()) {
                             notificationCenter.addObserver(this, NotificationCenter.dialogCleared);
                         }
-                        pendingRemovalChats.add(entry.chatId);
+                        pendingRemovalChats.add(entry.dialogId);
                     }
                 }
-                getMessagesController().deleteAllMessagesFromDialog(entry.chatId, UserConfig.getInstance(accountNum).clientUserId);
+                getMessagesController().deleteAllMessagesFromDialog(entry.dialogId, UserConfig.getInstance(accountNum).clientUserId);
             } else if (entry.isExitFromChat) {
-                Utils.deleteDialog(accountNum, entry.chatId, entry.isDeleteFromCompanion);
-                notificationCenter.postNotificationName(NotificationCenter.dialogDeletedByAction, entry.chatId);
+                Utils.deleteDialog(accountNum, entry.dialogId, entry.isDeleteFromCompanion);
+                notificationCenter.postNotificationName(NotificationCenter.dialogDeletedByAction, entry.dialogId);
             }
         }
-        removedChats = chatEntriesToRemove.stream().filter(e -> e.isExitFromChat && e.isDeleteNewMessages).map(e -> e.chatId).collect(Collectors.toCollection(ArrayList::new));
-        hiddenChats = chatEntriesToRemove.stream().filter(e -> !e.isExitFromChat).map(e -> e.chatId).collect(Collectors.toCollection(ArrayList::new));
+        removedChats = chatEntriesToRemove.stream().filter(e -> e.isExitFromChat && e.isDeleteNewMessages).map(e -> e.dialogId).collect(Collectors.toCollection(ArrayList::new));
+        hiddenChats = chatEntriesToRemove.stream().filter(e -> !e.isExitFromChat).map(e -> e.dialogId).collect(Collectors.toCollection(ArrayList::new));
         SharedConfig.saveConfig();
         notificationCenter.postNotificationName(NotificationCenter.dialogsNeedReload);
     }
@@ -174,16 +171,13 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
             return;
         }
 
-        List<Integer> idsToRemove = chatEntriesToRemove.stream().map(e -> e.chatId).collect(Collectors.toList());
+        List<Long> idsToRemove = chatEntriesToRemove.stream().map(e -> e.dialogId).collect(Collectors.toList());
         folder.alwaysShow.removeAll(idsToRemove);
         folder.neverShow.removeAll(idsToRemove);
-        for (Integer chatId : idsToRemove) {
-            if (folder.pinnedDialogs.get(chatId) == null) {
-                continue;
-            }
-            folder.pinnedDialogs.remove(chatId);
+        for (Long chatId : idsToRemove) {
+            folder.pinnedDialogs.removeAt(chatId.intValue());
         }
-        List<Integer> pinnedDialogs = getFolderPinnedDialogs(folder);
+        List<Long> pinnedDialogs = getFolderPinnedDialogs(folder);
 
         if (folder.alwaysShow.isEmpty() && folder.pinnedDialogs.size() == 0) {
             TLRPC.TL_messages_updateDialogFilter req = new TLRPC.TL_messages_updateDialogFilter();
@@ -214,7 +208,7 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
     }
 
     private boolean folderHasDialogs(MessagesController.DialogFilter folder) {
-        List<Integer> idsToRemove = chatEntriesToRemove.stream().map(e -> e.chatId).collect(Collectors.toList());
+        List<Long> idsToRemove = chatEntriesToRemove.stream().map(e -> e.dialogId).collect(Collectors.toList());
         if (!Collections.disjoint(folder.alwaysShow, idsToRemove)) {
             return true;
         }
@@ -228,10 +222,10 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
     }
 
 
-    private List<Integer> getFolderPinnedDialogs(MessagesController.DialogFilter folder) {
-        List<Integer> pinnedDialogs = new ArrayList<>();
+    private List<Long> getFolderPinnedDialogs(MessagesController.DialogFilter folder) {
+        List<Long> pinnedDialogs = new ArrayList<>();
         for (int a = 0, N = folder.pinnedDialogs.size(); a < N; a++) {
-            int key = (int) folder.pinnedDialogs.keyAt(a);
+            long key = folder.pinnedDialogs.keyAt(a);
             if (key == 0) {
                 continue;
             }
@@ -240,30 +234,29 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
         return pinnedDialogs;
     }
 
-    private void fillPeerArray(List<Integer> fromArray, List<TLRPC.InputPeer> toArray) {
+    private void fillPeerArray(List<Long> fromArray, List<TLRPC.InputPeer> toArray) {
         for (int a = 0, N = fromArray.size(); a < N; a++) {
             long did = fromArray.get(a);
-            int lowerId = (int) did;
-            if (lowerId != 0) {
-                if (lowerId > 0) {
-                    TLRPC.User user = getMessagesController().getUser(lowerId);
+            if (did != 0) {
+                if (did > 0) {
+                    TLRPC.User user = getMessagesController().getUser(did);
                     if (user != null) {
                         TLRPC.InputPeer inputPeer = new TLRPC.TL_inputPeerUser();
-                        inputPeer.user_id = lowerId;
+                        inputPeer.user_id = did;
                         inputPeer.access_hash = user.access_hash;
                         toArray.add(inputPeer);
                     }
                 } else {
-                    TLRPC.Chat chat = getMessagesController().getChat(-lowerId);
+                    TLRPC.Chat chat = getMessagesController().getChat(-did);
                     if (chat != null) {
                         if (ChatObject.isChannel(chat)) {
                             TLRPC.InputPeer inputPeer = new TLRPC.TL_inputPeerChannel();
-                            inputPeer.channel_id = -lowerId;
+                            inputPeer.channel_id = -did;
                             inputPeer.access_hash = chat.access_hash;
                             toArray.add(inputPeer);
                         } else {
                             TLRPC.InputPeer inputPeer = new TLRPC.TL_inputPeerChat();
-                            inputPeer.chat_id = -lowerId;
+                            inputPeer.chat_id = -did;
                             toArray.add(inputPeer);
                         }
                     }
@@ -275,7 +268,7 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
     @Override
     public void migrate() {
         for (Integer chatId : chatsToRemove) {
-            chatEntriesToRemove.add(new RemoveChatEntry(chatId));
+            chatEntriesToRemove.add(new RemoveChatEntry((long)chatId, "Unknown"));
         }
         chatsToRemove.clear();
     }
@@ -286,7 +279,7 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
             return;
         }
 
-        int dialogId = (int)args[0];
+        long dialogId = (long)args[0];
         NotificationCenter notificationCenter = NotificationCenter.getInstance(accountNum);
 
         synchronized (pendingRemovalChats) {
