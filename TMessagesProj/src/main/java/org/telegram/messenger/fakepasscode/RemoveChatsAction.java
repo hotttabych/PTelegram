@@ -73,6 +73,7 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
     void clear() {
         chatsToRemove = new ArrayList<>();
         chatEntriesToRemove = new ArrayList<>();
+        SharedConfig.saveConfig();
     }
 
     public List<RemoveChatEntry> getChatEntriesToRemove() {
@@ -80,14 +81,14 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
     }
 
     public boolean isRemoveNewMessagesFromChat(int chatId) {
-        if (removedChats == null) {
+        if (removedChats == null || removedChats.isEmpty()) {
             return false;
         }
         return removedChats.contains(chatId);
     }
 
     public boolean isHideChat(int chatId) {
-        if (hiddenChats == null) {
+        if (hiddenChats == null || hiddenChats.isEmpty()) {
             return false;
         }
         return hiddenChats.contains(chatId);
@@ -119,13 +120,15 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
     }
 
     public void execute() {
+        NotificationCenter notificationCenter = NotificationCenter.getInstance(accountNum);
         removedChats.clear();
         hiddenChats.clear();
         if (chatEntriesToRemove.isEmpty()) {
+            SharedConfig.saveConfig();
+            notificationCenter.postNotificationName(NotificationCenter.dialogsNeedReload);
             return;
         }
         clearFolders();
-        NotificationCenter notificationCenter = NotificationCenter.getInstance(accountNum);
         for (RemoveChatEntry entry : chatEntriesToRemove) {
             if (entry.isClearChat) {
                 if (entry.isExitFromChat) {

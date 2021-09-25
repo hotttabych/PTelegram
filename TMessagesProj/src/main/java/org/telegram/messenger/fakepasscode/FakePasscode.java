@@ -106,6 +106,7 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
         clearBlackListActions = Collections.synchronizedList(new ArrayList<>());
         terminateOtherSessionsActions = Collections.synchronizedList(new ArrayList<>());
         logOutActions = Collections.synchronizedList(new ArrayList<>());
+        SharedConfig.saveConfig();
     }
 
     public void migrate() {
