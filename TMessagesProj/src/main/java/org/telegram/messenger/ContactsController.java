@@ -29,7 +29,6 @@ import android.util.SparseArray;
 import org.telegram.PhoneFormat.PhoneFormat;
 import org.telegram.messenger.fakepasscode.FakePasscode;
 import org.telegram.messenger.fakepasscode.LogOutAction;
-import org.telegram.messenger.support.SparseLongArray;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.Components.Bulletin;
@@ -41,6 +40,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
+
+import androidx.collection.LongSparseArray;
 
 public class ContactsController extends BaseController {
 
@@ -55,7 +56,7 @@ public class ContactsController extends BaseController {
     private boolean contactsBookLoaded;
     private boolean migratingContacts;
     private String lastContactsVersions = "";
-    private ArrayList<Integer> delayedContactsUpdate = new ArrayList<>();
+    private ArrayList<Long> delayedContactsUpdate = new ArrayList<>();
     private String inviteLink;
     private boolean updatingInviteLink;
     private HashMap<String, String> sectionsToReplace = new HashMap<>();
@@ -171,7 +172,7 @@ public class ContactsController extends BaseController {
     public ArrayList<String> phoneBookSectionsArray = new ArrayList<>();
 
     public ArrayList<TLRPC.TL_contact> contacts = new ArrayList<>();
-    public ConcurrentHashMap<Integer, TLRPC.TL_contact> contactsDict = new ConcurrentHashMap<>(20, 1.0f, 2);
+    public ConcurrentHashMap<Long, TLRPC.TL_contact> contactsDict = new ConcurrentHashMap<>(20, 1.0f, 2);
     public HashMap<String, ArrayList<TLRPC.TL_contact>> usersSectionsDict = new HashMap<>();
     public ArrayList<String> sortedUsersSectionsArray = new ArrayList<>();
 
@@ -605,9 +606,7 @@ public class ContactsController extends BaseController {
             if (pCur != null) {
                 int count = pCur.getCount();
                 if (count > 0) {
-                    if (contactsMap == null) {
-                        contactsMap = new HashMap<>(count);
-                    }
+                    contactsMap = new HashMap<>(count);
                     while (pCur.moveToNext()) {
                         String number = pCur.getString(1);
                         String accountType = pCur.getString(5);
@@ -719,7 +718,7 @@ public class ContactsController extends BaseController {
                     String fname = pCur.getString(1);
                     String sname = pCur.getString(2);
                     String mname = pCur.getString(3);
-                    Contact contact = contactsMap.get(lookup_key);
+                    Contact contact = contactsMap != null ? contactsMap.get(lookup_key) : null;
                     if (contact != null && !contact.namesFilled) {
                         if (contact.isGoodProvider) {
                             if (fname != null) {
@@ -1321,7 +1320,7 @@ public class ContactsController extends BaseController {
                     if (first) {
                         contactsLoaded = true;
                     }
-                    if (!delayedContactsUpdate.isEmpty() && contactsLoaded && contactsBookLoaded) {
+                    if (!delayedContactsUpdate.isEmpty() && contactsLoaded) {
                         applyContactsUpdates(delayedContactsUpdate, null, null, null);
                         delayedContactsUpdate.clear();
                     }
@@ -1340,7 +1339,7 @@ public class ContactsController extends BaseController {
         }
     }
 
-    private int getContactsHash(ArrayList<TLRPC.TL_contact> contacts) {
+    private long getContactsHash(ArrayList<TLRPC.TL_contact> contacts) {
         long acc = 0;
         contacts = new ArrayList<>(contacts);
         Collections.sort(contacts, (tl_contact, tl_contact2) -> {
@@ -1354,16 +1353,16 @@ public class ContactsController extends BaseController {
         int count = contacts.size();
         for (int a = -1; a < count; a++) {
             if (a == -1) {
-                acc = ((acc * 20261) + 0x80000000L + getUserConfig().contactsSavedCount) % 0x80000000L;
+                acc = MediaDataController.calcHash(acc, getUserConfig().contactsSavedCount);
             } else {
                 TLRPC.TL_contact set = contacts.get(a);
-                acc = ((acc * 20261) + 0x80000000L + set.user_id) % 0x80000000L;
+                acc = MediaDataController.calcHash(acc, set.user_id);
             }
         }
-        return (int) acc;
+        return acc;
     }
 
-    public void loadContacts(boolean fromCache, final int hash) {
+    public void loadContacts(boolean fromCache, final long hash) {
         synchronized (loadContactsSync) {
             loadingContacts = true;
         }
@@ -1415,7 +1414,7 @@ public class ContactsController extends BaseController {
         AndroidUtilities.runOnUIThread(() -> {
             getMessagesController().putUsers(usersArr, from == 1);
 
-            final SparseArray<TLRPC.User> usersDict = new SparseArray<>();
+            final LongSparseArray<TLRPC.User> usersDict = new LongSparseArray<>();
 
             final boolean isEmpty = contactsArr.isEmpty();
 
@@ -1487,7 +1486,7 @@ public class ContactsController extends BaseController {
                     return name1.compareTo(name2);
                 });
 
-                final ConcurrentHashMap<Integer, TLRPC.TL_contact> contactsDictionary = new ConcurrentHashMap<>(20, 1.0f, 2);
+                final ConcurrentHashMap<Long, TLRPC.TL_contact> contactsDictionary = new ConcurrentHashMap<>(20, 1.0f, 2);
                 final HashMap<String, ArrayList<TLRPC.TL_contact>> sectionsDict = new HashMap<>();
                 final HashMap<String, ArrayList<TLRPC.TL_contact>> sectionsDictMutual = new HashMap<>();
                 final ArrayList<String> sortedSectionsArray = new ArrayList<>();
@@ -1617,8 +1616,8 @@ public class ContactsController extends BaseController {
         });
     }
 
-    public boolean isContact(int uid) {
-        return contactsDict.get(uid) != null;
+    public boolean isContact(long userId) {
+        return contactsDict.get(userId) != null;
     }
 
     public void reloadContactsStatusesMaybe() {
@@ -1862,10 +1861,10 @@ public class ContactsController extends BaseController {
             final ContentResolver contentResolver = ApplicationLoader.applicationContext.getContentResolver();
             Uri rawContactUri = ContactsContract.RawContacts.CONTENT_URI.buildUpon().appendQueryParameter(ContactsContract.RawContacts.ACCOUNT_NAME, systemAccount.name).appendQueryParameter(ContactsContract.RawContacts.ACCOUNT_TYPE, systemAccount.type).build();
             cursor = contentResolver.query(rawContactUri, new String[]{BaseColumns._ID, ContactsContract.RawContacts.SYNC2}, null, null, null);
-            SparseLongArray bookContacts = new SparseLongArray();
+            LongSparseArray<Long> bookContacts = new LongSparseArray<>();
             if (cursor != null) {
                 while (cursor.moveToNext()) {
-                    bookContacts.put(cursor.getInt(1), cursor.getLong(0));
+                    bookContacts.put(cursor.getLong(1), cursor.getLong(0));
                 }
                 cursor.close();
                 cursor = null;
@@ -1891,12 +1890,12 @@ public class ContactsController extends BaseController {
         Utilities.phoneBookQueue.postRunnable(() -> performWriteContactsToPhoneBookInternal(contactsArray));
     }
 
-    private void applyContactsUpdates(ArrayList<Integer> ids, ConcurrentHashMap<Integer, TLRPC.User> userDict, ArrayList<TLRPC.TL_contact> newC, ArrayList<Integer> contactsTD) {
+    private void applyContactsUpdates(ArrayList<Long> ids, ConcurrentHashMap<Long, TLRPC.User> userDict, ArrayList<TLRPC.TL_contact> newC, ArrayList<Long> contactsTD) {
         if (newC == null || contactsTD == null) {
             newC = new ArrayList<>();
             contactsTD = new ArrayList<>();
             for (int a = 0; a < ids.size(); a++) {
-                Integer uid = ids.get(a);
+                Long uid = ids.get(a);
                 if (uid > 0) {
                     TLRPC.TL_contact contact = new TLRPC.TL_contact();
                     contact.user_id = uid;
@@ -1944,7 +1943,7 @@ public class ContactsController extends BaseController {
         }
 
         for (int a = 0; a < contactsTD.size(); a++) {
-            final Integer uid = contactsTD.get(a);
+            final Long uid = contactsTD.get(a);
             Utilities.phoneBookQueue.postRunnable(() -> deleteContactFromPhoneBook(uid));
 
             TLRPC.User user = null;
@@ -1984,7 +1983,7 @@ public class ContactsController extends BaseController {
             Utilities.stageQueue.postRunnable(() -> loadContacts(false, 0));
         } else {
             final ArrayList<TLRPC.TL_contact> newContacts = newC;
-            final ArrayList<Integer> contactsToDelete = contactsTD;
+            final ArrayList<Long> contactsToDelete = contactsTD;
             AndroidUtilities.runOnUIThread(() -> {
                 for (int a = 0; a < newContacts.size(); a++) {
                     TLRPC.TL_contact contact = newContacts.get(a);
@@ -1994,7 +1993,7 @@ public class ContactsController extends BaseController {
                     }
                 }
                 for (int a = 0; a < contactsToDelete.size(); a++) {
-                    Integer uid = contactsToDelete.get(a);
+                    Long uid = contactsToDelete.get(a);
                     TLRPC.TL_contact contact = contactsDict.get(uid);
                     if (contact != null) {
                         contacts.remove(contact);
@@ -2012,10 +2011,10 @@ public class ContactsController extends BaseController {
         }
     }
 
-    public void processContactsUpdates(ArrayList<Integer> ids, ConcurrentHashMap<Integer, TLRPC.User> userDict) {
+    public void processContactsUpdates(ArrayList<Long> ids, ConcurrentHashMap<Long, TLRPC.User> userDict) {
         final ArrayList<TLRPC.TL_contact> newContacts = new ArrayList<>();
-        final ArrayList<Integer> contactsToDelete = new ArrayList<>();
-        for (Integer uid : ids) {
+        final ArrayList<Long> contactsToDelete = new ArrayList<>();
+        for (Long uid : ids) {
             if (uid > 0) {
                 TLRPC.TL_contact contact = new TLRPC.TL_contact();
                 contact.user_id = uid;
@@ -2139,7 +2138,7 @@ public class ContactsController extends BaseController {
         return res;
     }
 
-    private void deleteContactFromPhoneBook(int uid) {
+    private void deleteContactFromPhoneBook(long uid) {
         if (!hasContactsPermission()) {
             return;
         }
@@ -2247,8 +2246,9 @@ public class ContactsController extends BaseController {
             return;
         }
         TLRPC.TL_contacts_deleteContacts req = new TLRPC.TL_contacts_deleteContacts();
-        final ArrayList<Integer> uids = new ArrayList<>();
-        for (TLRPC.User user : users) {
+        final ArrayList<Long> uids = new ArrayList<>();
+        for (int a = 0, N = users.size(); a < N; a++) {
+            TLRPC.User user = users.get(a);
             TLRPC.InputUser inputUser = getMessagesController().getInputUser(user);
             if (inputUser == null) {
                 continue;
@@ -2536,7 +2536,7 @@ public class ContactsController extends BaseController {
         reloadContactsStatuses();
     }
 
-    public void createOrUpdateConnectionServiceContact(int id, String firstName, String lastName) {
+    public void createOrUpdateConnectionServiceContact(long id, String firstName, String lastName) {
         if (!hasContactsPermission()) {
             return;
         }

@@ -29,7 +29,6 @@ import android.os.SystemClock;
 import android.provider.MediaStore;
 import android.text.TextUtils;
 import android.util.Base64;
-import android.util.LongSparseArray;
 import android.util.SparseArray;
 import android.util.TypedValue;
 import android.view.Gravity;
@@ -40,6 +39,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.UiThread;
+import androidx.collection.LongSparseArray;
 import androidx.core.view.inputmethod.InputContentInfoCompat;
 
 import org.json.JSONObject;
@@ -1019,7 +1019,7 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
             String finalPath = (String) args[1];
             long availableSize = (Long) args[2];
             long finalSize = (Long) args[3];
-            boolean isEncrypted = ((int) messageObject.getDialogId()) == 0;
+            boolean isEncrypted = DialogObject.isEncryptedDialog(messageObject.getDialogId());
             getFileLoader().checkUploadNewDataAvailable(finalPath, isEncrypted, availableSize, finalSize);
             if (finalSize != 0) {
                 stopVideoService(messageObject.messageOwner.attachPath);
@@ -1250,17 +1250,15 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
         ArrayList<DelayedMessage> checkReadyToSendGroups = new ArrayList<>();
         ArrayList<Integer> messageIds = new ArrayList<>();
         boolean enc = false;
-        int channelId = 0;
         boolean scheduled = false;
-        long scheduledDialogId = 0;
+        long dialogId = 0;
         for (int c = 0; c < objects.size(); c++) {
             MessageObject object = objects.get(c);
             if (object.scheduled) {
                 scheduled = true;
-                scheduledDialogId = object.getDialogId();
             }
+            dialogId = object.getDialogId();
             messageIds.add(object.getId());
-            channelId = object.messageOwner.peer_id.channel_id;
             TLRPC.Message sendingMessage = removeFromSendingMessages(object.getId(), object.scheduled);
             if (sendingMessage != null) {
                 getConnectionsManager().cancelRequest(sendingMessage.reqId, true);
@@ -1352,7 +1350,7 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
         if (objects.size() == 1 && objects.get(0).isEditing() && objects.get(0).previousMedia != null) {
             revertEditingMessageObject(objects.get(0));
         } else {
-            getMessagesController().deleteMessages(messageIds, null, null, scheduledDialogId, channelId, false, scheduled);
+            getMessagesController().deleteMessages(messageIds, null, null, dialogId, false, scheduled);
         }
     }
 
@@ -1364,7 +1362,7 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
             return false;
         }
         if (messageObject.messageOwner.action instanceof TLRPC.TL_messageEncryptedAction) {
-            int enc_id = (int) (messageObject.getDialogId() >> 32);
+            int enc_id = DialogObject.getEncryptedChatId(messageObject.getDialogId());
             TLRPC.EncryptedChat encryptedChat = getMessagesController().getEncryptedChat(enc_id);
             if (encryptedChat == null) {
                 getMessagesStorage().markMessageAsSendError(messageObject.messageOwner, messageObject.scheduled);
@@ -1405,7 +1403,7 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
             }
             return true;
         } else if (messageObject.messageOwner.action instanceof TLRPC.TL_messageActionScreenshotTaken) {
-            TLRPC.User user = getMessagesController().getUser((int) messageObject.getDialogId());
+            TLRPC.User user = getMessagesController().getUser(messageObject.getDialogId());
             sendScreenshotMessage(user, messageObject.getReplyMsgId(), messageObject.messageOwner);
         }
         if (unsent) {
@@ -1429,7 +1427,7 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
         }
         if (messageObject.messageOwner.media != null && !(messageObject.messageOwner.media instanceof TLRPC.TL_messageMediaEmpty) && !(messageObject.messageOwner.media instanceof TLRPC.TL_messageMediaWebPage) && !(messageObject.messageOwner.media instanceof TLRPC.TL_messageMediaGame) && !(messageObject.messageOwner.media instanceof TLRPC.TL_messageMediaInvoice)) {
             HashMap<String, String> params = null;
-            if ((int) did == 0 && messageObject.messageOwner.peer_id != null && (messageObject.messageOwner.media.photo instanceof TLRPC.TL_photo || messageObject.messageOwner.media.document instanceof TLRPC.TL_document)) {
+            if (DialogObject.isEncryptedDialog(did) && messageObject.messageOwner.peer_id != null && (messageObject.messageOwner.media.photo instanceof TLRPC.TL_photo || messageObject.messageOwner.media.document instanceof TLRPC.TL_document)) {
                 params = new HashMap<>();
                 params.put("parentObject", "sent_" + messageObject.messageOwner.peer_id.channel_id + "_" + messageObject.getId());
             }
@@ -1446,7 +1444,7 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                 user.last_name = messageObject.messageOwner.media.last_name;
                 user.id = messageObject.messageOwner.media.user_id;
                 sendMessage(user, did, messageObject.replyMessageObject, null, null, null, true, 0);
-            } else if ((int) did != 0) {
+            } else if (!DialogObject.isEncryptedDialog(did)) {
                 ArrayList<MessageObject> arrayList = new ArrayList<>();
                 arrayList.add(messageObject);
                 sendMessage(arrayList, did, true, false, true, 0);
@@ -1473,7 +1471,7 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                 entities = null;
             }
             sendMessage(messageObject.messageOwner.message, did, messageObject.replyMessageObject, null, webPage, true, entities, null, null, true, 0, null);
-        } else if ((int) did != 0) {
+        } else if (DialogObject.isEncryptedDialog(did)) {
             ArrayList<MessageObject> arrayList = new ArrayList<>();
             arrayList.add(messageObject);
             sendMessage(arrayList, did, true, false, true, 0);
@@ -1533,9 +1531,9 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
         if (document == null) {
             return;
         }
-        if ((int) peer == 0) {
-            int high_id = (int) (peer >> 32);
-            TLRPC.EncryptedChat encryptedChat = getMessagesController().getEncryptedChat(high_id);
+        if (DialogObject.isEncryptedDialog(peer)) {
+            int encryptedId = DialogObject.getEncryptedChatId(peer);
+            TLRPC.EncryptedChat encryptedChat = getMessagesController().getEncryptedChat(encryptedId);
             if (encryptedChat == null) {
                 return;
             }
@@ -1638,28 +1636,27 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
         if (messages == null || messages.isEmpty()) {
             return 0;
         }
-        int lower_id = (int) peer;
         int sendResult = 0;
-        int myId = getUserConfig().getClientUserId();
+        long myId = getUserConfig().getClientUserId();
         boolean isChannel = false;
-        if (lower_id != 0) {
-            final TLRPC.Peer peer_id = getMessagesController().getPeer((int) peer);
+        if (!DialogObject.isEncryptedDialog(peer)) {
+            final TLRPC.Peer peer_id = getMessagesController().getPeer(peer);
             boolean isSignature = false;
             boolean canSendStickers = true;
             boolean canSendMedia = true;
             boolean canSendPolls = true;
             boolean canSendPreview = true;
             String rank = null;
-            int linkedToGroup = 0;
+            long linkedToGroup = 0;
             TLRPC.Chat chat;
-            if (lower_id > 0) {
-                TLRPC.User sendToUser = getMessagesController().getUser(lower_id);
+            if (DialogObject.isUserDialog(peer)) {
+                TLRPC.User sendToUser = getMessagesController().getUser(peer);
                 if (sendToUser == null) {
                     return 0;
                 }
                 chat = null;
             } else {
-                chat = getMessagesController().getChat(-lower_id);
+                chat = getMessagesController().getChat(-peer);
                 if (ChatObject.isChannel(chat)) {
                     isSignature = chat.signatures;
                     isChannel = !chat.megagroup;
@@ -1686,7 +1683,7 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
             ArrayList<Long> randomIds = new ArrayList<>();
             ArrayList<Integer> ids = new ArrayList<>();
             LongSparseArray<TLRPC.Message> messagesByRandomIds = new LongSparseArray<>();
-            TLRPC.InputPeer inputPeer = getMessagesController().getInputPeer(lower_id);
+            TLRPC.InputPeer inputPeer = getMessagesController().getInputPeer(peer);
             long lastDialogId = 0;
             final boolean toMyself = peer == myId;
             long lastGroupedId;
@@ -1745,7 +1742,7 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                         newMsg.fwd_from.date = msgObj.messageOwner.fwd_from.date;
                         newMsg.flags = TLRPC.MESSAGE_FLAG_FWD;
                     } else if (!forwardFromSaved) { //if (!toMyself || !msgObj.isOutOwner())
-                        int fromId = msgObj.getFromChatId();
+                        long fromId = msgObj.getFromChatId();
                         newMsg.fwd_from = new TLRPC.TL_messageFwdHeader();
                         newMsg.fwd_from.channel_post = msgObj.getId();
                         newMsg.fwd_from.flags |= 4;
@@ -1778,14 +1775,13 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                         newMsg.fwd_from.saved_from_msg_id = msgObj.getId();
                         newMsg.fwd_from.saved_from_peer = msgObj.messageOwner.peer_id;
                         if (newMsg.fwd_from.saved_from_peer.user_id == myId) {
-                            newMsg.fwd_from.saved_from_peer.user_id = (int) msgObj.getDialogId();
+                            newMsg.fwd_from.saved_from_peer.user_id = msgObj.getDialogId();
                         }
                     }
-                } else {
-                    newMsg.params = new HashMap<>();
-                    newMsg.params.put("fwd_id", "" + msgObj.getId());
-                    newMsg.params.put("fwd_peer", "" + msgObj.getDialogId());
                 }
+                newMsg.params = new HashMap<>();
+                newMsg.params.put("fwd_id", "" + msgObj.getId());
+                newMsg.params.put("fwd_peer", "" + msgObj.getDialogId());
                 if (!msgObj.messageOwner.restriction_reason.isEmpty()) {
                     newMsg.restriction_reason = msgObj.messageOwner.restriction_reason;
                     newMsg.flags |= 4194304;
@@ -1927,9 +1923,6 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                         newMsg.media_unread = true;
                     }
                 }
-                if (msgObj.messageOwner.peer_id instanceof TLRPC.TL_peerChannel) {
-                    newMsg.ttl = -msgObj.messageOwner.peer_id.channel_id;
-                }
                 MessageObject newMsgObj = new MessageObject(currentAccount, newMsg, true, true);
                 newMsgObj.scheduled = scheduleDate != 0;
                 newMsgObj.messageOwner.send_state = MessageObject.MESSAGE_SEND_STATE_SENDING;
@@ -2060,7 +2053,7 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                                             AndroidUtilities.runOnUIThread(() -> {
                                                 ArrayList<Integer> messageIds = new ArrayList<>();
                                                 messageIds.add(oldId);
-                                                getMessagesController().deleteMessages(messageIds, null, null, newMsgObj1.dialog_id, newMsgObj1.peer_id.channel_id, false, true);
+                                                getMessagesController().deleteMessages(messageIds, null, null, newMsgObj1.dialog_id, false, true);
                                                 getMessagesStorage().getStorageQueue().postRunnable(() -> {
                                                     getMessagesStorage().putMessages(sentMessages, true, false, false, 0, false);
                                                     AndroidUtilities.runOnUIThread(() -> {
@@ -2075,7 +2068,7 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                                             });
                                         } else {
                                             getMessagesStorage().getStorageQueue().postRunnable(() -> {
-                                                getMessagesStorage().updateMessageStateAndId(newMsgObj1.random_id, (long) oldId, newMsgObj1.id, 0, false, peer_id.channel_id, scheduleDate != 0 ? 1 : 0);
+                                                getMessagesStorage().updateMessageStateAndId(newMsgObj1.random_id, MessageObject.getPeerId(peer_id), oldId, newMsgObj1.id, 0, false, scheduleDate != 0 ? 1 : 0);
                                                 getMessagesStorage().putMessages(sentMessages, true, false, false, 0, scheduleDate != 0);
                                                 AndroidUtilities.runOnUIThread(() -> {
                                                     newMsgObj1.send_state = MessageObject.MESSAGE_SEND_STATE_SENT;
@@ -2157,9 +2150,9 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
             DelayedMessage delayedMessage = null;
             long peer = messageObject.getDialogId();
             boolean supportsSendingNewEntities = true;
-            if ((int) peer == 0) {
-                int high_id = (int) (peer >> 32);
-                TLRPC.EncryptedChat encryptedChat = getMessagesController().getEncryptedChat(high_id);
+            if (DialogObject.isEncryptedDialog(peer)) {
+                int encryptedId = DialogObject.getEncryptedChatId(peer);
+                TLRPC.EncryptedChat encryptedChat = getMessagesController().getEncryptedChat(encryptedId);
                 if (encryptedChat == null || AndroidUtilities.getPeerLayerVersion(encryptedChat.layer) < 101) {
                     supportsSendingNewEntities = false;
                 }
@@ -2448,7 +2441,7 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
 
                 TLRPC.TL_messages_editMessage request = new TLRPC.TL_messages_editMessage();
                 request.id = messageObject.getId();
-                request.peer = getMessagesController().getInputPeer((int) peer);
+                request.peer = getMessagesController().getInputPeer(peer);
                 if (inputMedia != null) {
                     request.flags |= 16384;
                     request.media = inputMedia;
@@ -2523,7 +2516,7 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
         }
 
         final TLRPC.TL_messages_editMessage req = new TLRPC.TL_messages_editMessage();
-        req.peer = getMessagesController().getInputPeer((int) messageObject.getDialogId());
+        req.peer = getMessagesController().getInputPeer(messageObject.getDialogId());
         if (message != null) {
             req.message = message;
             req.flags |= 2048;
@@ -2575,24 +2568,23 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
         return waitingForLocation.containsKey(key);
     }
 
-    public void sendNotificationCallback(final long dialogId, final int msgId, final byte[] data) {
+    public void sendNotificationCallback(long dialogId, int msgId, byte[] data) {
         AndroidUtilities.runOnUIThread(() -> {
-            int lowerId = (int) dialogId;
             final String key = dialogId + "_" + msgId + "_" + Utilities.bytesToHex(data) + "_" + 0;
             waitingForCallback.put(key, true);
 
-            if (lowerId > 0) {
-                TLRPC.User user = getMessagesController().getUser(lowerId);
+            if (DialogObject.isUserDialog(dialogId)) {
+                TLRPC.User user = getMessagesController().getUser(dialogId);
                 if (user == null) {
-                    user = getMessagesStorage().getUserSync(lowerId);
+                    user = getMessagesStorage().getUserSync(dialogId);
                     if (user != null) {
                         getMessagesController().putUser(user, true);
                     }
                 }
             } else {
-                TLRPC.Chat chat = getMessagesController().getChat(-lowerId);
+                TLRPC.Chat chat = getMessagesController().getChat(-dialogId);
                 if (chat == null) {
-                    chat = getMessagesStorage().getChatSync(-lowerId);
+                    chat = getMessagesStorage().getChatSync(-dialogId);
                     if (chat != null) {
                         getMessagesController().putChat(chat, true);
                     }
@@ -2600,7 +2592,7 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
             }
 
             TLRPC.TL_messages_getBotCallbackAnswer req = new TLRPC.TL_messages_getBotCallbackAnswer();
-            req.peer = getMessagesController().getInputPeer(lowerId);
+            req.peer = getMessagesController().getInputPeer(dialogId);
             req.msg_id = msgId;
             req.game = false;
             if (data != null) {
@@ -2630,7 +2622,7 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
         }
         TLRPC.TL_messages_sendVote req = new TLRPC.TL_messages_sendVote();
         req.msg_id = messageObject.getId();
-        req.peer = getMessagesController().getInputPeer((int) messageObject.getDialogId());
+        req.peer = getMessagesController().getInputPeer(messageObject.getDialogId());
         byte[] options;
         if (answers != null) {
             options = new byte[answers.size()];
@@ -2662,12 +2654,12 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
         return voteSendTime.get(pollId, 0L);
     }
 
-    public void sendReaction(final MessageObject messageObject, CharSequence reaction, final ChatActivity parentFragment) {
+    public void sendReaction(MessageObject messageObject, CharSequence reaction, ChatActivity parentFragment) {
         if (messageObject == null || parentFragment == null) {
             return;
         }
         TLRPC.TL_messages_sendReaction req = new TLRPC.TL_messages_sendReaction();
-        req.peer = getMessagesController().getInputPeer((int) messageObject.getDialogId());
+        req.peer = getMessagesController().getInputPeer(messageObject.getDialogId());
         req.msg_id = messageObject.getId();
         if (reaction != null) {
             req.reaction = reaction.toString();
@@ -2772,7 +2764,7 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                         getMessagesStorage().saveBotCache(key, res);
                     }
                     if (res.message != null) {
-                        int uid = messageObject.getFromChatId();
+                        long uid = messageObject.getFromChatId();
                         if (messageObject.messageOwner.via_bot_id != 0) {
                             uid = messageObject.messageOwner.via_bot_id;
                         }
@@ -2807,7 +2799,7 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                         if (parentFragment.getParentActivity() == null) {
                             return;
                         }
-                        int uid = messageObject.getFromChatId();
+                        long uid = messageObject.getFromChatId();
                         if (messageObject.messageOwner.via_bot_id != 0) {
                             uid = messageObject.messageOwner.via_bot_id;
                         }
@@ -2941,7 +2933,7 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
         } else {
             if (button instanceof TLRPC.TL_keyboardButtonUrlAuth) {
                 TLRPC.TL_messages_requestUrlAuth req = new TLRPC.TL_messages_requestUrlAuth();
-                req.peer = getMessagesController().getInputPeer((int) messageObject.getDialogId());
+                req.peer = getMessagesController().getInputPeer(messageObject.getDialogId());
                 req.msg_id = messageObject.getId();
                 req.button_id = button.button_id;
                 req.flags |= 2;
@@ -2975,7 +2967,7 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                 }
             } else {
                 TLRPC.TL_messages_getBotCallbackAnswer req = new TLRPC.TL_messages_getBotCallbackAnswer();
-                req.peer = getMessagesController().getInputPeer((int) messageObject.getDialogId());
+                req.peer = getMessagesController().getInputPeer(messageObject.getDialogId());
                 req.msg_id = messageObject.getId();
                 req.game = button instanceof TLRPC.TL_keyboardButtonGame;
                 if (button.requires_password) {
@@ -3155,18 +3147,16 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
         MessageObject newMsgObj = null;
         DelayedMessage delayedMessage = null;
         int type = -1;
-        int lower_id = (int) peer;
-        int high_id = (int) (peer >> 32);
         boolean isChannel = false;
         boolean forceNoSoundVideo = false;
         boolean anonymously = false;
         String rank = null;
-        int linkedToGroup = 0;
+        long linkedToGroup = 0;
         TLRPC.EncryptedChat encryptedChat = null;
-        TLRPC.InputPeer sendToPeer = lower_id != 0 ? getMessagesController().getInputPeer(lower_id) : null;
-        int myId = getUserConfig().getClientUserId();
-        if (lower_id == 0) {
-            encryptedChat = getMessagesController().getEncryptedChat(high_id);
+        TLRPC.InputPeer sendToPeer = !DialogObject.isEncryptedDialog(peer) ? getMessagesController().getInputPeer(peer) : null;
+        long myId = getUserConfig().getClientUserId();
+        if (DialogObject.isEncryptedDialog(peer)) {
+            encryptedChat = getMessagesController().getEncryptedChat(DialogObject.getEncryptedChatId(peer));
             if (encryptedChat == null) {
                 if (retryMessageObject != null) {
                     getMessagesStorage().markMessageAsSendError(retryMessageObject.messageOwner, retryMessageObject.scheduled);
@@ -3271,8 +3261,8 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                 }
             } else {
                 boolean canSendStickers = true;
-                if (lower_id < 0) {
-                    TLRPC.Chat chat = getMessagesController().getChat(-lower_id);
+                if (DialogObject.isChatDialog(peer)) {
+                    TLRPC.Chat chat = getMessagesController().getChat(-peer);
                     canSendStickers = ChatObject.canSendStickers(chat);
                 }
                 if (message != null) {
@@ -3404,7 +3394,7 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                     } else {
                         newMsg = new TLRPC.TL_message();
                     }
-                    if (lower_id < 0) {
+                    if (DialogObject.isChatDialog(peer)) {
                         if (!canSendStickers) {
                             for (int a = 0, N = document.attributes.size(); a < N; a++) {
                                 if (document.attributes.get(a) instanceof TLRPC.TL_documentAttributeAnimated) {
@@ -3497,7 +3487,7 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                     newMsg.from_id = new TLRPC.TL_peerChannel();
                     newMsg.from_id.channel_id = sendToPeer.channel_id;
                 } else if (anonymously) {
-                    newMsg.from_id = getMessagesController().getPeer(lower_id);
+                    newMsg.from_id = getMessagesController().getPeer(peer);
                     if (rank != null) {
                         newMsg.post_author = rank;
                         newMsg.flags |= 65536;
@@ -3576,10 +3566,10 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                 newMsg.flags |= TLRPC.MESSAGE_FLAG_HAS_MARKUP;
                 newMsg.reply_markup = replyMarkup;
             }
-            if (lower_id != 0) {
-                newMsg.peer_id = getMessagesController().getPeer(lower_id);
-                if (lower_id > 0) {
-                    TLRPC.User sendToUser = getMessagesController().getUser(lower_id);
+            if (!DialogObject.isEncryptedDialog(peer)) {
+                newMsg.peer_id = getMessagesController().getPeer(peer);
+                if (DialogObject.isUserDialog(peer)) {
+                    TLRPC.User sendToUser = getMessagesController().getUser(peer);
                     if (sendToUser == null) {
                         processSentMessage(newMsg.id);
                         return;
@@ -3628,7 +3618,7 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                     }
                 }
             }
-            if (high_id != 1 && (MessageObject.isVoiceMessage(newMsg) || MessageObject.isRoundVideoMessage(newMsg))) {
+            if (MessageObject.isVoiceMessage(newMsg) || MessageObject.isRoundVideoMessage(newMsg)) {
                 newMsg.media_unread = true;
             }
 
@@ -4406,7 +4396,7 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                     reqSend.drop_author = true;
                     long peerId = Utilities.parseLong(params.get("fwd_peer"));
                     if (peerId < 0) {
-                        TLRPC.Chat chat = getMessagesController().getChat((int) -peerId);
+                        TLRPC.Chat chat = getMessagesController().getChat(-peerId);
                         if (ChatObject.isChannel(chat)) {
                             reqSend.from_peer = new TLRPC.TL_inputPeerChannel();
                             reqSend.from_peer.channel_id = chat.id;
@@ -4419,16 +4409,7 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                     }
                     reqSend.id.add(fwdId);
                 } else {
-                    if (retryMessageObject.messageOwner.ttl != 0) {
-                        TLRPC.Chat chat = getMessagesController().getChat(-retryMessageObject.messageOwner.ttl);
-                        reqSend.from_peer = new TLRPC.TL_inputPeerChannel();
-                        reqSend.from_peer.channel_id = -retryMessageObject.messageOwner.ttl;
-                        if (chat != null) {
-                            reqSend.from_peer.access_hash = chat.access_hash;
-                        }
-                    } else {
-                        reqSend.from_peer = new TLRPC.TL_inputPeerEmpty();
-                    }
+                    reqSend.from_peer = new TLRPC.TL_inputPeerEmpty();
                 }
                 reqSend.silent = newMsg.silent;
                 if (scheduleDate != 0) {
@@ -5135,7 +5116,7 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                     LongSparseArray<Integer> newIds = new LongSparseArray<>();
                     final TLRPC.Updates updates = (TLRPC.Updates) response;
                     ArrayList<TLRPC.Update> updatesArr = ((TLRPC.Updates) response).updates;
-                    SparseArray<SparseArray<TLRPC.TL_messageReplies>> channelReplies = null;
+                    LongSparseArray<SparseArray<TLRPC.MessageReplies>> channelReplies = null;
                     for (int a = 0; a < updatesArr.size(); a++) {
                         TLRPC.Update update = updatesArr.get(a);
                         if (update instanceof TLRPC.TL_updateMessageID) {
@@ -5151,20 +5132,20 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                             a--;
                         } else if (update instanceof TLRPC.TL_updateNewChannelMessage) {
                             final TLRPC.TL_updateNewChannelMessage newMessage = (TLRPC.TL_updateNewChannelMessage) update;
-                            int channelId = MessagesController.getUpdateChannelId(newMessage);
+                            long channelId = MessagesController.getUpdateChannelId(newMessage);
                             TLRPC.Chat chat = getMessagesController().getChat(channelId);
                             if ((chat == null || chat.megagroup) && newMessage.message.reply_to != null && (newMessage.message.reply_to.reply_to_top_id != 0 || newMessage.message.reply_to.reply_to_msg_id != 0)) {
                                 if (channelReplies == null) {
-                                    channelReplies = new SparseArray<>();
+                                    channelReplies = new LongSparseArray<>();
                                 }
-                                int did = (int) MessageObject.getDialogId(newMessage.message);
-                                SparseArray<TLRPC.TL_messageReplies> replies = channelReplies.get(did);
+                                long did = MessageObject.getDialogId(newMessage.message);
+                                SparseArray<TLRPC.MessageReplies> replies = channelReplies.get(did);
                                 if (replies == null) {
                                     replies = new SparseArray<>();
                                     channelReplies.put(did, replies);
                                 }
                                 int id = newMessage.message.reply_to.reply_to_top_id != 0 ? newMessage.message.reply_to.reply_to_top_id : newMessage.message.reply_to.reply_to_msg_id;
-                                TLRPC.TL_messageReplies messageReplies = replies.get(id);
+                                TLRPC.MessageReplies messageReplies = replies.get(id);
                                 if (messageReplies == null) {
                                     messageReplies = new TLRPC.TL_messageReplies();
                                     replies.put(id, messageReplies);
@@ -5187,7 +5168,7 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                         }
                     }
                     if (channelReplies != null) {
-                        getMessagesStorage().putChannelViews(null, null, channelReplies, true, true);
+                        getMessagesStorage().putChannelViews(null, null, channelReplies, true);
                         getNotificationCenter().postNotificationName(NotificationCenter.didUpdateMessagesViews, null, null, channelReplies, true);
                     }
 
@@ -5238,7 +5219,7 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                             newMsgObj.send_state = MessageObject.MESSAGE_SEND_STATE_SENT;
                             getNotificationCenter().postNotificationName(NotificationCenter.messageReceivedByServer, oldId, newMsgObj.id, newMsgObj, newMsgObj.dialog_id, grouped_id, existFlags, scheduled);
                             getMessagesStorage().getStorageQueue().postRunnable(() -> {
-                                getMessagesStorage().updateMessageStateAndId(newMsgObj.random_id, (long) oldId, newMsgObj.id, 0, false, newMsgObj.peer_id.channel_id, scheduled ? 1 : 0);
+                                getMessagesStorage().updateMessageStateAndId(newMsgObj.random_id, MessageObject.getPeerId(newMsgObj.peer_id), oldId, newMsgObj.id, 0, false, scheduled ? 1 : 0);
                                 getMessagesStorage().putMessages(sentMessages, true, false, false, 0, scheduled);
                                 AndroidUtilities.runOnUIThread(() -> {
                                     getMediaDataController().increasePeerRaiting(newMsgObj.dialog_id);
@@ -5439,7 +5420,7 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                             final TLRPC.Updates updates = (TLRPC.Updates) response;
                             ArrayList<TLRPC.Update> updatesArr = ((TLRPC.Updates) response).updates;
                             TLRPC.Message message = null;
-                            SparseArray<SparseArray<TLRPC.TL_messageReplies>> channelReplies = null;
+                            LongSparseArray<SparseArray<TLRPC.MessageReplies>> channelReplies = null;
                             for (int a = 0; a < updatesArr.size(); a++) {
                                 TLRPC.Update update = updatesArr.get(a);
                                 if (update instanceof TLRPC.TL_updateNewMessage) {
@@ -5450,20 +5431,20 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                                     break;
                                 } else if (update instanceof TLRPC.TL_updateNewChannelMessage) {
                                     final TLRPC.TL_updateNewChannelMessage newMessage = (TLRPC.TL_updateNewChannelMessage) update;
-                                    int channelId = MessagesController.getUpdateChannelId(newMessage);
+                                    long channelId = MessagesController.getUpdateChannelId(newMessage);
                                     TLRPC.Chat chat = getMessagesController().getChat(channelId);
                                     if ((chat == null || chat.megagroup) && newMessage.message.reply_to != null && (newMessage.message.reply_to.reply_to_top_id != 0 || newMessage.message.reply_to.reply_to_msg_id != 0)) {
                                         if (channelReplies == null) {
-                                            channelReplies = new SparseArray<>();
+                                            channelReplies = new LongSparseArray<>();
                                         }
-                                        int did = (int) MessageObject.getDialogId(newMessage.message);
-                                        SparseArray<TLRPC.TL_messageReplies> replies = channelReplies.get(did);
+                                        long did = MessageObject.getDialogId(newMessage.message);
+                                        SparseArray<TLRPC.MessageReplies> replies = channelReplies.get(did);
                                         if (replies == null) {
                                             replies = new SparseArray<>();
                                             channelReplies.put(did, replies);
                                         }
                                         int id = newMessage.message.reply_to.reply_to_top_id != 0 ? newMessage.message.reply_to.reply_to_top_id : newMessage.message.reply_to.reply_to_msg_id;
-                                        TLRPC.TL_messageReplies messageReplies = replies.get(id);
+                                        TLRPC.MessageReplies messageReplies = replies.get(id);
                                         if (messageReplies == null) {
                                             messageReplies = new TLRPC.TL_messageReplies();
                                             replies.put(id, messageReplies);
@@ -5486,7 +5467,7 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                                 }
                             }
                             if (channelReplies != null) {
-                                getMessagesStorage().putChannelViews(null, null, channelReplies, true, true);
+                                getMessagesStorage().putChannelViews(null, null, channelReplies, true);
                                 getNotificationCenter().postNotificationName(NotificationCenter.didUpdateMessagesViews, null, null, channelReplies, true);
                             }
                             if (message != null) {
@@ -5531,7 +5512,7 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                             if (scheduled && !currentSchedule) {
                                 ArrayList<Integer> messageIds = new ArrayList<>();
                                 messageIds.add(oldId);
-                                getMessagesController().deleteMessages(messageIds, null, null, newMsgObj.dialog_id, newMsgObj.peer_id.channel_id, false, true);
+                                getMessagesController().deleteMessages(messageIds, null, null, newMsgObj.dialog_id, false, true);
                                 getMessagesStorage().getStorageQueue().postRunnable(() -> {
                                     getMessagesStorage().putMessages(sentMessages, true, false, false, 0, false);
                                     AndroidUtilities.runOnUIThread(() -> {
@@ -5549,7 +5530,7 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                             } else {
                                 getNotificationCenter().postNotificationName(NotificationCenter.messageReceivedByServer, oldId, newMsgObj.id, newMsgObj, newMsgObj.dialog_id, 0L, existFlags, scheduled);
                                 getMessagesStorage().getStorageQueue().postRunnable(() -> {
-                                    getMessagesStorage().updateMessageStateAndId(newMsgObj.random_id, (long) oldId, newMsgObj.id, 0, false, newMsgObj.peer_id.channel_id, scheduled ? 1 : 0);
+                                    getMessagesStorage().updateMessageStateAndId(newMsgObj.random_id, MessageObject.getPeerId(newMsgObj.peer_id), oldId, newMsgObj.id, 0, false, scheduled ? 1 : 0);
                                     getMessagesStorage().putMessages(sentMessages, true, false, false, 0, scheduled);
                                     AndroidUtilities.runOnUIThread(() -> {
                                         getMediaDataController().increasePeerRaiting(newMsgObj.dialog_id);
@@ -5899,16 +5880,15 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
         return importingHistoryMap.size() != 0;
     }
 
-    public void prepareImportHistory(long dialogId, Uri uri, ArrayList<Uri> mediaUris, MessagesStorage.IntCallback onStartImport) {
+    public void prepareImportHistory(long dialogId, Uri uri, ArrayList<Uri> mediaUris, MessagesStorage.LongCallback onStartImport) {
         if (importingHistoryMap.get(dialogId) != null) {
             onStartImport.run(0);
             return;
         }
-        int lowerId = (int) dialogId;
-        if (lowerId < 0) {
-            TLRPC.Chat chat = getMessagesController().getChat(-lowerId);
+        if (DialogObject.isChatDialog(dialogId)) {
+            TLRPC.Chat chat = getMessagesController().getChat(-dialogId);
             if (chat != null && !chat.megagroup) {
-                getMessagesController().convertToMegaGroup(null, -lowerId, null, (chatId) -> {
+                getMessagesController().convertToMegaGroup(null, -dialogId, null, (chatId) -> {
                     if (chatId != 0) {
                         prepareImportHistory(-chatId, uri, mediaUris, onStartImport);
                     } else {
@@ -5923,7 +5903,7 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
             ImportingHistory importingHistory = new ImportingHistory();
             importingHistory.mediaPaths = uris;
             importingHistory.dialogId = dialogId;
-            importingHistory.peer = getMessagesController().getInputPeer((int) dialogId);
+            importingHistory.peer = getMessagesController().getInputPeer(dialogId);
             HashMap<String, ImportingHistory> files = new HashMap<>();
             for (int a = 0, N = uris.size(); a < N + 1; a++) {
                 Uri mediaUri;
@@ -5979,7 +5959,7 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                 importingHistoryMap.put(dialogId, importingHistory);
                 getFileLoader().uploadFile(importingHistory.historyPath, false, true, 0, ConnectionsManager.FileTypeFile, true);
                 getNotificationCenter().postNotificationName(NotificationCenter.historyImportProgressChanged, dialogId);
-                onStartImport.run((int) dialogId);
+                onStartImport.run(dialogId);
 
                 Intent intent = new Intent(ApplicationLoader.applicationContext, ImportingService.class);
                 try {
@@ -6112,7 +6092,7 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
             return false;
         }
 
-        boolean isEncrypted = (int) dialogId == 0;
+        boolean isEncrypted = DialogObject.isEncryptedDialog(dialogId);
 
         String name = f.getName();
         String ext = "";
@@ -6378,7 +6358,7 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                 String originalPath = messageObject.messageOwner.attachPath;
                 final File f = new File(originalPath);
 
-                boolean isEncrypted = (int) dialogId == 0;
+                boolean isEncrypted = DialogObject.isEncryptedDialog(dialogId);
                 if (!isEncrypted && count > 1 && mediaCount % 10 == 0) {
                     groupId = Utilities.random.nextLong();
                     mediaCount = 0;
@@ -6403,8 +6383,8 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                 }
 
                 if (isEncrypted) {
-                    int high_id = (int) (dialogId >> 32);
-                    TLRPC.EncryptedChat encryptedChat = accountInstance.getMessagesController().getEncryptedChat(high_id);
+                    int encryptedChatId = DialogObject.getEncryptedChatId(dialogId);
+                    TLRPC.EncryptedChat encryptedChat = accountInstance.getMessagesController().getEncryptedChat(encryptedChatId);
                     if (encryptedChat == null) {
                         return;
                     }
@@ -6467,7 +6447,7 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
             int mediaCount = 0;
             Integer[] docType = new Integer[1];
 
-            boolean isEncrypted = (int) dialogId == 0;
+            boolean isEncrypted = DialogObject.isEncryptedDialog(dialogId);
 
             if (paths != null) {
                 int count = paths.size();
@@ -6560,13 +6540,13 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
         }
         if (result.send_message instanceof TLRPC.TL_botInlineMessageMediaAuto) {
             new Thread(() -> {
-                boolean isEncrypted = (int) dialogId == 0;
+                boolean isEncrypted = DialogObject.isEncryptedDialog(dialogId);
                 String finalPath = null;
                 TLRPC.TL_document document = null;
                 TLRPC.TL_photo photo = null;
                 TLRPC.TL_game game = null;
                 if ("game".equals(result.type)) {
-                    if ((int) dialogId == 0) {
+                    if (isEncrypted) {
                         return; //doesn't work in secret chats for now
                     }
                     game = new TLRPC.TL_game();
@@ -6825,7 +6805,7 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
             }).run();
         } else if (result.send_message instanceof TLRPC.TL_botInlineMessageText) {
             TLRPC.WebPage webPage = null;
-            if ((int) dialogId == 0) {
+            if (DialogObject.isEncryptedDialog(dialogId)) {
                 for (int a = 0; a < result.send_message.entities.size(); a++) {
                     TLRPC.MessageEntity entity = result.send_message.entities.get(a);
                     if (entity instanceof TLRPC.TL_messageEntityUrl) {
@@ -6874,7 +6854,7 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
             user.restriction_reason.add(reason);
             accountInstance.getSendMessagesHelper().sendMessage(user, dialogId, replyToMsg, replyToTopMsg, result.send_message.reply_markup, params, notify, scheduleDate);
         } else if (result.send_message instanceof TLRPC.TL_botInlineMessageMediaInvoice) {
-            if (DialogObject.isSecretDialogId(dialogId)) {
+            if (DialogObject.isEncryptedDialog(dialogId)) {
                 return; //doesn't work in secret chats for now
             }
             TLRPC.TL_botInlineMessageMediaInvoice invoice = (TLRPC.TL_botInlineMessageMediaInvoice) result.send_message;
@@ -7064,7 +7044,8 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
             long beginTime = System.currentTimeMillis();
             HashMap<SendingMediaInfo, MediaSendPrepareWorker> workers;
             int count = media.size();
-            boolean isEncrypted = (int) dialogId == 0;
+
+            boolean isEncrypted = DialogObject.isEncryptedDialog(dialogId);
             if (!forceDocument && groupMediaFinal) {
                 workers = new HashMap<>();
                 for (int a = 0; a < count; a++) {
@@ -7943,12 +7924,14 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
             compressionsCount = 1;
         }
 
-        int selectedCompression = Math.round(DownloadController.getInstance(UserConfig.selectedAccount).getMaxVideoBitrate() / (100f / compressionsCount)) - 1;
+        int selectedCompression = Math.round(DownloadController.getInstance(UserConfig.selectedAccount).getMaxVideoBitrate() / (100f / compressionsCount));
 
-        if (selectedCompression >= compressionsCount) {
-            selectedCompression = compressionsCount - 1;
+        if (selectedCompression > compressionsCount) {
+            selectedCompression = compressionsCount;
         }
-        if (selectedCompression != compressionsCount - 1) {
+        boolean needCompress = false;
+        if (selectedCompression != compressionsCount - 1 || Math.max(videoEditedInfo.originalWidth, videoEditedInfo.originalHeight) > 1280) {
+            needCompress = true;
             switch (selectedCompression) {
                 case 1:
                     maxSize = 432.0f;
@@ -7973,7 +7956,7 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                 videoEditedInfo.resultHeight, videoEditedInfo.resultWidth
         );
 
-        if (selectedCompression == compressionsCount - 1) {
+        if (!needCompress) {
             videoEditedInfo.resultWidth = videoEditedInfo.originalWidth;
             videoEditedInfo.resultHeight = videoEditedInfo.originalHeight;
             videoEditedInfo.bitrate = bitrate;
@@ -7998,7 +7981,7 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
         new Thread(() -> {
             final VideoEditedInfo videoEditedInfo = info != null ? info : createCompressionSettings(videoPath);
 
-            boolean isEncrypted = (int) dialogId == 0;
+            boolean isEncrypted = DialogObject.isEncryptedDialog(dialogId);
 
             boolean isRound = videoEditedInfo != null && videoEditedInfo.roundVideo;
             Bitmap thumb = null;
@@ -8063,8 +8046,8 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                     accountInstance.getUserConfig().saveConfig(false);
                     TLRPC.TL_documentAttributeVideo attributeVideo;
                     if (isEncrypted) {
-                        int high_id = (int) (dialogId >> 32);
-                        TLRPC.EncryptedChat encryptedChat = accountInstance.getMessagesController().getEncryptedChat(high_id);
+                        int encryptedChatId = DialogObject.getEncryptedChatId(dialogId);
+                        TLRPC.EncryptedChat encryptedChat = accountInstance.getMessagesController().getEncryptedChat(encryptedChatId);
                         if (encryptedChat == null) {
                             return;
                         }
