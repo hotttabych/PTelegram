@@ -83,7 +83,7 @@ public class GroupCallUserCell extends FrameLayout {
     private boolean needDivider;
     private boolean currentIconGray;
     private int currentStatus;
-    private int selfId;
+    private long selfId;
 
     private Runnable shakeHandCallback = () -> {
         shakeHandDrawable.setOnFinishCallback(null, 0);
@@ -447,14 +447,14 @@ public class GroupCallUserCell extends FrameLayout {
         return avatarImageView.getImageReceiver().hasNotThumb();
     }
 
-    public void setData(AccountInstance account, TLRPC.TL_groupCallParticipant groupCallParticipant, ChatObject.Call call, int self, TLRPC.FileLocation uploadingAvatar, boolean animated) {
+    public void setData(AccountInstance account, TLRPC.TL_groupCallParticipant groupCallParticipant, ChatObject.Call call, long self, TLRPC.FileLocation uploadingAvatar, boolean animated) {
         currentCall = call;
         accountInstance = account;
         selfId = self;
 
         participant = groupCallParticipant;
 
-        int id = MessageObject.getPeerId(participant.peer);
+        long id = MessageObject.getPeerId(participant.peer);
         if (id > 0) {
             currentUser = accountInstance.getMessagesController().getUser(id);
             currentChat = null;
@@ -1046,7 +1046,7 @@ public class GroupCallUserCell extends FrameLayout {
         }
     }
 
-    public int getPeerId() {
+    public long getPeerId() {
         if (participant == null) {
             return 0;
         }

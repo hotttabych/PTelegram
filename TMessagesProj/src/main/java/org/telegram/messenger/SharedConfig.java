@@ -27,8 +27,8 @@ import org.telegram.messenger.fakepasscode.RemoveChatsAction;
 import org.telegram.messenger.fakepasscode.TerminateOtherSessionsAction;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.SerializedData;
+import org.telegram.ui.Components.SwipeGestureSettingsView;
 import org.telegram.tgnet.TLRPC;
-import org.telegram.ui.SwipeGestureSettingsView;
 
 import java.io.File;
 import java.io.RandomAccessFile;
@@ -131,6 +131,9 @@ public class SharedConfig {
     public static int fontSize = 16;
     public static int bubbleRadius = 10;
     public static int ivFontSize = 16;
+    public static int messageSeenHintCount;
+    public static int emojiInteractionsHintCount;
+    public static int dayNightThemeSwitchHintCount;
 
     public static TLRPC.TL_help_appUpdate pendingAppUpdate;
     public static int pendingAppUpdateBuildVersion;
@@ -547,7 +550,9 @@ public class SharedConfig {
             maxIgnoredVersionMajor = preferences.getInt("maxIgnoredVersionMajor", 0);
             maxIgnoredVersionMinor = preferences.getInt("maxIgnoredVersionMinor", 0);
             maxIgnoredVersionPatch = preferences.getInt("maxIgnoredVersionPatch", 0);
-
+            messageSeenHintCount = preferences.getInt("messageSeenCount", 3);
+            emojiInteractionsHintCount = preferences.getInt("emojiInteractionsHintCount", 3);
+            dayNightThemeSwitchHintCount = preferences.getInt("dayNightThemeSwitchHintCount", 3);
             preferences = ApplicationLoader.applicationContext.getSharedPreferences("Notifications", Activity.MODE_PRIVATE);
             showNotificationsForAllAccounts = preferences.getBoolean("AllAccounts", true);
 
@@ -783,6 +788,9 @@ public class SharedConfig {
         scheduledOrNoSoundHintShows = 0;
         lockRecordAudioVideoHint = 0;
         forwardingOptionsHintShown = false;
+        messageSeenHintCount = 3;
+        emojiInteractionsHintCount = 3;
+        dayNightThemeSwitchHintCount = 3;
         saveConfig();
     }
 
@@ -1300,8 +1308,6 @@ public class SharedConfig {
     public static void checkSaveToGalleryFiles() {
         Utilities.globalQueue.postRunnable(() -> {
             try {
-
-
                 File telegramPath = new File(Environment.getExternalStorageDirectory(), "Telegram");
                 File imagePath = new File(telegramPath, "Telegram Images");
                 imagePath.mkdir();
@@ -1346,6 +1352,25 @@ public class SharedConfig {
         chatSwipeAction = newAction;
         SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences("mainconfig", Activity.MODE_PRIVATE);
         preferences.edit().putInt("ChatSwipeAction", chatSwipeAction).apply();
+    }
+
+    public static void updateMessageSeenHintCount(int count) {
+        messageSeenHintCount = count;
+        SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences("mainconfig", Activity.MODE_PRIVATE);
+        preferences.edit().putInt("messageSeenCount", messageSeenHintCount).apply();
+    }
+
+    public static void updateEmojiInteractionsHintCount(int count) {
+        emojiInteractionsHintCount = count;
+        SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences("mainconfig", Activity.MODE_PRIVATE);
+        preferences.edit().putInt("emojiInteractionsHintCount", emojiInteractionsHintCount).apply();
+    }
+
+
+    public static void updateDayNightThemeSwitchHintCount(int count) {
+        dayNightThemeSwitchHintCount = count;
+        SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences("mainconfig", Activity.MODE_PRIVATE);
+        preferences.edit().putInt("dayNightThemeSwitchHintCount", dayNightThemeSwitchHintCount).apply();
     }
 
     public final static int PERFORMANCE_CLASS_LOW = 0;
