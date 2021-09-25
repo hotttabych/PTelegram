@@ -77,7 +77,7 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
         return chatEntriesToRemove;
     }
 
-    public boolean isRemoveNewMessagesFromChat(int chatId) {
+    public boolean isRemoveNewMessagesFromChat(long chatId) {
         if (removedChats == null || removedChats.isEmpty()) {
             return false;
         }
@@ -88,7 +88,7 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
         if (hiddenChats == null || hiddenChats.isEmpty()) {
             return false;
         }
-        return hiddenChats.contains((int)chatId);
+        return hiddenChats.contains(chatId);
     }
 
     public boolean contains(long chatId) {
@@ -96,7 +96,7 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
     }
 
     public void add(long chatId, String title) {
-        RemoveChatEntry entry = new RemoveChatEntry((int)chatId, title);
+        RemoveChatEntry entry = new RemoveChatEntry(chatId, title);
         add(entry);
     }
 
@@ -275,7 +275,7 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
 
     @Override
     public void didReceivedNotification(int id, int account, Object... args) {
-        if (id != NotificationCenter.dialogCleared || account != accountNum || args.length < 1 || !(args[0] instanceof Integer)) {
+        if (id != NotificationCenter.dialogCleared || account != accountNum || args.length < 1 || !(args[0] instanceof Long)) {
             return;
         }
 

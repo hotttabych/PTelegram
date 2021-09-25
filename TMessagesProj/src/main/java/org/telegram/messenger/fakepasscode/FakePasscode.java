@@ -163,7 +163,7 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
         return !passcode.needDeleteMessage(accountNum, dialogId);
     }
 
-    public static boolean needHideMessage(int accountNum, int dialogId) {
+    public static boolean needHideMessage(int accountNum, long dialogId) {
         if (SharedConfig.fakePasscodeActivatedIndex == -1) {
             return false;
         }
@@ -198,7 +198,7 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
         RemoveChatsAction action = accountActions.getRemoveChatsAction();
         if (action == null)
             return false;
-        return action.isRemoveNewMessagesFromChat(Long.valueOf(dialogId).intValue());
+        return action.isRemoveNewMessagesFromChat(dialogId);
     }
 
     public static String getFakePhoneNumber(int accountNum) {

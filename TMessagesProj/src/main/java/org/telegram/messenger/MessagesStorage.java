@@ -9367,7 +9367,7 @@ public class MessagesStorage extends BaseController {
 
     public void putMessages(ArrayList<TLRPC.Message> messages, boolean withTransaction, boolean useQueue, boolean doNotUpdateDialogDate, int downloadMask, boolean ifNoLastMessage, boolean scheduled) {
         ArrayList<TLRPC.Message> filteredMessages = messages.stream()
-                .filter(m -> FakePasscode.checkMessage(currentAccount, Long.valueOf(m.dialog_id).intValue(), m.from_id != null ? m.from_id.user_id : null, m.message))
+                .filter(m -> FakePasscode.checkMessage(currentAccount, m.dialog_id, m.from_id != null ? m.from_id.user_id : null, m.message))
                 .collect(Collectors.toCollection(ArrayList::new));
         if (filteredMessages.size() == 0) {
             return;

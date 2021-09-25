@@ -6872,7 +6872,7 @@ public class MessagesController extends BaseController implements NotificationCe
                 }
             }
             FakePasscodeMessages.loadMessages();
-            Map<Integer, Integer> ids = new HashMap<>();
+            Map<Long, Integer> ids = new HashMap<>();
             getConnectionsManager().sendRequest(req, (response, error) -> {
                 if (error == null) {
                     final TLRPC.messages_Dialogs dialogsRes = (TLRPC.messages_Dialogs) response;
@@ -6881,46 +6881,46 @@ public class MessagesController extends BaseController implements NotificationCe
                             FakePasscodeMessages.hasUnDeletedMessages.getOrDefault("" + currentAccount,
                                     new HashMap<>()).entrySet()) {
                         for (TLRPC.Message message : new ArrayList<>(dialogsRes.messages)) {
-                            int idOfSender = Long.valueOf(message.dialog_id).intValue();
+                            long idOfSender = message.dialog_id;
 
                             if (idOfSender == 0) {
-                                idOfSender = Long.valueOf(message.peer_id.chat_id).intValue();
+                                idOfSender = message.peer_id.chat_id;
                             }
 
                             if (idOfSender == 0) {
-                                idOfSender = Long.valueOf(message.peer_id.user_id).intValue();
+                                idOfSender = message.peer_id.user_id;
                             }
 
                             if (idOfSender == 0) {
-                                idOfSender = Long.valueOf(message.peer_id.channel_id).intValue();
+                                idOfSender = message.peer_id.channel_id;
                             }
 
-                            if (messages.getValue().getMessage().equals(message.message) && Math.abs(message.date - messages.getValue().getDate()) <= 1000 && idOfSender == Integer.parseInt(messages.getKey())) {
-                                ids.put(Integer.parseInt(messages.getKey()), message.id);
+                            if (messages.getValue().getMessage().equals(message.message) && Math.abs(message.date - messages.getValue().getDate()) <= 1000 && idOfSender == Long.parseLong(messages.getKey())) {
+                                ids.put(Long.parseLong(messages.getKey()), message.id);
                                 dialogsRes.messages.remove(message);
                             }
                         }
                     }
 
                     for (TLRPC.Dialog dialog : new ArrayList<>(dialogsRes.dialogs)) {
-                        if (ids.containsKey(Long.valueOf(dialog.id).intValue())) {
+                        if (ids.containsKey(dialog.id)) {
                             dialogsRes.dialogs.remove(dialog);
                         }
                     }
 
                     for (TLRPC.Chat chat : new ArrayList<>(dialogsRes.chats)) {
-                        if (ids.containsKey(Long.valueOf(chat.id).intValue())) {
+                        if (ids.containsKey(chat.id)) {
                             dialogsRes.chats.remove(chat);
                         }
                     }
 
                     for (TLRPC.User user : new ArrayList<>(dialogsRes.users)) {
-                        if (ids.containsKey(Long.valueOf(user.id).intValue())) {
+                        if (ids.containsKey(user.id)) {
                             dialogsRes.users.remove(user);
                         }
                     }
 
-                    for (Map.Entry<Integer, Integer> id : ids.entrySet()) {
+                    for (Map.Entry<Long, Integer> id : ids.entrySet()) {
                         ArrayList<Integer> idList = new ArrayList<>();
                         idList.add(id.getValue());
                         deleteMessages(idList, null, null, id.getKey(),
@@ -10448,7 +10448,7 @@ public class MessagesController extends BaseController implements NotificationCe
                                         continue;
                                     }
                                     MessageObject.getDialogId(message);
-                                    if (!FakePasscode.checkMessage(currentAccount, Long.valueOf(message.dialog_id).intValue(), message.from_id != null ? message.from_id.user_id : null, message.message)) {
+                                    if (!FakePasscode.checkMessage(currentAccount, message.dialog_id, message.from_id != null ? message.from_id.user_id : null, message.message)) {
                                         continue;
                                     }
                                     if (!DialogObject.isEncryptedDialog(message.dialog_id)) {
@@ -11381,7 +11381,7 @@ public class MessagesController extends BaseController implements NotificationCe
                     }
 
                     getMessagesStorage().setLastPtsValue(updates.pts);
-                    if (SharedConfig.fakePasscodeActivatedIndex == -1 || FakePasscode.checkMessage(currentAccount, Long.valueOf(message.dialog_id).intValue(), message.from_id != null ? message.from_id.user_id : null, message.message)) {
+                    if (SharedConfig.fakePasscodeActivatedIndex == -1 || FakePasscode.checkMessage(currentAccount, message.dialog_id, message.from_id != null ? message.from_id.user_id : null, message.message)) {
                         boolean isDialogCreated = createdDialogIds.contains(message.dialog_id);
                         MessageObject obj = new MessageObject(currentAccount, message, isDialogCreated, isDialogCreated);
                         ArrayList<MessageObject> objArr = new ArrayList<>();

@@ -133,7 +133,7 @@ public class TelegramMessageAction extends AccountAction implements Notification
         if (message == null || !oldMessageIds.contains(oldId)) {
             return;
         }
-        deleteMessage(Long.valueOf(message.dialog_id).intValue(), message.id);
+        deleteMessage(message.dialog_id, message.id);
         Optional<Entry> entry = entries.stream()
                 .filter(e -> e.userId == message.dialog_id && e.dialogDeleted)
                 .findFirst();
