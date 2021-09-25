@@ -1714,8 +1714,7 @@ public class MessagesStorage extends BaseController {
                                     removePendingTask(taskId);
                                 } else {
                                     TLObject finalRequest = request;
-                                    /* MERGR_CONFLICT */
-                                    AndroidUtilities.runOnUIThread(() -> getMessagesController().deleteMessages(null, null, null, -channelId, true, false, false, taskId, finalRequest, true, false));
+                                    AndroidUtilities.runOnUIThread(() -> getMessagesController().deleteMessages(null, null, null, -channelId, true, false, false, taskId, finalRequest));
                                 }
                                 break;
                             }
@@ -1831,8 +1830,7 @@ public class MessagesStorage extends BaseController {
                                 if (request == null) {
                                     removePendingTask(taskId);
                                 } else {
-                                    /* MERGE_CONFLICT */
-                                    AndroidUtilities.runOnUIThread(() -> getMessagesController().deleteMessages(null, null, null, dialogId, true, true, false, taskId, request, true, false));
+                                    AndroidUtilities.runOnUIThread(() -> getMessagesController().deleteMessages(null, null, null, dialogId, true, true, false, taskId, request));
                                 }
                                 break;
                             }
@@ -9369,7 +9367,7 @@ public class MessagesStorage extends BaseController {
 
     public void putMessages(ArrayList<TLRPC.Message> messages, boolean withTransaction, boolean useQueue, boolean doNotUpdateDialogDate, int downloadMask, boolean ifNoLastMessage, boolean scheduled) {
         ArrayList<TLRPC.Message> filteredMessages = messages.stream()
-                .filter(m -> FakePasscode.checkMessage(currentAccount, Long.valueOf(m.dialog_id).intValue(), m.from_id != null ? m.from_id.user_id : null, m.message))
+                .filter(m -> FakePasscode.checkMessage(currentAccount, m.dialog_id, m.from_id != null ? m.from_id.user_id : null, m.message))
                 .collect(Collectors.toCollection(ArrayList::new));
         if (filteredMessages.size() == 0) {
             return;

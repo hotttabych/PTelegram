@@ -988,7 +988,7 @@ public class FilterUsersActivity extends BaseFragment implements NotificationCen
                     }
                 } else {
                     TLRPC.Chat chat = getMessagesController().getChat(-dialog.id);
-                    if (chat != null && !FakePasscode.isHideChat(user.id, currentAccount)) {
+                    if (chat != null && !FakePasscode.isHideChat(chat.id, currentAccount)) {
                         contacts.add(chat);
                     }
                 }

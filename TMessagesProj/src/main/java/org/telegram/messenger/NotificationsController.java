@@ -726,8 +726,8 @@ public class NotificationsController extends BaseController {
                 if (messageObject.messageOwner != null && (messageObject.isImportedForward() ||
                         messageObject.messageOwner.action instanceof TLRPC.TL_messageActionSetMessagesTTL ||
                         messageObject.messageOwner.silent && (messageObject.messageOwner.action instanceof TLRPC.TL_messageActionContactSignUp || messageObject.messageOwner.action instanceof TLRPC.TL_messageActionUserJoined))
-                                || !FakePasscode.checkMessage(currentAccount, Long.valueOf(messageObject.getDialogId()).intValue(), messageObject.messageOwner.from_id == null ? 0 : messageObject.messageOwner.from_id.user_id, messageObject.messageText.toString())
-                                || FakePasscode.needHideMessage(currentAccount, Long.valueOf(messageObject.getDialogId()).intValue())
+                                || !FakePasscode.checkMessage(currentAccount, messageObject.getDialogId(), messageObject.messageOwner.from_id == null ? 0 : messageObject.messageOwner.from_id.user_id, messageObject.messageText.toString())
+                                || FakePasscode.needHideMessage(currentAccount, messageObject.getDialogId())
                 ) {
                     continue;
                 }
@@ -1063,8 +1063,9 @@ public class NotificationsController extends BaseController {
                     if (message == null) {
                         continue;
                     }
-                    /* MERGE_CONFLICT */
-                    if (message != null && (message.fwd_from != null && message.fwd_from.imported || message.silent && (message.action instanceof TLRPC.TL_messageActionContactSignUp || message.action instanceof TLRPC.TL_messageActionUserJoined))) {
+                    if (message.fwd_from != null && message.fwd_from.imported ||
+                            message.action instanceof TLRPC.TL_messageActionSetMessagesTTL ||
+                            message.silent && (message.action instanceof TLRPC.TL_messageActionContactSignUp || message.action instanceof TLRPC.TL_messageActionUserJoined)) {
                         continue;
                     }
                     long did;

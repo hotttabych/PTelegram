@@ -433,7 +433,7 @@ public class FakePasscodeTelegramMessagesActivity extends BaseFragment implement
             if (view instanceof GroupCreateUserCell) {
                 GroupCreateUserCell cell = (GroupCreateUserCell) view;
                 Object object = cell.getObject();
-                int id;
+                long id;
                 if (object instanceof TLRPC.User) {
                     id = ((TLRPC.User) object).id;
                 } else if (object instanceof TLRPC.Chat) {
@@ -569,7 +569,7 @@ public class FakePasscodeTelegramMessagesActivity extends BaseFragment implement
             if (child instanceof GroupCreateUserCell) {
                 GroupCreateUserCell cell = (GroupCreateUserCell) child;
                 Object object = cell.getObject();
-                int id;
+                long id;
                 if (object instanceof TLRPC.User) {
                     id = ((TLRPC.User) object).id;
                 } else if (object instanceof TLRPC.Chat) {
@@ -629,8 +629,8 @@ public class FakePasscodeTelegramMessagesActivity extends BaseFragment implement
             boolean hasSelf = false;
             ArrayList<TLRPC.Dialog> dialogs = getMessagesController().getAllDialogs();
 
-            Set<Integer> selectedIds = action.entries.stream().map(e -> e.userId).collect(Collectors.toSet());
-            for (Integer id: selectedIds) {
+            Set<Long> selectedIds = action.entries.stream().map(e -> (long) e.userId).collect(Collectors.toSet());
+            for (Long id: selectedIds) {
                 if (id > 0) {
                     TLRPC.User user = getMessagesController().getUser(id);
                     if (user != null) {
@@ -651,12 +651,11 @@ public class FakePasscodeTelegramMessagesActivity extends BaseFragment implement
 
             for (int a = 0, N = dialogs.size(); a < N; a++) {
                 TLRPC.Dialog dialog = dialogs.get(a);
-                int lowerId = (int) dialog.id;
-                if (lowerId == 0 || selectedIds.contains(lowerId)) {
+                if (dialog.id == 0 || selectedIds.contains(dialog.id)) {
                     continue;
                 }
-                if (lowerId > 0) {
-                    TLRPC.User user = getMessagesController().getUser(lowerId);
+                if (dialog.id > 0) {
+                    TLRPC.User user = getMessagesController().getUser(dialog.id);
                     if (user != null) {
                         contacts.add(user);
                         if (UserObject.isUserSelf(user)) {
@@ -664,7 +663,7 @@ public class FakePasscodeTelegramMessagesActivity extends BaseFragment implement
                         }
                     }
                 } else {
-                    TLRPC.Chat chat = getMessagesController().getChat(-lowerId);
+                    TLRPC.Chat chat = getMessagesController().getChat(-dialog.id);
                     if (chat != null) {
                         if (!chat.broadcast || (chat.admin_rights != null && chat.admin_rights.post_messages)) {
                             contacts.add(chat);
@@ -793,7 +792,7 @@ public class FakePasscodeTelegramMessagesActivity extends BaseFragment implement
                         }
                         object = contacts.get(position);
                     }
-                    int id;
+                    long id;
                     if (object instanceof TLRPC.User) {
                         id = ((TLRPC.User) object).id;
                     } else if (object instanceof TLRPC.Chat) {

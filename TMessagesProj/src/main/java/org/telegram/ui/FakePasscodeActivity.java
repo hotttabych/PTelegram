@@ -296,7 +296,7 @@ public class FakePasscodeActivity extends BaseFragment {
                 }
                 if (position == changeNameRow) {
                     AlertDialog.Builder alert = new AlertDialog.Builder(getParentActivity());
-                    final EditTextCaption editText = new EditTextCaption(getParentActivity());
+                    final EditTextCaption editText = new EditTextCaption(getParentActivity(), null);
                     editText.setText(fakePasscode.name);
                     editText.setTextColor(Theme.getColor(Theme.key_chat_messagePanelText));
                     editText.setHintColor(Theme.getColor(Theme.key_chat_messagePanelHint));

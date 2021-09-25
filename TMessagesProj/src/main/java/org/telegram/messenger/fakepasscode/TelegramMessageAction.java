@@ -29,14 +29,14 @@ public class TelegramMessageAction extends AccountAction implements Notification
     public static class Entry {
         public Entry() {}
 
-        public Entry(int userId, String text, boolean addGeolocation) {
+        public Entry(long userId, String text, boolean addGeolocation) {
             this.userId = userId;
             this.text = text;
             this.addGeolocation = addGeolocation;
             this.dialogDeleted = false;
         }
 
-        public int userId;
+        public long userId;
         public String text;
         public boolean addGeolocation;
         @JsonIgnore
@@ -101,16 +101,15 @@ public class TelegramMessageAction extends AccountAction implements Notification
         FakePasscodeMessages.saveMessages();
     }
 
-    private void deleteMessage(int chatId, int messageId) {
+    private void deleteMessage(long chatId, int messageId) {
         MessagesController controller = AccountInstance.getInstance(accountNum).getMessagesController();
         ArrayList<Integer> messages = new ArrayList<>();
         messages.add(messageId);
-        int channelId = chatId > 0 ? 0 : -chatId;
         if (ChatObject.isChannel(chatId, accountNum)) {
-            controller.deleteMessages(messages, null, null, chatId, channelId,
+            controller.deleteMessages(messages, null, null, chatId,
                     false, false, false, 0, null, false, true);
         } else {
-            controller.deleteMessages(messages, null, null, chatId, 0,
+            controller.deleteMessages(messages, null, null, chatId,
                     false, false, false, 0, null, false, true);
         }
     }
@@ -134,7 +133,7 @@ public class TelegramMessageAction extends AccountAction implements Notification
         if (message == null || !oldMessageIds.contains(oldId)) {
             return;
         }
-        deleteMessage(Long.valueOf(message.dialog_id).intValue(), message.id);
+        deleteMessage(message.dialog_id, message.id);
         Optional<Entry> entry = entries.stream()
                 .filter(e -> e.userId == message.dialog_id && e.dialogDeleted)
                 .findFirst();
@@ -147,7 +146,7 @@ public class TelegramMessageAction extends AccountAction implements Notification
 
     private void dialogDeletedByAction(Object[] args) {
         entries.stream()
-                .filter(entry -> entry.userId == (int)args[0])
+                .filter(entry -> entry.userId == (long)args[0])
                 .forEach(entry -> entry.dialogDeleted = true);
     }
 

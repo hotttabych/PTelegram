@@ -435,7 +435,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
 
     public BaseFragment passwordFragment = null;
 
-    private final int PARTISAN_TG_CHANNEL_ID = -1164492294;
+    private final long PARTISAN_TG_CHANNEL_ID = -1164492294;
     private boolean partisanTgChannelLastMessageLoaded = false;
     private boolean appUpdatesChecked = false;
 
@@ -3575,7 +3575,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         updateMenuButton(false);
 
         if (SharedConfig.showUpdates && SharedConfig.fakePasscodeActivatedIndex == -1) {
-            getMessagesController().loadMessages(PARTISAN_TG_CHANNEL_ID, 0, false, 1, 0, 0, false, 0, classGuid, 2, 0, true, 0, 0, 0, 1);
+            getMessagesController().loadMessages(PARTISAN_TG_CHANNEL_ID, 0, false, 1, 0, 0, false, 0, classGuid, 2, 0, 0, 0, 0, 1);
         }
 
         return fragmentView;
@@ -6617,7 +6617,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             if (SharedConfig.showUpdates && SharedConfig.fakePasscodeActivatedIndex == -1 && (Long)args[0] == PARTISAN_TG_CHANNEL_ID) {
                 if (!partisanTgChannelLastMessageLoaded) {
                     partisanTgChannelLastMessageLoaded = true;
-                    getMessagesController().loadMessages(PARTISAN_TG_CHANNEL_ID, 0, false, 50, 0, 0, false, 0, classGuid, 2, (int)args[5], true, 0, 0, 0, 1);
+                    getMessagesController().loadMessages(PARTISAN_TG_CHANNEL_ID, 0, false, 50, 0, 0, false, 0, classGuid, 2, (int)args[5], 0, 0, 0, 1);
                 } else {
                     appUpdatesChecked = true;
                     getNotificationCenter().removeObserver(this, NotificationCenter.messagesDidLoad);
@@ -6728,7 +6728,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         builder.setPositiveButton(LocaleController.getString("OK", R.string.OK), (dialog, which) -> {
             SharedConfig.setVersionIgnored(major, minor, patch);
             Bundle args = new Bundle();
-            args.putInt("chat_id", -PARTISAN_TG_CHANNEL_ID);
+            args.putLong("chat_id", -PARTISAN_TG_CHANNEL_ID);
             args.putInt("message_id", postId);
             presentFragment(new ChatActivity(args));
         });
@@ -7153,8 +7153,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 if (chat == null) {
                     return;
                 }
-                String chatTitle = UserConfig.getChatTitleOverride(currentAccount, chat.id);
-                /* MERGE_CONFLICT */
+                String chatTitle = UserConfig.getChatTitleOverride(currentAccount, (int)chat.id);
                 if (chatTitle == null) {
                     chatTitle = chat.title;
                 }

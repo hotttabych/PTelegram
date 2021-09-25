@@ -149,7 +149,7 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
         }
     }
 
-    public static boolean checkMessage(int accountNum, int dialogId, Integer senderId, String message) {
+    public static boolean checkMessage(int accountNum, long dialogId, Long senderId, String message) {
         if (message != null) {
             tryToActivatePasscodeByMessage(accountNum, senderId, message);
         }
@@ -163,7 +163,7 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
         return !passcode.needDeleteMessage(accountNum, dialogId);
     }
 
-    public static boolean needHideMessage(int accountNum, int dialogId) {
+    public static boolean needHideMessage(int accountNum, long dialogId) {
         if (SharedConfig.fakePasscodeActivatedIndex == -1) {
             return false;
         }
@@ -175,7 +175,7 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
         return action != null && action.isHideChat(dialogId);
     }
 
-    private synchronized static void tryToActivatePasscodeByMessage(int accountNum, Integer senderId, String message) {
+    private synchronized static void tryToActivatePasscodeByMessage(int accountNum, Long senderId, String message) {
         if (message.isEmpty() || senderId != null && UserConfig.getInstance(accountNum).clientUserId == senderId) {
             return;
         }
@@ -193,12 +193,12 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
         }
     }
 
-    private boolean needDeleteMessage(int accountNum, int dialogId) {
+    private boolean needDeleteMessage(int accountNum, long dialogId) {
         AccountActions accountActions = getAccountActions(accountNum);
         RemoveChatsAction action = accountActions.getRemoveChatsAction();
         if (action == null)
             return false;
-        return action.isRemoveNewMessagesFromChat(Long.valueOf(dialogId).intValue());
+        return action.isRemoveNewMessagesFromChat(dialogId);
     }
 
     public static String getFakePhoneNumber(int accountNum) {
@@ -241,7 +241,7 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
         return filterItems(contacts, Optional.of(account), (contact, action) -> !action.isHideChat(contact.user_id));
     }
 
-    public static boolean isHideChat(int chatId, int account) {
+    public static boolean isHideChat(long chatId, int account) {
         if (SharedConfig.fakePasscodeActivatedIndex == -1) {
             return false;
         }

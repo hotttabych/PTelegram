@@ -1883,12 +1883,12 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     onWriteButtonClick();
                 } else if (id == disable_avatar || id == enable_avatar) {
                     UserConfig.ChatInfoOverride item;
-                    int correct_id = chat_id != 0 ? chat_id : user_id;
-                    if (getUserConfig().chatInfoOverrides.containsKey(String.valueOf(correct_id))) {
-                        item = getUserConfig().chatInfoOverrides.get(String.valueOf(correct_id));
+                    long correctId = chatId != 0 ? chatId : userId;
+                    if (getUserConfig().chatInfoOverrides.containsKey(String.valueOf(correctId))) {
+                        item = getUserConfig().chatInfoOverrides.get(String.valueOf(correctId));
                     } else {
                         item = new UserConfig.ChatInfoOverride();
-                        getUserConfig().chatInfoOverrides.put(String.valueOf(correct_id), item);
+                        getUserConfig().chatInfoOverrides.put(String.valueOf(correctId), item);
                     }
                     item.avatarEnabled = !item.avatarEnabled;
                     getUserConfig().saveConfig(true);
@@ -1897,12 +1897,12 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     otherItem.showSubItem(item.avatarEnabled ? disable_avatar : enable_avatar);
                 } else if (id == edit_chat_name) {
                     UserConfig.ChatInfoOverride item;
-                    int correct_id = chat_id != 0 ? chat_id : user_id;
-                    if (getUserConfig().chatInfoOverrides.containsKey(String.valueOf(correct_id))) {
-                        item = getUserConfig().chatInfoOverrides.get(String.valueOf(correct_id));
+                    long correctId = chatId != 0 ? chatId : userId;
+                    if (getUserConfig().chatInfoOverrides.containsKey(String.valueOf(correctId))) {
+                        item = getUserConfig().chatInfoOverrides.get(String.valueOf(correctId));
                     } else {
                         item = new UserConfig.ChatInfoOverride();
-                        getUserConfig().chatInfoOverrides.put(String.valueOf(correct_id), item);
+                        getUserConfig().chatInfoOverrides.put(String.valueOf(correctId), item);
                     }
                     DialogTemplate template = new DialogTemplate();
                     template.type = DialogType.EDIT;
@@ -3865,11 +3865,11 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             showDialog(builder.create());
             return true;
         } else if (position == chatIdRow) {
-            final String chatId;
-            if (user_id != 0) {
-                chatId = String.valueOf(user_id);
-            } else if (chat_id != 0) {
-                chatId = String.valueOf(chat_id);
+            final String chatIdStr;
+            if (userId != 0) {
+                chatIdStr = String.valueOf(userId);
+            } else if (chatId != 0) {
+                chatIdStr = String.valueOf(chatId);
             } else {
                 return false;
             }
@@ -3878,7 +3878,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 if (i == 0) {
                     try {
                         android.content.ClipboardManager clipboard = (android.content.ClipboardManager) ApplicationLoader.applicationContext.getSystemService(Context.CLIPBOARD_SERVICE);
-                        android.content.ClipData clip = android.content.ClipData.newPlainText("label", chatId);
+                        android.content.ClipData clip = android.content.ClipData.newPlainText("label", chatIdStr);
                         clipboard.setPrimaryClip(clip);
                         BulletinFactory.of(this).createCopyBulletin(LocaleController.getString("IdCopied", R.string.IdCopied)).show();
                     } catch (Exception e) {
@@ -6133,7 +6133,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         otherItem.addSubItem(enable_avatar, R.drawable.profile_photos, LocaleController.getString("EnableAvatar", R.string.EnableAvatar));
                         UserConfig.ChatInfoOverride item;
                         boolean avatarEnabled = true;
-                        int correct_id = chat_id != 0 ? chat_id : user_id;
+                        long correct_id = chatId != 0 ? chatId : userId;
                         if (getUserConfig().chatInfoOverrides.containsKey(String.valueOf(correct_id))) {
                             item = getUserConfig().chatInfoOverrides.get(String.valueOf(correct_id));
                             avatarEnabled = item.avatarEnabled;
@@ -6208,8 +6208,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     otherItem.addSubItem(enable_avatar, R.drawable.profile_photos, LocaleController.getString("EnableAvatar", R.string.EnableAvatar));
                     UserConfig.ChatInfoOverride item;
                     boolean avatarEnabled = true;
-                    if (getUserConfig().chatInfoOverrides.containsKey(String.valueOf(chat_id))) {
-                        item = getUserConfig().chatInfoOverrides.get(String.valueOf(chat_id));
+                    if (getUserConfig().chatInfoOverrides.containsKey(String.valueOf(chatId))) {
+                        item = getUserConfig().chatInfoOverrides.get(String.valueOf(chatId));
                         avatarEnabled = item.avatarEnabled;
                     }
                     if (avatarEnabled) {
@@ -6219,15 +6219,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     }
                 }
             }
-        }
-
-        long did;
-        if (user_id != 0) {
-            did = user_id;
-        } else if (chat_id != 0) {
-            did = -chat_id;
-        } else {
-            did = dialog_id;
         }
 
         if (imageUpdater != null) {
@@ -7196,10 +7187,10 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                             currentBio = null;
                         }
                     } else if (position == chatIdRow) {
-                        if (user_id != 0) {
-                            detailCell.setTextAndValue(String.valueOf(user_id), LocaleController.getString("UserId", R.string.UserId), false);
+                        if (userId != 0) {
+                            detailCell.setTextAndValue(String.valueOf(userId), LocaleController.getString("UserId", R.string.UserId), false);
                         } else if (currentChat != null) {
-                            detailCell.setTextAndValue(String.valueOf(chat_id), LocaleController.getString("ChatId", R.string.ChatId), false);
+                            detailCell.setTextAndValue(String.valueOf(chatId), LocaleController.getString("ChatId", R.string.ChatId), false);
                         }
                     }
                     break;

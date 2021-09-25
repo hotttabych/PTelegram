@@ -19,7 +19,7 @@ EditTemplate implements ViewTemplate {
 
     @Override
     public View create(Context context) {
-        EditTextCaption editText = new EditTextCaption(context);
+        EditTextCaption editText = new EditTextCaption(context, null);
         editText.setText(text);
         editText.setHint(name);
         editText.setSingleLine(singleLine);
