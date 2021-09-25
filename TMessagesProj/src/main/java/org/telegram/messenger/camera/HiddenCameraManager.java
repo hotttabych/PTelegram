@@ -125,11 +125,13 @@ public class HiddenCameraManager implements Camera.PictureCallback, Camera.Previ
 
     private void unMuteSound() {
         if (context != null && SharedConfig.takePhotoMuteAudio) {
+            AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 if (!soundWasMuted) {
-                    AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
                     audioManager.adjustStreamVolume(AudioManager.STREAM_SYSTEM, AudioManager.ADJUST_UNMUTE, 0);
                 }
+            } else {
+                audioManager.setStreamMute(AudioManager.STREAM_SYSTEM, false);
             }
         }
     }

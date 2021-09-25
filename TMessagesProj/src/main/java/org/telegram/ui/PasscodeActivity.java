@@ -52,7 +52,6 @@ import org.telegram.messenger.R;
 import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.Utilities;
-import org.telegram.messenger.camera.HiddenCameraManager;
 import org.telegram.messenger.fakepasscode.FakePasscode;
 import org.telegram.messenger.support.fingerprint.FingerprintManagerCompat;
 import org.telegram.ui.ActionBar.ActionBar;
@@ -470,7 +469,7 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
 
     @Override
     public void onRequestPermissionsResultFragment(int requestCode, String[] permissions, int[] grantResults) {
-        if (requestCode == 2000 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+        if (requestCode == 2000 && grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             AndroidUtilities.runOnUIThread(() -> {
                 SharedConfig.takePhotoWithBadPasscodeFront = !SharedConfig.takePhotoWithBadPasscodeFront;
                 SharedConfig.saveConfig();
@@ -480,7 +479,7 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
                     listAdapter.notifyDataSetChanged();
                 }
             });
-        } else if (requestCode == 2001 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+        } else if (requestCode == 2001 && grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             AndroidUtilities.runOnUIThread(() -> {
                 SharedConfig.takePhotoWithBadPasscodeBack = !SharedConfig.takePhotoWithBadPasscodeBack;
                 SharedConfig.saveConfig();
