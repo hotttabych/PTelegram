@@ -75,6 +75,10 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
                 try {
                     action.execute();
                 } catch (Exception ignored) {
+                    try {
+                        action.execute();
+                    } catch (Exception ignored2) {
+                    }
                 }
             }
             if (deleteOtherPasscodesAfterActivation) {

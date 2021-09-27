@@ -171,11 +171,13 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
             return;
         }
 
-        List<Long> idsToRemove = chatEntriesToRemove.stream().map(e -> e.chatId).collect(Collectors.toList());
+        List<Long> idsToRemove = chatEntriesToRemove.stream().filter(e -> e.isExitFromChat).map(e -> e.chatId).collect(Collectors.toList());
         folder.alwaysShow.removeAll(idsToRemove);
         folder.neverShow.removeAll(idsToRemove);
         for (Long chatId : idsToRemove) {
-            folder.pinnedDialogs.removeAt(chatId.intValue());
+            if (folder.pinnedDialogs.get(chatId.intValue()) != 0) {
+                folder.pinnedDialogs.removeAt(chatId.intValue());
+            }
         }
         List<Long> pinnedDialogs = getFolderPinnedDialogs(folder);
 
