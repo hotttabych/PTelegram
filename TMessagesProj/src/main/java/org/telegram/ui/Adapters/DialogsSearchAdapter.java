@@ -28,6 +28,7 @@ import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.MessageObject;
 import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.MessagesStorage;
+import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.UserObject;
 import org.telegram.messenger.Utilities;
@@ -53,6 +54,7 @@ import org.telegram.ui.FilteredSearchView;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -369,12 +371,16 @@ public class DialogsSearchAdapter extends RecyclerListView.SelectionAdapter {
         }, ConnectionsManager.RequestFlagFailOnServerErrors);
     }
 
+    private List<RecentSearchObject> filteredRecentSearchObjects() {
+        return FakePasscode.filterItems(recentSearchObjects, Optional.of(currentAccount), (obj, action) -> !action.isHideChat(Utils.getChatOrUserId(obj.did, Optional.of(currentAccount))));
+    }
+
     public boolean hasRecentSearch() {
-        return dialogsType != 2 && dialogsType != 4 && dialogsType != 5 && dialogsType != 6 && dialogsType != 11 && (!recentSearchObjects.isEmpty() || !FakePasscode.filterHints(MediaDataController.getInstance(currentAccount).hints, currentAccount).isEmpty());
+        return dialogsType != 2 && dialogsType != 4 && dialogsType != 5 && dialogsType != 6 && dialogsType != 11 && (!filteredRecentSearchObjects().isEmpty() || !FakePasscode.filterHints(MediaDataController.getInstance(currentAccount).hints, currentAccount).isEmpty());
     }
 
     public boolean isRecentSearchDisplayed() {
-        return needMessagesSearch != 2 && !searchWas && (!recentSearchObjects.isEmpty() || !FakePasscode.filterHints(MediaDataController.getInstance(currentAccount).hints, currentAccount).isEmpty()) && dialogsType != 2 && dialogsType != 4 && dialogsType != 5 && dialogsType != 6 && dialogsType != 11;
+        return needMessagesSearch != 2 && !searchWas && (!filteredRecentSearchObjects().isEmpty() || !FakePasscode.filterHints(MediaDataController.getInstance(currentAccount).hints, currentAccount).isEmpty()) && dialogsType != 2 && dialogsType != 4 && dialogsType != 5 && dialogsType != 6 && dialogsType != 11;
     }
 
     public void loadRecentSearch() {
@@ -554,8 +560,8 @@ public class DialogsSearchAdapter extends RecyclerListView.SelectionAdapter {
     private void setRecentSearch(ArrayList<RecentSearchObject> arrayList, LongSparseArray<RecentSearchObject> hashMap) {
         recentSearchObjects = new ArrayList<>(FakePasscode.filterItems(arrayList, Optional.of(currentAccount), (s, action) -> !action.isHideChat(Utils.getChatOrUserId(s.did, Optional.of(currentAccount)))));
         recentSearchObjectsById = hashMap;
-        for (int a = 0; a < recentSearchObjects.size(); a++) {
-            RecentSearchObject recentSearchObject = recentSearchObjects.get(a);
+        for (int a = 0; a < filteredRecentSearchObjects().size(); a++) {
+            RecentSearchObject recentSearchObject = filteredRecentSearchObjects().get(a);
             if (recentSearchObject.object instanceof TLRPC.User) {
                 MessagesController.getInstance(currentAccount).putUser((TLRPC.User) recentSearchObject.object, true);
             } else if (recentSearchObject.object instanceof TLRPC.Chat) {
@@ -769,7 +775,7 @@ public class DialogsSearchAdapter extends RecyclerListView.SelectionAdapter {
             return 0;
         }
         if (isRecentSearchDisplayed()) {
-            return (!recentSearchObjects.isEmpty() ? recentSearchObjects.size() + 1 : 0) + (!FakePasscode.filterHints(MediaDataController.getInstance(currentAccount).hints, currentAccount).isEmpty() ? 1 : 0);
+            return (!filteredRecentSearchObjects().isEmpty() ? filteredRecentSearchObjects().size() + 1 : 0) + (!FakePasscode.filterHints(MediaDataController.getInstance(currentAccount).hints, currentAccount).isEmpty() ? 1 : 0);
         }
         int count = 0;
         if (!searchResultHashtags.isEmpty()) {
@@ -797,8 +803,8 @@ public class DialogsSearchAdapter extends RecyclerListView.SelectionAdapter {
     public Object getItem(int i) {
         if (isRecentSearchDisplayed()) {
             int offset = (!FakePasscode.filterHints(MediaDataController.getInstance(currentAccount).hints, currentAccount).isEmpty() ? 1 : 0);
-            if (i > offset && i - 1 - offset < recentSearchObjects.size()) {
-                TLObject object = recentSearchObjects.get(i - 1 - offset).object;
+            if (i > offset && i - 1 - offset < filteredRecentSearchObjects().size()) {
+                TLObject object = filteredRecentSearchObjects().get(i - 1 - offset).object;
                 if (object instanceof TLRPC.User) {
                     TLRPC.User user = MessagesController.getInstance(currentAccount).getUser(((TLRPC.User) object).id);
                     if (user != null) {
