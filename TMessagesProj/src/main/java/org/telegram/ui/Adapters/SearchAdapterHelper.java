@@ -261,7 +261,7 @@ public class SearchAdapterHelper {
                                         chat = chatsMap.get(peer.channel_id);
                                     }
                                     if (chat != null) {
-                                        if (!allowChats || canAddGroupsOnly && !ChatObject.canAddBotsToChat(chat) || FakePasscode.isHideChat(chat.id, currentAccount)) {
+                                        if (!allowChats || canAddGroupsOnly && !ChatObject.canAddBotsToChat(chat) || FakePasscode.isHideChat(-chat.id, currentAccount)) {
                                             continue;
                                         }
                                         localServerSearch.add(chat);
