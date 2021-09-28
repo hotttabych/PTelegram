@@ -25,6 +25,7 @@ import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.R;
+import org.telegram.messenger.fakepasscode.FakePasscode;
 import org.telegram.messenger.support.LongSparseIntArray;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.ActionBar;
@@ -153,11 +154,11 @@ public class FilterCreateActivity extends BaseFragment {
         }
         newFilterName = filter.name;
         newFilterFlags = filter.flags;
-        newAlwaysShow = new ArrayList<>(filter.alwaysShow);
+        newAlwaysShow = new ArrayList<>(FakePasscode.filterDialogIds(filter.alwaysShow, currentAccount));
         if (alwaysShow != null) {
             newAlwaysShow.addAll(alwaysShow);
         }
-        newNeverShow = new ArrayList<>(filter.neverShow);
+        newNeverShow = new ArrayList<>(FakePasscode.filterDialogIds(filter.neverShow, currentAccount));
         newPinned = filter.pinnedDialogs.clone();
     }
 
