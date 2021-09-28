@@ -921,7 +921,7 @@ public class FakePasscodeRemoveChatsActivity extends BaseFragment implements Not
                     } else if (object instanceof TLRPC.Chat) {
                         id = -((TLRPC.Chat) object).id;
                     } else if (object instanceof RemoveChatsAction.RemoveChatEntry) {
-                        id = ((RemoveChatsAction.RemoveChatEntry)object).dialogId;
+                        id = ((RemoveChatsAction.RemoveChatEntry)object).chatId;
                     } else {
                         id = 0L;
                     }

@@ -992,9 +992,9 @@ public class GroupCreateActivity extends BaseFragment implements NotificationCen
             }
             TLRPC.Chat chat = getMessagesController().getChat(chatId != 0 ? chatId : channelId);
             if (selectedContacts.size() > 5) {
-                String title = UserConfig.getChatTitleOverride(currentAccount, chat.id);
+                String title = chat == null ? "" : UserConfig.getChatTitleOverride(currentAccount, chat.id);
                 if (title == null) {
-                    title = chat == null ? "" : chat.title;
+                    title = chat.title;
                 }
                 SpannableStringBuilder spannableStringBuilder = new SpannableStringBuilder(AndroidUtilities.replaceTags(LocaleController.formatString("AddMembersAlertNamesText", R.string.AddMembersAlertNamesText, LocaleController.formatPluralString("Members", selectedContacts.size()),  title)));
                 String countString = String.format("%d", selectedContacts.size());
@@ -1004,9 +1004,9 @@ public class GroupCreateActivity extends BaseFragment implements NotificationCen
                 }
                 builder.setMessage(spannableStringBuilder);
             } else {
-                String title = UserConfig.getChatTitleOverride(currentAccount, chat.id);
+                String title = chat == null ? "" : UserConfig.getChatTitleOverride(currentAccount, chat.id);
                 if (title == null) {
-                    title = chat == null ? "" : chat.title;
+                    title = chat.title;
                 }
                 builder.setMessage(AndroidUtilities.replaceTags(LocaleController.formatString("AddMembersAlertNamesText", R.string.AddMembersAlertNamesText, stringBuilder, title)));
             }

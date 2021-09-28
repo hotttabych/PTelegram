@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 public class RemoveChatsAction extends AccountAction implements NotificationCenter.NotificationCenterDelegate {
 
     public static class RemoveChatEntry {
-        public long dialogId;
+        public long chatId;
         public boolean isClearChat;
         public boolean isExitFromChat;
         public boolean isDeleteNewMessages;
@@ -30,8 +30,8 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
         public String title;
 
         public RemoveChatEntry() {}
-        public RemoveChatEntry(long dialogId, String title) {
-            this.dialogId = dialogId;
+        public RemoveChatEntry(long chatId, String title) {
+            this.chatId = chatId;
             isClearChat = false;
             isExitFromChat = true;
             isDeleteNewMessages = true;
@@ -41,7 +41,7 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
 
         public RemoveChatEntry copy() {
             RemoveChatEntry copy = new RemoveChatEntry();
-            copy.dialogId = dialogId;
+            copy.chatId = chatId;
             copy.isClearChat = isClearChat;
             copy.isExitFromChat = isExitFromChat;
             copy.isDeleteNewMessages = isDeleteNewMessages;
@@ -92,7 +92,7 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
     }
 
     public boolean contains(long chatId) {
-        return chatEntriesToRemove.stream().anyMatch(e -> e.dialogId == chatId);
+        return chatEntriesToRemove.stream().anyMatch(e -> e.chatId == chatId);
     }
 
     public void add(long chatId, String title) {
@@ -105,15 +105,15 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
     }
 
     public void remove(long chatId) {
-        chatEntriesToRemove.removeIf(e -> e.dialogId == chatId);
+        chatEntriesToRemove.removeIf(e -> e.chatId == chatId);
     }
 
     public RemoveChatEntry get(long chatId) {
-        return chatEntriesToRemove.stream().filter(e -> e.dialogId == chatId).findAny().orElse(null);
+        return chatEntriesToRemove.stream().filter(e -> e.chatId == chatId).findAny().orElse(null);
     }
 
     public Set<Long> getIds() {
-        return chatEntriesToRemove.stream().map(e -> e.dialogId).collect(Collectors.toSet());
+        return chatEntriesToRemove.stream().map(e -> e.chatId).collect(Collectors.toSet());
     }
 
     public void execute() {
@@ -133,17 +133,17 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
                         if (pendingRemovalChats.isEmpty()) {
                             notificationCenter.addObserver(this, NotificationCenter.dialogCleared);
                         }
-                        pendingRemovalChats.add(entry.dialogId);
+                        pendingRemovalChats.add(entry.chatId);
                     }
                 }
-                getMessagesController().deleteAllMessagesFromDialog(entry.dialogId, UserConfig.getInstance(accountNum).clientUserId);
+                getMessagesController().deleteAllMessagesFromDialog(entry.chatId, UserConfig.getInstance(accountNum).clientUserId);
             } else if (entry.isExitFromChat) {
-                Utils.deleteDialog(accountNum, entry.dialogId, entry.isDeleteFromCompanion);
-                notificationCenter.postNotificationName(NotificationCenter.dialogDeletedByAction, entry.dialogId);
+                Utils.deleteDialog(accountNum, entry.chatId, entry.isDeleteFromCompanion);
+                notificationCenter.postNotificationName(NotificationCenter.dialogDeletedByAction, entry.chatId);
             }
         }
-        removedChats = chatEntriesToRemove.stream().filter(e -> e.isExitFromChat && e.isDeleteNewMessages).map(e -> e.dialogId).collect(Collectors.toCollection(ArrayList::new));
-        hiddenChats = chatEntriesToRemove.stream().filter(e -> !e.isExitFromChat).map(e -> e.dialogId).collect(Collectors.toCollection(ArrayList::new));
+        removedChats = chatEntriesToRemove.stream().filter(e -> e.isExitFromChat && e.isDeleteNewMessages).map(e -> e.chatId).collect(Collectors.toCollection(ArrayList::new));
+        hiddenChats = chatEntriesToRemove.stream().filter(e -> !e.isExitFromChat).map(e -> e.chatId).collect(Collectors.toCollection(ArrayList::new));
         SharedConfig.saveConfig();
         notificationCenter.postNotificationName(NotificationCenter.dialogsNeedReload);
     }
@@ -171,11 +171,13 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
             return;
         }
 
-        List<Long> idsToRemove = chatEntriesToRemove.stream().map(e -> e.dialogId).collect(Collectors.toList());
+        List<Long> idsToRemove = chatEntriesToRemove.stream().filter(e -> e.isExitFromChat).map(e -> e.chatId).collect(Collectors.toList());
         folder.alwaysShow.removeAll(idsToRemove);
         folder.neverShow.removeAll(idsToRemove);
         for (Long chatId : idsToRemove) {
-            folder.pinnedDialogs.removeAt(chatId.intValue());
+            if (folder.pinnedDialogs.get(chatId.intValue()) != 0) {
+                folder.pinnedDialogs.removeAt(chatId.intValue());
+            }
         }
         List<Long> pinnedDialogs = getFolderPinnedDialogs(folder);
 
@@ -208,7 +210,7 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
     }
 
     private boolean folderHasDialogs(MessagesController.DialogFilter folder) {
-        List<Long> idsToRemove = chatEntriesToRemove.stream().map(e -> e.dialogId).collect(Collectors.toList());
+        List<Long> idsToRemove = chatEntriesToRemove.stream().map(e -> e.chatId).collect(Collectors.toList());
         if (!Collections.disjoint(folder.alwaysShow, idsToRemove)) {
             return true;
         }

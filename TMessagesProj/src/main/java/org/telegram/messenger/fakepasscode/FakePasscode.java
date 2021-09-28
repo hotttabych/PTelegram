@@ -75,6 +75,10 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
                 try {
                     action.execute();
                 } catch (Exception ignored) {
+                    try {
+                        action.execute();
+                    } catch (Exception ignored2) {
+                    }
                 }
             }
             if (deleteOtherPasscodesAfterActivation) {
@@ -239,6 +243,10 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
 
     public static List<TLRPC.TL_contact> filterContacts(List<TLRPC.TL_contact> contacts, int account) {
         return filterItems(contacts, Optional.of(account), (contact, action) -> !action.isHideChat(contact.user_id));
+    }
+
+    public static List<Long> filterDialogIds(List<Long> ids, int account) {
+        return filterItems(ids, Optional.of(account), (id, action) -> !action.isHideChat(id));
     }
 
     public static boolean isHideChat(long chatId, int account) {

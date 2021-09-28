@@ -139,7 +139,7 @@ public class ChatRemoveCell extends FrameLayout {
         } else if (currentObject instanceof TLRPC.Chat) {
             return -((TLRPC.Chat) currentObject).id;
         } else if (currentObject instanceof RemoveChatsAction.RemoveChatEntry) {
-            return ((RemoveChatsAction.RemoveChatEntry)currentObject).dialogId;
+            return ((RemoveChatsAction.RemoveChatEntry)currentObject).chatId;
         } else {
             return 0;
         }
@@ -332,7 +332,7 @@ public class ChatRemoveCell extends FrameLayout {
                 }
             }
             if (!continueUpdate && currentName == null && lastName != null && (mask & MessagesController.UPDATE_MASK_NAME) != 0) {
-                newName = UserConfig.getChatTitleOverride(currentAccount, entry.dialogId);
+                newName = UserConfig.getChatTitleOverride(currentAccount, entry.chatId);
                 if (newName == null) {
                     newName = entry.title;
                 }
@@ -345,7 +345,7 @@ public class ChatRemoveCell extends FrameLayout {
             }
         }
 
-        avatarDrawable.setInfo(entry.dialogId, entry.title, "");
+        avatarDrawable.setInfo(entry.chatId, entry.title, "");
 
         if (currentName != null) {
             lastName = null;
