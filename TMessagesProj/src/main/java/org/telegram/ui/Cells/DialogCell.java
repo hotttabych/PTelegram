@@ -2082,7 +2082,7 @@ public class DialogCell extends BaseCell {
                     }
                 }
                 if (!continueUpdate && (mask & MessagesController.UPDATE_MASK_READ_DIALOG_MESSAGE) != 0) {
-                    if (message != null && !message.isUnread()) {
+                    if (message != null && !message.isUnread() && lastUnreadState != message.isUnread()) {
                         List<MessageObject> messages = new ArrayList<>();
                         messages.add(message);
                         Utils.startDeleteProcess(currentAccount, currentDialogId, messages);
