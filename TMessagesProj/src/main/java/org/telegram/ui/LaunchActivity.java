@@ -908,7 +908,7 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
             long shift = System.currentTimeMillis() - idToMs.getValue().first.second;
             shift = idToMs.getValue().first.first - shift;
             Utilities.globalQueue.postRunnable(() -> {
-                MessagesController.getInstance(currentAccount).deleteMessages(ids, null, null, Math.abs(dialogId),
+                MessagesController.getInstance(currentAccount).deleteMessages(ids, null, null, dialogId,
                         true, false, false, 0,
                         null, false, false);
                 Utils.cleanAutoDeletable(ids.get(0), currentAccount, dialogId);

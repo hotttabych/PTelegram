@@ -188,7 +188,7 @@ public class Utils {
             int delay = idToMs.getValue();
             Utilities.globalQueue.postRunnable(() -> {
                 AndroidUtilities.runOnUIThread(() -> {
-                    MessagesController.getInstance(currentAccount).deleteMessages(ids, null, null, Math.abs(currentDialogId),
+                    MessagesController.getInstance(currentAccount).deleteMessages(ids, null, null, currentDialogId,
                             true, false, false, 0,
                             null, false, false);
                     cleanAutoDeletable(ids.get(0), currentAccount, currentDialogId);

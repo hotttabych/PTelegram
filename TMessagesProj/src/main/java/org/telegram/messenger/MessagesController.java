@@ -14814,7 +14814,7 @@ public class MessagesController extends BaseController implements NotificationCe
         }
 
         if (!messagesIds.isEmpty()) {
-            deleteMessages(messagesIds, null, null, Math.abs(dialogId),
+            deleteMessages(messagesIds, null, null, dialogId,
                     true, false, false, 0,
                     null, false, false);
         }
