@@ -721,7 +721,8 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
                     SharedConfig.saveConfig();
                     badAttempt.takePhoto(getParentActivity());
                 }
-                if (!result.allowLogin()) {
+                if (!result.allowLogin() || result.isRealPasscodeSuccess && SharedConfig.fakePasscodeActivatedIndex != -1
+                    || result.fakePasscode != null && SharedConfig.getActivatedFakePasscode() != result.fakePasscode) {
                     SharedConfig.increaseBadPasscodeTries();
                     passwordEditText.setText("");
                     onPasscodeError();
