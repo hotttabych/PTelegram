@@ -583,7 +583,7 @@ public class VoIPFragment implements VoIPService.StateListener, NotificationCent
             }
         });
 
-        callingUserPhotoView.setImage(ImageLocation.getForUserOrChat(callingUser, ImageLocation.TYPE_BIG), null, gradientDrawable, callingUser);
+        callingUserPhotoView.setImage(ImageLocation.getForUserOrChat(callingUser, ImageLocation.TYPE_BIG, currentAccount), null, gradientDrawable, callingUser);
 
         currentUserCameraFloatingLayout = new VoIPFloatingLayout(context);
         currentUserCameraFloatingLayout.setDelegate((progress, value) -> currentUserTextureView.setScreenshareMiniProgress(progress, value));
@@ -709,7 +709,7 @@ public class VoIPFragment implements VoIPService.StateListener, NotificationCent
         statusLayout.setFocusableInTouchMode(true);
 
         callingUserPhotoViewMini = new BackupImageView(context);
-        callingUserPhotoViewMini.setImage(ImageLocation.getForUserOrChat(callingUser, ImageLocation.TYPE_SMALL), null, Theme.createCircleDrawable(AndroidUtilities.dp(135), 0xFF000000), callingUser);
+        callingUserPhotoViewMini.setImage(ImageLocation.getForUserOrChat(callingUser, ImageLocation.TYPE_SMALL, currentAccount), null, Theme.createCircleDrawable(AndroidUtilities.dp(135), 0xFF000000), callingUser);
         callingUserPhotoViewMini.setRoundRadius(AndroidUtilities.dp(135) / 2);
         callingUserPhotoViewMini.setVisibility(View.GONE);
 

@@ -129,7 +129,7 @@ public class UserConfig extends BaseController {
     }
 
     public static ChatInfoOverride getChatInfoOverride(int accountNum, long id) {
-        return  getChatInfoOverride(accountNum < UserConfig.MAX_ACCOUNT_COUNT ? UserConfig.getInstance(accountNum) : null, id);
+        return getChatInfoOverride(accountNum < UserConfig.MAX_ACCOUNT_COUNT ? UserConfig.getInstance(accountNum) : null, id);
     }
 
     public static ChatInfoOverride getChatInfoOverride(UserConfig config, long id) {
@@ -140,16 +140,30 @@ public class UserConfig extends BaseController {
         }
     }
 
-    public static String getChatTitleOverride(int accountNum, long id) {
-        return getChatTitleOverride(accountNum < UserConfig.MAX_ACCOUNT_COUNT ? UserConfig.getInstance(accountNum) : null, id);
+    public static boolean isAvatarEnabled(int accountNum, long id) {
+        ChatInfoOverride chatInfo = getChatInfoOverride(accountNum, id);
+        return chatInfo == null || chatInfo.avatarEnabled;
+    }
+
+    public static String getChatTitleOverride(Integer accountNum, long id) {
+        return getChatTitleOverride(accountNum, id, null);
+    }
+
+    public static String getChatTitleOverride(Integer accountNum, long id, String defaultValue) {
+        UserConfig config = accountNum != null && accountNum < UserConfig.MAX_ACCOUNT_COUNT ? UserConfig.getInstance(accountNum) : null;
+        return getChatTitleOverride(config, id, defaultValue);
     }
 
     public static String getChatTitleOverride(UserConfig config, long id) {
+        return getChatTitleOverride(config, id, null);
+    }
+
+    public static String getChatTitleOverride(UserConfig config, long id, String defaultValue) {
         ChatInfoOverride chatInfo = getChatInfoOverride(config, id);
         if (chatInfo != null) {
             return chatInfo.title;
         } else {
-            return null;
+            return defaultValue;
         }
     }
 

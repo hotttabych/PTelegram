@@ -184,7 +184,7 @@ public class AvatarDrawable extends Drawable {
         }
     }
 
-    public void setInfo(TLRPC.User user, int accountNum) {
+    public void setInfo(TLRPC.User user, Integer accountNum) {
         if (user != null) {
             drawDeleted = UserObject.isDeleted(user);
             String title = UserConfig.getChatTitleOverride(accountNum, user.id);
@@ -204,7 +204,7 @@ public class AvatarDrawable extends Drawable {
         }
     }
 
-    public void setInfo(TLObject object, int accountNum) {
+    public void setInfo(TLObject object, Integer accountNum) {
         if (object instanceof TLRPC.User) {
             setInfo((TLRPC.User) object, accountNum);
         } else if (object instanceof TLRPC.Chat) {
@@ -262,7 +262,7 @@ public class AvatarDrawable extends Drawable {
         }
     }
 
-    public void setInfo(TLRPC.Chat chat, int accountNum) {
+    public void setInfo(TLRPC.Chat chat, Integer accountNum) {
         if (chat != null) {
             String title = UserConfig.getChatTitleOverride(accountNum, chat.id);
             setInfo(chat.id, title != null ? title : chat.title, null, null);

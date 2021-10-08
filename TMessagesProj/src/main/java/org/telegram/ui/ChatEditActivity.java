@@ -964,7 +964,7 @@ public class ChatEditActivity extends BaseFragment implements ImageUpdater.Image
         boolean hasPhoto;
         if (currentChat.photo != null) {
             avatar = currentChat.photo.photo_small;
-            ImageLocation location = ImageLocation.getForUserOrChat(currentChat, ImageLocation.TYPE_SMALL);
+            ImageLocation location = ImageLocation.getForUserOrChat(currentChat, ImageLocation.TYPE_SMALL, currentAccount);
             avatarImage.setForUserOrChat(currentChat, avatarDrawable);
             hasPhoto = location != null;
         } else {
