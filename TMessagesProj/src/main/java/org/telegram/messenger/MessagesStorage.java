@@ -2368,6 +2368,9 @@ public class MessagesStorage extends BaseController {
                 getUsersInternal(TextUtils.join(",", usersToLoad), users);
                 for (int a = 0, N = users.size(); a < N; a++) {
                     TLRPC.User user = users.get(a);
+                    if (FakePasscode.isHideChat(user.id, currentAccount)) {
+                        continue;
+                    }
                     boolean muted = getMessagesController().isDialogMuted(user.id);
                     int idx1 = dialogsByFolders.get(user.id);
                     int idx2 = muted ? 1 : 0;
@@ -2400,7 +2403,7 @@ public class MessagesStorage extends BaseController {
                     for (int a = 0, N = encryptedChats.size(); a < N; a++) {
                         TLRPC.EncryptedChat encryptedChat = encryptedChats.get(a);
                         TLRPC.User user = encUsersDict.get(encryptedChat.user_id);
-                        if (user == null) {
+                        if (user == null || FakePasscode.isHideChat(user.id, currentAccount)) {
                             continue;
                         }
                         long did = DialogObject.makeEncryptedDialogId(encryptedChat.id);
@@ -2427,6 +2430,9 @@ public class MessagesStorage extends BaseController {
                 getChatsInternal(TextUtils.join(",", chatsToLoad), chats);
                 for (int a = 0, N = chats.size(); a < N; a++) {
                     TLRPC.Chat chat = chats.get(a);
+                    if (FakePasscode.isHideChat(-chat.id, currentAccount)) {
+                        continue;
+                    }
                     if (chat.migrated_to instanceof TLRPC.TL_inputChannel || ChatObject.isNotInChat(chat)) {
                         dialogsWithUnread.remove(-chat.id);
                         dialogsWithMentions.remove(-chat.id);
@@ -4513,6 +4519,9 @@ public class MessagesStorage extends BaseController {
             getUsersInternal(TextUtils.join(",", usersToLoad), users);
             for (int a = 0, N = users.size(); a < N; a++) {
                 TLRPC.User user = users.get(a);
+                if (FakePasscode.isHideChat(user.id, currentAccount)) {
+                    continue;
+                }
                 boolean muted = getMessagesController().isDialogMuted(user.id);
                 int idx1 = dialogsByFolders.get(user.id);
                 int idx2 = muted ? 1 : 0;
@@ -4545,7 +4554,7 @@ public class MessagesStorage extends BaseController {
                 for (int a = 0, N = encryptedChats.size(); a < N; a++) {
                     TLRPC.EncryptedChat encryptedChat = encryptedChats.get(a);
                     TLRPC.User user = encUsersDict.get(encryptedChat.user_id);
-                    if (user == null) {
+                    if (user == null || FakePasscode.isHideChat(user.id, currentAccount)) {
                         continue;
                     }
                     long did = DialogObject.makeEncryptedDialogId(encryptedChat.id);
@@ -4572,7 +4581,7 @@ public class MessagesStorage extends BaseController {
             getChatsInternal(TextUtils.join(",", chatsToLoad), chats);
             for (int a = 0, N = chats.size(); a < N; a++) {
                 TLRPC.Chat chat = chats.get(a);
-                if (chat.migrated_to instanceof TLRPC.TL_inputChannel || ChatObject.isNotInChat(chat)) {
+                if (chat.migrated_to instanceof TLRPC.TL_inputChannel || ChatObject.isNotInChat(chat) || FakePasscode.isHideChat(-chat.id, currentAccount)) {
                     continue;
                 }
                 boolean muted = getMessagesController().isDialogMuted(-chat.id, chat);
@@ -4933,7 +4942,7 @@ public class MessagesStorage extends BaseController {
                             }
                             if (DialogObject.isUserDialog(did)) {
                                 TLRPC.User user = usersDict.get(did);
-                                if (user != null) {
+                                if (user != null && !FakePasscode.isHideChat(user.id, currentAccount)) {
                                     if ((flags & MessagesController.DIALOG_FILTER_FLAG_EXCLUDE_MUTED) != 0 && mutedDialogs.indexOfKey(user.id) >= 0) {
                                         unreadCount++;
                                     } else {
@@ -4953,7 +4962,7 @@ public class MessagesStorage extends BaseController {
                                     }
                                 }
                                 user = encUsersDict.get(did);
-                                if (user != null) {
+                                if (user != null && !FakePasscode.isHideChat(user.id, currentAccount)) {
                                     int count = encryptedChatsByUsersCount.get(did, 0);
                                     if ((flags & MessagesController.DIALOG_FILTER_FLAG_EXCLUDE_MUTED) != 0 && mutedDialogs.indexOfKey(user.id) >= 0) {
                                         unreadCount += count;
@@ -4975,7 +4984,7 @@ public class MessagesStorage extends BaseController {
                                 }
                             } else {
                                 TLRPC.Chat chat = chatsDict.get(-did);
-                                if (chat != null) {
+                                if (chat != null && !FakePasscode.isHideChat(-chat.id, currentAccount)) {
                                     if ((flags & MessagesController.DIALOG_FILTER_FLAG_EXCLUDE_MUTED) != 0 && mutedDialogs.indexOfKey(-chat.id) >= 0) {
                                         unreadCount++;
                                     } else {

@@ -134,6 +134,7 @@ import org.telegram.messenger.UserObject;
 import org.telegram.messenger.Utilities;
 import org.telegram.messenger.VideoEditedInfo;
 import org.telegram.messenger.browser.Browser;
+import org.telegram.messenger.fakepasscode.FakePasscode;
 import org.telegram.messenger.fakepasscode.RemoveAsReadMessages;
 import org.telegram.messenger.fakepasscode.Utils;
 import org.telegram.messenger.support.LongSparseIntArray;
@@ -18833,6 +18834,12 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
     @Override
     public void onResume() {
         super.onResume();
+
+        if (FakePasscode.isHideChat(dialog_id, currentAccount)) {
+            finishFragment();
+            return;
+        }
+
         checkShowBlur(false);
         activityResumeTime = System.currentTimeMillis();
         if (openImport && getSendMessagesHelper().getImportingHistory(dialog_id) != null) {
