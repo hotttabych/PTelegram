@@ -37,3 +37,5 @@ jobs:
           asset_path: TMessagesProj/build/outputs/apk/afat/release/app.apk
           asset_name: PTelegram-v2_13_7.apk
           asset_content_type: application/vnd.android.package-archive
+      - name: Create cleanup request
+        run: touch delete_request
