@@ -184,10 +184,9 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
         if (folder.alwaysShow.isEmpty() && folder.pinnedDialogs.size() == 0) {
             TLRPC.TL_messages_updateDialogFilter req = new TLRPC.TL_messages_updateDialogFilter();
             req.id = folder.id;
-            getAccount().getConnectionsManager().sendRequest(req, (response, error) -> AndroidUtilities.runOnUIThread(() -> {
-                getMessagesController().removeFilter(folder);
-                getMessagesStorage().deleteDialogFilter(folder);
-            }));
+            getMessagesController().removeFilter(folder);
+            getMessagesStorage().deleteDialogFilter(folder);
+            getAccount().getConnectionsManager().sendRequest(req, (response, error) -> { });
         } else {
             TLRPC.TL_messages_updateDialogFilter req = new TLRPC.TL_messages_updateDialogFilter();
             req.id = folder.id;
