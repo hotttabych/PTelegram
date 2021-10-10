@@ -4844,6 +4844,9 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
             updateAppUpdateViews(mainFragmentsStack.size() == 1);
         } else if (id == NotificationCenter.appDidLogoutByAction) {
             switchToAvailableAccountIfCurrentAccountIsHidden();
+            if (drawerLayoutAdapter != null) {
+                drawerLayoutAdapter.notifyDataSetChanged();
+            }
         } else if (id == NotificationCenter.fakePasscodeActivated) {
             switchToAvailableAccountIfCurrentAccountIsHidden();
         }
