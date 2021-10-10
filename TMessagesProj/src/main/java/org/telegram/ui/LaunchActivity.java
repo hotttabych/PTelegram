@@ -4843,7 +4843,10 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
         } else if (id == NotificationCenter.appUpdateAvailable) {
             updateAppUpdateViews(mainFragmentsStack.size() == 1);
         } else if (id == NotificationCenter.appDidLogoutByAction) {
-            switchToAvailableAccountOrLogout();
+            switchToAvailableAccountIfCurrentAccountIsHidden();
+            if (drawerLayoutAdapter != null) {
+                drawerLayoutAdapter.notifyDataSetChanged();
+            }
         } else if (id == NotificationCenter.fakePasscodeActivated) {
             switchToAvailableAccountIfCurrentAccountIsHidden();
         }
