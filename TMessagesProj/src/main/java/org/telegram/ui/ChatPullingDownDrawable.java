@@ -127,8 +127,8 @@ public class ChatPullingDownDrawable implements NotificationCenter.NotificationC
                 MessagesController.getInstance(currentAccount).getChat(dialog.id);
             }
             AvatarDrawable avatarDrawable = new AvatarDrawable();
-            avatarDrawable.setInfo(nextChat);
-            imageReceiver.setImage(ImageLocation.getForChat(nextChat, ImageLocation.TYPE_SMALL), "50_50", avatarDrawable, null, UserConfig.getInstance(0).getCurrentUser(), 0);
+            avatarDrawable.setInfo(nextChat, currentAccount);
+            imageReceiver.setImage(ImageLocation.getForChat(nextChat, ImageLocation.TYPE_SMALL, currentAccount), "50_50", avatarDrawable, null, UserConfig.getInstance(0).getCurrentUser(), 0);
             MessagesController.getInstance(currentAccount).ensureMessagesLoaded(dialog.id, 0, null);
             counterDrawable.setCount(dialog.unread_count, false);
         } else {
@@ -143,7 +143,7 @@ public class ChatPullingDownDrawable implements NotificationCenter.NotificationC
             circleRadius = AndroidUtilities.dp(56) / 2f;
             lastWidth = width;
 
-            String nameStr = nextChat != null ? nextChat.title : LocaleController.getString("SwipeToGoNextChannelEnd", R.string.SwipeToGoNextChannelEnd);
+            String nameStr = nextChat != null ? UserConfig.getChatTitleOverride(currentAccount, nextChat.id, nextChat.title) : LocaleController.getString("SwipeToGoNextChannelEnd", R.string.SwipeToGoNextChannelEnd);
             chatNameWidth = (int) textPaint.measureText(nameStr);
             chatNameWidth = Math.min(chatNameWidth, lastWidth - AndroidUtilities.dp(60));
             chatNameLayout = new StaticLayout(nameStr, textPaint, chatNameWidth, Layout.Alignment.ALIGN_NORMAL, 1.0f, 0.0f, false);

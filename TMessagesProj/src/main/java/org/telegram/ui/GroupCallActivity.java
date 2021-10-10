@@ -7132,12 +7132,12 @@ public class GroupCallActivity extends BottomSheet implements NotificationCenter
         final ImageLocation thumbLocation;
         if (peerId > 0) {
             TLRPC.User currentUser = accountInstance.getMessagesController().getUser(peerId);
-            imageLocation = ImageLocation.getForUserOrChat(currentUser, ImageLocation.TYPE_BIG);
-            thumbLocation = ImageLocation.getForUserOrChat(currentUser, ImageLocation.TYPE_SMALL);
+            imageLocation = ImageLocation.getForUserOrChat(currentUser, ImageLocation.TYPE_BIG, currentAccount);
+            thumbLocation = ImageLocation.getForUserOrChat(currentUser, ImageLocation.TYPE_SMALL, currentAccount);
         } else {
             TLRPC.Chat currentChat = accountInstance.getMessagesController().getChat(-peerId);
-            imageLocation = ImageLocation.getForUserOrChat(currentChat, ImageLocation.TYPE_BIG);
-            thumbLocation = ImageLocation.getForUserOrChat(currentChat, ImageLocation.TYPE_SMALL);
+            imageLocation = ImageLocation.getForUserOrChat(currentChat, ImageLocation.TYPE_BIG, currentAccount);
+            thumbLocation = ImageLocation.getForUserOrChat(currentChat, ImageLocation.TYPE_SMALL, currentAccount);
         }
 
         boolean hasAttachedRenderer = scrimRenderer != null && scrimRenderer.isAttached();
@@ -8093,7 +8093,7 @@ public class GroupCallActivity extends BottomSheet implements NotificationCenter
                                     src.renameTo(destFile);
                                     String oldKey = avatar.volume_id + "_" + avatar.local_id + "@50_50";
                                     String newKey = small.location.volume_id + "_" + small.location.local_id + "@50_50";
-                                    ImageLoader.getInstance().replaceImageInCache(oldKey, newKey, ImageLocation.getForUser(user, ImageLocation.TYPE_SMALL), false);
+                                    ImageLoader.getInstance().replaceImageInCache(oldKey, newKey, ImageLocation.getForUser(user, ImageLocation.TYPE_SMALL, currentAccount), false);
                                 }
 
                                 if (big != null && avatarBig != null) {
@@ -8115,8 +8115,8 @@ public class GroupCallActivity extends BottomSheet implements NotificationCenter
                                 final ImageLocation imageLocation;
                                 final ImageLocation thumbLocation;
                                 TLRPC.User currentUser = accountInstance.getMessagesController().getUser(peerId);
-                                imageLocation = ImageLocation.getForUser(currentUser, ImageLocation.TYPE_BIG);
-                                thumbLocation = ImageLocation.getForUser(currentUser, ImageLocation.TYPE_SMALL);
+                                imageLocation = ImageLocation.getForUser(currentUser, ImageLocation.TYPE_BIG, currentAccount);
+                                thumbLocation = ImageLocation.getForUser(currentUser, ImageLocation.TYPE_SMALL, currentAccount);
                                 ImageLocation thumb = ImageLocation.getForLocal(avatarBig);
                                 if (thumb == null) {
                                     thumb = ImageLocation.getForLocal(avatar);
@@ -8143,8 +8143,8 @@ public class GroupCallActivity extends BottomSheet implements NotificationCenter
                             }
 
                             TLRPC.Chat currentChat = accountInstance.getMessagesController().getChat(-peerId);
-                            ImageLocation imageLocation = ImageLocation.getForChat(currentChat, ImageLocation.TYPE_BIG);
-                            ImageLocation thumbLocation = ImageLocation.getForChat(currentChat, ImageLocation.TYPE_SMALL);
+                            ImageLocation imageLocation = ImageLocation.getForChat(currentChat, ImageLocation.TYPE_BIG, accountInstance.getCurrentAccount());
+                            ImageLocation thumbLocation = ImageLocation.getForChat(currentChat, ImageLocation.TYPE_SMALL, accountInstance.getCurrentAccount());
                             ImageLocation thumb = ImageLocation.getForLocal(avatarBig);
                             if (thumb == null) {
                                 thumb = ImageLocation.getForLocal(avatar);

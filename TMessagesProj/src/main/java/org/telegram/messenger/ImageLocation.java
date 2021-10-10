@@ -109,16 +109,24 @@ public class ImageLocation {
     public static final int TYPE_STRIPPED = 2;
 
     public static ImageLocation getForUserOrChat(TLObject object, int type) {
+        return getForUserOrChat(object, type, null);
+    }
+
+    public static ImageLocation getForUserOrChat(TLObject object, int type, Integer accountNum) {
         if (object instanceof TLRPC.User) {
-            return getForUser((TLRPC.User) object, type);
+            return getForUser((TLRPC.User) object, type, accountNum);
         } else if (object instanceof TLRPC.Chat) {
-            return getForChat((TLRPC.Chat) object, type);
+            return getForChat((TLRPC.Chat) object, type, accountNum);
         }
         return null;
     }
 
     public static ImageLocation getForUser(TLRPC.User user, int type) {
-        if (user == null || user.access_hash == 0 || user.photo == null) {
+        return getForUser(user, type, null);
+    }
+
+    public static ImageLocation getForUser(TLRPC.User user, int type, Integer accountNum) {
+        if (user == null || user.access_hash == 0 || user.photo == null || (accountNum != null && !UserConfig.isAvatarEnabled(accountNum, user.id))) {
             return null;
         }
         if (type == TYPE_STRIPPED) {
@@ -150,9 +158,14 @@ public class ImageLocation {
     }
 
     public static ImageLocation getForChat(TLRPC.Chat chat, int type) {
-        if (chat == null || chat.photo == null) {
+        return getForChat(chat, type, null);
+    }
+
+    public static ImageLocation getForChat(TLRPC.Chat chat, int type, Integer accountNum) {
+        if (chat == null || chat.photo == null || (accountNum != null && !UserConfig.isAvatarEnabled(accountNum, chat.id))) {
             return null;
         }
+
         if (type == TYPE_STRIPPED) {
             if (chat.photo.stripped_thumb == null) {
                 return null;

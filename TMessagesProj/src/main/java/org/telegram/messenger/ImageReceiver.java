@@ -369,11 +369,11 @@ public class ImageReceiver implements NotificationCenter.NotificationCenterDeleg
         }
         if (avatarEnabled) {
             if (strippedBitmap != null) {
-                setImage(ImageLocation.getForUserOrChat(object, ImageLocation.TYPE_SMALL), "50_50", strippedBitmap, null, parentObject, 0);
+                setImage(ImageLocation.getForUserOrChat(object, ImageLocation.TYPE_SMALL, currentAccount), "50_50", strippedBitmap, null, parentObject, 0);
             } else if (hasStripped) {
-                setImage(ImageLocation.getForUserOrChat(object, ImageLocation.TYPE_SMALL), "50_50", ImageLocation.getForUserOrChat(object, ImageLocation.TYPE_STRIPPED), "50_50", avatarDrawable, parentObject, 0);
+                setImage(ImageLocation.getForUserOrChat(object, ImageLocation.TYPE_SMALL, currentAccount), "50_50", ImageLocation.getForUserOrChat(object, ImageLocation.TYPE_STRIPPED), "50_50", avatarDrawable, parentObject, 0);
             } else {
-                setImage(ImageLocation.getForUserOrChat(object, ImageLocation.TYPE_SMALL), "50_50", avatarDrawable, null, parentObject, 0);
+                setImage(ImageLocation.getForUserOrChat(object, ImageLocation.TYPE_SMALL, currentAccount), "50_50", avatarDrawable, null, parentObject, 0);
             }
         } else {
             setImage(null, "50_50", avatarDrawable, null, parentObject, 0);

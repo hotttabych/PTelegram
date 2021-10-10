@@ -266,7 +266,7 @@ public class MessageSeenView extends FrameLayout {
             @Override
             public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
                 UserCell cell = (UserCell) holder.itemView;
-                cell.setUser(users.get(position));
+                cell.setUser(users.get(position), currentAccount);
             }
 
             @Override
@@ -304,9 +304,13 @@ public class MessageSeenView extends FrameLayout {
         }
 
         public void setUser(TLRPC.User user) {
+            setUser(user, null);
+        }
+
+        public void setUser(TLRPC.User user, Integer accountNum) {
             if (user != null) {
-                avatarDrawable.setInfo(user);
-                ImageLocation imageLocation = ImageLocation.getForUser(user, ImageLocation.TYPE_SMALL);
+                avatarDrawable.setInfo(user, accountNum);
+                ImageLocation imageLocation = ImageLocation.getForUser(user, ImageLocation.TYPE_SMALL, accountNum);
                 avatarImageView.setImage(imageLocation, "50_50", avatarDrawable, user);
                 nameView.setText(ContactsController.formatName(user.first_name, user.last_name));
             }

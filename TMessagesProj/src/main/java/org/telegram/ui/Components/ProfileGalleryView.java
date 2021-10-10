@@ -749,10 +749,10 @@ public class ProfileGalleryView extends CircularViewPager implements Notificatio
                 ImageLocation currentImageLocation = null;
                 if (DialogObject.isChatDialog(did)) {
                     TLRPC.Chat chat = MessagesController.getInstance(currentAccount).getChat(-did);
-                    currentImageLocation = ImageLocation.getForUserOrChat(chat, ImageLocation.TYPE_BIG);
+                    currentImageLocation = ImageLocation.getForUserOrChat(chat, ImageLocation.TYPE_BIG, currentAccount);
                     if (currentImageLocation != null) {
                         imagesLocations.add(currentImageLocation);
-                        thumbsLocations.add(ImageLocation.getForUserOrChat(chat, ImageLocation.TYPE_SMALL));
+                        thumbsLocations.add(ImageLocation.getForUserOrChat(chat, ImageLocation.TYPE_SMALL, currentAccount));
                         thumbsFileNames.add(null);
                         if (chatInfo != null && FileLoader.isSamePhoto(currentImageLocation.location, chatInfo.chat_photo)) {
                             photos.add(chatInfo.chat_photo);
