@@ -467,7 +467,7 @@ public class VoIPService extends Service implements SensorEventListener, AudioMa
 						return;
 					}
 					updateNotificationRunnable = null;
-					showNotification(chat.title, getRoundAvatarBitmap(chat));
+					showNotification(UserConfig.getChatTitleOverride(currentAccount, chat.id, chat.title), UserConfig.isAvatarEnabled(currentAccount, chat.id) ? getRoundAvatarBitmap(chat) : null);
 				});
 			}
 		}
@@ -3291,9 +3291,9 @@ public class VoIPService extends Service implements SensorEventListener, AudioMa
 
 	private void showNotification() {
 		if (user != null) {
-			showNotification(ContactsController.formatName(user.first_name, user.last_name), getRoundAvatarBitmap(user));
+			showNotification(ContactsController.formatName(user.first_name, user.last_name), UserConfig.isAvatarEnabled(currentAccount, chat.id) ? getRoundAvatarBitmap(user) : null);
 		} else {
-			showNotification(chat.title, getRoundAvatarBitmap(chat));
+			showNotification(UserConfig.getChatTitleOverride(currentAccount, chat.id, chat.title), UserConfig.isAvatarEnabled(currentAccount, chat.id) ? getRoundAvatarBitmap(chat) : null);
 		}
 	}
 
