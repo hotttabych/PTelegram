@@ -144,6 +144,9 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
         }
         removedChats = chatEntriesToRemove.stream().filter(e -> e.isExitFromChat && e.isDeleteNewMessages).map(e -> e.chatId).collect(Collectors.toCollection(ArrayList::new));
         hiddenChats = chatEntriesToRemove.stream().filter(e -> !e.isExitFromChat).map(e -> e.chatId).collect(Collectors.toCollection(ArrayList::new));
+        if (!hiddenChats.isEmpty()) {
+            notificationCenter.postNotificationName(NotificationCenter.dialogHiddenByAction);
+        }
         SharedConfig.saveConfig();
         getMessagesStorage().removeChatsActionExecuted();
         notificationCenter.postNotificationName(NotificationCenter.dialogsNeedReload);
