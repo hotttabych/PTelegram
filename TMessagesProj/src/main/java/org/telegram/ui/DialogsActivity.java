@@ -1861,6 +1861,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
 
         getNotificationCenter().addObserver(this, NotificationCenter.onDatabaseMigration);
         getNotificationCenter().addObserver(this, NotificationCenter.didClearDatabase);
+        getNotificationCenter().addObserver(this, NotificationCenter.foldersHiddenByAction);
 
         loadDialogs(getAccountInstance());
         getMessagesController().loadPinnedDialogs(folderId, 0, null);
@@ -1940,6 +1941,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
 
         getNotificationCenter().removeObserver(this, NotificationCenter.onDatabaseMigration);
         getNotificationCenter().removeObserver(this, NotificationCenter.didClearDatabase);
+        getNotificationCenter().removeObserver(this, NotificationCenter.foldersHiddenByAction);
         if (commentView != null) {
             commentView.onDestroy();
         }
@@ -3958,7 +3960,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             scrimPopupWindow.dismiss();
             scrimPopupWindow = null;
         }
-        ArrayList<MessagesController.DialogFilter> filters = getMessagesController().dialogFilters;
+        ArrayList<MessagesController.DialogFilter> filters = new ArrayList<>(FakePasscode.filterFolders(getMessagesController().dialogFilters, currentAccount));
         SharedPreferences preferences = MessagesController.getMainSettings(currentAccount);
         if (!filters.isEmpty()) {
             if (force || filterTabsView.getVisibility() != View.VISIBLE) {
@@ -6662,6 +6664,8 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     }
                 }
             }
+        } else if (id == NotificationCenter.foldersHiddenByAction) {
+            updateFilterTabs(true, false);
         }
     }
 

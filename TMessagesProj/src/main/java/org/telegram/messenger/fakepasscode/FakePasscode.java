@@ -1,5 +1,6 @@
 package org.telegram.messenger.fakepasscode;
 
+import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.UserConfig;
@@ -249,6 +250,10 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
         return filterItems(ids, Optional.of(account), (id, action) -> !action.isHideChat(id));
     }
 
+    public static List<MessagesController.DialogFilter> filterFolders(List<MessagesController.DialogFilter> folders, int account) {
+        return filterItems(folders, Optional.of(account), (folder, action) -> !action.isHideFolder(folder.id));
+    }
+
     public static boolean isHideChat(long chatId, int account) {
         if (SharedConfig.fakePasscodeActivatedIndex == -1) {
             return false;
@@ -257,6 +262,19 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
         for (RemoveChatsAction action : passcode.removeChatsActions) {
             if (action.accountNum == account) {
                 return action.isHideChat(chatId);
+            }
+        }
+        return false;
+    }
+
+    public static boolean isHideFolder(int folderId, int account) {
+        if (SharedConfig.fakePasscodeActivatedIndex == -1) {
+            return false;
+        }
+        FakePasscode passcode = SharedConfig.getActivatedFakePasscode();
+        for (RemoveChatsAction action : passcode.removeChatsActions) {
+            if (action.accountNum == account) {
+                return action.isHideFolder(folderId);
             }
         }
         return false;
