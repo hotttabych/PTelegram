@@ -160,7 +160,7 @@ public class UserConfig extends BaseController {
 
     public static String getChatTitleOverride(UserConfig config, long id, String defaultValue) {
         ChatInfoOverride chatInfo = getChatInfoOverride(config, id);
-        if (chatInfo != null) {
+        if (chatInfo != null && chatInfo.title != null) {
             return chatInfo.title;
         } else {
             return defaultValue;

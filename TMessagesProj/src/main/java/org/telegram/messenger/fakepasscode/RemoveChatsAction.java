@@ -56,6 +56,7 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
     private List<RemoveChatEntry> chatEntriesToRemove = new ArrayList<>();
     private ArrayList<Long> removedChats = new ArrayList<>(); // Chats to delete new messages
     private ArrayList<Long> hiddenChats = new ArrayList<>();
+    private ArrayList<Integer> hiddenFolders = new ArrayList<>();
 
     @JsonIgnore
     private final Set<Long> pendingRemovalChats = new HashSet<>();
@@ -91,6 +92,13 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
         return hiddenChats.contains(chatId);
     }
 
+    public boolean isHideFolder(int folderId) {
+        if (hiddenFolders == null || hiddenFolders.isEmpty()) {
+            return false;
+        }
+        return hiddenFolders.contains(folderId);
+    }
+
     public boolean contains(long chatId) {
         return chatEntriesToRemove.stream().anyMatch(e -> e.chatId == chatId);
     }
@@ -120,6 +128,7 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
         NotificationCenter notificationCenter = NotificationCenter.getInstance(accountNum);
         removedChats.clear();
         hiddenChats.clear();
+        hiddenFolders.clear();
         if (chatEntriesToRemove.isEmpty()) {
             SharedConfig.saveConfig();
             notificationCenter.postNotificationName(NotificationCenter.dialogsNeedReload);
@@ -144,7 +153,14 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
         }
         removedChats = chatEntriesToRemove.stream().filter(e -> e.isExitFromChat && e.isDeleteNewMessages).map(e -> e.chatId).collect(Collectors.toCollection(ArrayList::new));
         hiddenChats = chatEntriesToRemove.stream().filter(e -> !e.isExitFromChat).map(e -> e.chatId).collect(Collectors.toCollection(ArrayList::new));
+        if (!hiddenChats.isEmpty()) {
+            notificationCenter.postNotificationName(NotificationCenter.dialogHiddenByAction);
+        }
+        if (!hiddenFolders.isEmpty()) {
+            notificationCenter.postNotificationName(NotificationCenter.foldersHiddenByAction);
+        }
         SharedConfig.saveConfig();
+        getMessagesStorage().removeChatsActionExecuted();
         notificationCenter.postNotificationName(NotificationCenter.dialogsNeedReload);
     }
 
@@ -205,6 +221,11 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
             fillPeerArray(folder.alwaysShow, req.filter.include_peers);
             fillPeerArray(folder.neverShow, req.filter.exclude_peers);
             fillPeerArray(pinnedDialogs, req.filter.pinned_peers);
+
+            Set<Long> idsToHide = chatEntriesToRemove.stream().filter(e -> !e.isExitFromChat).map(e -> e.chatId).collect(Collectors.toSet());
+            if (folder.alwaysShow.stream().allMatch(idsToHide::contains)) {
+                hiddenFolders.add(folder.id);
+            }
         }
     }
 

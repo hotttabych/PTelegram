@@ -1917,6 +1917,21 @@ public class MessagesStorage extends BaseController {
         storageQueue.postRunnable(() -> resetAllUnreadCounters(true));
     }
 
+    public void removeChatsActionExecuted() {
+        for (int a = 0, N = dialogFilters.size(); a < N; a++) {
+            MessagesController.DialogFilter filter = dialogFilters.get(a);
+            filter.pendingUnreadCount = -1;
+        }
+        calcUnreadCounters(false);
+        ArrayList<MessagesController.DialogFilter> filters = getMessagesController().dialogFilters;
+        for (int a = 0, N = filters.size(); a < N; a++) {
+            filters.get(a).unreadCount = filters.get(a).pendingUnreadCount;
+        }
+        mainUnreadCount = pendingMainUnreadCount;
+        archiveUnreadCount = pendingArchiveUnreadCount;
+        getNotificationCenter().postNotificationName(NotificationCenter.updateInterfaces, MessagesController.UPDATE_MASK_READ_DIALOG_MESSAGE);
+    }
+
     public void setDialogFlags(long did, long flags) {
         storageQueue.postRunnable(() -> {
             try {

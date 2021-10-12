@@ -285,7 +285,7 @@ public class GroupCallPipAlertView extends LinearLayout implements VoIPService.S
             AvatarDrawable avatarDrawable = new AvatarDrawable();
             avatarDrawable.setColor(color2);
             avatarDrawable.setInfo(service.getChat(), currentAccount);
-            avatarImageView.setImage(ImageLocation.getForLocal(service.getChat().photo.photo_small), "50_50", avatarDrawable, null);
+            avatarImageView.setImage(UserConfig.isAvatarEnabled(currentAccount, service.getChat().id) ? ImageLocation.getForLocal(service.getChat().photo.photo_small) : null, "50_50", avatarDrawable, null);
 
             String titleStr;
             if (!TextUtils.isEmpty(service.groupCall.call.title)) {

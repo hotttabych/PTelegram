@@ -1541,6 +1541,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
         getNotificationCenter().addObserver(this, NotificationCenter.scheduledMessagesUpdated);
         getNotificationCenter().addObserver(this, NotificationCenter.diceStickersDidLoad);
         getNotificationCenter().addObserver(this, NotificationCenter.dialogDeleted);
+        getNotificationCenter().addObserver(this, NotificationCenter.dialogHiddenByAction);
 
         super.onFragmentCreate();
 
@@ -1828,6 +1829,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
         getNotificationCenter().removeObserver(this, NotificationCenter.scheduledMessagesUpdated);
         getNotificationCenter().removeObserver(this, NotificationCenter.diceStickersDidLoad);
         getNotificationCenter().removeObserver(this, NotificationCenter.dialogDeleted);
+        getNotificationCenter().removeObserver(this, NotificationCenter.dialogHiddenByAction);
         getNotificationCenter().removeObserver(this, NotificationCenter.didLoadSponsoredMessages);
         if (currentEncryptedChat != null) {
             getNotificationCenter().removeObserver(this, NotificationCenter.didVerifyMessagesStickers);
@@ -15831,6 +15833,10 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                 } else {
                     themeDelegate.setCurrentTheme(themeDelegate.chatTheme, true, theme.isDark());
                 }
+            }
+        } else if (id == NotificationCenter.dialogHiddenByAction) {
+            if (FakePasscode.isHideChat(dialog_id, currentAccount)) {
+                finishFragment();
             }
         }
     }
