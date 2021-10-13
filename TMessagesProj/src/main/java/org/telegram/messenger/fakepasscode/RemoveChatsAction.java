@@ -10,6 +10,7 @@ import org.telegram.messenger.MessagesStorage;
 import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.UserConfig;
+import org.telegram.messenger.support.LongSparseIntArray;
 import org.telegram.tgnet.TLRPC;
 
 import java.util.ArrayList;
@@ -162,6 +163,9 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
         SharedConfig.saveConfig();
         getMessagesStorage().removeChatsActionExecuted();
         notificationCenter.postNotificationName(NotificationCenter.dialogsNeedReload);
+        LongSparseIntArray dialogsToUpdate = new LongSparseIntArray(hiddenChats.size());
+        hiddenChats.stream().forEach(c -> dialogsToUpdate.put(c, 0));
+        getAccount().getNotificationsController().processDialogsUpdateRead(dialogsToUpdate);
     }
 
     private AccountInstance getAccount() {
