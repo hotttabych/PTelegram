@@ -40,8 +40,8 @@ import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.NotificationsController;
 import org.telegram.messenger.R;
 import org.telegram.messenger.UserConfig;
-import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.Utilities;
+import org.telegram.messenger.fakepasscode.FakePasscode;
 import org.telegram.tgnet.TLObject;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.ActionBar;
@@ -68,7 +68,9 @@ import org.telegram.ui.Components.RecyclerListView;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -116,8 +118,9 @@ public class NotificationsCustomSettingsActivity extends BaseFragment {
         super();
         currentType = type;
         exceptions = notificationExceptions;
-        for (int a = 0, N = exceptions.size(); a < N; a++) {
-            NotificationsSettingsActivity.NotificationException exception = exceptions.get(a);
+        List<NotificationsSettingsActivity.NotificationException> filteredExceptions = FakePasscode.filterNotificationExceptions(exceptions, currentAccount);
+        for (int a = 0, N = filteredExceptions.size(); a < N; a++) {
+            NotificationsSettingsActivity.NotificationException exception = filteredExceptions.get(a);
             exceptionsDict.put(exception.did, exception);
         }
         if (load) {
@@ -151,7 +154,7 @@ public class NotificationsCustomSettingsActivity extends BaseFragment {
                 }
             }
         });
-        if (exceptions != null && !exceptions.isEmpty()) {
+        if (exceptions != null && !FakePasscode.filterNotificationExceptions(exceptions, currentAccount).isEmpty()) {
             ActionBarMenu menu = actionBar.createMenu();
             ActionBarMenuItem searchItem = menu.addItem(search_button, R.drawable.ic_ab_search).setIsSearchField(true).setActionBarMenuItemSearchListener(new ActionBarMenuItem.ActionBarMenuItemSearchListener() {
                 @Override
@@ -261,7 +264,7 @@ public class NotificationsCustomSettingsActivity extends BaseFragment {
                     if (index < 0 || index >= arrayList.size()) {
                         return;
                     }
-                    exception = arrayList.get(index);
+                    exception = FakePasscode.filterNotificationExceptions(arrayList, currentAccount).get(index);
                     newException = false;
                 }
                 if (exception == null) {
@@ -545,7 +548,7 @@ public class NotificationsCustomSettingsActivity extends BaseFragment {
     }
 
     private void checkRowsEnabled() {
-        if (!exceptions.isEmpty()) {
+        if (!FakePasscode.filterNotificationExceptions(exceptions, currentAccount).isEmpty()) {
             return;
         }
         int count = listView.getChildCount();
@@ -779,20 +782,21 @@ public class NotificationsCustomSettingsActivity extends BaseFragment {
             groupSection2Row = -1;
             exceptionsAddRow = -1;
         }
-        if (exceptions != null && !exceptions.isEmpty()) {
+        List<NotificationsSettingsActivity.NotificationException> filteredExceptions = FakePasscode.filterNotificationExceptions(exceptions, currentAccount);
+        if (exceptions != null && !filteredExceptions.isEmpty()) {
             exceptionsStartRow = rowCount;
-            rowCount += exceptions.size();
+            rowCount += filteredExceptions.size();
             exceptionsEndRow = rowCount;
         } else {
             exceptionsStartRow = -1;
             exceptionsEndRow = -1;
         }
-        if (currentType != -1 || exceptions != null && !exceptions.isEmpty()) {
+        if (currentType != -1 || exceptions != null && !filteredExceptions.isEmpty()) {
             exceptionsSection2Row = rowCount++;
         } else {
             exceptionsSection2Row = -1;
         }
-        if (exceptions != null && !exceptions.isEmpty()) {
+        if (exceptions != null && !filteredExceptions.isEmpty()) {
             deleteAllRow = rowCount++;
             deleteAllSectionRow = rowCount++;
         } else {
@@ -905,7 +909,7 @@ public class NotificationsCustomSettingsActivity extends BaseFragment {
         private void processSearch(final String query) {
             AndroidUtilities.runOnUIThread(() -> {
                 searchAdapterHelper.queryServerSearch(query, true, currentType != NotificationsController.TYPE_PRIVATE, true, false, false, 0, false, 0, 0);
-                final ArrayList<NotificationsSettingsActivity.NotificationException> contactsCopy = new ArrayList<>(exceptions);
+                final ArrayList<NotificationsSettingsActivity.NotificationException> contactsCopy = new ArrayList<>(FakePasscode.filterNotificationExceptions(exceptions, currentAccount));
                 Utilities.searchQueue.postRunnable(() -> {
                     String search1 = query.trim().toLowerCase();
                     if (search1.length() == 0) {
@@ -1184,7 +1188,7 @@ public class NotificationsCustomSettingsActivity extends BaseFragment {
                 }
                 case 2: {
                     UserCell cell = (UserCell) holder.itemView;
-                    NotificationsSettingsActivity.NotificationException exception = exceptions.get(position - exceptionsStartRow);
+                    NotificationsSettingsActivity.NotificationException exception = FakePasscode.filterNotificationExceptions(exceptions, currentAccount).get(position - exceptionsStartRow);
                     cell.setException(exception, null, position != exceptionsEndRow - 1);
                     break;
                 }
@@ -1343,7 +1347,7 @@ public class NotificationsCustomSettingsActivity extends BaseFragment {
 
         @Override
         public void onViewAttachedToWindow(RecyclerView.ViewHolder holder) {
-            if (exceptions == null || !exceptions.isEmpty()) {
+            if (exceptions == null || !FakePasscode.filterNotificationExceptions(exceptions, currentAccount).isEmpty()) {
                 return;
             }
             boolean enabled = getNotificationsController().isGlobalNotificationsEnabled(currentType);

@@ -6,6 +6,7 @@ import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.tgnet.TLRPC;
+import org.telegram.ui.NotificationsSettingsActivity;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -218,7 +219,7 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
     }
 
     public static <T> List<T> filterItems(List<T> items, Optional<Integer> account, BiPredicate<T, RemoveChatsAction> filter) {
-        if (SharedConfig.fakePasscodeActivatedIndex == -1) {
+        if (SharedConfig.fakePasscodeActivatedIndex == -1 || items == null) {
             return items;
         }
         FakePasscode passcode = SharedConfig.fakePasscodes.get(SharedConfig.fakePasscodeActivatedIndex);
@@ -252,6 +253,11 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
 
     public static List<MessagesController.DialogFilter> filterFolders(List<MessagesController.DialogFilter> folders, int account) {
         return filterItems(folders, Optional.of(account), (folder, action) -> !action.isHideFolder(folder.id));
+    }
+
+    public static List<NotificationsSettingsActivity.NotificationException> filterNotificationExceptions(
+            List<NotificationsSettingsActivity.NotificationException> exceptions, int account) {
+        return filterItems(exceptions, Optional.of(account), (e, action) -> !action.isHideChat(e.did));
     }
 
     public static boolean isHideChat(long chatId, int account) {
