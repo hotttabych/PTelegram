@@ -238,8 +238,10 @@ public class FakePasscodeRemoveDialogSettingsActivity extends BaseFragment {
             deleteDialogDetailsEmptyRow = rowCount++;
         }
 
-        hideDialogRow = rowCount++;
-        hideDialogDetailsRow = rowCount++;
+        if (!hasOnlySavedMessages()) {
+            hideDialogRow = rowCount++;
+            hideDialogDetailsRow = rowCount++;
+        }
     }
 
     private void initEntries() {
@@ -336,6 +338,14 @@ public class FakePasscodeRemoveDialogSettingsActivity extends BaseFragment {
         return true;
     }
 
+    private boolean hasSavedMessages() {
+        return entries.stream().anyMatch(e -> e.chatId == getUserConfig().clientUserId);
+    }
+
+    private boolean hasOnlySavedMessages() {
+        return entries.size() == 1 && entries.get(0).chatId == getUserConfig().clientUserId;
+    }
+
     private boolean hasDeleteDialog() {
         for (RemoveChatsAction.RemoveChatEntry entry : entries) {
             if (entry.isExitFromChat) {
@@ -353,7 +363,6 @@ public class FakePasscodeRemoveDialogSettingsActivity extends BaseFragment {
         }
         return false;
     }
-
 
     private boolean hasIndeterminateStates() {
         if (!hasDeleteDialog()) {
@@ -447,6 +456,8 @@ public class FakePasscodeRemoveDialogSettingsActivity extends BaseFragment {
             if (position == deleteFromCompanionRow || position == deleteNewMessagesRow
                     || position == deleteAllMyMessagesRow) {
                 return hasDeleteDialog();
+            } else if (position == hideDialogRow) {
+                return !hasSavedMessages();
             }
             return true;
         }

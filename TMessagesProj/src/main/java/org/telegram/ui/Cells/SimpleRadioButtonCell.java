@@ -81,6 +81,13 @@ public class SimpleRadioButtonCell extends FrameLayout {
     }
 
     @Override
+    public void setEnabled(boolean enabled) {
+        super.setEnabled(enabled);
+        textView.setAlpha(enabled ? 1.0f : 0.5f);
+        radioButton.setAlpha(enabled ? 1.0f : 0.5f);
+    }
+
+    @Override
     protected void onDraw(Canvas canvas) {
         if (needDivider) {
             canvas.drawLine(AndroidUtilities.dp(LocaleController.isRTL ? 0 : 60), getHeight() - 1, getMeasuredWidth() - AndroidUtilities.dp(LocaleController.isRTL ? 60 : 0), getHeight() - 1, Theme.dividerPaint);
