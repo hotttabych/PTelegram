@@ -23,6 +23,8 @@ public class DeleteStickersAction extends AccountAction implements NotificationC
 
     @Override
     public void execute() {
+        loadedStickerTypes.clear();
+        deletedStickerSets.clear();
         NotificationCenter.getInstance(accountNum).addObserver(this, NotificationCenter.stickersDidLoad);
         MediaDataController.getInstance(accountNum).loadStickers(TYPE_IMAGE, true, false);
 
