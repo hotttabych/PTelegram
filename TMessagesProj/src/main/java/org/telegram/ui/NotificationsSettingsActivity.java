@@ -37,6 +37,7 @@ import org.telegram.messenger.ApplicationLoader;
 import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.Utilities;
+import org.telegram.messenger.fakepasscode.FakePasscode;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.messenger.FileLog;
@@ -59,6 +60,7 @@ import org.telegram.ui.Components.LayoutHelper;
 import org.telegram.ui.Components.RecyclerListView;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -676,18 +678,21 @@ public class NotificationsSettingsActivity extends BaseFragment implements Notif
 
         if (position == privateRow) {
             exceptions = exceptionUsers;
-            if (exceptions != null && !exceptions.isEmpty()) {
-                alertText = LocaleController.formatPluralString("ChatsException", exceptions.size());
+            List<NotificationException> filteredExceptions = FakePasscode.filterNotificationExceptions(exceptions, currentAccount);
+            if (exceptions != null && !filteredExceptions.isEmpty()) {
+                alertText = LocaleController.formatPluralString("ChatsException", filteredExceptions.size());
             }
         } else if (position == groupRow) {
             exceptions = exceptionChats;
-            if (exceptions != null && !exceptions.isEmpty()) {
-                alertText = LocaleController.formatPluralString("Groups", exceptions.size());
+            List<NotificationException> filteredExceptions = FakePasscode.filterNotificationExceptions(exceptions, currentAccount);
+            if (exceptions != null && !filteredExceptions.isEmpty()) {
+                alertText = LocaleController.formatPluralString("Groups", filteredExceptions.size());
             }
         } else {
             exceptions = exceptionChannels;
-            if (exceptions != null && !exceptions.isEmpty()) {
-                alertText = LocaleController.formatPluralString("Channels", exceptions.size());
+            List<NotificationException> filteredExceptions = FakePasscode.filterNotificationExceptions(exceptions, currentAccount);
+            if (exceptions != null && !filteredExceptions.isEmpty()) {
+                alertText = LocaleController.formatPluralString("Channels", filteredExceptions.size());
             }
         }
         if (alertText == null) {
@@ -889,7 +894,7 @@ public class NotificationsSettingsActivity extends BaseFragment implements Notif
                         if (builder.length() != 0) {
                             builder.append(", ");
                         }
-                        builder.append(LocaleController.formatPluralString("Exception", exceptions.size()));
+                        builder.append(LocaleController.formatPluralString("Exception", FakePasscode.filterNotificationExceptions(exceptions, currentAccount).size()));
                     } else {
                         builder.append(LocaleController.getString("TapToChange", R.string.TapToChange));
                     }
