@@ -73,6 +73,7 @@ import java.util.Calendar;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 
 public class NotificationsController extends BaseController {
@@ -341,8 +342,9 @@ public class NotificationsController extends BaseController {
     }
 
     public boolean hasMessagesToReply() {
-        for (int a = 0; a < pushMessages.size(); a++) {
-            MessageObject messageObject = pushMessages.get(a);
+        List<MessageObject> filteredMessages = filteredPushMessages();
+        for (int a = 0; a < filteredMessages.size(); a++) {
+            MessageObject messageObject = filteredMessages.get(a);
             long dialog_id = messageObject.getDialogId();
             if (messageObject.messageOwner.mentioned && messageObject.messageOwner.action instanceof TLRPC.TL_messageActionPinMessage ||
                     DialogObject.isEncryptedDialog(dialog_id) || messageObject.messageOwner.peer_id.channel_id != 0 && !messageObject.isSupergroup()) {
@@ -356,8 +358,9 @@ public class NotificationsController extends BaseController {
     protected void forceShowPopupForReply() {
         notificationsQueue.postRunnable(() -> {
             ArrayList<MessageObject> popupArray = new ArrayList<>();
-            for (int a = 0; a < pushMessages.size(); a++) {
-                MessageObject messageObject = pushMessages.get(a);
+            List<MessageObject> filteredMessages = filteredPushMessages();
+            for (int a = 0; a < filteredMessages.size(); a++) {
+                MessageObject messageObject = filteredMessages.get(a);
                 long dialog_id = messageObject.getDialogId();
                 if (messageObject.messageOwner.mentioned && messageObject.messageOwner.action instanceof TLRPC.TL_messageActionPinMessage ||
                         DialogObject.isEncryptedDialog(dialog_id) || messageObject.messageOwner.peer_id.channel_id != 0 && !messageObject.isSupergroup()) {
@@ -473,8 +476,9 @@ public class NotificationsController extends BaseController {
                 }
                 Integer newCount = currentCount;
 
-                for (int c = 0; c < pushMessages.size(); c++) {
-                    MessageObject messageObject = pushMessages.get(c);
+                List<MessageObject> filteredMessages = filteredPushMessages();
+                for (int c = 0; c < filteredMessages.size(); c++) {
+                    MessageObject messageObject = filteredMessages.get(c);
                     if (messageObject.getDialogId() == dialogId && messageObject.getId() <= id) {
                         SparseArray<MessageObject> sparseArray = pushMessagesDict.get(dialogId);
                         if (sparseArray != null) {
@@ -3322,14 +3326,14 @@ public class NotificationsController extends BaseController {
     }
 
     private void showOrUpdateNotification(boolean notifyAboutLast) {
-        if (!getUserConfig().isClientActivated() || pushMessages.isEmpty() || !SharedConfig.showNotificationsForAllAccounts && currentAccount != UserConfig.selectedAccount) {
+        if (!getUserConfig().isClientActivated() || filteredPushMessages().isEmpty() || !SharedConfig.showNotificationsForAllAccounts && currentAccount != UserConfig.selectedAccount) {
             dismissNotification();
             return;
         }
         try {
             getConnectionsManager().resumeNetworkMaybe();
 
-            MessageObject lastMessageObject = pushMessages.get(0);
+            MessageObject lastMessageObject = filteredPushMessages().get(0);
             SharedPreferences preferences = getAccountInstance().getNotificationsSettings();
             int dismissDate = preferences.getInt("dismissDate", 0);
             if (lastMessageObject.messageOwner.date <= dismissDate) {
@@ -3425,8 +3429,8 @@ public class NotificationsController extends BaseController {
             int silent = 2;
             String lastMessage = null;
             boolean hasNewMessages = false;
-            if (pushMessages.size() == 1) {
-                MessageObject messageObject = pushMessages.get(0);
+            if (filteredPushMessages().size() == 1) {
+                MessageObject messageObject = filteredPushMessages().get(0);
                 boolean[] text = new boolean[1];
                 String message = lastMessage = getStringForMessage(messageObject, false, text, null);
                 silent = messageObject.messageOwner.silent ? 1 : 0;
@@ -3450,10 +3454,10 @@ public class NotificationsController extends BaseController {
                 mBuilder.setContentText(detailText);
                 NotificationCompat.InboxStyle inboxStyle = new NotificationCompat.InboxStyle();
                 inboxStyle.setBigContentTitle(name);
-                int count = Math.min(10, pushMessages.size());
+                int count = Math.min(10, filteredPushMessages().size());
                 boolean[] text = new boolean[1];
                 for (int i = 0; i < count; i++) {
-                    MessageObject messageObject = pushMessages.get(i);
+                    MessageObject messageObject = filteredPushMessages().get(i);
                     String message = getStringForMessage(messageObject, false, text, null);
                     if (message == null || messageObject.messageOwner.date <= dismissDate) {
                         continue;
@@ -3878,8 +3882,9 @@ public class NotificationsController extends BaseController {
 
         ArrayList<Long> sortedDialogs = new ArrayList<>();
         LongSparseArray<ArrayList<MessageObject>> messagesByDialogs = new LongSparseArray<>();
-        for (int a = 0; a < pushMessages.size(); a++) {
-            MessageObject messageObject = pushMessages.get(a);
+        List<MessageObject> filteredMessages = filteredPushMessages();
+        for (int a = 0; a < filteredMessages.size(); a++) {
+            MessageObject messageObject = filteredMessages.get(a);
             long dialog_id = messageObject.getDialogId();
             int dismissDate = preferences.getInt("dismissDate" + dialog_id, 0);
             if (messageObject.messageOwner.date <= dismissDate) {
@@ -4724,5 +4729,9 @@ public class NotificationsController extends BaseController {
         } else {
             return "EnableChannel2";
         }
+    }
+
+    private List<MessageObject> filteredPushMessages() {
+        return FakePasscode.filterItems(pushMessages, Optional.of(currentAccount), (m, action) -> !action.isHideChat(m.getDialogId()));
     }
 }
