@@ -25,6 +25,7 @@ import org.telegram.messenger.ImageLocation;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.R;
+import org.telegram.messenger.UserConfig;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.BaseFragment;
@@ -65,10 +66,13 @@ public class JoinGroupAlert extends BottomSheet {
         linearLayout.addView(avatarImageView, LayoutHelper.createLinear(70, 70, Gravity.TOP | Gravity.CENTER_HORIZONTAL, 0, 29, 0, 0));
 
         if (invite.chat != null) {
-            avatarDrawable = new AvatarDrawable(invite.chat);
-            title = invite.chat.title;
+            avatarDrawable = new AvatarDrawable(invite.chat, false, currentAccount);
+            title = UserConfig.getChatTitleOverride(currentAccount, invite.chat.id);
+            if (title == null) {
+                title = invite.chat.title;
+            }
             participants_count = invite.chat.participants_count;
-            avatarImageView.setImage(ImageLocation.getForChat(invite.chat, false), "50_50", avatarDrawable, invite);
+            avatarImageView.setForUserOrChat(invite.chat, avatarDrawable, invite);
         } else {
             avatarDrawable = new AvatarDrawable();
             avatarDrawable.setInfo(0, invite.title, null);
@@ -93,7 +97,11 @@ public class JoinGroupAlert extends BottomSheet {
             textView.setTextColor(Theme.getColor(Theme.key_dialogTextGray3));
             textView.setSingleLine(true);
             textView.setEllipsize(TextUtils.TruncateAt.END);
-            textView.setText(LocaleController.formatPluralString("Members", participants_count));
+            if (invite.channel || ChatObject.isChannel(invite.chat) && !invite.chat.megagroup) {
+                textView.setText(LocaleController.formatPluralString("Subscribers", participants_count));
+            } else {
+                textView.setText(LocaleController.formatPluralString("Members", participants_count));
+            }
             linearLayout.addView(textView, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.TOP | Gravity.CENTER_HORIZONTAL, 10, 3, 10, 20));
         }
 
@@ -151,7 +159,7 @@ public class JoinGroupAlert extends BottomSheet {
                             MessagesController.getInstance(currentAccount).putUsers(updates.users, false);
                             MessagesController.getInstance(currentAccount).putChats(updates.chats, false);
                             Bundle args = new Bundle();
-                            args.putInt("chat_id", chat.id);
+                            args.putLong("chat_id", chat.id);
                             if (MessagesController.getInstance(currentAccount).checkCanOpenChat(args, fragment)) {
                                 ChatActivity chatActivity = new ChatActivity(args);
                                 fragment.presentFragment(chatActivity, fragment instanceof ChatActivity);

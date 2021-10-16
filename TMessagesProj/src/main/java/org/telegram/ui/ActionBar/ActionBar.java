@@ -25,6 +25,11 @@ import android.os.Build;
 import android.text.SpannableString;
 import android.text.TextPaint;
 import android.text.TextUtils;
+import android.transition.ChangeBounds;
+import android.transition.Fade;
+import android.transition.TransitionManager;
+import android.transition.TransitionSet;
+import android.transition.TransitionValues;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
@@ -33,11 +38,13 @@ import android.view.ViewPropertyAnimator;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 
+import org.checkerframework.checker.units.qual.A;
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.R;
 import org.telegram.messenger.SharedConfig;
 import org.telegram.ui.Adapters.FiltersView;
+import org.telegram.ui.Components.CubicBezierInterpolator;
 import org.telegram.ui.Components.EllipsizeSpanAnimator;
 import org.telegram.ui.Components.FireworksEffect;
 import org.telegram.ui.Components.LayoutHelper;
@@ -60,6 +67,7 @@ public class ActionBar extends FrameLayout {
     private ImageView backButtonImageView;
     private SimpleTextView[] titleTextView = new SimpleTextView[2];
     private SimpleTextView subtitleTextView;
+    private SimpleTextView additionalSubtitleTextView;
     private View actionModeTop;
     private int actionModeColor;
     private int actionBarColor;
@@ -109,11 +117,21 @@ public class ActionBar extends FrameLayout {
     private boolean overlayTitleAnimation;
     private boolean titleAnimationRunning;
     private boolean fromBottom;
+    private boolean centerScale;
+    private CharSequence subtitle;
+
+    private View.OnTouchListener interceptTouchEventListener;
+    private final Theme.ResourcesProvider resourcesProvider;
 
     EllipsizeSpanAnimator ellipsizeSpanAnimator = new EllipsizeSpanAnimator(this);
 
     public ActionBar(Context context) {
+        this(context, null);
+    }
+
+    public ActionBar(Context context, Theme.ResourcesProvider resourcesProvider) {
         super(context);
+        this.resourcesProvider = resourcesProvider;
         setOnClickListener(v -> {
             if (isSearchFieldVisible()) {
                 return;
@@ -160,6 +178,10 @@ public class ActionBar extends FrameLayout {
             backDrawable.setRotation(isActionModeShowed() ? 1 : 0, false);
             backDrawable.setRotatedColor(itemsActionModeColor);
             backDrawable.setColor(itemsColor);
+        } else if (drawable instanceof MenuDrawable) {
+            MenuDrawable menuDrawable = (MenuDrawable) drawable;
+            menuDrawable.setBackColor(actionBarColor);
+            menuDrawable.setIconColor(itemsColor);
         }
     }
 
@@ -197,11 +219,11 @@ public class ActionBar extends FrameLayout {
                 }
             }
         }
-        return super.onInterceptTouchEvent(ev);
+        return interceptTouchEventListener != null && interceptTouchEventListener.onTouch(this, ev) || super.onInterceptTouchEvent(ev);
     }
 
     protected boolean shouldClipChild(View child) {
-        return clipContent && (child == titleTextView[0] || child == titleTextView[1] || child == subtitleTextView || child == menu || child == backButtonImageView);
+        return clipContent && (child == titleTextView[0] || child == titleTextView[1] || child == subtitleTextView || child == menu || child == backButtonImageView || child == additionalSubtitleTextView);
     }
 
     @Override
@@ -277,8 +299,23 @@ public class ActionBar extends FrameLayout {
         subtitleTextView = new SimpleTextView(getContext());
         subtitleTextView.setGravity(Gravity.LEFT);
         subtitleTextView.setVisibility(GONE);
-        subtitleTextView.setTextColor(Theme.getColor(Theme.key_actionBarDefaultSubtitle));
+        subtitleTextView.setTextColor(getThemedColor(Theme.key_actionBarDefaultSubtitle));
         addView(subtitleTextView, 0, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.LEFT | Gravity.TOP));
+    }
+
+    public void createAdditionalSubtitleTextView() {
+        if (additionalSubtitleTextView != null) {
+            return;
+        }
+        additionalSubtitleTextView = new SimpleTextView(getContext());
+        additionalSubtitleTextView.setGravity(Gravity.LEFT);
+        additionalSubtitleTextView.setVisibility(GONE);
+        additionalSubtitleTextView.setTextColor(getThemedColor(Theme.key_actionBarDefaultSubtitle));
+        addView(additionalSubtitleTextView, 0, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.LEFT | Gravity.TOP));
+    }
+
+    public SimpleTextView getAdditionalSubtitleTextView() {
+        return additionalSubtitleTextView;
     }
 
     public void setAddToContainer(boolean value) {
@@ -298,9 +335,13 @@ public class ActionBar extends FrameLayout {
             createSubtitleTextView();
         }
         if (subtitleTextView != null) {
-            subtitleTextView.setVisibility(!TextUtils.isEmpty(value) && !isSearchFieldVisible ? VISIBLE : GONE);
+            boolean isEmpty = TextUtils.isEmpty(value);
+            subtitleTextView.setVisibility(!isEmpty && !isSearchFieldVisible ? VISIBLE : GONE);
             subtitleTextView.setAlpha(1f);
-            subtitleTextView.setText(value);
+            if (!isEmpty) {
+                subtitleTextView.setText(value);
+            }
+            subtitle = value;
         }
     }
 
@@ -313,7 +354,7 @@ public class ActionBar extends FrameLayout {
         if (titleColorToSet != 0) {
             titleTextView[i].setTextColor(titleColorToSet);
         } else {
-            titleTextView[i].setTextColor(Theme.getColor(Theme.key_actionBarDefaultTitle));
+            titleTextView[i].setTextColor(getThemedColor(Theme.key_actionBarDefaultTitle));
         }
         titleTextView[i].setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
         addView(titleTextView[i], 0, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.LEFT | Gravity.TOP));
@@ -397,10 +438,10 @@ public class ActionBar extends FrameLayout {
     }
 
     public String getSubtitle() {
-        if (subtitleTextView == null) {
+        if (subtitleTextView == null || subtitle == null) {
             return null;
         }
-        return subtitleTextView.getText().toString();
+        return subtitle.toString();
     }
 
     public ActionBarMenu createMenu() {
@@ -452,7 +493,7 @@ public class ActionBar extends FrameLayout {
         };
         actionMode.isActionMode = true;
         actionMode.setClickable(true);
-        actionMode.setBackgroundColor(Theme.getColor(Theme.key_actionBarActionModeDefault));
+        actionMode.setBackgroundColor(getThemedColor(Theme.key_actionBarActionModeDefault));
         addView(actionMode, indexOfChild(backButtonImageView));
         actionMode.setPadding(0, occupyStatusBar ? AndroidUtilities.statusBarHeight : 0, 0, 0);
         FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) actionMode.getLayoutParams();
@@ -465,7 +506,7 @@ public class ActionBar extends FrameLayout {
 
         if (occupyStatusBar && needTop && actionModeTop == null) {
             actionModeTop = new View(getContext());
-            actionModeTop.setBackgroundColor(Theme.getColor(Theme.key_actionBarActionModeDefaultTop));
+            actionModeTop.setBackgroundColor(getThemedColor(Theme.key_actionBarActionModeDefaultTop));
             addView(actionModeTop);
             layoutParams = (FrameLayout.LayoutParams) actionModeTop.getLayoutParams();
             layoutParams.height = AndroidUtilities.statusBarHeight;
@@ -543,7 +584,7 @@ public class ActionBar extends FrameLayout {
                         if (titleTextView[0] != null) {
                             titleTextView[0].setVisibility(INVISIBLE);
                         }
-                        if (subtitleTextView != null && !TextUtils.isEmpty(subtitleTextView.getText())) {
+                        if (subtitleTextView != null && !TextUtils.isEmpty(subtitle)) {
                             subtitleTextView.setVisibility(INVISIBLE);
                         }
                         if (menu != null) {
@@ -612,7 +653,7 @@ public class ActionBar extends FrameLayout {
             if (titleTextView[0] != null) {
                 titleTextView[0].setVisibility(INVISIBLE);
             }
-            if (subtitleTextView != null && !TextUtils.isEmpty(subtitleTextView.getText())) {
+            if (subtitleTextView != null && !TextUtils.isEmpty(subtitle)) {
                 subtitleTextView.setVisibility(INVISIBLE);
             }
             if (menu != null) {
@@ -703,7 +744,7 @@ public class ActionBar extends FrameLayout {
             if (titleTextView[0] != null) {
                 titleTextView[0].setVisibility(VISIBLE);
             }
-            if (subtitleTextView != null && !TextUtils.isEmpty(subtitleTextView.getText())) {
+            if (subtitleTextView != null && !TextUtils.isEmpty(subtitle)) {
                 subtitleTextView.setVisibility(VISIBLE);
             }
         }
@@ -722,7 +763,7 @@ public class ActionBar extends FrameLayout {
     public void showActionModeTop() {
         if (occupyStatusBar && actionModeTop == null) {
             actionModeTop = new View(getContext());
-            actionModeTop.setBackgroundColor(Theme.getColor(Theme.key_actionBarActionModeDefaultTop));
+            actionModeTop.setBackgroundColor(getThemedColor(Theme.key_actionBarActionModeDefaultTop));
             addView(actionModeTop);
             FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) actionModeTop.getLayoutParams();
             layoutParams.height = AndroidUtilities.statusBarHeight;
@@ -757,20 +798,81 @@ public class ActionBar extends FrameLayout {
     @Override
     public void setBackgroundColor(int color) {
         super.setBackgroundColor(actionBarColor = color);
+        if (backButtonImageView != null) {
+            Drawable drawable = backButtonImageView.getDrawable();
+            if (drawable instanceof MenuDrawable) {
+                ((MenuDrawable) drawable).setBackColor(color);
+            }
+        }
     }
 
     public boolean isActionModeShowed() {
         return actionMode != null && actionModeVisible;
     }
 
+    public boolean isActionModeShowed(String tag) {
+        return actionMode != null && actionModeVisible && ((actionModeTag == null && tag == null) || (actionModeTag != null && actionModeTag.equals(tag)));
+    }
+
+    AnimatorSet searchVisibleAnimator;
+
     public void onSearchFieldVisibilityChanged(boolean visible) {
         isSearchFieldVisible = visible;
-        if (titleTextView[0] != null) {
-            titleTextView[0].setVisibility(visible ? INVISIBLE : VISIBLE);
+        if (searchVisibleAnimator != null) {
+            searchVisibleAnimator.cancel();
         }
-        if (subtitleTextView != null && !TextUtils.isEmpty(subtitleTextView.getText())) {
+        searchVisibleAnimator = new AnimatorSet();
+        final ArrayList<View> viewsToHide = new ArrayList<>();
+
+        if (titleTextView[0] != null) {
+            viewsToHide.add(titleTextView[0]);
+        }
+
+        if (subtitleTextView != null && !TextUtils.isEmpty(subtitle)) {
+            viewsToHide.add(subtitleTextView);
             subtitleTextView.setVisibility(visible ? INVISIBLE : VISIBLE);
         }
+
+        for (int i = 0; i < viewsToHide.size(); i++) {
+            View view = viewsToHide.get(i);
+            if (!visible) {
+                view.setVisibility(View.VISIBLE);
+                view.setAlpha(0);
+                view.setScaleX(0.95f);
+                view.setScaleY(0.95f);
+            }
+            searchVisibleAnimator.playTogether(ObjectAnimator.ofFloat(view, View.ALPHA, visible ? 0f : 1f));
+            searchVisibleAnimator.playTogether(ObjectAnimator.ofFloat(view, View.SCALE_Y, visible ? 0.95f : 1f));
+            searchVisibleAnimator.playTogether(ObjectAnimator.ofFloat(view, View.SCALE_X, visible ? 0.95f : 1f));
+        }
+        centerScale = true;
+        requestLayout();
+        searchVisibleAnimator.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                for (int i = 0; i < viewsToHide.size(); i++) {
+                    View view = viewsToHide.get(i);
+                    if (visible) {
+                        view.setVisibility(View.INVISIBLE);
+                        view.setAlpha(0);
+                    } else {
+                        view.setAlpha(1f);
+                    }
+                }
+
+                if (visible) {
+                    if (titleTextView[0] != null) {
+                        titleTextView[0].setVisibility(View.GONE);
+                    }
+                    if (titleTextView[1] != null) {
+                        titleTextView[1].setVisibility(View.GONE);
+                    }
+                }
+            }
+        });
+
+        searchVisibleAnimator.setDuration(150).start();
+
         Drawable drawable = backButtonImageView.getDrawable();
         if (drawable instanceof MenuDrawable) {
             MenuDrawable menuDrawable = (MenuDrawable) drawable;
@@ -781,6 +883,10 @@ public class ActionBar extends FrameLayout {
 
     public void setInterceptTouches(boolean value) {
         interceptTouches = value;
+    }
+
+    public void setInterceptTouchEventListener(View.OnTouchListener listener) {
+        interceptTouchEventListener = listener;
     }
 
     public void setExtraHeight(int value) {
@@ -875,12 +981,22 @@ public class ActionBar extends FrameLayout {
 
         if (menu != null && menu.getVisibility() != GONE) {
             int menuWidth;
-            if (isSearchFieldVisible) {
+            boolean searchFieldIsVisible = menu.searchFieldVisible();
+            if (searchFieldIsVisible && !this.isSearchFieldVisible) {
+                menuWidth = MeasureSpec.makeMeasureSpec(width, MeasureSpec.AT_MOST);
+                menu.measure(menuWidth, actionBarHeightSpec);
+                int itemsWidth = menu.getItemsMeasuredWidth();
+                menuWidth = MeasureSpec.makeMeasureSpec(width - AndroidUtilities.dp(AndroidUtilities.isTablet() ? 74 : 66) + menu.getItemsMeasuredWidth(), MeasureSpec.EXACTLY);
+                menu.translateXItems(-itemsWidth);
+            } else if (isSearchFieldVisible) {
                 menuWidth = MeasureSpec.makeMeasureSpec(width - AndroidUtilities.dp(AndroidUtilities.isTablet() ? 74 : 66), MeasureSpec.EXACTLY);
+                menu.translateXItems(0);
             } else {
                 menuWidth = MeasureSpec.makeMeasureSpec(width, MeasureSpec.AT_MOST);
+                menu.translateXItems(0);
             }
             menu.measure(menuWidth, actionBarHeightSpec);
+
         }
 
         for (int i = 0; i < 2; i++) {
@@ -895,6 +1011,9 @@ public class ActionBar extends FrameLayout {
                             titleTextView[i].setTextSize(AndroidUtilities.isTablet() ? 20 : 18);
                         }
                         subtitleTextView.setTextSize(AndroidUtilities.isTablet() ? 16 : 14);
+                        if (additionalSubtitleTextView != null) {
+                            additionalSubtitleTextView.setTextSize(AndroidUtilities.isTablet() ? 16 : 14);
+                        }
                     } else {
                         if (titleTextView[i] != null && titleTextView[i].getVisibility() != GONE) {
                             titleTextView[i].setTextSize(!AndroidUtilities.isTablet() && getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE ? 18 : 20);
@@ -902,17 +1021,28 @@ public class ActionBar extends FrameLayout {
                         if (subtitleTextView != null && subtitleTextView.getVisibility() != GONE) {
                             subtitleTextView.setTextSize(!AndroidUtilities.isTablet() && getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE ? 14 : 16);
                         }
+                        if (additionalSubtitleTextView != null) {
+                            additionalSubtitleTextView.setTextSize(!AndroidUtilities.isTablet() && getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE ? 14 : 16);
+                        }
                     }
                 }
 
                 if (titleTextView[i] != null && titleTextView[i].getVisibility() != GONE) {
-                    CharSequence text = titleTextView[i].getText();
-                    titleTextView[i].setPivotX(titleTextView[i].getTextPaint().measureText(text, 0, text.length()) / 2f);
-                    titleTextView[i].setPivotY((AndroidUtilities.dp(24) >> 1));
                     titleTextView[i].measure(MeasureSpec.makeMeasureSpec(availableWidth, MeasureSpec.AT_MOST), MeasureSpec.makeMeasureSpec(AndroidUtilities.dp(24), MeasureSpec.AT_MOST));
+                    if (centerScale) {
+                        CharSequence text = titleTextView[i].getText();
+                        titleTextView[i].setPivotX(titleTextView[i].getTextPaint().measureText(text, 0, text.length()) / 2f);
+                        titleTextView[i].setPivotY((AndroidUtilities.dp(24) >> 1));
+                    } else {
+                        titleTextView[i].setPivotX(0);
+                        titleTextView[i].setPivotY(0);
+                    }
                 }
                 if (subtitleTextView != null && subtitleTextView.getVisibility() != GONE) {
                     subtitleTextView.measure(MeasureSpec.makeMeasureSpec(availableWidth, MeasureSpec.AT_MOST), MeasureSpec.makeMeasureSpec(AndroidUtilities.dp(20), MeasureSpec.AT_MOST));
+                }
+                if (additionalSubtitleTextView != null && additionalSubtitleTextView.getVisibility() != GONE) {
+                    additionalSubtitleTextView.measure(MeasureSpec.makeMeasureSpec(availableWidth, MeasureSpec.AT_MOST), MeasureSpec.makeMeasureSpec(AndroidUtilities.dp(20), MeasureSpec.AT_MOST));
                 }
             }
         }
@@ -920,7 +1050,7 @@ public class ActionBar extends FrameLayout {
         int childCount = getChildCount();
         for (int i = 0; i < childCount; i++) {
             View child = getChildAt(i);
-            if (child.getVisibility() == GONE || child == titleTextView[0] || child == titleTextView[1] || child == subtitleTextView || child == menu || child == backButtonImageView) {
+            if (child.getVisibility() == GONE || child == titleTextView[0] || child == titleTextView[1] || child == subtitleTextView || child == menu || child == backButtonImageView || child == additionalSubtitleTextView) {
                 continue;
             }
             measureChildWithMargins(child, widthMeasureSpec, 0, MeasureSpec.makeMeasureSpec(getMeasuredHeight(), MeasureSpec.EXACTLY), 0);
@@ -940,7 +1070,7 @@ public class ActionBar extends FrameLayout {
         }
 
         if (menu != null && menu.getVisibility() != GONE) {
-            int menuLeft = isSearchFieldVisible ? AndroidUtilities.dp(AndroidUtilities.isTablet() ? 74 : 66) : (right - left) - menu.getMeasuredWidth();
+            int menuLeft = menu.searchFieldVisible() ? AndroidUtilities.dp(AndroidUtilities.isTablet() ? 74 : 66) : (right - left) - menu.getMeasuredWidth();
             menu.layout(menuLeft, additionalTop, menuLeft + menu.getMeasuredWidth(), additionalTop + menu.getMeasuredHeight());
         }
 
@@ -964,10 +1094,15 @@ public class ActionBar extends FrameLayout {
             subtitleTextView.layout(textLeft, additionalTop + textTop, textLeft + subtitleTextView.getMeasuredWidth(), additionalTop + textTop + subtitleTextView.getTextHeight());
         }
 
+        if (additionalSubtitleTextView != null && additionalSubtitleTextView.getVisibility() != GONE) {
+            int textTop = getCurrentActionBarHeight() / 2 + (getCurrentActionBarHeight() / 2 - additionalSubtitleTextView.getTextHeight()) / 2 - AndroidUtilities.dp(!AndroidUtilities.isTablet() && getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE ? 1 : 1);
+            additionalSubtitleTextView.layout(textLeft, additionalTop + textTop, textLeft + additionalSubtitleTextView.getMeasuredWidth(), additionalTop + textTop + additionalSubtitleTextView.getTextHeight());
+        }
+
         int childCount = getChildCount();
         for (int i = 0; i < childCount; i++) {
             View child = getChildAt(i);
-            if (child.getVisibility() == GONE || child == titleTextView[0] || child == titleTextView[1] || child == subtitleTextView || child == menu || child == backButtonImageView) {
+            if (child.getVisibility() == GONE || child == titleTextView[0] || child == titleTextView[1] || child == subtitleTextView || child == menu || child == backButtonImageView || child == additionalSubtitleTextView) {
                 continue;
             }
 
@@ -1055,7 +1190,6 @@ public class ActionBar extends FrameLayout {
         CharSequence textToSet = title != null ? LocaleController.getString(title, titleId) : lastTitle;
         boolean ellipsize = false;
         if (title != null) {
-
             int index = TextUtils.indexOf(textToSet, "...");
             if (index >= 0) {
                 SpannableString spannableString = SpannableString.valueOf(textToSet);
@@ -1106,6 +1240,8 @@ public class ActionBar extends FrameLayout {
             } else {
                 animator.scaleY(0.7f).scaleX(0.7f);
             }
+            requestLayout();
+            centerScale = true;
             animator.setDuration(220).setListener(new AnimatorListenerAdapter() {
                 @Override
                 public void onAnimationEnd(Animator animation) {
@@ -1219,7 +1355,7 @@ public class ActionBar extends FrameLayout {
             setTitle(title);
             return;
         }
-        boolean crossfade =  overlayTitleAnimation && !TextUtils.isEmpty(subtitleTextView.getText());
+        boolean crossfade =  overlayTitleAnimation && !TextUtils.isEmpty(subtitle);
         if (crossfade) {
             if (subtitleTextView.getVisibility() != View.VISIBLE) {
                 subtitleTextView.setVisibility(View.VISIBLE);
@@ -1306,5 +1442,79 @@ public class ActionBar extends FrameLayout {
 
     public void setOverlayTitleAnimation(boolean ovelayTitleAnimation) {
         this.overlayTitleAnimation = ovelayTitleAnimation;
+    }
+
+    public void beginDelayedTransition() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            TransitionSet transitionSet = new TransitionSet();
+            transitionSet.setOrdering(TransitionSet.ORDERING_TOGETHER);
+            transitionSet.addTransition(new Fade());
+            transitionSet.addTransition(new ChangeBounds() {
+
+
+                public void captureStartValues(TransitionValues transitionValues) {
+                    super.captureStartValues(transitionValues);
+                    if (transitionValues.view instanceof SimpleTextView) {
+                        float textSize = ((SimpleTextView) transitionValues.view).getTextPaint().getTextSize();
+                        transitionValues.values.put("text_size", textSize);
+                    }
+                }
+
+                public void captureEndValues(TransitionValues transitionValues) {
+                    super.captureEndValues(transitionValues);
+                    if (transitionValues.view instanceof SimpleTextView) {
+                        float textSize= ((SimpleTextView) transitionValues.view).getTextPaint().getTextSize();
+                        transitionValues.values.put("text_size", textSize);
+                    }
+                }
+
+                @Override
+                public Animator createAnimator(ViewGroup sceneRoot, TransitionValues startValues, TransitionValues endValues) {
+                    if (startValues != null && startValues.view instanceof SimpleTextView) {
+                        AnimatorSet animatorSet = new AnimatorSet();
+                        if (startValues != null && endValues != null) {
+                            Animator animator = super.createAnimator(sceneRoot, startValues, endValues);
+                            float s = (float) startValues.values.get("text_size") / (float) endValues.values.get("text_size");
+                            startValues.view.setScaleX(s);
+                            startValues.view.setScaleY(s);
+                            if (animator != null) {
+                                animatorSet.playTogether(animator);
+                            }
+                        }
+                        animatorSet.playTogether(ObjectAnimator.ofFloat(startValues.view, SCALE_X, 1f));
+                        animatorSet.playTogether(ObjectAnimator.ofFloat(startValues.view, SCALE_Y, 1f));
+                        animatorSet.addListener(new AnimatorListenerAdapter() {
+
+                            @Override
+                            public void onAnimationStart(Animator animation) {
+                                super.onAnimationStart(animation);
+                                startValues.view.setLayerType(LAYER_TYPE_HARDWARE, null);
+                            }
+
+                            @Override
+                            public void onAnimationEnd(Animator animation) {
+                                super.onAnimationEnd(animation);
+                                startValues.view.setLayerType(LAYER_TYPE_NONE, null);
+                            }
+                        });
+                        return animatorSet;
+                    } else {
+                        return super.createAnimator(sceneRoot, startValues, endValues);
+                    }
+                }
+            });
+            centerScale = false;
+            transitionSet.setDuration(220);
+            transitionSet.setInterpolator(CubicBezierInterpolator.DEFAULT);
+            TransitionManager.beginDelayedTransition(this, transitionSet);
+        }
+    }
+
+    private int getThemedColor(String key) {
+        Integer color = resourcesProvider != null ? resourcesProvider.getColor(key) : null;
+        if (color == null) {
+            color = parentFragment != null ? parentFragment.getThemedColor(key) : null;
+        }
+        return color != null ? color : Theme.getColor(key);
     }
 }

@@ -8,37 +8,26 @@
 
 package org.telegram.ui.Cells;
 
-import android.animation.Animator;
-import android.animation.AnimatorSet;
-import android.animation.ObjectAnimator;
 import android.content.Context;
 import android.graphics.Canvas;
-import android.graphics.Paint;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffColorFilter;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.text.SpannableStringBuilder;
 import android.text.TextUtils;
-import android.text.style.ReplacementSpan;
 import android.transition.ChangeBounds;
 import android.transition.Fade;
 import android.transition.TransitionManager;
 import android.transition.TransitionSet;
-import android.transition.TransitionValues;
-import android.transition.Visibility;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.accessibility.AccessibilityNodeInfo;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.DownloadController;
@@ -51,7 +40,6 @@ import org.telegram.messenger.FileLoader;
 import org.telegram.messenger.R;
 import org.telegram.messenger.UserConfig;
 import org.telegram.tgnet.TLRPC;
-import org.telegram.ui.ActionBar.ActionBarMenuItem;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.Components.BackupImageView;
 import org.telegram.ui.Components.CheckBox2;
@@ -80,6 +68,8 @@ public class SharedDocumentCell extends FrameLayout implements DownloadControlle
     private TextView rightDateTextView;
     private TextView captionTextView;
 
+    private boolean drawDownloadIcon = true;
+
     private boolean needDivider;
 
     private int currentAccount = UserConfig.selectedAccount;
@@ -98,13 +88,19 @@ public class SharedDocumentCell extends FrameLayout implements DownloadControlle
     private SpannableStringBuilder dotSpan;
     private CharSequence caption;
     private RLottieDrawable statusDrawable;
+    private final Theme.ResourcesProvider resourcesProvider;
 
     public SharedDocumentCell(Context context) {
         this(context, VIEW_TYPE_DEFAULT);
     }
 
     public SharedDocumentCell(Context context, int viewType) {
+        this(context, viewType, null);
+    }
+
+    public SharedDocumentCell(Context context, int viewType, Theme.ResourcesProvider resourcesProvider) {
         super(context);
+        this.resourcesProvider = resourcesProvider;
 
         this.viewType = viewType;
         TAG = DownloadController.getInstance(currentAccount).generateObserverTag();
@@ -117,7 +113,7 @@ public class SharedDocumentCell extends FrameLayout implements DownloadControlle
         }
 
         extTextView = new TextView(context);
-        extTextView.setTextColor(Theme.getColor(Theme.key_files_iconText));
+        extTextView.setTextColor(getThemedColor(Theme.key_files_iconText));
         extTextView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 14);
         extTextView.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
         extTextView.setLines(1);
@@ -154,13 +150,13 @@ public class SharedDocumentCell extends FrameLayout implements DownloadControlle
         }
 
         nameTextView = new TextView(context);
-        nameTextView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
+        nameTextView.setTextColor(getThemedColor(Theme.key_windowBackgroundWhiteBlackText));
         nameTextView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 16);
         nameTextView.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
         nameTextView.setEllipsize(TextUtils.TruncateAt.END);
         nameTextView.setGravity((LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.CENTER_VERTICAL);
 
-        LinearLayout linearLayout = null;
+        LinearLayout linearLayout;
         if (viewType == VIEW_TYPE_PICKER) {
             nameTextView.setLines(1);
             nameTextView.setMaxLines(1);
@@ -172,7 +168,7 @@ public class SharedDocumentCell extends FrameLayout implements DownloadControlle
             addView(linearLayout, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, (LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.TOP, LocaleController.isRTL ? 16 : 72, 5, LocaleController.isRTL ? 72 : 16, 0));
 
             rightDateTextView = new TextView(context);
-            rightDateTextView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteGrayText3));
+            rightDateTextView.setTextColor(getThemedColor(Theme.key_windowBackgroundWhiteGrayText3));
             rightDateTextView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 14);
             if (!LocaleController.isRTL) {
                 linearLayout.addView(nameTextView, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, 1f));
@@ -184,7 +180,7 @@ public class SharedDocumentCell extends FrameLayout implements DownloadControlle
             nameTextView.setMaxLines(2);
 
             captionTextView = new TextView(context);
-            captionTextView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
+            captionTextView.setTextColor(getThemedColor(Theme.key_windowBackgroundWhiteBlackText));
             captionTextView.setLines(1);
             captionTextView.setMaxLines(1);
             captionTextView.setSingleLine(true);
@@ -202,7 +198,7 @@ public class SharedDocumentCell extends FrameLayout implements DownloadControlle
         statusImageView = new RLottieImageView(context);
         statusImageView.setAnimation(statusDrawable);
         statusImageView.setVisibility(INVISIBLE);
-        statusImageView.setColorFilter(new PorterDuffColorFilter(Theme.getColor(Theme.key_sharedMedia_startStopLoadIcon), PorterDuff.Mode.MULTIPLY));
+        statusImageView.setColorFilter(new PorterDuffColorFilter(getThemedColor(Theme.key_sharedMedia_startStopLoadIcon), PorterDuff.Mode.MULTIPLY));
         if (viewType == VIEW_TYPE_PICKER) {
             addView(statusImageView, LayoutHelper.createFrame(14, 14, (LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.TOP, LocaleController.isRTL ? 8 : 70, 37, LocaleController.isRTL ? 72 : 8, 0));
         } else {
@@ -210,7 +206,7 @@ public class SharedDocumentCell extends FrameLayout implements DownloadControlle
         }
 
         dateTextView = new TextView(context);
-        dateTextView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteGrayText3));
+        dateTextView.setTextColor(getThemedColor(Theme.key_windowBackgroundWhiteGrayText3));
         dateTextView.setLines(1);
         dateTextView.setMaxLines(1);
         dateTextView.setSingleLine(true);
@@ -225,7 +221,7 @@ public class SharedDocumentCell extends FrameLayout implements DownloadControlle
         }
 
         progressView = new LineProgressView(context);
-        progressView.setProgressColor(Theme.getColor(Theme.key_sharedMedia_startStopLoadIcon));
+        progressView.setProgressColor(getThemedColor(Theme.key_sharedMedia_startStopLoadIcon));
         addView(progressView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 2, (LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.TOP, LocaleController.isRTL ? 0 : 72, 54, LocaleController.isRTL ? 72 : 0, 0));
 
         checkBox = new CheckBox2(context, 21);
@@ -243,6 +239,10 @@ public class SharedDocumentCell extends FrameLayout implements DownloadControlle
             dotSpan = new SpannableStringBuilder(".");
             dotSpan.setSpan(new DotDividerSpan(), 0, 1, 0);
         }
+    }
+
+    public void setDrawDownloadIcon(boolean value) {
+        drawDownloadIcon = value;
     }
 
     public void setTextAndValueAndTypeAndThumb(String text, String value, String type, String thumb, int resId, boolean divider) {
@@ -284,8 +284,8 @@ public class SharedDocumentCell extends FrameLayout implements DownloadControlle
                     backKey = Theme.key_files_folderIconBackground;
                     iconKey = Theme.key_files_folderIcon;
                 }
-                Theme.setCombinedDrawableColor(drawable, Theme.getColor(backKey), false);
-                Theme.setCombinedDrawableColor(drawable, Theme.getColor(iconKey), true);
+                Theme.setCombinedDrawableColor(drawable, getThemedColor(backKey), false);
+                Theme.setCombinedDrawableColor(drawable, getThemedColor(iconKey), true);
                 thumbImageView.setImageDrawable(drawable);
             }
             thumbImageView.setVisibility(VISIBLE);
@@ -379,7 +379,7 @@ public class SharedDocumentCell extends FrameLayout implements DownloadControlle
         loading = false;
 
         TLRPC.Document document = messageObject.getDocument();
-        if (messageObject != null && document != null) {
+        if (document != null) {
             int idx;
             String name = null;
             if (messageObject.isMusic()) {
@@ -396,7 +396,7 @@ public class SharedDocumentCell extends FrameLayout implements DownloadControlle
             if (name == null) {
                 name = fileName;
             }
-            CharSequence nameH = AndroidUtilities.highlightText(name, messageObject.highlightedWords);
+            CharSequence nameH = AndroidUtilities.highlightText(name, messageObject.highlightedWords, resourcesProvider);
             if (nameH != null) {
                 nameTextView.setText(nameH);
             } else {
@@ -422,7 +422,11 @@ public class SharedDocumentCell extends FrameLayout implements DownloadControlle
                 thumbImageView.getImageReceiver().setShouldGenerateQualityThumb(bigthumb == null);
 
                 thumbImageView.setVisibility(VISIBLE);
-                thumbImageView.setImage(ImageLocation.getForDocument(bigthumb, document), "40_40", ImageLocation.getForDocument(thumb, document), "40_40_b", null, 0, 1, messageObject);
+                if (messageObject.strippedThumb != null) {
+                    thumbImageView.setImage(ImageLocation.getForDocument(bigthumb, document), "40_40", null, null, messageObject.strippedThumb, null, null, 1, messageObject);
+                } else {
+                    thumbImageView.setImage(ImageLocation.getForDocument(bigthumb, document), "40_40", ImageLocation.getForDocument(thumb, document), "40_40_b", null, 0, 1, messageObject);
+                }
             }
             long date = (long) messageObject.messageOwner.date * 1000;
             if (viewType == VIEW_TYPE_GLOBAL_SEARCH) {
@@ -438,7 +442,7 @@ public class SharedDocumentCell extends FrameLayout implements DownloadControlle
 
             if (messageObject.hasHighlightedWords() && !TextUtils.isEmpty(message.messageOwner.message)) {
                 String str = message.messageOwner.message.replace("\n", " ").replaceAll(" +", " ").trim();
-                caption = AndroidUtilities.highlightText(str, message.highlightedWords);
+                caption = AndroidUtilities.highlightText(str, message.highlightedWords, resourcesProvider);
                 if (captionTextView != null) {
                     captionTextView.setVisibility(caption == null ? View.GONE : View.VISIBLE);
                 }
@@ -480,7 +484,7 @@ public class SharedDocumentCell extends FrameLayout implements DownloadControlle
         }
         if (message != null && message.messageOwner.media != null) {
             loaded = false;
-            if (message.attachPathExists || message.mediaExists) {
+            if (message.attachPathExists || message.mediaExists || !drawDownloadIcon) {
                 statusImageView.setVisibility(INVISIBLE);
                 progressView.setVisibility(INVISIBLE);
 
@@ -640,5 +644,10 @@ public class SharedDocumentCell extends FrameLayout implements DownloadControlle
             info.setCheckable(true);
             info.setChecked(true);
         }
+    }
+
+    private int getThemedColor(String key) {
+        Integer color = resourcesProvider != null ? resourcesProvider.getColor(key) : null;
+        return color != null ? color : Theme.getColor(key);
     }
 }

@@ -156,7 +156,7 @@ public class ManageChatUserCell extends FrameLayout {
         super.onMeasure(MeasureSpec.makeMeasureSpec(MeasureSpec.getSize(widthMeasureSpec), MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(AndroidUtilities.dp(64) + (needDivider ? 1 : 0), MeasureSpec.EXACTLY));
     }
 
-    public int getUserId() {
+    public long getUserId() {
         if (currentObject instanceof TLRPC.User) {
             return ((TLRPC.User) currentObject).id;
         }
@@ -200,11 +200,11 @@ public class ManageChatUserCell extends FrameLayout {
             if (mask != 0) {
                 boolean continueUpdate = false;
                 if ((mask & MessagesController.UPDATE_MASK_AVATAR) != 0) {
-                    if (lastAvatar != null && photo == null || lastAvatar == null && photo != null || lastAvatar != null && photo != null && (lastAvatar.volume_id != photo.volume_id || lastAvatar.local_id != photo.local_id)) {
+                    if (lastAvatar != null && photo == null || lastAvatar == null && photo != null || lastAvatar != null && (lastAvatar.volume_id != photo.volume_id || lastAvatar.local_id != photo.local_id)) {
                         continueUpdate = true;
                     }
                 }
-                if (currentUser != null && !continueUpdate && (mask & MessagesController.UPDATE_MASK_STATUS) != 0) {
+                if (!continueUpdate && (mask & MessagesController.UPDATE_MASK_STATUS) != 0) {
                     int newStatus = 0;
                     if (currentUser.status != null) {
                         newStatus = currentUser.status.expires;
@@ -214,7 +214,7 @@ public class ManageChatUserCell extends FrameLayout {
                     }
                 }
                 if (!continueUpdate && currentName == null && lastName != null && (mask & MessagesController.UPDATE_MASK_NAME) != 0) {
-                    newName = UserObject.getUserName(currentUser);
+                    newName = UserObject.getUserName(currentUser, currentAccount);
                     if (!newName.equals(lastName)) {
                         continueUpdate = true;
                     }
@@ -224,7 +224,7 @@ public class ManageChatUserCell extends FrameLayout {
                 }
             }
 
-            avatarDrawable.setInfo(currentUser);
+            avatarDrawable.setInfo(currentUser, currentAccount);
             if (currentUser.status != null) {
                 lastStatus = currentUser.status.expires;
             } else {
@@ -235,7 +235,7 @@ public class ManageChatUserCell extends FrameLayout {
                 lastName = null;
                 nameTextView.setText(currentName);
             } else {
-                lastName = newName == null ? UserObject.getUserName(currentUser) : newName;
+                lastName = newName == null ? UserObject.getUserName(currentUser, currentAccount) : newName;
                 nameTextView.setText(lastName);
             }
             if (currrntStatus != null) {
@@ -260,7 +260,7 @@ public class ManageChatUserCell extends FrameLayout {
                 }
             }
             lastAvatar = photo;
-            avatarImageView.setImage(ImageLocation.getForUser(currentUser, false), "50_50", avatarDrawable, currentUser);
+            avatarImageView.setForUserOrChat(currentUser, avatarDrawable);
         } else if (currentObject instanceof TLRPC.Chat) {
             TLRPC.Chat currentChat = (TLRPC.Chat) currentObject;
 
@@ -273,12 +273,15 @@ public class ManageChatUserCell extends FrameLayout {
             if (mask != 0) {
                 boolean continueUpdate = false;
                 if ((mask & MessagesController.UPDATE_MASK_AVATAR) != 0) {
-                    if (lastAvatar != null && photo == null || lastAvatar == null && photo != null || lastAvatar != null && photo != null && (lastAvatar.volume_id != photo.volume_id || lastAvatar.local_id != photo.local_id)) {
+                    if (lastAvatar != null && photo == null || lastAvatar == null && photo != null || lastAvatar != null && (lastAvatar.volume_id != photo.volume_id || lastAvatar.local_id != photo.local_id)) {
                         continueUpdate = true;
                     }
                 }
                 if (!continueUpdate && currentName == null && lastName != null && (mask & MessagesController.UPDATE_MASK_NAME) != 0) {
-                    newName = currentChat.title;
+                    newName = UserConfig.getChatTitleOverride(currentAccount, currentChat.id);
+                    if (newName == null) {
+                        newName = currentChat.title;
+                    }
                     if (!newName.equals(lastName)) {
                         continueUpdate = true;
                     }
@@ -288,13 +291,17 @@ public class ManageChatUserCell extends FrameLayout {
                 }
             }
 
-            avatarDrawable.setInfo(currentChat);
+            avatarDrawable.setInfo(currentChat, currentAccount);
 
             if (currentName != null) {
                 lastName = null;
                 nameTextView.setText(currentName);
             } else {
-                lastName = newName == null ? currentChat.title : newName;
+                String title = UserConfig.getChatTitleOverride(currentAccount, currentChat.id);
+                if (title == null) {
+                    title = currentChat.title;
+                }
+                lastName = newName == null ? title : newName;
                 nameTextView.setText(lastName);
             }
             if (currrntStatus != null) {
@@ -317,7 +324,7 @@ public class ManageChatUserCell extends FrameLayout {
                 }
             }
             lastAvatar = photo;
-            avatarImageView.setImage(ImageLocation.getForChat(currentChat, false), "50_50", avatarDrawable, currentChat);
+            avatarImageView.setForUserOrChat(currentChat, avatarDrawable);
         } else if (currentObject instanceof Integer) {
             nameTextView.setText(currentName);
             statusTextView.setTextColor(statusColor);

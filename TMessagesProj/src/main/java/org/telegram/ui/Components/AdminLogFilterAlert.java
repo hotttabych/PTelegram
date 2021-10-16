@@ -15,7 +15,6 @@ import android.graphics.PorterDuff;
 import android.graphics.PorterDuffColorFilter;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
-import android.util.SparseArray;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
@@ -24,6 +23,7 @@ import android.widget.FrameLayout;
 
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.LocaleController;
+import org.telegram.messenger.MessageObject;
 import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.R;
 import org.telegram.tgnet.TLRPC;
@@ -37,13 +37,14 @@ import org.telegram.ui.ContentPreviewViewer;
 import java.util.ArrayList;
 import java.util.regex.Pattern;
 
+import androidx.collection.LongSparseArray;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 public class AdminLogFilterAlert extends BottomSheet {
 
     public interface AdminLogFilterAlertDelegate {
-        void didSelectRights(TLRPC.TL_channelAdminLogEventsFilter filter, SparseArray<TLRPC.User> admins);
+        void didSelectRights(TLRPC.TL_channelAdminLogEventsFilter filter, LongSparseArray<TLRPC.User> admins);
     }
 
     private Pattern urlPattern;
@@ -61,7 +62,7 @@ public class AdminLogFilterAlert extends BottomSheet {
 
     private TLRPC.TL_channelAdminLogEventsFilter currentFilter;
     private ArrayList<TLRPC.ChannelParticipant> currentAdmins;
-    private SparseArray<TLRPC.User> selectedAdmins;
+    private LongSparseArray<TLRPC.User> selectedAdmins;
     private boolean isMegagroup;
 
     private int restrictionsRow;
@@ -76,7 +77,7 @@ public class AdminLogFilterAlert extends BottomSheet {
     private int callsRow;
     private int allAdminsRow;
 
-    public AdminLogFilterAlert(Context context, TLRPC.TL_channelAdminLogEventsFilter filter, SparseArray<TLRPC.User> admins, boolean megagroup) {
+    public AdminLogFilterAlert(Context context, TLRPC.TL_channelAdminLogEventsFilter filter, LongSparseArray<TLRPC.User> admins, boolean megagroup) {
         super(context, false);
         if (filter != null) {
             currentFilter = new TLRPC.TL_channelAdminLogEventsFilter();
@@ -120,11 +121,7 @@ public class AdminLogFilterAlert extends BottomSheet {
             pinnedRow = -1;
         }
         leavingRow = rowCount++;
-        if (isMegagroup) {
-            callsRow = rowCount++;
-        } else {
-            callsRow = -1;
-        }
+        callsRow = rowCount++;
         rowCount += 1;
         allAdminsRow = rowCount;
 
@@ -154,7 +151,7 @@ public class AdminLogFilterAlert extends BottomSheet {
                     height -= AndroidUtilities.statusBarHeight;
                 }
                 int measuredWidth = getMeasuredWidth();
-                int contentSize = AndroidUtilities.dp(48) + (isMegagroup ? 11 : 7) * AndroidUtilities.dp(48) + backgroundPaddingTop + AndroidUtilities.dp(17);
+                int contentSize = AndroidUtilities.dp(48) + (isMegagroup ? 11 : 8) * AndroidUtilities.dp(48) + backgroundPaddingTop + AndroidUtilities.dp(17);
                 if (currentAdmins != null) {
                     contentSize += (currentAdmins.size() + 1) * AndroidUtilities.dp(48) + AndroidUtilities.dp(20);
                 }
@@ -200,7 +197,7 @@ public class AdminLogFilterAlert extends BottomSheet {
         listView = new RecyclerListView(context) {
             @Override
             public boolean onInterceptTouchEvent(MotionEvent event) {
-                boolean result = ContentPreviewViewer.getInstance().onInterceptTouchEvent(event, listView, 0, null);
+                boolean result = ContentPreviewViewer.getInstance().onInterceptTouchEvent(event, listView, 0, null, resourcesProvider);
                 return super.onInterceptTouchEvent(event) || result;
             }
 
@@ -250,7 +247,7 @@ public class AdminLogFilterAlert extends BottomSheet {
                     }
                 } else if (position == allAdminsRow) {
                     if (isChecked) {
-                        selectedAdmins = new SparseArray<>();
+                        selectedAdmins = new LongSparseArray<>();
                     } else {
                         selectedAdmins = null;
                     }
@@ -312,13 +309,13 @@ public class AdminLogFilterAlert extends BottomSheet {
             } else if (view instanceof CheckBoxUserCell) {
                 CheckBoxUserCell checkBoxUserCell = (CheckBoxUserCell) view;
                 if (selectedAdmins == null) {
-                    selectedAdmins = new SparseArray<>();
+                    selectedAdmins = new LongSparseArray<>();
                     RecyclerView.ViewHolder holder = listView.findViewHolderForAdapterPosition(allAdminsRow);
                     if (holder != null) {
                         ((CheckBoxCell) holder.itemView).setChecked(false, true);
                     }
                     for (int a = 0; a < currentAdmins.size(); a++) {
-                        TLRPC.User user = MessagesController.getInstance(currentAccount).getUser(currentAdmins.get(a).user_id);
+                        TLRPC.User user = MessagesController.getInstance(currentAccount).getUser(MessageObject.getPeerId(currentAdmins.get(a).peer));
                         selectedAdmins.put(user.id, user);
                     }
                 }
@@ -394,7 +391,7 @@ public class AdminLogFilterAlert extends BottomSheet {
 
         @Override
         public int getItemCount() {
-            return (isMegagroup ? 11 : 7) + (currentAdmins != null ? 2 + currentAdmins.size() : 0);
+            return (isMegagroup ? 11 : 8) + (currentAdmins != null ? 2 + currentAdmins.size() : 0);
         }
 
         @Override
@@ -418,7 +415,7 @@ public class AdminLogFilterAlert extends BottomSheet {
             FrameLayout view = null;
             switch (viewType) {
                 case 0:
-                    view = new CheckBoxCell(context, 1, 21);
+                    view = new CheckBoxCell(context, 1, 21, resourcesProvider);
                     break;
                 case 1:
                     ShadowSectionCell shadowSectionCell = new ShadowSectionCell(context, 18);
@@ -469,7 +466,7 @@ public class AdminLogFilterAlert extends BottomSheet {
                 }
                 case 2: {
                     CheckBoxUserCell userCell = (CheckBoxUserCell) holder.itemView;
-                    int userId = currentAdmins.get(position - allAdminsRow - 1).user_id;
+                    long userId = MessageObject.getPeerId(currentAdmins.get(position - allAdminsRow - 1).peer);
                     userCell.setChecked(selectedAdmins == null || selectedAdmins.indexOfKey(userId) >= 0, false);
                     break;
                 }
@@ -514,7 +511,7 @@ public class AdminLogFilterAlert extends BottomSheet {
                 }
                 case 2: {
                     CheckBoxUserCell userCell = (CheckBoxUserCell) holder.itemView;
-                    int userId = currentAdmins.get(position - allAdminsRow - 1).user_id;
+                    long userId = MessageObject.getPeerId(currentAdmins.get(position - allAdminsRow - 1).peer);
                     userCell.setUser(MessagesController.getInstance(currentAccount).getUser(userId), selectedAdmins == null || selectedAdmins.indexOfKey(userId) >= 0, position != getItemCount() - 1);
                     break;
                 }

@@ -8,8 +8,12 @@
 
 package org.telegram.ui.Cells;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
+import android.animation.ValueAnimator;
 import android.content.Context;
 import android.graphics.Canvas;
+import android.graphics.Paint;
 import android.text.TextUtils;
 import android.view.Gravity;
 import android.widget.FrameLayout;
@@ -30,6 +34,7 @@ import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.Components.AvatarDrawable;
 import org.telegram.ui.Components.BackupImageView;
 import org.telegram.ui.Components.CheckBox2;
+import org.telegram.ui.Components.CubicBezierInterpolator;
 import org.telegram.ui.Components.LayoutHelper;
 
 public class GroupCreateUserCell extends FrameLayout {
@@ -43,6 +48,8 @@ public class GroupCreateUserCell extends FrameLayout {
     private CharSequence currentName;
     private CharSequence currentStatus;
 
+    private int checkBoxType;
+
     private int currentAccount = UserConfig.selectedAccount;
 
     private String lastName;
@@ -52,10 +59,24 @@ public class GroupCreateUserCell extends FrameLayout {
     private boolean drawDivider;
     private int padding;
 
+    private ValueAnimator animator;
+    private boolean isChecked;
+    private float checkProgress;
+    private Paint paint;
+
+    private boolean forceDarkTheme;
+
     private boolean showSelfAsSaved;
 
-    public GroupCreateUserCell(Context context, boolean needCheck, int pad, boolean selfAsSaved) {
+    public GroupCreateUserCell(Context context, int checkBoxType, int pad, boolean selfAsSaved) {
+        this(context, checkBoxType, pad, selfAsSaved, false);
+    }
+
+    public GroupCreateUserCell(Context context, int checkBoxType, int pad, boolean selfAsSaved, boolean forCall) {
         super(context);
+        this.checkBoxType = checkBoxType;
+        forceDarkTheme = forCall;
+
         drawDivider = false;
         padding = pad;
         showSelfAsSaved = selfAsSaved;
@@ -66,7 +87,7 @@ public class GroupCreateUserCell extends FrameLayout {
         addView(avatarImageView, LayoutHelper.createFrame(46, 46, (LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.TOP, LocaleController.isRTL ? 0 : (13 + padding), 6, LocaleController.isRTL ? (13 + padding) : 0, 0));
 
         nameTextView = new SimpleTextView(context);
-        nameTextView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
+        nameTextView.setTextColor(Theme.getColor(forceDarkTheme ? Theme.key_voipgroup_nameText : Theme.key_windowBackgroundWhiteBlackText));
         nameTextView.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
         nameTextView.setTextSize(16);
         nameTextView.setGravity((LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.TOP);
@@ -77,12 +98,16 @@ public class GroupCreateUserCell extends FrameLayout {
         statusTextView.setGravity((LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.TOP);
         addView(statusTextView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 20, (LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.TOP, (LocaleController.isRTL ? 28 : 72) + padding, 32, (LocaleController.isRTL ? 72 : 28) + padding, 0));
 
-        if (needCheck) {
+        if (checkBoxType == 1) {
             checkBox = new CheckBox2(context, 21);
             checkBox.setColor(null, Theme.key_windowBackgroundWhite, Theme.key_checkboxCheck);
             checkBox.setDrawUnchecked(false);
             checkBox.setDrawBackgroundAsArc(3);
             addView(checkBox, LayoutHelper.createFrame(24, 24, (LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.TOP, LocaleController.isRTL ? 0 : 40, 33, LocaleController.isRTL ? 39 : 0, 0));
+        } else if (checkBoxType == 2) {
+            paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+            paint.setStyle(Paint.Style.STROKE);
+            paint.setStrokeWidth(AndroidUtilities.dp(2));
         }
 
         setWillNotDraw(false);
@@ -102,15 +127,55 @@ public class GroupCreateUserCell extends FrameLayout {
     }
 
     public void setChecked(boolean checked, boolean animated) {
-        checkBox.setChecked(checked, animated);
+        if (checkBox != null) {
+            checkBox.setChecked(checked, animated);
+        } else if (checkBoxType == 2) {
+            if (isChecked == checked) {
+                return;
+            }
+            isChecked = checked;
+            if (animator != null) {
+                animator.cancel();
+            }
+            if (animated) {
+                animator = ValueAnimator.ofFloat(0.0f, 1.0f);
+                animator.addUpdateListener(animation -> {
+                    float v = (float) animation.getAnimatedValue();
+                    float scale = isChecked ? 1.0f - 0.18f * v : 0.82f + 0.18f * v;
+                    avatarImageView.setScaleX(scale);
+                    avatarImageView.setScaleY(scale);
+                    checkProgress = isChecked ? v : 1.0f - v;
+                    invalidate();
+                });
+                animator.addListener(new AnimatorListenerAdapter() {
+                    @Override
+                    public void onAnimationEnd(Animator animation) {
+                        animator = null;
+                    }
+                });
+                animator.setDuration(180);
+                animator.setInterpolator(CubicBezierInterpolator.EASE_OUT);
+                animator.start();
+            } else {
+                avatarImageView.setScaleX(isChecked ? 0.82f : 1.0f);
+                avatarImageView.setScaleY(isChecked ? 0.82f : 1.0f);
+                checkProgress = isChecked ? 1.0f : 0.0f;
+            }
+            invalidate();
+        }
     }
 
     public void setCheckBoxEnabled(boolean enabled) {
-        checkBox.setEnabled(enabled);
+        if (checkBox != null) {
+            checkBox.setEnabled(enabled);
+        }
     }
 
     public boolean isChecked() {
-        return checkBox.isChecked();
+        if (checkBox != null) {
+            return checkBox.isChecked();
+        }
+        return isChecked;
     }
 
     public Object getObject() {
@@ -227,7 +292,7 @@ public class GroupCreateUserCell extends FrameLayout {
                         }
                     }
                     if (!continueUpdate && currentName == null && lastName != null && (mask & MessagesController.UPDATE_MASK_NAME) != 0) {
-                        newName = UserObject.getUserName(currentUser);
+                        newName = UserObject.getUserName(currentUser, currentAccount);
                         if (!newName.equals(lastName)) {
                             continueUpdate = true;
                         }
@@ -236,36 +301,36 @@ public class GroupCreateUserCell extends FrameLayout {
                         return;
                     }
                 }
-                avatarDrawable.setInfo(currentUser);
+                avatarDrawable.setInfo(currentUser, currentAccount);
                 lastStatus = currentUser.status != null ? currentUser.status.expires : 0;
 
                 if (currentName != null) {
                     lastName = null;
                     nameTextView.setText(currentName, true);
                 } else {
-                    lastName = newName == null ? UserObject.getUserName(currentUser) : newName;
+                    lastName = newName == null ? UserObject.getUserName(currentUser, currentAccount) : newName;
                     nameTextView.setText(lastName);
                 }
 
                 if (currentStatus == null) {
                     if (currentUser.bot) {
                         statusTextView.setTag(Theme.key_windowBackgroundWhiteGrayText);
-                        statusTextView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteGrayText));
+                        statusTextView.setTextColor(Theme.getColor(forceDarkTheme ? Theme.key_voipgroup_lastSeenText : Theme.key_windowBackgroundWhiteGrayText));
                         statusTextView.setText(LocaleController.getString("Bot", R.string.Bot));
                     } else {
                         if (currentUser.id == UserConfig.getInstance(currentAccount).getClientUserId() || currentUser.status != null && currentUser.status.expires > ConnectionsManager.getInstance(currentAccount).getCurrentTime() || MessagesController.getInstance(currentAccount).onlinePrivacy.containsKey(currentUser.id)) {
                             statusTextView.setTag(Theme.key_windowBackgroundWhiteBlueText);
-                            statusTextView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlueText));
+                            statusTextView.setTextColor(Theme.getColor(forceDarkTheme ? Theme.key_voipgroup_listeningText : Theme.key_windowBackgroundWhiteBlueText));
                             statusTextView.setText(LocaleController.getString("Online", R.string.Online));
                         } else {
                             statusTextView.setTag(Theme.key_windowBackgroundWhiteGrayText);
-                            statusTextView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteGrayText));
+                            statusTextView.setTextColor(Theme.getColor(forceDarkTheme ? Theme.key_voipgroup_lastSeenText : Theme.key_windowBackgroundWhiteGrayText));
                             statusTextView.setText(LocaleController.formatUserStatus(currentAccount, currentUser));
                         }
                     }
                 }
 
-                avatarImageView.setImage(ImageLocation.getForUser(currentUser, false), "50_50", avatarDrawable, currentUser);
+                avatarImageView.setForUserOrChat(currentUser, avatarDrawable);
             } else {
                 TLRPC.Chat currentChat = (TLRPC.Chat) currentObject;
                 if (currentChat.photo != null) {
@@ -279,7 +344,10 @@ public class GroupCreateUserCell extends FrameLayout {
                         }
                     }
                     if (!continueUpdate && currentName == null && lastName != null && (mask & MessagesController.UPDATE_MASK_NAME) != 0) {
-                        newName = currentChat.title;
+                        newName = UserConfig.getChatTitleOverride(currentAccount, currentChat.id);
+                        if (newName == null) {
+                            newName = currentChat.title;
+                        }
                         if (!newName.equals(lastName)) {
                             continueUpdate = true;
                         }
@@ -289,21 +357,29 @@ public class GroupCreateUserCell extends FrameLayout {
                     }
                 }
 
-                avatarDrawable.setInfo(currentChat);
+                avatarDrawable.setInfo(currentChat, currentAccount);
 
                 if (currentName != null) {
                     lastName = null;
                     nameTextView.setText(currentName, true);
                 } else {
-                    lastName = newName == null ? currentChat.title : newName;
+                    String title = UserConfig.getChatTitleOverride(currentAccount, currentChat.id);
+                    if (title == null) {
+                        title = currentChat.title;
+                    }
+                    lastName = newName == null ? title : newName;
                     nameTextView.setText(lastName);
                 }
 
                 if (currentStatus == null) {
                     statusTextView.setTag(Theme.key_windowBackgroundWhiteGrayText);
-                    statusTextView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteGrayText));
+                    statusTextView.setTextColor(Theme.getColor(forceDarkTheme ? Theme.key_voipgroup_lastSeenText : Theme.key_windowBackgroundWhiteGrayText));
                     if (currentChat.participants_count != 0) {
-                        statusTextView.setText(LocaleController.formatPluralString("Members", currentChat.participants_count));
+                        if (ChatObject.isChannel(currentChat) && !currentChat.megagroup) {
+                            statusTextView.setText(LocaleController.formatPluralString("Subscribers", currentChat.participants_count));
+                        } else {
+                            statusTextView.setText(LocaleController.formatPluralString("Members", currentChat.participants_count));
+                        }
                     } else if (currentChat.has_geo) {
                         statusTextView.setText(LocaleController.getString("MegaLocation", R.string.MegaLocation));
                     } else if (TextUtils.isEmpty(currentChat.username)) {
@@ -321,24 +397,35 @@ public class GroupCreateUserCell extends FrameLayout {
                     }
                 }
 
-                avatarImageView.setImage(ImageLocation.getForChat(currentChat, false), "50_50", avatarDrawable, currentChat);
+                avatarImageView.setForUserOrChat(currentChat, avatarDrawable);
             }
         }
 
         if (currentStatus != null) {
             statusTextView.setText(currentStatus, true);
             statusTextView.setTag(Theme.key_windowBackgroundWhiteGrayText);
-            statusTextView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteGrayText));
+            statusTextView.setTextColor(Theme.getColor(forceDarkTheme ? Theme.key_voipgroup_lastSeenText : Theme.key_windowBackgroundWhiteGrayText));
         }
     }
 
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
+        if (checkBoxType == 2 && (isChecked || checkProgress > 0.0f)) {
+            paint.setColor(Theme.getColor(Theme.key_checkboxSquareBackground));
+            float cx = avatarImageView.getLeft() + avatarImageView.getMeasuredWidth() / 2;
+            float cy = avatarImageView.getTop() + avatarImageView.getMeasuredHeight() / 2;
+            canvas.drawCircle(cx, cy, AndroidUtilities.dp(18) + AndroidUtilities.dp(4) * checkProgress, paint);
+        }
         if (drawDivider) {
             int start = AndroidUtilities.dp(LocaleController.isRTL ? 0 : 72 + padding);
             int end = getMeasuredWidth() - AndroidUtilities.dp(!LocaleController.isRTL ? 0 : 72 + padding);
-            canvas.drawRect(start, getMeasuredHeight() - 1, end, getMeasuredHeight(), Theme.dividerPaint);
+            if (forceDarkTheme) {
+                Theme.dividerExtraPaint.setColor(Theme.getColor(Theme.key_voipgroup_actionBar));
+                canvas.drawRect(start, getMeasuredHeight() - 1, end, getMeasuredHeight(), Theme.dividerExtraPaint);
+            } else {
+                canvas.drawRect(start, getMeasuredHeight() - 1, end, getMeasuredHeight(), Theme.dividerPaint);
+            }
         }
     }
 

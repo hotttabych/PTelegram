@@ -52,13 +52,14 @@ import org.telegram.messenger.ChatObject;
 import org.telegram.messenger.ChatsWidgetProvider;
 import org.telegram.messenger.ContactsController;
 import org.telegram.messenger.ContactsWidgetProvider;
+import org.telegram.messenger.DialogObject;
 import org.telegram.messenger.FileLoader;
 import org.telegram.messenger.FileLog;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.MessageObject;
-import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.R;
 import org.telegram.messenger.SharedConfig;
+import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.UserObject;
 import org.telegram.tgnet.TLRPC;
@@ -78,6 +79,7 @@ import org.telegram.ui.Components.CombinedDrawable;
 import org.telegram.ui.Components.ForegroundColorSpanThemable;
 import org.telegram.ui.Components.InviteMembersBottomSheet;
 import org.telegram.ui.Components.LayoutHelper;
+import org.telegram.ui.Components.MotionBackgroundDrawable;
 import org.telegram.ui.Components.RecyclerListView;
 
 import java.io.File;
@@ -105,7 +107,6 @@ public class EditWidgetActivity extends BaseFragment {
 
     private int widgetType;
     private int currentWidgetId;
-    private boolean isEdit;
 
     private EditWidgetActivityDelegate delegate;
 
@@ -262,9 +263,8 @@ public class EditWidgetActivity extends BaseFragment {
                     TLRPC.FileLocation photoPath = null;
                     TLRPC.User user = null;
                     TLRPC.Chat chat = null;
-                    int lowerId = (int) dialog.id;
-                    if (lowerId > 0) {
-                        user = getMessagesController().getUser(lowerId);
+                    if (DialogObject.isUserDialog(dialog.id)) {
+                        user = getMessagesController().getUser(dialog.id);
                         if (user != null) {
                             if (UserObject.isUserSelf(user)) {
                                 name = LocaleController.getString("SavedMessages", R.string.SavedMessages);
@@ -275,14 +275,17 @@ public class EditWidgetActivity extends BaseFragment {
                             } else {
                                 name = ContactsController.formatName(user.first_name, user.last_name);
                             }
-                            if (!UserObject.isReplyUser(user) && !UserObject.isUserSelf(user) && user != null && user.photo != null && user.photo.photo_small != null && user.photo.photo_small.volume_id != 0 && user.photo.photo_small.local_id != 0) {
+                            if (!UserObject.isReplyUser(user) && !UserObject.isUserSelf(user) && user.photo != null && user.photo.photo_small != null && user.photo.photo_small.volume_id != 0 && user.photo.photo_small.local_id != 0) {
                                 photoPath = user.photo.photo_small;
                             }
                         }
                     } else {
-                        chat = getMessagesController().getChat(-lowerId);
+                        chat = getMessagesController().getChat(-dialog.id);
                         if (chat != null) {
-                            name = chat.title;
+                            name = UserConfig.getChatTitleOverride(currentAccount, chat.id);
+                            if (name == null) {
+                                name = chat.title;
+                            }
                             if (chat.photo != null && chat.photo.photo_small != null && chat.photo.photo_small.volume_id != 0 && chat.photo.photo_small.local_id != 0) {
                                 photoPath = chat.photo.photo_small;
                             }
@@ -304,14 +307,14 @@ public class EditWidgetActivity extends BaseFragment {
                         if (bitmap == null) {
                             AvatarDrawable avatarDrawable;
                             if (user != null) {
-                                avatarDrawable = new AvatarDrawable(user);
+                                avatarDrawable = new AvatarDrawable(user, false, currentAccount);
                                 if (UserObject.isReplyUser(user)) {
                                     avatarDrawable.setAvatarType(AvatarDrawable.AVATAR_TYPE_REPLIES);
                                 } else if (UserObject.isUserSelf(user)) {
                                     avatarDrawable.setAvatarType(AvatarDrawable.AVATAR_TYPE_SAVED);
                                 }
                             } else {
-                                avatarDrawable = new AvatarDrawable(chat);
+                                avatarDrawable = new AvatarDrawable(chat, false, currentAccount);
                             }
                             avatarDrawable.setBounds(0, 0, size, size);
                             avatarDrawable.draw(canvas);
@@ -339,7 +342,7 @@ public class EditWidgetActivity extends BaseFragment {
                     if (message != null) {
                         TLRPC.User fromUser = null;
                         TLRPC.Chat fromChat = null;
-                        int fromId = message.getFromChatId();
+                        long fromId = message.getFromChatId();
                         if (fromId > 0) {
                             fromUser = getMessagesController().getUser(fromId);
                         } else {
@@ -463,7 +466,7 @@ public class EditWidgetActivity extends BaseFragment {
                                         messageString = String.format("\uD83C\uDFA7 %s - %s", message.getMusicAuthor(), message.getMusicTitle());
                                     } else {
                                         messageString = message.messageText;
-                                        AndroidUtilities.highlightText(messageString, message.highlightedWords);
+                                        AndroidUtilities.highlightText(messageString, message.highlightedWords, null);
                                     }
                                     if (message.messageOwner.media != null && !message.isMediaEmpty()) {
                                         textColor = getContext().getResources().getColor(R.color.widget_action_text);
@@ -476,14 +479,14 @@ public class EditWidgetActivity extends BaseFragment {
                         ((TextView) cells[a].findViewById(R.id.shortcut_widget_item_message)).setText(messageString.toString());
                         ((TextView) cells[a].findViewById(R.id.shortcut_widget_item_message)).setTextColor(textColor);
                     } else {
-                        if (dialog != null && dialog.last_message_date != 0) {
+                        if (dialog.last_message_date != 0) {
                             ((TextView) cells[a].findViewById(R.id.shortcut_widget_item_time)).setText(LocaleController.stringForMessageListDate(dialog.last_message_date));
                         } else {
                             ((TextView) cells[a].findViewById(R.id.shortcut_widget_item_time)).setText("");
                         }
                         ((TextView) cells[a].findViewById(R.id.shortcut_widget_item_message)).setText("");
                     }
-                    if (dialog != null && dialog.unread_count > 0) {
+                    if (dialog.unread_count > 0) {
                         ((TextView) cells[a].findViewById(R.id.shortcut_widget_item_badge)).setText(String.format("%d", dialog.unread_count));
                         cells[a].findViewById(R.id.shortcut_widget_item_badge).setVisibility(VISIBLE);
                         if (getMessagesController().isDialogMuted(dialog.id)) {
@@ -504,7 +507,7 @@ public class EditWidgetActivity extends BaseFragment {
                         TLRPC.Dialog dialog;
                         if (selectedDialogs.isEmpty()) {
                             if (num < getMediaDataController().hints.size()) {
-                                int userId = getMediaDataController().hints.get(num).peer.user_id;
+                                long userId = getMediaDataController().hints.get(num).peer.user_id;
                                 dialog = getMessagesController().dialogs_dict.get(userId);
                                 if (dialog == null) {
                                     dialog = new TLRPC.TL_dialog();
@@ -538,12 +541,11 @@ public class EditWidgetActivity extends BaseFragment {
 
                         String name;
 
-                        int lowerId = (int) dialog.id;
                         TLRPC.FileLocation photoPath = null;
                         TLRPC.User user = null;
                         TLRPC.Chat chat = null;
-                        if (lowerId > 0) {
-                            user = getMessagesController().getUser(lowerId);
+                        if (DialogObject.isUserDialog(dialog.id)) {
+                            user = getMessagesController().getUser(dialog.id);
                             if (UserObject.isUserSelf(user)) {
                                 name = LocaleController.getString("SavedMessages", R.string.SavedMessages);
                             } else if (UserObject.isReplyUser(user)) {
@@ -557,8 +559,12 @@ public class EditWidgetActivity extends BaseFragment {
                                 photoPath = user.photo.photo_small;
                             }
                         } else {
-                            chat = getMessagesController().getChat(-lowerId);
+                            chat = getMessagesController().getChat(-dialog.id);
                             name = chat.title;
+                            UserConfig.getChatTitleOverride(currentAccount, chat.id);
+                            if (name == null) {
+                                name = chat.title;
+                            }
                             if (chat.photo != null && chat.photo.photo_small != null && chat.photo.photo_small.volume_id != 0 && chat.photo.photo_small.local_id != 0) {
                                 photoPath = chat.photo.photo_small;
                             }
@@ -578,14 +584,14 @@ public class EditWidgetActivity extends BaseFragment {
                             if (bitmap == null) {
                                 AvatarDrawable avatarDrawable;
                                 if (user != null) {
-                                    avatarDrawable = new AvatarDrawable(user);
+                                    avatarDrawable = new AvatarDrawable(user, false, currentAccount);
                                     if (UserObject.isReplyUser(user)) {
                                         avatarDrawable.setAvatarType(AvatarDrawable.AVATAR_TYPE_REPLIES);
                                     } else if (UserObject.isUserSelf(user)) {
                                         avatarDrawable.setAvatarType(AvatarDrawable.AVATAR_TYPE_SAVED);
                                     }
                                 } else {
-                                    avatarDrawable = new AvatarDrawable(chat);
+                                    avatarDrawable = new AvatarDrawable(chat, false, currentAccount);
                                 }
                                 avatarDrawable.setBounds(0, 0, size, size);
                                 avatarDrawable.draw(canvas);
@@ -605,7 +611,7 @@ public class EditWidgetActivity extends BaseFragment {
                             FileLog.e(e);
                         }
 
-                        if (dialog != null && dialog.unread_count > 0) {
+                        if (dialog.unread_count > 0) {
                             String count;
                             if (dialog.unread_count > 99) {
                                 count = String.format("%d+", 99);
@@ -656,7 +662,7 @@ public class EditWidgetActivity extends BaseFragment {
                 } else {
                     drawable.setAlpha(255);
                 }
-                if (drawable instanceof ColorDrawable || drawable instanceof GradientDrawable) {
+                if (drawable instanceof ColorDrawable || drawable instanceof GradientDrawable || drawable instanceof MotionBackgroundDrawable) {
                     drawable.setBounds(0, 0, getMeasuredWidth(), getMeasuredHeight());
                     if (drawable instanceof BackgroundGradientDrawable) {
                         final BackgroundGradientDrawable backgroundGradientDrawable = (BackgroundGradientDrawable) drawable;
@@ -734,18 +740,15 @@ public class EditWidgetActivity extends BaseFragment {
         }
     }
 
-    public EditWidgetActivity(int type, int widgetId, boolean edit) {
+    public EditWidgetActivity(int type, int widgetId) {
         super();
         widgetType = type;
         currentWidgetId = widgetId;
-        isEdit = edit;
-        if (edit) {
-            ArrayList<TLRPC.User> users = new ArrayList<>();
-            ArrayList<TLRPC.Chat> chats = new ArrayList<>();
-            getMessagesStorage().getWidgetDialogIds(currentWidgetId, widgetType, selectedDialogs, users, chats, true);
-            getMessagesController().putUsers(users, true);
-            getMessagesController().putChats(chats, true);
-        }
+        ArrayList<TLRPC.User> users = new ArrayList<>();
+        ArrayList<TLRPC.Chat> chats = new ArrayList<>();
+        getMessagesStorage().getWidgetDialogIds(currentWidgetId, widgetType, selectedDialogs, users, chats, true);
+        getMessagesController().putUsers(users, true);
+        getMessagesController().putChats(chats, true);
         updateRows();
     }
 
@@ -811,14 +814,16 @@ public class EditWidgetActivity extends BaseFragment {
                     getMessagesStorage().putWidgetDialogs(currentWidgetId, selectedDialogs);
 
                     SharedPreferences preferences = getParentActivity().getSharedPreferences("shortcut_widget", Activity.MODE_PRIVATE);
-                    preferences.edit().putInt("account" + currentWidgetId, currentAccount).commit();
-                    preferences.edit().putInt("type" + currentWidgetId, widgetType).commit();
+                    SharedPreferences.Editor editor = preferences.edit();
+                    editor.putInt("account" + currentWidgetId, currentAccount);
+                    editor.putInt("type" + currentWidgetId, widgetType);
+                    editor.commit();
 
                     AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(getParentActivity());
                     if (widgetType == TYPE_CHATS) {
-                        ChatsWidgetProvider.updateWidget(getParentActivity(), appWidgetManager, currentWidgetId, isEdit);
+                        ChatsWidgetProvider.updateWidget(getParentActivity(), appWidgetManager, currentWidgetId);
                     } else {
-                        ContactsWidgetProvider.updateWidget(getParentActivity(), appWidgetManager, currentWidgetId, isEdit);
+                        ContactsWidgetProvider.updateWidget(getParentActivity(), appWidgetManager, currentWidgetId);
                     }
                     if (delegate != null) {
                         delegate.didSelectDialogs(selectedDialogs);
@@ -845,7 +850,7 @@ public class EditWidgetActivity extends BaseFragment {
         itemTouchHelper.attachToRecyclerView(listView);
         listView.setOnItemClickListener((view, position) -> {
             if (position == selectChatsRow) {
-                InviteMembersBottomSheet bottomSheet = new InviteMembersBottomSheet(context, currentAccount, null, 0, EditWidgetActivity.this);
+                InviteMembersBottomSheet bottomSheet = new InviteMembersBottomSheet(context, currentAccount, null, 0, EditWidgetActivity.this, null);
                 bottomSheet.setDelegate(dids -> {
                     selectedDialogs.clear();
                     selectedDialogs.addAll(dids);
@@ -934,7 +939,7 @@ public class EditWidgetActivity extends BaseFragment {
             switch (viewType) {
                 case 0:
                     view = new TextInfoPrivacyCell(mContext);
-                    view.setBackgroundDrawable(Theme.getThemedDrawable(mContext, R.drawable.greydivider, Theme.key_windowBackgroundGrayShadow));
+                    view.setBackgroundDrawable(Theme.getThemedDrawable(mContext, R.drawable.greydivider_bottom, Theme.key_windowBackgroundGrayShadow));
                     break;
                 case 1:
                     view = new TextCell(mContext);
@@ -945,7 +950,7 @@ public class EditWidgetActivity extends BaseFragment {
                     break;
                 case 3:
                 default:
-                    GroupCreateUserCell cell = new GroupCreateUserCell(mContext, false, 0, false);
+                    GroupCreateUserCell cell = new GroupCreateUserCell(mContext, 0, 0, false);
                     ImageView sortImageView = new ImageView(mContext);
                     sortImageView.setImageResource(R.drawable.list_reorder);
                     sortImageView.setScaleType(ImageView.ScaleType.CENTER);
@@ -976,8 +981,8 @@ public class EditWidgetActivity extends BaseFragment {
                         } else if (widgetType == TYPE_CONTACTS) {
                             builder.append(LocaleController.getString("EditWidgetContactsInfo", R.string.EditWidgetContactsInfo));
                         }
-                        if (SharedConfig.passcodeHash.length() > 0) {
-                            builder.append(AndroidUtilities.replaceTags(LocaleController.getString("WidgetPasscode", R.string.WidgetPasscode)));
+                        if (SharedConfig.passcodeEnabled()) {
+                            builder.append("\n\n").append(AndroidUtilities.replaceTags(LocaleController.getString("WidgetPasscode2", R.string.WidgetPasscode2)));
                         }
                         cell.setText(builder);
                     }
@@ -998,12 +1003,11 @@ public class EditWidgetActivity extends BaseFragment {
                 case 3: {
                     GroupCreateUserCell cell = (GroupCreateUserCell) holder.itemView;
                     long did = selectedDialogs.get(position - chatsStartRow);
-                    int lowerId = (int) did;
-                    if (lowerId > 0) {
-                        TLRPC.User user = getMessagesController().getUser(lowerId);
+                    if (DialogObject.isUserDialog(did)) {
+                        TLRPC.User user = getMessagesController().getUser(did);
                         cell.setObject(user, null, null, position != chatsEndRow - 1);
                     } else {
-                        TLRPC.Chat chat = getMessagesController().getChat(-lowerId);
+                        TLRPC.Chat chat = getMessagesController().getChat(-did);
                         cell.setObject(chat, null, null, position != chatsEndRow - 1);
                     }
                 }

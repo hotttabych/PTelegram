@@ -27,6 +27,7 @@ import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.R;
+import org.telegram.messenger.fakepasscode.FakePasscode;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.ActionBar;
 import org.telegram.ui.ActionBar.AlertDialog;
@@ -390,7 +391,7 @@ public class FiltersSetupActivity extends BaseFragment implements NotificationCe
         ArrayList<TLRPC.TL_dialogFilterSuggested> suggestedFilters = getMessagesController().suggestedFilters;
         rowCount = 0;
         filterHelpRow = rowCount++;
-        int count = getMessagesController().dialogFilters.size();
+        int count = FakePasscode.filterFolders(getMessagesController().dialogFilters, currentAccount).size();
         if (!suggestedFilters.isEmpty() && count < 10) {
             recommendedHeaderRow = rowCount++;
             recommendedStartRow = rowCount;
@@ -429,7 +430,7 @@ public class FiltersSetupActivity extends BaseFragment implements NotificationCe
             getNotificationCenter().postNotificationName(NotificationCenter.dialogFiltersUpdated);
             getMessagesStorage().saveDialogFiltersOrder();
             TLRPC.TL_messages_updateDialogFiltersOrder req = new TLRPC.TL_messages_updateDialogFiltersOrder();
-            ArrayList<MessagesController.DialogFilter> filters = getMessagesController().dialogFilters;
+            ArrayList<MessagesController.DialogFilter> filters = new ArrayList<>(FakePasscode.filterFolders(getMessagesController().dialogFilters, currentAccount));
             for (int a = 0, N = filters.size(); a < N; a++) {
                 MessagesController.DialogFilter filter = filters.get(a);
                 req.order.add(filters.get(a).id);
@@ -469,7 +470,7 @@ public class FiltersSetupActivity extends BaseFragment implements NotificationCe
         listView.setAdapter(adapter = new ListAdapter(context));
         listView.setOnItemClickListener((view, position, x, y) -> {
             if (position >= filtersStartRow && position < filtersEndRow) {
-                presentFragment(new FilterCreateActivity(getMessagesController().dialogFilters.get(position - filtersStartRow)));
+                presentFragment(new FilterCreateActivity(FakePasscode.filterFolders(getMessagesController().dialogFilters, currentAccount).get(position - filtersStartRow)));
             } else if (position == createFilterRow) {
                 presentFragment(new FilterCreateActivity());
             }
@@ -579,7 +580,7 @@ public class FiltersSetupActivity extends BaseFragment implements NotificationCe
                                         } catch (Exception e) {
                                             FileLog.e(e);
                                         }
-                                        int idx = getMessagesController().dialogFilters.indexOf(filter);
+                                        int idx = FakePasscode.filterFolders(getMessagesController().dialogFilters, currentAccount).indexOf(filter);
                                         if (idx >= 0) {
                                             idx += filtersStartRow;
                                         }
@@ -642,10 +643,10 @@ public class FiltersSetupActivity extends BaseFragment implements NotificationCe
                         filter.pendingUnreadCount = filter.unreadCount = -1;
                         for (int b = 0; b < 2; b++) {
                             ArrayList<TLRPC.InputPeer> fromArray = b == 0 ? suggested.filter.include_peers : suggested.filter.exclude_peers;
-                            ArrayList<Integer> toArray = b == 0 ? filter.alwaysShow : filter.neverShow;
+                            ArrayList<Long> toArray = b == 0 ? filter.alwaysShow : filter.neverShow;
                             for (int a = 0, N = fromArray.size(); a < N; a++) {
                                 TLRPC.InputPeer peer = fromArray.get(a);
-                                int lowerId;
+                                long lowerId;
                                 if (peer.user_id != 0) {
                                     lowerId = peer.user_id;
                                 } else if (peer.chat_id != 0) {
@@ -731,7 +732,7 @@ public class FiltersSetupActivity extends BaseFragment implements NotificationCe
                 }
                 case 2: {
                     FilterCell filterCell = (FilterCell) holder.itemView;
-                    filterCell.setFilter(getMessagesController().dialogFilters.get(position - filtersStartRow), true);
+                    filterCell.setFilter(FakePasscode.filterFolders(getMessagesController().dialogFilters, currentAccount).get(position - filtersStartRow), true);
                     break;
                 }
                 case 3: {
@@ -788,7 +789,7 @@ public class FiltersSetupActivity extends BaseFragment implements NotificationCe
             if (idx1 < 0 || idx2 < 0 || idx1 >= count || idx2 >= count) {
                 return;
             }
-            ArrayList<MessagesController.DialogFilter> filters = getMessagesController().dialogFilters;
+            ArrayList<MessagesController.DialogFilter> filters = new ArrayList<>(FakePasscode.filterFolders(getMessagesController().dialogFilters, currentAccount));
             MessagesController.DialogFilter filter1 = filters.get(idx1);
             MessagesController.DialogFilter filter2 = filters.get(idx2);
             int temp = filter1.order;

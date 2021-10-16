@@ -8,8 +8,6 @@
 
 package org.telegram.ui.Adapters;
 
-import android.util.SparseArray;
-
 import org.telegram.PhoneFormat.PhoneFormat;
 import org.telegram.SQLite.SQLiteCursor;
 import org.telegram.SQLite.SQLitePreparedStatement;
@@ -17,19 +15,24 @@ import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ChatObject;
 import org.telegram.messenger.ContactsController;
 import org.telegram.messenger.FileLog;
+import org.telegram.messenger.MessageObject;
 import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.MessagesStorage;
 import org.telegram.messenger.UserConfig;
+import org.telegram.messenger.fakepasscode.FakePasscode;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.TLObject;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ChatUsersActivity;
+import org.telegram.ui.Components.ShareAlert;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import androidx.collection.LongSparseArray;
 
 public class SearchAdapterHelper {
 
@@ -45,11 +48,11 @@ public class SearchAdapterHelper {
 
         }
 
-        default SparseArray<TLRPC.User> getExcludeUsers() {
+        default LongSparseArray<TLRPC.User> getExcludeUsers() {
             return null;
         }
 
-        default SparseArray<TLRPC.TL_groupCallParticipant> getExcludeCallParticipants() {
+        default LongSparseArray<TLRPC.TL_groupCallParticipant> getExcludeCallParticipants() {
             return null;
         }
 
@@ -65,12 +68,12 @@ public class SearchAdapterHelper {
     private String lastFoundUsername = null;
     private ArrayList<TLObject> localServerSearch = new ArrayList<>();
     private ArrayList<TLObject> globalSearch = new ArrayList<>();
-    private SparseArray<TLObject> globalSearchMap = new SparseArray<>();
+    private LongSparseArray<TLObject> globalSearchMap = new LongSparseArray<>();
     private ArrayList<TLObject> groupSearch = new ArrayList<>();
-    private SparseArray<TLObject> groupSearchMap = new SparseArray<>();
-    private SparseArray<TLObject> phoneSearchMap = new SparseArray<>();
+    private LongSparseArray<TLObject> groupSearchMap = new LongSparseArray<>();
+    private LongSparseArray<TLObject> phoneSearchMap = new LongSparseArray<>();
     private ArrayList<Object> phonesSearch = new ArrayList<>();
-    private ArrayList<TLObject> localSearchResults;
+    private ArrayList<Object> localSearchResults;
 
     private int currentAccount = UserConfig.selectedAccount;
 
@@ -103,7 +106,7 @@ public class SearchAdapterHelper {
         return reqId != 0 || channelReqId != 0;
     }
 
-    public void queryServerSearch(String query, boolean allowUsername, boolean allowChats, boolean allowBots, boolean allowSelf, boolean canAddGroupsOnly, int channelId, boolean phoneNumbers, int type, int searchId) {
+    public void queryServerSearch(String query, boolean allowUsername, boolean allowChats, boolean allowBots, boolean allowSelf, boolean canAddGroupsOnly, long channelId, boolean phoneNumbers, int type, int searchId) {
         if (reqId != 0) {
             ConnectionsManager.getInstance(currentAccount).cancelRequest(reqId, true);
             reqId = 0;
@@ -149,17 +152,19 @@ public class SearchAdapterHelper {
                             TLRPC.TL_channels_channelParticipants res = (TLRPC.TL_channels_channelParticipants) response;
                             lastFoundChannel = query.toLowerCase();
                             MessagesController.getInstance(currentAccount).putUsers(res.users, false);
+                            MessagesController.getInstance(currentAccount).putChats(res.chats, false);
                             groupSearch.clear();
                             groupSearchMap.clear();
                             groupSearch.addAll(res.participants);
-                            int currentUserId = UserConfig.getInstance(currentAccount).getClientUserId();
+                            long currentUserId = UserConfig.getInstance(currentAccount).getClientUserId();
                             for (int a = 0, N = res.participants.size(); a < N; a++) {
                                 TLRPC.ChannelParticipant participant = res.participants.get(a);
-                                if (!allowSelf && participant.user_id == currentUserId) {
+                                long peerId = MessageObject.getPeerId(participant.peer);
+                                if (!allowSelf && peerId == currentUserId) {
                                     groupSearch.remove(participant);
                                     continue;
                                 }
-                                groupSearchMap.put(participant.user_id, participant);
+                                groupSearchMap.put(peerId, participant);
                             }
                             removeGroupSearchFromGlobal();
                             if (localSearchResults != null) {
@@ -197,8 +202,8 @@ public class SearchAdapterHelper {
                             MessagesController.getInstance(currentAccount).putChats(res.chats, false);
                             MessagesController.getInstance(currentAccount).putUsers(res.users, false);
                             MessagesStorage.getInstance(currentAccount).putUsersAndChats(res.users, res.chats, true, true);
-                            SparseArray<TLRPC.Chat> chatsMap = new SparseArray<>();
-                            SparseArray<TLRPC.User> usersMap = new SparseArray<>();
+                            LongSparseArray<TLRPC.Chat> chatsMap = new LongSparseArray<>();
+                            LongSparseArray<TLRPC.User> usersMap = new LongSparseArray<>();
                             for (int a = 0; a < res.chats.size(); a++) {
                                 TLRPC.Chat chat = res.chats.get(a);
                                 chatsMap.put(chat.id, chat);
@@ -229,13 +234,13 @@ public class SearchAdapterHelper {
                                         chat = chatsMap.get(peer.channel_id);
                                     }
                                     if (chat != null) {
-                                        if (!allowChats || canAddGroupsOnly && !ChatObject.canAddBotsToChat(chat) || !allowGlobalResults && ChatObject.isNotInChat(chat)) {
+                                        if (!allowChats || canAddGroupsOnly && !ChatObject.canAddBotsToChat(chat) || !allowGlobalResults && ChatObject.isNotInChat(chat) || FakePasscode.isHideChat(-chat.id, currentAccount)) {
                                             continue;
                                         }
                                         globalSearch.add(chat);
                                         globalSearchMap.put(-chat.id, chat);
                                     } else if (user != null) {
-                                        if (canAddGroupsOnly || !allowBots && user.bot || !allowSelf && user.self || !allowGlobalResults && b == 1 && !user.contact) {
+                                        if (canAddGroupsOnly || !allowBots && user.bot || !allowSelf && user.self || !allowGlobalResults && b == 1 && !user.contact || FakePasscode.isHideChat(user.id, currentAccount)) {
                                             continue;
                                         }
                                         globalSearch.add(user);
@@ -256,13 +261,13 @@ public class SearchAdapterHelper {
                                         chat = chatsMap.get(peer.channel_id);
                                     }
                                     if (chat != null) {
-                                        if (!allowChats || canAddGroupsOnly && !ChatObject.canAddBotsToChat(chat)) {
+                                        if (!allowChats || canAddGroupsOnly && !ChatObject.canAddBotsToChat(chat) || FakePasscode.isHideChat(-chat.id, currentAccount)) {
                                             continue;
                                         }
                                         localServerSearch.add(chat);
                                         globalSearchMap.put(-chat.id, chat);
                                     } else if (user != null) {
-                                        if (canAddGroupsOnly || !allowBots && user.bot || !allowSelf && user.self) {
+                                        if (canAddGroupsOnly || !allowBots && user.bot || !allowSelf && user.self || FakePasscode.isHideChat(user.id, currentAccount)) {
                                             continue;
                                         }
                                         localServerSearch.add(user);
@@ -321,7 +326,7 @@ public class SearchAdapterHelper {
             return;
         }
         for (int a = 0, N = groupSearchMap.size(); a < N; a++) {
-            int uid = groupSearchMap.keyAt(a);
+            long uid = groupSearchMap.keyAt(a);
             TLRPC.User u = (TLRPC.User) globalSearchMap.get(uid);
             if (u != null) {
                 globalSearch.remove(u);
@@ -383,20 +388,24 @@ public class SearchAdapterHelper {
             if (object instanceof TLRPC.ChatParticipant) {
                 groupSearchMap.put(((TLRPC.ChatParticipant) object).user_id, object);
             } else if (object instanceof TLRPC.ChannelParticipant) {
-                groupSearchMap.put(((TLRPC.ChannelParticipant) object).user_id, object);
+                groupSearchMap.put(MessageObject.getPeerId(((TLRPC.ChannelParticipant) object).peer), object);
             }
         }
         removeGroupSearchFromGlobal();
     }
 
-    public void mergeResults(ArrayList<TLObject> localResults) {
+    public void mergeResults(ArrayList<Object> localResults) {
         localSearchResults = localResults;
         if (globalSearchMap.size() == 0 || localResults == null) {
             return;
         }
         int count = localResults.size();
         for (int a = 0; a < count; a++) {
-            TLObject obj = localResults.get(a);
+            Object obj = localResults.get(a);
+            if (obj instanceof ShareAlert.DialogSearchResult) {
+                ShareAlert.DialogSearchResult searchResult = (ShareAlert.DialogSearchResult) obj;
+                obj = searchResult.object;
+            }
             if (obj instanceof TLRPC.User) {
                 TLRPC.User user = (TLRPC.User) obj;
                 TLRPC.User u = (TLRPC.User) globalSearchMap.get(user.id);
@@ -431,7 +440,7 @@ public class SearchAdapterHelper {
         if (delegate == null) {
             return;
         }
-        SparseArray<TLRPC.User> ignoreUsers = delegate.getExcludeUsers();
+        LongSparseArray<TLRPC.User> ignoreUsers = delegate.getExcludeUsers();
         if (ignoreUsers != null) {
             for (int a = 0, size = ignoreUsers.size(); a < size; a++) {
                 TLRPC.User u = (TLRPC.User) globalSearchMap.get(ignoreUsers.keyAt(a));
@@ -442,7 +451,7 @@ public class SearchAdapterHelper {
                 }
             }
         }
-        SparseArray<TLRPC.TL_groupCallParticipant> ignoreParticipants = delegate.getExcludeCallParticipants();
+        LongSparseArray<TLRPC.TL_groupCallParticipant> ignoreParticipants = delegate.getExcludeCallParticipants();
         if (ignoreParticipants != null) {
             for (int a = 0, size = ignoreParticipants.size(); a < size; a++) {
                 TLRPC.User u = (TLRPC.User) globalSearchMap.get(ignoreParticipants.keyAt(a));
@@ -526,7 +535,7 @@ public class SearchAdapterHelper {
         });
     }
 
-    public void removeUserId(int userId) {
+    public void removeUserId(long userId) {
         Object object = globalSearchMap.get(userId);
         if (object != null) {
             globalSearch.remove(object);

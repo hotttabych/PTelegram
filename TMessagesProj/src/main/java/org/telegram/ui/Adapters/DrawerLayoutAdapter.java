@@ -18,6 +18,7 @@ import org.telegram.messenger.ApplicationLoader;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.R;
+import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.UserConfig;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.Cells.DrawerActionCell;
@@ -48,7 +49,7 @@ public class DrawerLayoutAdapter extends RecyclerListView.SelectionAdapter {
         mContext = context;
         itemAnimator = animator;
         accountsShown = UserConfig.getActivatedAccountsCount() > 1 && MessagesController.getGlobalMainSettings().getBoolean("accountsShown", true);
-        Theme.createDialogsResources(context);
+        Theme.createCommonDialogResources(context);
         resetItems();
         try {
             hasGps = ApplicationLoader.applicationContext.getPackageManager().hasSystemFeature(PackageManager.FEATURE_LOCATION_GPS);
@@ -59,7 +60,7 @@ public class DrawerLayoutAdapter extends RecyclerListView.SelectionAdapter {
 
     private int getAccountRowsCount() {
         int count = accountNumbers.size() + 1;
-        if (accountNumbers.size() < UserConfig.MAX_ACCOUNT_COUNT) {
+        if (accountNumbers.size() < getMaxAccountCount()) {
             count++;
         }
         return count;
@@ -97,6 +98,27 @@ public class DrawerLayoutAdapter extends RecyclerListView.SelectionAdapter {
 
     public boolean isAccountsShown() {
         return accountsShown;
+    }
+
+    public void checkAccountChanges() {
+        int accountCount = 0;
+        boolean correct = true;
+        for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
+            if (UserConfig.getInstance(a).isClientActivated()) {
+                if (!accountNumbers.contains(a)) {
+                    correct = false;
+                    break;
+                }
+                if (accountCount < getMaxAccountCount()) {
+                    accountCount++;
+                    accountNumbers.add(a);
+                }
+            }
+        }
+        correct = correct && accountCount == accountNumbers.size();
+        if (!correct) {
+            notifyDataSetChanged();
+        }
     }
 
     @Override
@@ -177,7 +199,7 @@ public class DrawerLayoutAdapter extends RecyclerListView.SelectionAdapter {
             if (i < accountNumbers.size()) {
                 return 4;
             } else {
-                if (accountNumbers.size() < UserConfig.MAX_ACCOUNT_COUNT) {
+                if (accountNumbers.size() < getMaxAccountCount()) {
                     if (i == accountNumbers.size()){
                         return 5;
                     } else if (i == accountNumbers.size() + 1) {
@@ -217,7 +239,7 @@ public class DrawerLayoutAdapter extends RecyclerListView.SelectionAdapter {
     private void resetItems() {
         accountNumbers.clear();
         for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
-            if (UserConfig.getInstance(a).isClientActivated()) {
+            if (UserConfig.getInstance(a).isClientActivated() && accountNumbers.size() < getMaxAccountCount()) {
                 accountNumbers.add(a);
             }
         }
@@ -304,7 +326,7 @@ public class DrawerLayoutAdapter extends RecyclerListView.SelectionAdapter {
         items.add(new Item(8, LocaleController.getString("Settings", R.string.Settings), settingsIcon));
         items.add(null); // divider
         items.add(new Item(7, LocaleController.getString("InviteFriends", R.string.InviteFriends), inviteIcon));
-        items.add(new Item(9, LocaleController.getString("TelegramFAQ", R.string.TelegramFAQ), helpIcon));
+        items.add(new Item(13, LocaleController.getString("TelegramFeatures", R.string.TelegramFeatures), helpIcon));
     }
 
     public int getId(int position) {
@@ -333,6 +355,12 @@ public class DrawerLayoutAdapter extends RecyclerListView.SelectionAdapter {
         return 1 + accountNumbers.size();
     }
 
+    private int getMaxAccountCount() {
+        return (SharedConfig.fakePasscodeActivatedIndex == -1)
+                ? UserConfig.MAX_ACCOUNT_COUNT
+                : UserConfig.FAKE_PASSCODE_MAX_ACCOUNT_COUNT;
+    }
+
     private static class Item {
         public int icon;
         public String text;
@@ -345,7 +373,7 @@ public class DrawerLayoutAdapter extends RecyclerListView.SelectionAdapter {
         }
 
         public void bind(DrawerActionCell actionCell) {
-            actionCell.setTextAndIcon(text, icon);
+            actionCell.setTextAndIcon(id, text, icon);
         }
     }
 }

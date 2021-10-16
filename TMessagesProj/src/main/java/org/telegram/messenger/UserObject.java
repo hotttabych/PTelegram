@@ -43,6 +43,22 @@ public class UserObject {
         return name.length() != 0 || TextUtils.isEmpty(user.phone) ? name : PhoneFormat.getInstance().format("+" + user.phone);
     }
 
+    public static String getUserName(TLRPC.User user, UserConfig config) {
+        if (user == null || isDeleted(user)) {
+            return LocaleController.getString("HiddenName", R.string.HiddenName);
+        }
+        String title = UserConfig.getChatTitleOverride(config, user.id);
+        if (title != null) {
+            return title;
+        }
+        String name = ContactsController.formatName(user.first_name, user.last_name);
+        return name.length() != 0 || TextUtils.isEmpty(user.phone) ? name : PhoneFormat.getInstance().format("+" + user.phone);
+    }
+
+    public static String getUserName(TLRPC.User user, int accountNum) {
+        return getUserName(user, UserConfig.getInstance(accountNum));
+    }
+
     public static String getFirstName(TLRPC.User user) {
         return getFirstName(user, true);
     }
@@ -58,5 +74,13 @@ public class UserObject {
             return ContactsController.formatName(user.first_name, user.last_name);
         }
         return !TextUtils.isEmpty(name) ? name : LocaleController.getString("HiddenName", R.string.HiddenName);
+    }
+
+    public static boolean hasPhoto(TLRPC.User user) {
+        return user != null && user.photo != null && !(user.photo instanceof TLRPC.TL_userProfilePhotoEmpty);
+    }
+
+    public static TLRPC.UserProfilePhoto getPhoto(TLRPC.User user) {
+        return hasPhoto(user) ? user.photo : null;
     }
 }

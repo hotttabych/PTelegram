@@ -127,9 +127,12 @@ public class DialogMeUrlCell extends BaseCell {
                 nameLockLeft = getMeasuredWidth() - AndroidUtilities.dp(AndroidUtilities.leftBaseline) - (drawNameGroup ? Theme.dialogs_groupDrawable.getIntrinsicWidth() : Theme.dialogs_broadcastDrawable.getIntrinsicWidth());
                 nameLeft = AndroidUtilities.dp(14);
             }
-            nameString = chat.title;
-            avatarDrawable.setInfo(chat);
-            avatarImage.setImage(ImageLocation.getForChat(chat, false), "50_50", avatarDrawable, null, recentMeUrl, 0);
+            nameString = UserConfig.getChatTitleOverride(currentAccount, chat.id);
+            if (nameString == null) {
+                nameString = chat.title;
+            }
+            avatarDrawable.setInfo(chat, currentAccount);
+            avatarImage.setForUserOrChat(chat, avatarDrawable, recentMeUrl);
         } else if (recentMeUrl instanceof TLRPC.TL_recentMeUrlUser) {
             TLRPC.User user = MessagesController.getInstance(currentAccount).getUser(recentMeUrl.user_id);
             if (!LocaleController.isRTL) {
@@ -151,9 +154,9 @@ public class DialogMeUrlCell extends BaseCell {
                 }
                 drawVerified = user.verified;
             }
-            nameString = UserObject.getUserName(user);
-            avatarDrawable.setInfo(user);
-            avatarImage.setImage(ImageLocation.getForUser(user, false), "50_50", avatarDrawable, null, recentMeUrl, 0);
+            nameString = UserObject.getUserName(user, currentAccount);
+            avatarDrawable.setInfo(user, currentAccount);
+            avatarImage.setForUserOrChat(user, avatarDrawable, recentMeUrl);
         } else if (recentMeUrl instanceof TLRPC.TL_recentMeUrlStickerSet) {
             if (!LocaleController.isRTL) {
                 nameLeft = AndroidUtilities.dp(AndroidUtilities.leftBaseline);
@@ -170,8 +173,11 @@ public class DialogMeUrlCell extends BaseCell {
                 nameLeft = AndroidUtilities.dp(14);
             }
             if (recentMeUrl.chat_invite.chat != null) {
-                avatarDrawable.setInfo(recentMeUrl.chat_invite.chat);
-                nameString = recentMeUrl.chat_invite.chat.title;
+                avatarDrawable.setInfo(recentMeUrl.chat_invite.chat, currentAccount);
+                nameString = UserConfig.getChatTitleOverride(currentAccount, recentMeUrl.chat_invite.chat.id);
+                if (nameString == null) {
+                    nameString = recentMeUrl.chat_invite.chat.title;
+                }
                 if (recentMeUrl.chat_invite.chat.id < 0 || ChatObject.isChannel(recentMeUrl.chat_invite.chat) && !recentMeUrl.chat_invite.chat.megagroup) {
                     drawNameBroadcast = true;
                     nameLockTop = AndroidUtilities.dp(16.5f);
@@ -180,7 +186,7 @@ public class DialogMeUrlCell extends BaseCell {
                     nameLockTop = AndroidUtilities.dp(17.5f);
                 }
                 drawVerified = recentMeUrl.chat_invite.chat.verified;
-                avatarImage.setImage(ImageLocation.getForChat(recentMeUrl.chat_invite.chat, false), "50_50", avatarDrawable, null, recentMeUrl, 0);
+                avatarImage.setForUserOrChat(recentMeUrl.chat_invite.chat, avatarDrawable, recentMeUrl);
             } else {
                 nameString = recentMeUrl.chat_invite.title;
                 avatarDrawable.setInfo(5, recentMeUrl.chat_invite.title, null);

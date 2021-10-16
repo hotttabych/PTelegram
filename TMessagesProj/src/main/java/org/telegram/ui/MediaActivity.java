@@ -48,6 +48,7 @@ import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ApplicationLoader;
 import org.telegram.messenger.ChatObject;
 import org.telegram.messenger.ContactsController;
+import org.telegram.messenger.DialogObject;
 import org.telegram.messenger.FileLoader;
 import org.telegram.messenger.FileLog;
 import org.telegram.messenger.LocaleController;
@@ -162,7 +163,7 @@ public class MediaActivity extends BaseFragment implements NotificationCenter.No
 
     private boolean swipeBackEnabled;
 
-    private long dialog_id;
+    private long dialogId;
     private int columnsCount = 3;
 
     private static final Interpolator interpolator = t -> {
@@ -195,6 +196,9 @@ public class MediaActivity extends BaseFragment implements NotificationCenter.No
             final RecyclerListView listView = mediaPages[0].listView;
             for (int a = 0, count = listView.getChildCount(); a < count; a++) {
                 View view = listView.getChildAt(a);
+                if (view.getTop() >= mediaPages[0].listView.getMeasuredHeight()) {
+                    continue;
+                }
                 BackupImageView imageView = null;
                 if (view instanceof SharedPhotoVideoCell) {
                     SharedPhotoVideoCell cell = (SharedPhotoVideoCell) view;
@@ -255,8 +259,18 @@ public class MediaActivity extends BaseFragment implements NotificationCenter.No
                             }
                         }
                     }
-
                     return object;
+                }
+                if (mediaPages[0].selectedType == 0) {
+                    int position = photoVideoAdapter.getPositionForIndex(index);
+                    int firstVisiblePosition = mediaPages[0].layoutManager.findFirstVisibleItemPosition();
+                    int lastVisiblePosition = mediaPages[0].layoutManager.findLastVisibleItemPosition();
+
+                    if (position <= firstVisiblePosition) {
+                        mediaPages[0].layoutManager.scrollToPositionWithOffset(position, 0);
+                    } else if (position >= lastVisiblePosition && lastVisiblePosition >= 0) {
+                        mediaPages[0].layoutManager.scrollToPositionWithOffset(position, 0, true);
+                    }
                 }
             }
             return null;
@@ -277,10 +291,10 @@ public class MediaActivity extends BaseFragment implements NotificationCenter.No
         super(args);
         hasMedia = media;
         initialTab = initTab;
-        dialog_id = args.getLong("dialog_id", 0);
+        dialogId = args.getLong("dialog_id", 0);
         for (int a = 0; a < sharedMediaData.length; a++) {
             sharedMediaData[a] = new SharedMediaLayout.SharedMediaData();
-            sharedMediaData[a].max_id[0] = ((int) dialog_id) == 0 ? Integer.MIN_VALUE : Integer.MAX_VALUE;
+            sharedMediaData[a].max_id[0] = DialogObject.isEncryptedDialog(dialogId) ? Integer.MIN_VALUE : Integer.MAX_VALUE;
             if (mergeDialogId != 0 && info != null) {
                 sharedMediaData[a].max_id[1] = info.migrated_from_max_id;
                 sharedMediaData[a].endReached[1] = false;
@@ -360,32 +374,34 @@ public class MediaActivity extends BaseFragment implements NotificationCenter.No
         actionBar.setBackButtonDrawable(new BackDrawable(false));
         actionBar.setAddToContainer(false);
         actionBar.setClipContent(true);
-        int lower_id = (int) dialog_id;
-        if (lower_id != 0) {
-            if (lower_id > 0) {
-                TLRPC.User user = MessagesController.getInstance(currentAccount).getUser(lower_id);
-                if (user != null) {
-                    if (user.self) {
-                        actionBar.setTitle(LocaleController.getString("SavedMessages", R.string.SavedMessages));
-                    } else {
-                        actionBar.setTitle(ContactsController.formatName(user.first_name, user.last_name));
-                    }
-                }
-            } else {
-                TLRPC.Chat chat = MessagesController.getInstance(currentAccount).getChat(-lower_id);
-                if (chat != null) {
-                    actionBar.setTitle(chat.title);
-                }
-            }
-        } else {
-            TLRPC.EncryptedChat encryptedChat = MessagesController.getInstance(currentAccount).getEncryptedChat((int) (dialog_id >> 32));
+        if (DialogObject.isEncryptedDialog(dialogId)) {
+            TLRPC.EncryptedChat encryptedChat = getMessagesController().getEncryptedChat(DialogObject.getEncryptedChatId(dialogId));
             if (encryptedChat != null) {
-                TLRPC.User user = MessagesController.getInstance(currentAccount).getUser(encryptedChat.user_id);
+                TLRPC.User user = getMessagesController().getUser(encryptedChat.user_id);
                 if (user != null) {
                     actionBar.setTitle(ContactsController.formatName(user.first_name, user.last_name));
                 }
             }
+        } else if (DialogObject.isUserDialog(dialogId)) {
+            TLRPC.User user = MessagesController.getInstance(currentAccount).getUser(dialogId);
+            if (user != null) {
+                if (user.self) {
+                    actionBar.setTitle(LocaleController.getString("SavedMessages", R.string.SavedMessages));
+                } else {
+                    actionBar.setTitle(ContactsController.formatName(user.first_name, user.last_name));
+                }
+            }
+        } else {
+            TLRPC.Chat chat = MessagesController.getInstance(currentAccount).getChat(-dialogId);
+            if (chat != null) {
+                String title = UserConfig.getChatTitleOverride(currentAccount, chat.id);
+                if (title == null) {
+                    title = chat.title;
+                }
+                actionBar.setTitle(title);
+            }
         }
+
         if (TextUtils.isEmpty(actionBar.getTitle())) {
             actionBar.setTitle(LocaleController.getString("SharedContentTitle", R.string.SharedContentTitle));
         }
@@ -402,21 +418,18 @@ public class MediaActivity extends BaseFragment implements NotificationCenter.No
                     TLRPC.Chat currentChat = null;
                     TLRPC.User currentUser = null;
                     TLRPC.EncryptedChat currentEncryptedChat = null;
-                    int lower_id = (int) dialog_id;
-                    if (lower_id != 0) {
-                        if (lower_id > 0) {
-                            currentUser = MessagesController.getInstance(currentAccount).getUser(lower_id);
-                        } else {
-                            currentChat = MessagesController.getInstance(currentAccount).getChat(-lower_id);
-                        }
+                    if (DialogObject.isEncryptedDialog(dialogId)) {
+                        currentEncryptedChat = MessagesController.getInstance(currentAccount).getEncryptedChat(DialogObject.getEncryptedChatId(dialogId));
+                    } else if (DialogObject.isUserDialog(dialogId)) {
+                        currentUser = MessagesController.getInstance(currentAccount).getUser(dialogId);
                     } else {
-                        currentEncryptedChat = MessagesController.getInstance(currentAccount).getEncryptedChat((int) (dialog_id >> 32));
+                        currentChat = MessagesController.getInstance(currentAccount).getChat(-dialogId);
                     }
                     AlertsCreator.createDeleteMessagesAlert(MediaActivity.this, currentUser, currentChat, currentEncryptedChat, null, mergeDialogId, null, selectedFiles, null, false, 1, () -> {
                         actionBar.hideActionMode();
                         actionBar.closeSearchField();
                         cantDeleteMessagesCount = 0;
-                    });
+                    }, null);
                 } else if (id == forward) {
                     Bundle args = new Bundle();
                     args.putBoolean("onlySelect", true);
@@ -445,27 +458,23 @@ public class MediaActivity extends BaseFragment implements NotificationCenter.No
                             for (int a = 0; a < dids.size(); a++) {
                                 long did = dids.get(a);
                                 if (message != null) {
-                                    SendMessagesHelper.getInstance(currentAccount).sendMessage(message.toString(), did, null, null, null, true, null, null, null, true, 0);
+                                    SendMessagesHelper.getInstance(currentAccount).sendMessage(message.toString(), did, null, null, null, true, null, null, null, true, 0, null);
                                 }
-                                SendMessagesHelper.getInstance(currentAccount).sendMessage(fmessages, did, true, 0);
+                                SendMessagesHelper.getInstance(currentAccount).sendMessage(fmessages, did, false, false, true, 0);
                             }
                             fragment1.finishFragment();
                         } else {
                             long did = dids.get(0);
-                            int lower_part = (int) did;
-                            int high_part = (int) (did >> 32);
                             Bundle args1 = new Bundle();
                             args1.putBoolean("scrollToTopOnResume", true);
-                            if (lower_part != 0) {
-                                if (lower_part > 0) {
-                                    args1.putInt("user_id", lower_part);
-                                } else if (lower_part < 0) {
-                                    args1.putInt("chat_id", -lower_part);
-                                }
+                            if (DialogObject.isEncryptedDialog(did)) {
+                                args1.putInt("enc_id", DialogObject.getEncryptedChatId(did));
+                            } else if (DialogObject.isUserDialog(did)) {
+                                args1.putLong("user_id", did);
                             } else {
-                                args1.putInt("enc_id", high_part);
+                                args1.putLong("chat_id", -did);
                             }
-                            if (lower_part != 0) {
+                            if (!DialogObject.isEncryptedDialog(did)) {
                                 if (!MessagesController.getInstance(currentAccount).checkCanOpenChat(args1, fragment1)) {
                                     return;
                                 }
@@ -488,25 +497,22 @@ public class MediaActivity extends BaseFragment implements NotificationCenter.No
                         return;
                     }
                     Bundle args = new Bundle();
-                    int lower_part = (int) dialog_id;
-                    int high_id = (int) (dialog_id >> 32);
-                    if (lower_part != 0) {
-                        if (lower_part > 0) {
-                            args.putInt("user_id", lower_part);
-                        } else if (lower_part < 0) {
-                            TLRPC.Chat chat = MessagesController.getInstance(currentAccount).getChat(-lower_part);
-                            if (chat != null && chat.migrated_to != null) {
-                                args.putInt("migrated_to", lower_part);
-                                lower_part = -chat.migrated_to.channel_id;
-                            }
-                            args.putInt("chat_id", -lower_part);
-                        }
+                    if (DialogObject.isEncryptedDialog(dialogId)) {
+                        args.putInt("enc_id", DialogObject.getEncryptedChatId(dialogId));
+                    } else if (DialogObject.isUserDialog(dialogId)) {
+                        args.putLong("user_id", dialogId);
                     } else {
-                        args.putInt("enc_id", high_id);
+                        long did = dialogId;
+                        TLRPC.Chat chat = MessagesController.getInstance(currentAccount).getChat(-did);
+                        if (chat != null && chat.migrated_to != null) {
+                            args.putLong("migrated_to", did);
+                            did = -chat.migrated_to.channel_id;
+                        }
+                        args.putLong("chat_id", -did);
                     }
                     args.putInt("message_id", selectedFiles[0].keyAt(0));
-                    NotificationCenter.getInstance(currentAccount).postNotificationName(NotificationCenter.closeChats);
-                    presentFragment(new ChatActivity(args), true);
+                    args.putBoolean("need_remove_previous_same_chat_activity", false);
+                    presentFragment(new ChatActivity(args), false);
                 }
             }
         });
@@ -647,7 +653,7 @@ public class MediaActivity extends BaseFragment implements NotificationCenter.No
         selectedMessagesCountTextView.setOnTouchListener((v, event) -> true);
         actionMode.addView(selectedMessagesCountTextView, LayoutHelper.createLinear(0, LayoutHelper.MATCH_PARENT, 1.0f, 72, 0, 0, 0));
 
-        if ((int) dialog_id != 0) {
+        if (!DialogObject.isEncryptedDialog(dialogId)) {
             actionModeViews.add(gotoItem = actionMode.addItemWithWidth(gotochat, R.drawable.msg_message, AndroidUtilities.dp(54), LocaleController.getString("AccDescrGoToMessage", R.string.AccDescrGoToMessage)));
             actionModeViews.add(actionMode.addItemWithWidth(forward, R.drawable.msg_forward, AndroidUtilities.dp(54), LocaleController.getString("Forward", R.string.Forward)));
         }
@@ -1074,6 +1080,9 @@ public class MediaActivity extends BaseFragment implements NotificationCenter.No
                 protected void onLayout(boolean changed, int l, int t, int r, int b) {
                     super.onLayout(changed, l, t, r, b);
                     updateSections(this, true);
+                    if (mediaPage.selectedType == 0) {
+                        PhotoViewer.getInstance().checkCurrentImageVisibility();
+                    }
                 }
             };
             mediaPages[a].listView.setScrollingTouchSlop(RecyclerView.TOUCH_SLOP_PAGING);
@@ -1139,7 +1148,7 @@ public class MediaActivity extends BaseFragment implements NotificationCenter.No
                         }
                         if (!sharedMediaData[mediaPage.selectedType].endReached[0]) {
                             sharedMediaData[mediaPage.selectedType].loading = true;
-                            MediaDataController.getInstance(currentAccount).loadMedia(dialog_id, 50, sharedMediaData[mediaPage.selectedType].max_id[0], type, 1, classGuid);
+                            MediaDataController.getInstance(currentAccount).loadMedia(dialogId, 50, sharedMediaData[mediaPage.selectedType].max_id[0], type, 1, classGuid);
                         } else if (mergeDialogId != 0 && !sharedMediaData[mediaPage.selectedType].endReached[1]) {
                             sharedMediaData[mediaPage.selectedType].loading = true;
                             MediaDataController.getInstance(currentAccount).loadMedia(mergeDialogId, 50, sharedMediaData[mediaPage.selectedType].max_id[1], type, 1, classGuid);
@@ -1298,8 +1307,8 @@ public class MediaActivity extends BaseFragment implements NotificationCenter.No
                 sharedMediaData[type].loading = false;
                 sharedMediaData[type].totalCount = (Integer) args[1];
                 ArrayList<MessageObject> arr = (ArrayList<MessageObject>) args[2];
-                boolean enc = ((int) dialog_id) == 0;
-                int loadIndex = uid == dialog_id ? 0 : 1;
+                boolean enc = DialogObject.isEncryptedDialog(dialogId);
+                int loadIndex = uid == dialogId ? 0 : 1;
 
                 RecyclerListView.Adapter adapter = null;
                 if (type == 0) {
@@ -1365,10 +1374,10 @@ public class MediaActivity extends BaseFragment implements NotificationCenter.No
                 return;
             }
             TLRPC.Chat currentChat = null;
-            if ((int) dialog_id < 0) {
-                currentChat = MessagesController.getInstance(currentAccount).getChat(-(int) dialog_id);
+            if (DialogObject.isChatDialog(dialogId)) {
+                currentChat = MessagesController.getInstance(currentAccount).getChat(-dialogId);
             }
-            int channelId = (Integer) args[1];
+            long channelId = (Long) args[1];
             int loadIndex = 0;
             if (ChatObject.isChannel(currentChat)) {
                 if (channelId == 0 && mergeDialogId != 0) {
@@ -1414,9 +1423,9 @@ public class MediaActivity extends BaseFragment implements NotificationCenter.No
                 return;
             }
             long uid = (Long) args[0];
-            if (uid == dialog_id) {
+            if (uid == dialogId) {
                 ArrayList<MessageObject> arr = (ArrayList<MessageObject>) args[1];
-                boolean enc = ((int) dialog_id) == 0;
+                boolean enc = DialogObject.isEncryptedDialog(dialogId);
                 boolean updated = false;
                 for (int a = 0; a < arr.size(); a++) {
                     MessageObject obj = arr.get(a);
@@ -1427,7 +1436,7 @@ public class MediaActivity extends BaseFragment implements NotificationCenter.No
                     if (type == -1) {
                         return;
                     }
-                    if (sharedMediaData[type].addMessage(obj, obj.getDialogId() == dialog_id ? 0 : 1, true, enc)) {
+                    if (sharedMediaData[type].addMessage(obj, obj.getDialogId() == dialogId ? 0 : 1, true, enc)) {
                         updated = true;
                         hasMedia[type] = 1;
                     }
@@ -1636,7 +1645,7 @@ public class MediaActivity extends BaseFragment implements NotificationCenter.No
                 changed = true;
             }
         }
-        if ((int) dialog_id != 0) {
+        if (!DialogObject.isEncryptedDialog(dialogId)) {
             if (hasMedia[3] != 0 && !scrollSlidingTextTabStrip.hasTab(3)) {
                 changed = true;
             }
@@ -1644,11 +1653,8 @@ public class MediaActivity extends BaseFragment implements NotificationCenter.No
                 changed = true;
             }
         } else {
-            TLRPC.EncryptedChat currentEncryptedChat = MessagesController.getInstance(currentAccount).getEncryptedChat((int) (dialog_id >> 32));
-            if (currentEncryptedChat != null && AndroidUtilities.getPeerLayerVersion(currentEncryptedChat.layer) >= 46) {
-                if (hasMedia[4] != 0 && !scrollSlidingTextTabStrip.hasTab(4)) {
-                    changed = true;
-                }
+            if (hasMedia[4] != 0 && !scrollSlidingTextTabStrip.hasTab(4)) {
+                changed = true;
             }
         }
         if (hasMedia[2] != 0 && !scrollSlidingTextTabStrip.hasTab(2)) {
@@ -1666,7 +1672,7 @@ public class MediaActivity extends BaseFragment implements NotificationCenter.No
                     scrollSlidingTextTabStrip.addTextTab(1, LocaleController.getString("SharedFilesTab2", R.string.SharedFilesTab2));
                 }
             }
-            if ((int) dialog_id != 0) {
+            if (!DialogObject.isEncryptedDialog(dialogId)) {
                 if (hasMedia[3] != 0) {
                     if (!scrollSlidingTextTabStrip.hasTab(3)) {
                         scrollSlidingTextTabStrip.addTextTab(3, LocaleController.getString("SharedLinksTab2", R.string.SharedLinksTab2));
@@ -1678,12 +1684,9 @@ public class MediaActivity extends BaseFragment implements NotificationCenter.No
                     }
                 }
             } else {
-                TLRPC.EncryptedChat currentEncryptedChat = MessagesController.getInstance(currentAccount).getEncryptedChat((int) (dialog_id >> 32));
-                if (currentEncryptedChat != null && AndroidUtilities.getPeerLayerVersion(currentEncryptedChat.layer) >= 46) {
-                    if (hasMedia[4] != 0) {
-                        if (!scrollSlidingTextTabStrip.hasTab(4)) {
-                            scrollSlidingTextTabStrip.addTextTab(4, LocaleController.getString("SharedMusicTab2", R.string.SharedMusicTab2));
-                        }
+                if (hasMedia[4] != 0) {
+                    if (!scrollSlidingTextTabStrip.hasTab(4)) {
+                        scrollSlidingTextTabStrip.addTextTab(4, LocaleController.getString("SharedMusicTab2", R.string.SharedMusicTab2));
                     }
                 }
             }
@@ -1826,7 +1829,7 @@ public class MediaActivity extends BaseFragment implements NotificationCenter.No
             }
             if (!sharedMediaData[mediaPages[a].selectedType].loading && !sharedMediaData[mediaPages[a].selectedType].endReached[0] && sharedMediaData[mediaPages[a].selectedType].messages.isEmpty()) {
                 sharedMediaData[mediaPages[a].selectedType].loading = true;
-                MediaDataController.getInstance(currentAccount).loadMedia(dialog_id, 50, 0, mediaPages[a].selectedType, 1, classGuid);
+                MediaDataController.getInstance(currentAccount).loadMedia(dialogId, 50, 0, mediaPages[a].selectedType, 1, classGuid);
             }
             mediaPages[a].listView.setVisibility(View.VISIBLE);
         }
@@ -1845,7 +1848,7 @@ public class MediaActivity extends BaseFragment implements NotificationCenter.No
             return false;
         }
         AndroidUtilities.hideKeyboard(getParentActivity().getCurrentFocus());
-        selectedFiles[item.getDialogId() == dialog_id ? 0 : 1].put(item.getId(), item);
+        selectedFiles[item.getDialogId() == dialogId ? 0 : 1].put(item.getId(), item);
         if (!item.canDeleteMessage(false, null)) {
             cantDeleteMessagesCount++;
         }
@@ -1886,7 +1889,7 @@ public class MediaActivity extends BaseFragment implements NotificationCenter.No
             return;
         }
         if (actionBar.isActionModeShowed()) {
-            int loadIndex = message.getDialogId() == dialog_id ? 0 : 1;
+            int loadIndex = message.getDialogId() == dialogId ? 0 : 1;
             if (selectedFiles[loadIndex].indexOfKey(message.getId()) >= 0) {
                 selectedFiles[loadIndex].remove(message.getId());
                 if (!message.canDeleteMessage(false, null)) {
@@ -1923,7 +1926,7 @@ public class MediaActivity extends BaseFragment implements NotificationCenter.No
         } else {
             if (selectedMode == 0) {
                 PhotoViewer.getInstance().setParentActivity(getParentActivity());
-                PhotoViewer.getInstance().openPhoto(sharedMediaData[selectedMode].messages, index, dialog_id, mergeDialogId, provider);
+                PhotoViewer.getInstance().openPhoto(sharedMediaData[selectedMode].messages, index, dialogId, mergeDialogId, provider);
             } else if (selectedMode == 2 || selectedMode == 4) {
                 if (view instanceof SharedAudioCell) {
                     ((SharedAudioCell) view).didPressedButton();
@@ -1941,7 +1944,7 @@ public class MediaActivity extends BaseFragment implements NotificationCenter.No
                                 documents.add(message);
                                 PhotoViewer.getInstance().openPhoto(documents, 0, 0, 0, provider);
                             } else {
-                                PhotoViewer.getInstance().openPhoto(sharedMediaData[selectedMode].messages, index, dialog_id, mergeDialogId, provider);
+                                PhotoViewer.getInstance().openPhoto(sharedMediaData[selectedMode].messages, index, dialogId, mergeDialogId, provider);
                             }
                             return;
                         }
@@ -1965,7 +1968,7 @@ public class MediaActivity extends BaseFragment implements NotificationCenter.No
                             ArticleViewer.getInstance().open(message);
                             return;
                         } else if (webPage.embed_url != null && webPage.embed_url.length() != 0) {
-                            openWebView(webPage);
+                            openWebView(webPage, message);
                             return;
                         } else {
                             link = webPage.url;
@@ -1992,8 +1995,8 @@ public class MediaActivity extends BaseFragment implements NotificationCenter.No
         }
     }
 
-    private void openWebView(TLRPC.WebPage webPage) {
-        EmbedBottomSheet.show(getParentActivity(), webPage.site_name, webPage.description, webPage.url, webPage.embed_url, webPage.embed_width, webPage.embed_height, false);
+    private void openWebView(TLRPC.WebPage webPage, MessageObject messageObject) {
+        EmbedBottomSheet.show(getParentActivity(), messageObject, provider, webPage.site_name, webPage.description, webPage.url, webPage.embed_url, webPage.embed_width, webPage.embed_height, false);
     }
 
     private void recycleAdapter(RecyclerView.Adapter adapter) {
@@ -2053,8 +2056,8 @@ public class MediaActivity extends BaseFragment implements NotificationCenter.No
 
     SharedLinkCell.SharedLinkCellDelegate sharedLinkCellDelegate = new SharedLinkCell.SharedLinkCellDelegate() {
         @Override
-        public void needOpenWebView(TLRPC.WebPage webPage) {
-            MediaActivity.this.openWebView(webPage);
+        public void needOpenWebView(TLRPC.WebPage webPage, MessageObject message) {
+            MediaActivity.this.openWebView(webPage, message);
         }
 
         @Override
@@ -2101,7 +2104,7 @@ public class MediaActivity extends BaseFragment implements NotificationCenter.No
         }
 
         @Override
-        public boolean isEnabled(int section, int row) {
+        public boolean isEnabled(RecyclerView.ViewHolder holder, int section, int row) {
             return row != 0;
         }
 
@@ -2154,7 +2157,7 @@ public class MediaActivity extends BaseFragment implements NotificationCenter.No
                     ((SharedLinkCell) view).setDelegate(sharedLinkCellDelegate);
                     break;
                 case 3:
-                    View emptyStubView = SharedMediaLayout.createEmptyStubView(mContext, 3, dialog_id);
+                    View emptyStubView = SharedMediaLayout.createEmptyStubView(mContext, 3, dialogId);
                     emptyStubView.setLayoutParams(new RecyclerView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
                     return new RecyclerListView.Holder(emptyStubView);
                 case 2:
@@ -2181,7 +2184,7 @@ public class MediaActivity extends BaseFragment implements NotificationCenter.No
                         MessageObject messageObject = messageObjects.get(position - 1);
                         sharedLinkCell.setLink(messageObject, position != messageObjects.size() || section == sharedMediaData[3].sections.size() - 1 && sharedMediaData[3].loading);
                         if (actionBar.isActionModeShowed()) {
-                            sharedLinkCell.setChecked(selectedFiles[messageObject.getDialogId() == dialog_id ? 0 : 1].indexOfKey(messageObject.getId()) >= 0, !scrolling);
+                            sharedLinkCell.setChecked(selectedFiles[messageObject.getDialogId() == dialogId ? 0 : 1].indexOfKey(messageObject.getId()) >= 0, !scrolling);
                         } else {
                             sharedLinkCell.setChecked(false, !scrolling);
                         }
@@ -2228,7 +2231,7 @@ public class MediaActivity extends BaseFragment implements NotificationCenter.No
         }
 
         @Override
-        public boolean isEnabled(int section, int row) {
+        public boolean isEnabled(RecyclerView.ViewHolder holder, int section, int row) {
             return row != 0;
         }
 
@@ -2288,7 +2291,7 @@ public class MediaActivity extends BaseFragment implements NotificationCenter.No
                     view = new LoadingCell(mContext, AndroidUtilities.dp(32), AndroidUtilities.dp(54));
                     break;
                 case 4:
-                    View emptyStubView = SharedMediaLayout.createEmptyStubView(mContext, currentType, dialog_id);
+                    View emptyStubView = SharedMediaLayout.createEmptyStubView(mContext, currentType, dialogId);
                     emptyStubView.setLayoutParams(new RecyclerView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
                     return new RecyclerListView.Holder(emptyStubView);
                 case 3:
@@ -2339,7 +2342,7 @@ public class MediaActivity extends BaseFragment implements NotificationCenter.No
                         MessageObject messageObject = messageObjects.get(position - 1);
                         sharedDocumentCell.setDocument(messageObject, position != messageObjects.size() || section == sharedMediaData[currentType].sections.size() - 1 && sharedMediaData[currentType].loading);
                         if (actionBar.isActionModeShowed()) {
-                            sharedDocumentCell.setChecked(selectedFiles[messageObject.getDialogId() == dialog_id ? 0 : 1].indexOfKey(messageObject.getId()) >= 0, !scrolling);
+                            sharedDocumentCell.setChecked(selectedFiles[messageObject.getDialogId() == dialogId ? 0 : 1].indexOfKey(messageObject.getId()) >= 0, !scrolling);
                         } else {
                             sharedDocumentCell.setChecked(false, !scrolling);
                         }
@@ -2350,7 +2353,7 @@ public class MediaActivity extends BaseFragment implements NotificationCenter.No
                         MessageObject messageObject = messageObjects.get(position - 1);
                         sharedAudioCell.setMessageObject(messageObject, position != messageObjects.size() || section == sharedMediaData[currentType].sections.size() - 1 && sharedMediaData[currentType].loading);
                         if (actionBar.isActionModeShowed()) {
-                            sharedAudioCell.setChecked(selectedFiles[messageObject.getDialogId() == dialog_id ? 0 : 1].indexOfKey(messageObject.getId()) >= 0, !scrolling);
+                            sharedAudioCell.setChecked(selectedFiles[messageObject.getDialogId() == dialogId ? 0 : 1].indexOfKey(messageObject.getId()) >= 0, !scrolling);
                         } else {
                             sharedAudioCell.setChecked(false, !scrolling);
                         }
@@ -2404,7 +2407,7 @@ public class MediaActivity extends BaseFragment implements NotificationCenter.No
         }
 
         @Override
-        public boolean isEnabled(int section, int row) {
+        public boolean isEnabled(RecyclerView.ViewHolder holder, int section, int row) {
             return false;
         }
 
@@ -2482,7 +2485,7 @@ public class MediaActivity extends BaseFragment implements NotificationCenter.No
                     cache.add((SharedPhotoVideoCell) view);
                     break;
                 case 3:
-                    View emptyStubView = SharedMediaLayout.createEmptyStubView(mContext, 0, dialog_id);
+                    View emptyStubView = SharedMediaLayout.createEmptyStubView(mContext, 0, dialogId);
                     emptyStubView.setLayoutParams(new RecyclerView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
                     return new RecyclerListView.Holder(emptyStubView);
                 case 2:
@@ -2514,7 +2517,7 @@ public class MediaActivity extends BaseFragment implements NotificationCenter.No
                                 MessageObject messageObject = messageObjects.get(index);
                                 cell.setItem(a, sharedMediaData[0].messages.indexOf(messageObject), messageObject);
                                 if (actionBar.isActionModeShowed()) {
-                                    cell.setChecked(a, selectedFiles[messageObject.getDialogId() == dialog_id ? 0 : 1].indexOfKey(messageObject.getId()) >= 0, !scrolling);
+                                    cell.setChecked(a, selectedFiles[messageObject.getDialogId() == dialogId ? 0 : 1].indexOfKey(messageObject.getId()) >= 0, !scrolling);
                                 } else {
                                     cell.setChecked(a, false, !scrolling);
                                 }
@@ -2553,6 +2556,10 @@ public class MediaActivity extends BaseFragment implements NotificationCenter.No
         public int getPositionForScrollProgress(float progress) {
             return 0;
         }
+
+        public int getPositionForIndex(int i) {
+            return i / columnsCount;
+        }
     }
 
     public class MediaSearchAdapter extends RecyclerListView.SelectionAdapter {
@@ -2572,8 +2579,7 @@ public class MediaActivity extends BaseFragment implements NotificationCenter.No
         }
 
         public void queryServerSearch(final String query, final int max_id, long did) {
-            int uid = (int) did;
-            if (uid == 0) {
+            if (DialogObject.isEncryptedDialog(did)) {
                 return;
             }
             if (reqId != 0) {
@@ -2598,7 +2604,7 @@ public class MediaActivity extends BaseFragment implements NotificationCenter.No
                 req.filter = new TLRPC.TL_inputMessagesFilterMusic();
             }
             req.q = query;
-            req.peer = MessagesController.getInstance(currentAccount).getInputPeer(uid);
+            req.peer = MessagesController.getInstance(currentAccount).getInputPeer(did);
             if (req.peer == null) {
                 return;
             }
@@ -2673,7 +2679,7 @@ public class MediaActivity extends BaseFragment implements NotificationCenter.No
                         MessageObject messageObject = sharedMediaData[currentType].messages.get(sharedMediaData[currentType].messages.size() - 1);
                         queryServerSearch(query, messageObject.getId(), messageObject.getDialogId());
                     } else if (currentType == 3) {
-                        queryServerSearch(query, 0, dialog_id);
+                        queryServerSearch(query, 0, dialogId);
                     }
                     if (currentType == 1 || currentType == 4) {
                         final ArrayList<MessageObject> copy = new ArrayList<>(sharedMediaData[currentType].messages);
@@ -2833,7 +2839,7 @@ public class MediaActivity extends BaseFragment implements NotificationCenter.No
                 MessageObject messageObject = getItem(position);
                 sharedDocumentCell.setDocument(messageObject, position != getItemCount() - 1);
                 if (actionBar.isActionModeShowed()) {
-                    sharedDocumentCell.setChecked(selectedFiles[messageObject.getDialogId() == dialog_id ? 0 : 1].indexOfKey(messageObject.getId()) >= 0, !scrolling);
+                    sharedDocumentCell.setChecked(selectedFiles[messageObject.getDialogId() == dialogId ? 0 : 1].indexOfKey(messageObject.getId()) >= 0, !scrolling);
                 } else {
                     sharedDocumentCell.setChecked(false, !scrolling);
                 }
@@ -2842,7 +2848,7 @@ public class MediaActivity extends BaseFragment implements NotificationCenter.No
                 MessageObject messageObject = getItem(position);
                 sharedLinkCell.setLink(messageObject, position != getItemCount() - 1);
                 if (actionBar.isActionModeShowed()) {
-                    sharedLinkCell.setChecked(selectedFiles[messageObject.getDialogId() == dialog_id ? 0 : 1].indexOfKey(messageObject.getId()) >= 0, !scrolling);
+                    sharedLinkCell.setChecked(selectedFiles[messageObject.getDialogId() == dialogId ? 0 : 1].indexOfKey(messageObject.getId()) >= 0, !scrolling);
                 } else {
                     sharedLinkCell.setChecked(false, !scrolling);
                 }
@@ -2851,7 +2857,7 @@ public class MediaActivity extends BaseFragment implements NotificationCenter.No
                 MessageObject messageObject = getItem(position);
                 sharedAudioCell.setMessageObject(messageObject, position != getItemCount() - 1);
                 if (actionBar.isActionModeShowed()) {
-                    sharedAudioCell.setChecked(selectedFiles[messageObject.getDialogId() == dialog_id ? 0 : 1].indexOfKey(messageObject.getId()) >= 0, !scrolling);
+                    sharedAudioCell.setChecked(selectedFiles[messageObject.getDialogId() == dialogId ? 0 : 1].indexOfKey(messageObject.getId()) >= 0, !scrolling);
                 } else {
                     sharedAudioCell.setChecked(false, !scrolling);
                 }

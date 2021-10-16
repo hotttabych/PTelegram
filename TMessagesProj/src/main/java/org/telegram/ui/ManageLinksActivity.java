@@ -69,13 +69,13 @@ import org.telegram.ui.Components.LayoutHelper;
 import org.telegram.ui.Components.LinkActionView;
 import org.telegram.ui.Components.RecyclerListView;
 import org.telegram.ui.Components.TimerParticles;
-import org.webrtc.RecyclerItemsEnterAnimator;
+import org.telegram.ui.Components.RecyclerItemsEnterAnimator;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Locale;
 
-public class ManageLinksActivity extends BaseFragment implements NotificationCenter.NotificationCenterDelegate {
+public class ManageLinksActivity extends BaseFragment {
 
     private ListAdapter listViewAdapter;
     private RecyclerListView listView;
@@ -83,11 +83,11 @@ public class ManageLinksActivity extends BaseFragment implements NotificationCen
     private TLRPC.Chat currentChat;
     private TLRPC.ChatFull info;
     private TLRPC.TL_chatInviteExported invite;
-    private int adminId;
+    private long adminId;
 
     private boolean isChannel;
 
-    private int currentChatId;
+    private long currentChatId;
 
     private int helpRow;
     private int permanentLinkHeaderRow;
@@ -134,7 +134,7 @@ public class ManageLinksActivity extends BaseFragment implements NotificationCen
     private RecyclerItemsEnterAnimator recyclerItemsEnterAnimator;
     private ArrayList<TLRPC.TL_chatInviteExported> invites = new ArrayList<>();
     private ArrayList<TLRPC.TL_chatInviteExported> revokedInvites = new ArrayList<>();
-    private HashMap<Integer, TLRPC.User> users = new HashMap<>();
+    private HashMap<Long, TLRPC.User> users = new HashMap<>();
     private InviteLinkBottomSheet inviteLinkBottomSheet;
 
     private ArrayList<TLRPC.TL_chatAdminWithInvites> admins = new ArrayList<>();
@@ -142,11 +142,7 @@ public class ManageLinksActivity extends BaseFragment implements NotificationCen
     long timeDif;
 
     private boolean isPublic;
-
-    @Override
-    public void didReceivedNotification(int id, int account, Object... args) {
-
-    }
+    private boolean canEdit;
 
     Runnable updateTimerRunnable = new Runnable() {
         @Override
@@ -168,14 +164,13 @@ public class ManageLinksActivity extends BaseFragment implements NotificationCen
         }
     };
 
-
     private static class EmptyView extends LinearLayout implements NotificationCenter.NotificationCenterDelegate {
 
         private BackupImageView stickerView;
 
         private final int currentAccount = UserConfig.selectedAccount;
 
-        private static final String stickerSetName = "tg_placeholders";
+        private static final String stickerSetName = AndroidUtilities.STICKERS_PLACEHOLDER_PACK_NAME;
 
         public EmptyView(Context context) {
             super(context);
@@ -226,7 +221,7 @@ public class ManageLinksActivity extends BaseFragment implements NotificationCen
         }
     }
 
-    public ManageLinksActivity(int chatId, int adminId, int invitesCount) {
+    public ManageLinksActivity(long chatId, long adminId, int invitesCount) {
         super();
         currentChatId = chatId;
         this.invitesCount = invitesCount;
@@ -237,55 +232,54 @@ public class ManageLinksActivity extends BaseFragment implements NotificationCen
         } else {
             this.adminId = adminId;
         }
+
+        TLRPC.User user = getMessagesController().getUser(this.adminId);
+        canEdit = (this.adminId == getAccountInstance().getUserConfig().clientUserId) || (user != null && !user.bot);
     }
 
     boolean loadRevoked = false;
 
-    private void loadLinks() {
+    private void loadLinks(boolean notify) {
         if (loadAdmins && !adminsLoaded) {
             linksLoading = true;
             TLRPC.TL_messages_getAdminsWithInvites req = new TLRPC.TL_messages_getAdminsWithInvites();
             req.peer = getMessagesController().getInputPeer(-currentChatId);
-            int reqId = getConnectionsManager().sendRequest(req, (response, error) -> {
-                AndroidUtilities.runOnUIThread(() -> {
-                    getNotificationCenter().doOnIdle(() -> {
-                        linksLoading = false;
-                        if (error == null) {
-                            TLRPC.TL_messages_chatAdminsWithInvites adminsWithInvites = (TLRPC.TL_messages_chatAdminsWithInvites) response;
-                            for (int i = 0; i < adminsWithInvites.admins.size(); i++) {
-                                TLRPC.TL_chatAdminWithInvites admin = adminsWithInvites.admins.get(i);
-                                if (admin.admin_id != getAccountInstance().getUserConfig().clientUserId) {
-                                    admins.add(admin);
-                                }
-                            }
-                            for (int i = 0; i < adminsWithInvites.users.size(); i++) {
-                                TLRPC.User user = adminsWithInvites.users.get(i);
-                                users.put(user.id, user);
-                            }
+            int reqId = getConnectionsManager().sendRequest(req, (response, error) -> AndroidUtilities.runOnUIThread(() -> getNotificationCenter().doOnIdle(() -> {
+                linksLoading = false;
+                if (error == null) {
+                    TLRPC.TL_messages_chatAdminsWithInvites adminsWithInvites = (TLRPC.TL_messages_chatAdminsWithInvites) response;
+                    for (int i = 0; i < adminsWithInvites.admins.size(); i++) {
+                        TLRPC.TL_chatAdminWithInvites admin = adminsWithInvites.admins.get(i);
+                        if (admin.admin_id != getAccountInstance().getUserConfig().clientUserId) {
+                            admins.add(admin);
+                        }
+                    }
+                    for (int i = 0; i < adminsWithInvites.users.size(); i++) {
+                        TLRPC.User user = adminsWithInvites.users.get(i);
+                        users.put(user.id, user);
+                    }
 
-                        }
-                        int oldRowsCount = rowCount;
-                        adminsLoaded = true;
+                }
+                int oldRowsCount = rowCount;
+                adminsLoaded = true;
 
-                        hasMore = false;
-                        if (admins.size() > 0) {
-                            if (recyclerItemsEnterAnimator != null && !isPaused && isOpened) {
-                                recyclerItemsEnterAnimator.showItemsAnimated(oldRowsCount + 1);
-                            }
-                        }
+                hasMore = false;
+                if (admins.size() > 0) {
+                    if (recyclerItemsEnterAnimator != null && !isPaused && isOpened) {
+                        recyclerItemsEnterAnimator.showItemsAnimated(oldRowsCount + 1);
+                    }
+                }
+                if (!hasMore || (invites.size() + revokedInvites.size() + admins.size()) >= 5) {
+                    resumeDelayedFragmentAnimation();
+                }
 
-                        if (!hasMore && !loadRevoked) {
-                            hasMore = true;
-                            loadRevoked = true;
-                            loadLinks();
-                        }
-                        updateRows(true);
-                        if (!hasMore || (invites.size() + revokedInvites.size() + admins.size()) >= 5) {
-                            resumeDelayedFragmentAnimation();
-                        }
-                    });
-                });
-            });
+                if (!hasMore && !loadRevoked) {
+                    hasMore = true;
+                    loadRevoked = true;
+                    loadLinks(false);
+                }
+                updateRows(true);
+            })));
             getConnectionsManager().bindRequestToGuid(reqId, getClassGuid());
         } else {
             TLRPC.TL_messages_getExportedChatInvites req = new TLRPC.TL_messages_getExportedChatInvites();
@@ -308,7 +302,7 @@ public class ManageLinksActivity extends BaseFragment implements NotificationCen
                 if (!invites.isEmpty()) {
                     req.flags |= 4;
                     req.offset_link = invites.get(invites.size() - 1).link;
-                    req.offset_date = invites.get(revokedInvites.size() - 1).date;
+                    req.offset_date = invites.get(invites.size() - 1).date;
                 }
             }
 
@@ -330,97 +324,96 @@ public class ManageLinksActivity extends BaseFragment implements NotificationCen
                 }
 
                 TLRPC.TL_chatInviteExported finalPermanentLink = permanentLink;
-                AndroidUtilities.runOnUIThread(() -> {
-                    getNotificationCenter().doOnIdle(() -> {
-                        linksLoading = false;
-                        hasMore = false;
-                        if (finalPermanentLink != null) {
-                            invite = finalPermanentLink;
-                            if (info != null) {
-                                info.exported_invite = finalPermanentLink;
-                            }
+                AndroidUtilities.runOnUIThread(() -> getNotificationCenter().doOnIdle(() -> {
+                    linksLoading = false;
+                    hasMore = false;
+                    if (finalPermanentLink != null) {
+                        invite = finalPermanentLink;
+                        if (info != null) {
+                            info.exported_invite = finalPermanentLink;
                         }
-                        DiffCallback callback = saveListState();
-                        boolean updateByDiffUtils = false;
+                    }
+                    DiffCallback callback = saveListState();
+                    boolean updateByDiffUtils = false;
 
-                        if (error == null) {
-                            TLRPC.TL_messages_exportedChatInvites invites = (TLRPC.TL_messages_exportedChatInvites) response;
+                    if (error == null) {
+                        TLRPC.TL_messages_exportedChatInvites invites = (TLRPC.TL_messages_exportedChatInvites) response;
 
 
-                            if (revoked) {
-                                for (int i = 0; i < invites.invites.size(); i++) {
-                                    TLRPC.TL_chatInviteExported in = (TLRPC.TL_chatInviteExported) invites.invites.get(i);
-                                    fixDate(in);
-                                    this.revokedInvites.add(in);
-                                }
-                            } else {
-                                if (adminId != getAccountInstance().getUserConfig().clientUserId && this.invites.size() == 0 && invites.invites.size() > 0) {
-                                    invite = (TLRPC.TL_chatInviteExported) invites.invites.get(0);
-                                    invites.invites.remove(0);
-                                }
-                                for (int i = 0; i < invites.invites.size(); i++) {
-                                    TLRPC.TL_chatInviteExported in = (TLRPC.TL_chatInviteExported) invites.invites.get(i);
-                                    fixDate(in);
-                                    this.invites.add(in);
-                                }
-                            }
-
-                            for (int i = 0; i < invites.users.size(); i++) {
-                                users.put(invites.users.get(i).id, invites.users.get(i));
-                            }
-                            int oldRowsCount = rowCount;
-                            if (invites.invites.size() == 0) {
-                                hasMore = false;
-                            } else if (revoked) {
-                                hasMore = this.revokedInvites.size() + 1 < invites.count;
-                            } else {
-                                hasMore = this.invites.size() + 1 < invites.count;
-                            }
-                            if (invites.invites.size() > 0 && isOpened) {
-                                if (recyclerItemsEnterAnimator != null && !isPaused) {
-                                    recyclerItemsEnterAnimator.showItemsAnimated(oldRowsCount + 1);
-                                }
-                            } else {
-                                updateByDiffUtils = true;
-                            }
-                            if (info != null && !revoked) {
-                                info.invitesCount = invites.count;
-                                getMessagesStorage().saveChatLinksCount(currentChatId, info.invitesCount);
+                        if (revoked) {
+                            for (int i = 0; i < invites.invites.size(); i++) {
+                                TLRPC.TL_chatInviteExported in = (TLRPC.TL_chatInviteExported) invites.invites.get(i);
+                                fixDate(in);
+                                this.revokedInvites.add(in);
                             }
                         } else {
+                            if (adminId != getAccountInstance().getUserConfig().clientUserId && this.invites.size() == 0 && invites.invites.size() > 0) {
+                                invite = (TLRPC.TL_chatInviteExported) invites.invites.get(0);
+                                invites.invites.remove(0);
+                            }
+                            for (int i = 0; i < invites.invites.size(); i++) {
+                                TLRPC.TL_chatInviteExported in = (TLRPC.TL_chatInviteExported) invites.invites.get(i);
+                                fixDate(in);
+                                this.invites.add(in);
+                            }
+                        }
+
+                        for (int i = 0; i < invites.users.size(); i++) {
+                            users.put(invites.users.get(i).id, invites.users.get(i));
+                        }
+                        int oldRowsCount = rowCount;
+                        if (invites.invites.size() == 0) {
                             hasMore = false;
-                        }
-
-                        boolean loadNext = false;
-                        if (!hasMore && !loadRevoked && adminId == getAccountInstance().getUserConfig().clientUserId) {
-                            hasMore = true;
-                            loadAdmins = true;
-                            loadNext = true;
-                        } else if (!hasMore && !loadRevoked) {
-                            hasMore = true;
-                            loadRevoked = true;
-                            loadNext = true;
-                        }
-
-                        if (!hasMore || (invites.size() + revokedInvites.size() + admins.size()) >= 5) {
-                            resumeDelayedFragmentAnimation();
-                        }
-
-                        if (loadNext) {
-                            loadLinks();
-                        }
-                        if (updateByDiffUtils && isOpened && listViewAdapter != null && listView.getChildCount() > 0) {
-                            updateRows(false);
-                            callback.fillPositions(callback.newPositionToItem);
-                            DiffUtil.calculateDiff(callback).dispatchUpdatesTo(listViewAdapter);
-                            AndroidUtilities.updateVisibleRows(listView);
+                        } else if (revoked) {
+                            hasMore = this.revokedInvites.size() + 1 < invites.count;
                         } else {
-                            updateRows(true);
+                            hasMore = this.invites.size() + 1 < invites.count;
                         }
-                    });
-                });
+                        if (invites.invites.size() > 0 && isOpened) {
+                            if (recyclerItemsEnterAnimator != null && !isPaused) {
+                                recyclerItemsEnterAnimator.showItemsAnimated(oldRowsCount + 1);
+                            }
+                        } else {
+                            updateByDiffUtils = true;
+                        }
+                        if (info != null && !revoked) {
+                            info.invitesCount = invites.count;
+                            getMessagesStorage().saveChatLinksCount(currentChatId, info.invitesCount);
+                        }
+                    } else {
+                        hasMore = false;
+                    }
+
+                    boolean loadNext = false;
+                    if (!hasMore && !loadRevoked && adminId == getAccountInstance().getUserConfig().clientUserId) {
+                        hasMore = true;
+                        loadAdmins = true;
+                        loadNext = true;
+                    } else if (!hasMore && !loadRevoked) {
+                        hasMore = true;
+                        loadRevoked = true;
+                        loadNext = true;
+                    }
+
+                    if (!hasMore || (invites.size() + revokedInvites.size() + admins.size()) >= 5) {
+                        resumeDelayedFragmentAnimation();
+                    }
+
+                    if (loadNext) {
+                        loadLinks(false);
+                    }
+
+                    if (updateByDiffUtils && listViewAdapter != null && listView.getChildCount() > 0) {
+                        updateRecyclerViewAnimated(callback);
+                    } else {
+                        updateRows(true);
+                    }
+                }));
             });
             getConnectionsManager().bindRequestToGuid(reqId, getClassGuid());
+        }
+        if (notify) {
+            updateRows(true);
         }
     }
 
@@ -468,7 +461,7 @@ public class ManageLinksActivity extends BaseFragment implements NotificationCen
         if (!otherAdmin) {
             dividerRow = rowCount++;
             createNewLinkRow = rowCount++;
-        } else if (!invites.isEmpty() || (linksLoading && !loadRevoked)) {
+        } else if (!invites.isEmpty()) {
             dividerRow = rowCount++;
             linksHeaderRow = rowCount++;
         }
@@ -509,7 +502,7 @@ public class ManageLinksActivity extends BaseFragment implements NotificationCen
             revokeAllRow = rowCount++;
         }
 
-        if (!loadAdmins && !loadRevoked && (linksLoading || hasMore)) {
+        if (!loadAdmins && !loadRevoked && (linksLoading || hasMore) && !otherAdmin) {
             linksLoadingRow = rowCount++;
         }
 
@@ -560,6 +553,12 @@ public class ManageLinksActivity extends BaseFragment implements NotificationCen
                 recyclerItemsEnterAnimator.dispatchDraw();
                 super.dispatchDraw(canvas);
             }
+
+            @Override
+            protected void onDetachedFromWindow() {
+                super.onDetachedFromWindow();
+                recyclerItemsEnterAnimator.onDetached();
+            }
         };
         LinearLayoutManager layoutManager = new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false);
         listView.setLayoutManager(layoutManager);
@@ -571,12 +570,12 @@ public class ManageLinksActivity extends BaseFragment implements NotificationCen
                 if (hasMore && !linksLoading) {
                     int lastPosition = layoutManager.findLastVisibleItemPosition();
                     if (rowCount - lastPosition < 10) {
-                        loadLinks();
+                        loadLinks(true);
                     }
                 }
             }
         });
-        recyclerItemsEnterAnimator = new RecyclerItemsEnterAnimator(listView);
+        recyclerItemsEnterAnimator = new RecyclerItemsEnterAnimator(listView, false);
         DefaultItemAnimator defaultItemAnimator = new DefaultItemAnimator();
         defaultItemAnimator.setDelayAnimations(false);
         defaultItemAnimator.setSupportsChangeAnimations(false);
@@ -589,7 +588,7 @@ public class ManageLinksActivity extends BaseFragment implements NotificationCen
                 TLRPC.User user = users.get(invite.admin_id);
                 if (user != null) {
                     Bundle bundle = new Bundle();
-                    bundle.putInt("user_id", user.id);
+                    bundle.putLong("user_id", user.id);
                     MessagesController.getInstance(UserConfig.selectedAccount).putUser(user, false);
                     ProfileActivity profileActivity = new ProfileActivity(bundle);
                     presentFragment(profileActivity);
@@ -601,6 +600,7 @@ public class ManageLinksActivity extends BaseFragment implements NotificationCen
             } else if (position >= linksStartRow && position < linksEndRow) {
                 TLRPC.TL_chatInviteExported invite = invites.get(position - linksStartRow);
                 inviteLinkBottomSheet = new InviteLinkBottomSheet(context, invite, info, users, this, currentChatId, false, isChannel);
+                inviteLinkBottomSheet.setCanEdit(canEdit);
                 inviteLinkBottomSheet.show();
             } else if (position >= revokedLinksStartRow && position < revokedLinksEndRow) {
                 TLRPC.TL_chatInviteExported invite = revokedInvites.get(position - revokedLinksStartRow);
@@ -628,9 +628,7 @@ public class ManageLinksActivity extends BaseFragment implements NotificationCen
                         if (error == null) {
                             DiffCallback callback = saveListState();
                             revokedInvites.clear();
-                            updateRows(false);
-                            callback.fillPositions(callback.newPositionToItem);
-                            DiffUtil.calculateDiff(callback).dispatchUpdatesTo(listViewAdapter);
+                            updateRecyclerViewAnimated(callback);
                         }
                     }));
                 });
@@ -671,7 +669,7 @@ public class ManageLinksActivity extends BaseFragment implements NotificationCen
         this.invite = (TLRPC.TL_chatInviteExported) invite;
 
         isPublic = !TextUtils.isEmpty(currentChat.username);
-        loadLinks();
+        loadLinks(true);
     }
 
     @Override
@@ -765,7 +763,6 @@ public class ManageLinksActivity extends BaseFragment implements NotificationCen
 
                         @Override
                         public void showUsersForPermanentLink() {
-                            boolean canEdit = adminId == getAccountInstance().getUserConfig().clientUserId;
                             inviteLinkBottomSheet = new InviteLinkBottomSheet(linkActionView.getContext(), invite, info, users, ManageLinksActivity.this, currentChatId, true, isChannel);
                             inviteLinkBottomSheet.show();
                         }
@@ -828,10 +825,10 @@ public class ManageLinksActivity extends BaseFragment implements NotificationCen
                         if (info != null) {
                             linkActionView.setLink("https://t.me/" + currentChat.username);
                             linkActionView.setUsers(0, null);
-                            linkActionView.showRevokeOption(true);
+                            linkActionView.hideRevokeOption(true);
                         }
                     } else {
-                        linkActionView.showRevokeOption(false);
+                        linkActionView.hideRevokeOption(!canEdit);
                         if (invite != null) {
                             TLRPC.TL_chatInviteExported inviteExported = invite;
                             linkActionView.setLink(inviteExported.link);
@@ -971,10 +968,7 @@ public class ManageLinksActivity extends BaseFragment implements NotificationCen
                     oldInvite.revoked = true;
                     DiffCallback callback = saveListState();
                     revokedInvites.add(0, oldInvite);
-                    updateRows(false);
-                    callback.fillPositions(callback.newPositionToItem);
-                    DiffUtil.calculateDiff(callback).dispatchUpdatesTo(listViewAdapter);
-                    AndroidUtilities.updateVisibleRows(listView);
+                    updateRecyclerViewAnimated(callback);
                     BulletinFactory.of(this).createSimpleBulletin(R.raw.linkbroken, LocaleController.getString("InviteRevokedHint", R.string.InviteRevokedHint)).show();
                 }
 
@@ -1040,7 +1034,7 @@ public class ManageLinksActivity extends BaseFragment implements NotificationCen
         protected void onDraw(Canvas canvas) {
             super.onDraw(canvas);
             if (divider) {
-                canvas.drawLine(AndroidUtilities.dp(70), getMeasuredHeight() - 1, getMeasuredWidth(), getMeasuredHeight(), Theme.dividerPaint);
+                canvas.drawLine(AndroidUtilities.dp(70), getMeasuredHeight() - 1, getMeasuredWidth() + AndroidUtilities.dp(23), getMeasuredHeight(), Theme.dividerPaint);
             }
         }
 
@@ -1105,7 +1099,7 @@ public class ManageLinksActivity extends BaseFragment implements NotificationCen
             optionsView = new ImageView(context);
             optionsView.setImageDrawable(ContextCompat.getDrawable(context, R.drawable.ic_ab_other));
             optionsView.setScaleType(ImageView.ScaleType.CENTER);
-            optionsView.setColorFilter(Theme.getColor(Theme.key_dialogTextGray3));
+            optionsView.setColorFilter(Theme.getColor(Theme.key_stickers_menu));
             optionsView.setOnClickListener(view -> {
                 if (invite == null) {
                     return;
@@ -1114,12 +1108,14 @@ public class ManageLinksActivity extends BaseFragment implements NotificationCen
                 ArrayList<Integer> icons = new ArrayList<>();
                 final ArrayList<Integer> actions = new ArrayList<>();
 
+                boolean redLastItem = false;
                 if (invite.revoked) {
                     items.add(LocaleController.getString("Delete", R.string.Delete));
                     icons.add(R.drawable.msg_delete);
                     actions.add(4);
+                    redLastItem = true;
                 } else {
-                    items.add(LocaleController.getString("Copy", R.string.Copy));
+                    items.add(LocaleController.getString("CopyLink", R.string.CopyLink));
                     icons.add(R.drawable.msg_copy);
                     actions.add(0);
 
@@ -1127,15 +1123,18 @@ public class ManageLinksActivity extends BaseFragment implements NotificationCen
                     icons.add(R.drawable.msg_share);
                     actions.add(1);
 
-                    if (!invite.permanent) {
-                        items.add(LocaleController.getString("Edit", R.string.Edit));
+                    if (!invite.permanent && canEdit) {
+                        items.add(LocaleController.getString("EditLink", R.string.EditLink));
                         icons.add(R.drawable.msg_edit);
                         actions.add(2);
                     }
 
-                    items.add(LocaleController.getString("RevokeLink", R.string.RevokeLink));
-                    icons.add(R.drawable.msg_delete);
-                    actions.add(3);
+                    if (canEdit) {
+                        items.add(LocaleController.getString("RevokeLink", R.string.RevokeLink));
+                        icons.add(R.drawable.msg_delete);
+                        actions.add(3);
+                        redLastItem = true;
+                    }
                 }
 
                 AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
@@ -1175,9 +1174,7 @@ public class ManageLinksActivity extends BaseFragment implements NotificationCen
                             AlertDialog.Builder builder2 = new AlertDialog.Builder(getParentActivity());
                             builder2.setMessage(LocaleController.getString("RevokeAlert", R.string.RevokeAlert));
                             builder2.setTitle(LocaleController.getString("RevokeLink", R.string.RevokeLink));
-                            builder2.setPositiveButton(LocaleController.getString("RevokeButton", R.string.RevokeButton), (dialogInterface2, i2) -> {
-                                revokeLink(inviteFinal);
-                            });
+                            builder2.setPositiveButton(LocaleController.getString("RevokeButton", R.string.RevokeButton), (dialogInterface2, i2) -> revokeLink(inviteFinal));
                             builder2.setNegativeButton(LocaleController.getString("Cancel", R.string.Cancel), null);
                             showDialog(builder2.create());
                             break;
@@ -1186,9 +1183,7 @@ public class ManageLinksActivity extends BaseFragment implements NotificationCen
                             builder2 = new AlertDialog.Builder(getParentActivity());
                             builder2.setTitle(LocaleController.getString("DeleteLink", R.string.DeleteLink));
                             builder2.setMessage(LocaleController.getString("DeleteLinkHelp", R.string.DeleteLinkHelp));
-                            builder2.setPositiveButton(LocaleController.getString("Delete", R.string.Delete), (dialogInterface2, i2) -> {
-                                deleteLink(inviteFinal);
-                            });
+                            builder2.setPositiveButton(LocaleController.getString("Delete", R.string.Delete), (dialogInterface2, i2) -> deleteLink(inviteFinal));
                             builder2.setNegativeButton(LocaleController.getString("Cancel", R.string.Cancel), null);
                             showDialog(builder2.create());
                             break;
@@ -1197,9 +1192,9 @@ public class ManageLinksActivity extends BaseFragment implements NotificationCen
                 builder.setTitle(LocaleController.getString("InviteLink", R.string.InviteLink));
                 AlertDialog alert = builder.create();
                 builder.show();
-                //if (adminId == getAccountInstance().getUserConfig().getClientUserId()) {
-                alert.setItemColor(items.size() - 1, Theme.getColor(Theme.key_dialogTextRed2), Theme.getColor(Theme.key_dialogRedIcon));
-                // }
+                if (redLastItem) {
+                    alert.setItemColor(items.size() - 1, Theme.getColor(Theme.key_dialogTextRed2), Theme.getColor(Theme.key_dialogRedIcon));
+                }
             });
             optionsView.setBackground(Theme.createSelectorDrawable(Theme.getColor(Theme.key_listSelector), 1));
             addView(optionsView, LayoutHelper.createFrame(40, 48, Gravity.RIGHT | Gravity.CENTER_VERTICAL));
@@ -1322,7 +1317,7 @@ public class ManageLinksActivity extends BaseFragment implements NotificationCen
             }
 
             if (drawDivider) {
-                canvas.drawLine(AndroidUtilities.dp(70), getMeasuredHeight() - 1, getMeasuredWidth(), getMeasuredHeight(), Theme.dividerPaint);
+                canvas.drawLine(AndroidUtilities.dp(70), getMeasuredHeight() - 1, getMeasuredWidth() + AndroidUtilities.dp(23), getMeasuredHeight(), Theme.dividerPaint);
             }
         }
 
@@ -1433,18 +1428,6 @@ public class ManageLinksActivity extends BaseFragment implements NotificationCen
             } else {
                 subtitleView.setText(joinedString);
             }
-
-//            if (adminId != getAccountInstance().getUserConfig().getClientUserId() && invite.revoked) {
-//                optionsView.setVisibility(View.GONE);
-//            } else {
-//                optionsView.setVisibility(View.VISIBLE);
-//            }
-
-//            if (invite.revoked) {
-//                optionsView.setVisibility(View.GONE);
-//            } else {
-//                optionsView.setVisibility(View.VISIBLE);
-//            }
         }
     }
 
@@ -1481,20 +1464,14 @@ public class ManageLinksActivity extends BaseFragment implements NotificationCen
 
                     invite.revoked = true;
                     DiffCallback callback = saveListState();
-                    if (isPublic) {
+                    if (isPublic && adminId == getAccountInstance().getUserConfig().getClientUserId()) {
                         invites.remove(invite);
                         invites.add(0, (TLRPC.TL_chatInviteExported) replaced.new_invite);
+                    } else if (this.invite != null) {
+                        this.invite = (TLRPC.TL_chatInviteExported) replaced.new_invite;
                     }
                     revokedInvites.add(0, invite);
-                    updateRows(false);
-
-                    if (getParentActivity() == null) {
-                        listViewAdapter.notifyDataSetChanged();
-                        return;
-                    }
-                    callback.fillPositions(callback.newPositionToItem);
-                    DiffUtil.calculateDiff(callback).dispatchUpdatesTo(listViewAdapter);
-                    AndroidUtilities.updateVisibleRows(listView);
+                    updateRecyclerViewAnimated(callback);
                 } else {
                     linkEditActivityCallback.onLinkEdited(invite, response);
                     if (info != null) {
@@ -1505,7 +1482,9 @@ public class ManageLinksActivity extends BaseFragment implements NotificationCen
                         getMessagesStorage().saveChatLinksCount(currentChatId, info.invitesCount);
                     }
                 }
-                BulletinFactory.of(this).createSimpleBulletin(R.raw.linkbroken, LocaleController.getString("InviteRevokedHint", R.string.InviteRevokedHint)).show();
+                if (getParentActivity() != null) {
+                    BulletinFactory.of(this).createSimpleBulletin(R.raw.linkbroken, LocaleController.getString("InviteRevokedHint", R.string.InviteRevokedHint)).show();
+                }
             }
         }));
     }
@@ -1517,10 +1496,7 @@ public class ManageLinksActivity extends BaseFragment implements NotificationCen
                 AndroidUtilities.runOnUIThread(() -> {
                     DiffCallback callback = saveListState();
                     invites.add(0, (TLRPC.TL_chatInviteExported) response);
-                    updateRows(false);
-                    callback.fillPositions(callback.newPositionToItem);
-                    DiffUtil.calculateDiff(callback).dispatchUpdatesTo(listViewAdapter);
-                    AndroidUtilities.updateVisibleRows(listView);
+                    updateRecyclerViewAnimated(callback);
                     if (info != null) {
                         info.invitesCount++;
                         getMessagesStorage().saveChatLinksCount(currentChatId, info.invitesCount);
@@ -1540,13 +1516,10 @@ public class ManageLinksActivity extends BaseFragment implements NotificationCen
                             DiffCallback callback = saveListState();
                             invites.remove(i);
                             revokedInvites.add(0, edited);
-                            updateRows(false);
-                            callback.fillPositions(callback.newPositionToItem);
-                            DiffUtil.calculateDiff(callback).dispatchUpdatesTo(listViewAdapter);
-                            AndroidUtilities.updateVisibleRows(listView);
+                            updateRecyclerViewAnimated(callback);
                         } else {
                             invites.set(i, edited);
-                            listViewAdapter.notifyDataSetChanged();
+                            updateRows(true);
                         }
                         return;
                     }
@@ -1560,10 +1533,7 @@ public class ManageLinksActivity extends BaseFragment implements NotificationCen
                 if (revokedInvites.get(i).link.equals(removedInvite.link)) {
                     DiffCallback callback = saveListState();
                     revokedInvites.remove(i);
-                    updateRows(false);
-                    callback.fillPositions(callback.newPositionToItem);
-                    DiffUtil.calculateDiff(callback).dispatchUpdatesTo(listViewAdapter);
-                    AndroidUtilities.updateVisibleRows(listView);
+                    updateRecyclerViewAnimated(callback);
                     return;
                 }
             }
@@ -1574,6 +1544,17 @@ public class ManageLinksActivity extends BaseFragment implements NotificationCen
             ManageLinksActivity.this.revokeLink(inviteFinal);
         }
     };
+
+    private void updateRecyclerViewAnimated(DiffCallback callback) {
+        if (isPaused || listViewAdapter == null || listView == null) {
+            updateRows(true);
+            return;
+        }
+        updateRows(false);
+        callback.fillPositions(callback.newPositionToItem);
+        DiffUtil.calculateDiff(callback).dispatchUpdatesTo(listViewAdapter);
+        AndroidUtilities.updateVisibleRows(listView);
+    }
 
 
     private class DiffCallback extends DiffUtil.Callback {
@@ -1644,15 +1625,11 @@ public class ManageLinksActivity extends BaseFragment implements NotificationCen
             put(++pointer, dividerRow, sparseIntArray);
             put(++pointer, createNewLinkRow, sparseIntArray);
             put(++pointer, revokedHeader, sparseIntArray);
-            put(++pointer, revokedDivider, sparseIntArray);
-            put(++pointer, lastDivider, sparseIntArray);
-            put(++pointer, revokeAllDivider, sparseIntArray);
             put(++pointer, revokeAllRow, sparseIntArray);
             put(++pointer, createLinkHelpRow, sparseIntArray);
             put(++pointer, creatorRow, sparseIntArray);
             put(++pointer, creatorDividerRow, sparseIntArray);
             put(++pointer, adminsHeaderRow, sparseIntArray);
-            put(++pointer, adminsDividerRow, sparseIntArray);
             put(++pointer, linksHeaderRow, sparseIntArray);
             put(++pointer, linksLoadingRow, sparseIntArray);
         }
@@ -1756,7 +1733,7 @@ public class ManageLinksActivity extends BaseFragment implements NotificationCen
 
         themeDescriptions.add(new ThemeDescription(listView, 0, new Class[]{LinkCell.class}, new String[]{"titleView"}, null, null, null, Theme.key_windowBackgroundWhiteBlackText));
         themeDescriptions.add(new ThemeDescription(listView, 0, new Class[]{LinkCell.class}, new String[]{"subtitleView"}, null, null, null, Theme.key_windowBackgroundWhiteGrayText));
-        themeDescriptions.add(new ThemeDescription(listView, ThemeDescription.FLAG_IMAGECOLOR, new Class[]{LinkCell.class}, new String[]{"optionsView"}, null, null, null, Theme.key_dialogTextGray3));
+        themeDescriptions.add(new ThemeDescription(listView, ThemeDescription.FLAG_IMAGECOLOR, new Class[]{LinkCell.class}, new String[]{"optionsView"}, null, null, null, Theme.key_stickers_menu));
         return themeDescriptions;
     }
 
@@ -1766,6 +1743,7 @@ public class ManageLinksActivity extends BaseFragment implements NotificationCen
     }
 
     int animationIndex = -1;
+
     @Override
     protected void onTransitionAnimationEnd(boolean isOpen, boolean backward) {
         super.onTransitionAnimationEnd(isOpen, backward);

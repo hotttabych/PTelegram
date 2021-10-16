@@ -25,6 +25,7 @@ import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ChatObject;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.R;
+import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.Utilities;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.ActionBar;
@@ -67,7 +68,7 @@ public class TooManyCommunitiesActivity extends BaseFragment {
 
     private int buttonAnimation;
 
-    private Set<Integer> selectedIds = new HashSet<>();
+    private Set<Long> selectedIds = new HashSet<>();
 
     private TooManyCommunitiesHintCell hintCell;
 
@@ -267,7 +268,7 @@ public class TooManyCommunitiesActivity extends BaseFragment {
             for (int i = 0; i < chats.size(); i++) {
                 TLRPC.Chat chat = chats.get(i);
                 getMessagesController().putChat(chat, false);
-                getMessagesController().deleteUserFromChat(chat.id, currentUser, null);
+                getMessagesController().deleteParticipantFromChat(chat.id, currentUser, null);
             }
             finishFragment();
         });
@@ -481,7 +482,7 @@ public class TooManyCommunitiesActivity extends BaseFragment {
                     break;
                 case 4:
                 default:
-                    view = new GroupCreateUserCell(parent.getContext(), true, 0, false);
+                    view = new GroupCreateUserCell(parent.getContext(), 1, 0, false);
                     break;
 
             }
@@ -499,7 +500,11 @@ public class TooManyCommunitiesActivity extends BaseFragment {
                 GroupCreateUserCell cell = (GroupCreateUserCell) holder.itemView;
                 TLRPC.Chat chat = inactiveChats.get(position - inactiveChatsStartRow);
                 String signature = inactiveChatsSignatures.get(position - inactiveChatsStartRow);
-                cell.setObject(chat, chat.title, signature, position != inactiveChatsEndRow - 1);
+                String title = UserConfig.getChatTitleOverride(currentAccount, chat.id);
+                if (title == null) {
+                    title = chat.title;
+                }
+                cell.setObject(chat, title, signature, position != inactiveChatsEndRow - 1);
                 cell.setChecked(selectedIds.contains(chat.id), false);
             }
         }
@@ -547,7 +552,7 @@ public class TooManyCommunitiesActivity extends BaseFragment {
         @NonNull
         @Override
         public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            return new RecyclerListView.Holder(new GroupCreateUserCell(parent.getContext(), true, 0, false));
+            return new RecyclerListView.Holder(new GroupCreateUserCell(parent.getContext(), 1, 0, false));
         }
 
         @Override
@@ -555,7 +560,11 @@ public class TooManyCommunitiesActivity extends BaseFragment {
             TLRPC.Chat chat = searchResults.get(position);
             String signature = searchResultsSignatures.get(position);
             GroupCreateUserCell cell = ((GroupCreateUserCell) holder.itemView);
-            cell.setObject(chat, chat.title, signature, position != searchResults.size() - 1);
+            String title = UserConfig.getChatTitleOverride(currentAccount, chat.id);
+            if (title == null) {
+                title = chat.title;
+            }
+            cell.setObject(chat, title, signature, position != searchResults.size() - 1);
             cell.setChecked(selectedIds.contains(chat.id), false);
         }
 

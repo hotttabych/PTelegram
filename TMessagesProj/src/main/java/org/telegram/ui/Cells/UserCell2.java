@@ -200,9 +200,12 @@ public class UserCell2 extends FrameLayout {
             }
             if (!continueUpdate && currentName == null && lastName != null && (mask & MessagesController.UPDATE_MASK_NAME) != 0) {
                 if (currentUser != null) {
-                    newName = UserObject.getUserName(currentUser);
+                    newName = UserObject.getUserName(currentUser, currentAccount);
                 } else {
-                    newName = currentChat.title;
+                    newName = UserConfig.getChatTitleOverride(currentAccount, currentChat.id);
+                    if (newName == null) {
+                        newName = currentChat.title;
+                    }
                 }
                 if (!newName.equals(lastName)) {
                     continueUpdate = true;
@@ -215,16 +218,20 @@ public class UserCell2 extends FrameLayout {
         lastAvatar = photo;
 
         if (currentUser != null) {
-            avatarDrawable.setInfo(currentUser);
+            avatarDrawable.setInfo(currentUser, currentAccount);
             if (currentUser.status != null) {
                 lastStatus = currentUser.status.expires;
             } else {
                 lastStatus = 0;
             }
         } else if (currentChat != null) {
-            avatarDrawable.setInfo(currentChat);
+            avatarDrawable.setInfo(currentChat, currentAccount);
         } else if (currentName != null) {
-            avatarDrawable.setInfo(currentId, currentName.toString(), null);
+            String title = UserConfig.getChatTitleOverride(currentAccount, currentId);
+            if (title != null) {
+                title = currentName.toString();
+            }
+            avatarDrawable.setInfo(currentId, title, null);
         } else {
             avatarDrawable.setInfo(currentId, "#", null);
         }
@@ -234,9 +241,13 @@ public class UserCell2 extends FrameLayout {
             nameTextView.setText(currentName);
         } else {
             if (currentUser != null) {
-                lastName = newName == null ? UserObject.getUserName(currentUser) : newName;
+                lastName = newName == null ? UserObject.getUserName(currentUser, currentAccount) : newName;
             } else {
-                lastName = newName == null ? currentChat.title : newName;
+                String title = UserConfig.getChatTitleOverride(currentAccount, currentChat.id);
+                if (title == null) {
+                    title = currentChat.title;
+                }
+                lastName = newName == null ? title : newName;
             }
             nameTextView.setText(lastName);
         }
@@ -260,7 +271,7 @@ public class UserCell2 extends FrameLayout {
                     statusTextView.setText(LocaleController.formatUserStatus(currentAccount, currentUser));
                 }
             }
-            avatarImageView.setImage(ImageLocation.getForUser(currentUser, false), "50_50", avatarDrawable, currentUser);
+            avatarImageView.setForUserOrChat(currentUser, avatarDrawable);
         } else if (currentChat != null) {
             statusTextView.setTextColor(statusColor);
             if (ChatObject.isChannel(currentChat) && !currentChat.megagroup) {
@@ -282,7 +293,7 @@ public class UserCell2 extends FrameLayout {
                     statusTextView.setText(LocaleController.getString("MegaPublic", R.string.MegaPublic));
                 }
             }
-            avatarImageView.setImage(ImageLocation.getForChat(currentChat, false), "50_50", avatarDrawable, currentObject);
+            avatarImageView.setForUserOrChat(currentChat, avatarDrawable);
         } else {
             avatarImageView.setImageDrawable(avatarDrawable);
         }

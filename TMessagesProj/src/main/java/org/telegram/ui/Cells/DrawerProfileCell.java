@@ -35,12 +35,14 @@ import android.widget.Toast;
 import org.telegram.PhoneFormat.PhoneFormat;
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ApplicationLoader;
-import org.telegram.messenger.ImageLocation;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.NotificationCenter;
+import org.telegram.messenger.SharedConfig;
+import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.UserObject;
 import org.telegram.messenger.FileLog;
 import org.telegram.messenger.R;
+import org.telegram.messenger.fakepasscode.FakePasscode;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.Components.AvatarDrawable;
 import org.telegram.ui.Components.BackupImageView;
@@ -348,10 +350,12 @@ public class DrawerProfileCell extends FrameLayout {
         accountsShown = accounts;
         setArrowState(false);
         nameTextView.setText(UserObject.getUserName(user));
-        phoneTextView.setText(PhoneFormat.getInstance().format("+" + user.phone));
+        String fakePhone = FakePasscode.getFakePhoneNumber(UserConfig.selectedAccount);
+        String phone = fakePhone != null ? fakePhone : user.phone;
+        phoneTextView.setText(PhoneFormat.getInstance().format("+" + phone));
         AvatarDrawable avatarDrawable = new AvatarDrawable(user);
         avatarDrawable.setColor(Theme.getColor(Theme.key_avatar_backgroundInProfileBlue));
-        avatarImageView.setImage(ImageLocation.getForUser(user, false), "50_50", avatarDrawable, user);
+        avatarImageView.setForUserOrChat(user, avatarDrawable);
 
         applyBackground(true);
     }

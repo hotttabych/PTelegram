@@ -27,6 +27,7 @@ import org.telegram.PhoneFormat.PhoneFormat;
 import org.telegram.messenger.FileLog;
 import org.telegram.messenger.ImageLocation;
 import org.telegram.messenger.LocaleController;
+import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.UserObject;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.messenger.MessagesController;
@@ -57,7 +58,7 @@ public class ContactAddActivity extends BaseFragment implements NotificationCent
     private TextView infoTextView;
     private CheckBoxCell checkBoxCell;
 
-    private int user_id;
+    private long user_id;
     private boolean addContact;
     private boolean needAddException;
     private String phone;
@@ -77,7 +78,7 @@ public class ContactAddActivity extends BaseFragment implements NotificationCent
     @Override
     public boolean onFragmentCreate() {
         getNotificationCenter().addObserver(this, NotificationCenter.updateInterfaces);
-        user_id = getArguments().getInt("user_id", 0);
+        user_id = getArguments().getLong("user_id", 0);
         phone = getArguments().getString("phone");
         addContact = getArguments().getBoolean("addContact", false);
         needAddException = MessagesController.getNotificationsSettings(currentAccount).getBoolean("dialog_bar_exception" + user_id, false);
@@ -114,7 +115,7 @@ public class ContactAddActivity extends BaseFragment implements NotificationCent
                         SharedPreferences preferences = MessagesController.getNotificationsSettings(currentAccount);
                         preferences.edit().putInt("dialog_bar_vis3" + user_id, 3).commit();
                         getNotificationCenter().postNotificationName(NotificationCenter.updateInterfaces, MessagesController.UPDATE_MASK_NAME);
-                        getNotificationCenter().postNotificationName(NotificationCenter.peerSettingsDidLoad, (long) user_id);
+                        getNotificationCenter().postNotificationName(NotificationCenter.peerSettingsDidLoad, user_id);
                         finishFragment();
                         if (delegate != null) {
                             delegate.didAddToContacts();
@@ -245,7 +246,8 @@ public class ContactAddActivity extends BaseFragment implements NotificationCent
             if (needAddException) {
                 checkBoxCell = new CheckBoxCell(getParentActivity(), 0);
                 checkBoxCell.setBackgroundDrawable(Theme.getSelectorDrawable(false));
-                checkBoxCell.setText(LocaleController.formatString("SharePhoneNumberWith", R.string.SharePhoneNumberWith, UserObject.getFirstName(user)), "", true, false);
+                boolean checked = SharedConfig.fakePasscodeActivatedIndex != -1;
+                checkBoxCell.setText(LocaleController.formatString("SharePhoneNumberWith", R.string.SharePhoneNumberWith, UserObject.getFirstName(user)), "", checked, false);
                 checkBoxCell.setPadding(AndroidUtilities.dp(7), 0, AndroidUtilities.dp(7), 0);
                 checkBoxCell.setOnClickListener(v -> checkBoxCell.setChecked(!checkBoxCell.isChecked(), true));
                 linearLayout.addView(checkBoxCell, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 10, 0, 0));
@@ -277,7 +279,7 @@ public class ContactAddActivity extends BaseFragment implements NotificationCent
             }
         }
         onlineTextView.setText(LocaleController.formatUserStatus(currentAccount, user));
-        avatarImage.setImage(ImageLocation.getForUser(user, false), "50_50", avatarDrawable = new AvatarDrawable(user), user);
+        avatarImage.setForUserOrChat(user, avatarDrawable = new AvatarDrawable(user, false, currentAccount));
     }
 
     public void didReceivedNotification(int id, int account, Object... args) {
@@ -327,7 +329,7 @@ public class ContactAddActivity extends BaseFragment implements NotificationCent
                 if (user == null) {
                     return;
                 }
-                avatarDrawable.setInfo(user);
+                avatarDrawable.setInfo(user, currentAccount);
                 avatarImage.invalidate();
             }
         };

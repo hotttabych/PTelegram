@@ -33,12 +33,15 @@ import android.widget.TextView;
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ChatObject;
 import org.telegram.messenger.ContactsController;
+import org.telegram.messenger.DialogObject;
 import org.telegram.messenger.FileLog;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.NotificationsController;
 import org.telegram.messenger.R;
+import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.Utilities;
+import org.telegram.messenger.fakepasscode.FakePasscode;
 import org.telegram.tgnet.TLObject;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.ActionBar;
@@ -65,7 +68,9 @@ import org.telegram.ui.Components.RecyclerListView;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -113,8 +118,9 @@ public class NotificationsCustomSettingsActivity extends BaseFragment {
         super();
         currentType = type;
         exceptions = notificationExceptions;
-        for (int a = 0, N = exceptions.size(); a < N; a++) {
-            NotificationsSettingsActivity.NotificationException exception = exceptions.get(a);
+        List<NotificationsSettingsActivity.NotificationException> filteredExceptions = FakePasscode.filterNotificationExceptions(exceptions, currentAccount);
+        for (int a = 0, N = filteredExceptions.size(); a < N; a++) {
+            NotificationsSettingsActivity.NotificationException exception = filteredExceptions.get(a);
             exceptionsDict.put(exception.did, exception);
         }
         if (load) {
@@ -148,7 +154,7 @@ public class NotificationsCustomSettingsActivity extends BaseFragment {
                 }
             }
         });
-        if (exceptions != null && !exceptions.isEmpty()) {
+        if (exceptions != null && !FakePasscode.filterNotificationExceptions(exceptions, currentAccount).isEmpty()) {
             ActionBarMenu menu = actionBar.createMenu();
             ActionBarMenuItem searchItem = menu.addItem(search_button, R.drawable.ic_ab_search).setIsSearchField(true).setActionBarMenuItemSearchListener(new ActionBarMenuItem.ActionBarMenuItemSearchListener() {
                 @Override
@@ -258,7 +264,7 @@ public class NotificationsCustomSettingsActivity extends BaseFragment {
                     if (index < 0 || index >= arrayList.size()) {
                         return;
                     }
-                    exception = arrayList.get(index);
+                    exception = FakePasscode.filterNotificationExceptions(arrayList, currentAccount).get(index);
                     newException = false;
                 }
                 if (exception == null) {
@@ -379,7 +385,7 @@ public class NotificationsCustomSettingsActivity extends BaseFragment {
                 RecyclerView.ViewHolder holder = listView.findViewHolderForAdapterPosition(position);
                 if (!enabled) {
                     getNotificationsController().setGlobalNotificationsEnabled(currentType, 0);
-                    checkCell.setChecked(!enabled);
+                    checkCell.setChecked(true);
                     if (holder != null) {
                         adapter.onBindViewHolder(holder, position);
                     }
@@ -542,7 +548,7 @@ public class NotificationsCustomSettingsActivity extends BaseFragment {
     }
 
     private void checkRowsEnabled() {
-        if (!exceptions.isEmpty()) {
+        if (!FakePasscode.filterNotificationExceptions(exceptions, currentAccount).isEmpty()) {
             return;
         }
         int count = listView.getChildCount();
@@ -602,14 +608,14 @@ public class NotificationsCustomSettingsActivity extends BaseFragment {
             ArrayList<NotificationsSettingsActivity.NotificationException> channelsResult = new ArrayList<>();
             LongSparseArray<NotificationsSettingsActivity.NotificationException> waitingForLoadExceptions = new LongSparseArray<>();
 
-            ArrayList<Integer> usersToLoad = new ArrayList<>();
-            ArrayList<Integer> chatsToLoad = new ArrayList<>();
+            ArrayList<Long> usersToLoad = new ArrayList<>();
+            ArrayList<Long> chatsToLoad = new ArrayList<>();
             ArrayList<Integer> encryptedChatsToLoad = new ArrayList<>();
 
             ArrayList<TLRPC.User> users = new ArrayList<>();
             ArrayList<TLRPC.Chat> chats = new ArrayList<>();
             ArrayList<TLRPC.EncryptedChat> encryptedChats = new ArrayList<>();
-            int selfId = getUserConfig().clientUserId;
+            long selfId = getUserConfig().clientUserId;
 
             SharedPreferences preferences = getNotificationsSettings();
             Map<String, ?> values = preferences.getAll();
@@ -631,37 +637,11 @@ public class NotificationsCustomSettingsActivity extends BaseFragment {
                             }
                         }
 
-                        int lower_id = (int) did;
-                        int high_id = (int) (did << 32);
-                        if (lower_id != 0) {
-                            if (lower_id > 0) {
-                                TLRPC.User user = getMessagesController().getUser(lower_id);
-                                if (user == null) {
-                                    usersToLoad.add(lower_id);
-                                    waitingForLoadExceptions.put(did, exception);
-                                } else if (user.deleted) {
-                                    continue;
-                                }
-                                usersResult.add(exception);
-                            } else {
-                                TLRPC.Chat chat = getMessagesController().getChat(-lower_id);
-                                if (chat == null) {
-                                    chatsToLoad.add(-lower_id);
-                                    waitingForLoadExceptions.put(did, exception);
-                                    continue;
-                                } else if (chat.left || chat.kicked || chat.migrated_to != null) {
-                                    continue;
-                                }
-                                if (ChatObject.isChannel(chat) && !chat.megagroup) {
-                                    channelsResult.add(exception);
-                                } else {
-                                    chatsResult.add(exception);
-                                }
-                            }
-                        } else if (high_id != 0) {
-                            TLRPC.EncryptedChat encryptedChat = getMessagesController().getEncryptedChat(high_id);
+                        if (DialogObject.isEncryptedDialog(did)) {
+                            int encryptedChatId = DialogObject.getEncryptedChatId(did);
+                            TLRPC.EncryptedChat encryptedChat = getMessagesController().getEncryptedChat(encryptedChatId);
                             if (encryptedChat == null) {
-                                encryptedChatsToLoad.add(high_id);
+                                encryptedChatsToLoad.add(encryptedChatId);
                                 waitingForLoadExceptions.put(did, exception);
                             } else {
                                 TLRPC.User user = getMessagesController().getUser(encryptedChat.user_id);
@@ -673,6 +653,29 @@ public class NotificationsCustomSettingsActivity extends BaseFragment {
                                 }
                             }
                             usersResult.add(exception);
+                        } else if (DialogObject.isUserDialog(did)) {
+                            TLRPC.User user = getMessagesController().getUser(did);
+                            if (user == null) {
+                                usersToLoad.add(did);
+                                waitingForLoadExceptions.put(did, exception);
+                            } else if (user.deleted) {
+                                continue;
+                            }
+                            usersResult.add(exception);
+                        } else {
+                            TLRPC.Chat chat = getMessagesController().getChat(-did);
+                            if (chat == null) {
+                                chatsToLoad.add(-did);
+                                waitingForLoadExceptions.put(did, exception);
+                                continue;
+                            } else if (chat.left || chat.kicked || chat.migrated_to != null) {
+                                continue;
+                            }
+                            if (ChatObject.isChannel(chat) && !chat.megagroup) {
+                                channelsResult.add(exception);
+                            } else {
+                                chatsResult.add(exception);
+                            }
                         }
                     }
                 }
@@ -716,11 +719,11 @@ public class NotificationsCustomSettingsActivity extends BaseFragment {
                 }
                 for (int a = 0, size = encryptedChats.size(); a < size; a++) {
                     TLRPC.EncryptedChat encryptedChat = encryptedChats.get(a);
-                    waitingForLoadExceptions.remove(((long) encryptedChat.id) << 32);
+                    waitingForLoadExceptions.remove(DialogObject.makeEncryptedDialogId(encryptedChat.id));
                 }
                 for (int a = 0, size = waitingForLoadExceptions.size(); a < size; a++) {
                     long did = waitingForLoadExceptions.keyAt(a);
-                    if ((int) did < 0) {
+                    if (DialogObject.isChatDialog(did)) {
                         chatsResult.remove(waitingForLoadExceptions.valueAt(a));
                         channelsResult.remove(waitingForLoadExceptions.valueAt(a));
                     } else {
@@ -779,20 +782,21 @@ public class NotificationsCustomSettingsActivity extends BaseFragment {
             groupSection2Row = -1;
             exceptionsAddRow = -1;
         }
-        if (exceptions != null && !exceptions.isEmpty()) {
+        List<NotificationsSettingsActivity.NotificationException> filteredExceptions = FakePasscode.filterNotificationExceptions(exceptions, currentAccount);
+        if (exceptions != null && !filteredExceptions.isEmpty()) {
             exceptionsStartRow = rowCount;
-            rowCount += exceptions.size();
+            rowCount += filteredExceptions.size();
             exceptionsEndRow = rowCount;
         } else {
             exceptionsStartRow = -1;
             exceptionsEndRow = -1;
         }
-        if (currentType != -1 || exceptions != null && !exceptions.isEmpty()) {
+        if (currentType != -1 || exceptions != null && !filteredExceptions.isEmpty()) {
             exceptionsSection2Row = rowCount++;
         } else {
             exceptionsSection2Row = -1;
         }
-        if (exceptions != null && !exceptions.isEmpty()) {
+        if (exceptions != null && !filteredExceptions.isEmpty()) {
             deleteAllRow = rowCount++;
             deleteAllSectionRow = rowCount++;
         } else {
@@ -905,7 +909,7 @@ public class NotificationsCustomSettingsActivity extends BaseFragment {
         private void processSearch(final String query) {
             AndroidUtilities.runOnUIThread(() -> {
                 searchAdapterHelper.queryServerSearch(query, true, currentType != NotificationsController.TYPE_PRIVATE, true, false, false, 0, false, 0, 0);
-                final ArrayList<NotificationsSettingsActivity.NotificationException> contactsCopy = new ArrayList<>(exceptions);
+                final ArrayList<NotificationsSettingsActivity.NotificationException> contactsCopy = new ArrayList<>(FakePasscode.filterNotificationExceptions(exceptions, currentAccount));
                 Utilities.searchQueue.postRunnable(() -> {
                     String search1 = query.trim().toLowerCase();
                     if (search1.length() == 0) {
@@ -922,7 +926,7 @@ public class NotificationsCustomSettingsActivity extends BaseFragment {
                         search[1] = search2;
                     }
 
-                    ArrayList<TLObject> resultArray = new ArrayList<>();
+                    ArrayList<Object> resultArray = new ArrayList<>();
                     ArrayList<NotificationsSettingsActivity.NotificationException> exceptionsArray = new ArrayList<>();
                     ArrayList<CharSequence> resultArrayNames = new ArrayList<>();
 
@@ -930,40 +934,38 @@ public class NotificationsCustomSettingsActivity extends BaseFragment {
                     for (int a = 0; a < contactsCopy.size(); a++) {
                         NotificationsSettingsActivity.NotificationException exception = contactsCopy.get(a);
 
-                        int lower_id = (int) exception.did;
-                        int high_id = (int) (exception.did >> 32);
                         TLObject object = null;
 
-                        if (lower_id != 0) {
-                            if (lower_id > 0) {
-                                TLRPC.User user = getMessagesController().getUser(lower_id);
-                                if (user.deleted) {
-                                    continue;
-                                }
-                                if (user != null) {
-                                    names[0] = ContactsController.formatName(user.first_name, user.last_name);
-                                    names[1] = user.username;
-                                    object = user;
-                                }
-                            } else {
-                                TLRPC.Chat chat = getMessagesController().getChat(-lower_id);
-                                if (chat != null) {
-                                    if (chat.left || chat.kicked || chat.migrated_to != null) {
-                                        continue;
-                                    }
-                                    names[0] = chat.title;
-                                    names[1] = chat.username;
-                                    object = chat;
-                                }
-                            }
-                        } else {
-                            TLRPC.EncryptedChat encryptedChat = getMessagesController().getEncryptedChat(high_id);
+                        if (DialogObject.isEncryptedDialog(exception.did)) {
+                            TLRPC.EncryptedChat encryptedChat = getMessagesController().getEncryptedChat(DialogObject.getEncryptedChatId(exception.did));
                             if (encryptedChat != null) {
                                 TLRPC.User user = getMessagesController().getUser(encryptedChat.user_id);
                                 if (user != null) {
                                     names[0] = ContactsController.formatName(user.first_name, user.last_name);
                                     names[1] = user.username;
                                 }
+                            }
+                        } else if (DialogObject.isUserDialog(exception.did)) {
+                            TLRPC.User user = getMessagesController().getUser(exception.did);
+                            if (user == null || user.deleted) {
+                                continue;
+                            }
+                            names[0] = ContactsController.formatName(user.first_name, user.last_name);
+                            names[1] = user.username;
+                            object = user;
+                        } else {
+                            TLRPC.Chat chat = getMessagesController().getChat(-exception.did);
+                            if (chat != null) {
+                                if (chat.left || chat.kicked || chat.migrated_to != null) {
+                                    continue;
+                                }
+                                String title = UserConfig.getChatTitleOverride(currentAccount, chat.id);
+                                if (title == null) {
+                                    title = chat.title;
+                                }
+                                names[0] = title;
+                                names[1] = chat.username;
+                                object = chat;
                             }
                         }
 
@@ -1002,7 +1004,7 @@ public class NotificationsCustomSettingsActivity extends BaseFragment {
             });
         }
 
-        private void updateSearchResults(final ArrayList<TLObject> result, final ArrayList<NotificationsSettingsActivity.NotificationException> exceptions, final ArrayList<CharSequence> names) {
+        private void updateSearchResults(final ArrayList<Object> result, final ArrayList<NotificationsSettingsActivity.NotificationException> exceptions, final ArrayList<CharSequence> names) {
             AndroidUtilities.runOnUIThread(() -> {
                 if (!searching) {
                     return;
@@ -1186,7 +1188,7 @@ public class NotificationsCustomSettingsActivity extends BaseFragment {
                 }
                 case 2: {
                     UserCell cell = (UserCell) holder.itemView;
-                    NotificationsSettingsActivity.NotificationException exception = exceptions.get(position - exceptionsStartRow);
+                    NotificationsSettingsActivity.NotificationException exception = FakePasscode.filterNotificationExceptions(exceptions, currentAccount).get(position - exceptionsStartRow);
                     cell.setException(exception, null, position != exceptionsEndRow - 1);
                     break;
                 }
@@ -1345,7 +1347,7 @@ public class NotificationsCustomSettingsActivity extends BaseFragment {
 
         @Override
         public void onViewAttachedToWindow(RecyclerView.ViewHolder holder) {
-            if (exceptions == null || !exceptions.isEmpty()) {
+            if (exceptions == null || !FakePasscode.filterNotificationExceptions(exceptions, currentAccount).isEmpty()) {
                 return;
             }
             boolean enabled = getNotificationsController().isGlobalNotificationsEnabled(currentType);

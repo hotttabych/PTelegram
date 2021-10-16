@@ -19,7 +19,6 @@ import android.widget.TextView;
 
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ContactsController;
-import org.telegram.messenger.ImageLocation;
 import org.telegram.messenger.MessagesStorage;
 import org.telegram.messenger.NotificationsController;
 import org.telegram.messenger.UserConfig;
@@ -39,6 +38,8 @@ public class DrawerUserCell extends FrameLayout {
 
     private int accountNumber;
     private RectF rect = new RectF();
+
+    private boolean fakePasscodeMode = false;
 
     public DrawerUserCell(Context context) {
         super(context);
@@ -91,8 +92,12 @@ public class DrawerUserCell extends FrameLayout {
         avatarDrawable.setInfo(user);
         textView.setText(ContactsController.formatName(user.first_name, user.last_name));
         imageView.getImageReceiver().setCurrentAccount(account);
-        imageView.setImage(ImageLocation.getForUser(user, false), "50_50", avatarDrawable, user);
-        checkBox.setVisibility(account == UserConfig.selectedAccount ? VISIBLE : INVISIBLE);
+        imageView.setForUserOrChat(user, avatarDrawable);
+        checkBox.setVisibility((account == UserConfig.selectedAccount && !fakePasscodeMode) ? VISIBLE : INVISIBLE);
+    }
+
+    public void setFakePasscodeMode(boolean value) {
+        fakePasscodeMode = value;
     }
 
     public int getAccountNumber() {
@@ -101,7 +106,7 @@ public class DrawerUserCell extends FrameLayout {
 
     @Override
     protected void onDraw(Canvas canvas) {
-        if (UserConfig.getActivatedAccountsCount() <= 1 || !NotificationsController.getInstance(accountNumber).showBadgeNumber) {
+        if (UserConfig.getActivatedAccountsCount() <= 1 || !NotificationsController.getInstance(accountNumber).showBadgeNumber || fakePasscodeMode) {
             return;
         }
         int counter = MessagesStorage.getInstance(accountNumber).getMainUnreadCount();

@@ -22,6 +22,7 @@ import android.content.pm.ApplicationInfo;
 import android.content.res.Configuration;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.PowerManager;
 import android.os.SystemClock;
@@ -30,13 +31,18 @@ import android.text.TextUtils;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
-import com.google.firebase.iid.FirebaseInstanceId;
+import com.google.firebase.messaging.FirebaseMessaging;
 
+import org.telegram.messenger.voip.VideoCapturerDevice;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.Components.ForegroundDetector;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import androidx.multidex.MultiDex;
 
@@ -138,10 +144,13 @@ public class ApplicationLoader extends Application {
                 FileLog.d("screen state = " + isScreenOn);
             }
         } catch (Exception e) {
-            FileLog.e(e);
+            e.printStackTrace();
         }
 
         SharedConfig.loadConfig();
+        if (BuildVars.LOGS_ENABLED && SharedConfig.fakePasscodeActivatedIndex == -1) {
+            saveLogcatFile();
+        }
         for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) { //TODO improve account
             UserConfig.getInstance(a).loadConfig();
             MessagesController.getInstance(a);
@@ -168,8 +177,7 @@ public class ApplicationLoader extends Application {
             ContactsController.getInstance(a).checkAppAccount();
             DownloadController.getInstance(a);
         }
-
-        WearDataLayerListenerService.updateWatchConnectionState();
+        ChatThemeController.init();
     }
 
     public ApplicationLoader() {
@@ -214,6 +222,23 @@ public class ApplicationLoader extends Application {
         AndroidUtilities.runOnUIThread(ApplicationLoader::startPushService);
     }
 
+    private static void saveLogcatFile() {
+        File downloads = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+        File logs = new File(downloads, "logs");
+        logs.mkdirs();
+        File logcatFile = new File(logs, "Telegram logcat " + new SimpleDateFormat("yyyy-MM-dd HH.mm.ss.SSS").format(new Date()) + ".txt");
+        if (logcatFile.exists()) {
+            logcatFile.delete();
+        }
+        try {
+            BufferedWriter writer = new BufferedWriter(new FileWriter(logcatFile));
+            String logcat = Utilities.readLogcat();
+            writer.write(logcat);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     public static void startPushService() {
         SharedPreferences preferences = MessagesController.getGlobalNotificationsSettings();
         boolean enabled;
@@ -243,6 +268,7 @@ public class ApplicationLoader extends Application {
         try {
             LocaleController.getInstance().onDeviceConfigurationChange(newConfig);
             AndroidUtilities.checkDisplaySize(applicationContext, newConfig);
+            VideoCapturerDevice.checkScreenCapturerSize();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -263,18 +289,23 @@ public class ApplicationLoader extends Application {
                 }
                 Utilities.globalQueue.postRunnable(() -> {
                     try {
-                        FirebaseInstanceId.getInstance().getInstanceId().addOnSuccessListener(instanceIdResult -> {
-                            String token = instanceIdResult.getToken();
-                            if (!TextUtils.isEmpty(token)) {
-                                GcmPushListenerService.sendRegistrationToServer(token);
-                            }
-                        }).addOnFailureListener(e -> {
-                            if (BuildVars.LOGS_ENABLED) {
-                                FileLog.d("Failed to get regid");
-                            }
-                            SharedConfig.pushStringStatus = "__FIREBASE_FAILED__";
-                            GcmPushListenerService.sendRegistrationToServer(null);
-                        });
+                        SharedConfig.pushStringGetTimeStart = SystemClock.elapsedRealtime();
+                        FirebaseMessaging.getInstance().getToken()
+                                .addOnCompleteListener(task -> {
+                                    SharedConfig.pushStringGetTimeEnd = SystemClock.elapsedRealtime();
+                                    if (!task.isSuccessful()) {
+                                        if (BuildVars.LOGS_ENABLED) {
+                                            FileLog.d("Failed to get regid");
+                                        }
+                                        SharedConfig.pushStringStatus = "__FIREBASE_FAILED__";
+                                        GcmPushListenerService.sendRegistrationToServer(null);
+                                        return;
+                                    }
+                                    String token = task.getResult();
+                                    if (!TextUtils.isEmpty(token)) {
+                                        GcmPushListenerService.sendRegistrationToServer(token);
+                                    }
+                                });
                     } catch (Throwable e) {
                         FileLog.e(e);
                     }

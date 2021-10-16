@@ -43,6 +43,7 @@ import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.R;
+import org.telegram.messenger.UserConfig;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.ActionBar;
@@ -121,7 +122,7 @@ public class ChannelCreateActivity extends BaseFragment implements NotificationC
     private LoadingCell loadingAdminedCell;
 
     private int currentStep;
-    private int chatId;
+    private long chatId;
     private boolean canCreatePublic = true;
     private TLRPC.InputFile inputPhoto;
     private TLRPC.InputFile inputVideo;
@@ -152,7 +153,7 @@ public class ChannelCreateActivity extends BaseFragment implements NotificationC
                     loadAdminedChannels();
                 }
             }
-            chatId = args.getInt("chat_id", 0);
+            chatId = args.getLong("chat_id", 0);
         }
     }
 
@@ -306,7 +307,7 @@ public class ChannelCreateActivity extends BaseFragment implements NotificationC
                         }
                         Bundle args = new Bundle();
                         args.putInt("step", 2);
-                        args.putInt("chatId", chatId);
+                        args.putLong("chatId", chatId);
                         args.putInt("chatType", ChatObject.CHAT_TYPE_CHANNEL);
                         presentFragment(new GroupCreateActivity(args), true);
                     }
@@ -499,8 +500,12 @@ public class ChannelCreateActivity extends BaseFragment implements NotificationC
                     avatarEditor.setAnimation(cameraDrawable);
                     cameraDrawable.setCurrentFrame(0);
                 }, dialog -> {
-                    cameraDrawable.setCustomEndFrame(86);
-                    avatarEditor.playAnimation();
+                    if (!imageUpdater.isUploadingImage()) {
+                        cameraDrawable.setCustomEndFrame(86);
+                        avatarEditor.playAnimation();
+                    } else {
+                        cameraDrawable.setCurrentFrame(0, false);
+                    }
                 });
                 cameraDrawable.setCurrentFrame(0);
                 cameraDrawable.setCustomEndFrame(43);
@@ -720,7 +725,7 @@ public class ChannelCreateActivity extends BaseFragment implements NotificationC
 
             permanentLinkView = new LinkActionView(context, this, null, chatId, true, ChatObject.isChannel(getMessagesController().getChat(chatId)));
             //permanentLinkView.showOptions(false);
-            permanentLinkView.showRevokeOption(true);
+            permanentLinkView.hideRevokeOption(true);
             permanentLinkView.setUsers(0, null);
             privateContainer.addView(permanentLinkView);
 
@@ -879,6 +884,7 @@ public class ChannelCreateActivity extends BaseFragment implements NotificationC
             return;
         }
         if (avatarAnimation != null) {
+            avatarAnimation.removeAllListeners();
             avatarAnimation.cancel();
             avatarAnimation = null;
         }
@@ -890,6 +896,9 @@ public class ChannelCreateActivity extends BaseFragment implements NotificationC
                 avatarAnimation.playTogether(ObjectAnimator.ofFloat(avatarEditor, View.ALPHA, 0.0f),
                         ObjectAnimator.ofFloat(avatarProgressView, View.ALPHA, 1.0f));
             } else {
+                if (avatarEditor.getVisibility() != View.VISIBLE) {
+                    avatarEditor.setAlpha(0f);
+                }
                 avatarEditor.setVisibility(View.VISIBLE);
 
                 avatarAnimation.playTogether(ObjectAnimator.ofFloat(avatarEditor, View.ALPHA, 1.0f),
@@ -997,13 +1006,13 @@ public class ChannelCreateActivity extends BaseFragment implements NotificationC
                     FileLog.e(e);
                 }
             }
-            int chat_id = (Integer) args[0];
+            long chat_id = (Long) args[0];
             Bundle bundle = new Bundle();
             bundle.putInt("step", 1);
-            bundle.putInt("chat_id", chat_id);
+            bundle.putLong("chat_id", chat_id);
             bundle.putBoolean("canCreatePublic", canCreatePublic);
             if (inputPhoto != null || inputVideo != null) {
-                MessagesController.getInstance(currentAccount).changeChatAvatar(chat_id, null, inputPhoto, inputVideo, videoTimestamp, inputVideoPath, avatar, avatarBig);
+                MessagesController.getInstance(currentAccount).changeChatAvatar(chat_id, null, inputPhoto, inputVideo, videoTimestamp, inputVideoPath, avatar, avatarBig, null);
             }
             presentFragment(new ChannelCreateActivity(bundle), true);
         }
@@ -1034,10 +1043,14 @@ public class ChannelCreateActivity extends BaseFragment implements NotificationC
                         final TLRPC.Chat channel = cell.getCurrentChannel();
                         AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
                         builder.setTitle(LocaleController.getString("AppName", R.string.AppName));
+                        String title = UserConfig.getChatTitleOverride(currentAccount, channel.id);
+                        if (title == null) {
+                            title = channel.title;
+                        }
                         if (channel.megagroup) {
-                            builder.setMessage(AndroidUtilities.replaceTags(LocaleController.formatString("RevokeLinkAlert", R.string.RevokeLinkAlert, MessagesController.getInstance(currentAccount).linkPrefix + "/" + channel.username, channel.title)));
+                            builder.setMessage(AndroidUtilities.replaceTags(LocaleController.formatString("RevokeLinkAlert", R.string.RevokeLinkAlert, MessagesController.getInstance(currentAccount).linkPrefix + "/" + channel.username, title)));
                         } else {
-                            builder.setMessage(AndroidUtilities.replaceTags(LocaleController.formatString("RevokeLinkAlertChannel", R.string.RevokeLinkAlertChannel, MessagesController.getInstance(currentAccount).linkPrefix  + "/" + channel.username, channel.title)));
+                            builder.setMessage(AndroidUtilities.replaceTags(LocaleController.formatString("RevokeLinkAlertChannel", R.string.RevokeLinkAlertChannel, MessagesController.getInstance(currentAccount).linkPrefix  + "/" + channel.username, title)));
                         }
                         builder.setNegativeButton(LocaleController.getString("Cancel", R.string.Cancel), null);
                         builder.setPositiveButton(LocaleController.getString("RevokeButton", R.string.RevokeButton), (dialogInterface, i) -> {

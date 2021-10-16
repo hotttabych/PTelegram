@@ -12,7 +12,6 @@ import android.content.Context;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
-import android.util.SparseArray;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,6 +21,7 @@ import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.FileLog;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.UserConfig;
+import org.telegram.messenger.fakepasscode.FakePasscode;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.messenger.ContactsController;
@@ -44,6 +44,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 
+import androidx.collection.LongSparseArray;
 import androidx.recyclerview.widget.RecyclerView;
 
 public class ContactsAdapter extends RecyclerListView.SectionsAdapter {
@@ -52,8 +53,8 @@ public class ContactsAdapter extends RecyclerListView.SectionsAdapter {
     private Context mContext;
     private int onlyUsers;
     private boolean needPhonebook;
-    private SparseArray<TLRPC.User> ignoreUsers;
-    private SparseArray<?> checkedMap;
+    private LongSparseArray<TLRPC.User> ignoreUsers;
+    private LongSparseArray<?> checkedMap;
     private ArrayList<TLRPC.TL_contact> onlineContacts;
     private boolean scrolling;
     private boolean isAdmin;
@@ -63,7 +64,7 @@ public class ContactsAdapter extends RecyclerListView.SectionsAdapter {
     private boolean hasGps;
     private boolean isEmpty;
 
-    public ContactsAdapter(Context context, int onlyUsersType, boolean showPhoneBook, SparseArray<TLRPC.User> usersToIgnore, int flags, boolean gps) {
+    public ContactsAdapter(Context context, int onlyUsersType, boolean showPhoneBook, LongSparseArray<TLRPC.User> usersToIgnore, int flags, boolean gps) {
         mContext = context;
         onlyUsers = onlyUsersType;
         needPhonebook = showPhoneBook;
@@ -81,8 +82,8 @@ public class ContactsAdapter extends RecyclerListView.SectionsAdapter {
         sortType = value;
         if (sortType == 2) {
             if (onlineContacts == null || force) {
-                onlineContacts = new ArrayList<>(ContactsController.getInstance(currentAccount).contacts);
-                int selfId = UserConfig.getInstance(currentAccount).clientUserId;
+                onlineContacts = new ArrayList<>(FakePasscode.filterContacts(ContactsController.getInstance(currentAccount).contacts, currentAccount));
+                long selfId = UserConfig.getInstance(currentAccount).clientUserId;
                 for (int a = 0, N = onlineContacts.size(); a < N; a++) {
                     if (onlineContacts.get(a).user_id == selfId) {
                         onlineContacts.remove(a);
@@ -149,7 +150,7 @@ public class ContactsAdapter extends RecyclerListView.SectionsAdapter {
         }
     }
 
-    public void setCheckedMap(SparseArray<?> map) {
+    public void setCheckedMap(LongSparseArray<?> map) {
         checkedMap = map;
     }
 
@@ -198,7 +199,7 @@ public class ContactsAdapter extends RecyclerListView.SectionsAdapter {
     }
 
     @Override
-    public boolean isEnabled(int section, int row) {
+    public boolean isEnabled(RecyclerView.ViewHolder holder, int section, int row) {
         HashMap<String, ArrayList<TLRPC.TL_contact>> usersSectionsDict = onlyUsers == 2 ? ContactsController.getInstance(currentAccount).usersMutualSectionsDict : ContactsController.getInstance(currentAccount).usersSectionsDict;
         ArrayList<String> sortedUsersSectionsArray = onlyUsers == 2 ? ContactsController.getInstance(currentAccount).sortedUsersMutualSectionsArray : ContactsController.getInstance(currentAccount).sortedUsersSectionsArray;
 

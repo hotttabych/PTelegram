@@ -37,6 +37,7 @@ import org.telegram.messenger.FileLog;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.R;
+import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.UserObject;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.TLRPC;
@@ -73,7 +74,7 @@ public class ChatRightsEditActivity extends BaseFragment {
     private ListAdapter listViewAdapter;
     private RecyclerListView listView;
 
-    private int chatId;
+    private long chatId;
     private TLRPC.User currentUser;
     private TLRPC.Chat currentChat;
     private int currentType;
@@ -133,7 +134,7 @@ public class ChatRightsEditActivity extends BaseFragment {
 
     private final static int done_button = 1;
 
-    public ChatRightsEditActivity(int userId, int channelId, TLRPC.TL_chatAdminRights rightsAdmin, TLRPC.TL_chatBannedRights rightsBannedDefault, TLRPC.TL_chatBannedRights rightsBanned, String rank, int type, boolean edit, boolean addingNew) {
+    public ChatRightsEditActivity(long userId, long channelId, TLRPC.TL_chatAdminRights rightsAdmin, TLRPC.TL_chatBannedRights rightsBannedDefault, TLRPC.TL_chatBannedRights rightsBanned, String rank, int type, boolean edit, boolean addingNew) {
         super();
         isAddingNew = addingNew;
         chatId = channelId;
@@ -153,10 +154,7 @@ public class ChatRightsEditActivity extends BaseFragment {
             myAdminRights = new TLRPC.TL_chatAdminRights();
             myAdminRights.change_info = myAdminRights.post_messages = myAdminRights.edit_messages =
             myAdminRights.delete_messages = myAdminRights.ban_users = myAdminRights.invite_users =
-            myAdminRights.pin_messages = myAdminRights.add_admins = true;
-            if (!isChannel) {
-                myAdminRights.manage_call = true;
-            }
+            myAdminRights.pin_messages = myAdminRights.add_admins = myAdminRights.manage_call = true;
         }
         if (type == TYPE_ADMIN) {
             adminRights = new TLRPC.TL_chatAdminRights();
@@ -317,7 +315,7 @@ public class ChatRightsEditActivity extends BaseFragment {
             }
             if (position == 0) {
                 Bundle args = new Bundle();
-                args.putInt("user_id", currentUser.id);
+                args.putLong("user_id", currentUser.id);
                 presentFragment(new ProfileActivity(args));
             } else if (position == removeAdminRow) {
                 if (currentType == TYPE_ADMIN) {
@@ -601,13 +599,13 @@ public class ChatRightsEditActivity extends BaseFragment {
     }
 
     private boolean isDefaultAdminRights() {
-        return adminRights.change_info && adminRights.delete_messages && adminRights.ban_users && adminRights.invite_users && adminRights.pin_messages && (isChannel || adminRights.manage_call) && !adminRights.add_admins && !adminRights.anonymous ||
+        return adminRights.change_info && adminRights.delete_messages && adminRights.ban_users && adminRights.invite_users && adminRights.pin_messages && adminRights.manage_call && !adminRights.add_admins && !adminRights.anonymous ||
                 !adminRights.change_info && !adminRights.delete_messages && !adminRights.ban_users && !adminRights.invite_users && !adminRights.pin_messages && !adminRights.manage_call && !adminRights.add_admins && !adminRights.anonymous;
     }
 
     private boolean hasAllAdminRights() {
         if (isChannel) {
-            return adminRights.change_info && adminRights.post_messages && adminRights.edit_messages && adminRights.delete_messages && adminRights.invite_users && adminRights.add_admins;
+            return adminRights.change_info && adminRights.post_messages && adminRights.edit_messages && adminRights.delete_messages && adminRights.invite_users && adminRights.add_admins && adminRights.manage_call;
         } else {
             return adminRights.change_info && adminRights.delete_messages && adminRights.ban_users && adminRights.invite_users && adminRights.pin_messages && adminRights.add_admins && adminRights.manage_call;
         }
@@ -650,7 +648,11 @@ public class ChatRightsEditActivity extends BaseFragment {
                         } else {
                             builder.setTitle(LocaleController.getString("EditAdminGroupTransfer", R.string.EditAdminGroupTransfer));
                         }
-                        builder.setMessage(AndroidUtilities.replaceTags(LocaleController.formatString("EditAdminTransferReadyAlertText", R.string.EditAdminTransferReadyAlertText, currentChat.title, UserObject.getFirstName(currentUser))));
+                        String title = UserConfig.getChatTitleOverride(currentAccount, currentChat.id);
+                        if (title == null) {
+                            title = currentChat.title;
+                        }
+                        builder.setMessage(AndroidUtilities.replaceTags(LocaleController.formatString("EditAdminTransferReadyAlertText", R.string.EditAdminTransferReadyAlertText, title, UserObject.getFirstName(currentUser))));
                         builder.setPositiveButton(LocaleController.getString("EditAdminTransferChangeOwner", R.string.EditAdminTransferChangeOwner), (dialogInterface, i) -> {
                             TwoStepVerificationActivity fragment = new TwoStepVerificationActivity();
                             fragment.setDelegate(password -> initTransfer(password, fragment));
@@ -809,6 +811,7 @@ public class ChatRightsEditActivity extends BaseFragment {
                 editMesagesRow = rowCount++;
                 deleteMessagesRow = rowCount++;
                 addUsersRow = rowCount++;
+                startVoiceChatRow = rowCount++;
                 addAdminsRow = rowCount++;
             } else {
                 changeInfoRow = rowCount++;
@@ -928,7 +931,7 @@ public class ChatRightsEditActivity extends BaseFragment {
                         adminRights.other ? 1 : 0, adminRights, bannedRights, currentRank);
             }
         } else if (currentType == TYPE_BANNED) {
-            MessagesController.getInstance(currentAccount).setUserBannedRole(chatId, currentUser, bannedRights, isChannel, getFragmentForAlert(1));
+            MessagesController.getInstance(currentAccount).setParticipantBannedRole(chatId, currentUser, null, bannedRights, isChannel, getFragmentForAlert(1));
             int rights;
             if (bannedRights.send_messages || bannedRights.send_stickers || bannedRights.embed_links || bannedRights.send_media ||
                     bannedRights.send_gifs || bannedRights.send_games || bannedRights.send_inline) {
@@ -960,7 +963,11 @@ public class ChatRightsEditActivity extends BaseFragment {
             AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
             builder.setTitle(LocaleController.getString("UserRestrictionsApplyChanges", R.string.UserRestrictionsApplyChanges));
             TLRPC.Chat chat = MessagesController.getInstance(currentAccount).getChat(chatId);
-            builder.setMessage(AndroidUtilities.replaceTags(LocaleController.formatString("UserRestrictionsApplyChangesText", R.string.UserRestrictionsApplyChangesText, chat.title)));
+            String title = UserConfig.getChatTitleOverride(currentAccount, chat.id);
+            if (title == null) {
+                title = chat.title;
+            }
+            builder.setMessage(AndroidUtilities.replaceTags(LocaleController.formatString("UserRestrictionsApplyChangesText", R.string.UserRestrictionsApplyChangesText, title)));
             builder.setPositiveButton(LocaleController.getString("ApplyTheme", R.string.ApplyTheme), (dialogInterface, i) -> onDonePressed());
             builder.setNegativeButton(LocaleController.getString("PassportDiscard", R.string.PassportDiscard), (dialog, which) -> finishFragment());
             showDialog(builder.create());

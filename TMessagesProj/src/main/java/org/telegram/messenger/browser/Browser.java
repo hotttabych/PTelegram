@@ -188,7 +188,7 @@ public class Browser {
         if (tryTelegraph) {
             try {
                 String host = uri.getHost().toLowerCase();
-                if (isTelegraphUrl(host, true) || uri.toString().toLowerCase().contains("telegram.org/faq")) {
+                if (isTelegraphUrl(host, true) || uri.toString().toLowerCase().contains("telegram.org/faq") || uri.toString().toLowerCase().contains("telegram.org/privacy")) {
                     final AlertDialog[] progressDialog = new AlertDialog[]{new AlertDialog(context, 3)};
 
                     Uri finalUri = uri;
@@ -246,15 +246,15 @@ public class Browser {
                 String url = uri.toString();
                 int idx = url.indexOf("://");
                 String path = idx >= 0 ? url.substring(idx + 3) : url;
-                String[] args = path.split("#");
-                String finalPath = args[0];
+                String fragment = uri.getEncodedFragment();
+                String finalPath = fragment == null ? path : path.substring(0, path.indexOf("#" + fragment));
                 if (finalPath.indexOf('?') >= 0) {
                     finalPath += "&" + token;
                 } else {
                     finalPath += "?" + token;
                 }
-                if (args.length > 1) {
-                    finalPath += args[1];
+                if (fragment != null) {
+                    finalPath += "#" + fragment;
                 }
                 uri = Uri.parse("https://" + finalPath);
             }

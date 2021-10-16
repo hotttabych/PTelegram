@@ -17,6 +17,7 @@ import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
+import android.widget.ScrollView;
 import android.widget.TextView;
 
 import org.telegram.messenger.AndroidUtilities;
@@ -29,7 +30,6 @@ public class ReportAlert extends BottomSheet {
 
     private BottomSheetCell clearButton;
     private EditTextBoldCursor editText;
-    private boolean compteled;
 
     public static class BottomSheetCell extends FrameLayout {
 
@@ -71,8 +71,12 @@ public class ReportAlert extends BottomSheet {
         setApplyBottomPadding(false);
         setApplyTopPadding(false);
 
+        ScrollView scrollView = new ScrollView(context);
+        scrollView.setFillViewport(true);
+        setCustomView(scrollView);
+
         FrameLayout frameLayout = new FrameLayout(context);
-        setCustomView(frameLayout);
+        scrollView.addView(frameLayout, LayoutHelper.createScroll(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.LEFT | Gravity.TOP));
 
         RLottieImageView imageView = new RLottieImageView(context);
         imageView.setAnimation(R.raw.report_police, 120, 120);
@@ -139,6 +143,7 @@ public class ReportAlert extends BottomSheet {
             dismiss();
         });
         frameLayout.addView(clearButton, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 50, Gravity.LEFT | Gravity.TOP, 0, 357, 0, 0));
+        smoothKeyboardAnimationEnabled = true;
     }
 
     protected void onSend(int type, String message) {

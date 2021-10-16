@@ -5,7 +5,6 @@ import android.animation.AnimatorListenerAdapter;
 import android.animation.ValueAnimator;
 import android.content.Context;
 import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.Rect;
@@ -33,7 +32,6 @@ import android.view.animation.OvershootInterpolator;
 import android.widget.Magnifier;
 import android.widget.TextView;
 
-import androidx.core.graphics.ColorUtils;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
 import org.telegram.messenger.AndroidUtilities;
@@ -145,8 +143,8 @@ public abstract class TextSelectionHelper<Cell extends TextSelectionHelper.Selec
                             dy = selectedView.getBottom() - parentView.getMeasuredHeight();
                         }
                     } else {
-                        if (selectedView.getTop() + dy > 0) {
-                            dy = -selectedView.getTop();
+                        if (selectedView.getTop() + dy > getParentTopPadding()) {
+                            dy = -selectedView.getTop() + getParentTopPadding();
                         }
                     }
                 }
@@ -426,7 +424,7 @@ public abstract class TextSelectionHelper<Cell extends TextSelectionHelper.Selec
             if (!movingHandle && isSelectionMode() && canShowActions()) {
                 if (!actionsIsShowing) {
                     if (actionMode == null) {
-                        FloatingToolbar floatingToolbar = new FloatingToolbar(textSelectionOverlay.getContext(), textSelectionOverlay, STYLE_THEME);
+                        FloatingToolbar floatingToolbar = new FloatingToolbar(textSelectionOverlay.getContext(), textSelectionOverlay, STYLE_THEME, getResourcesProvider());
                         actionMode = new FloatingActionMode(textSelectionOverlay.getContext(), (ActionMode.Callback2) textSelectActionCallback, textSelectionOverlay, floatingToolbar);
                         textSelectActionCallback.onCreateActionMode(actionMode, actionMode.getMenu());
                     }
@@ -457,16 +455,16 @@ public abstract class TextSelectionHelper<Cell extends TextSelectionHelper.Selec
                             }
                             return false;
                         });
-                        popupLayout.setShowedFromBotton(false);
+                        popupLayout.setShownFromBotton(false);
 
                         deleteView = new TextView(textSelectionOverlay.getContext());
-                        deleteView.setBackgroundDrawable(Theme.createSelectorDrawable(Theme.getColor(Theme.key_listSelector), 2));
+                        deleteView.setBackgroundDrawable(Theme.createSelectorDrawable(getThemedColor(Theme.key_listSelector), 2));
                         deleteView.setGravity(Gravity.CENTER_VERTICAL);
                         deleteView.setPadding(AndroidUtilities.dp(20), 0, AndroidUtilities.dp(20), 0);
                         deleteView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 15);
                         deleteView.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
                         deleteView.setText(textSelectionOverlay.getContext().getString(android.R.string.copy));
-                        deleteView.setTextColor(Theme.getColor(Theme.key_actionBarDefaultSubmenuItem));
+                        deleteView.setTextColor(getThemedColor(Theme.key_actionBarDefaultSubmenuItem));
                         deleteView.setOnClickListener(v -> {
                             copyText();
                         });
@@ -478,7 +476,7 @@ public abstract class TextSelectionHelper<Cell extends TextSelectionHelper.Selec
                         popupWindow.setOutsideTouchable(true);
 
                         if (popupLayout != null) {
-                            popupLayout.setBackgroundColor(Theme.getColor(Theme.key_actionBarDefaultSubmenuBackground));
+                            popupLayout.setBackgroundColor(getThemedColor(Theme.key_actionBarDefaultSubmenuBackground));
                         }
                     }
 
@@ -750,7 +748,7 @@ public abstract class TextSelectionHelper<Cell extends TextSelectionHelper.Selec
                         x -= selectedView.getX();
 
                         boolean canScrollDown = event.getY() - touchSlop > parentView.getMeasuredHeight() && (multiselect || selectedView.getBottom() > parentView.getMeasuredHeight());
-                        boolean canScrollUp = event.getY() < ((View) parentView.getParent()).getTop() && (multiselect || selectedView.getTop() < 0);
+                        boolean canScrollUp = event.getY() < ((View) parentView.getParent()).getTop() + getParentTopPadding() && (multiselect || selectedView.getTop() < getParentTopPadding());
                         if (canScrollDown || canScrollUp) {
                             if (!scrolling) {
                                 scrolling = true;
@@ -1006,7 +1004,7 @@ public abstract class TextSelectionHelper<Cell extends TextSelectionHelper.Selec
                 canvas.translate(xOffset, yOffset);
 
 
-                handleViewPaint.setColor(Theme.getColor(Theme.key_chat_TextSelectionCursor));
+                handleViewPaint.setColor(getThemedColor(Theme.key_chat_TextSelectionCursor));
 
                 int len = getText(selectedView, false).length();
 
@@ -1585,9 +1583,9 @@ public abstract class TextSelectionHelper<Cell extends TextSelectionHelper.Selec
 
                 if (selectionStart != selectionEnd) {
                     if (selectedMessageObject.isOutOwner()) {
-                        selectionPaint.setColor(Theme.getColor(Theme.key_chat_outTextSelectionHighlight));
+                        selectionPaint.setColor(getThemedColor(Theme.key_chat_outTextSelectionHighlight));
                     } else {
-                        selectionPaint.setColor(Theme.getColor(key_chat_inTextSelectionHighlight));
+                        selectionPaint.setColor(getThemedColor(key_chat_inTextSelectionHighlight));
                     }
                     drawSelection(canvas, block.textLayout, selectionStart, selectionEnd);
                 }
@@ -1769,9 +1767,9 @@ public abstract class TextSelectionHelper<Cell extends TextSelectionHelper.Selec
                 return;
             }
             if (isOut) {
-                selectionPaint.setColor(Theme.getColor(Theme.key_chat_outTextSelectionHighlight));
+                selectionPaint.setColor(getThemedColor(Theme.key_chat_outTextSelectionHighlight));
             } else {
-                selectionPaint.setColor(Theme.getColor(key_chat_inTextSelectionHighlight));
+                selectionPaint.setColor(getThemedColor(key_chat_inTextSelectionHighlight));
             }
             drawSelection(canvas, captionLayout, selectionStart, selectionEnd);
         }
@@ -1781,9 +1779,9 @@ public abstract class TextSelectionHelper<Cell extends TextSelectionHelper.Selec
                 return;
             }
             if (isOut) {
-                selectionPaint.setColor(Theme.getColor(Theme.key_chat_outTextSelectionHighlight));
+                selectionPaint.setColor(getThemedColor(Theme.key_chat_outTextSelectionHighlight));
             } else {
-                selectionPaint.setColor(Theme.getColor(key_chat_inTextSelectionHighlight));
+                selectionPaint.setColor(getThemedColor(key_chat_inTextSelectionHighlight));
             }
             drawSelection(canvas, layout, selectionStart, selectionEnd);
         }
@@ -2061,7 +2059,7 @@ public abstract class TextSelectionHelper<Cell extends TextSelectionHelper.Selec
 
 
         public void draw(Canvas canvas, ArticleSelectableView view, int i) {
-            selectionPaint.setColor(Theme.getColor(key_chat_inTextSelectionHighlight));
+            selectionPaint.setColor(getThemedColor(key_chat_inTextSelectionHighlight));
 
             int position = getAdapterPosition(view);
             if (position < 0) {
@@ -2615,5 +2613,17 @@ public abstract class TextSelectionHelper<Cell extends TextSelectionHelper.Selec
     public void setKeyboardSize(int keyboardSize) {
         this.keyboardSize = keyboardSize;
         invalidate();
+    }
+
+    public int getParentTopPadding() {
+        return 0;
+    }
+
+    protected int getThemedColor(String key) {
+        return Theme.getColor(key);
+    }
+
+    protected Theme.ResourcesProvider getResourcesProvider() {
+        return null;
     }
 }

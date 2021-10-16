@@ -14,12 +14,14 @@ import org.telegram.messenger.MessageObject;
 import org.telegram.messenger.R;
 import org.telegram.tgnet.TLObject;
 import org.telegram.tgnet.TLRPC;
+import org.telegram.ui.ActionBar.Theme;
 
 import java.util.ArrayList;
 
 @SuppressLint("ViewConstructor")
 public class StickerSetBulletinLayout extends Bulletin.TwoLineLayout {
 
+    public static final int TYPE_EMPTY = -1;
     public static final int TYPE_REMOVED = 0;
     public static final int TYPE_ARCHIVED = 1;
     public static final int TYPE_ADDED = 2;
@@ -27,15 +29,15 @@ public class StickerSetBulletinLayout extends Bulletin.TwoLineLayout {
     public static final int TYPE_REMOVED_FROM_FAVORITES = 4;
     public static final int TYPE_ADDED_TO_FAVORITES = 5;
 
-    @IntDef(value = {TYPE_REMOVED, TYPE_ARCHIVED, TYPE_ADDED, TYPE_REMOVED_FROM_RECENT, TYPE_REMOVED_FROM_FAVORITES, TYPE_ADDED_TO_FAVORITES})
+    @IntDef(value = {TYPE_EMPTY, TYPE_REMOVED, TYPE_ARCHIVED, TYPE_ADDED, TYPE_REMOVED_FROM_RECENT, TYPE_REMOVED_FROM_FAVORITES, TYPE_ADDED_TO_FAVORITES})
     public @interface Type {}
 
     public StickerSetBulletinLayout(@NonNull Context context, TLObject setObject, @Type int type) {
-        this(context, setObject, type, null);
+        this(context, setObject, type, null, null);
     }
 
-    public StickerSetBulletinLayout(@NonNull Context context, TLObject setObject, @Type int type, TLRPC.Document sticker) {
-        super(context);
+    public StickerSetBulletinLayout(@NonNull Context context, TLObject setObject, @Type int type, TLRPC.Document sticker, Theme.ResourcesProvider resourcesProvider) {
+        super(context, resourcesProvider);
 
         final TLRPC.StickerSet stickerSet;
 
@@ -59,12 +61,12 @@ public class StickerSetBulletinLayout extends Bulletin.TwoLineLayout {
                 sticker = null;
             }
         } else {
+            if (sticker == null && setObject != null && BuildVars.DEBUG_VERSION) {
+                throw new IllegalArgumentException("Invalid type of the given setObject: " + setObject.getClass());
+            }
             stickerSet = null;
         }
 
-        if (sticker == null && BuildVars.DEBUG_VERSION) {
-            throw new IllegalArgumentException("Invalid type of the given setObject: " + setObject.getClass());
-        }
 
         if (sticker != null) {
             TLObject object = stickerSet == null ? null : FileLoader.getClosestPhotoSizeWithSize(stickerSet.thumbs, 90);
@@ -78,7 +80,13 @@ public class StickerSetBulletinLayout extends Bulletin.TwoLineLayout {
                 imageLocation = ImageLocation.getForDocument(thumb, sticker);
             } else {
                 TLRPC.PhotoSize thumb = (TLRPC.PhotoSize) object;
-                imageLocation = ImageLocation.getForSticker(thumb, sticker);
+                int thumbVersion = 0;
+                if (setObject instanceof TLRPC.StickerSetCovered) {
+                    thumbVersion = ((TLRPC.StickerSetCovered) setObject).set.thumb_version;
+                } else if (setObject instanceof TLRPC.TL_messages_stickerSet) {
+                    thumbVersion = ((TLRPC.TL_messages_stickerSet) setObject).set.thumb_version;
+                }
+                imageLocation = ImageLocation.getForSticker(thumb, sticker, thumbVersion);
             }
 
             if (object instanceof TLRPC.Document && MessageObject.isAnimatedStickerDocument(sticker, true)) {

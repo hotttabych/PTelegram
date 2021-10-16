@@ -29,7 +29,6 @@ import android.text.Spanned;
 import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.text.style.ForegroundColorSpan;
-import android.util.SparseArray;
 import android.util.TypedValue;
 import android.view.ActionMode;
 import android.view.Gravity;
@@ -46,12 +45,15 @@ import android.widget.ScrollView;
 
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ContactsController;
+import org.telegram.messenger.DialogObject;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.R;
 import org.telegram.messenger.UserObject;
 import org.telegram.messenger.Utilities;
+import org.telegram.messenger.fakepasscode.FakePasscode;
+import org.telegram.messenger.fakepasscode.FakePasscode;
 import org.telegram.tgnet.TLObject;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.ActionBar;
@@ -71,6 +73,7 @@ import org.telegram.ui.Components.RecyclerListView;
 import java.util.ArrayList;
 
 import androidx.annotation.Keep;
+import androidx.collection.LongSparseArray;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -92,14 +95,13 @@ public class FilterUsersActivity extends BaseFragment implements NotificationCen
 
     //private boolean doneButtonVisible;
 
-    private Boolean isInclude;
+    private boolean isInclude;
     private int filterFlags;
-    private ArrayList<Integer> initialIds;
-    private boolean onlyWritable;
+    private ArrayList<Long> initialIds;
 
     private boolean searchWas;
     private boolean searching;
-    private SparseArray<GroupCreateSpan> selectedContacts = new SparseArray<>();
+    private LongSparseArray<GroupCreateSpan> selectedContacts = new LongSparseArray<>();
     private ArrayList<GroupCreateSpan> allSpans = new ArrayList<>();
     private GroupCreateSpan currentDeletingSpan;
 
@@ -145,7 +147,7 @@ public class FilterUsersActivity extends BaseFragment implements NotificationCen
     }
 
     public interface FilterUsersActivityDelegate {
-        void didSelectChats(ArrayList<Integer> ids, int flags);
+        void didSelectChats(ArrayList<Long> ids, int flags);
     }
 
     private class SpansContainer extends ViewGroup {
@@ -263,7 +265,7 @@ public class FilterUsersActivity extends BaseFragment implements NotificationCen
 
         public void addSpan(final GroupCreateSpan span, boolean animated) {
             allSpans.add(span);
-            int uid = span.getUid();
+            long uid = span.getUid();
             if (uid > Integer.MIN_VALUE + 7) {
                 selectedCount++;
             }
@@ -298,7 +300,7 @@ public class FilterUsersActivity extends BaseFragment implements NotificationCen
 
         public void removeSpan(final GroupCreateSpan span) {
             ignoreScrollEvent = true;
-            int uid = span.getUid();
+            long uid = span.getUid();
             if (uid > Integer.MIN_VALUE + 7) {
                 selectedCount--;
             }
@@ -335,17 +337,11 @@ public class FilterUsersActivity extends BaseFragment implements NotificationCen
         }
     }
 
-    public FilterUsersActivity(Boolean include, ArrayList<Integer> arrayList, int flags) {
+    public FilterUsersActivity(boolean include, ArrayList<Long> arrayList, int flags) {
         super();
         isInclude = include;
         filterFlags = flags;
         initialIds = arrayList;
-        onlyWritable = false;
-    }
-
-    public FilterUsersActivity(Boolean include, ArrayList<Integer> arrayList, int flags, boolean onlyWritable) {
-        this(include, arrayList, flags);
-        this.onlyWritable = onlyWritable;
     }
 
     @Override
@@ -408,7 +404,7 @@ public class FilterUsersActivity extends BaseFragment implements NotificationCen
 
         actionBar.setBackButtonImage(R.drawable.ic_ab_back);
         actionBar.setAllowOverlayTitle(true);
-        if (isInclude != null && isInclude) {
+        if (isInclude) {
             actionBar.setTitle(LocaleController.getString("FilterAlwaysShow", R.string.FilterAlwaysShow));
         } else {
             actionBar.setTitle(LocaleController.getString("FilterNeverShow", R.string.FilterNeverShow));
@@ -628,7 +624,7 @@ public class FilterUsersActivity extends BaseFragment implements NotificationCen
         listView = new RecyclerListView(context);
         listView.setFastScrollEnabled();
         listView.setEmptyView(emptyView);
-        listView.setAdapter(adapter = new GroupCreateAdapter(context, onlyWritable));
+        listView.setAdapter(adapter = new GroupCreateAdapter(context));
         listView.setLayoutManager(linearLayoutManager);
         listView.setVerticalScrollBarEnabled(false);
         listView.setVerticalScrollbarPosition(LocaleController.isRTL ? View.SCROLLBAR_POSITION_LEFT : View.SCROLLBAR_POSITION_RIGHT);
@@ -638,46 +634,42 @@ public class FilterUsersActivity extends BaseFragment implements NotificationCen
             if (view instanceof GroupCreateUserCell) {
                 GroupCreateUserCell cell = (GroupCreateUserCell) view;
                 Object object = cell.getObject();
-                int id;
+                long id;
                 if (object instanceof String) {
                     int flag;
-                    if (isInclude != null) {
-                        if (isInclude) {
-                            if (position == 1) {
-                                flag = MessagesController.DIALOG_FILTER_FLAG_CONTACTS;
-                                id = Integer.MIN_VALUE;
-                            } else if (position == 2) {
-                                flag = MessagesController.DIALOG_FILTER_FLAG_NON_CONTACTS;
-                                id = Integer.MIN_VALUE + 1;
-                            } else if (position == 3) {
-                                flag = MessagesController.DIALOG_FILTER_FLAG_GROUPS;
-                                id = Integer.MIN_VALUE + 2;
-                            } else if (position == 4) {
-                                flag = MessagesController.DIALOG_FILTER_FLAG_CHANNELS;
-                                id = Integer.MIN_VALUE + 3;
-                            } else {
-                                flag = MessagesController.DIALOG_FILTER_FLAG_BOTS;
-                                id = Integer.MIN_VALUE + 4;
-                            }
+                    if (isInclude) {
+                        if (position == 1) {
+                            flag = MessagesController.DIALOG_FILTER_FLAG_CONTACTS;
+                            id = Integer.MIN_VALUE;
+                        } else if (position == 2) {
+                            flag = MessagesController.DIALOG_FILTER_FLAG_NON_CONTACTS;
+                            id = Integer.MIN_VALUE + 1;
+                        } else if (position == 3) {
+                            flag = MessagesController.DIALOG_FILTER_FLAG_GROUPS;
+                            id = Integer.MIN_VALUE + 2;
+                        } else if (position == 4) {
+                            flag = MessagesController.DIALOG_FILTER_FLAG_CHANNELS;
+                            id = Integer.MIN_VALUE + 3;
                         } else {
-                            if (position == 1) {
-                                flag = MessagesController.DIALOG_FILTER_FLAG_EXCLUDE_MUTED;
-                                id = Integer.MIN_VALUE + 5;
-                            } else if (position == 2) {
-                                flag = MessagesController.DIALOG_FILTER_FLAG_EXCLUDE_READ;
-                                id = Integer.MIN_VALUE + 6;
-                            } else {
-                                flag = MessagesController.DIALOG_FILTER_FLAG_EXCLUDE_ARCHIVED;
-                                id = Integer.MIN_VALUE + 7;
-                            }
-                        }
-                        if (cell.isChecked()) {
-                            filterFlags &= ~flag;
-                        } else {
-                            filterFlags |= flag;
+                            flag = MessagesController.DIALOG_FILTER_FLAG_BOTS;
+                            id = Integer.MIN_VALUE + 4;
                         }
                     } else {
-                        id = Integer.MIN_VALUE / 2;
+                        if (position == 1) {
+                            flag = MessagesController.DIALOG_FILTER_FLAG_EXCLUDE_MUTED;
+                            id = Integer.MIN_VALUE + 5;
+                        } else if (position == 2) {
+                            flag = MessagesController.DIALOG_FILTER_FLAG_EXCLUDE_READ;
+                            id = Integer.MIN_VALUE + 6;
+                        } else {
+                            flag = MessagesController.DIALOG_FILTER_FLAG_EXCLUDE_ARCHIVED;
+                            id = Integer.MIN_VALUE + 7;
+                        }
+                    }
+                    if (cell.isChecked()) {
+                        filterFlags &=~ flag;
+                    } else {
+                        filterFlags |= flag;
                     }
                 } else {
                     if (object instanceof TLRPC.User) {
@@ -762,52 +754,49 @@ public class FilterUsersActivity extends BaseFragment implements NotificationCen
         floatingButton.setAlpha(0.0f);*/
         floatingButton.setContentDescription(LocaleController.getString("Next", R.string.Next));
 
-        for (int position = 1, N = isInclude == null ? 0 : (isInclude ? 5 : 3); position <= N; position++) {
+        for (int position = 1, N = (isInclude ? 5 : 3); position <= N; position++) {
             int id;
             int flag;
             Object object;
-            if (isInclude != null) {
-                if (isInclude) {
-                    if (position == 1) {
-                        object = "contacts";
-                        flag = MessagesController.DIALOG_FILTER_FLAG_CONTACTS;
-                    } else if (position == 2) {
-                        object = "non_contacts";
-                        flag = MessagesController.DIALOG_FILTER_FLAG_NON_CONTACTS;
-                    } else if (position == 3) {
-                        object = "groups";
-                        flag = MessagesController.DIALOG_FILTER_FLAG_GROUPS;
-                    } else if (position == 4) {
-                        object = "channels";
-                        flag = MessagesController.DIALOG_FILTER_FLAG_CHANNELS;
-                    } else {
-                        object = "bots";
-                        flag = MessagesController.DIALOG_FILTER_FLAG_BOTS;
-                    }
+            if (isInclude) {
+                if (position == 1) {
+                    object = "contacts";
+                    flag = MessagesController.DIALOG_FILTER_FLAG_CONTACTS;
+                } else if (position == 2) {
+                    object = "non_contacts";
+                    flag = MessagesController.DIALOG_FILTER_FLAG_NON_CONTACTS;
+                } else if (position == 3) {
+                    object = "groups";
+                    flag = MessagesController.DIALOG_FILTER_FLAG_GROUPS;
+                } else if (position == 4) {
+                    object = "channels";
+                    flag = MessagesController.DIALOG_FILTER_FLAG_CHANNELS;
                 } else {
-                    if (position == 1) {
-                        object = "muted";
-                        flag = MessagesController.DIALOG_FILTER_FLAG_EXCLUDE_MUTED;
-                    } else if (position == 2) {
-                        object = "read";
-                        flag = MessagesController.DIALOG_FILTER_FLAG_EXCLUDE_READ;
-                    } else {
-                        object = "archived";
-                        flag = MessagesController.DIALOG_FILTER_FLAG_EXCLUDE_ARCHIVED;
-                    }
+                    object = "bots";
+                    flag = MessagesController.DIALOG_FILTER_FLAG_BOTS;
                 }
-                if ((filterFlags & flag) != 0) {
-                    GroupCreateSpan span = new GroupCreateSpan(editText.getContext(), object);
-                    spansContainer.addSpan(span, false);
-                    span.setOnClickListener(FilterUsersActivity.this);
+            } else {
+                if (position == 1) {
+                    object = "muted";
+                    flag = MessagesController.DIALOG_FILTER_FLAG_EXCLUDE_MUTED;
+                } else if (position == 2) {
+                    object = "read";
+                    flag = MessagesController.DIALOG_FILTER_FLAG_EXCLUDE_READ;
+                } else {
+                    object = "archived";
+                    flag = MessagesController.DIALOG_FILTER_FLAG_EXCLUDE_ARCHIVED;
                 }
             }
-
+            if ((filterFlags & flag) != 0) {
+                GroupCreateSpan span = new GroupCreateSpan(editText.getContext(), object);
+                spansContainer.addSpan(span, false);
+                span.setOnClickListener(FilterUsersActivity.this);
+            }
         }
         if (initialIds != null && !initialIds.isEmpty()) {
             TLObject object;
             for (int a = 0, N = initialIds.size(); a < N; a++) {
-                Integer id = initialIds.get(a);
+                Long id = initialIds.get(a);
                 if (id > 0) {
                     object = getMessagesController().getUser(id);
                 } else {
@@ -882,7 +871,7 @@ public class FilterUsersActivity extends BaseFragment implements NotificationCen
             if (child instanceof GroupCreateUserCell) {
                 GroupCreateUserCell cell = (GroupCreateUserCell) child;
                 Object object = cell.getObject();
-                int id;
+                long id;
                 if (object instanceof String) {
                     String str = (String) object;
                     switch (str) {
@@ -931,9 +920,9 @@ public class FilterUsersActivity extends BaseFragment implements NotificationCen
         /*if (!doneButtonVisible || selectedContacts.size() == 0) {
             return false;
         }*/
-        ArrayList<Integer> result = new ArrayList<>();
+        ArrayList<Long> result = new ArrayList<>();
         for (int a = 0; a < selectedContacts.size(); a++) {
-            int uid = selectedContacts.keyAt(a);
+            long uid = selectedContacts.keyAt(a);
             if (uid <= Integer.MIN_VALUE + 7) {
                 continue;
             }
@@ -971,49 +960,44 @@ public class FilterUsersActivity extends BaseFragment implements NotificationCen
     public class GroupCreateAdapter extends RecyclerListView.FastScrollAdapter {
 
         private Context context;
-        private ArrayList<TLObject> searchResult = new ArrayList<>();
+        private ArrayList<Object> searchResult = new ArrayList<>();
         private ArrayList<CharSequence> searchResultNames = new ArrayList<>();
         private SearchAdapterHelper searchAdapterHelper;
         private Runnable searchRunnable;
         private boolean searching;
         private ArrayList<TLObject> contacts = new ArrayList<>();
-        private final int usersStartRow = isInclude == null ? 0 : (isInclude ? 7 : 5);
+        private final int usersStartRow = isInclude ? 7 : 5;
 
-        public GroupCreateAdapter(Context ctx, boolean onlyWritable) {
+        public GroupCreateAdapter(Context ctx) {
             context = ctx;
 
             boolean hasSelf = false;
             ArrayList<TLRPC.Dialog> dialogs = getMessagesController().getAllDialogs();
             for (int a = 0, N = dialogs.size(); a < N; a++) {
                 TLRPC.Dialog dialog = dialogs.get(a);
-                int lowerId = (int) dialog.id;
-                if (lowerId == 0) {
+                if (DialogObject.isEncryptedDialog(dialog.id)) {
                     continue;
                 }
-                if (lowerId > 0) {
-                    TLRPC.User user = getMessagesController().getUser(lowerId);
-                    if (user != null) {
+                if (DialogObject.isUserDialog(dialog.id)) {
+                    TLRPC.User user = getMessagesController().getUser(dialog.id);
+                    if (user != null && !FakePasscode.isHideChat(user.id, currentAccount)) {
                         contacts.add(user);
                         if (UserObject.isUserSelf(user)) {
                             hasSelf = true;
                         }
                     }
                 } else {
-                    TLRPC.Chat chat = getMessagesController().getChat(-lowerId);
-                    if (chat != null) {
-                        if (onlyWritable) {
-                            if (!chat.broadcast || (chat.admin_rights != null && chat.admin_rights.post_messages)) {
-                                contacts.add(chat);
-                            }
-                        } else {
-                            contacts.add(chat);
-                        }
+                    TLRPC.Chat chat = getMessagesController().getChat(-dialog.id);
+                    if (chat != null && !FakePasscode.isHideChat(-chat.id, currentAccount)) {
+                        contacts.add(chat);
                     }
                 }
             }
             if (!hasSelf) {
                 TLRPC.User user = getMessagesController().getUser(getUserConfig().clientUserId);
-                contacts.add(0, user);
+                if (!FakePasscode.isHideChat(user.id, currentAccount)) {
+                    contacts.add(0, user);
+                }
             }
 
             searchAdapterHelper = new SearchAdapterHelper(false);
@@ -1049,9 +1033,7 @@ public class FilterUsersActivity extends BaseFragment implements NotificationCen
                 count += localServerCount + globalCount;
                 return count;
             } else {
-                if (isInclude == null) {
-                    count = 0;
-                } else if (isInclude) {
+                if (isInclude) {
                     count = 7;
                 } else {
                     count = 5;
@@ -1066,7 +1048,7 @@ public class FilterUsersActivity extends BaseFragment implements NotificationCen
             View view;
             switch (viewType) {
                 case 1:
-                    view = new GroupCreateUserCell(context, true, 0, true);
+                    view = new GroupCreateUserCell(context, 1, 0, true);
                     break;
                 case 2:
                 default:
@@ -1141,53 +1123,51 @@ public class FilterUsersActivity extends BaseFragment implements NotificationCen
                     } else {
                         if (position < usersStartRow) {
                             int flag;
-                            if (isInclude != null) {
-                                if (isInclude) {
-                                    if (position == 1) {
-                                        name = LocaleController.getString("FilterContacts", R.string.FilterContacts);
-                                        object = "contacts";
-                                        flag = MessagesController.DIALOG_FILTER_FLAG_CONTACTS;
-                                    } else if (position == 2) {
-                                        name = LocaleController.getString("FilterNonContacts", R.string.FilterNonContacts);
-                                        object = "non_contacts";
-                                        flag = MessagesController.DIALOG_FILTER_FLAG_NON_CONTACTS;
-                                    } else if (position == 3) {
-                                        name = LocaleController.getString("FilterGroups", R.string.FilterGroups);
-                                        object = "groups";
-                                        flag = MessagesController.DIALOG_FILTER_FLAG_GROUPS;
-                                    } else if (position == 4) {
-                                        name = LocaleController.getString("FilterChannels", R.string.FilterChannels);
-                                        object = "channels";
-                                        flag = MessagesController.DIALOG_FILTER_FLAG_CHANNELS;
-                                    } else {
-                                        name = LocaleController.getString("FilterBots", R.string.FilterBots);
-                                        object = "bots";
-                                        flag = MessagesController.DIALOG_FILTER_FLAG_BOTS;
-                                    }
+                            if (isInclude) {
+                                if (position == 1) {
+                                    name = LocaleController.getString("FilterContacts", R.string.FilterContacts);
+                                    object = "contacts";
+                                    flag = MessagesController.DIALOG_FILTER_FLAG_CONTACTS;
+                                } else if (position == 2) {
+                                    name = LocaleController.getString("FilterNonContacts", R.string.FilterNonContacts);
+                                    object = "non_contacts";
+                                    flag = MessagesController.DIALOG_FILTER_FLAG_NON_CONTACTS;
+                                } else if (position == 3) {
+                                    name = LocaleController.getString("FilterGroups", R.string.FilterGroups);
+                                    object = "groups";
+                                    flag = MessagesController.DIALOG_FILTER_FLAG_GROUPS;
+                                } else if (position == 4) {
+                                    name = LocaleController.getString("FilterChannels", R.string.FilterChannels);
+                                    object = "channels";
+                                    flag = MessagesController.DIALOG_FILTER_FLAG_CHANNELS;
                                 } else {
-                                    if (position == 1) {
-                                        name = LocaleController.getString("FilterMuted", R.string.FilterMuted);
-                                        object = "muted";
-                                        flag = MessagesController.DIALOG_FILTER_FLAG_EXCLUDE_MUTED;
-                                    } else if (position == 2) {
-                                        name = LocaleController.getString("FilterRead", R.string.FilterRead);
-                                        object = "read";
-                                        flag = MessagesController.DIALOG_FILTER_FLAG_EXCLUDE_READ;
-                                    } else {
-                                        name = LocaleController.getString("FilterArchived", R.string.FilterArchived);
-                                        object = "archived";
-                                        flag = MessagesController.DIALOG_FILTER_FLAG_EXCLUDE_ARCHIVED;
-                                    }
+                                    name = LocaleController.getString("FilterBots", R.string.FilterBots);
+                                    object = "bots";
+                                    flag = MessagesController.DIALOG_FILTER_FLAG_BOTS;
                                 }
-                                cell.setObject(object, name, null);
-                                cell.setChecked((filterFlags & flag) == flag, false);
-                                cell.setCheckBoxEnabled(true);
+                            } else {
+                                if (position == 1) {
+                                    name = LocaleController.getString("FilterMuted", R.string.FilterMuted);
+                                    object = "muted";
+                                    flag = MessagesController.DIALOG_FILTER_FLAG_EXCLUDE_MUTED;
+                                } else if (position == 2) {
+                                    name = LocaleController.getString("FilterRead", R.string.FilterRead);
+                                    object = "read";
+                                    flag = MessagesController.DIALOG_FILTER_FLAG_EXCLUDE_READ;
+                                } else {
+                                    name = LocaleController.getString("FilterArchived", R.string.FilterArchived);
+                                    object = "archived";
+                                    flag = MessagesController.DIALOG_FILTER_FLAG_EXCLUDE_ARCHIVED;
+                                }
                             }
+                            cell.setObject(object, name, null);
+                            cell.setChecked((filterFlags & flag) == flag, false);
+                            cell.setCheckBoxEnabled(true);
                             return;
                         }
                         object = contacts.get(position - usersStartRow);
                     }
-                    int id;
+                    long id;
                     if (object instanceof TLRPC.User) {
                         id = ((TLRPC.User) object).id;
                     } else if (object instanceof TLRPC.Chat) {
@@ -1233,9 +1213,7 @@ public class FilterUsersActivity extends BaseFragment implements NotificationCen
             if (searching) {
                 return 1;
             } else {
-                if (isInclude == null) {
-                    return 1;
-                } else if (isInclude) {
+                if (isInclude) {
                     if (position == 0 || position == 6) {
                         return 2;
                     }
@@ -1295,7 +1273,7 @@ public class FilterUsersActivity extends BaseFragment implements NotificationCen
                             search[1] = search2;
                         }
 
-                        ArrayList<TLObject> resultArray = new ArrayList<>();
+                        ArrayList<Object> resultArray = new ArrayList<>();
                         ArrayList<CharSequence> resultArrayNames = new ArrayList<>();
 
                         for (int a = 0; a < contacts.size(); a++) {
@@ -1359,7 +1337,7 @@ public class FilterUsersActivity extends BaseFragment implements NotificationCen
             }
         }
 
-        private void updateSearchResults(final ArrayList<TLObject> users, final ArrayList<CharSequence> names) {
+        private void updateSearchResults(final ArrayList<Object> users, final ArrayList<CharSequence> names) {
             AndroidUtilities.runOnUIThread(() -> {
                 if (!searching) {
                     return;

@@ -10,19 +10,31 @@ package org.telegram.messenger;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.content.pm.PackageInfo;
 import android.os.SystemClock;
 import android.util.Base64;
+
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import org.telegram.tgnet.SerializedData;
 import org.telegram.tgnet.TLRPC;
 
 import java.io.File;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.Map;
 
 public class UserConfig extends BaseController {
 
     public static int selectedAccount;
+    public final static int FAKE_PASSCODE_MAX_ACCOUNT_COUNT = 3;
     public final static int MAX_ACCOUNT_COUNT = 5;
 
     private final Object sync = new Object();
@@ -32,7 +44,7 @@ public class UserConfig extends BaseController {
     public int lastSendMessageId = -210000;
     public int lastBroadcastId = -1;
     public int contactsSavedCount;
-    public int clientUserId;
+    public long clientUserId;
     public int lastContactsSyncTime;
     public int lastHintsSyncTime;
     public boolean draftsLoaded;
@@ -44,9 +56,9 @@ public class UserConfig extends BaseController {
     public boolean hasValidDialogLoadIds;
     public int migrateOffsetId = -1;
     public int migrateOffsetDate = -1;
-    public int migrateOffsetUserId = -1;
-    public int migrateOffsetChatId = -1;
-    public int migrateOffsetChannelId = -1;
+    public long migrateOffsetUserId = -1;
+    public long migrateOffsetChatId = -1;
+    public long migrateOffsetChannelId = -1;
     public long migrateOffsetAccess = -1;
     public boolean filtersLoaded;
 
@@ -60,25 +72,47 @@ public class UserConfig extends BaseController {
     public boolean hasSecureData;
     public int loginTime;
     public TLRPC.TL_help_termsOfService unacceptedTermsOfService;
-    public TLRPC.TL_help_appUpdate pendingAppUpdate;
-    public int pendingAppUpdateBuildVersion;
-    public long pendingAppUpdateInstallTime;
-    public long lastUpdateCheckTime;
     public long autoDownloadConfigLoadTime;
 
     public volatile byte[] savedPasswordHash;
     public volatile byte[] savedSaltedPassword;
     public volatile long savedPasswordTime;
 
-    public String tonEncryptedData;
-    public String tonPublicKey;
-    public int tonPasscodeType = -1;
-    public byte[] tonPasscodeSalt;
-    public long tonPasscodeRetryInMs;
-    public long tonLastUptimeMillis;
-    public int tonBadPasscodeTries;
-    public String tonKeyName;
-    public boolean tonCreationFinished;
+    public static class ChatInfoOverride {
+        public String title;
+        public boolean avatarEnabled;
+
+        public ChatInfoOverride() {
+            avatarEnabled = true;
+        }
+    }
+
+    public Map<String, ChatInfoOverride> chatInfoOverrides = new HashMap<>();
+
+    private static ObjectMapper jsonMapper = null;
+
+    static private ObjectMapper getJsonMapper() {
+        if (jsonMapper != null) {
+            return jsonMapper;
+        }
+        jsonMapper = new ObjectMapper();
+        jsonMapper.registerModule(new JavaTimeModule());
+        jsonMapper.activateDefaultTyping(jsonMapper.getPolymorphicTypeValidator());
+        jsonMapper.setVisibility(jsonMapper.getSerializationConfig().getDefaultVisibilityChecker()
+                .withFieldVisibility(JsonAutoDetect.Visibility.ANY)
+                .withGetterVisibility(JsonAutoDetect.Visibility.NONE)
+                .withSetterVisibility(JsonAutoDetect.Visibility.NONE)
+                .withCreatorVisibility(JsonAutoDetect.Visibility.NONE));
+        return jsonMapper;
+    }
+
+    static private String toJson(Object o) throws Exception {
+        return getJsonMapper().writeValueAsString(o);
+    }
+
+    static public <T> T fromJson(String content, Class<T> valueType) throws Exception {
+        return getJsonMapper().readValue(content, valueType);
+    }
 
     private static volatile UserConfig[] Instance = new UserConfig[UserConfig.MAX_ACCOUNT_COUNT];
     public static UserConfig getInstance(int num) {
@@ -92,6 +126,45 @@ public class UserConfig extends BaseController {
             }
         }
         return localInstance;
+    }
+
+    public static ChatInfoOverride getChatInfoOverride(int accountNum, long id) {
+        return getChatInfoOverride(accountNum < UserConfig.MAX_ACCOUNT_COUNT ? UserConfig.getInstance(accountNum) : null, id);
+    }
+
+    public static ChatInfoOverride getChatInfoOverride(UserConfig config, long id) {
+        if (SharedConfig.fakePasscodeActivatedIndex == -1 && config != null && config.chatInfoOverrides.containsKey(String.valueOf(id))) {
+            return config.chatInfoOverrides.get(String.valueOf(id));
+        } else {
+            return null;
+        }
+    }
+
+    public static boolean isAvatarEnabled(int accountNum, long id) {
+        ChatInfoOverride chatInfo = getChatInfoOverride(accountNum, id);
+        return chatInfo == null || chatInfo.avatarEnabled;
+    }
+
+    public static String getChatTitleOverride(Integer accountNum, long id) {
+        return getChatTitleOverride(accountNum, id, null);
+    }
+
+    public static String getChatTitleOverride(Integer accountNum, long id, String defaultValue) {
+        UserConfig config = accountNum != null && accountNum < UserConfig.MAX_ACCOUNT_COUNT ? UserConfig.getInstance(accountNum) : null;
+        return getChatTitleOverride(config, id, defaultValue);
+    }
+
+    public static String getChatTitleOverride(UserConfig config, long id) {
+        return getChatTitleOverride(config, id, null);
+    }
+
+    public static String getChatTitleOverride(UserConfig config, long id, String defaultValue) {
+        ChatInfoOverride chatInfo = getChatInfoOverride(config, id);
+        if (chatInfo != null && chatInfo.title != null) {
+            return chatInfo.title;
+        } else {
+            return defaultValue;
+        }
     }
 
     public static int getActivatedAccountsCount() {
@@ -118,127 +191,93 @@ public class UserConfig extends BaseController {
     }
 
     public void saveConfig(boolean withFile) {
-        saveConfig(withFile, null);
-    }
-
-    public void saveConfig(boolean withFile, File oldFile) {
-        synchronized (sync) {
-            try {
-                SharedPreferences.Editor editor = getPreferences().edit();
-                if (currentAccount == 0) {
-                    editor.putInt("selectedAccount", selectedAccount);
-                }
-                editor.putBoolean("registeredForPush", registeredForPush);
-                editor.putInt("lastSendMessageId", lastSendMessageId);
-                editor.putInt("contactsSavedCount", contactsSavedCount);
-                editor.putInt("lastBroadcastId", lastBroadcastId);
-                editor.putInt("lastContactsSyncTime", lastContactsSyncTime);
-                editor.putInt("lastHintsSyncTime", lastHintsSyncTime);
-                editor.putBoolean("draftsLoaded", draftsLoaded);
-                editor.putBoolean("unreadDialogsLoaded", unreadDialogsLoaded);
-                editor.putInt("ratingLoadTime", ratingLoadTime);
-                editor.putInt("botRatingLoadTime", botRatingLoadTime);
-                editor.putBoolean("contactsReimported", contactsReimported);
-                editor.putInt("loginTime", loginTime);
-                editor.putBoolean("syncContacts", syncContacts);
-                editor.putBoolean("suggestContacts", suggestContacts);
-                editor.putBoolean("hasSecureData", hasSecureData);
-                editor.putBoolean("notificationsSettingsLoaded3", notificationsSettingsLoaded);
-                editor.putBoolean("notificationsSignUpSettingsLoaded", notificationsSignUpSettingsLoaded);
-                editor.putLong("autoDownloadConfigLoadTime", autoDownloadConfigLoadTime);
-                editor.putBoolean("hasValidDialogLoadIds", hasValidDialogLoadIds);
-                editor.putInt("sharingMyLocationUntil", sharingMyLocationUntil);
-                editor.putInt("lastMyLocationShareTime", lastMyLocationShareTime);
-                editor.putBoolean("filtersLoaded", filtersLoaded);
-                if (tonEncryptedData != null) {
-                    editor.putString("tonEncryptedData", tonEncryptedData);
-                    editor.putString("tonPublicKey", tonPublicKey);
-                    editor.putString("tonKeyName", tonKeyName);
-                    editor.putBoolean("tonCreationFinished", tonCreationFinished);
-                    if (tonPasscodeSalt != null) {
-                        editor.putInt("tonPasscodeType", tonPasscodeType);
-                        editor.putString("tonPasscodeSalt", Base64.encodeToString(tonPasscodeSalt, Base64.DEFAULT));
-                        editor.putLong("tonPasscodeRetryInMs", tonPasscodeRetryInMs);
-                        editor.putLong("tonLastUptimeMillis", tonLastUptimeMillis);
-                        editor.putInt("tonBadPasscodeTries", tonBadPasscodeTries);
+        NotificationCenter.getInstance(currentAccount).doOnIdle(() -> {
+            synchronized (sync) {
+                try {
+                    SharedPreferences.Editor editor = getPreferences().edit();
+                    if (currentAccount == 0) {
+                        editor.putInt("selectedAccount", selectedAccount);
                     }
-                } else {
-                    editor.remove("tonEncryptedData").remove("tonPublicKey").remove("tonKeyName").remove("tonPasscodeType").remove("tonPasscodeSalt").remove("tonPasscodeRetryInMs").remove("tonBadPasscodeTries").remove("tonLastUptimeMillis").remove("tonCreationFinished");
-                }
+                    editor.putString("chatInfoOverrides", toJson(chatInfoOverrides));
+                    editor.putBoolean("registeredForPush", registeredForPush);
+                    editor.putInt("lastSendMessageId", lastSendMessageId);
+                    editor.putInt("contactsSavedCount", contactsSavedCount);
+                    editor.putInt("lastBroadcastId", lastBroadcastId);
+                    editor.putInt("lastContactsSyncTime", lastContactsSyncTime);
+                    editor.putInt("lastHintsSyncTime", lastHintsSyncTime);
+                    editor.putBoolean("draftsLoaded", draftsLoaded);
+                    editor.putBoolean("unreadDialogsLoaded", unreadDialogsLoaded);
+                    editor.putInt("ratingLoadTime", ratingLoadTime);
+                    editor.putInt("botRatingLoadTime", botRatingLoadTime);
+                    editor.putBoolean("contactsReimported", contactsReimported);
+                    editor.putInt("loginTime", loginTime);
+                    editor.putBoolean("syncContacts", syncContacts);
+                    editor.putBoolean("suggestContacts", suggestContacts);
+                    editor.putBoolean("hasSecureData", hasSecureData);
+                    editor.putBoolean("notificationsSettingsLoaded3", notificationsSettingsLoaded);
+                    editor.putBoolean("notificationsSignUpSettingsLoaded", notificationsSignUpSettingsLoaded);
+                    editor.putLong("autoDownloadConfigLoadTime", autoDownloadConfigLoadTime);
+                    editor.putBoolean("hasValidDialogLoadIds", hasValidDialogLoadIds);
+                    editor.putInt("sharingMyLocationUntil", sharingMyLocationUntil);
+                    editor.putInt("lastMyLocationShareTime", lastMyLocationShareTime);
+                    editor.putBoolean("filtersLoaded", filtersLoaded);
 
-                editor.putInt("6migrateOffsetId", migrateOffsetId);
-                if (migrateOffsetId != -1) {
-                    editor.putInt("6migrateOffsetDate", migrateOffsetDate);
-                    editor.putInt("6migrateOffsetUserId", migrateOffsetUserId);
-                    editor.putInt("6migrateOffsetChatId", migrateOffsetChatId);
-                    editor.putInt("6migrateOffsetChannelId", migrateOffsetChannelId);
-                    editor.putLong("6migrateOffsetAccess", migrateOffsetAccess);
-                }
-
-                if (unacceptedTermsOfService != null) {
-                    try {
-                        SerializedData data = new SerializedData(unacceptedTermsOfService.getObjectSize());
-                        unacceptedTermsOfService.serializeToStream(data);
-                        editor.putString("terms", Base64.encodeToString(data.toByteArray(), Base64.DEFAULT));
-                        data.cleanup();
-                    } catch (Exception ignore) {
-
+                    editor.putInt("6migrateOffsetId", migrateOffsetId);
+                    if (migrateOffsetId != -1) {
+                        editor.putInt("6migrateOffsetDate", migrateOffsetDate);
+                        editor.putLong("6migrateOffsetUserId", migrateOffsetUserId);
+                        editor.putLong("6migrateOffsetChatId", migrateOffsetChatId);
+                        editor.putLong("6migrateOffsetChannelId", migrateOffsetChannelId);
+                        editor.putLong("6migrateOffsetAccess", migrateOffsetAccess);
                     }
-                } else {
-                    editor.remove("terms");
-                }
 
-                if (currentAccount == 0) {
-                    if (pendingAppUpdate != null) {
+                    if (unacceptedTermsOfService != null) {
                         try {
-                            SerializedData data = new SerializedData(pendingAppUpdate.getObjectSize());
-                            pendingAppUpdate.serializeToStream(data);
-                            String str = Base64.encodeToString(data.toByteArray(), Base64.DEFAULT);
-                            editor.putString("appUpdate", str);
-                            editor.putInt("appUpdateBuild", pendingAppUpdateBuildVersion);
-                            editor.putLong("appUpdateTime", pendingAppUpdateInstallTime);
-                            editor.putLong("appUpdateCheckTime", lastUpdateCheckTime);
+                            SerializedData data = new SerializedData(unacceptedTermsOfService.getObjectSize());
+                            unacceptedTermsOfService.serializeToStream(data);
+                            editor.putString("terms", Base64.encodeToString(data.toByteArray(), Base64.DEFAULT));
                             data.cleanup();
                         } catch (Exception ignore) {
 
                         }
                     } else {
-                        editor.remove("appUpdate");
+                        editor.remove("terms");
                     }
-                }
 
-                SharedConfig.saveConfig();
+                    SharedConfig.saveConfig();
 
-                if (tmpPassword != null) {
-                    SerializedData data = new SerializedData();
-                    tmpPassword.serializeToStream(data);
-                    String string = Base64.encodeToString(data.toByteArray(), Base64.DEFAULT);
-                    editor.putString("tmpPassword", string);
-                    data.cleanup();
-                } else {
-                    editor.remove("tmpPassword");
-                }
-
-                if (currentUser != null) {
-                    if (withFile) {
+                    if (tmpPassword != null) {
                         SerializedData data = new SerializedData();
-                        currentUser.serializeToStream(data);
+                        tmpPassword.serializeToStream(data);
                         String string = Base64.encodeToString(data.toByteArray(), Base64.DEFAULT);
-                        editor.putString("user", string);
+                        editor.putString("tmpPassword", string);
                         data.cleanup();
+                    } else {
+                        editor.remove("tmpPassword");
                     }
-                } else {
-                    editor.remove("user");
-                }
 
-                editor.commit();
-                if (oldFile != null) {
-                    oldFile.delete();
+                    if (currentUser != null) {
+                        if (withFile) {
+                            SerializedData data = new SerializedData();
+                            currentUser.serializeToStream(data);
+                            String string = Base64.encodeToString(data.toByteArray(), Base64.DEFAULT);
+                            editor.putString("user", string);
+                            data.cleanup();
+                        }
+                    } else {
+                        editor.remove("user");
+                    }
+
+                    editor.commit();
+                } catch (Exception e) {
+                    FileLog.e(e);
                 }
-            } catch (Exception e) {
-                FileLog.e(e);
             }
-        }
+        });
+    }
+
+    public static boolean isValidAccount(int num) {
+         return num >= 0 && num < UserConfig.MAX_ACCOUNT_COUNT && getInstance(num).isClientActivated();
     }
 
     public boolean isClientActivated() {
@@ -247,7 +286,7 @@ public class UserConfig extends BaseController {
         }
     }
 
-    public int getClientUserId() {
+    public long getClientUserId() {
         synchronized (sync) {
             return currentUser != null ? currentUser.id : 0;
         }
@@ -281,6 +320,10 @@ public class UserConfig extends BaseController {
             if (currentAccount == 0) {
                 selectedAccount = preferences.getInt("selectedAccount", 0);
             }
+            try {
+                chatInfoOverrides = fromJson(preferences.getString("chatInfoOverrides", null), HashMap.class);
+            } catch (Exception ignored) {
+            }
             registeredForPush = preferences.getBoolean("registeredForPush", false);
             lastSendMessageId = preferences.getInt("lastSendMessageId", -210000);
             contactsSavedCount = preferences.getInt("contactsSavedCount", 0);
@@ -300,25 +343,9 @@ public class UserConfig extends BaseController {
             notificationsSignUpSettingsLoaded = preferences.getBoolean("notificationsSignUpSettingsLoaded", false);
             autoDownloadConfigLoadTime = preferences.getLong("autoDownloadConfigLoadTime", 0);
             hasValidDialogLoadIds = preferences.contains("2dialogsLoadOffsetId") || preferences.getBoolean("hasValidDialogLoadIds", false);
-            tonEncryptedData = preferences.getString("tonEncryptedData", null);
-            tonPublicKey = preferences.getString("tonPublicKey", null);
-            tonKeyName = preferences.getString("tonKeyName", "walletKey" + currentAccount);
-            tonCreationFinished = preferences.getBoolean("tonCreationFinished", true);
             sharingMyLocationUntil = preferences.getInt("sharingMyLocationUntil", 0);
             lastMyLocationShareTime = preferences.getInt("lastMyLocationShareTime", 0);
             filtersLoaded = preferences.getBoolean("filtersLoaded", false);
-            String salt = preferences.getString("tonPasscodeSalt", null);
-            if (salt != null) {
-                try {
-                    tonPasscodeSalt = Base64.decode(salt, Base64.DEFAULT);
-                    tonPasscodeType = preferences.getInt("tonPasscodeType", -1);
-                    tonPasscodeRetryInMs = preferences.getLong("tonPasscodeRetryInMs", 0);
-                    tonLastUptimeMillis = preferences.getLong("tonLastUptimeMillis", 0);
-                    tonBadPasscodeTries = preferences.getInt("tonBadPasscodeTries", 0);
-                } catch (Exception e) {
-                    FileLog.e(e);
-                }
-            }
 
             try {
                 String terms = preferences.getString("terms", null);
@@ -334,44 +361,12 @@ public class UserConfig extends BaseController {
                 FileLog.e(e);
             }
 
-            if (currentAccount == 0) {
-                lastUpdateCheckTime = preferences.getLong("appUpdateCheckTime", System.currentTimeMillis());
-                try {
-                    String update = preferences.getString("appUpdate", null);
-                    if (update != null) {
-                        pendingAppUpdateBuildVersion = preferences.getInt("appUpdateBuild", BuildVars.BUILD_VERSION);
-                        pendingAppUpdateInstallTime = preferences.getLong("appUpdateTime", System.currentTimeMillis());
-                        byte[] arr = Base64.decode(update, Base64.DEFAULT);
-                        if (arr != null) {
-                            SerializedData data = new SerializedData(arr);
-                            pendingAppUpdate = (TLRPC.TL_help_appUpdate) TLRPC.help_AppUpdate.TLdeserialize(data, data.readInt32(false), false);
-                            data.cleanup();
-                        }
-                    }
-                    if (pendingAppUpdate != null) {
-                        long updateTime = 0;
-                        try {
-                            PackageInfo packageInfo = ApplicationLoader.applicationContext.getPackageManager().getPackageInfo(ApplicationLoader.applicationContext.getPackageName(), 0);
-                            updateTime = Math.max(packageInfo.lastUpdateTime, packageInfo.firstInstallTime);
-                        } catch (Exception e) {
-                            FileLog.e(e);
-                        }
-                        if (pendingAppUpdateBuildVersion != BuildVars.BUILD_VERSION || pendingAppUpdateInstallTime < updateTime) {
-                            pendingAppUpdate = null;
-                            AndroidUtilities.runOnUIThread(() -> saveConfig(false));
-                        }
-                    }
-                } catch (Exception e) {
-                    FileLog.e(e);
-                }
-            }
-
             migrateOffsetId = preferences.getInt("6migrateOffsetId", 0);
             if (migrateOffsetId != -1) {
                 migrateOffsetDate = preferences.getInt("6migrateOffsetDate", 0);
-                migrateOffsetUserId = preferences.getInt("6migrateOffsetUserId", 0);
-                migrateOffsetChatId = preferences.getInt("6migrateOffsetChatId", 0);
-                migrateOffsetChannelId = preferences.getInt("6migrateOffsetChannelId", 0);
+                migrateOffsetUserId = AndroidUtilities.getPrefIntOrLong(preferences, "6migrateOffsetUserId", 0);
+                migrateOffsetChatId = AndroidUtilities.getPrefIntOrLong(preferences, "6migrateOffsetChatId", 0);
+                migrateOffsetChannelId = AndroidUtilities.getPrefIntOrLong(preferences, "6migrateOffsetChannelId", 0);
                 migrateOffsetAccess = preferences.getLong("6migrateOffsetAccess", 0);
             }
 
@@ -438,26 +433,14 @@ public class UserConfig extends BaseController {
         }
     }
 
-    public void clearTonConfig() {
-        tonEncryptedData = null;
-        tonKeyName = null;
-        tonPublicKey = null;
-        tonPasscodeType = -1;
-        tonPasscodeSalt = null;
-        tonCreationFinished = false;
-        tonPasscodeRetryInMs = 0;
-        tonLastUptimeMillis = 0;
-        tonBadPasscodeTries = 0;
-    }
-
     public void clearConfig() {
         getPreferences().edit().clear().commit();
-        clearTonConfig();
 
         sharingMyLocationUntil = 0;
         lastMyLocationShareTime = 0;
         currentUser = null;
         clientUserId = 0;
+        chatInfoOverrides.clear();
         registeredForPush = false;
         contactsSavedCount = 0;
         lastSendMessageId = -210000;
@@ -480,7 +463,6 @@ public class UserConfig extends BaseController {
         hasValidDialogLoadIds = true;
         unacceptedTermsOfService = null;
         filtersLoaded = false;
-        pendingAppUpdate = null;
         hasSecureData = false;
         loginTime = (int) (System.currentTimeMillis() / 1000);
         lastContactsSyncTime = (int) (System.currentTimeMillis() / 1000) - 23 * 60 * 60;
@@ -512,8 +494,7 @@ public class UserConfig extends BaseController {
     public static final int i_dialogsLoadOffsetUserId = 2;
     public static final int i_dialogsLoadOffsetChatId = 3;
     public static final int i_dialogsLoadOffsetChannelId = 4;
-    public static final int i_dialogsLoadOffsetAccess_1 = 5;
-    public static final int i_dialogsLoadOffsetAccess_2 = 6;
+    public static final int i_dialogsLoadOffsetAccess = 5;
 
     public int getTotalDialogsCount(int folderId) {
         return getPreferences().getInt("2totalDialogsLoadCount" + (folderId == 0 ? "" : folderId), 0);
@@ -523,24 +504,24 @@ public class UserConfig extends BaseController {
         getPreferences().edit().putInt("2totalDialogsLoadCount" + (folderId == 0 ? "" : folderId), totalDialogsLoadCount).commit();
     }
 
-    public int[] getDialogLoadOffsets(int folderId) {
+    public long[] getDialogLoadOffsets(int folderId) {
         SharedPreferences preferences = getPreferences();
         int dialogsLoadOffsetId = preferences.getInt("2dialogsLoadOffsetId" + (folderId == 0 ? "" : folderId), hasValidDialogLoadIds ? 0 : -1);
         int dialogsLoadOffsetDate = preferences.getInt("2dialogsLoadOffsetDate" + (folderId == 0 ? "" : folderId), hasValidDialogLoadIds ? 0 : -1);
-        int dialogsLoadOffsetUserId = preferences.getInt("2dialogsLoadOffsetUserId" + (folderId == 0 ? "" : folderId), hasValidDialogLoadIds ? 0 : -1);
-        int dialogsLoadOffsetChatId = preferences.getInt("2dialogsLoadOffsetChatId" + (folderId == 0 ? "" : folderId), hasValidDialogLoadIds ? 0 : -1);
-        int dialogsLoadOffsetChannelId = preferences.getInt("2dialogsLoadOffsetChannelId" + (folderId == 0 ? "" : folderId), hasValidDialogLoadIds ? 0 : -1);
+        long dialogsLoadOffsetUserId = AndroidUtilities.getPrefIntOrLong(preferences, "2dialogsLoadOffsetUserId" + (folderId == 0 ? "" : folderId), hasValidDialogLoadIds ? 0 : -1);
+        long dialogsLoadOffsetChatId = AndroidUtilities.getPrefIntOrLong(preferences, "2dialogsLoadOffsetChatId" + (folderId == 0 ? "" : folderId), hasValidDialogLoadIds ? 0 : -1);
+        long dialogsLoadOffsetChannelId = AndroidUtilities.getPrefIntOrLong(preferences, "2dialogsLoadOffsetChannelId" + (folderId == 0 ? "" : folderId), hasValidDialogLoadIds ? 0 : -1);
         long dialogsLoadOffsetAccess = preferences.getLong("2dialogsLoadOffsetAccess" + (folderId == 0 ? "" : folderId), hasValidDialogLoadIds ? 0 : -1);
-        return new int[]{dialogsLoadOffsetId, dialogsLoadOffsetDate, dialogsLoadOffsetUserId, dialogsLoadOffsetChatId, dialogsLoadOffsetChannelId, (int) dialogsLoadOffsetAccess, (int) (dialogsLoadOffsetAccess >> 32)};
+        return new long[]{dialogsLoadOffsetId, dialogsLoadOffsetDate, dialogsLoadOffsetUserId, dialogsLoadOffsetChatId, dialogsLoadOffsetChannelId, dialogsLoadOffsetAccess};
     }
 
-    public void setDialogsLoadOffset(int folderId, int dialogsLoadOffsetId, int dialogsLoadOffsetDate, int dialogsLoadOffsetUserId, int dialogsLoadOffsetChatId, int dialogsLoadOffsetChannelId, long dialogsLoadOffsetAccess) {
+    public void setDialogsLoadOffset(int folderId, int dialogsLoadOffsetId, int dialogsLoadOffsetDate, long dialogsLoadOffsetUserId, long dialogsLoadOffsetChatId, long dialogsLoadOffsetChannelId, long dialogsLoadOffsetAccess) {
         SharedPreferences.Editor editor = getPreferences().edit();
         editor.putInt("2dialogsLoadOffsetId" + (folderId == 0 ? "" : folderId), dialogsLoadOffsetId);
         editor.putInt("2dialogsLoadOffsetDate" + (folderId == 0 ? "" : folderId), dialogsLoadOffsetDate);
-        editor.putInt("2dialogsLoadOffsetUserId" + (folderId == 0 ? "" : folderId), dialogsLoadOffsetUserId);
-        editor.putInt("2dialogsLoadOffsetChatId" + (folderId == 0 ? "" : folderId), dialogsLoadOffsetChatId);
-        editor.putInt("2dialogsLoadOffsetChannelId" + (folderId == 0 ? "" : folderId), dialogsLoadOffsetChannelId);
+        editor.putLong("2dialogsLoadOffsetUserId" + (folderId == 0 ? "" : folderId), dialogsLoadOffsetUserId);
+        editor.putLong("2dialogsLoadOffsetChatId" + (folderId == 0 ? "" : folderId), dialogsLoadOffsetChatId);
+        editor.putLong("2dialogsLoadOffsetChannelId" + (folderId == 0 ? "" : folderId), dialogsLoadOffsetChannelId);
         editor.putLong("2dialogsLoadOffsetAccess" + (folderId == 0 ? "" : folderId), dialogsLoadOffsetAccess);
         editor.putBoolean("hasValidDialogLoadIds", true);
         editor.commit();
