@@ -28,6 +28,7 @@ import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.R;
 import org.telegram.messenger.UserConfig;
+import org.telegram.messenger.fakepasscode.FakePasscode;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.Components.AvatarDrawable;
@@ -35,6 +36,8 @@ import org.telegram.ui.Components.CounterView;
 import org.telegram.ui.Components.CubicBezierInterpolator;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 public class ChatPullingDownDrawable implements NotificationCenter.NotificationCenterDelegate {
 
@@ -512,11 +515,11 @@ public class ChatPullingDownDrawable implements NotificationCenter.NotificationC
             params[1] = folderId;
             params[2] = filterId;
         }
-        ArrayList<TLRPC.Dialog> dialogs;
+        List<TLRPC.Dialog> dialogs;
         if (filterId != 0) {
-            dialogs = messagesController.dialogFiltersById.get(filterId).dialogs;
+            dialogs = FakePasscode.filterDialogs(messagesController.dialogFiltersById.get(filterId).dialogs, Optional.of(UserConfig.selectedAccount));
         } else {
-            dialogs = messagesController.getDialogs(folderId);
+            dialogs = FakePasscode.filterDialogs(messagesController.getDialogs(folderId), Optional.of(UserConfig.selectedAccount));
         }
         if (dialogs == null) {
             return null;
