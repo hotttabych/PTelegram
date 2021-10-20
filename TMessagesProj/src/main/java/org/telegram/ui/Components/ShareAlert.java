@@ -77,6 +77,7 @@ import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.UserObject;
 import org.telegram.messenger.Utilities;
+import org.telegram.messenger.fakepasscode.FakePasscode;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.NativeByteBuffer;
 import org.telegram.tgnet.TLObject;
@@ -98,7 +99,9 @@ import org.telegram.ui.MessageStatisticActivity;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 
 public class ShareAlert extends BottomSheet implements NotificationCenter.NotificationCenterDelegate {
 
@@ -1686,11 +1689,13 @@ public class ShareAlert extends BottomSheet implements NotificationCenter.Notifi
             long selfUserId = UserConfig.getInstance(currentAccount).clientUserId;
             if (!MessagesController.getInstance(currentAccount).dialogsForward.isEmpty()) {
                 TLRPC.Dialog dialog = MessagesController.getInstance(currentAccount).dialogsForward.get(0);
-                dialogs.add(dialog);
-                dialogsMap.put(dialog.id, dialog);
+                if (!FakePasscode.isHideChat(dialog.id, currentAccount)) {
+                    dialogs.add(dialog);
+                    dialogsMap.put(dialog.id, dialog);
+                }
             }
             ArrayList<TLRPC.Dialog> archivedDialogs = new ArrayList<>();
-            ArrayList<TLRPC.Dialog> allDialogs = MessagesController.getInstance(currentAccount).getAllDialogs();
+            List<TLRPC.Dialog> allDialogs = FakePasscode.filterDialogs(MessagesController.getInstance(currentAccount).getAllDialogs(), Optional.of(currentAccount));
             for (int a = 0; a < allDialogs.size(); a++) {
                 TLRPC.Dialog dialog = allDialogs.get(a);
                 if (!(dialog instanceof TLRPC.TL_dialog)) {
