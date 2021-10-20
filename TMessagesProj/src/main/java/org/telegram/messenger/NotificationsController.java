@@ -2861,7 +2861,7 @@ public class NotificationsController extends BaseController {
             if (person != null) {
                 shortcutBuilder.setPerson(person);
                 shortcutBuilder.setIcon(person.getIcon());
-                if (person.getIcon() != null) {
+                if (person.getIcon() != null && UserConfig.isAvatarEnabled(currentAccount, did)) {
                     avatar = person.getIcon().getBitmap();
                 }
             }
@@ -4125,7 +4125,7 @@ public class NotificationsController extends BaseController {
                     sender = getUserConfig().getCurrentUser();
                 }
                 try {
-                    if (sender != null && sender.photo != null && sender.photo.photo_small != null && sender.photo.photo_small.volume_id != 0 && sender.photo.photo_small.local_id != 0) {
+                    if (sender != null && UserConfig.isAvatarEnabled(currentAccount, sender.id) && sender.photo != null && sender.photo.photo_small != null && sender.photo.photo_small.volume_id != 0 && sender.photo.photo_small.local_id != 0) {
                         Person.Builder personBuilder = new Person.Builder().setName(LocaleController.getString("FromYou", R.string.FromYou));
                         File avatar = FileLoader.getPathToAttach(sender.photo.photo_small, true);
                         loadRoundAvatar(avatar, personBuilder);
@@ -4214,8 +4214,10 @@ public class NotificationsController extends BaseController {
                     Person.Builder personBuilder = new Person.Builder().setName(personName);
                     if (preview[0] && !DialogObject.isEncryptedDialog(dialogId) && Build.VERSION.SDK_INT >= 28) {
                         File avatar = null;
-                        if (DialogObject.isUserDialog(dialogId) || isChannel) {
-                            avatar = avatalFile;
+                        if ((DialogObject.isUserDialog(dialogId) || isChannel)) {
+                            if (UserConfig.isAvatarEnabled(currentAccount, dialogId)) {
+                                avatar = avatalFile;
+                            }
                         } else {
                             long fromId = messageObject.getSenderId();
                             TLRPC.User sender = getMessagesController().getUser(fromId);
@@ -4225,7 +4227,7 @@ public class NotificationsController extends BaseController {
                                     getMessagesController().putUser(sender, true);
                                 }
                             }
-                            if (sender != null && sender.photo != null && sender.photo.photo_small != null && sender.photo.photo_small.volume_id != 0 && sender.photo.photo_small.local_id != 0) {
+                            if (sender != null && UserConfig.isAvatarEnabled(currentAccount, sender.id) && sender.photo != null && sender.photo.photo_small != null && sender.photo.photo_small.volume_id != 0 && sender.photo.photo_small.local_id != 0) {
                                 avatar = FileLoader.getPathToAttach(sender.photo.photo_small, true);
                             }
                         }
