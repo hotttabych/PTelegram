@@ -4004,7 +4004,7 @@ public class NotificationsController extends BaseController {
                     if (chat == null) {
                         if (lastMessageObject.isFcmMessage()) {
                             isSupergroup = lastMessageObject.isSupergroup();
-                            name = lastMessageObject.localName;
+                            name = UserConfig.getChatTitleOverride(currentAccount, dialogId, lastMessageObject.localName);
                             isChannel = lastMessageObject.localChannel;
                         } else {
                             if (BuildVars.LOGS_ENABLED) {
@@ -4015,7 +4015,7 @@ public class NotificationsController extends BaseController {
                     } else {
                         isSupergroup = chat.megagroup;
                         isChannel = ChatObject.isChannel(chat) && !chat.megagroup;
-                        name = chat.title;
+                        name = UserConfig.getChatTitleOverride(currentAccount, chat.id, chat.title);
                         if (UserConfig.isAvatarEnabled(currentAccount, chat.id) && chat.photo != null && chat.photo.photo_small != null && chat.photo.photo_small.volume_id != 0 && chat.photo.photo_small.local_id != 0) {
                             photoPath = chat.photo.photo_small;
                         }
