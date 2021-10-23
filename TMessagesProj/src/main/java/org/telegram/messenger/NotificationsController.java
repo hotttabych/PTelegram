@@ -1369,7 +1369,7 @@ public class NotificationsController extends BaseController {
         } else {
             TLRPC.Chat chat = getMessagesController().getChat(-fromId);
             if (chat != null) {
-                name = chat.title;
+                name = UserConfig.getChatTitleOverride(currentAccount, chat.id, chat.title);
                 userName[0] = name;
             }
         }
