@@ -28,6 +28,7 @@ import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ChatObject;
 import org.telegram.messenger.ImageLocation;
 import org.telegram.messenger.MessageObject;
+import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.UserObject;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.Theme;
@@ -240,7 +241,7 @@ public class GroupCallFullscreenAdapter extends RecyclerListView.SelectionAdapte
                 avatarDrawable.setInfo(currentChat);
 
                 if (currentChat != null) {
-                    name = currentChat.title;
+                    name = UserConfig.getChatTitleOverride(currentAccount, currentChat.id, currentChat.title);
                     avatarImageView.getImageReceiver().setCurrentAccount(currentAccount);
 
                     ImageLocation imageLocation = ImageLocation.getForChat(currentChat, ImageLocation.TYPE_SMALL, currentAccount);
