@@ -289,6 +289,10 @@ public class MediaDataController extends BaseController {
     }
 
     public void addRecentSticker(int type, Object parentObject, TLRPC.Document document, int date, boolean remove) {
+        addRecentSticker(type, parentObject, document, date, remove, true);
+    }
+
+    public void addRecentSticker(int type, Object parentObject, TLRPC.Document document, int date, boolean remove, boolean showDeleted) {
         if (type == TYPE_GREETINGS || !MessageObject.isStickerDocument(document) && !MessageObject.isAnimatedStickerDocument(document, true)) {
             return;
         }
@@ -333,7 +337,9 @@ public class MediaDataController extends BaseController {
             maxCount = getMessagesController().maxFaveStickersCount;
         } else {
             if (type == TYPE_IMAGE && remove) {
-                NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.showBulletin, Bulletin.TYPE_STICKER, document, StickerSetBulletinLayout.TYPE_REMOVED_FROM_RECENT);
+                if (showDeleted) {
+                    NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.showBulletin, Bulletin.TYPE_STICKER, document, StickerSetBulletinLayout.TYPE_REMOVED_FROM_RECENT);
+                }
                 TLRPC.TL_messages_saveRecentSticker req = new TLRPC.TL_messages_saveRecentSticker();
                 req.id = new TLRPC.TL_inputDocument();
                 req.id.id = document.id;

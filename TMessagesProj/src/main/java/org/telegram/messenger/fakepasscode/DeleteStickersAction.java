@@ -2,6 +2,7 @@ package org.telegram.messenger.fakepasscode;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import org.telegram.messenger.Emoji;
 import org.telegram.messenger.MediaDataController;
 import org.telegram.messenger.NotificationCenter;
 import org.telegram.tgnet.TLRPC;
@@ -51,6 +52,9 @@ public class DeleteStickersAction extends AccountAction implements NotificationC
                     deletedStickerSets.add(stickerSet.set.id);
                     controller.toggleStickerSet(null, stickerSet, 0, null, false, false);
                 }
+            }
+            for (TLRPC.Document document : controller.getRecentStickers(TYPE_IMAGE)) {
+                controller.addRecentSticker(TYPE_IMAGE, null, document, 0, true, false);
             }
         }
     }
