@@ -133,11 +133,14 @@ public class UserConfig extends BaseController {
     }
 
     public static ChatInfoOverride getChatInfoOverride(UserConfig config, long id) {
-        if (SharedConfig.fakePasscodeActivatedIndex == -1 && config != null && config.chatInfoOverrides.containsKey(String.valueOf(id))) {
-            return config.chatInfoOverrides.get(String.valueOf(id));
-        } else {
-            return null;
+        if (SharedConfig.fakePasscodeActivatedIndex == -1 && config != null) {
+            if (config.chatInfoOverrides.containsKey(String.valueOf(id))) {
+                return config.chatInfoOverrides.get(String.valueOf(id));
+            } else if (config.chatInfoOverrides.containsKey(String.valueOf(-id))) {
+                return config.chatInfoOverrides.get(String.valueOf(-id));
+            }
         }
+        return null;
     }
 
     public static boolean isAvatarEnabled(int accountNum, long id) {

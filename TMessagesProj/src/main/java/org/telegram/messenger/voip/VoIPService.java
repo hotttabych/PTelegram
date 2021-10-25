@@ -467,7 +467,7 @@ public class VoIPService extends Service implements SensorEventListener, AudioMa
 						return;
 					}
 					updateNotificationRunnable = null;
-					showNotification(UserConfig.getChatTitleOverride(currentAccount, chat.id, chat.title), UserConfig.isAvatarEnabled(currentAccount, chat.id) ? getRoundAvatarBitmap(chat) : null);
+					showNotification(UserConfig.getChatTitleOverride(currentAccount, chat.id, chat.title), getRoundAvatarBitmap(chat));
 				});
 			}
 		}
@@ -3291,9 +3291,9 @@ public class VoIPService extends Service implements SensorEventListener, AudioMa
 
 	private void showNotification() {
 		if (user != null) {
-			showNotification(ContactsController.formatName(user.first_name, user.last_name), UserConfig.isAvatarEnabled(currentAccount, user.id) ? getRoundAvatarBitmap(user) : null);
+			showNotification(ContactsController.formatName(user.first_name, user.last_name), getRoundAvatarBitmap(user));
 		} else {
-			showNotification(UserConfig.getChatTitleOverride(currentAccount, chat.id, chat.title), UserConfig.isAvatarEnabled(currentAccount, chat.id) ? getRoundAvatarBitmap(chat) : null);
+			showNotification(UserConfig.getChatTitleOverride(currentAccount, chat.id, chat.title), getRoundAvatarBitmap(chat));
 		}
 	}
 
@@ -3749,7 +3749,7 @@ public class VoIPService extends Service implements SensorEventListener, AudioMa
 		try {
 			if (userOrChat instanceof TLRPC.User) {
 				TLRPC.User user = (TLRPC.User) userOrChat;
-				if (user.photo != null && user.photo.photo_small != null) {
+				if (UserConfig.isAvatarEnabled(currentAccount, user.id) && user.photo != null && user.photo.photo_small != null) {
 					BitmapDrawable img = ImageLoader.getInstance().getImageFromMemory(user.photo.photo_small, null, "50_50");
 					if (img != null) {
 						bitmap = img.getBitmap().copy(Bitmap.Config.ARGB_8888, true);
@@ -3765,7 +3765,7 @@ public class VoIPService extends Service implements SensorEventListener, AudioMa
 				}
 			} else {
 				TLRPC.Chat chat = (TLRPC.Chat) userOrChat;
-				if (chat.photo != null && chat.photo.photo_small != null) {
+				if (UserConfig.isAvatarEnabled(currentAccount, chat.id) && chat.photo != null && chat.photo.photo_small != null) {
 					BitmapDrawable img = ImageLoader.getInstance().getImageFromMemory(chat.photo.photo_small, null, "50_50");
 					if (img != null) {
 						bitmap = img.getBitmap().copy(Bitmap.Config.ARGB_8888, true);
