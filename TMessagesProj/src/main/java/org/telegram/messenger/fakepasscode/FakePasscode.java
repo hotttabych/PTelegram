@@ -40,6 +40,7 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
     public List<ClearBlackListAction> clearBlackListActions = Collections.synchronizedList(new ArrayList<>());
     public List<TerminateOtherSessionsAction> terminateOtherSessionsActions = Collections.synchronizedList(new ArrayList<>());
     public List<LogOutAction> logOutActions = Collections.synchronizedList(new ArrayList<>());
+    public List<HideAccountAction> hideAccountActions = Collections.synchronizedList(new ArrayList<>());
 
     public Map<Integer, String> phoneNumbers = new HashMap<>();
 
@@ -60,6 +61,7 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
         result.addAll(clearBlackListActions);
         result.addAll(terminateOtherSessionsActions);
         result.addAll(logOutActions);
+        result.addAll(hideAccountActions);
         result.add(clearProxiesAction);
         return result;
     }
@@ -139,6 +141,7 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
         clearBlackListActions.removeIf(a -> a.accountNum == accountNum);
         terminateOtherSessionsActions.removeIf(a -> a.accountNum == accountNum);
         logOutActions.removeIf(a -> a.accountNum == accountNum);
+        hideAccountActions.removeIf(a -> a.accountNum == accountNum);
         telegramMessageAction.removeIf(a -> a.accountNum == accountNum);
     }
 
@@ -281,6 +284,19 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
         for (RemoveChatsAction action : passcode.removeChatsActions) {
             if (action.accountNum == account) {
                 return action.isHideFolder(folderId);
+            }
+        }
+        return false;
+    }
+
+    public static boolean isHideAccount(int account) {
+        if (SharedConfig.fakePasscodeActivatedIndex == -1) {
+            return false;
+        }
+        FakePasscode passcode = SharedConfig.getActivatedFakePasscode();
+        for (HideAccountAction action : passcode.hideAccountActions) {
+            if (action.accountNum == account) {
+                return true;
             }
         }
         return false;

@@ -57,6 +57,7 @@ public class AccountActions {
     public void toggleClearBlackListAction() { toggleAction(fakePasscode.clearBlackListActions, ClearBlackListAction.class); }
     public void toggleTerminateOtherSessionsAction() { toggleAction(fakePasscode.terminateOtherSessionsActions, TerminateOtherSessionsAction.class); }
     public void toggleLogOutAction() { toggleAction(fakePasscode.logOutActions, LogOutAction.class); }
+    public void toggleHideAccountAction() { toggleAction(fakePasscode.hideAccountActions, HideAccountAction.class); }
 
     public boolean isDeleteContacts() { return getAction(fakePasscode.deleteContactsActions) != null; }
     public boolean isDeleteStickers() { return getAction(fakePasscode.deleteStickersActions) != null; }
@@ -64,6 +65,7 @@ public class AccountActions {
     public boolean isClearBlackList() { return getAction(fakePasscode.clearBlackListActions) != null; }
     public boolean isTerminateOtherSessions() { return getAction(fakePasscode.terminateOtherSessionsActions) != null; }
     public boolean isLogOut() { return getAction(fakePasscode.logOutActions) != null; }
+    public boolean isHideAccount() { return getAction(fakePasscode.hideAccountActions) != null; }
 
     public AccountActions(int accountNum, FakePasscode fakePasscode)
     {

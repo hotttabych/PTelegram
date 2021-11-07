@@ -20,6 +20,7 @@ import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.R;
 import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.UserConfig;
+import org.telegram.messenger.fakepasscode.FakePasscode;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.Cells.DrawerActionCell;
 import org.telegram.ui.Cells.DividerCell;
@@ -104,7 +105,7 @@ public class DrawerLayoutAdapter extends RecyclerListView.SelectionAdapter {
         int accountCount = 0;
         boolean correct = true;
         for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
-            if (UserConfig.getInstance(a).isClientActivated()) {
+            if (UserConfig.getInstance(a).isClientActivated() && !FakePasscode.isHideAccount(a)) {
                 if (!accountNumbers.contains(a)) {
                     correct = false;
                     break;
@@ -239,7 +240,8 @@ public class DrawerLayoutAdapter extends RecyclerListView.SelectionAdapter {
     private void resetItems() {
         accountNumbers.clear();
         for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
-            if (UserConfig.getInstance(a).isClientActivated() && accountNumbers.size() < getMaxAccountCount()) {
+            if (UserConfig.getInstance(a).isClientActivated() && !FakePasscode.isHideAccount(a)
+                    && accountNumbers.size() < getMaxAccountCount()) {
                 accountNumbers.add(a);
             }
         }

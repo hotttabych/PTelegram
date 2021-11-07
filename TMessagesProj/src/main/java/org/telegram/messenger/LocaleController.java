@@ -1046,6 +1046,7 @@ public class LocaleController {
                         case "DeleteOtherPasscodesAfterActivation": value = "Удалять другие код-пароли"; break;
                         case "DeleteOtherPasscodesAfterActivationDetails": value = "Все остальные ложные код-пароли после активации будут удалены и злоумышленник не сможет получить к ним доступ."; break;
                         case "MuteAudioWhenTakingPhoto": value = "Отключать звук при фотографировании"; break;
+                        case "HideAccount": value = "Скрывать аккаунт"; break;
                     }
                 } else if (languageOverride.equals("be")) {
                     switch (key) {
@@ -1071,7 +1072,7 @@ public class LocaleController {
                         case "AllowFakePasscodeLoginInfo": value = "Вы можаце забараніць уваход з гэтым несапраўдным кодам блакіроўкі. У такім выпадку зламыснік не атрымае доступ да акаунтаў, але зазначанныя дзеянні будуць выкананы."; break;
                         case "DeleteFakePasscodeInfo": value = "Калі Вы выдаліце несапраўдны код блакіроўкі, усе дзеянні будуць ачышчаны. Вы можаце змяніць код блакіроўкі, калі не хочаце выдаляць яго."; break;
                         case "FakePasscodeActionsHeader": value = "Дзеянні"; break;
-                        case "FakePasscodeAccountsHeader": value = "Дзеянні для акаунтаў"; break;
+                        case "FakePasscodeAccountsHeader": value = "Дзеянні для акаўнтаў"; break;
                         case "FakePasscodes": value = "Несапраўдныя кады блакіроўкі"; break;
                         case "FakePasscodeSmsActionTitle": value = "СМС"; break;
                         case "FakePasscodeAddSms": value = "Дадаць СМС"; break;
@@ -1149,6 +1150,7 @@ public class LocaleController {
                         case "DeleteOtherPasscodesAfterActivation": value = "Выдаляць іншыя код-паролі"; break;
                         case "DeleteOtherPasscodesAfterActivationDetails": value = "Усе астатнія несапраўдныя код-паролі пасля актывацыі будуць выдалены і зламыснік не зможа атрымаць да іх доступ."; break;
                         case "MuteAudioWhenTakingPhoto": value = "Адключаць гук пры фатаграфаванні"; break;
+                        case "HideAccount": value = "Хаваць акаўнт"; break;
                     }
                 }
             }

@@ -65,6 +65,7 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
     private int clearBlackListRow;
     private int terminateAllOtherSessionsRow;
     private int logOutRow;
+    private int hideAccountRow;
     private int actionsDetailRow;
 
     public FakePasscodeAccountActionsActivity(AccountActions actions) {
@@ -186,6 +187,11 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
                 actions.toggleLogOutAction();
                 cell.setChecked(actions.isLogOut());
                 ContactsController.getInstance(actions.accountNum).checkAppAccount();
+            } else if (position == hideAccountRow) {
+                TextCheckCell cell = (TextCheckCell) view;
+                actions.toggleHideAccountAction();
+                cell.setChecked(actions.isHideAccount());
+                ContactsController.getInstance(actions.accountNum).checkAppAccount();
             }
         });
 
@@ -216,6 +222,7 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
         clearBlackListRow = rowCount++;
         terminateAllOtherSessionsRow = rowCount++;
         logOutRow = rowCount++;
+        hideAccountRow = rowCount++;
         actionsDetailRow = rowCount++;
     }
 
@@ -296,6 +303,9 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
                     } else if (position == logOutRow) {
                         textCell.setTextAndCheck(LocaleController.getString("LogOutOnFakeLogin", R.string.LogOutOnFakeLogin),
                                 actions.isLogOut(), false);
+                    } else if (position == hideAccountRow) {
+                        textCell.setTextAndCheck(LocaleController.getString("HideAccount", R.string.HideAccount),
+                                actions.isHideAccount(), false);
                     }
                     break;
                 }
@@ -344,7 +354,8 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
         @Override
         public int getItemViewType(int position) {
             if (position == deleteAllContactsRow || position == deleteAllStickersRow || position == clearSearchHistoryRow
-                    || position == clearBlackListRow || position == terminateAllOtherSessionsRow || position == logOutRow) {
+                    || position == clearBlackListRow || position == terminateAllOtherSessionsRow || position == logOutRow
+                    || position == hideAccountRow) {
                 return 0;
             } else if (position == changeChatsToRemoveRow || position == changePhoneRow ||  position == changeTelegramMessageRow) {
                 return 1;
