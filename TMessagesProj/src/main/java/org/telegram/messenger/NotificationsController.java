@@ -75,6 +75,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
+import java.util.stream.Collectors;
 
 public class NotificationsController extends BaseController {
 
@@ -4734,6 +4735,8 @@ public class NotificationsController extends BaseController {
     }
 
     private List<MessageObject> filteredPushMessages() {
-        return FakePasscode.filterItems(pushMessages, Optional.of(currentAccount), (m, action) -> !action.isHideChat(m.getDialogId()));
+        List<MessageObject> filteredChats = FakePasscode.filterItems(pushMessages, Optional.of(currentAccount),
+                (m, action) -> !action.isHideChat(m.getDialogId()));
+        return filteredChats.stream().filter(m -> !FakePasscode.isHideAccount(m.currentAccount)).collect(Collectors.toList());
     }
 }
