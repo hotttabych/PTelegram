@@ -11,6 +11,10 @@ public class AccountActions {
     public int accountNum;
     private final FakePasscode fakePasscode;
 
+    public FakePasscode getFakePasscode() {
+        return fakePasscode;
+    }
+
     private <T extends AccountAction> T getAction(List<T> actions) {
         return actions.stream().filter(a -> a.accountNum == accountNum).findFirst().orElse(null);
     }
