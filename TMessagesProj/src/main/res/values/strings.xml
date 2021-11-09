@@ -4848,7 +4848,7 @@
     <string name="HideAccount">Hide Account</string>
     <string name="CannotHideAccount">Unable to Hide Account</string>
     <string name="CannotRemoveHiding">Unable to Remove Hiding</string>
-    <string name="CannotHideAllAccounts">You cannot hide all accounts. If you want to hide this account, remove the hide from another account.</string>
+    <string name="CannotHideAllAccounts">You cannot hide all accounts. If you want to remove hiding from this account, hide or configure log out from another account.</string>
     <string name="CannotHideSingleAccount">You cannot hide a single account. Hiding works only if there are 2 or more accounts in Telegram.</string>
     <string name="CannotShowManyAccounts">You cannot leave more than %d accounts not hidden. If you want to remove hiding from this account, hide another account.</string>
 </resources>

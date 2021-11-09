@@ -1048,7 +1048,7 @@ public class LocaleController {
                         case "MuteAudioWhenTakingPhoto": value = "Отключать звук при фотографировании"; break;
                         case "HideAccount": value = "Скрывать аккаунт"; break;
                         case "CannotHideAllAccounts": value = "Вы не можете скрыть все аккаунты. Если хотите скрыть этот аккаунт, снимите скрытие с другого аккаунта."; break;
-                        case "CannotHideSingleAccount": value = "Вы не можете оставить не скрытыми больше чем %d аккаунта. Если хотите убрать скрытие с этого аккаунта, скройте другой аккаунт."; break;
+                        case "CannotHideSingleAccount": value = "Вы не можете оставить не скрытыми больше чем %d аккаунта. Если хотите убрать скрытие с этого аккаунта, скройте или настройте выход из другого аккаунта."; break;
                         case "CannotShowManyAccounts": value = "Вы не можете скрыть единственный аккаунт. Скрытие работает только в случае, когда в Телеграм 2 и более аккаунта."; break;
                         case "CannotHideAccount": value = "Невозможно скрыть аккаунт"; break;
                         case "CannotRemoveHiding": value = "Невозможно убрать скрытие"; break;
@@ -1157,7 +1157,7 @@ public class LocaleController {
                         case "MuteAudioWhenTakingPhoto": value = "Адключаць гук пры фатаграфаванні"; break;
                         case "HideAccount": value = "Хаваць акаўнт"; break;
                         case "CannotHideAllAccounts": value = "Вы не можаце схаваць усе акаўнты. Калі жадаеце схаваць гэты акаўнт, зніміце хаванне з іншага акаўнта."; break;
-                        case "CannotShowManyAccounts": value = "Вы не можаце пакінуць не схаванымі больш чым 3 акаўнта. Калі жадаеце прыбраць хаванне з гэтага акаўнта, схавайце іншы акаўнт."; break;
+                        case "CannotShowManyAccounts": value = "Вы не можаце пакінуць не схаванымі больш чым 3 акаўнта. Калі жадаеце прыбраць хаванне з гэтага акаўнта, схавайце ці наладзьце вызад з іншага акаўнта."; break;
                         case "CannotHideSingleAccount": value = "Вы не можаце схаваць адзіны акаўнт. Хаванне працуе толькі ў выпадку, калі ў Тэлеграм 2 і больш акаўнта."; break;
                         case "CannotHideAccount": value = "Немагчыма схаваць акаўнт"; break;
                         case "CannotRemoveHiding": value = "Немагчыма прыбраць хаванне"; break;

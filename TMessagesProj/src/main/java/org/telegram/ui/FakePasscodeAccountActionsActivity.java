@@ -44,6 +44,7 @@ import org.telegram.ui.DialogBuilder.DialogType;
 import org.telegram.ui.DialogBuilder.FakePasscodeDialogBuilder;
 
 import java.util.ArrayList;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -391,11 +392,15 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
             if (holder.getItemViewType() == 3) {
                 TextCheckCell textCell = (TextCheckCell) holder.itemView;
 
-                int hiddenAccountCount = actions.getFakePasscode().hideAccountActions.size();
+                Set<Integer> hiddenAccounts = actions.getFakePasscode().hideAccountActions.stream()
+                        .map(a -> a.accountNum).collect(Collectors.toSet());
+                hiddenAccounts.addAll(actions.getFakePasscode().logOutActions.stream()
+                        .map(a -> a.accountNum).collect(Collectors.toSet()));
+                int hiddenAccountCount = hiddenAccounts.size();
                 int accountCount = UserConfig.getActivatedAccountsCount();
                 boolean enabled = actions.isHideAccount() && (accountCount - hiddenAccountCount
                         < UserConfig.FAKE_PASSCODE_MAX_ACCOUNT_COUNT)
-                        || !actions.isHideAccount() && (hiddenAccountCount < accountCount - 1);
+                        || !actions.isHideAccount() && ((hiddenAccountCount < accountCount - 1) || actions.isLogOut());
 
                 textCell.setEnabled(enabled, null);
             }
