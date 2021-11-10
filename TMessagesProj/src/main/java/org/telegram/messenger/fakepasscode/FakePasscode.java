@@ -6,6 +6,7 @@ import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.tgnet.TLRPC;
+import org.telegram.ui.LogoutActivity;
 import org.telegram.ui.NotificationsSettingsActivity;
 
 import java.util.ArrayList;
@@ -15,6 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.BiPredicate;
 import java.util.stream.Collectors;
 
@@ -301,5 +303,43 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
             }
         }
         return false;
+    }
+
+    public int getHideOrLogOutCount() {
+        Set<Integer> hiddenAccounts = hideAccountActions.stream().map(a -> a.accountNum)
+                .collect(Collectors.toSet());
+        hiddenAccounts.addAll(logOutActions.stream().map(a -> a.accountNum)
+                .collect(Collectors.toSet()));
+        return hiddenAccounts.size();
+    }
+
+    public boolean autoAddHidings() {
+        int targetCount = UserConfig.getActivatedAccountsCount() - UserConfig.FAKE_PASSCODE_MAX_ACCOUNT_COUNT;
+        if (targetCount > getHideOrLogOutCount()) {
+            for (int i = UserConfig.MAX_ACCOUNT_COUNT - 1; i >= 0; i--) {
+                int acc = i;
+                if (UserConfig.getInstance(acc).isClientActivated() && !isHideAccount(acc)
+                        && logOutActions.stream().noneMatch(a -> a.accountNum == acc)) {
+                    HideAccountAction action = new HideAccountAction();
+                    action.accountNum = acc;
+                    hideAccountActions.add(action);
+                    if (targetCount <= getHideOrLogOutCount()) {
+                        break;
+                    }
+                }
+            }
+            SharedConfig.saveConfig();
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public static boolean autoAddHidingsToAllFakePasscodes() {
+        boolean result = false;
+        for (FakePasscode fakePasscode: SharedConfig.fakePasscodes) {
+            result |= fakePasscode.autoAddHidings();
+        }
+        return result;
     }
 }

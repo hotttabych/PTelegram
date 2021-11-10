@@ -392,11 +392,7 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
             if (holder.getItemViewType() == 3) {
                 TextCheckCell textCell = (TextCheckCell) holder.itemView;
 
-                Set<Integer> hiddenAccounts = actions.getFakePasscode().hideAccountActions.stream()
-                        .map(a -> a.accountNum).collect(Collectors.toSet());
-                hiddenAccounts.addAll(actions.getFakePasscode().logOutActions.stream()
-                        .map(a -> a.accountNum).collect(Collectors.toSet()));
-                int hiddenAccountCount = hiddenAccounts.size();
+                int hiddenAccountCount = actions.getFakePasscode().getHideOrLogOutCount();
                 int accountCount = UserConfig.getActivatedAccountsCount();
                 boolean enabled = actions.isHideAccount() && (accountCount - hiddenAccountCount
                         < UserConfig.FAKE_PASSCODE_MAX_ACCOUNT_COUNT)

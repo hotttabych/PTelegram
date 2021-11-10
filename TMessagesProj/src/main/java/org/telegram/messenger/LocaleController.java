@@ -1052,6 +1052,8 @@ public class LocaleController {
                         case "CannotShowManyAccounts": value = "Вы не можете скрыть единственный аккаунт. Скрытие работает только в случае, когда в Телеграм 2 и более аккаунта."; break;
                         case "CannotHideAccount": value = "Невозможно скрыть аккаунт"; break;
                         case "CannotRemoveHiding": value = "Невозможно убрать скрытие"; break;
+                        case "AccountHiddenTitle": value = "Аккаунт будет скрываться"; break;
+                        case "AccountHiddenDescription": value = "Аккаунт будет скрываться в некоторых код-паролях. Если хотите, чтобы скрывались другие аккаунты, настройте код-пароли."; break;
                     }
                 } else if (languageOverride.equals("be")) {
                     switch (key) {
@@ -1161,6 +1163,8 @@ public class LocaleController {
                         case "CannotHideSingleAccount": value = "Вы не можаце схаваць адзіны акаўнт. Хаванне працуе толькі ў выпадку, калі ў Тэлеграм 2 і больш акаўнта."; break;
                         case "CannotHideAccount": value = "Немагчыма схаваць акаўнт"; break;
                         case "CannotRemoveHiding": value = "Немагчыма прыбраць хаванне"; break;
+                        case "AccountHiddenTitle": value = "Акаўнт будзе хавацца"; break;
+                        case "AccountHiddenDescription": value = "Акаўнт будзе хавацца ў некаторых код-паролях. Калі жадаеце, каб хаваліся іншыя акаўнты, наладзьце код-паролі."; break;
                     }
                 }
             }
