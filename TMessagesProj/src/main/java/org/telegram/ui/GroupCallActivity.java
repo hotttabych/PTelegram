@@ -5030,7 +5030,7 @@ public class GroupCallActivity extends BottomSheet implements NotificationCenter
         } else {
             decorView = containerView;
         }
-        pinchToZoomHelper = new PinchToZoomHelper(decorView) {
+        pinchToZoomHelper = new PinchToZoomHelper(decorView, containerView) {
             @Override
             protected void invalidateViews() {
                 super.invalidateViews();
