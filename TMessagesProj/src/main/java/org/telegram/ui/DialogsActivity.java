@@ -3581,7 +3581,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         }
         if (FakePasscode.autoAddHidingsToAllFakePasscodes()) {
             AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
-            builder.setMessage(LocaleController.getString("CannotHideAllAccounts", R.string.CannotHideAllAccounts));
+            builder.setMessage(LocaleController.getString("AccountHiddenDescription", R.string.AccountHiddenDescription));
             builder.setTitle(LocaleController.getString("AccountHiddenTitle", R.string.AccountHiddenTitle));
             builder.setPositiveButton(LocaleController.getString("OK", R.string.OK), null);
             AlertDialog alertDialog = builder.create();
