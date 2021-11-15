@@ -223,7 +223,7 @@ public class BadPasscodeCell extends FrameLayout {
                         result = false;
                     }
                     if (result) {
-                        AndroidUtilities.addMediaToGallery(Uri.fromFile(destFile));
+                        AndroidUtilities.addMediaToGallery(destFile);
                     }
                 } catch (Exception e) {
                     FileLog.e(e);
