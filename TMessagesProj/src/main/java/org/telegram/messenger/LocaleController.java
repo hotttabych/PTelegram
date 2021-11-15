@@ -1054,6 +1054,8 @@ public class LocaleController {
                         case "CannotRemoveHiding": value = "Невозможно убрать скрытие"; break;
                         case "AccountHiddenTitle": value = "Аккаунт будет скрываться"; break;
                         case "AccountHiddenDescription": value = "Аккаунт будет скрываться в некоторых код-паролях. Если хотите, чтобы скрывались другие аккаунты, настройте код-пароли."; break;
+                        case "TooManyAccountsHiddenTitle": value = "Скрыто слишком много аккаунтов"; break;
+                        case "TooManyAccountsHiddenDescription": value = "Скрыто более %d аккаунтов. Это понижает маскировку приложения. Рекомендуется убрать скрытие с некоторых аккаунтов."; break;
                     }
                 } else if (languageOverride.equals("be")) {
                     switch (key) {
@@ -1165,6 +1167,8 @@ public class LocaleController {
                         case "CannotRemoveHiding": value = "Немагчыма прыбраць хаванне"; break;
                         case "AccountHiddenTitle": value = "Акаўнт будзе хавацца"; break;
                         case "AccountHiddenDescription": value = "Акаўнт будзе хавацца ў некаторых код-паролях. Калі жадаеце, каб хаваліся іншыя акаўнты, наладзьце код-паролі."; break;
+                        case "TooManyAccountsHiddenTitle": value = "Схавана занадта шмат акаўнтаў"; break;
+                        case "TooManyAccountsHiddenDescription": value = "Схавана больш за %d акаўнты. Гэта паніжае маскіроўку прыкладання. Рэкамендуецца прыбраць утойванне з некаторых акаўнтаў."; break;
                     }
                 }
             }

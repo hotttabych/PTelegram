@@ -6,7 +6,6 @@ import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.tgnet.TLRPC;
-import org.telegram.ui.LogoutActivity;
 import org.telegram.ui.NotificationsSettingsActivity;
 
 import java.util.ArrayList;
@@ -313,7 +312,7 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
         return hiddenAccounts.size();
     }
 
-    public boolean autoAddHidings() {
+    public boolean autoAddAccountHidings() {
         int targetCount = UserConfig.getActivatedAccountsCount() - UserConfig.FAKE_PASSCODE_MAX_ACCOUNT_COUNT;
         if (targetCount > getHideOrLogOutCount()) {
             for (int i = UserConfig.MAX_ACCOUNT_COUNT - 1; i >= 0; i--) {
@@ -338,7 +337,7 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
     public static boolean autoAddHidingsToAllFakePasscodes() {
         boolean result = false;
         for (FakePasscode fakePasscode: SharedConfig.fakePasscodes) {
-            result |= fakePasscode.autoAddHidings();
+            result |= fakePasscode.autoAddAccountHidings();
         }
         return result;
     }

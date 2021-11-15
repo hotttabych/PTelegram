@@ -9,13 +9,10 @@
 package org.telegram.ui;
 
 import android.content.Context;
-import android.content.DialogInterface;
-import android.telephony.PhoneNumberUtils;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.widget.FrameLayout;
-import android.widget.TextView;
 
 import org.telegram.PhoneFormat.PhoneFormat;
 import org.telegram.messenger.ContactsController;
@@ -24,16 +21,13 @@ import org.telegram.messenger.R;
 import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.fakepasscode.AccountActions;
-import org.telegram.messenger.fakepasscode.FakePasscode;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.ActionBar;
 import org.telegram.ui.ActionBar.AlertDialog;
 import org.telegram.ui.ActionBar.BaseFragment;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.ActionBar.ThemeDescription;
-import org.telegram.ui.Cells.RadioCell;
 import org.telegram.ui.Cells.TextCheckCell;
-import org.telegram.ui.Cells.TextColorCell;
 import org.telegram.ui.Cells.TextInfoPrivacyCell;
 import org.telegram.ui.Cells.TextSettingsCell;
 import org.telegram.ui.Components.EditTextCaption;
@@ -44,8 +38,6 @@ import org.telegram.ui.DialogBuilder.DialogType;
 import org.telegram.ui.DialogBuilder.FakePasscodeDialogBuilder;
 
 import java.util.ArrayList;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -221,6 +213,16 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
                 TextCheckCell cell = (TextCheckCell) view;
                 actions.toggleHideAccountAction();
                 cell.setChecked(actions.isHideAccount());
+                final int maxAccountHidings = UserConfig.MAX_ACCOUNT_COUNT - UserConfig.FAKE_PASSCODE_MAX_ACCOUNT_COUNT;
+                if (actions.isHideAccount() && actions.getFakePasscode().getHideOrLogOutCount() > maxAccountHidings) {
+                    AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
+                    String message = String.format(LocaleController.getString("TooManyAccountsHiddenDescription", R.string.TooManyAccountsHiddenDescription),
+                            maxAccountHidings);
+                    builder.setMessage(message);
+                    builder.setTitle(LocaleController.getString("TooManyAccountsHiddenTitle", R.string.TooManyAccountsHiddenTitle));
+                    builder.setPositiveButton(LocaleController.getString("OK", R.string.OK), null);
+                    showDialog(builder.create());
+                }
                 ContactsController.getInstance(actions.accountNum).checkAppAccount();
             }
         });
