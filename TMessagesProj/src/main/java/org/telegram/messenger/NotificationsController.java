@@ -335,6 +335,14 @@ public class NotificationsController extends BaseController {
         });
     }
 
+    public void removeAllNotifications() {
+        for (MessageObject message : pushMessages) {
+            if (message.messageOwner != null) {
+                removeNotificationsForDialog(message.messageOwner.dialog_id);
+            }
+        }
+    }
+
     public void removeNotificationsForDialog(long did) {
         processReadMessages(null, did, 0, Integer.MAX_VALUE, false);
         LongSparseIntArray dialogsToUpdate = new LongSparseIntArray();
