@@ -208,6 +208,20 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
                 TextCheckCell cell = (TextCheckCell) view;
                 actions.toggleLogOutAction();
                 cell.setChecked(actions.isLogOut());
+                if (!actions.isLogOut()) {
+                    int targetHideCount = UserConfig.getActivatedAccountsCount() - UserConfig.FAKE_PASSCODE_MAX_ACCOUNT_COUNT;
+                    if (!actions.isHideAccount() && actions.getFakePasscode().getHideOrLogOutCount() < targetHideCount) {
+                        actions.toggleHideAccountAction();
+                    }
+                } else {
+                    if (actions.isHideAccount()) {
+                        actions.toggleHideAccountAction();
+                    }
+                }
+                if (listAdapter != null) {
+                    updateRows();
+                    listAdapter.notifyDataSetChanged();
+                }
                 ContactsController.getInstance(actions.accountNum).checkAppAccount();
             } else if (position == hideAccountRow) {
                 TextCheckCell cell = (TextCheckCell) view;
@@ -254,7 +268,9 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
         clearBlackListRow = rowCount++;
         terminateAllOtherSessionsRow = rowCount++;
         logOutRow = rowCount++;
-        hideAccountRow = rowCount++;
+        if (!actions.isLogOut()) {
+            hideAccountRow = rowCount++;
+        }
         actionsDetailRow = rowCount++;
     }
 
