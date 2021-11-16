@@ -4861,6 +4861,21 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
             }
         } else if (id == NotificationCenter.fakePasscodeActivated) {
             switchToAvailableAccountIfCurrentAccountIsHidden();
+            if (SharedConfig.getActivatedFakePasscode() != null) {
+                Utilities.globalQueue.postRunnable(() -> {
+                    ArrayList<BaseFragment> fragmentsStack = actionBarLayout.fragmentsStack;
+                    if (fragmentsStack.stream().noneMatch(f -> f instanceof DialogsActivity)) {
+                        return;
+                    }
+                    while (!fragmentsStack.isEmpty() && !(fragmentsStack.get(fragmentsStack.size() - 1) instanceof DialogsActivity)) {
+                        int count = fragmentsStack.size();
+                        AndroidUtilities.runOnUIThread(() -> fragmentsStack.get(fragmentsStack.size() - 1).finishFragment(false));
+                        while(count == fragmentsStack.size()) {
+                            // wait
+                        }
+                    }
+                });
+            }
         }
     }
 
