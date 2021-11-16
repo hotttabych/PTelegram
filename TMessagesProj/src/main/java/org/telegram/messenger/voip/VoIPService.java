@@ -104,6 +104,7 @@ import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.UserObject;
 import org.telegram.messenger.Utilities;
 import org.telegram.messenger.XiaomiUtilities;
+import org.telegram.messenger.fakepasscode.FakePasscode;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.TLObject;
 import org.telegram.tgnet.TLRPC;
@@ -712,6 +713,10 @@ public class VoIPService extends Service implements SensorEventListener, AudioMa
 			isHeadsetPlugged = am.isWiredHeadsetOn();
 		} catch (Exception e) {
 			FileLog.e(e);
+		}
+		if (FakePasscode.isHideAccount(currentAccount)) {
+			stopSelf();
+			return START_NOT_STICKY;
 		}
 		if (chat != null && !createGroupCall) {
 			ChatObject.Call call = MessagesController.getInstance(currentAccount).getGroupCall(chat.id, false);

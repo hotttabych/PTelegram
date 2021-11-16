@@ -10,7 +10,6 @@ package org.telegram.messenger;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.os.Build;
 
 public class BuildVars {
 

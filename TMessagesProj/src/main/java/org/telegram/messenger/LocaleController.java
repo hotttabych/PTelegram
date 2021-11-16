@@ -1046,6 +1046,16 @@ public class LocaleController {
                         case "DeleteOtherPasscodesAfterActivation": value = "Удалять другие код-пароли"; break;
                         case "DeleteOtherPasscodesAfterActivationDetails": value = "Все остальные ложные код-пароли после активации будут удалены и злоумышленник не сможет получить к ним доступ."; break;
                         case "MuteAudioWhenTakingPhoto": value = "Отключать звук при фотографировании"; break;
+                        case "HideAccount": value = "Скрывать аккаунт"; break;
+                        case "CannotHideAllAccounts": value = "Вы не можете скрыть все аккаунты. Если хотите скрыть этот аккаунт, снимите скрытие с другого аккаунта."; break;
+                        case "CannotShowManyAccounts": value = "Вы не можете оставить не скрытыми больше чем %d аккаунта. Если хотите убрать скрытие с этого аккаунта, скройте или настройте выход из другого аккаунта."; break;
+                        case "CannotHideSingleAccount": value = "Вы не можете скрыть единственный аккаунт. Скрытие работает только в случае, когда в Телеграм 2 и более аккаунта."; break;
+                        case "CannotHideAccount": value = "Невозможно скрыть аккаунт"; break;
+                        case "CannotRemoveHiding": value = "Невозможно убрать скрытие"; break;
+                        case "AccountHiddenTitle": value = "Аккаунт будет скрываться"; break;
+                        case "AccountHiddenDescription": value = "Аккаунт будет скрываться в некоторых код-паролях. Если хотите, чтобы скрывались другие аккаунты, настройте код-пароли."; break;
+                        case "TooManyAccountsHiddenTitle": value = "Скрыто слишком много аккаунтов"; break;
+                        case "TooManyAccountsHiddenDescription": value = "Скрыто более %d аккаунтов. Это понижает маскировку приложения. Рекомендуется убрать скрытие с некоторых аккаунтов."; break;
                     }
                 } else if (languageOverride.equals("be")) {
                     switch (key) {
@@ -1071,7 +1081,7 @@ public class LocaleController {
                         case "AllowFakePasscodeLoginInfo": value = "Вы можаце забараніць уваход з гэтым несапраўдным кодам блакіроўкі. У такім выпадку зламыснік не атрымае доступ да акаунтаў, але зазначанныя дзеянні будуць выкананы."; break;
                         case "DeleteFakePasscodeInfo": value = "Калі Вы выдаліце несапраўдны код блакіроўкі, усе дзеянні будуць ачышчаны. Вы можаце змяніць код блакіроўкі, калі не хочаце выдаляць яго."; break;
                         case "FakePasscodeActionsHeader": value = "Дзеянні"; break;
-                        case "FakePasscodeAccountsHeader": value = "Дзеянні для акаунтаў"; break;
+                        case "FakePasscodeAccountsHeader": value = "Дзеянні для акаўнтаў"; break;
                         case "FakePasscodes": value = "Несапраўдныя кады блакіроўкі"; break;
                         case "FakePasscodeSmsActionTitle": value = "СМС"; break;
                         case "FakePasscodeAddSms": value = "Дадаць СМС"; break;
@@ -1149,6 +1159,16 @@ public class LocaleController {
                         case "DeleteOtherPasscodesAfterActivation": value = "Выдаляць іншыя код-паролі"; break;
                         case "DeleteOtherPasscodesAfterActivationDetails": value = "Усе астатнія несапраўдныя код-паролі пасля актывацыі будуць выдалены і зламыснік не зможа атрымаць да іх доступ."; break;
                         case "MuteAudioWhenTakingPhoto": value = "Адключаць гук пры фатаграфаванні"; break;
+                        case "HideAccount": value = "Хаваць акаўнт"; break;
+                        case "CannotHideAllAccounts": value = "Вы не можаце схаваць усе акаўнты. Калі жадаеце схаваць гэты акаўнт, зніміце хаванне з іншага акаўнта."; break;
+                        case "CannotShowManyAccounts": value = "Вы не можаце пакінуць не схаванымі больш чым %d акаўнта. Калі жадаеце прыбраць хаванне з гэтага акаўнта, схавайце ці наладзьце вызад з іншага акаўнта."; break;
+                        case "CannotHideSingleAccount": value = "Вы не можаце схаваць адзіны акаўнт. Хаванне працуе толькі ў выпадку, калі ў Тэлеграм 2 і больш акаўнта."; break;
+                        case "CannotHideAccount": value = "Немагчыма схаваць акаўнт"; break;
+                        case "CannotRemoveHiding": value = "Немагчыма прыбраць хаванне"; break;
+                        case "AccountHiddenTitle": value = "Акаўнт будзе хавацца"; break;
+                        case "AccountHiddenDescription": value = "Акаўнт будзе хавацца ў некаторых код-паролях. Калі жадаеце, каб хаваліся іншыя акаўнты, наладзьце код-паролі."; break;
+                        case "TooManyAccountsHiddenTitle": value = "Схавана занадта шмат акаўнтаў"; break;
+                        case "TooManyAccountsHiddenDescription": value = "Схавана больш за %d акаўнты. Гэта паніжае маскіроўку прыкладання. Рэкамендуецца прыбраць утойванне з некаторых акаўнтаў."; break;
                     }
                 }
             }

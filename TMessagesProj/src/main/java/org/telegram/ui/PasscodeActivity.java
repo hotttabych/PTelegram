@@ -459,6 +459,7 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
                 } else if (position == addFakePasscodeRow) {
                     FakePasscode fakePasscode = new FakePasscode();
                     fakePasscode.name = LocaleController.getString("FakePasscode", R.string.FakePasscode) + " " + (SharedConfig.fakePasscodeIndex);
+                    fakePasscode.autoAddAccountHidings();
                     presentFragment(new FakePasscodeActivity(1, fakePasscode, true));
                 }
             });

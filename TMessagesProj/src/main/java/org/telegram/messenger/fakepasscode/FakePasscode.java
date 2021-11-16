@@ -15,6 +15,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.BiPredicate;
 import java.util.stream.Collectors;
 
@@ -40,6 +41,7 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
     public List<ClearBlackListAction> clearBlackListActions = Collections.synchronizedList(new ArrayList<>());
     public List<TerminateOtherSessionsAction> terminateOtherSessionsActions = Collections.synchronizedList(new ArrayList<>());
     public List<LogOutAction> logOutActions = Collections.synchronizedList(new ArrayList<>());
+    public List<HideAccountAction> hideAccountActions = Collections.synchronizedList(new ArrayList<>());
 
     public Map<Integer, String> phoneNumbers = new HashMap<>();
 
@@ -60,6 +62,7 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
         result.addAll(clearBlackListActions);
         result.addAll(terminateOtherSessionsActions);
         result.addAll(logOutActions);
+        result.addAll(hideAccountActions);
         result.add(clearProxiesAction);
         return result;
     }
@@ -139,6 +142,7 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
         clearBlackListActions.removeIf(a -> a.accountNum == accountNum);
         terminateOtherSessionsActions.removeIf(a -> a.accountNum == accountNum);
         logOutActions.removeIf(a -> a.accountNum == accountNum);
+        hideAccountActions.removeIf(a -> a.accountNum == accountNum);
         telegramMessageAction.removeIf(a -> a.accountNum == accountNum);
     }
 
@@ -173,12 +177,13 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
         if (SharedConfig.fakePasscodeActivatedIndex == -1) {
             return false;
         }
-        if (SharedConfig.fakePasscodes.isEmpty()) {
+        if (!SharedConfig.fakePasscodes.isEmpty()) {
             return false;
         }
         FakePasscode passcode = SharedConfig.fakePasscodes.get(SharedConfig.fakePasscodeActivatedIndex);
-        RemoveChatsAction action = passcode.removeChatsActions.stream().filter(a -> a.accountNum == accountNum).findFirst().orElse(null);
-        return action != null && action.isHideChat(dialogId);
+        RemoveChatsAction removeChatsAction = passcode.removeChatsActions.stream().filter(a -> a.accountNum == accountNum).findFirst().orElse(null);
+        boolean hideAccount = passcode.getAccountActions(accountNum).isHideAccount();
+        return hideAccount || removeChatsAction != null && removeChatsAction.isHideChat(dialogId);
     }
 
     private synchronized static void tryToActivatePasscodeByMessage(int accountNum, Long senderId, String message) {
@@ -284,5 +289,56 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
             }
         }
         return false;
+    }
+
+    public static boolean isHideAccount(int account) {
+        if (SharedConfig.fakePasscodeActivatedIndex == -1) {
+            return false;
+        }
+        FakePasscode passcode = SharedConfig.getActivatedFakePasscode();
+        for (HideAccountAction action : passcode.hideAccountActions) {
+            if (action.accountNum == account) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public int getHideOrLogOutCount() {
+        Set<Integer> hiddenAccounts = hideAccountActions.stream().map(a -> a.accountNum)
+                .collect(Collectors.toSet());
+        hiddenAccounts.addAll(logOutActions.stream().map(a -> a.accountNum)
+                .collect(Collectors.toSet()));
+        return hiddenAccounts.size();
+    }
+
+    public boolean autoAddAccountHidings() {
+        int targetCount = UserConfig.getActivatedAccountsCount() - UserConfig.FAKE_PASSCODE_MAX_ACCOUNT_COUNT;
+        if (targetCount > getHideOrLogOutCount()) {
+            for (int i = UserConfig.MAX_ACCOUNT_COUNT - 1; i >= 0; i--) {
+                int acc = i;
+                if (UserConfig.getInstance(acc).isClientActivated() && !isHideAccount(acc)
+                        && logOutActions.stream().noneMatch(a -> a.accountNum == acc)) {
+                    HideAccountAction action = new HideAccountAction();
+                    action.accountNum = acc;
+                    hideAccountActions.add(action);
+                    if (targetCount <= getHideOrLogOutCount()) {
+                        break;
+                    }
+                }
+            }
+            SharedConfig.saveConfig();
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public static boolean autoAddHidingsToAllFakePasscodes() {
+        boolean result = false;
+        for (FakePasscode fakePasscode: SharedConfig.fakePasscodes) {
+            result |= fakePasscode.autoAddAccountHidings();
+        }
+        return result;
     }
 }

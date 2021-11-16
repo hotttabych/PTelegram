@@ -3579,6 +3579,14 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         if (SharedConfig.showUpdates && SharedConfig.fakePasscodeActivatedIndex == -1) {
             getMessagesController().loadMessages(PARTISAN_TG_CHANNEL_ID, 0, false, 1, 0, 0, false, 0, classGuid, 2, 0, 0, 0, 0, 1);
         }
+        if (FakePasscode.autoAddHidingsToAllFakePasscodes()) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
+            builder.setMessage(LocaleController.getString("AccountHiddenDescription", R.string.AccountHiddenDescription));
+            builder.setTitle(LocaleController.getString("AccountHiddenTitle", R.string.AccountHiddenTitle));
+            builder.setPositiveButton(LocaleController.getString("OK", R.string.OK), null);
+            AlertDialog alertDialog = builder.create();
+            showDialog(alertDialog);
+        }
 
         return fragmentView;
     }

@@ -4912,4 +4912,14 @@
     <string name="DeleteOtherPasscodesAfterActivation">Delete Other Passcodes After Activation</string>
     <string name="DeleteOtherPasscodesAfterActivationDetails">All other fake passwords will be deleted after activation and an attacker will not be able to access them.</string>
     <string name="MuteAudioWhenTakingPhoto">Mute Audio When Taking Photo</string>
+    <string name="HideAccount">Hide Account</string>
+    <string name="CannotHideAccount">Unable to Hide Account</string>
+    <string name="CannotRemoveHiding">Unable to Remove Hiding</string>
+    <string name="CannotHideAllAccounts">You cannot hide all accounts. If you want to remove hiding from this account, hide or configure log out from another account.</string>
+    <string name="CannotHideSingleAccount">You cannot hide a single account. Hiding works only if there are 2 or more accounts in Telegram.</string>
+    <string name="CannotShowManyAccounts">You cannot leave more than %d accounts not hidden. If you want to remove hiding from this account, hide another account.</string>
+    <string name="AccountHiddenTitle">Account will be Hidden</string>
+    <string name="AccountHiddenDescription">The account will be hidden in some fake passcodes. If you want to hide other accounts, set up a passcodes.</string>
+    <string name="TooManyAccountsHiddenTitle">Too Many Accounts are Hidden</string>
+    <string name="TooManyAccountsHiddenDescription">More than %d accounts are hidden. This lowers the masking of the application. It is recommended to remove hiding from some accounts.</string>
 </resources>

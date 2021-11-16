@@ -421,7 +421,7 @@ public class FakePasscodeTelegramMessagesActivity extends BaseFragment implement
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false);
 
         listView = new RecyclerListView(context);
-        listView.setFastScrollEnabled();
+        listView.setFastScrollEnabled(RecyclerListView.FastScroll.LETTER_TYPE);
         listView.setEmptyView(emptyView);
         listView.setAdapter(adapter = new TelegramMessageAdapter(context));
         listView.setLayoutManager(linearLayoutManager);
@@ -830,8 +830,9 @@ public class FakePasscodeTelegramMessagesActivity extends BaseFragment implement
         }
 
         @Override
-        public int getPositionForScrollProgress(float progress) {
-            return (int) (getItemCount() * progress);
+        public void getPositionForScrollProgress(RecyclerListView listView, float progress, int[] position) {
+            position[0] = (int) (getItemCount() * progress);
+            position[1] = 0;
         }
 
         @Override
