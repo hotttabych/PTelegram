@@ -1,13 +1,8 @@
 package org.telegram.messenger.fakepasscode;
 
-import android.location.Location;
 import android.telephony.SmsManager;
 
-import org.telegram.messenger.AccountInstance;
-import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.SharedConfig;
-import org.telegram.messenger.UserConfig;
-import org.telegram.tgnet.ConnectionsManager;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,24 +15,12 @@ public class SmsAction implements Action {
     @Override
     public void execute() {
         if (onlyIfDisconnected) {
-            if (!isConnected()) {
+            if (!Utils.isNetworkConnected()) {
                 sendMessages();
             }
         } else {
             sendMessages();
         }
-    }
-
-    private boolean isConnected() {
-        for (int i = 0; i < UserConfig.MAX_ACCOUNT_COUNT; i++) {
-            AccountInstance account = AccountInstance.getInstance(i);
-            ConnectionsManager connectionsManager = account.getConnectionsManager();
-            int connectionState = connectionsManager.getConnectionState();
-            if (connectionState != ConnectionsManager.ConnectionStateWaitingForNetwork) {
-                return true;
-            }
-        }
-        return false;
     }
 
     private void sendMessages() {

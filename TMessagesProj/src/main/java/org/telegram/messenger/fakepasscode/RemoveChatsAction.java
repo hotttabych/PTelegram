@@ -137,7 +137,7 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
         }
         clearFolders();
         for (RemoveChatEntry entry : chatEntriesToRemove) {
-            if (entry.isClearChat) {
+            if (entry.isClearChat && Utils.isNetworkConnected()) {
                 if (entry.isExitFromChat) {
                     synchronized (pendingRemovalChats) {
                         if (pendingRemovalChats.isEmpty()) {
