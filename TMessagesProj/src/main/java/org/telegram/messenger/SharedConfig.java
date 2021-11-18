@@ -633,8 +633,11 @@ public class SharedConfig {
     }
 
     public static void fakePasscodeActivated(int fakePasscodeIndex) {
+        int oldIndex = fakePasscodeActivatedIndex;
         fakePasscodeActivatedIndex = fakePasscodeIndex;
-        NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.fakePasscodeActivated);
+        if (oldIndex != fakePasscodeIndex) {
+            NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.fakePasscodeActivated);
+        }
     }
 
     public static boolean isPassportConfigLoaded() {
