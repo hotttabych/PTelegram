@@ -198,6 +198,8 @@ public class SharedConfig {
         public FakePasscodesWrapper() {}
     }
 
+    public static boolean oldCacheCleared = false;
+
     static {
         loadConfig();
     }
@@ -321,6 +323,7 @@ public class SharedConfig {
                 editor.putBoolean("takePhotoOnBadPasscodeFront", takePhotoWithBadPasscodeFront);
                 editor.putBoolean("takePhotoOnBadPasscodeBack", takePhotoWithBadPasscodeBack);
                 editor.putBoolean("takePhotoMuteAudio", takePhotoMuteAudio);
+                editor.putBoolean("oldCacheCleared", oldCacheCleared);
 
                 if (pendingAppUpdate != null) {
                     try {
@@ -446,6 +449,7 @@ public class SharedConfig {
             takePhotoWithBadPasscodeFront = preferences.getBoolean("takePhotoOnBadPasscodeFront", false);
             takePhotoWithBadPasscodeBack = preferences.getBoolean("takePhotoOnBadPasscodeBack", false);
             takePhotoMuteAudio = preferences.getBoolean("takePhotoMuteAudio", true);
+            oldCacheCleared = preferences.getBoolean("oldCacheCleared", false);
 
             String authKeyString = preferences.getString("pushAuthKey", null);
             if (!TextUtils.isEmpty(authKeyString)) {

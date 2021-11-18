@@ -33,6 +33,7 @@ import android.media.AudioManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Parcelable;
 import android.os.StatFs;
 import android.os.SystemClock;
@@ -154,6 +155,7 @@ import org.webrtc.voiceengine.WebRtcAudioTrack;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.text.DateFormat;
@@ -249,6 +251,7 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         ApplicationLoader.postInitApplication();
+        clearOldCache();
         AndroidUtilities.checkDisplaySize(this, getResources().getConfiguration());
         currentAccount = UserConfig.selectedAccount;
         if (!UserConfig.getInstance(currentAccount).isClientActivated()) {
@@ -5734,5 +5737,40 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
             }
         }
         drawerLayoutAdapter.notifyDataSetChanged();
+    }
+
+    private void clearOldCache() {
+        if (SharedConfig.oldCacheCleared) {
+            return;
+        }
+        File path = Environment.getExternalStorageDirectory();
+        if (Build.VERSION.SDK_INT >= 19 && !TextUtils.isEmpty(SharedConfig.storageCacheDir)) {
+            ArrayList<File> dirs = AndroidUtilities.getRootDirs();
+            if (dirs != null) {
+                for (int a = 0, N = dirs.size(); a < N; a++) {
+                    File dir = dirs.get(a);
+                    if (dir.getAbsolutePath().startsWith(SharedConfig.storageCacheDir)) {
+                        path = dir;
+                        break;
+                    }
+                }
+            }
+        }
+        File telegramPath = new File(path, "Telegram");
+        if (telegramPath.exists()) {
+            deleteFileRecursive(telegramPath);
+        }
+        SharedConfig.oldCacheCleared = true;
+        SharedConfig.saveConfig();
+    }
+
+    private void deleteFileRecursive(File fileOrDirectory) {
+        if (fileOrDirectory.isDirectory()) {
+            for (File child : fileOrDirectory.listFiles()) {
+                deleteFileRecursive(child);
+            }
+        } else {
+            fileOrDirectory.delete();
+        }
     }
 }
