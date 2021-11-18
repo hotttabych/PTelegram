@@ -1431,4 +1431,16 @@ public class SharedConfig {
             ApplicationLoader.applicationContext.getSharedPreferences("mainconfig", Activity.MODE_PRIVATE).edit().putInt("fastScrollHintCount", fastScrollHintCount).apply();
         }
     }
+
+    public static int getAutoLockIn() {
+        if (autoLockIn == 1) {
+            if (getActivatedFakePasscode() == null) {
+                return autoLockIn;
+            } else {
+                return 60;
+            }
+        } else {
+            return autoLockIn;
+        }
+    }
 }

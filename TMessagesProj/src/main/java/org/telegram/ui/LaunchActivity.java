@@ -5215,11 +5215,11 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
                 if (BuildVars.LOGS_ENABLED) {
                     FileLog.d("schedule app lock in " + 1000);
                 }
-            } else if (SharedConfig.autoLockIn != 0) {
+            } else if (SharedConfig.getAutoLockIn() != 0) {
                 if (BuildVars.LOGS_ENABLED) {
-                    FileLog.d("schedule app lock in " + (((long) SharedConfig.autoLockIn) * 1000 + 1000));
+                    FileLog.d("schedule app lock in " + (((long) SharedConfig.getAutoLockIn()) * 1000 + 1000));
                 }
-                AndroidUtilities.runOnUIThread(lockRunnable, ((long) SharedConfig.autoLockIn) * 1000 + 1000);
+                AndroidUtilities.runOnUIThread(lockRunnable, ((long) SharedConfig.getAutoLockIn()) * 1000 + 1000);
             }
         } else {
             SharedConfig.lastPauseTime = 0;
