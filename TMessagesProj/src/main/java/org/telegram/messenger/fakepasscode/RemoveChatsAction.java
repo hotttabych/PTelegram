@@ -319,6 +319,8 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
         }
 
         Utils.deleteDialog(accountNum, dialogId);
+        AndroidUtilities.runOnUIThread(() -> Utils.deleteDialog(accountNum, dialogId), 100);
+        AndroidUtilities.runOnUIThread(() -> Utils.deleteDialog(accountNum, dialogId), 1000);
         notificationCenter.postNotificationName(NotificationCenter.dialogDeletedByAction, dialogId);
     }
 
