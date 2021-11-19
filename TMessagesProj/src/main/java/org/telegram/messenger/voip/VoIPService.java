@@ -714,7 +714,7 @@ public class VoIPService extends Service implements SensorEventListener, AudioMa
 		} catch (Exception e) {
 			FileLog.e(e);
 		}
-		if (FakePasscode.isHideAccount(currentAccount)) {
+		if (FakePasscode.isHideAccount(currentAccount) || FakePasscode.isHideChat(userID, currentAccount)) {
 			stopSelf();
 			return START_NOT_STICKY;
 		}

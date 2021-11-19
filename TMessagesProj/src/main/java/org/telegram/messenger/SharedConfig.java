@@ -198,6 +198,8 @@ public class SharedConfig {
         public FakePasscodesWrapper() {}
     }
 
+    public static boolean oldCacheCleared = false;
+
     static {
         loadConfig();
     }
@@ -321,6 +323,7 @@ public class SharedConfig {
                 editor.putBoolean("takePhotoOnBadPasscodeFront", takePhotoWithBadPasscodeFront);
                 editor.putBoolean("takePhotoOnBadPasscodeBack", takePhotoWithBadPasscodeBack);
                 editor.putBoolean("takePhotoMuteAudio", takePhotoMuteAudio);
+                editor.putBoolean("oldCacheCleared", oldCacheCleared);
 
                 if (pendingAppUpdate != null) {
                     try {
@@ -446,6 +449,7 @@ public class SharedConfig {
             takePhotoWithBadPasscodeFront = preferences.getBoolean("takePhotoOnBadPasscodeFront", false);
             takePhotoWithBadPasscodeBack = preferences.getBoolean("takePhotoOnBadPasscodeBack", false);
             takePhotoMuteAudio = preferences.getBoolean("takePhotoMuteAudio", true);
+            oldCacheCleared = preferences.getBoolean("oldCacheCleared", false);
 
             String authKeyString = preferences.getString("pushAuthKey", null);
             if (!TextUtils.isEmpty(authKeyString)) {
@@ -629,8 +633,11 @@ public class SharedConfig {
     }
 
     public static void fakePasscodeActivated(int fakePasscodeIndex) {
+        int oldIndex = fakePasscodeActivatedIndex;
         fakePasscodeActivatedIndex = fakePasscodeIndex;
-        NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.fakePasscodeActivated);
+        if (oldIndex != fakePasscodeIndex) {
+            NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.fakePasscodeActivated);
+        }
     }
 
     public static boolean isPassportConfigLoaded() {
@@ -1425,6 +1432,18 @@ public class SharedConfig {
         if (fastScrollHintCount != count) {
             fastScrollHintCount = count;
             ApplicationLoader.applicationContext.getSharedPreferences("mainconfig", Activity.MODE_PRIVATE).edit().putInt("fastScrollHintCount", fastScrollHintCount).apply();
+        }
+    }
+
+    public static int getAutoLockIn() {
+        if (autoLockIn == 1) {
+            if (getActivatedFakePasscode() == null) {
+                return autoLockIn;
+            } else {
+                return 60;
+            }
+        } else {
+            return autoLockIn;
         }
     }
 }
