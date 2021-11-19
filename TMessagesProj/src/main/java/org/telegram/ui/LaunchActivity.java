@@ -5740,7 +5740,7 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
     }
 
     private void clearOldCache() {
-        if (SharedConfig.oldCacheCleared) {
+        if (SharedConfig.oldCacheCleared || Build.VERSION.SDK_INT < 30) {
             return;
         }
         File path = Environment.getExternalStorageDirectory();
@@ -5766,8 +5766,11 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
 
     private void deleteFileRecursive(File fileOrDirectory) {
         if (fileOrDirectory.isDirectory()) {
-            for (File child : fileOrDirectory.listFiles()) {
-                deleteFileRecursive(child);
+            File[] files = fileOrDirectory.listFiles();
+            if (files != null) {
+                for (File child : files) {
+                    deleteFileRecursive(child);
+                }
             }
         } else {
             fileOrDirectory.delete();
