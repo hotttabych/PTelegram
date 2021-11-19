@@ -358,32 +358,33 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
                     builder.setTitle(LocaleController.getString("AutoLock", R.string.AutoLock));
                     final NumberPicker numberPicker = new NumberPicker(getParentActivity());
                     numberPicker.setMinValue(0);
-                    numberPicker.setMaxValue(4);
+                    int fakePasscodeValueShift = SharedConfig.getActivatedFakePasscode() == null ? 0 : 1;
+                    numberPicker.setMaxValue(5 - fakePasscodeValueShift);
                     if (SharedConfig.getAutoLockIn() == 0) {
                         numberPicker.setValue(0);
                     } else if (SharedConfig.getAutoLockIn() == 1) {
                         numberPicker.setValue(1);
                     } else if (SharedConfig.getAutoLockIn() == 60) {
-                        numberPicker.setValue(2);
+                        numberPicker.setValue(2 - fakePasscodeValueShift);
                     } else if (SharedConfig.getAutoLockIn() == 60 * 5) {
-                        numberPicker.setValue(3);
+                        numberPicker.setValue(3 - fakePasscodeValueShift);
                     } else if (SharedConfig.getAutoLockIn() == 60 * 60) {
-                        numberPicker.setValue(4);
+                        numberPicker.setValue(4 - fakePasscodeValueShift);
                     } else if (SharedConfig.getAutoLockIn() == 60 * 60 * 5) {
-                        numberPicker.setValue(5);
+                        numberPicker.setValue(5 - fakePasscodeValueShift);
                     }
                     numberPicker.setFormatter(value -> {
                         if (value == 0) {
                             return LocaleController.getString("AutoLockDisabled", R.string.AutoLockDisabled);
-                        } else if (value == 1) {
+                        } else if (fakePasscodeValueShift == 0 && value == 1) {
                             return LocaleController.formatString("AutoLockInTime", R.string.AutoLockInTime, LocaleController.formatPluralString("Seconds", 1));
-                        } else if (value == 2) {
+                        } else if (value == 2 - fakePasscodeValueShift) {
                             return LocaleController.formatString("AutoLockInTime", R.string.AutoLockInTime, LocaleController.formatPluralString("Minutes", 1));
-                        } else if (value == 3) {
+                        } else if (value == 3 - fakePasscodeValueShift) {
                             return LocaleController.formatString("AutoLockInTime", R.string.AutoLockInTime, LocaleController.formatPluralString("Minutes", 5));
-                        } else if (value == 4) {
+                        } else if (value == 4 - fakePasscodeValueShift) {
                             return LocaleController.formatString("AutoLockInTime", R.string.AutoLockInTime, LocaleController.formatPluralString("Hours", 1));
-                        } else if (value == 5) {
+                        } else if (value == 5 - fakePasscodeValueShift) {
                             return LocaleController.formatString("AutoLockInTime", R.string.AutoLockInTime, LocaleController.formatPluralString("Hours", 5));
                         }
                         return "";
@@ -393,15 +394,15 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
                         which = numberPicker.getValue();
                         if (which == 0) {
                             SharedConfig.autoLockIn = 0;
-                        } else if (which == 1) {
+                        } else if (fakePasscodeValueShift == 0 && which == 1) {
                             SharedConfig.autoLockIn = 1;
-                        } else if (which == 2) {
+                        } else if (which == 2 - fakePasscodeValueShift) {
                             SharedConfig.autoLockIn = 60;
-                        } else if (which == 3) {
+                        } else if (which == 3 - fakePasscodeValueShift) {
                             SharedConfig.autoLockIn = 60 * 5;
-                        } else if (which == 4) {
+                        } else if (which == 4 - fakePasscodeValueShift) {
                             SharedConfig.autoLockIn = 60 * 60;
-                        } else if (which == 5) {
+                        } else if (which == 5 - fakePasscodeValueShift) {
                             SharedConfig.autoLockIn = 60 * 60 * 5;
                         }
                         listAdapter.notifyItemChanged(position);
