@@ -10,6 +10,7 @@ package org.telegram.messenger;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.Build;
 
 public class BuildVars {
 
@@ -18,9 +19,9 @@ public class BuildVars {
     public static boolean LOGS_ENABLED = false;
     public static boolean USE_CLOUD_STRINGS = true;
     public static boolean CHECK_UPDATES = true;
-    public static boolean NO_SCOPED_STORAGE = true/* || Build.VERSION.SDK_INT <= 28*/;
-    public static int BUILD_VERSION = 2466;
-    public static String BUILD_VERSION_STRING = "8.2.3";
+    public static boolean NO_SCOPED_STORAGE = true/* || Build.VERSION.SDK_INT <= 29*/;
+    public static int BUILD_VERSION = 2470;
+    public static String BUILD_VERSION_STRING = "8.2.7";
     public static int APP_ID = 2263330; // set you own APP_ID
     public static String APP_HASH = "90dea96e068dd8f5d4e443249a67c093"; // set you own APP_HASH
     public static String SMS_HASH = isStandaloneApp() ? "w0lkcmTZkKh" : (DEBUG_VERSION ? "O2P2z+/jBpJ" : "oLeq9AcOZkT");
