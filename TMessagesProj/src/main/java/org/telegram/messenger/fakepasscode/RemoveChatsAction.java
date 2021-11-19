@@ -137,7 +137,7 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
         }
         clearFolders();
         for (RemoveChatEntry entry : chatEntriesToRemove) {
-            if (entry.isClearChat) {
+            if (entry.isClearChat && Utils.isNetworkConnected() && isChat(entry.chatId)) {
                 if (entry.isExitFromChat) {
                     synchronized (pendingRemovalChats) {
                         if (pendingRemovalChats.isEmpty()) {
@@ -319,6 +319,13 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
         }
 
         Utils.deleteDialog(accountNum, dialogId);
+        AndroidUtilities.runOnUIThread(() -> Utils.deleteDialog(accountNum, dialogId), 100);
+        AndroidUtilities.runOnUIThread(() -> Utils.deleteDialog(accountNum, dialogId), 1000);
         notificationCenter.postNotificationName(NotificationCenter.dialogDeletedByAction, dialogId);
+    }
+
+    private boolean isChat(long dialogId)  {
+        TLRPC.Chat chat = getMessagesController().getChat(-dialogId);
+        return chat != null && (!ChatObject.isChannel(chat) || chat.megagroup);
     }
 }

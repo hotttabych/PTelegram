@@ -14807,20 +14807,30 @@ public class MessagesController extends BaseController implements NotificationCe
         final int[] prevMaxId = new int[]{0};
         forceResetDialogs();
         deleteMessagesDelegate = (id, account, args) -> {
-            int guid = (Integer) args[10];
-            if (guid == deleteAllMessagesGuid) {
-                ArrayList<MessageObject> messArr = (ArrayList<MessageObject>) args[2];
+            if (id == NotificationCenter.messagesDidLoad) {
+                int guid = (Integer) args[10];
+                if (guid == deleteAllMessagesGuid) {
+                    ArrayList<MessageObject> messArr = (ArrayList<MessageObject>) args[2];
 
-                if (!messArr.isEmpty()) {
-                    prevMaxId[0] = clearMessages(dialogId, ownerId, deleteAllMessagesGuid, loadIndex[0]++,
-                            prevMaxId[0], condition, messArr);
-                } else {
+                    if (!messArr.isEmpty()) {
+                        prevMaxId[0] = clearMessages(dialogId, ownerId, deleteAllMessagesGuid, loadIndex[0]++,
+                                prevMaxId[0], condition, messArr);
+                    } else {
+                        getNotificationCenter().removeObserver(deleteMessagesDelegate, NotificationCenter.messagesDidLoad);
+                        getNotificationCenter().postNotificationName(NotificationCenter.dialogCleared, dialogId);
+                    }
+                }
+            } else if (id == NotificationCenter.loadingMessagesFailed) {
+                int guid = (Integer) args[0];
+                if (guid == deleteAllMessagesGuid) {
                     getNotificationCenter().removeObserver(deleteMessagesDelegate, NotificationCenter.messagesDidLoad);
                     getNotificationCenter().postNotificationName(NotificationCenter.dialogCleared, dialogId);
                 }
             }
+
         };
         getNotificationCenter().addObserver(deleteMessagesDelegate, NotificationCenter.messagesDidLoad);
+        getNotificationCenter().addObserver(deleteMessagesDelegate, NotificationCenter.loadingMessagesFailed);
         loadMessages(dialogId, 0, false,
                 100, 0, 0, false, 0,
                 deleteAllMessagesGuid, 0, 0,

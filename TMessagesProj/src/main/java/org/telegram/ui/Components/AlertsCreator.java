@@ -1699,7 +1699,7 @@ public class AlertsCreator {
             currentLastName = user.last_name;
         } else {
             TLRPC.Chat chat = MessagesController.getInstance(currentAccount).getChat(-peerId);
-            currentName = chat.title;
+            currentName = UserConfig.getChatTitleOverride(currentAccount, chat.id, chat.title);
         }
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
         builder.setTitle(peerId > 0 ? LocaleController.getString("VoipEditName", R.string.VoipEditName) : LocaleController.getString("VoipEditTitle", R.string.VoipEditTitle));

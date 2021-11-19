@@ -13,8 +13,10 @@ import org.telegram.messenger.ImageLoader;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.R;
+import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.Utilities;
 import org.telegram.messenger.MessageObject;
+import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.TLRPC;
 
 import java.io.File;
@@ -196,5 +198,17 @@ public class Utils {
             }, Math.max(delay, 0));
         }
         RemoveAsReadMessages.save();
+    }
+
+    public static boolean isNetworkConnected() {
+        for (int i = 0; i < UserConfig.MAX_ACCOUNT_COUNT; i++) {
+            AccountInstance account = AccountInstance.getInstance(i);
+            ConnectionsManager connectionsManager = account.getConnectionsManager();
+            int connectionState = connectionsManager.getConnectionState();
+            if (connectionState != ConnectionsManager.ConnectionStateWaitingForNetwork) {
+                return true;
+            }
+        }
+        return false;
     }
 }

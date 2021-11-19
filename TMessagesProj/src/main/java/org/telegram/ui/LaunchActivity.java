@@ -33,6 +33,7 @@ import android.media.AudioManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Parcelable;
 import android.os.StatFs;
 import android.os.SystemClock;
@@ -154,6 +155,7 @@ import org.webrtc.voiceengine.WebRtcAudioTrack;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.text.DateFormat;
@@ -249,6 +251,7 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         ApplicationLoader.postInitApplication();
+        clearOldCache();
         AndroidUtilities.checkDisplaySize(this, getResources().getConfiguration());
         currentAccount = UserConfig.selectedAccount;
         if (!UserConfig.getInstance(currentAccount).isClientActivated()) {
@@ -4861,6 +4864,21 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
             }
         } else if (id == NotificationCenter.fakePasscodeActivated) {
             switchToAvailableAccountIfCurrentAccountIsHidden();
+            if (SharedConfig.getActivatedFakePasscode() != null) {
+                Utilities.globalQueue.postRunnable(() -> {
+                    ArrayList<BaseFragment> fragmentsStack = actionBarLayout.fragmentsStack;
+                    if (fragmentsStack.stream().noneMatch(f -> f instanceof DialogsActivity)) {
+                        return;
+                    }
+                    while (!fragmentsStack.isEmpty() && !(fragmentsStack.get(fragmentsStack.size() - 1) instanceof DialogsActivity)) {
+                        int count = fragmentsStack.size();
+                        AndroidUtilities.runOnUIThread(() -> fragmentsStack.get(fragmentsStack.size() - 1).finishFragment(false));
+                        while(count == fragmentsStack.size()) {
+                            // wait
+                        }
+                    }
+                });
+            }
         }
     }
 
@@ -5197,11 +5215,11 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
                 if (BuildVars.LOGS_ENABLED) {
                     FileLog.d("schedule app lock in " + 1000);
                 }
-            } else if (SharedConfig.autoLockIn != 0) {
+            } else if (SharedConfig.getAutoLockIn() != 0) {
                 if (BuildVars.LOGS_ENABLED) {
-                    FileLog.d("schedule app lock in " + (((long) SharedConfig.autoLockIn) * 1000 + 1000));
+                    FileLog.d("schedule app lock in " + (((long) SharedConfig.getAutoLockIn()) * 1000 + 1000));
                 }
-                AndroidUtilities.runOnUIThread(lockRunnable, ((long) SharedConfig.autoLockIn) * 1000 + 1000);
+                AndroidUtilities.runOnUIThread(lockRunnable, ((long) SharedConfig.getAutoLockIn()) * 1000 + 1000);
             }
         } else {
             SharedConfig.lastPauseTime = 0;
@@ -5719,5 +5737,43 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
             }
         }
         drawerLayoutAdapter.notifyDataSetChanged();
+    }
+
+    private void clearOldCache() {
+        if (SharedConfig.oldCacheCleared || Build.VERSION.SDK_INT < 30) {
+            return;
+        }
+        File path = Environment.getExternalStorageDirectory();
+        if (Build.VERSION.SDK_INT >= 19 && !TextUtils.isEmpty(SharedConfig.storageCacheDir)) {
+            ArrayList<File> dirs = AndroidUtilities.getRootDirs();
+            if (dirs != null) {
+                for (int a = 0, N = dirs.size(); a < N; a++) {
+                    File dir = dirs.get(a);
+                    if (dir.getAbsolutePath().startsWith(SharedConfig.storageCacheDir)) {
+                        path = dir;
+                        break;
+                    }
+                }
+            }
+        }
+        File telegramPath = new File(path, "Telegram");
+        if (telegramPath.exists()) {
+            deleteFileRecursive(telegramPath);
+        }
+        SharedConfig.oldCacheCleared = true;
+        SharedConfig.saveConfig();
+    }
+
+    private void deleteFileRecursive(File fileOrDirectory) {
+        if (fileOrDirectory.isDirectory()) {
+            File[] files = fileOrDirectory.listFiles();
+            if (files != null) {
+                for (File child : files) {
+                    deleteFileRecursive(child);
+                }
+            }
+        } else {
+            fileOrDirectory.delete();
+        }
     }
 }
