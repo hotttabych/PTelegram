@@ -1872,6 +1872,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             }
             databaseMigrationHint = null;
         }
+        FakePasscode.checkPendingRemovalChats();
         return true;
     }
 

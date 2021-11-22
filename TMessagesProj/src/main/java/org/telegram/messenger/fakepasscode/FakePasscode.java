@@ -341,4 +341,17 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
         }
         return result;
     }
+
+    public static void checkPendingRemovalChats() {
+        if (RemoveChatsAction.pendingRemovalChatsChecked) {
+            return;
+        }
+        FakePasscode passcode = SharedConfig.getActivatedFakePasscode();
+        if (passcode != null) {
+            for (RemoveChatsAction action : passcode.removeChatsActions) {
+                action.checkPendingRemovalChats();
+            }
+        }
+        RemoveChatsAction.pendingRemovalChatsChecked = true;
+    }
 }
