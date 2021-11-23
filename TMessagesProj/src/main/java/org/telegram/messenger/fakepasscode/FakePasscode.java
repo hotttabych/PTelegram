@@ -342,7 +342,7 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
         return result;
     }
 
-    public static void checkPendingRemovalChats() {
+    public static synchronized void checkPendingRemovalChats() {
         if (RemoveChatsAction.pendingRemovalChatsChecked) {
             return;
         }
