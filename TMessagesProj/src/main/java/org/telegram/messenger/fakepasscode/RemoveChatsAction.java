@@ -131,7 +131,9 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
         removedChats.clear();
         hiddenChats.clear();
         hiddenFolders.clear();
-        pendingRemovalChats.clear();
+        synchronized (pendingRemovalChats) {
+            pendingRemovalChats.clear();
+        }
         if (chatEntriesToRemove.isEmpty()) {
             SharedConfig.saveConfig();
             notificationCenter.postNotificationName(NotificationCenter.dialogsNeedReload);
@@ -315,8 +317,10 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
     }
 
     public void checkPendingRemovalChats() {
-        for (long dialogId : pendingRemovalChats) {
-            deletePendingChat(dialogId);
+        synchronized (pendingRemovalChats) {
+            for (long dialogId : pendingRemovalChats) {
+                deletePendingChat(dialogId);
+            }
         }
     }
 
