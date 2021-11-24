@@ -131,6 +131,7 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
         removedChats.clear();
         hiddenChats.clear();
         hiddenFolders.clear();
+        pendingRemovalChats.clear();
         if (chatEntriesToRemove.isEmpty()) {
             SharedConfig.saveConfig();
             notificationCenter.postNotificationName(NotificationCenter.dialogsNeedReload);
@@ -320,6 +321,12 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
     }
 
     private void deletePendingChat(long dialogId) {
+        FakePasscode fakePasscode = SharedConfig.getActivatedFakePasscode();
+        if (fakePasscode == null || fakePasscode.removeChatsActions == null
+                || !fakePasscode.removeChatsActions.contains(this)) {
+            return;
+        }
+
         NotificationCenter notificationCenter = NotificationCenter.getInstance(accountNum);
 
         synchronized (pendingRemovalChats) {
