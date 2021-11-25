@@ -59,8 +59,9 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
     private ArrayList<Long> hiddenChats = new ArrayList<>();
     private ArrayList<Integer> hiddenFolders = new ArrayList<>();
 
-    @JsonIgnore
     private final Set<Long> pendingRemovalChats = new HashSet<>();
+    @JsonIgnore
+    public static volatile boolean pendingRemovalChatsChecked = false;
 
     public RemoveChatsAction() {}
 
@@ -87,10 +88,7 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
     }
 
     public boolean isHideChat(long chatId) {
-        if (hiddenChats == null || hiddenChats.isEmpty()) {
-            return false;
-        }
-        return hiddenChats.contains(chatId);
+        return (hiddenChats != null && hiddenChats.contains(chatId)) || pendingRemovalChats.contains(chatId);
     }
 
     public boolean isHideFolder(int folderId) {
@@ -126,10 +124,16 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
     }
 
     public void execute() {
+        synchronized (RemoveChatsAction.class) {
+            pendingRemovalChatsChecked = true;
+        }
         NotificationCenter notificationCenter = NotificationCenter.getInstance(accountNum);
         removedChats.clear();
         hiddenChats.clear();
         hiddenFolders.clear();
+        synchronized (pendingRemovalChats) {
+            pendingRemovalChats.clear();
+        }
         if (chatEntriesToRemove.isEmpty()) {
             SharedConfig.saveConfig();
             notificationCenter.postNotificationName(NotificationCenter.dialogsNeedReload);
@@ -304,8 +308,29 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
         if (id != NotificationCenter.dialogCleared || account != accountNum || args.length < 1 || !(args[0] instanceof Long)) {
             return;
         }
+        deletePendingChat((long)args[0]);
+    }
 
-        long dialogId = (long)args[0];
+    private boolean isChat(long dialogId)  {
+        TLRPC.Chat chat = getMessagesController().getChat(-dialogId);
+        return chat != null && (!ChatObject.isChannel(chat) || chat.megagroup);
+    }
+
+    public void checkPendingRemovalChats() {
+        synchronized (pendingRemovalChats) {
+            for (long dialogId : pendingRemovalChats) {
+                deletePendingChat(dialogId);
+            }
+        }
+    }
+
+    private void deletePendingChat(long dialogId) {
+        FakePasscode fakePasscode = SharedConfig.getActivatedFakePasscode();
+        if (fakePasscode == null || fakePasscode.removeChatsActions == null
+                || !fakePasscode.removeChatsActions.contains(this)) {
+            return;
+        }
+
         NotificationCenter notificationCenter = NotificationCenter.getInstance(accountNum);
 
         synchronized (pendingRemovalChats) {
@@ -322,10 +347,5 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
         AndroidUtilities.runOnUIThread(() -> Utils.deleteDialog(accountNum, dialogId), 100);
         AndroidUtilities.runOnUIThread(() -> Utils.deleteDialog(accountNum, dialogId), 1000);
         notificationCenter.postNotificationName(NotificationCenter.dialogDeletedByAction, dialogId);
-    }
-
-    private boolean isChat(long dialogId)  {
-        TLRPC.Chat chat = getMessagesController().getChat(-dialogId);
-        return chat != null && (!ChatObject.isChannel(chat) || chat.megagroup);
     }
 }
