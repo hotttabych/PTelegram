@@ -318,7 +318,7 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
 
     public void checkPendingRemovalChats() {
         synchronized (pendingRemovalChats) {
-            List<Long> pendingRemovalChatsCopy = pendingRemovalChats.stream().collect(Collectors.toList());
+            List<Long> pendingRemovalChatsCopy = new ArrayList<>(pendingRemovalChats);
             for (long dialogId : pendingRemovalChatsCopy) {
                 deletePendingChat(dialogId);
             }
