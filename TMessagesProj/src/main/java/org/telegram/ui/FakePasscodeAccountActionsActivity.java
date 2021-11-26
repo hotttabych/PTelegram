@@ -148,7 +148,7 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
             }
             if (position == changeTelegramMessageRow) {
                 presentFragment(new FakePasscodeTelegramMessagesActivity(actions.getMessageAction()));
-            } if (position == changePhoneRow) {
+            } else if (position == changePhoneRow) {
                 DialogTemplate template = new DialogTemplate();
                 template.type = DialogType.EDIT;
                 template.title = LocaleController.getString("FakePhoneNumber", R.string.FakePhoneNumber);
@@ -270,6 +270,8 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
         logOutRow = rowCount++;
         if (!actions.isLogOut()) {
             hideAccountRow = rowCount++;
+        } else {
+            hideAccountRow = -1;
         }
         actionsDetailRow = rowCount++;
     }
