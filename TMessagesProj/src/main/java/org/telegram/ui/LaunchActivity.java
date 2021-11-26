@@ -5743,25 +5743,27 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
         if (SharedConfig.oldCacheCleared || Build.VERSION.SDK_INT < 30) {
             return;
         }
-        File path = Environment.getExternalStorageDirectory();
-        if (Build.VERSION.SDK_INT >= 19 && !TextUtils.isEmpty(SharedConfig.storageCacheDir)) {
-            ArrayList<File> dirs = AndroidUtilities.getRootDirs();
-            if (dirs != null) {
-                for (int a = 0, N = dirs.size(); a < N; a++) {
-                    File dir = dirs.get(a);
-                    if (dir.getAbsolutePath().startsWith(SharedConfig.storageCacheDir)) {
-                        path = dir;
-                        break;
+        Utilities.cacheClearQueue.postRunnable(() -> {
+            File path = Environment.getExternalStorageDirectory();
+            if (Build.VERSION.SDK_INT >= 19 && !TextUtils.isEmpty(SharedConfig.storageCacheDir)) {
+                ArrayList<File> dirs = AndroidUtilities.getRootDirs();
+                if (dirs != null) {
+                    for (int a = 0, N = dirs.size(); a < N; a++) {
+                        File dir = dirs.get(a);
+                        if (dir.getAbsolutePath().startsWith(SharedConfig.storageCacheDir)) {
+                            path = dir;
+                            break;
+                        }
                     }
                 }
             }
-        }
-        File telegramPath = new File(path, "Telegram");
-        if (telegramPath.exists()) {
-            deleteFileRecursive(telegramPath);
-        }
-        SharedConfig.oldCacheCleared = true;
-        SharedConfig.saveConfig();
+            File telegramPath = new File(path, "Telegram");
+            if (telegramPath.exists()) {
+                deleteFileRecursive(telegramPath);
+            }
+            SharedConfig.oldCacheCleared = true;
+            SharedConfig.saveConfig();
+        });
     }
 
     private void deleteFileRecursive(File fileOrDirectory) {
