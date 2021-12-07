@@ -150,6 +150,7 @@ import org.telegram.ui.Components.CrossfadeDrawable;
 import org.telegram.ui.Components.CubicBezierInterpolator;
 import org.telegram.ui.Components.EditTextCaption;
 import org.telegram.ui.Components.FragmentContextView;
+import org.telegram.ui.Components.HintView;
 import org.telegram.ui.Components.IdenticonDrawable;
 import org.telegram.ui.Components.ImageUpdater;
 import org.telegram.ui.Components.LayoutHelper;
@@ -214,6 +215,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
 
     private RLottieDrawable cameraDrawable;
 
+    private HintView fwdRestrictedHint;
     private FrameLayout avatarContainer;
     private FrameLayout avatarContainer2;
     private AvatarImageView avatarImage;
@@ -2051,7 +2053,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 if (pinchToZoomHelper.isInOverlayMode()) {
                     return pinchToZoomHelper.onTouchEvent(ev);
                 }
-                if (sharedMediaLayout != null && sharedMediaLayout.isInFastScroll() && sharedMediaLayout.getY() == 0) {
+                if (sharedMediaLayout != null && sharedMediaLayout.isInFastScroll() && sharedMediaLayout.isPinnedToTop()) {
                     return sharedMediaLayout.dispatchFastScrollEvent(ev);
                 }
                 if (sharedMediaLayout != null && sharedMediaLayout.checkPinchToZoom(ev)) {
@@ -2139,7 +2141,11 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     allowPullingDown = true;
                     isPulledDown = true;
                     if (otherItem != null) {
-                        otherItem.showSubItem(gallery_menu_save);
+                        if (!getMessagesController().isChatNoForwards(currentChat)) {
+                            otherItem.showSubItem(gallery_menu_save);
+                        } else {
+                            otherItem.hideSubItem(gallery_menu_save);
+                        }
                         if (imageUpdater != null) {
                             otherItem.showSubItem(edit_avatar);
                             otherItem.showSubItem(delete_avatar);
@@ -3248,10 +3254,14 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
 
             @Override
             public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+                if (fwdRestrictedHint != null) {
+                    fwdRestrictedHint.hide();
+                }
                 checkListViewScroll();
                 if (participantsMap != null && !usersEndReached && layoutManager.findLastVisibleItemPosition() > membersEndRow - 8) {
                     getChannelParticipants(false);
                 }
+                sharedMediaLayout.setPinnedToTop(sharedMediaLayout.getY() == 0);
             }
         });
 
@@ -3355,6 +3365,10 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
 
         updateSelectedMediaTabText();
 
+        fwdRestrictedHint = new HintView(getParentActivity(), 9);
+        fwdRestrictedHint.setAlpha(0);
+        frameLayout.addView(fwdRestrictedHint, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.LEFT | Gravity.TOP, 12, 0, 12, 0));
+        sharedMediaLayout.setForwardRestrictedHint(fwdRestrictedHint);
 
         ViewGroup decorView;
         if (Build.VERSION.SDK_INT >= 21) {
@@ -4351,7 +4365,11 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 if (allowPullingDown && (openingAvatar || expandProgress >= 0.33f)) {
                     if (!isPulledDown) {
                         if (otherItem != null) {
-                            otherItem.showSubItem(gallery_menu_save);
+                            if (!getMessagesController().isChatNoForwards(currentChat)) {
+                                otherItem.showSubItem(gallery_menu_save);
+                            } else {
+                                otherItem.hideSubItem(gallery_menu_save);
+                            }
                             if (imageUpdater != null) {
                                 otherItem.showSubItem(add_photo);
                                 otherItem.showSubItem(edit_avatar);
@@ -6290,6 +6308,10 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         } else {
             otherItem.addSubItem(gallery_menu_save, R.drawable.msg_gallery, LocaleController.getString("SaveToGallery", R.string.SaveToGallery));
         }
+        if (getMessagesController().isChatNoForwards(currentChat)) {
+            otherItem.hideSubItem(gallery_menu_save);
+        }
+
         if (selfUser) {
             otherItem.addSubItem(logout, R.drawable.msg_leave, LocaleController.getString("LogOut", R.string.LogOut));
         }
