@@ -182,15 +182,6 @@ public class SessionCell extends FrameLayout {
                 dotDividerSpan.setTopPadding(AndroidUtilities.dp(1.5f));
                 spannableStringBuilder.append(" . ").setSpan(dotDividerSpan, spannableStringBuilder.length() - 2, spannableStringBuilder.length() - 1, 0);
             }
-            if (!session.official_app && !isSessionOfThisApp) {
-                if (stringBuilder.length() != 0) {
-                    stringBuilder.append(", ");
-                }
-                stringBuilder.append(LocaleController.getString("UnofficialApp", R.string.UnofficialApp));
-                stringBuilder.append(" (ID: ");
-                stringBuilder.append(session.api_id);
-                stringBuilder.append(")");
-            }
             spannableStringBuilder.append(timeText);
             detailExTextView.setText(spannableStringBuilder);
 
