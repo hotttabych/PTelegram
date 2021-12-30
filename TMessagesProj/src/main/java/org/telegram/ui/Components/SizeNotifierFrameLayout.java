@@ -18,10 +18,15 @@ import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Build;
 import android.view.View;
+import android.view.WindowInsets;
 import android.widget.FrameLayout;
 
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
+
+import com.google.android.exoplayer2.util.Log;
+
 import org.telegram.messenger.AndroidUtilities;
-import org.telegram.messenger.SharedConfig;
 import org.telegram.ui.ActionBar.ActionBar;
 import org.telegram.ui.ActionBar.ActionBarLayout;
 import org.telegram.ui.ActionBar.AdjustPanLayoutHelper;
@@ -49,7 +54,6 @@ public class SizeNotifierFrameLayout extends FrameLayout {
     private float emojiOffset;
     private boolean animationInProgress;
     private boolean skipBackgroundDrawing;
-    SnowflakesEffect snowflakesEffect;
 
     public interface SizeNotifierFrameLayoutDelegate {
         void onSizeChanged(int keyboardHeight, boolean isWidthGreater);
@@ -259,7 +263,6 @@ public class SizeNotifierFrameLayout extends FrameLayout {
                     canvas.clipRect(0, actionBarHeight, width, getMeasuredHeight() - bottomClip);
                     drawable.setBounds(x, y, x + width, y + height);
                     drawable.draw(canvas);
-                    checkSnowflake(canvas);
                     canvas.restore();
                 } else {
                     if (bottomClip != 0) {
@@ -286,7 +289,6 @@ public class SizeNotifierFrameLayout extends FrameLayout {
                 }
                 drawable.setBounds(0, 0, getMeasuredWidth(), getRootView().getMeasuredHeight());
                 drawable.draw(canvas);
-                checkSnowflake(canvas);
                 if (bottomClip != 0) {
                     canvas.restore();
                 }
@@ -297,7 +299,6 @@ public class SizeNotifierFrameLayout extends FrameLayout {
                 }
                 drawable.setBounds(0, backgroundTranslationY, getMeasuredWidth(), backgroundTranslationY + getRootView().getMeasuredHeight());
                 drawable.draw(canvas);
-                checkSnowflake(canvas);
                 if (bottomClip != 0) {
                     canvas.restore();
                 }
@@ -309,7 +310,6 @@ public class SizeNotifierFrameLayout extends FrameLayout {
                     canvas.scale(scale, scale);
                     drawable.setBounds(0, 0, (int) Math.ceil(getMeasuredWidth() / scale), (int) Math.ceil(getRootView().getMeasuredHeight() / scale));
                     drawable.draw(canvas);
-                    checkSnowflake(canvas);
                     canvas.restore();
                 } else {
                     int actionBarHeight = (isActionBarVisible() ? ActionBar.getCurrentActionBarHeight() : 0) + (Build.VERSION.SDK_INT >= 21 && occupyStatusBar ? AndroidUtilities.statusBarHeight : 0);
@@ -325,7 +325,6 @@ public class SizeNotifierFrameLayout extends FrameLayout {
                     canvas.clipRect(0, actionBarHeight, width, getMeasuredHeight() - bottomClip);
                     drawable.setBounds(x, y, x + width, y + height);
                     drawable.draw(canvas);
-                    checkSnowflake(canvas);
                     canvas.restore();
                 }
             }
@@ -333,15 +332,6 @@ public class SizeNotifierFrameLayout extends FrameLayout {
                 oldBackgroundDrawable = null;
                 invalidate();
             }
-        }
-    }
-
-    private void checkSnowflake(Canvas canvas) {
-        if (SharedConfig.drawSnowInChat || Theme.canStartHolidayAnimation()) {
-            if (snowflakesEffect == null) {
-                snowflakesEffect = new SnowflakesEffect(1);
-            }
-            snowflakesEffect.onDraw(this, canvas);
         }
     }
 

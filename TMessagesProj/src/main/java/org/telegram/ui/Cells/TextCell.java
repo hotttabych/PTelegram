@@ -250,7 +250,6 @@ public class TextCell extends FrameLayout {
                 info.setText(text);
             }
         }
-        info.addAction(AccessibilityNodeInfo.ACTION_CLICK);
     }
 
     public void setNeedDivider(boolean needDivider) {

@@ -318,17 +318,6 @@ public class ActionBarMenu extends LinearLayout {
         return w;
     }
 
-    public int getVisibleItemsMeasuredWidth() {
-        int w = 0;
-        for (int i = 0, count = getChildCount(); i < count; i++) {
-            View view = getChildAt(i);
-            if (view instanceof ActionBarMenuItem && view.getVisibility() != View.GONE) {
-                w += view.getMeasuredWidth();
-            }
-        }
-        return w;
-    }
-
     public boolean searchFieldVisible() {
         int count = getChildCount();
         for (int a = 0; a < count; a++) {

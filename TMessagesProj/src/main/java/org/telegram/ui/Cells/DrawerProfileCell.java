@@ -186,7 +186,7 @@ public class DrawerProfileCell extends FrameLayout {
         addView(darkThemeView, LayoutHelper.createFrame(48, 48, Gravity.RIGHT | Gravity.BOTTOM, 0, 0, 6, 90));
 
         if (Theme.getEventType() == 0) {
-            snowflakesEffect = new SnowflakesEffect(0);
+            snowflakesEffect = new SnowflakesEffect();
             snowflakesEffect.setColorKey(Theme.key_chats_menuName);
         }
     }
@@ -369,5 +369,4 @@ public class DrawerProfileCell extends FrameLayout {
         }
         arrowView.setContentDescription(accountsShown ? LocaleController.getString("AccDescrHideAccounts", R.string.AccDescrHideAccounts) : LocaleController.getString("AccDescrShowAccounts", R.string.AccDescrShowAccounts));
     }
-
 }

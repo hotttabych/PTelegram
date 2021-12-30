@@ -24,6 +24,14 @@ import android.graphics.Rect;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
+
+import androidx.annotation.Keep;
+
+import android.os.SystemClock;
+
+import androidx.core.graphics.ColorUtils;
+import androidx.core.math.MathUtils;
+
 import android.view.Gravity;
 import android.view.HapticFeedbackConstants;
 import android.view.KeyEvent;
@@ -36,12 +44,12 @@ import android.view.ViewOutlineProvider;
 import android.view.animation.AccelerateDecelerateInterpolator;
 import android.view.animation.DecelerateInterpolator;
 import android.widget.FrameLayout;
+import android.widget.LinearLayout;
 
-import androidx.annotation.Keep;
-import androidx.core.graphics.ColorUtils;
-import androidx.core.math.MathUtils;
+import com.google.android.exoplayer2.util.Log;
 
 import org.telegram.messenger.AndroidUtilities;
+import org.telegram.messenger.ApplicationLoader;
 import org.telegram.messenger.FileLog;
 import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.R;
@@ -1805,7 +1813,7 @@ public class ActionBarLayout extends FrameLayout {
             themeAnimatorSet = null;
         }
         boolean startAnimation = false;
-        int fragmentCount = settings.onlyTopFragment ? 1 : fragmentsStack.size();
+        int fragmentCount = settings.onlyTopFragment ? 1 : 2;
         for (int i = 0; i < fragmentCount; i++) {
             BaseFragment fragment;
             if (i == 0) {
@@ -1838,7 +1846,7 @@ public class ActionBarLayout extends FrameLayout {
                 }
                 if (i == 0) {
                     if (settings.applyTheme) {
-                        if (settings.accentId != -1 && settings.theme != null) {
+                        if (settings.accentId != -1) {
                             settings.theme.setCurrentAccentId(settings.accentId);
                             Theme.saveThemeAccents(settings.theme, true, false, true, false);
                         }
@@ -1857,13 +1865,11 @@ public class ActionBarLayout extends FrameLayout {
             }
         }
         if (startAnimation) {
-            if (!settings.onlyTopFragment) {
-                int count = fragmentsStack.size() - (inPreviewMode || transitionAnimationPreviewMode ? 2 : 1);
-                for (int a = 0; a < count; a++) {
-                    BaseFragment fragment = fragmentsStack.get(a);
-                    fragment.clearViews();
-                    fragment.setParentLayout(this);
-                }
+            int count = fragmentsStack.size() - (inPreviewMode || transitionAnimationPreviewMode ? 2 : 1);
+            for (int a = 0; a < count; a++) {
+                BaseFragment fragment = fragmentsStack.get(a);
+                fragment.clearViews();
+                fragment.setParentLayout(this);
             }
             if (settings.instant) {
                 setThemeAnimationValue(1.0f);

@@ -28,14 +28,12 @@ import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
-import android.os.Bundle;
 import android.os.Vibrator;
 import android.text.Editable;
 import android.text.TextPaint;
 import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.text.style.ImageSpan;
-import android.text.util.Linkify;
 import android.util.Property;
 import android.util.TypedValue;
 import android.view.Gravity;
@@ -46,7 +44,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewOutlineProvider;
 import android.view.WindowManager;
-import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 import android.view.animation.DecelerateInterpolator;
 import android.view.animation.OvershootInterpolator;
@@ -249,7 +246,7 @@ public class ChatAttachAlert extends BottomSheet implements NotificationCenter.N
 
         }
 
-        void applyCaption(CharSequence text) {
+        void applyCaption(String text) {
 
         }
 
@@ -422,8 +419,6 @@ public class ChatAttachAlert extends BottomSheet implements NotificationCenter.N
         public AttachButton(Context context) {
             super(context);
             setWillNotDraw(false);
-            setFocusable(true);
-            setFocusableInTouchMode(true);
 
             imageView = new RLottieImageView(context) {
                 @Override
@@ -442,7 +437,6 @@ public class ChatAttachAlert extends BottomSheet implements NotificationCenter.N
             textView.setTextColor(getThemedColor(Theme.key_dialogTextGray2));
             textView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 12);
             textView.setLineSpacing(-AndroidUtilities.dp(2), 1.0f);
-            textView.setImportantForAccessibility(IMPORTANT_FOR_ACCESSIBILITY_NO);
             addView(textView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.LEFT | Gravity.TOP, 0, 62, 0, 0));
         }
 
@@ -1791,7 +1785,7 @@ public class ChatAttachAlert extends BottomSheet implements NotificationCenter.N
         if (commentTextView.length() <= 0) {
             return;
         }
-        currentAttachLayout.applyCaption(commentTextView.getText());
+        currentAttachLayout.applyCaption(commentTextView.getText().toString());
     }
 
 

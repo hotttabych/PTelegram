@@ -16,6 +16,8 @@ import android.view.Gravity;
 import android.view.View;
 import android.view.animation.OvershootInterpolator;
 
+import com.google.android.exoplayer2.util.Log;
+
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.ui.ActionBar.Theme;
 
@@ -28,7 +30,7 @@ public class CounterView extends View {
         super(context);
         this.resourcesProvider = resourcesProvider;
         setVisibility(View.GONE);
-        counterDrawable = new CounterDrawable(this, true, resourcesProvider);
+        counterDrawable = new CounterDrawable(this, resourcesProvider);
         counterDrawable.updateVisibility = true;
     }
 
@@ -75,7 +77,7 @@ public class CounterView extends View {
 
         int animationType = -1;
 
-        public Paint circlePaint;
+        public Paint circlePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         public TextPaint textPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
         public RectF rectF = new RectF();
         public boolean addServiceGradient;
@@ -83,7 +85,7 @@ public class CounterView extends View {
         int currentCount;
         private boolean countAnimationIncrement;
         private ValueAnimator countAnimator;
-        public float countChangeProgress = 1f;
+        private float countChangeProgress = 1f;
         private StaticLayout countLayout;
         private StaticLayout countOldLayout;
         private StaticLayout countAnimationStableLayout;
@@ -105,27 +107,21 @@ public class CounterView extends View {
 
         private boolean reverseAnimation;
         public float horizontalPadding;
-        private boolean drawBackground = true;
 
-        public boolean updateVisibility;
+        boolean updateVisibility;
 
         private View parent;
 
         public final static int TYPE_DEFAULT = 0;
         public final static int TYPE_CHAT_PULLING_DOWN = 1;
-        public final static int TYPE_CHAT_REACTIONS = 2;
 
         int type = TYPE_DEFAULT;
         private final Theme.ResourcesProvider resourcesProvider;
 
-        public CounterDrawable(View parent, boolean drawBackground, Theme.ResourcesProvider resourcesProvider) {
+        public CounterDrawable(View parent, Theme.ResourcesProvider resourcesProvider) {
             this.parent = parent;
             this.resourcesProvider = resourcesProvider;
-            this.drawBackground = drawBackground;
-            if (drawBackground) {
-                circlePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-                circlePaint.setColor(Color.BLACK);
-            }
+            circlePaint.setColor(Color.BLACK);
             textPaint.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
             textPaint.setTextSize(AndroidUtilities.dp(13));
         }
@@ -145,11 +141,9 @@ public class CounterView extends View {
             float countTop = (lastH - AndroidUtilities.dp(23)) / 2f;
             updateX(countWidth);
             rectF.set(x, countTop, x + countWidth + AndroidUtilities.dp(11), countTop + AndroidUtilities.dp(23));
-            if (circlePaint != null && drawBackground) {
-                canvas.drawRoundRect(rectF, 11.5f * AndroidUtilities.density, 11.5f * AndroidUtilities.density, circlePaint);
-                if (addServiceGradient && Theme.hasGradientService()) {
-                    canvas.drawRoundRect(rectF, 11.5f * AndroidUtilities.density, 11.5f * AndroidUtilities.density, Theme.chat_actionBackgroundGradientDarkenPaint);
-                }
+            canvas.drawRoundRect(rectF, 11.5f * AndroidUtilities.density, 11.5f * AndroidUtilities.density, circlePaint);
+            if (addServiceGradient && Theme.hasGradientService()) {
+                canvas.drawRoundRect(rectF, 11.5f * AndroidUtilities.density, 11.5f * AndroidUtilities.density, Theme.chat_actionBackgroundGradientDarkenPaint);
             }
             if (countLayout != null) {
                 canvas.save();
@@ -270,14 +264,14 @@ public class CounterView extends View {
         }
 
         public void draw(Canvas canvas) {
-            if (type != TYPE_CHAT_PULLING_DOWN && type != TYPE_CHAT_REACTIONS) {
+            if (type != TYPE_CHAT_PULLING_DOWN) {
                 int textColor = getThemedColor(textColorKey);
                 int circleColor = getThemedColor(circleColorKey);
                 if (this.textColor != textColor) {
                     this.textColor = textColor;
                     textPaint.setColor(textColor);
                 }
-                if (circlePaint != null && this.circleColor != circleColor) {
+                if (this.circleColor != circleColor) {
                     this.circleColor = circleColor;
                     circlePaint.setColor(circleColor);
                 }
@@ -319,11 +313,9 @@ public class CounterView extends View {
                     rectF.set(x, countTop, x + countWidth + AndroidUtilities.dp(11), countTop + AndroidUtilities.dp(23));
                     canvas.save();
                     canvas.scale(scale, scale, rectF.centerX(), rectF.centerY());
-                    if (drawBackground && circlePaint != null) {
-                        canvas.drawRoundRect(rectF, 11.5f * AndroidUtilities.density, 11.5f * AndroidUtilities.density, circlePaint);
-                        if (addServiceGradient && Theme.hasGradientService()) {
-                            canvas.drawRoundRect(rectF, 11.5f * AndroidUtilities.density, 11.5f * AndroidUtilities.density, Theme.chat_actionBackgroundGradientDarkenPaint);
-                        }
+                    canvas.drawRoundRect(rectF, 11.5f * AndroidUtilities.density, 11.5f * AndroidUtilities.density, circlePaint);
+                    if (addServiceGradient && Theme.hasGradientService()) {
+                        canvas.drawRoundRect(rectF, 11.5f * AndroidUtilities.density, 11.5f * AndroidUtilities.density, Theme.chat_actionBackgroundGradientDarkenPaint);
                     }
                     canvas.clipRect(rectF);
 
@@ -394,20 +386,19 @@ public class CounterView extends View {
         }
 
         private void updateX(float countWidth) {
-            float padding = drawBackground ? AndroidUtilities.dp(5.5f) : 0f;
             if (gravity == Gravity.RIGHT) {
-                countLeft = width - padding;
+                countLeft = width - AndroidUtilities.dp(5.5f);
                 if (horizontalPadding != 0) {
                     countLeft -= Math.max(horizontalPadding + countWidth / 2f, countWidth);
                 } else {
                     countLeft -= countWidth;
                 }
             } else if (gravity == Gravity.LEFT) {
-                countLeft = padding;
+                countLeft = AndroidUtilities.dp(5.5f);
             } else {
                 countLeft = (int) ((width - countWidth) / 2f);
             }
-            x = countLeft - padding;
+            x = countLeft - AndroidUtilities.dp(5.5f);
         }
 
         public float getCenterX() {

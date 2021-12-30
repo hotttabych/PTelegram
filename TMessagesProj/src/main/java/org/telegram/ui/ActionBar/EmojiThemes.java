@@ -29,7 +29,7 @@ import java.util.Map;
 public class EmojiThemes {
 
     public boolean showAsDefaultStub;
-    public String emoji;
+    String emoji;
     int currentIndex = 0;
     ArrayList<ThemeItem> items = new ArrayList<>();
 
@@ -186,27 +186,6 @@ public class EmojiThemes {
         return themeItem;
     }
 
-    public static EmojiThemes createHome() {
-        EmojiThemes themeItem = new EmojiThemes();
-        themeItem.emoji = "\uD83C\uDFE0";
-
-        ThemeItem blue = new ThemeItem();
-        blue.themeInfo = getDefaultThemeInfo(false);
-        if (blue.themeInfo.getKey().equals("Blue")) {
-            blue.accentId = 99;
-        }
-        themeItem.items.add(blue);
-
-        ThemeItem nightBlue = new ThemeItem();
-        nightBlue.themeInfo = getDefaultThemeInfo(true);
-        if (nightBlue.themeInfo.getKey().equals("Night")) {
-            nightBlue.accentId = 0;
-        }
-        themeItem.items.add(nightBlue);
-
-        return themeItem;
-    }
-
     public void initColors() {
         getPreviewColors(0, 0);
         getPreviewColors(0, 1);
@@ -223,10 +202,7 @@ public class EmojiThemes {
     public TLRPC.WallPaper getWallpaper(int index) {
         int settingsIndex = items.get(index).settingsIndex;
         if (settingsIndex >= 0) {
-            TLRPC.TL_theme tlTheme = getTlTheme(index);
-            if (tlTheme != null) {
-                return tlTheme.settings.get(settingsIndex).wallpaper;
-            }
+            return getTlTheme(index).settings.get(settingsIndex).wallpaper;
         }
         return null;
     }

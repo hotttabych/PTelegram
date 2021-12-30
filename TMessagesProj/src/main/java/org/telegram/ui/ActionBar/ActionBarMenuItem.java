@@ -1590,6 +1590,7 @@ public class ActionBarMenuItem extends FrameLayout {
         if (view != null && view.getVisibility() != GONE) {
             view.setVisibility(GONE);
             measurePopup = true;
+            checkHideMenuItem();
         }
     }
 
@@ -1637,6 +1638,7 @@ public class ActionBarMenuItem extends FrameLayout {
         if (view != null && view.getVisibility() != VISIBLE) {
             view.setVisibility(VISIBLE);
             measurePopup = true;
+            checkHideMenuItem();
         }
     }
 

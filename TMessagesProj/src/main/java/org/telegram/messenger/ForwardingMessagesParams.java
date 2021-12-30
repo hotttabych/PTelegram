@@ -21,7 +21,6 @@ public class ForwardingMessagesParams {
     public boolean isSecret;
     public boolean willSeeSenders;
     public boolean multiplyUsers;
-    public boolean hasSpoilers;
 
     public ArrayList<TLRPC.TL_pollAnswerVoters> pollChoosenAnswers = new ArrayList<>();
 
@@ -30,7 +29,6 @@ public class ForwardingMessagesParams {
         hasCaption = false;
         hasSenders = false;
         isSecret = DialogObject.isEncryptedDialog(newDialogId);
-        hasSpoilers = false;
         ArrayList<String> hiddenSendersName = new ArrayList<>();
         for (int i = 0; i < messages.size(); i++) {
             MessageObject messageObject = messages.get(i);
@@ -48,17 +46,6 @@ public class ForwardingMessagesParams {
             message.media = messageObject.messageOwner.media;
             message.action =  messageObject.messageOwner.action;
             message.edit_date = 0;
-            if (messageObject.messageOwner.entities != null) {
-                message.entities.addAll(messageObject.messageOwner.entities);
-                if (!hasSpoilers) {
-                    for (TLRPC.MessageEntity e : message.entities) {
-                        if (e instanceof TLRPC.TL_messageEntitySpoiler) {
-                            hasSpoilers = true;
-                            break;
-                        }
-                    }
-                }
-            }
 
             message.out = true;
             message.unread = false;

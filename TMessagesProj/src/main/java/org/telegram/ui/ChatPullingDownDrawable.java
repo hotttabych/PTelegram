@@ -5,6 +5,7 @@ import android.animation.AnimatorListenerAdapter;
 import android.animation.AnimatorSet;
 import android.animation.ValueAnimator;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.PorterDuff;
@@ -82,7 +83,7 @@ public class ChatPullingDownDrawable implements NotificationCenter.NotificationC
     public long nextDialogId;
     View parentView;
 
-    CounterView.CounterDrawable counterDrawable = new CounterView.CounterDrawable(null, true, null);
+    CounterView.CounterDrawable counterDrawable = new CounterView.CounterDrawable(null, null);
     int params[] = new int[3];
     private final int currentAccount;
     private final int folderId;
@@ -158,10 +159,10 @@ public class ChatPullingDownDrawable implements NotificationCenter.NotificationC
                 str2 = LocaleController.getString("ReleaseToGoNextArchive", R.string.ReleaseToGoNextArchive);
             } else if (drawFolderBackground) {
                 str1 = LocaleController.getString("SwipeToGoNextFolder", R.string.SwipeToGoNextFolder);
-                str2 = LocaleController.getString("ReleaseToGoNextFolder", R.string.ReleaseToGoNextFolder);
+                str2 =  LocaleController.getString("ReleaseToGoNextFolder", R.string.ReleaseToGoNextFolder);
             } else {
                 str1 = LocaleController.getString("SwipeToGoNextChannel", R.string.SwipeToGoNextChannel);
-                str2 = LocaleController.getString("ReleaseToGoNextChannel", R.string.ReleaseToGoNextChannel);
+                str2 =  LocaleController.getString("ReleaseToGoNextChannel", R.string.ReleaseToGoNextChannel);
             }
             layout1Width = (int) textPaint2.measureText(str1);
             layout1Width = Math.min(layout1Width, lastWidth - AndroidUtilities.dp(60));
@@ -491,7 +492,7 @@ public class ChatPullingDownDrawable implements NotificationCenter.NotificationC
 
     @Override
     public void didReceivedNotification(int id, int account, Object... args) {
-        if (nextDialogId != 0) {
+        if (nextDialogId !=0 ) {
             TLRPC.Dialog dialog = MessagesController.getInstance(currentAccount).dialogs_dict.get(nextDialogId);
             if (dialog != null) {
                 counterDrawable.setCount(dialog.unread_count, true);

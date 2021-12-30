@@ -176,7 +176,6 @@ public class CheckBoxBase {
         }
     }
 
-    public long animationDuration = 200;
     private void animateToCheckedState(boolean newCheckedState) {
         checkAnimator = ObjectAnimator.ofFloat(this, "progress", newCheckedState ? 1 : 0);
         checkAnimator.addListener(new AnimatorListenerAdapter() {
@@ -191,7 +190,7 @@ public class CheckBoxBase {
             }
         });
         checkAnimator.setInterpolator(CubicBezierInterpolator.EASE_OUT);
-        checkAnimator.setDuration(animationDuration);
+        checkAnimator.setDuration(200);
         checkAnimator.start();
     }
 

@@ -1740,7 +1740,7 @@ public class LocationActivity extends BaseFragment implements NotificationCenter
         try {
             googleMap.setMyLocationEnabled(true);
         } catch (Exception e) {
-            FileLog.e(e, false);
+            FileLog.e(e);
         }
         googleMap.getUiSettings().setMyLocationButtonEnabled(false);
         googleMap.getUiSettings().setZoomControlsEnabled(false);

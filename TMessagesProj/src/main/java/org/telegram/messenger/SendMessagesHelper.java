@@ -1463,8 +1463,7 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                             entity instanceof TLRPC.TL_messageEntityItalic ||
                             entity instanceof TLRPC.TL_messageEntityPre ||
                             entity instanceof TLRPC.TL_messageEntityCode ||
-                            entity instanceof TLRPC.TL_messageEntityTextUrl ||
-                            entity instanceof TLRPC.TL_messageEntitySpoiler) {
+                            entity instanceof TLRPC.TL_messageEntityTextUrl) {
                         entities.add(entity);
                     }
                 }
@@ -2659,7 +2658,7 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
         return voteSendTime.get(pollId, 0L);
     }
 
-    public void sendReaction(MessageObject messageObject, CharSequence reaction, ChatActivity parentFragment, Runnable callback) {
+    public void sendReaction(MessageObject messageObject, CharSequence reaction, ChatActivity parentFragment) {
         if (messageObject == null || parentFragment == null) {
             return;
         }
@@ -2673,10 +2672,16 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
         getConnectionsManager().sendRequest(req, (response, error) -> {
             if (response != null) {
                 getMessagesController().processUpdates((TLRPC.Updates) response, false);
-                if (callback != null) {
-                    AndroidUtilities.runOnUIThread(callback);
-                }
             }
+            /*AndroidUtilities.runOnUIThread(new Runnable() {
+                @Override
+                public void run() {
+                    waitingForVote.remove(key);
+                    if (finishRunnable != null) {
+                        finishRunnable.run();
+                    }
+                }
+            });*/
         });
     }
 
