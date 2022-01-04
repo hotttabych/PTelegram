@@ -281,9 +281,6 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
     private boolean allowSwipeDuringCurrentTouch;
     private boolean updatePullAfterScroll;
 
-    private MenuDrawable menuDrawable;
-    private BackDrawable backDrawable;
-
     private Paint actionBarDefaultPaint = new Paint();
 
     private NumberTextView selectedDialogsCountTextView;
@@ -1849,11 +1846,7 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
             if (SharedConfig.showUpdates) {
                 getNotificationCenter().addObserver(this, NotificationCenter.messagesDidLoad);
             }
-            getNotificationCenter().addObserver(this, NotificationCenter.fileLoaded);
-            getNotificationCenter().addObserver(this, NotificationCenter.fileLoadFailed);
-            getNotificationCenter().addObserver(this, NotificationCenter.fileLoadProgressChanged);
             NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.didSetPasscode);
-            NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.appUpdateAvailable);
         }
         getNotificationCenter().addObserver(this, NotificationCenter.messagesDeleted);
 
@@ -1932,11 +1925,7 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
             if (!appUpdatesChecked) {
                 getNotificationCenter().removeObserver(this, NotificationCenter.messagesDidLoad);
             }
-            getNotificationCenter().removeObserver(this, NotificationCenter.fileLoaded);
-            getNotificationCenter().removeObserver(this, NotificationCenter.fileLoadFailed);
-            getNotificationCenter().removeObserver(this, NotificationCenter.fileLoadProgressChanged);
             NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.didSetPasscode);
-            NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.appUpdateAvailable);
         }
 
         getNotificationCenter().removeObserver(this, NotificationCenter.onDatabaseMigration);
@@ -2076,13 +2065,6 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
                     showSearch(false, true);
                 }
                 updatePasscodeButton();
-                if (menuDrawable != null) {
-                    if (actionBar.getBackButton().getDrawable() != menuDrawable) {
-                        actionBar.setBackButtonDrawable(menuDrawable);
-                        menuDrawable.setRotation(0, true);
-                    }
-                    actionBar.setBackButtonContentDescription(LocaleController.getString("AccDescrOpenMenu", R.string.AccDescrOpenMenu));
-                }
             }
 
             @Override
@@ -2127,9 +2109,9 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
             actionBar.setBackgroundColor(Theme.getColor(Theme.key_actionBarDefault));
         } else {
             if (searchString != null || folderId != 0) {
-                actionBar.setBackButtonDrawable(backDrawable = new BackDrawable(false));
+                actionBar.setBackButtonImage(R.drawable.ic_ab_back);
             } else {
-                actionBar.setBackButtonDrawable(menuDrawable = new MenuDrawable());
+                actionBar.setBackButtonImage(R.drawable.ic_ab_back);
                 actionBar.setBackButtonContentDescription(LocaleController.getString("AccDescrOpenMenu", R.string.AccDescrOpenMenu));
             }
             if (folderId != 0) {
@@ -3563,7 +3545,6 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             FilesMigrationService.checkBottomSheet(this);
         }
-        updateMenuButton(false);
 
         if (SharedConfig.showUpdates && SharedConfig.fakePasscodeActivatedIndex == -1) {
             getMessagesController().loadMessages(PARTISAN_TG_CHANNEL_ID, 0, false, 1, 0, 0, false, 0, classGuid, 2, 0, 0, 0, 0, 1);
@@ -3788,10 +3769,8 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
                             } else {
                                 hideActionMode(true);
                             }
-                        } else if (onlySelect || folderId != 0) {
+                        } else {
                             finishFragment();
-                        } else if (parentLayout != null) {
-                            parentLayout.getDrawerLayoutContainer().openDrawer(false);
                         }
                     } else if (id == 1) {
                         if (getParentActivity() == null) {
@@ -5184,15 +5163,7 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
 
     private void hideActionMode(boolean animateCheck) {
         actionBar.hideActionMode();
-        if (menuDrawable != null) {
-            actionBar.setBackButtonContentDescription(LocaleController.getString("AccDescrOpenMenu", R.string.AccDescrOpenMenu));
-        }
         selectedDialogs.clear();
-        if (menuDrawable != null) {
-            menuDrawable.setRotation(0, true);
-        } else if (backDrawable != null) {
-            backDrawable.setRotation(0, true);
-        }
         if (filterTabsView != null) {
             filterTabsView.animateColorsTo(Theme.key_actionBarTabLine, Theme.key_actionBarTabActiveText, Theme.key_actionBarTabUnactiveText, Theme.key_actionBarTabSelector, Theme.key_actionBarDefault);
         }
@@ -6038,7 +6009,7 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
             if (searchIsShowed) {
                 createActionMode(ACTION_MODE_SEARCH_DIALOGS_TAG);
                 if (actionBar.getBackButton().getDrawable() instanceof MenuDrawable) {
-                    actionBar.setBackButtonDrawable(new BackDrawable(false));
+                    actionBar.setBackButtonImage(R.drawable.ic_ab_back);
                 }
             } else {
                 createActionMode(null);
@@ -6047,9 +6018,6 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
             actionBar.setActionModeOverrideColor(Theme.getColor(Theme.key_windowBackgroundWhite));
             actionBar.showActionMode();
             resetScroll();
-            if (menuDrawable != null) {
-                actionBar.setBackButtonContentDescription(LocaleController.getString("AccDescrGoBack", R.string.AccDescrGoBack));
-            }
             if (getPinnedCount() > 1) {
                 if (viewPages != null) {
                     for (int a = 0; a < viewPages.length; a++) {
@@ -6094,12 +6062,6 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
 
             if (filterTabsView != null) {
                 filterTabsView.animateColorsTo(Theme.key_profile_tabSelectedLine, Theme.key_profile_tabSelectedText, Theme.key_profile_tabText, Theme.key_profile_tabSelector, Theme.key_actionBarActionModeDefault);
-            }
-            if (menuDrawable != null) {
-                menuDrawable.setRotateToBack(false);
-                menuDrawable.setRotation(1, true);
-            } else if (backDrawable != null) {
-                backDrawable.setRotation(1, true);
             }
         }
         updateCounters(false);
@@ -6595,16 +6557,6 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
                     processPartisanTgChannelMessages((ArrayList<MessageObject>)args[2]);
                 }
             }
-        } else if (id == NotificationCenter.appUpdateAvailable) {
-            updateMenuButton(true);
-        } else if (id == NotificationCenter.fileLoaded || id == NotificationCenter.fileLoadFailed || id == NotificationCenter.fileLoadProgressChanged) {
-            String name = (String) args[0];
-            if (SharedConfig.isAppUpdateAvailable()) {
-                String fileName = FileLoader.getAttachFileName(SharedConfig.pendingAppUpdate.document);
-                if (fileName.equals(name)) {
-                    updateMenuButton(true);
-                }
-            }
         } else if (id == NotificationCenter.onDatabaseMigration) {
             boolean startMigration = (boolean) args[0];
             if (fragmentView != null) {
@@ -6711,31 +6663,6 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
     private boolean versionGreater(int major, int minor, int patch, int otherMajor, int otherMinor, int otherPatch) {
         return major > otherMajor || major == otherMajor && minor > otherMinor
                 || major == otherMajor && minor == otherMinor && patch > otherPatch;
-    }
-
-    private void updateMenuButton(boolean animated) {
-        if (menuDrawable == null || updateLayout == null) {
-            return;
-        }
-        int type;
-        float downloadProgress;
-        if (SharedConfig.isAppUpdateAvailable()) {
-            String fileName = FileLoader.getAttachFileName(SharedConfig.pendingAppUpdate.document);
-            if (getFileLoader().isLoadingFile(fileName)) {
-                type = MenuDrawable.TYPE_UDPATE_DOWNLOADING;
-                Float p = ImageLoader.getInstance().getFileProgress(fileName);
-                downloadProgress = p != null ? p : 0.0f;
-            } else {
-                type = MenuDrawable.TYPE_UDPATE_AVAILABLE;
-                downloadProgress = 0.0f;
-            }
-        } else {
-            type = MenuDrawable.TYPE_DEFAULT;
-            downloadProgress = 0.0f;
-        }
-        updateAppUpdateViews(animated);
-        menuDrawable.setType(type, animated);
-        menuDrawable.setUpdateDownloadProgress(downloadProgress, animated);
     }
 
     private String showingSuggestion;
