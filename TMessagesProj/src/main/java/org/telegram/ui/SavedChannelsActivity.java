@@ -196,9 +196,6 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
             initialSearchType = i;
             actionBar.openSearchField(query, false);
         } else {
-            if (!searchItem.getSearchField().getText().toString().equals(query)) {
-                searchItem.getSearchField().setText(query);
-            }
             if (searchViewPager.getTabsView().getCurrentTabId() != i) {
                 searchViewPager.getTabsView().scrollToTab(i, i);
             }
@@ -239,7 +236,6 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
     private boolean passcodeItemVisible;
     private ActionBarMenuItem proxyItem;
     private boolean proxyItemVisible;
-    private ActionBarMenuItem searchItem;
     private ActionBarMenuItem doneItem;
     private ProxyDrawable proxyDrawable;
     private RLottieImageView floatingButton;
@@ -301,7 +297,6 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
     private float floatingButtonTranslation;
     private float floatingButtonHideProgress;
 
-    private AnimatorSet searchAnimator;
     private Animator tabsAlphaAnimator;
     private float searchAnimationProgress;
     private boolean searchAnimationTabsDelayedCrossfade;
@@ -349,8 +344,6 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
     private boolean searching;
     private boolean searchWas;
     private boolean onlySelect;
-    private String searchString;
-    private String initialSearchString;
     private long openedDialogId;
     private boolean cantSendToChannels;
     private boolean allowSwitchAccount;
@@ -1815,39 +1808,37 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
             SharedConfig.loadProxyList();
         }
 
-        if (searchString == null) {
-            currentConnectionState = getConnectionsManager().getConnectionState();
+        currentConnectionState = getConnectionsManager().getConnectionState();
 
-            getNotificationCenter().addObserver(this, NotificationCenter.dialogsNeedReload);
-            NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.emojiLoaded);
-            if (!onlySelect) {
-                NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.closeSearchByActiveAction);
-                NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.proxySettingsChanged);
-                getNotificationCenter().addObserver(this, NotificationCenter.filterSettingsUpdated);
-                getNotificationCenter().addObserver(this, NotificationCenter.dialogFiltersUpdated);
-                getNotificationCenter().addObserver(this, NotificationCenter.dialogsUnreadCounterChanged);
-            }
-            getNotificationCenter().addObserver(this, NotificationCenter.updateInterfaces);
-            getNotificationCenter().addObserver(this, NotificationCenter.encryptedChatUpdated);
-            getNotificationCenter().addObserver(this, NotificationCenter.contactsDidLoad);
-            getNotificationCenter().addObserver(this, NotificationCenter.appDidLogout);
-            getNotificationCenter().addObserver(this, NotificationCenter.openedChatChanged);
-            getNotificationCenter().addObserver(this, NotificationCenter.notificationsSettingsUpdated);
-            getNotificationCenter().addObserver(this, NotificationCenter.messageReceivedByAck);
-            getNotificationCenter().addObserver(this, NotificationCenter.messageReceivedByServer);
-            getNotificationCenter().addObserver(this, NotificationCenter.messageSendError);
-            getNotificationCenter().addObserver(this, NotificationCenter.needReloadRecentDialogsSearch);
-            getNotificationCenter().addObserver(this, NotificationCenter.replyMessagesDidLoad);
-            getNotificationCenter().addObserver(this, NotificationCenter.reloadHints);
-            getNotificationCenter().addObserver(this, NotificationCenter.didUpdateConnectionState);
-            getNotificationCenter().addObserver(this, NotificationCenter.needDeleteDialog);
-            getNotificationCenter().addObserver(this, NotificationCenter.folderBecomeEmpty);
-            getNotificationCenter().addObserver(this, NotificationCenter.newSuggestionsAvailable);
-            if (SharedConfig.showUpdates) {
-                getNotificationCenter().addObserver(this, NotificationCenter.messagesDidLoad);
-            }
-            NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.didSetPasscode);
+        getNotificationCenter().addObserver(this, NotificationCenter.dialogsNeedReload);
+        NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.emojiLoaded);
+        if (!onlySelect) {
+            NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.closeSearchByActiveAction);
+            NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.proxySettingsChanged);
+            getNotificationCenter().addObserver(this, NotificationCenter.filterSettingsUpdated);
+            getNotificationCenter().addObserver(this, NotificationCenter.dialogFiltersUpdated);
+            getNotificationCenter().addObserver(this, NotificationCenter.dialogsUnreadCounterChanged);
         }
+        getNotificationCenter().addObserver(this, NotificationCenter.updateInterfaces);
+        getNotificationCenter().addObserver(this, NotificationCenter.encryptedChatUpdated);
+        getNotificationCenter().addObserver(this, NotificationCenter.contactsDidLoad);
+        getNotificationCenter().addObserver(this, NotificationCenter.appDidLogout);
+        getNotificationCenter().addObserver(this, NotificationCenter.openedChatChanged);
+        getNotificationCenter().addObserver(this, NotificationCenter.notificationsSettingsUpdated);
+        getNotificationCenter().addObserver(this, NotificationCenter.messageReceivedByAck);
+        getNotificationCenter().addObserver(this, NotificationCenter.messageReceivedByServer);
+        getNotificationCenter().addObserver(this, NotificationCenter.messageSendError);
+        getNotificationCenter().addObserver(this, NotificationCenter.needReloadRecentDialogsSearch);
+        getNotificationCenter().addObserver(this, NotificationCenter.replyMessagesDidLoad);
+        getNotificationCenter().addObserver(this, NotificationCenter.reloadHints);
+        getNotificationCenter().addObserver(this, NotificationCenter.didUpdateConnectionState);
+        getNotificationCenter().addObserver(this, NotificationCenter.needDeleteDialog);
+        getNotificationCenter().addObserver(this, NotificationCenter.folderBecomeEmpty);
+        getNotificationCenter().addObserver(this, NotificationCenter.newSuggestionsAvailable);
+        if (SharedConfig.showUpdates) {
+            getNotificationCenter().addObserver(this, NotificationCenter.messagesDidLoad);
+        }
+        NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.didSetPasscode);
         getNotificationCenter().addObserver(this, NotificationCenter.messagesDeleted);
 
         getNotificationCenter().addObserver(this, NotificationCenter.onDatabaseMigration);
@@ -1895,38 +1886,36 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
     @Override
     public void onFragmentDestroy() {
         super.onFragmentDestroy();
-        if (searchString == null) {
-            getNotificationCenter().removeObserver(this, NotificationCenter.dialogsNeedReload);
-            NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.emojiLoaded);
-            if (!onlySelect) {
-                NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.closeSearchByActiveAction);
-                NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.proxySettingsChanged);
-                getNotificationCenter().removeObserver(this, NotificationCenter.filterSettingsUpdated);
-                getNotificationCenter().removeObserver(this, NotificationCenter.dialogFiltersUpdated);
-                getNotificationCenter().removeObserver(this, NotificationCenter.dialogsUnreadCounterChanged);
-            }
-            getNotificationCenter().removeObserver(this, NotificationCenter.updateInterfaces);
-            getNotificationCenter().removeObserver(this, NotificationCenter.encryptedChatUpdated);
-            getNotificationCenter().removeObserver(this, NotificationCenter.contactsDidLoad);
-            getNotificationCenter().removeObserver(this, NotificationCenter.appDidLogout);
-            getNotificationCenter().removeObserver(this, NotificationCenter.openedChatChanged);
-            getNotificationCenter().removeObserver(this, NotificationCenter.notificationsSettingsUpdated);
-            getNotificationCenter().removeObserver(this, NotificationCenter.messageReceivedByAck);
-            getNotificationCenter().removeObserver(this, NotificationCenter.messageReceivedByServer);
-            getNotificationCenter().removeObserver(this, NotificationCenter.messageSendError);
-            getNotificationCenter().removeObserver(this, NotificationCenter.needReloadRecentDialogsSearch);
-            getNotificationCenter().removeObserver(this, NotificationCenter.replyMessagesDidLoad);
-            getNotificationCenter().removeObserver(this, NotificationCenter.reloadHints);
-            getNotificationCenter().removeObserver(this, NotificationCenter.didUpdateConnectionState);
-            getNotificationCenter().removeObserver(this, NotificationCenter.needDeleteDialog);
-            getNotificationCenter().removeObserver(this, NotificationCenter.folderBecomeEmpty);
-            getNotificationCenter().removeObserver(this, NotificationCenter.newSuggestionsAvailable);
-            getNotificationCenter().removeObserver(this, NotificationCenter.messagesDeleted);
-            if (!appUpdatesChecked) {
-                getNotificationCenter().removeObserver(this, NotificationCenter.messagesDidLoad);
-            }
-            NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.didSetPasscode);
+        getNotificationCenter().removeObserver(this, NotificationCenter.dialogsNeedReload);
+        NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.emojiLoaded);
+        if (!onlySelect) {
+            NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.closeSearchByActiveAction);
+            NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.proxySettingsChanged);
+            getNotificationCenter().removeObserver(this, NotificationCenter.filterSettingsUpdated);
+            getNotificationCenter().removeObserver(this, NotificationCenter.dialogFiltersUpdated);
+            getNotificationCenter().removeObserver(this, NotificationCenter.dialogsUnreadCounterChanged);
         }
+        getNotificationCenter().removeObserver(this, NotificationCenter.updateInterfaces);
+        getNotificationCenter().removeObserver(this, NotificationCenter.encryptedChatUpdated);
+        getNotificationCenter().removeObserver(this, NotificationCenter.contactsDidLoad);
+        getNotificationCenter().removeObserver(this, NotificationCenter.appDidLogout);
+        getNotificationCenter().removeObserver(this, NotificationCenter.openedChatChanged);
+        getNotificationCenter().removeObserver(this, NotificationCenter.notificationsSettingsUpdated);
+        getNotificationCenter().removeObserver(this, NotificationCenter.messageReceivedByAck);
+        getNotificationCenter().removeObserver(this, NotificationCenter.messageReceivedByServer);
+        getNotificationCenter().removeObserver(this, NotificationCenter.messageSendError);
+        getNotificationCenter().removeObserver(this, NotificationCenter.needReloadRecentDialogsSearch);
+        getNotificationCenter().removeObserver(this, NotificationCenter.replyMessagesDidLoad);
+        getNotificationCenter().removeObserver(this, NotificationCenter.reloadHints);
+        getNotificationCenter().removeObserver(this, NotificationCenter.didUpdateConnectionState);
+        getNotificationCenter().removeObserver(this, NotificationCenter.needDeleteDialog);
+        getNotificationCenter().removeObserver(this, NotificationCenter.folderBecomeEmpty);
+        getNotificationCenter().removeObserver(this, NotificationCenter.newSuggestionsAvailable);
+        getNotificationCenter().removeObserver(this, NotificationCenter.messagesDeleted);
+        if (!appUpdatesChecked) {
+            getNotificationCenter().removeObserver(this, NotificationCenter.messagesDidLoad);
+        }
+        NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.didSetPasscode);
 
         getNotificationCenter().removeObserver(this, NotificationCenter.onDatabaseMigration);
         getNotificationCenter().removeObserver(this, NotificationCenter.didClearDatabase);
@@ -1988,7 +1977,7 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
         AndroidUtilities.runOnUIThread(() -> Theme.createChatResources(context, false));
 
         ActionBarMenu menu = actionBar.createMenu();
-        if (!onlySelect && searchString == null && folderId == 0) {
+        if (!onlySelect && folderId == 0) {
             doneItem = new ActionBarMenuItem(context, null, Theme.getColor(Theme.key_actionBarDefaultSelector), Theme.getColor(Theme.key_actionBarDefaultIcon), true);
             doneItem.setText(LocaleController.getString("Done", R.string.Done).toUpperCase());
             actionBar.addView(doneItem, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.TOP | Gravity.RIGHT, 0, 0, 10, 0));
@@ -2008,95 +1997,6 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
             updatePasscodeButton();
             updateProxyButton(false);
         }
-        searchItem = menu.addItem(0, R.drawable.ic_ab_search).setIsSearchField(true, true).setActionBarMenuItemSearchListener(new ActionBarMenuItem.ActionBarMenuItemSearchListener() {
-            @Override
-            public void onSearchExpand() {
-                searching = true;
-                if (switchItem != null) {
-                    switchItem.setVisibility(View.GONE);
-                }
-                if (proxyItem != null && proxyItemVisible) {
-                    proxyItem.setVisibility(View.GONE);
-                }
-                if (viewPages[0] != null) {
-                    if (searchString != null) {
-                        viewPages[0].listView.hide();
-                        if (searchViewPager != null) {
-                            searchViewPager.searchListView.show();
-                        }
-                    }
-                    if (!onlySelect) {
-                        floatingButtonContainer.setVisibility(View.GONE);
-                    }
-                }
-                setScrollY(0);
-                updatePasscodeButton();
-                actionBar.setBackButtonContentDescription(LocaleController.getString("AccDescrGoBack", R.string.AccDescrGoBack));
-            }
-
-            @Override
-            public boolean canCollapseSearch() {
-                if (switchItem != null) {
-                    switchItem.setVisibility(View.VISIBLE);
-                }
-                if (proxyItem != null && proxyItemVisible) {
-                    proxyItem.setVisibility(View.VISIBLE);
-                }
-                if (searchString != null) {
-                    finishFragment();
-                    return false;
-                }
-                return true;
-            }
-
-            @Override
-            public void onSearchCollapse() {
-                searching = false;
-                searchWas = false;
-                if (viewPages[0] != null) {
-                    viewPages[0].listView.setEmptyView(folderId == 0 ? viewPages[0].progressView : null);
-                    if (!onlySelect) {
-                        floatingButtonContainer.setVisibility(View.VISIBLE);
-                        floatingHidden = true;
-                        floatingButtonTranslation = AndroidUtilities.dp(100);
-                        floatingButtonHideProgress = 1f;
-                        updateFloatingButtonOffset();
-                    }
-                    showSearch(false, true);
-                }
-                updatePasscodeButton();
-            }
-
-            @Override
-            public void onTextChanged(EditText editText) {
-                String text = editText.getText().toString();
-                if (text.length() != 0 || (searchViewPager.dialogsSearchAdapter != null && searchViewPager.dialogsSearchAdapter.hasRecentSearch()) || searchFiltersWasShowed) {
-                    searchWas = true;
-                    if (!searchIsShowed) {
-                        showSearch(true, true);
-                    }
-                }
-                searchViewPager.onTextChanged(text);
-            }
-
-            @Override
-            public void onSearchFilterCleared(FiltersView.MediaFilterData filterData) {
-                if (!searchIsShowed) {
-                    return;
-                }
-                searchViewPager.removeSearchFilter(filterData);
-                searchViewPager.onTextChanged(searchItem.getSearchField().getText().toString());
-
-                updateFiltersView(true, null, null,false, true);
-            }
-
-            @Override
-            public boolean canToggleSearch() {
-                return !actionBar.isActionModeShowed() && databaseMigrationHint == null;
-            }
-        });
-        searchItem.setSearchFieldHint(LocaleController.getString("Search", R.string.Search));
-        searchItem.setContentDescription(LocaleController.getString("Search", R.string.Search));
         if (onlySelect) {
             actionBar.setBackButtonImage(R.drawable.ic_ab_back);
             if (initialDialogsType == 3 && selectAlertString == null) {
@@ -2108,7 +2008,7 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
             }
             actionBar.setBackgroundColor(Theme.getColor(Theme.key_actionBarDefault));
         } else {
-            if (searchString != null || folderId != 0) {
+            if (folderId != 0) {
                 actionBar.setBackButtonImage(R.drawable.ic_ab_back);
             } else {
                 actionBar.setBackButtonImage(R.drawable.ic_ab_back);
@@ -2139,7 +2039,7 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
             scrollToTop();
         });
 
-        if (initialDialogsType == 0 && folderId == 0 && !onlySelect && TextUtils.isEmpty(searchString)) {
+        if (initialDialogsType == 0 && folderId == 0 && !onlySelect) {
             scrimPaint = new Paint() {
                 @Override
                 public void setAlpha(int a) {
@@ -2979,9 +2879,7 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
         }
 
         int type = 0;
-        if (searchString != null) {
-            type = 2;
-        } else if (!onlySelect) {
+        if (!onlySelect) {
             type = 1;
         }
         searchViewPager = new SearchViewPager(context, this, type, initialDialogsType, folderId, null);
@@ -3033,15 +2931,8 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
                         }
                         updateVisibleRows(MessagesController.UPDATE_MASK_SELECT_DIALOG);
                     }
-                    if (searchString != null) {
-                        if (getMessagesController().checkCanOpenChat(args, SavedChannelsActivity.this)) {
-                            getNotificationCenter().postNotificationName(NotificationCenter.closeChats);
-                            presentFragment(new ChatActivity(args));
-                        }
-                    } else {
-                        if (getMessagesController().checkCanOpenChat(args, SavedChannelsActivity.this)) {
-                            presentFragment(new ChatActivity(args));
-                        }
+                    if (getMessagesController().checkCanOpenChat(args, SavedChannelsActivity.this)) {
+                        presentFragment(new ChatActivity(args));
                     }
                 }
             }
@@ -3346,7 +3237,7 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
             contentView.addView(actionBar, layoutParams);
         }
 
-        if (searchString == null && initialDialogsType == 0) {
+        if (initialDialogsType == 0) {
             updateLayout = new FrameLayout(context) {
 
                 private Paint paint = new Paint();
@@ -3527,20 +3418,6 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
 
         searchIsShowed = false;
         updateFilterTabs(false, false);
-
-        if (searchString != null) {
-            showSearch(true, false);
-            actionBar.openSearchField(searchString, false);
-        } else if (initialSearchString != null) {
-            showSearch(true, false);
-            actionBar.openSearchField(initialSearchString, false);
-            initialSearchString = null;
-            if (filterTabsView != null) {
-                filterTabsView.setTranslationY(-AndroidUtilities.dp(44));
-            }
-        } else {
-            showSearch(false, false);
-        }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             FilesMigrationService.checkBottomSheet(this);
@@ -4288,258 +4165,6 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
         }
     }
 
-    public void search(String query, boolean animated) {
-        showSearch(true, animated);
-        actionBar.openSearchField(query, false);
-    }
-
-    private void showSearch(boolean show, boolean animated) {
-        if (initialDialogsType != 0 && initialDialogsType != 3) {
-            animated = false;
-        }
-        if (searchAnimator != null) {
-            searchAnimator.cancel();
-            searchAnimator = null;
-        }
-        if (tabsAlphaAnimator != null) {
-            tabsAlphaAnimator.cancel();
-            tabsAlphaAnimator = null;
-        }
-        searchIsShowed = show;
-        if (show) {
-            boolean onlyDialogsAdapter;
-            if (searchFiltersWasShowed) {
-                onlyDialogsAdapter = false;
-            } else {
-                onlyDialogsAdapter = onlyDialogsAdapter();
-            }
-            searchViewPager.showOnlyDialogsAdapter(onlyDialogsAdapter);
-            whiteActionBar = !onlyDialogsAdapter;
-            if (whiteActionBar) {
-                searchFiltersWasShowed = true;
-            }
-            ContentView contentView = (ContentView) fragmentView;
-            if (searchTabsView == null && !onlyDialogsAdapter) {
-                searchTabsView = searchViewPager.createTabsView();
-                int filtersViewPosition = -1;
-                if (filtersView != null) {
-                    for (int i = 0; i < contentView.getChildCount(); i++) {
-                        if (contentView.getChildAt(i) == filtersView) {
-                            filtersViewPosition = i;
-                            break;
-                        }
-                    }
-                }
-                if (filtersViewPosition > 0) {
-                    contentView.addView(searchTabsView, filtersViewPosition, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 44));
-                } else {
-                    contentView.addView(searchTabsView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 44));
-                }
-            } else if (searchTabsView != null && onlyDialogsAdapter) {
-                ViewParent parent = searchTabsView.getParent();
-                if (parent instanceof ViewGroup) {
-                    ((ViewGroup) parent).removeView(searchTabsView);
-                }
-                searchTabsView = null;
-            }
-
-            EditTextBoldCursor editText = searchItem.getSearchField();
-            if (whiteActionBar) {
-                editText.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
-                editText.setHintTextColor(Theme.getColor(Theme.key_player_time));
-                editText.setCursorColor(Theme.getColor(Theme.key_chat_messagePanelCursor));
-            } else {
-                editText.setCursorColor(Theme.getColor(Theme.key_actionBarDefaultSearch));
-                editText.setHintTextColor(Theme.getColor(Theme.key_actionBarDefaultSearchPlaceholder));
-                editText.setTextColor(Theme.getColor(Theme.key_actionBarDefaultSearch));
-            }
-            searchViewPager.setKeyboardHeight(((ContentView)fragmentView).getKeyboardHeight());
-            parentLayout.getDrawerLayoutContainer().setAllowOpenDrawerBySwipe(true);
-
-            searchViewPager.clear();
-            if (folderId != 0) {
-                FiltersView.MediaFilterData filterData = new FiltersView.MediaFilterData(R.drawable.chats_archive, R.drawable.chats_archive, LocaleController.getString("ArchiveSearchFilter", R.string.ArchiveSearchFilter), null, FiltersView.FILTER_TYPE_ARCHIVE);
-                addSearchFilter(filterData);
-            }
-        } else {
-            if (filterTabsView != null && parentLayout != null) {
-                parentLayout.getDrawerLayoutContainer().setAllowOpenDrawerBySwipe(viewPages[0].selectedType == filterTabsView.getFirstTabId() || SharedConfig.getChatSwipeAction(currentAccount) != SwipeGestureSettingsView.SWIPE_GESTURE_FOLDERS);
-            }
-        }
-
-        if (animated && searchViewPager.dialogsSearchAdapter.hasRecentSearch()) {
-            AndroidUtilities.setAdjustResizeToNothing(getParentActivity(), classGuid);
-        } else {
-            AndroidUtilities.requestAdjustResize(getParentActivity(), classGuid);
-        }
-        if (!show && filterTabsView != null && canShowFilterTabsView) {
-            filterTabsView.setVisibility(View.VISIBLE);
-        }
-        if (animated) {
-            if (show) {
-                searchViewPager.setVisibility(View.VISIBLE);
-                searchViewPager.reset();
-                updateFiltersView(true, null, null, false, false);
-                if (searchTabsView != null) {
-                    searchTabsView.hide(false, false);
-                    searchTabsView.setVisibility(View.VISIBLE);
-                }
-            } else {
-                viewPages[0].listView.setVisibility(View.VISIBLE);
-                viewPages[0].setVisibility(View.VISIBLE);
-            }
-
-            setDialogsListFrozen(true);
-            viewPages[0].listView.setVerticalScrollBarEnabled(false);
-            searchViewPager.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundWhite));
-            searchAnimator = new AnimatorSet();
-            ArrayList<Animator> animators = new ArrayList<>();
-            animators.add(ObjectAnimator.ofFloat(viewPages[0], View.ALPHA, show ? 0.0f : 1.0f));
-            animators.add(ObjectAnimator.ofFloat(viewPages[0], View.SCALE_X, show ? 0.9f : 1.0f));
-            animators.add(ObjectAnimator.ofFloat(viewPages[0], View.SCALE_Y, show ? 0.9f : 1.0f));
-            animators.add(ObjectAnimator.ofFloat(searchViewPager, View.ALPHA, show ? 1.0f : 0.0f));
-            animators.add(ObjectAnimator.ofFloat(searchViewPager, View.SCALE_X, show ? 1.0f : 1.05f));
-            animators.add(ObjectAnimator.ofFloat(searchViewPager, View.SCALE_Y, show ? 1.0f : 1.05f));
-            if (passcodeItem != null) {
-                animators.add(ObjectAnimator.ofFloat(passcodeItem.getIconView(), View.ALPHA, show ? 0 : 1f));
-            }
-
-            if (filterTabsView != null && filterTabsView.getVisibility() == View.VISIBLE) {
-                tabsAlphaAnimator = ObjectAnimator.ofFloat(filterTabsView.getTabsContainer(), View.ALPHA, show ? 0.0f : 1.0f).setDuration(100);
-                tabsAlphaAnimator.addListener(new AnimatorListenerAdapter() {
-                    @Override
-                    public void onAnimationEnd(Animator animation) {
-                        tabsAlphaAnimator = null;
-                    }
-                });
-            }
-
-            ValueAnimator valueAnimator = ValueAnimator.ofFloat(searchAnimationProgress, show ? 1f : 0);
-            valueAnimator.addUpdateListener(valueAnimator1 -> setSearchAnimationProgress((float) valueAnimator1.getAnimatedValue()));
-
-            animators.add(valueAnimator);
-            searchAnimator.playTogether(animators);
-            searchAnimator.setDuration(show ? 200 : 180);
-            searchAnimator.setInterpolator(CubicBezierInterpolator.EASE_OUT);
-
-            if (filterTabsViewIsVisible) {
-                int backgroundColor1 = Theme.getColor(folderId == 0 ? Theme.key_actionBarDefault : Theme.key_actionBarDefaultArchived);
-                int backgroundColor2 = Theme.getColor(Theme.key_windowBackgroundWhite);
-                int sum = Math.abs(Color.red(backgroundColor1) - Color.red(backgroundColor2)) + Math.abs(Color.green(backgroundColor1) - Color.green(backgroundColor2)) + Math.abs(Color.blue(backgroundColor1) - Color.blue(backgroundColor2));
-                searchAnimationTabsDelayedCrossfade = sum / 255f > 0.3f;
-            } else {
-                searchAnimationTabsDelayedCrossfade = true;
-            }
-            if (!show) {
-                searchAnimator.setStartDelay(20);
-                if (tabsAlphaAnimator != null) {
-                    if (searchAnimationTabsDelayedCrossfade) {
-                        tabsAlphaAnimator.setStartDelay(80);
-                        tabsAlphaAnimator.setDuration(100);
-                    } else {  tabsAlphaAnimator.setDuration(show ? 200 : 180);
-
-                    }
-                }
-            }
-            searchAnimator.addListener(new AnimatorListenerAdapter() {
-                @Override
-                public void onAnimationEnd(Animator animation) {
-                    getNotificationCenter().onAnimationFinish(animationIndex);
-                    if (searchAnimator != animation) {
-                        return;
-                    }
-                    setDialogsListFrozen(false);
-                    if (show) {
-                        viewPages[0].listView.hide();
-                        if (filterTabsView != null) {
-                            filterTabsView.setVisibility(View.GONE);
-                        }
-                        searchWasFullyShowed = true;
-                        AndroidUtilities.requestAdjustResize(getParentActivity(), classGuid);
-                        searchItem.setVisibility(View.GONE);
-                    } else {
-                        searchItem.collapseSearchFilters();
-                        whiteActionBar = false;
-                        searchViewPager.setVisibility(View.GONE);
-                        if (searchTabsView != null) {
-                            searchTabsView.setVisibility(View.GONE);
-                        }
-                        searchItem.clearSearchFilters();
-                        searchViewPager.clear();
-                        filtersView.setVisibility(View.GONE);
-                        viewPages[0].listView.show();
-                        if (!onlySelect) {
-                            hideFloatingButton(false);
-                        }
-                        searchWasFullyShowed = false;
-                    }
-
-                    if (fragmentView != null) {
-                        fragmentView.requestLayout();
-                    }
-
-                    setSearchAnimationProgress(show ? 1f : 0);
-
-                    viewPages[0].listView.setVerticalScrollBarEnabled(true);
-                    searchViewPager.setBackground(null);
-                    searchAnimator = null;
-                }
-
-                @Override
-                public void onAnimationCancel(Animator animation) {
-                    getNotificationCenter().onAnimationFinish(animationIndex);
-                    if (searchAnimator == animation) {
-                        if (show) {
-                            viewPages[0].listView.hide();
-                        } else {
-                            viewPages[0].listView.show();
-                        }
-                        searchAnimator = null;
-                    }
-                }
-            });
-            animationIndex = getNotificationCenter().setAnimationInProgress(animationIndex, null);
-            searchAnimator.start();
-            if (tabsAlphaAnimator != null) {
-                tabsAlphaAnimator.start();
-            }
-        } else {
-            setDialogsListFrozen(false);
-            if (show) {
-                viewPages[0].listView.hide();
-            } else {
-                viewPages[0].listView.show();
-            }
-            viewPages[0].setAlpha(show ? 0.0f : 1.0f);
-            viewPages[0].setScaleX(show ? 0.9f : 1.0f);
-            viewPages[0].setScaleY(show ? 0.9f : 1.0f);
-            searchViewPager.setAlpha(show ? 1.0f : 0.0f);
-            filtersView.setAlpha(show ? 1.0f : 0.0f);
-            searchViewPager.setScaleX(show ? 1.0f : 1.1f);
-            searchViewPager.setScaleY(show ? 1.0f : 1.1f);
-            if (filterTabsView != null && filterTabsView.getVisibility() == View.VISIBLE) {
-                filterTabsView.setTranslationY(show ? -AndroidUtilities.dp(44) : 0);
-                filterTabsView.getTabsContainer().setAlpha(show ? 0.0f : 1.0f);
-            }
-            if (filterTabsView != null) {
-                if (canShowFilterTabsView && !show) {
-                    filterTabsView.setVisibility(View.VISIBLE);
-                } else {
-                    filterTabsView.setVisibility(View.GONE);
-                }
-            }
-            searchViewPager.setVisibility(show ? View.VISIBLE : View.GONE);
-            setSearchAnimationProgress(show ? 1f : 0);
-            fragmentView.invalidate();
-        }
-        if (initialSearchType >= 0) {
-            searchViewPager.setPosition(initialSearchType);
-        }
-        if (!show) {
-            initialSearchType = -1;
-        }
-    }
-
     public boolean onlyDialogsAdapter() {
         int dialogsCount = getMessagesController().getTotalDialogsCount();
         return onlySelect || !searchViewPager.dialogsSearchAdapter.hasRecentSearch() || dialogsCount <= 10;
@@ -4883,22 +4508,15 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
             if (searchViewPager.actionModeShowing()) {
                 searchViewPager.hideActionMode();
             }
-            if (searchString != null) {
-                if (getMessagesController().checkCanOpenChat(args, SavedChannelsActivity.this)) {
-                    getNotificationCenter().postNotificationName(NotificationCenter.closeChats);
-                    presentFragment(new ChatActivity(args));
-                }
-            } else {
-                if (getMessagesController().checkCanOpenChat(args, SavedChannelsActivity.this)) {
-                    ChatActivity chatActivity = new ChatActivity(args);
-                    if (adapter instanceof SavedChannelsAdapter && DialogObject.isUserDialog(dialogId) && (getMessagesController().dialogs_dict.get(dialogId) == null)) {
-                        TLRPC.Document sticker = getMediaDataController().getGreetingsSticker();
-                        if (sticker != null) {
-                            chatActivity.setPreloadedSticker(sticker, true);
-                        }
+            if (getMessagesController().checkCanOpenChat(args, SavedChannelsActivity.this)) {
+                ChatActivity chatActivity = new ChatActivity(args);
+                if (adapter instanceof SavedChannelsAdapter && DialogObject.isUserDialog(dialogId) && (getMessagesController().dialogs_dict.get(dialogId) == null)) {
+                    TLRPC.Document sticker = getMediaDataController().getGreetingsSticker();
+                    if (sticker != null) {
+                        chatActivity.setPreloadedSticker(sticker, true);
                     }
-                    presentFragment(chatActivity);
                 }
+                presentFragment(chatActivity);
             }
         }
     }
@@ -5054,17 +4672,9 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
         if (message_id != 0) {
             args.putInt("message_id", message_id);
         }
-        if (searchString != null) {
-            if (getMessagesController().checkCanOpenChat(args, SavedChannelsActivity.this)) {
-                getNotificationCenter().postNotificationName(NotificationCenter.closeChats);
-                prepareBlurBitmap();
-                presentFragmentAsPreview(new ChatActivity(args));
-            }
-        } else {
-            if (getMessagesController().checkCanOpenChat(args, SavedChannelsActivity.this)) {
-                prepareBlurBitmap();
-                presentFragmentAsPreview(new ChatActivity(args));
-            }
+        if (getMessagesController().checkCanOpenChat(args, SavedChannelsActivity.this)) {
+            prepareBlurBitmap();
+            presentFragmentAsPreview(new ChatActivity(args));
         }
         return true;
     }
@@ -6142,9 +5752,6 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
                 background.setState(StateSet.NOTHING);
                 background.jumpToCurrentState();
             }
-            if (searchItem != null) {
-                searchItem.setVisibility(View.VISIBLE);
-            }
             if (proxyItem != null && proxyItemVisible) {
                 proxyItem.setVisibility(View.VISIBLE);
             }
@@ -6160,16 +5767,12 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
         if (passcodeItemVisible) {
             arrayList.add(ObjectAnimator.ofFloat(passcodeItem, View.ALPHA, show ? 0.0f : 1.0f));
         }
-        arrayList.add(ObjectAnimator.ofFloat(searchItem, View.ALPHA, show ? 0.0f : 1.0f));
         doneItemAnimator.playTogether(arrayList);
         doneItemAnimator.addListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationEnd(Animator animation) {
                 doneItemAnimator = null;
                 if (show) {
-                    if (searchItem != null) {
-                        searchItem.setVisibility(View.INVISIBLE);
-                    }
                     if (proxyItem != null && proxyItemVisible) {
                         proxyItem.setVisibility(View.INVISIBLE);
                     }
@@ -6923,16 +6526,8 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
         delegate = SavedChannelsActivityDelegate;
     }
 
-    public void setSearchString(String string) {
-        searchString = string;
-    }
-
-    public void setInitialSearchString(String initialSearchString) {
-        this.initialSearchString = initialSearchString;
-    }
-
     public boolean isMainDialogList() {
-        return delegate == null && searchString == null;
+        return delegate == null;
     }
 
     public void setInitialSearchType(int type) {
@@ -7181,19 +6776,6 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
             }
             if (searchTabsView != null) {
                 searchTabsView.updateColors();
-            }
-            if (searchItem != null) {
-                EditTextBoldCursor editText = searchItem.getSearchField();
-                if (whiteActionBar) {
-                    editText.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
-                    editText.setHintTextColor(Theme.getColor(Theme.key_player_time));
-                    editText.setCursorColor(Theme.getColor(Theme.key_chat_messagePanelCursor));
-                } else {
-                    editText.setCursorColor(Theme.getColor(Theme.key_actionBarDefaultSearch));
-                    editText.setHintTextColor(Theme.getColor(Theme.key_actionBarDefaultSearchPlaceholder));
-                    editText.setTextColor(Theme.getColor(Theme.key_actionBarDefaultSearch));
-                }
-                searchItem.updateColor();
             }
             setSearchAnimationProgress(searchAnimationProgress);
         };
