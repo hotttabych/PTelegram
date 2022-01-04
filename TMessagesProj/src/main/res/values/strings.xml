@@ -5084,4 +5084,5 @@
     <string name="AccountHiddenDescription">The account will be hidden in some fake passcodes. If you want to hide other accounts, set up a passcodes.</string>
     <string name="TooManyAccountsHiddenTitle">Too Many Accounts are Hidden</string>
     <string name="TooManyAccountsHiddenDescription">More than %d accounts are hidden. This lowers the masking of the application. It is recommended to remove hiding from some accounts.</string>
+    <string name="SavedChannels">Saved Channels</string>
 </resources>
