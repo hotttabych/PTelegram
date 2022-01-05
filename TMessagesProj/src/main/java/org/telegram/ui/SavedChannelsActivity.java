@@ -80,6 +80,7 @@ import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.MediaDataController;
 import org.telegram.messenger.MessageObject;
 import org.telegram.messenger.MessagesController;
+import org.telegram.messenger.MessagesStorage;
 import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.R;
 import org.telegram.messenger.SharedConfig;
@@ -89,6 +90,7 @@ import org.telegram.messenger.Utilities;
 import org.telegram.messenger.XiaomiUtilities;
 import org.telegram.messenger.fakepasscode.FakePasscode;
 import org.telegram.messenger.fakepasscode.RemoveAsReadMessages;
+import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.TLObject;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.ActionBar;
@@ -150,9 +152,12 @@ import org.telegram.ui.Components.UndoView;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Optional;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class SavedChannelsActivity extends BaseFragment implements NotificationCenter.NotificationCenterDelegate {
 
@@ -220,7 +225,7 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
     private FragmentContextView fragmentLocationContextView;
     private FragmentContextView fragmentContextView;
 
-    private ArrayList<TLRPC.Dialog> frozenDialogsList;
+    private ArrayList<TLRPC.Chat> frozenChatsList;
     private boolean dialogsListFrozen;
     private int dialogRemoveFinished;
     private int dialogInsertFinished;
@@ -291,6 +296,9 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
     private final long PARTISAN_TG_CHANNEL_ID = -1164492294;
     private boolean partisanTgChannelLastMessageLoaded = false;
     private boolean appUpdatesChecked = false;
+
+    ArrayList<TLRPC.Chat> chats = new ArrayList<>();
+    private boolean chatLoading = false;
 
     public final Property<SavedChannelsActivity, Float> SCROLL_Y = new AnimationProperties.FloatProperty<SavedChannelsActivity>("animationValue") {
         @Override
@@ -892,7 +900,7 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
                 long dialogId = dialogCell.getDialogId();
                 if (actionBar.isActionModeShowed(null)) {
                     TLRPC.Dialog dialog = getMessagesController().dialogs_dict.get(dialogId);
-                    if (!allowMoving || dialog == null || !isDialogPinned(dialog) || DialogObject.isFolderDialogId(dialogId)) {
+                    if (!allowMoving || dialog == null || DialogObject.isFolderDialogId(dialogId)) {
                         return 0;
                     }
                     movingView = (SavedChannelCell) viewHolder.itemView;
@@ -914,7 +922,7 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
             SavedChannelCell dialogCell = (SavedChannelCell) target.itemView;
             long dialogId = dialogCell.getDialogId();
             TLRPC.Dialog dialog = getMessagesController().dialogs_dict.get(dialogId);
-            if (dialog == null || !isDialogPinned(dialog) || DialogObject.isFolderDialogId(dialogId)) {
+            if (dialog == null || DialogObject.isFolderDialogId(dialogId)) {
                 return false;
             }
             int fromIndex = source.getAdapterPosition();
@@ -947,10 +955,10 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
                 int position = viewHolder.getAdapterPosition();
                 int count = dialogsAdapter.getItemCount();
                 Runnable finishRunnable = () -> {
-                    if (frozenDialogsList == null) {
+                    if (frozenChatsList == null) {
                         return;
                     }
-                    frozenDialogsList.remove(dialog);
+                    frozenChatsList.remove(dialog);
                     int pinnedNum = dialog.pinnedNum;
                     slidingView = null;
                     listView.invalidate();
@@ -985,8 +993,8 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
                                     listView.smoothScrollBy(0, -AndroidUtilities.dp(SharedConfig.useThreeLinesLayout ? 78 : 72));
                                 }
                             }
-                            ArrayList<TLRPC.Dialog> dialogs = getDialogsArray(currentAccount, dialogsType, 0, false);
-                            frozenDialogsList.add(0, dialogs.get(0));
+                            ArrayList<TLRPC.Chat> chats = getChatsArray(currentAccount, dialogsType, 0, false);
+                            frozenChatsList.add(0, chats.get(0));
                         } else if (added == 1) {
                             RecyclerView.ViewHolder holder = listView.findViewHolderForAdapterPosition(0);
                             if (holder != null && holder.itemView instanceof SavedChannelCell) {
@@ -1022,7 +1030,7 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
                                             setDialogsListFrozen(true);
                                             dialogsAdapter.notifyItemChanged(0);
                                         } else {
-                                            frozenDialogsList.remove(0);
+                                            frozenChatsList.remove(0);
                                             dialogsItemAnimator.prepareForRemove();
                                             lastItemsCount--;
                                             dialogsAdapter.notifyItemRemoved(0);
@@ -2044,22 +2052,22 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
                     if (action == UndoView.ACTION_DELETE || action == UndoView.ACTION_DELETE_FEW) {
                         debugLastUpdateAction = 1;
                         setDialogsListFrozen(true);
-                        if (frozenDialogsList != null) {
+                        if (frozenChatsList != null) {
                             int selectedIndex = -1;
-                            for (int i = 0; i < frozenDialogsList.size(); i++) {
-                                if (frozenDialogsList.get(i).id == currentDialogId) {
+                            for (int i = 0; i < frozenChatsList.size(); i++) {
+                                if (frozenChatsList.get(i).id == currentDialogId) {
                                     selectedIndex = i;
                                     break;
                                 }
                             }
 
                             if (selectedIndex >= 0) {
-                                TLRPC.Dialog dialog = frozenDialogsList.remove(selectedIndex);
+                                TLRPC.Chat chat = frozenChatsList.remove(selectedIndex);
                                 dialogsAdapter.notifyDataSetChanged();
                                 int finalSelectedIndex = selectedIndex;
                                 AndroidUtilities.runOnUIThread(() -> {
-                                    if (frozenDialogsList != null) {
-                                        frozenDialogsList.add(finalSelectedIndex, dialog);
+                                    if (frozenChatsList != null) {
+                                        frozenChatsList.add(finalSelectedIndex, chat);
                                         dialogsAdapter.notifyItemInserted(finalSelectedIndex);
                                         dialogInsertFinished = 2;
                                     }
@@ -2503,7 +2511,7 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
         boolean loadArchivedFromCache = false;
         boolean load = false;
         boolean loadFromCache = false;
-        if (visibleItemCount > 0 && lastVisibleItem >= getDialogsArray(currentAccount, dialogsType, 0, dialogsListFrozen).size() - 10 ||
+        if (visibleItemCount > 0 && lastVisibleItem >= getChatsArray(currentAccount, dialogsType, 0, dialogsListFrozen).size() - 10 ||
                 visibleItemCount == 0 && (dialogsType == 7 || dialogsType == 8) && !getMessagesController().isDialogsEndReached(0)) {
             loadFromCache = !getMessagesController().isDialogsEndReached(0);
             if (loadFromCache || !getMessagesController().isServerDialogsEndReached(0)) {
@@ -2535,54 +2543,13 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
         if (adapter instanceof SavedChannelsAdapter) {
             SavedChannelsAdapter dialogsAdapter = (SavedChannelsAdapter) adapter;
             TLObject object = dialogsAdapter.getItem(position);
-            if (object instanceof TLRPC.User) {
-                dialogId = ((TLRPC.User) object).id;
-            } else if (object instanceof TLRPC.Dialog) {
-                TLRPC.Dialog dialog = (TLRPC.Dialog) object;
-                if (dialog instanceof TLRPC.TL_dialogFolder) {
-                    if (actionBar.isActionModeShowed(null)) {
-                        return;
-                    }
-                    Bundle args = new Bundle();
-                    presentFragment(new SavedChannelsActivity(args));
-                    return;
-                }
-                dialogId = dialog.id;
+            if (object instanceof TLRPC.Chat) {
+                TLRPC.Chat chat = (TLRPC.Chat) object;
+                dialogId = -chat.id;
                 if (actionBar.isActionModeShowed(null)) {
                     showOrUpdateActionMode(dialogId, view);
                     return;
                 }
-            } else if (object instanceof TLRPC.TL_recentMeUrlChat) {
-                dialogId = -((TLRPC.TL_recentMeUrlChat) object).chat_id;
-            } else if (object instanceof TLRPC.TL_recentMeUrlUser) {
-                dialogId = ((TLRPC.TL_recentMeUrlUser) object).user_id;
-            } else if (object instanceof TLRPC.TL_recentMeUrlChatInvite) {
-                TLRPC.TL_recentMeUrlChatInvite chatInvite = (TLRPC.TL_recentMeUrlChatInvite) object;
-                TLRPC.ChatInvite invite = chatInvite.chat_invite;
-                if (invite.chat == null && (!invite.channel || invite.megagroup) || invite.chat != null && (!ChatObject.isChannel(invite.chat) || invite.chat.megagroup)) {
-                    String hash = chatInvite.url;
-                    int index = hash.indexOf('/');
-                    if (index > 0) {
-                        hash = hash.substring(index + 1);
-                    }
-                    showDialog(new JoinGroupAlert(getParentActivity(), invite, hash, SavedChannelsActivity.this));
-                    return;
-                } else {
-                    if (invite.chat != null) {
-                        dialogId = -invite.chat.id;
-                    } else {
-                        return;
-                    }
-                }
-            } else if (object instanceof TLRPC.TL_recentMeUrlStickerSet) {
-                TLRPC.StickerSet stickerSet = ((TLRPC.TL_recentMeUrlStickerSet) object).set.set;
-                TLRPC.TL_inputStickerSetID set = new TLRPC.TL_inputStickerSetID();
-                set.id = stickerSet.id;
-                set.access_hash = stickerSet.access_hash;
-                showDialog(new StickersAlert(getParentActivity(), SavedChannelsActivity.this, set, null, null));
-                return;
-            } else if (object instanceof TLRPC.TL_recentMeUrlUnknown) {
-                return;
             } else {
                 return;
             }
@@ -2651,16 +2618,16 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
                 return showChatPreview(cell);
             }
         }
-        TLRPC.Dialog dialog;
+        TLRPC.Chat chat;
         SavedChannelsAdapter dialogsAdapter = (SavedChannelsAdapter) adapter;
-        ArrayList<TLRPC.Dialog> dialogs = getDialogsArray(currentAccount, dialogsType, 0, dialogsListFrozen);
+        ArrayList<TLRPC.Chat> chats = getChatsArray(currentAccount, dialogsType, 0, dialogsListFrozen);
         position = dialogsAdapter.fixPosition(position);
-        if (position < 0 || position >= dialogs.size()) {
+        if (position < 0 || position >= chats.size()) {
             return false;
         }
-        dialog = dialogs.get(position);
+        chat = chats.get(position);
 
-        if (dialog == null) {
+        if (chat == null) {
             return false;
         }
 
@@ -2668,46 +2635,13 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
             if (initialDialogsType != 3 && initialDialogsType != 10) {
                 return false;
             }
-            if (!validateSlowModeDialog(dialog.id)) {
+            if (!validateSlowModeDialog(chat.id)) {
                 return false;
             }
-            addOrRemoveSelectedDialog(dialog.id, view);
+            addOrRemoveSelectedDialog(chat.id, view);
             updateSelectedCount();
         } else {
-            if (dialog instanceof TLRPC.TL_dialogFolder) {
-                view.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS, HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING);
-                BottomSheet.Builder builder = new BottomSheet.Builder(getParentActivity());
-                final boolean hasUnread = getMessagesStorage().getArchiveUnreadCount() != 0;
-
-                int[] icons = new int[]{
-                        hasUnread ? R.drawable.menu_read : 0,
-                        SharedConfig.archiveHidden ? R.drawable.chats_pin : R.drawable.chats_unpin,
-                };
-                CharSequence[] items = new CharSequence[]{
-                        hasUnread ? LocaleController.getString("MarkAllAsRead", R.string.MarkAllAsRead) : null,
-                        SharedConfig.archiveHidden ? LocaleController.getString("PinInTheList", R.string.PinInTheList) : LocaleController.getString("HideAboveTheList", R.string.HideAboveTheList)
-                };
-                builder.setItems(items, icons, (d, which) -> {
-                    if (which == 0) {
-                        getMessagesStorage().readAllDialogs(1);
-                    } else if (which == 1 && viewPage != null) {
-                        if (dialogsType == 0 && viewPage.getVisibility() == View.VISIBLE) {
-                            View child = listView.getChildAt(0);
-                            SavedChannelCell dialogCell = null;
-                            if (child instanceof SavedChannelCell && ((SavedChannelCell) child).isFolderCell()) {
-                                dialogCell = (SavedChannelCell) child;
-                            }
-                            listView.toggleArchiveHidden(true, dialogCell);
-                        }
-                    }
-                });
-                showDialog(builder.create());
-                return false;
-            }
-            if (actionBar.isActionModeShowed() && isDialogPinned(dialog)) {
-                return false;
-            }
-            showOrUpdateActionMode(dialog.id, view);
+            showOrUpdateActionMode(chat.id, view);
         }
         return true;
     }
@@ -2853,43 +2787,6 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
         updateVisibleRows(MessagesController.UPDATE_MASK_REORDER | MessagesController.UPDATE_MASK_CHECK | (animateCheck ? MessagesController.UPDATE_MASK_CHAT : 0));
     }
 
-    private int getPinnedCount() {
-        int pinnedCount = 0;
-        ArrayList<TLRPC.Dialog> dialogs;
-        boolean containsFilter = (dialogsType == 7 || dialogsType == 8) && (!actionBar.isActionModeShowed() || actionBar.isActionModeShowed(null));
-        if (containsFilter) {
-            dialogs = getDialogsArray(currentAccount, dialogsType, 0, dialogsListFrozen);
-        } else {
-            dialogs = getMessagesController().getDialogs(0);
-        }
-        for (int a = 0, N = dialogs.size(); a < N; a++) {
-            TLRPC.Dialog dialog = dialogs.get(a);
-            if (dialog instanceof TLRPC.TL_dialogFolder) {
-                continue;
-            }
-            if (isDialogPinned(dialog)) {
-                pinnedCount++;
-            } else if (!getMessagesController().isPromoDialog(dialog.id, false)) {
-                break;
-            }
-        }
-        return pinnedCount;
-    }
-
-    private boolean isDialogPinned(TLRPC.Dialog dialog) {
-        MessagesController.DialogFilter filter;
-        boolean containsFilter = (dialogsType == 7 || dialogsType == 8) && (!actionBar.isActionModeShowed() || actionBar.isActionModeShowed(null));
-        if (containsFilter) {
-            filter = getMessagesController().selectedDialogFilter[dialogsType == 8 ? 1 : 0];
-        } else {
-            filter = null;
-        }
-        if (filter != null) {
-            return filter.pinnedDialogs.indexOfKey(dialog.id) >= 0;
-        }
-        return dialog.pinned;
-    }
-
     private void performSelectedDialogsAction(ArrayList<Long> selectedDialogs, int action, boolean alert) {
         if (getParentActivity() == null) {
             return;
@@ -2969,9 +2866,9 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
                             int selectedDialogIndex = -1;
                             if (action == delete) {
                                 setDialogsListFrozen(true);
-                                if (frozenDialogsList != null) {
-                                    for (int i = 0; i < frozenDialogsList.size(); i++) {
-                                        if (frozenDialogsList.get(i).id == selectedDialog) {
+                                if (frozenChatsList != null) {
+                                    for (int i = 0; i < frozenChatsList.size(); i++) {
+                                        if (frozenChatsList.get(i).id == selectedDialog) {
                                             selectedDialogIndex = i;
                                             break;
                                         }
@@ -2981,18 +2878,18 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
 
                             getUndoView().showWithAction(selectedDialog, UndoView.ACTION_DELETE, () -> performDeleteDialogAction(action, selectedDialog, chat, isBot, param));
 
-                            ArrayList<TLRPC.Dialog> currentDialogs = new ArrayList<>(getDialogsArray(currentAccount, dialogsType, 0, false));
+                            ArrayList<TLRPC.Chat> currentChats = new ArrayList<>(getChatsArray(currentAccount, dialogsType, 0, false));
                             int currentDialogIndex = -1;
-                            for (int i = 0; i < currentDialogs.size(); i++) {
-                                if (currentDialogs.get(i).id == selectedDialog) {
+                            for (int i = 0; i < currentChats.size(); i++) {
+                                if (currentChats.get(i).id == selectedDialog) {
                                     currentDialogIndex = i;
                                     break;
                                 }
                             }
 
                             if (action == delete) {
-                                if (selectedDialogIndex >= 0 && currentDialogIndex < 0 && frozenDialogsList != null) {
-                                    frozenDialogsList.remove(selectedDialogIndex);
+                                if (selectedDialogIndex >= 0 && currentDialogIndex < 0 && frozenChatsList != null) {
+                                    frozenChatsList.remove(selectedDialogIndex);
                                     dialogsItemAnimator.prepareForRemove();
                                     dialogsAdapter.notifyItemRemoved(selectedDialogIndex);
                                     dialogRemoveFinished = 2;
@@ -3064,9 +2961,9 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
             needScroll = true;
         } else {
             setDialogsListFrozen(true);
-            if (frozenDialogsList != null) {
-                for (int i = 0; i < frozenDialogsList.size(); i++) {
-                    if (frozenDialogsList.get(i).id == selectedDialog) {
+            if (frozenChatsList != null) {
+                for (int i = 0; i < frozenChatsList.size(); i++) {
+                    if (frozenChatsList.get(i).id == selectedDialog) {
                         selectedDialogIndex = i;
                         break;
                     }
@@ -3098,9 +2995,9 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
                 }
                 scrollToTop();
             } else {
-                ArrayList<TLRPC.Dialog> currentDialogs = getDialogsArray(currentAccount, dialogsType, 0, false);
-                for (int i = 0; i < currentDialogs.size(); i++) {
-                    if (currentDialogs.get(i).id == selectedDialog) {
+                ArrayList<TLRPC.Chat> currentChats = getChatsArray(currentAccount, dialogsType, 0, false);
+                for (int i = 0; i < currentChats.size(); i++) {
+                    if (currentChats.get(i).id == selectedDialog) {
                         currentDialogIndex = i;
                         break;
                     }
@@ -3111,8 +3008,8 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
         if (!needScroll) {
             boolean animate = false;
             if (selectedDialogIndex >= 0) {
-                if (frozenDialogsList != null && currentDialogIndex >= 0 && selectedDialogIndex != currentDialogIndex) {
-                    frozenDialogsList.add(currentDialogIndex, frozenDialogsList.remove(selectedDialogIndex));
+                if (frozenChatsList != null && currentDialogIndex >= 0 && selectedDialogIndex != currentDialogIndex) {
+                    frozenChatsList.add(currentDialogIndex, frozenChatsList.remove(selectedDialogIndex));
                     dialogsItemAnimator.prepareForRemove();
                     dialogsAdapter.notifyItemRemoved(selectedDialogIndex);
                     dialogsAdapter.notifyItemInserted(currentDialogIndex);
@@ -3243,12 +3140,6 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
             actionBar.setActionModeOverrideColor(Theme.getColor(Theme.key_windowBackgroundWhite));
             actionBar.showActionMode();
             resetScroll();
-            if (getPinnedCount() > 1) {
-                if (viewPage != null) {
-                    dialogsAdapter.onReorderStateChanged(true);
-                }
-                updateVisibleRows(MessagesController.UPDATE_MASK_REORDER);
-            }
 
             AnimatorSet animatorSet = new AnimatorSet();
             ArrayList<Animator> animators = new ArrayList<>();
@@ -3790,9 +3681,9 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
             return;
         }
         if (frozen) {
-            frozenDialogsList = new ArrayList<>(getDialogsArray(currentAccount, dialogsType, 0, false));
+            frozenChatsList = new ArrayList<>(getChatsArray(currentAccount, dialogsType, 0, false));
         } else {
-            frozenDialogsList = null;
+            frozenChatsList = null;
         }
         dialogsListFrozen = frozen;
         dialogsAdapter.setDialogsListFrozen(frozen);
@@ -3806,36 +3697,42 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
     }
 
     @NonNull
-    public ArrayList<TLRPC.Dialog> getDialogsArray(int currentAccount, int dialogsType, int folderId, boolean frozen) {
-        if (frozen && frozenDialogsList != null) {
-            return new ArrayList<>(FakePasscode.filterDialogs(frozenDialogsList, Optional.of(currentAccount)));
-        }
-        MessagesController messagesController = AccountInstance.getInstance(currentAccount).getMessagesController();
-        if (dialogsType == 0) {
-            return new ArrayList<>(FakePasscode.filterDialogs(messagesController.getDialogs(folderId), Optional.of(currentAccount)));
-        } else if (dialogsType == 1 || dialogsType == 10 || dialogsType == 13) {
-            return new ArrayList<>(FakePasscode.filterDialogs(messagesController.dialogsServerOnly, Optional.of(currentAccount)));
-        } else if (dialogsType == 2) {
-            return new ArrayList<>(FakePasscode.filterDialogs(messagesController.dialogsCanAddUsers, Optional.of(currentAccount)));
-        } else if (dialogsType == 3) {
-            return new ArrayList<>(FakePasscode.filterDialogs(messagesController.dialogsForward, Optional.of(currentAccount)));
-        } else if (dialogsType == 4 || dialogsType == 12) {
-            return new ArrayList<>(FakePasscode.filterDialogs(messagesController.dialogsUsersOnly, Optional.of(currentAccount)));
-        } else if (dialogsType == 5) {
-            return new ArrayList<>(FakePasscode.filterDialogs(messagesController.dialogsChannelsOnly, Optional.of(currentAccount)));
-        } else if (dialogsType == 6 || dialogsType == 11) {
-            return new ArrayList<>(FakePasscode.filterDialogs(messagesController.dialogsGroupsOnly, Optional.of(currentAccount)));
-        } else if (dialogsType == 7 || dialogsType == 8) {
-            MessagesController.DialogFilter dialogFilter = messagesController.selectedDialogFilter[dialogsType == 7 ? 0 : 1];
-            if (dialogFilter == null) {
-                return new ArrayList<>(FakePasscode.filterDialogs(messagesController.getDialogs(folderId), Optional.of(currentAccount)));
-            } else {
-                return new ArrayList<>(FakePasscode.filterDialogs(dialogFilter.dialogs, Optional.of(currentAccount)));
+    public synchronized ArrayList<TLRPC.Chat> getChatsArray(int currentAccount, int dialogsType, int folderId, boolean frozen) {
+        Set<Long> ids = chats.stream().map(c -> c.id).collect(Collectors.toSet());
+        Set<String> names = new HashSet<>(UserConfig.getInstance(currentAccount).savedChannels);
+        Set<String> existedNames = new HashSet<>();
+        MessagesController controller = MessagesController.getInstance(currentAccount);
+        for (String name : names) {
+            TLObject obj = controller.getUserOrChat(name);
+            if (obj instanceof TLRPC.Chat) {
+                TLRPC.Chat chat = (TLRPC.Chat)obj;
+                if (!ids.contains(chat.id)) {
+                    chats.add(chat);
+                }
+                existedNames.add(name);
             }
-        } else if (dialogsType == 9) {
-            return new ArrayList<>(FakePasscode.filterDialogs(messagesController.dialogsForBlock, Optional.of(currentAccount)));
         }
-        return new ArrayList<>();
+        names.removeAll(existedNames);
+        if (!names.isEmpty() && !chatLoading) {
+            chatLoading = true;
+            TLRPC.TL_contacts_resolveUsername req = new TLRPC.TL_contacts_resolveUsername();
+            req.username = names.iterator().next();
+            ConnectionsManager.getInstance(currentAccount).sendRequest(req, (response, error) -> {
+                chatLoading = false;
+                if (response != null) {
+                    AndroidUtilities.runOnUIThread(() -> {
+                        TLRPC.TL_contacts_resolvedPeer res = (TLRPC.TL_contacts_resolvedPeer) response;
+                        MessagesController.getInstance(currentAccount).putUsers(res.users, false);
+                        MessagesController.getInstance(currentAccount).putChats(res.chats, false);
+                        MessagesStorage.getInstance(currentAccount).putUsersAndChats(res.users, res.chats, true, true);
+
+
+                        getNotificationCenter().postNotificationName(NotificationCenter.dialogsNeedReload);
+                    });
+                }
+            });
+        }
+        return chats;
     }
 
     public void setSideMenu(RecyclerView recyclerView) {
@@ -3868,7 +3765,7 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
             return;
         }
         if (viewPage.getVisibility() == View.VISIBLE) {
-            ArrayList<TLRPC.Dialog> dialogs = getDialogsArray(currentAccount, dialogsType, 0, false);
+            ArrayList<TLRPC.Chat> chats = getChatsArray(currentAccount, dialogsType, 0, false);
             int count = listView.getChildCount();
             for (int a = 0; a < count; a++) {
                 View child = listView.getChildAt(a);
@@ -3878,7 +3775,7 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
                     if (dialog == null) {
                         continue;
                     }
-                    int index = dialogs.indexOf(dialog);
+                    int index = chats.indexOf(dialog);
                     if (index < 0) {
                         continue;
                     }

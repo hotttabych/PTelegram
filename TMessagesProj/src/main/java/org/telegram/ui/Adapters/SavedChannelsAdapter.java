@@ -149,7 +149,7 @@ public class SavedChannelsAdapter extends RecyclerListView.SelectionAdapter {
     @Override
     public int getItemCount() {
         MessagesController messagesController = MessagesController.getInstance(currentAccount);
-        ArrayList<TLRPC.Dialog> array = parentFragment.getDialogsArray(currentAccount, dialogsType, folderId, dialogsListFrozen);
+        ArrayList<TLRPC.Chat> array = parentFragment.getChatsArray(currentAccount, dialogsType, folderId, dialogsListFrozen);
         dialogsCount = array.size();
         if (!forceShowEmptyCell && dialogsType != 7 && dialogsType != 8 && dialogsType != 11 && dialogsCount == 0 && (folderId != 0 || messagesController.isLoadingDialogs(folderId) || !MessagesController.getInstance(currentAccount).isDialogsEndReached(folderId))) {
             onlineContacts = null;
@@ -251,7 +251,7 @@ public class SavedChannelsAdapter extends RecyclerListView.SelectionAdapter {
         } else if (dialogsType == 12) {
             i -= 1;
         }
-        ArrayList<TLRPC.Dialog> arrayList = parentFragment.getDialogsArray(currentAccount, dialogsType, folderId, dialogsListFrozen);
+        ArrayList<TLRPC.Chat> arrayList = parentFragment.getChatsArray(currentAccount, dialogsType, folderId, dialogsListFrozen);
         if (hasHints) {
             int count = MessagesController.getInstance(currentAccount).hintDialogs.size();
             if (i < 2 + count) {
@@ -501,19 +501,19 @@ public class SavedChannelsAdapter extends RecyclerListView.SelectionAdapter {
         switch (holder.getItemViewType()) {
             case 0: {
                 SavedChannelCell cell = (SavedChannelCell) holder.itemView;
-                TLRPC.Dialog dialog = (TLRPC.Dialog) getItem(i);
-                TLRPC.Dialog nextDialog = (TLRPC.Dialog) getItem(i + 1);
-                cell.useSeparator = nextDialog != null;
-                cell.fullSeparator = dialog.pinned && nextDialog != null && !nextDialog.pinned;
+                TLRPC.Chat chat = (TLRPC.Chat) getItem(i);
+                TLRPC.Chat nextChat = (TLRPC.Chat) getItem(i + 1);
+                cell.useSeparator = nextChat != null;
+                cell.fullSeparator = false;
                 if (dialogsType == 0) {
                     if (AndroidUtilities.isTablet()) {
-                        cell.setDialogSelected(dialog.id == openedDialogId);
+                        cell.setDialogSelected(chat.id == openedDialogId);
                     }
                 }
-                cell.setChecked(selectedDialogs.contains(dialog.id), false);
-                cell.setDialog(dialog, dialogsType, folderId);
+                cell.setChecked(selectedDialogs.contains(chat.id), false);
+                cell.setChat(chat, dialogsType, folderId);
                 if (preloader != null && i < 10) {
-                    preloader.add(dialog.id);
+                    preloader.add(chat.id);
                 }
                 break;
             }
@@ -645,7 +645,7 @@ public class SavedChannelsAdapter extends RecyclerListView.SelectionAdapter {
         if (folderId == 0 && dialogsCount > 10 && i == currentCount - 2 && dialogsType == 0) {
             return 11;
         }
-        int size = parentFragment.getDialogsArray(currentAccount, dialogsType, folderId, dialogsListFrozen).size();
+        int size = parentFragment.getChatsArray(currentAccount, dialogsType, folderId, dialogsListFrozen).size();
         if (i == size) {
             if (!forceShowEmptyCell && dialogsType != 7 && dialogsType != 8 && !MessagesController.getInstance(currentAccount).isDialogsEndReached(folderId)) {
                 return 1;
@@ -662,21 +662,17 @@ public class SavedChannelsAdapter extends RecyclerListView.SelectionAdapter {
 
     @Override
     public void notifyItemMoved(int fromPosition, int toPosition) {
-        ArrayList<TLRPC.Dialog> dialogs = parentFragment.getDialogsArray(currentAccount, dialogsType, folderId, false);
+        ArrayList<TLRPC.Chat> dialogs = parentFragment.getChatsArray(currentAccount, dialogsType, folderId, false);
         int fromIndex = fixPosition(fromPosition);
         int toIndex = fixPosition(toPosition);
-        TLRPC.Dialog fromDialog = dialogs.get(fromIndex);
-        TLRPC.Dialog toDialog = dialogs.get(toIndex);
+        TLRPC.Chat fromDialog = dialogs.get(fromIndex);
+        TLRPC.Chat toDialog = dialogs.get(toIndex);
         if (dialogsType == 7 || dialogsType == 8) {
             MessagesController.DialogFilter filter = MessagesController.getInstance(currentAccount).selectedDialogFilter[dialogsType == 8 ? 1 : 0];
             int idx1 = filter.pinnedDialogs.get(fromDialog.id);
             int idx2 = filter.pinnedDialogs.get(toDialog.id);
             filter.pinnedDialogs.put(fromDialog.id, idx2);
             filter.pinnedDialogs.put(toDialog.id, idx1);
-        } else {
-            int oldNum = fromDialog.pinnedNum;
-            fromDialog.pinnedNum = toDialog.pinnedNum;
-            toDialog.pinnedNum = oldNum;
         }
         Collections.swap(dialogs, fromIndex, toIndex);
         super.notifyItemMoved(fromPosition, toPosition);
@@ -831,7 +827,7 @@ public class SavedChannelsAdapter extends RecyclerListView.SelectionAdapter {
         }
 
         protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-            int size = parentFragment.getDialogsArray(currentAccount, dialogsType, folderId, dialogsListFrozen).size();
+            int size = parentFragment.getChatsArray(currentAccount, dialogsType, folderId, dialogsListFrozen).size();
             boolean hasArchive = dialogsType == 0 && MessagesController.getInstance(currentAccount).dialogs_dict.get(DialogObject.makeFolderDialogId(1)) != null;
             View parent = (View) getParent();
             int height;

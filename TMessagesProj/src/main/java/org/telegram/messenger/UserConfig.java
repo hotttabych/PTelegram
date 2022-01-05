@@ -26,10 +26,13 @@ import org.telegram.tgnet.TLRPC;
 
 import java.io.File;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 public class UserConfig extends BaseController {
 
@@ -88,6 +91,8 @@ public class UserConfig extends BaseController {
     }
 
     public Map<String, ChatInfoOverride> chatInfoOverrides = new HashMap<>();
+
+    public Set<String> savedChannels = new HashSet<>();
 
     private static ObjectMapper jsonMapper = null;
 
