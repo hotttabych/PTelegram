@@ -97,6 +97,7 @@ import org.telegram.ui.ActionBar.ActionBar;
 import org.telegram.ui.ActionBar.ActionBarMenu;
 import org.telegram.ui.ActionBar.ActionBarMenuItem;
 import org.telegram.ui.ActionBar.AlertDialog;
+import org.telegram.ui.ActionBar.BackDrawable;
 import org.telegram.ui.ActionBar.BaseFragment;
 import org.telegram.ui.ActionBar.BottomSheet;
 import org.telegram.ui.ActionBar.Theme;
@@ -2756,6 +2757,7 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
 
     private void hideActionMode(boolean animateCheck) {
         actionBar.hideActionMode();
+        actionBar.setBackButtonImage(R.drawable.ic_ab_back);
         selectedDialogs.clear();
         if (actionBarColorAnimator != null) {
             actionBarColorAnimator.cancel();
@@ -3046,68 +3048,10 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
     }
 
     private void updateCounters(boolean hide) {
-        int canDeleteCount = 0;
-        canDeletePsaSelected = false;
         if (hide) {
             return;
         }
-        int count = selectedDialogs.size();
-        for (int a = 0; a < count; a++) {
-            TLRPC.Dialog dialog = getMessagesController().dialogs_dict.get(selectedDialogs.get(a));
-            if (dialog == null) {
-                continue;
-            }
-
-            if (DialogObject.isChannel(dialog)) {
-                if (getMessagesController().isPromoDialog(dialog.id, true)) {
-                    if (getMessagesController().promoDialogType == MessagesController.PROMO_TYPE_PSA) {
-                        canDeleteCount++;
-                        canDeletePsaSelected = true;
-                    }
-                } else {
-                    canDeleteCount++;
-                }
-            } else {
-                canDeleteCount++;
-            }
-        }
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-//            TransitionSet transition = new TransitionSet();
-//            transition.addTransition(new Visibility() {
-//                @Override
-//                public Animator onAppear(ViewGroup sceneRoot, View view, TransitionValues startValues, TransitionValues endValues) {
-//                    AnimatorSet set = new AnimatorSet();
-//                    set.playTogether(
-//                            ObjectAnimator.ofFloat(view, View.ALPHA, 0, 1f),
-//                            ObjectAnimator.ofFloat(view, View.SCALE_X, 0.5f, 1f),
-//                            ObjectAnimator.ofFloat(view, View.SCALE_Y, 0.5f, 1f)
-//                    );
-//                    set.setInterpolator(CubicBezierInterpolator.DEFAULT);
-//                    return set;
-//                }
-//
-//                @Override
-//                public Animator onDisappear(ViewGroup sceneRoot, View view, TransitionValues startValues, TransitionValues endValues) {
-//                    AnimatorSet set = new AnimatorSet();
-//                    set.playTogether(
-//                            ObjectAnimator.ofFloat(view, View.ALPHA, view.getAlpha(), 0f),
-//                            ObjectAnimator.ofFloat(view, View.SCALE_X, view.getScaleX(), 0.5f),
-//                            ObjectAnimator.ofFloat(view, View.SCALE_Y, view.getScaleX(), 0.5f)
-//                    );
-//                    set.setInterpolator(CubicBezierInterpolator.DEFAULT);
-//                    return set;
-//                }
-//            }).addTransition(new ChangeBounds());
-//            transition.setOrdering(TransitionSet.ORDERING_TOGETHER);
-//            transition.setInterpolator(CubicBezierInterpolator.EASE_OUT);
-//            transition.setDuration(150);
-//            TransitionManager.beginDelayedTransition(actionBar.getActionMode(), transition);
-//        }
-        if (canDeleteCount != count) {
-            deleteItem.setVisibility(View.GONE);
-        } else {
-            deleteItem.setVisibility(View.VISIBLE);
-        }
+        deleteItem.setVisibility(View.VISIBLE);
     }
 
     private boolean validateSlowModeDialog(long dialogId) {
@@ -3133,12 +3077,14 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
                 hideActionMode(true);
                 return;
             }
+            actionBar.setBackButtonImage(R.drawable.ic_ab_back);
             updateAnimated = true;
         } else {
             createActionMode(null);
             AndroidUtilities.hideKeyboard(fragmentView.findFocus());
             actionBar.setActionModeOverrideColor(Theme.getColor(Theme.key_windowBackgroundWhite));
             actionBar.showActionMode();
+            actionBar.setBackButtonDrawable(new BackDrawable(true));
             resetScroll();
 
             AnimatorSet animatorSet = new AnimatorSet();
