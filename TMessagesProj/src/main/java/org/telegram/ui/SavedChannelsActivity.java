@@ -3715,22 +3715,8 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
         names.removeAll(existedNames);
         if (!names.isEmpty() && !chatLoading) {
             chatLoading = true;
-            TLRPC.TL_contacts_resolveUsername req = new TLRPC.TL_contacts_resolveUsername();
-            req.username = names.iterator().next();
-            ConnectionsManager.getInstance(currentAccount).sendRequest(req, (response, error) -> {
-                chatLoading = false;
-                if (response != null) {
-                    AndroidUtilities.runOnUIThread(() -> {
-                        TLRPC.TL_contacts_resolvedPeer res = (TLRPC.TL_contacts_resolvedPeer) response;
-                        MessagesController.getInstance(currentAccount).putUsers(res.users, false);
-                        MessagesController.getInstance(currentAccount).putChats(res.chats, false);
-                        MessagesStorage.getInstance(currentAccount).putUsersAndChats(res.users, res.chats, true, true);
-
-
-                        getNotificationCenter().postNotificationName(NotificationCenter.dialogsNeedReload);
-                    });
-                }
-            });
+            String username = names.iterator().next();
+            Utilities.globalQueue.postRunnable(() -> resolveUsername(username), 1000);
         }
         return chats;
     }
@@ -4494,6 +4480,30 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
             }
         }
         setSlideTransitionProgress(1f - progress);
+    }
+
+    private void resolveUsername(String username) {
+        TLRPC.TL_contacts_resolveUsername req = new TLRPC.TL_contacts_resolveUsername();
+        req.username = username;
+        ConnectionsManager.getInstance(currentAccount).sendRequest(req, (response, error) -> {
+            chatLoading = false;
+            if (response != null) {
+                AndroidUtilities.runOnUIThread(() -> {
+                    TLRPC.TL_contacts_resolvedPeer res = (TLRPC.TL_contacts_resolvedPeer) response;
+                    MessagesController.getInstance(currentAccount).putUsers(res.users, false);
+                    MessagesController.getInstance(currentAccount).putChats(res.chats, false);
+                    MessagesStorage.getInstance(currentAccount).putUsersAndChats(res.users, res.chats, true, true);
+
+
+                    getNotificationCenter().postNotificationName(NotificationCenter.dialogsNeedReload);
+                });
+            } else {
+                AndroidUtilities.runOnUIThread(() -> {
+                    getUserConfig().savedChannels.remove(username);
+                    getNotificationCenter().postNotificationName(NotificationCenter.dialogsNeedReload);
+                });
+            }
+        });
     }
 }
 
