@@ -2459,6 +2459,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                             UserConfig userConfig = getUserConfig();
                             userConfig.savedChannels.add(chat.username);
                             userConfig.saveConfig(true);
+                            Toast.makeText(getParentActivity(), LocaleController.getString("Saved", R.string.Saved), Toast.LENGTH_SHORT).show();
                         }
                     }
                 } else if (id == change_colors) {

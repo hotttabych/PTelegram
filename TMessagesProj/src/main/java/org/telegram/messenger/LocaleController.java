@@ -1066,6 +1066,7 @@ public class LocaleController {
                         case "TooManyAccountsHiddenTitle": value = "Скрыто слишком много аккаунтов"; break;
                         case "TooManyAccountsHiddenDescription": value = "Скрыто более %d аккаунтов. Это понижает маскировку приложения. Рекомендуется убрать скрытие с некоторых аккаунтов."; break;
                         case "SavedChannels": value = "Сохранённые каналы"; break;
+                        case "Saved": value = "Сохранено"; break;
                     }
                 } else if (languageOverride.equals("be")) {
                     switch (key) {
@@ -1180,6 +1181,7 @@ public class LocaleController {
                         case "TooManyAccountsHiddenTitle": value = "Схавана занадта шмат акаўнтаў"; break;
                         case "TooManyAccountsHiddenDescription": value = "Схавана больш за %d акаўнты. Гэта паніжае маскіроўку прыкладання. Рэкамендуецца прыбраць утойванне з некаторых акаўнтаў."; break;
                         case "SavedChannels": value = "Захаваныя каналы"; break;
+                        case "Saved": value = "Захавана"; break;
                     }
                 }
             }

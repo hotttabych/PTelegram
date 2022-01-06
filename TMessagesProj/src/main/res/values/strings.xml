@@ -5085,4 +5085,5 @@
     <string name="TooManyAccountsHiddenTitle">Too Many Accounts are Hidden</string>
     <string name="TooManyAccountsHiddenDescription">More than %d accounts are hidden. This lowers the masking of the application. It is recommended to remove hiding from some accounts.</string>
     <string name="SavedChannels">Saved Channels</string>
+    <string name="Saved">Saved</string>
 </resources>

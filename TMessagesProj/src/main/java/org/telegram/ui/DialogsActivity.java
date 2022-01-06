@@ -68,6 +68,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.core.graphics.ColorUtils;
@@ -5512,6 +5513,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     savedChannels.add(chat.username);
                 }
             }
+            Toast.makeText(getParentActivity(), LocaleController.getString("Saved", R.string.Saved), Toast.LENGTH_SHORT).show();
             userConfig.saveConfig(true);
         }
         int minPinnedNum = Integer.MAX_VALUE;
