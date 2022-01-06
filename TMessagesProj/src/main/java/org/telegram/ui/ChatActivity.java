@@ -21095,10 +21095,11 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                             }
                         );
                         cell.setOnClickListener(e -> {
-                            if (selectedObject == null || i >= options.size()) {
+                            if (selectedObject == null || i >= options.size() || getParentActivity() == null) {
                                 return;
                             }
-                            TranslateAlert.showAlert(getParentActivity(), this, fromLang[0], toLang, finalMessageText, currentChat.noforwards);
+                            boolean noForwards = currentChat != null && currentChat.noforwards;
+                            TranslateAlert.showAlert(getParentActivity(), this, fromLang[0], toLang, finalMessageText, noForwards);
                             scrimView = null;
                             contentView.invalidate();
                             chatListView.invalidate();
@@ -21114,10 +21115,11 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                         }, 250);
                     } else {
                         cell.setOnClickListener(e -> {
-                            if (selectedObject == null || i >= options.size()) {
+                            if (selectedObject == null || i >= options.size() || getParentActivity() == null) {
                                 return;
                             }
-                            TranslateAlert.showAlert(getParentActivity(), this, "und", toLang, finalMessageText, currentChat.noforwards);
+                            boolean noForwards = currentChat != null && currentChat.noforwards;
+                            TranslateAlert.showAlert(getParentActivity(), this, "und", toLang, finalMessageText, noForwards);
                             scrimView = null;
                             contentView.invalidate();
                             chatListView.invalidate();
@@ -24042,6 +24044,9 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
 
                     @Override
                     public void didPressReaction(ChatMessageCell cell, TLRPC.TL_reactionCount reaction, boolean longpress) {
+                        if (getParentActivity() == null) {
+                            return;
+                        }
                         if (longpress) {
                             if (!ChatObject.isChannelAndNotMegaGroup(currentChat)) {
                                 cell.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS);
@@ -26240,6 +26245,8 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
         themeDescriptions.add(new ThemeDescription(null, 0, null, null, null, null, Theme.key_chat_inReactionButtonBackground));
         themeDescriptions.add(new ThemeDescription(null, 0, null, null, null, null, Theme.key_chat_inReactionButtonText));
         themeDescriptions.add(new ThemeDescription(null, 0, null, null, null, null, Theme.key_chat_outReactionButtonText));
+        themeDescriptions.add(new ThemeDescription(null, 0, null, null, null, null, Theme.key_chat_inReactionButtonTextSelected));
+        themeDescriptions.add(new ThemeDescription(null, 0, null, null, null, null, Theme.key_chat_inReactionButtonTextSelected));
 
         if (chatActivityEnterView != null) {
             themeDescriptions.add(new ThemeDescription(chatActivityEnterView.botCommandsMenuContainer.listView, ThemeDescription.FLAG_TEXTCOLOR, new Class[]{BotCommandsMenuView.BotCommandView.class}, new String[]{"description"}, null, null, null, Theme.key_windowBackgroundWhiteBlackText));
