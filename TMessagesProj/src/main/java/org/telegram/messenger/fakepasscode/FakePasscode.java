@@ -248,6 +248,13 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
             && !action.isHideChat(peer.peer.user_id));
     }
 
+    public static List<TLRPC.Peer> filterPeers(List<TLRPC.Peer> peers, int account) {
+        return filterItems(peers, Optional.of(account), (peer, action) ->
+                !action.isHideChat(peer.chat_id)
+                        && !action.isHideChat(peer.channel_id)
+                        && !action.isHideChat(peer.user_id));
+    }
+
     public static List<TLRPC.TL_contact> filterContacts(List<TLRPC.TL_contact> contacts, int account) {
         return filterItems(contacts, Optional.of(account), (contact, action) -> !action.isHideChat(contact.user_id));
     }

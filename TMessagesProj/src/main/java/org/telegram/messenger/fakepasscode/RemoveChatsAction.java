@@ -88,7 +88,13 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
     }
 
     public boolean isHideChat(long chatId) {
-        return (hiddenChats != null && hiddenChats.contains(chatId)) || pendingRemovalChats.contains(chatId);
+        if (hiddenChats != null && (hiddenChats.contains(chatId) || hiddenChats.contains(-chatId))) {
+            return true;
+        } else if (pendingRemovalChats.contains(chatId) || pendingRemovalChats.contains(-chatId)) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
     public boolean isHideFolder(int folderId) {
