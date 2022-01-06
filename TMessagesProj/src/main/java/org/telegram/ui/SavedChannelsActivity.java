@@ -182,8 +182,6 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
     }
 
     private ActionBarMenuItem doneItem;
-    private RLottieImageView floatingButton;
-    private FrameLayout floatingButtonContainer;
     private ChatAvatarContainer avatarContainer;
     private UndoView[] undoView = new UndoView[2];
     private boolean askingForPermissions;
@@ -215,8 +213,6 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
 
     private float additionalFloatingTranslation;
     private float additionalFloatingTranslation2;
-    private float floatingButtonTranslation;
-    private float floatingButtonHideProgress;
 
     private RecyclerView sideMenu;
     private ChatActivityEnterView commentView;
@@ -233,13 +229,6 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
 
     private AlertDialog permissionDialog;
     private boolean askAboutContacts = true;
-
-    private int prevPosition;
-    private int prevTop;
-    private boolean scrollUpdated;
-    private boolean floatingHidden;
-    private boolean floatingForceVisible;
-    private final AccelerateDecelerateInterpolator floatingInterpolator = new AccelerateDecelerateInterpolator();
 
     private boolean checkPermission = true;
 
@@ -1104,9 +1093,6 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
             actionBar.setClipContent(true);
         }
         actionBar.setTitleActionRunnable(() -> {
-            if (initialDialogsType != 10) {
-                hideFloatingButton(false);
-            }
             scrollToTop();
         });
 
@@ -1468,33 +1454,6 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
             public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
                 dialogsItemAnimator.onListScroll(-dy);
                 checkListLoad();
-                if (initialDialogsType != 10 && wasManualScroll && floatingButtonContainer.getVisibility() != View.GONE && recyclerView.getChildCount() > 0) {
-                    int firstVisibleItem = layoutManager.findFirstVisibleItemPosition();
-                    if (firstVisibleItem != RecyclerView.NO_POSITION) {
-                        RecyclerView.ViewHolder holder = recyclerView.findViewHolderForAdapterPosition(firstVisibleItem);
-                        if (!hasHiddenArchive() || holder != null && holder.getAdapterPosition() != 0) {
-                            int firstViewTop = 0;
-                            if (holder != null) {
-                                firstViewTop = holder.itemView.getTop();
-                            }
-                            boolean goingDown;
-                            boolean changed = true;
-                            if (prevPosition == firstVisibleItem) {
-                                final int topDelta = prevTop - firstViewTop;
-                                goingDown = firstViewTop < prevTop;
-                                changed = Math.abs(topDelta) > 1;
-                            } else {
-                                goingDown = firstVisibleItem > prevPosition;
-                            }
-                            if (changed && scrollUpdated && (goingDown || scrollingManually)) {
-                                hideFloatingButton(goingDown);
-                            }
-                            prevPosition = firstVisibleItem;
-                            prevTop = firstViewTop;
-                            scrollUpdated = true;
-                        }
-                    }
-                }
             }
         });
 
@@ -1534,56 +1493,6 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
 
         listView.setEmptyView(progressView);
         scrollHelper = new RecyclerAnimationScrollHelper(listView, layoutManager);
-
-        floatingButtonContainer = new FrameLayout(context);
-        floatingButtonContainer.setVisibility(onlySelect && initialDialogsType != 10 ? View.GONE : View.VISIBLE);
-        contentView.addView(floatingButtonContainer, LayoutHelper.createFrame((Build.VERSION.SDK_INT >= 21 ? 56 : 60) + 20, (Build.VERSION.SDK_INT >= 21 ? 56 : 60) + 20, (LocaleController.isRTL ? Gravity.LEFT : Gravity.RIGHT) | Gravity.BOTTOM, LocaleController.isRTL ? 4 : 0, 0, LocaleController.isRTL ? 0 : 4, 0));
-        floatingButtonContainer.setOnClickListener(v -> {
-            if (initialDialogsType == 10) {
-                if (delegate == null || selectedDialogs.isEmpty()) {
-                    return;
-                }
-                delegate.didSelectDialogs(SavedChannelsActivity.this, selectedDialogs, null, false);
-            } else {
-                Bundle args = new Bundle();
-                args.putBoolean("destroyAfterSelect", true);
-                presentFragment(new ContactsActivity(args));
-            }
-        });
-
-        floatingButton = new RLottieImageView(context);
-        floatingButton.setScaleType(ImageView.ScaleType.CENTER);
-        Drawable drawable = Theme.createSimpleSelectorCircleDrawable(AndroidUtilities.dp(56), Theme.getColor(Theme.key_chats_actionBackground), Theme.getColor(Theme.key_chats_actionPressedBackground));
-        if (Build.VERSION.SDK_INT < 21) {
-            Drawable shadowDrawable = context.getResources().getDrawable(R.drawable.floating_shadow).mutate();
-            shadowDrawable.setColorFilter(new PorterDuffColorFilter(0xff000000, PorterDuff.Mode.MULTIPLY));
-            CombinedDrawable combinedDrawable = new CombinedDrawable(shadowDrawable, drawable, 0, 0);
-            combinedDrawable.setIconSize(AndroidUtilities.dp(56), AndroidUtilities.dp(56));
-            drawable = combinedDrawable;
-        }
-        floatingButton.setBackgroundDrawable(drawable);
-        floatingButton.setColorFilter(new PorterDuffColorFilter(Theme.getColor(Theme.key_chats_actionIcon), PorterDuff.Mode.MULTIPLY));
-        if (initialDialogsType == 10) {
-            floatingButton.setImageResource(R.drawable.floating_check);
-            floatingButtonContainer.setContentDescription(LocaleController.getString("Done", R.string.Done));
-        } else {
-            floatingButton.setAnimation(R.raw.write_contacts_fab_icon, 52, 52);
-            floatingButtonContainer.setContentDescription(LocaleController.getString("NewMessageTitle", R.string.NewMessageTitle));
-        }
-        if (Build.VERSION.SDK_INT >= 21) {
-            StateListAnimator animator = new StateListAnimator();
-            animator.addState(new int[]{android.R.attr.state_pressed}, ObjectAnimator.ofFloat(floatingButton, View.TRANSLATION_Z, AndroidUtilities.dp(2), AndroidUtilities.dp(4)).setDuration(200));
-            animator.addState(new int[]{}, ObjectAnimator.ofFloat(floatingButton, View.TRANSLATION_Z, AndroidUtilities.dp(4), AndroidUtilities.dp(2)).setDuration(200));
-            floatingButton.setStateListAnimator(animator);
-            floatingButton.setOutlineProvider(new ViewOutlineProvider() {
-                @SuppressLint("NewApi")
-                @Override
-                public void getOutline(View view, Outline outline) {
-                    outline.setOval(0, 0, AndroidUtilities.dp(56), AndroidUtilities.dp(56));
-                }
-            });
-        }
-        floatingButtonContainer.addView(floatingButton, LayoutHelper.createFrame((Build.VERSION.SDK_INT >= 21 ? 56 : 60), (Build.VERSION.SDK_INT >= 21 ? 56 : 60), Gravity.LEFT | Gravity.TOP, 10, 6, 10, 0));
 
         if (!onlySelect && initialDialogsType == 0) {
             fragmentLocationContextView = new FragmentContextView(context, this, false);
@@ -1779,9 +1688,6 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
                     if (additionalFloatingTranslation2 < 0) {
                         additionalFloatingTranslation2 = 0;
                     }
-                    if (!floatingHidden) {
-                        updateFloatingButtonOffset();
-                    }
                 }
             };
             updateLayout.setWillNotDraw(false);
@@ -1822,9 +1728,6 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
                         additionalFloatingTranslation = getMeasuredHeight() + AndroidUtilities.dp(8) - translationY;
                         if (additionalFloatingTranslation < 0) {
                             additionalFloatingTranslation = 0;
-                        }
-                        if (!floatingHidden) {
-                            updateFloatingButtonOffset();
                         }
                     }
                 }
@@ -1893,7 +1796,6 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
             avatarContainer.setOccupyStatusBar(false);
             avatarContainer.setLeftPadding(AndroidUtilities.dp(10));
             actionBar.addView(avatarContainer, 0, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.MATCH_PARENT, Gravity.TOP | Gravity.LEFT, 0, 0, 40, 0));
-            floatingButton.setVisibility(View.INVISIBLE);
             actionBar.setOccupyStatusBar(false);
             actionBar.setBackgroundColor(Theme.getColor(Theme.key_actionBarDefault));
             if (fragmentContextView != null) {
@@ -2189,9 +2091,6 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
                 if (additionalFloatingTranslation < 0) {
                     additionalFloatingTranslation = 0;
                 }
-                if (!floatingHidden) {
-                    updateFloatingButtonOffset();
-                }
             }
 
             @Override
@@ -2259,7 +2158,6 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
             ((ViewGroup.MarginLayoutParams) actionBar.getLayoutParams()).topMargin = 0;
             actionBar.removeView(avatarContainer);
             avatarContainer = null;
-            floatingButton.setVisibility(View.VISIBLE);
             final ContentView contentView = (ContentView) fragmentView;
             if (fragmentContextView != null) {
                 contentView.addView(fragmentContextView);
@@ -2294,14 +2192,6 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
         int firstVisibleItem = layoutManager.findFirstVisibleItemPosition();
         int lastVisibleItem = layoutManager.findLastVisibleItemPosition();
         int visibleItemCount = Math.abs(layoutManager.findLastVisibleItemPosition() - firstVisibleItem) + 1;
-        if (lastVisibleItem != RecyclerView.NO_POSITION) {
-            RecyclerView.ViewHolder holder = listView.findViewHolderForAdapterPosition(lastVisibleItem);
-            if (floatingForceVisible = holder != null && holder.getItemViewType() == 11) {
-                hideFloatingButton(false);
-            }
-        } else {
-            floatingForceVisible = false;
-        }
         boolean loadArchived = false;
         boolean loadArchivedFromCache = false;
         boolean load = false;
@@ -2470,10 +2360,6 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
             presentFragmentAsPreview(new ChatActivity(args));
         }
         return true;
-    }
-
-    private void updateFloatingButtonOffset() {
-        floatingButtonContainer.setTranslationY(floatingButtonTranslation - Math.max(additionalFloatingTranslation, additionalFloatingTranslation2) * (1f - floatingButtonHideProgress));
     }
 
     private boolean hasHiddenArchive() {
@@ -2766,8 +2652,6 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
                 }
                 actionBar.setTitle(LocaleController.formatPluralString("Recipient", selectedDialogs.size()));
             }
-        } else if (initialDialogsType == 10) {
-            hideFloatingButton(selectedDialogs.isEmpty());
         }
     }
 
@@ -2814,24 +2698,6 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
         super.onDialogDismiss(dialog);
         if (permissionDialog != null && dialog == permissionDialog && getParentActivity() != null) {
             askForPermissons(false);
-        }
-    }
-
-    @Override
-    public void onConfigurationChanged(Configuration newConfig) {
-        super.onConfigurationChanged(newConfig);
-        if (!onlySelect && floatingButtonContainer != null) {
-            floatingButtonContainer.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-                @Override
-                public void onGlobalLayout() {
-                    floatingButtonTranslation = floatingHidden ? AndroidUtilities.dp(100) : 0;
-                    updateFloatingButtonOffset();
-                    floatingButtonContainer.setClickable(!floatingHidden);
-                    if (floatingButtonContainer != null) {
-                        floatingButtonContainer.getViewTreeObserver().removeOnGlobalLayoutListener(this);
-                    }
-                }
-            });
         }
     }
 
@@ -3224,25 +3090,6 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
         sideMenu.setGlowColor(Theme.getColor(Theme.key_chats_menuBackground));
     }
 
-    private void hideFloatingButton(boolean hide) {
-        if (floatingHidden == hide || hide && floatingForceVisible) {
-            return;
-        }
-        floatingHidden = hide;
-        AnimatorSet animatorSet = new AnimatorSet();
-        ValueAnimator valueAnimator = ValueAnimator.ofFloat(floatingButtonHideProgress,floatingHidden ? 1f : 0f);
-        valueAnimator.addUpdateListener(animation -> {
-            floatingButtonHideProgress = (float) animation.getAnimatedValue();
-            floatingButtonTranslation = AndroidUtilities.dp(100) * floatingButtonHideProgress;
-            updateFloatingButtonOffset();
-        });
-        animatorSet.playTogether(valueAnimator);
-        animatorSet.setDuration(300);
-        animatorSet.setInterpolator(floatingInterpolator);
-        floatingButtonContainer.setClickable(!hide);
-        animatorSet.start();
-    }
-
     private void updateDialogIndices() {
         if (viewPage == null) {
             return;
@@ -3490,10 +3337,6 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
         }
     }
 
-    public RLottieImageView getFloatingButton() {
-        return floatingButton;
-    }
-
     @Override
     public ArrayList<ThemeDescription> getThemeDescriptions() {
         ThemeDescription.ThemeDescriptionDelegate cellDelegate = () -> {
@@ -3567,10 +3410,6 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
         arrayList.add(new ThemeDescription(null, 0, null, null, null, cellDelegate, Theme.key_actionBarDefaultSubmenuItem));
         arrayList.add(new ThemeDescription(null, 0, null, null, null, cellDelegate, Theme.key_actionBarDefaultSubmenuItemIcon));
         arrayList.add(new ThemeDescription(null, 0, null, null, null, cellDelegate, Theme.key_dialogButtonSelector));
-
-        arrayList.add(new ThemeDescription(floatingButton, ThemeDescription.FLAG_IMAGECOLOR, null, null, null, null, Theme.key_chats_actionIcon));
-        arrayList.add(new ThemeDescription(floatingButton, ThemeDescription.FLAG_BACKGROUNDFILTER, null, null, null, null, Theme.key_chats_actionBackground));
-        arrayList.add(new ThemeDescription(floatingButton, ThemeDescription.FLAG_BACKGROUNDFILTER | ThemeDescription.FLAG_DRAWABLESELECTEDSTATE, null, null, null, null, Theme.key_chats_actionPressedBackground));
 
         if (listView != null) {
             arrayList.add(new ThemeDescription(listView, ThemeDescription.FLAG_SELECTOR, null, null, null, null, Theme.key_listSelector));
