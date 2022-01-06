@@ -168,8 +168,6 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
     private DialogsRecyclerView listView;
     private LinearLayoutManager layoutManager;
     private SavedChannelsAdapter dialogsAdapter;
-    private ItemTouchHelper itemTouchhelper;
-    private SwipeController swipeController;
     private PullForegroundDrawable pullForegroundDrawable;
     private RecyclerAnimationScrollHelper scrollHelper;
     private int dialogsType;
@@ -736,7 +734,7 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
             }
 
             int pos = layoutManager.findFirstVisibleItemPosition();
-            if (pos != RecyclerView.NO_POSITION && !dialogsListFrozen && itemTouchhelper.isIdle()) {
+            if (pos != RecyclerView.NO_POSITION && !dialogsListFrozen) {
                 RecyclerView.ViewHolder holder = listView.findViewHolderForAdapterPosition(pos);
                 if (holder != null) {
                     int top = holder.itemView.getTop();
@@ -888,215 +886,6 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
                 checkIfAdapterValid();
             }
             return super.onInterceptTouchEvent(e);
-        }
-    }
-
-    private class SwipeController extends ItemTouchHelper.Callback {
-        @Override
-        public int getMovementFlags(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder) {
-            if (waitingForDialogsAnimationEnd() || parentLayout != null && parentLayout.isInPreviewMode()) {
-                return 0;
-            }
-            if (!onlySelect && isDefaultDialogType() && slidingView == null && viewHolder.itemView instanceof SavedChannelCell) {
-                SavedChannelCell dialogCell = (SavedChannelCell) viewHolder.itemView;
-                long dialogId = dialogCell.getDialogId();
-                if (actionBar.isActionModeShowed(null)) {
-                    TLRPC.Dialog dialog = getMessagesController().dialogs_dict.get(dialogId);
-                    if (!allowMoving || dialog == null || DialogObject.isFolderDialogId(dialogId)) {
-                        return 0;
-                    }
-                    movingView = (SavedChannelCell) viewHolder.itemView;
-                    movingView.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundWhite));
-                    return makeMovementFlags(ItemTouchHelper.UP | ItemTouchHelper.DOWN, 0);
-                } else {
-                    dialogCell.setSliding(true);
-                    return makeMovementFlags(0, ItemTouchHelper.LEFT);
-                }
-            }
-            return 0;
-        }
-
-        @Override
-        public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder source, RecyclerView.ViewHolder target) {
-            if (!(target.itemView instanceof SavedChannelCell)) {
-                return false;
-            }
-            SavedChannelCell dialogCell = (SavedChannelCell) target.itemView;
-            long dialogId = dialogCell.getDialogId();
-            TLRPC.Dialog dialog = getMessagesController().dialogs_dict.get(dialogId);
-            if (dialog == null || DialogObject.isFolderDialogId(dialogId)) {
-                return false;
-            }
-            int fromIndex = source.getAdapterPosition();
-            int toIndex = target.getAdapterPosition();
-            dialogsAdapter.notifyItemMoved(fromIndex, toIndex);
-            updateDialogIndices();
-            if (dialogsType == 7 || dialogsType == 8) {
-                MessagesController.DialogFilter filter = getMessagesController().selectedDialogFilter[dialogsType == 8 ? 1 : 0];
-            } else {
-                movingWas = true;
-            }
-            return true;
-        }
-
-        @Override
-        public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
-            if (viewHolder != null) {
-                SavedChannelCell dialogCell = (SavedChannelCell) viewHolder.itemView;
-                long dialogId = dialogCell.getDialogId();
-                if (DialogObject.isFolderDialogId(dialogId)) {
-                    listView.toggleArchiveHidden(false, dialogCell);
-                    return;
-                }
-                TLRPC.Dialog dialog = getMessagesController().dialogs_dict.get(dialogId);
-                if (dialog == null) {
-                    return;
-                }
-
-                slidingView = dialogCell;
-                int position = viewHolder.getAdapterPosition();
-                int count = dialogsAdapter.getItemCount();
-                Runnable finishRunnable = () -> {
-                    if (frozenChatsList == null) {
-                        return;
-                    }
-                    frozenChatsList.remove(dialog);
-                    int pinnedNum = dialog.pinnedNum;
-                    slidingView = null;
-                    listView.invalidate();
-                    int lastItemPosition = layoutManager.findLastVisibleItemPosition();
-                    if (lastItemPosition == count - 1) {
-                        layoutManager.findViewByPosition(lastItemPosition).requestLayout();
-                    }
-                    if (getMessagesController().isPromoDialog(dialog.id, false)) {
-                        getMessagesController().hidePromoDialog();
-                        dialogsItemAnimator.prepareForRemove();
-                        lastItemsCount--;
-                        dialogsAdapter.notifyItemRemoved(position);
-                        dialogRemoveFinished = 2;
-                    } else {
-                        int added = getMessagesController().addDialogToFolder(dialog.id, 1, -1, 0);
-                        if (added != 2 || position != 0) {
-                            dialogsItemAnimator.prepareForRemove();
-                            lastItemsCount--;
-                            dialogsAdapter.notifyItemRemoved(position);
-                            dialogRemoveFinished = 2;
-                        }
-                        if (added == 2) {
-                            dialogsItemAnimator.prepareForRemove();
-                            if (position == 0) {
-                                dialogChangeFinished = 2;
-                                setDialogsListFrozen(true);
-                                dialogsAdapter.notifyItemChanged(0);
-                            } else {
-                                lastItemsCount++;
-                                dialogsAdapter.notifyItemInserted(0);
-                                if (!SharedConfig.archiveHidden && layoutManager.findFirstVisibleItemPosition() == 0) {
-                                    listView.smoothScrollBy(0, -AndroidUtilities.dp(SharedConfig.useThreeLinesLayout ? 78 : 72));
-                                }
-                            }
-                            List<TLRPC.Chat> chats = getChatsArray(currentAccount, dialogsType, 0, false);
-                            frozenChatsList.add(0, chats.get(0));
-                        } else if (added == 1) {
-                            RecyclerView.ViewHolder holder = listView.findViewHolderForAdapterPosition(0);
-                            if (holder != null && holder.itemView instanceof SavedChannelCell) {
-                                SavedChannelCell cell = (SavedChannelCell) holder.itemView;
-                                cell.checkCurrentDialogIndex(true);
-                                cell.animateArchiveAvatar();
-                            }
-                        }
-                        SharedPreferences preferences = MessagesController.getGlobalMainSettings();
-                        boolean hintShowed = preferences.getBoolean("archivehint_l", false) || SharedConfig.archiveHidden;
-                        if (!hintShowed) {
-                            preferences.edit().putBoolean("archivehint_l", true).commit();
-                        }
-                        getUndoView().showWithAction(dialog.id, hintShowed ? UndoView.ACTION_ARCHIVE : UndoView.ACTION_ARCHIVE_HINT, null, () -> {
-                                dialogsListFrozen = true;
-                                getMessagesController().addDialogToFolder(dialog.id, 0, pinnedNum, 0);
-                                dialogsListFrozen = false;
-                                ArrayList<TLRPC.Dialog> dialogs = getMessagesController().getDialogs(0);
-                                int index = dialogs.indexOf(dialog);
-                                if (index >= 0) {
-                                    ArrayList<TLRPC.Dialog> archivedDialogs = getMessagesController().getDialogs(1);
-                                    if (!archivedDialogs.isEmpty() || index != 1) {
-                                        dialogInsertFinished = 2;
-                                        setDialogsListFrozen(true);
-                                        dialogsItemAnimator.prepareForRemove();
-                                        lastItemsCount++;
-                                        dialogsAdapter.notifyItemInserted(index);
-                                    }
-                                    if (archivedDialogs.isEmpty()) {
-                                        dialogs.remove(0);
-                                        if (index == 1) {
-                                            dialogChangeFinished = 2;
-                                            setDialogsListFrozen(true);
-                                            dialogsAdapter.notifyItemChanged(0);
-                                        } else {
-                                            frozenChatsList.remove(0);
-                                            dialogsItemAnimator.prepareForRemove();
-                                            lastItemsCount--;
-                                            dialogsAdapter.notifyItemRemoved(0);
-                                        }
-                                    }
-                                } else {
-                                    dialogsAdapter.notifyDataSetChanged();
-                                }
-                            });
-                    }
-                };
-                setDialogsListFrozen(true);
-                if (Utilities.random.nextInt(1000) == 1) {
-                    if (pacmanAnimation == null) {
-                        pacmanAnimation = new PacmanAnimation(listView);
-                    }
-                    pacmanAnimation.setFinishRunnable(finishRunnable);
-                    pacmanAnimation.start();
-                } else {
-                    finishRunnable.run();
-                }
-            } else {
-                slidingView = null;
-            }
-        }
-
-        @Override
-        public void onSelectedChanged(RecyclerView.ViewHolder viewHolder, int actionState) {
-            if (viewHolder != null) {
-                listView.hideSelector(false);
-            }
-            if (viewHolder != null && viewHolder.itemView instanceof SavedChannelCell) {
-                ((SavedChannelCell) viewHolder.itemView).swipeCanceled = false;
-            }
-            super.onSelectedChanged(viewHolder, actionState);
-        }
-
-        @Override
-        public long getAnimationDuration(RecyclerView recyclerView, int animationType, float animateDx, float animateDy) {
-            if (animationType == ItemTouchHelper.ANIMATION_TYPE_SWIPE_CANCEL) {
-                return 200;
-            } else if (animationType == ItemTouchHelper.ANIMATION_TYPE_DRAG) {
-                if (movingView != null) {
-                    View view = movingView;
-                    AndroidUtilities.runOnUIThread(() -> view.setBackgroundDrawable(null), dialogsItemAnimator.getMoveDuration());
-                    movingView = null;
-                }
-            }
-            return super.getAnimationDuration(recyclerView, animationType, animateDx, animateDy);
-        }
-
-        @Override
-        public float getSwipeThreshold(RecyclerView.ViewHolder viewHolder) {
-            return 0.45f;
-        }
-
-        @Override
-        public float getSwipeEscapeVelocity(float defaultValue) {
-            return 3500;
-        }
-
-        @Override
-        public float getSwipeVelocityThreshold(float defaultValue) {
-            return Float.MAX_VALUE;
         }
     }
 
@@ -1648,11 +1437,7 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
                 movePreviewFragment(dy);
             }
         });
-        swipeController = new SwipeController();
         recyclerItemsEnterAnimator = new RecyclerItemsEnterAnimator(listView, false);
-
-        itemTouchhelper = new ItemTouchHelper(swipeController);
-        itemTouchhelper.attachToRecyclerView(listView);
 
         listView.setOnScrollListener(new RecyclerView.OnScrollListener() {
 
