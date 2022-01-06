@@ -181,6 +181,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Optional;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -298,6 +299,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     private ActionBarMenuSubItem clearItem;
     private ActionBarMenuSubItem readItem;
     private ActionBarMenuSubItem blockItem;
+    private ActionBarMenuSubItem saveItem;
 
     private float additionalFloatingTranslation;
     private float additionalFloatingTranslation2;
@@ -396,6 +398,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     private final static int pin2 = 108;
     private final static int add_to_folder = 109;
     private final static int remove_from_folder = 110;
+    private final static int save = 400;
 
     private final static int ARCHIVE_ITEM_STATE_PINNED = 0;
     private final static int ARCHIVE_ITEM_STATE_SHOWED = 1;
@@ -3780,6 +3783,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         readItem = otherItem.addSubItem(read, R.drawable.msg_markread, LocaleController.getString("MarkAsRead", R.string.MarkAsRead));
         clearItem = otherItem.addSubItem(clear, R.drawable.msg_clear, LocaleController.getString("ClearHistory", R.string.ClearHistory));
         blockItem = otherItem.addSubItem(block, R.drawable.msg_block, LocaleController.getString("BlockUser", R.string.BlockUser));
+        saveItem = otherItem.addSubItem(save, R.drawable.chats_saved, LocaleController.getString("Save", R.string.Save));
 
         actionModeViews.add(pinItem);
         actionModeViews.add(archive2Item);
@@ -3902,7 +3906,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                         }
                         getUndoView().showWithAction(did, UndoView.ACTION_REMOVED_FROM_FOLDER, neverShow.size(), filter, null, null);
                         hideActionMode(false);
-                    } else if (id == pin || id == read || id == delete || id == clear || id == mute || id == archive || id == block || id == archive2 || id == pin2) {
+                    } else if (id == pin || id == read || id == delete || id == clear || id == mute || id == archive || id == block || id == archive2 || id == pin2 || id == save) {
                         performSelectedDialogsAction(selectedDialogs, id, true);
                     }
                 }
@@ -5495,6 +5499,16 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 hideActionMode(false);
             });
             return;
+        } else if (action == save) {
+            Set<String> savedChannels = getUserConfig().savedChannels;
+            for (int a = 0, N = selectedDialogs.size(); a < N; a++) {
+                long did = selectedDialogs.get(a);
+                TLRPC.Chat chat = getMessagesController().getChat(-did);
+                if (chat != null && chat.username != null) {
+                    savedChannels.add(chat.username);
+                }
+            }
+            getUserConfig().saveConfig(true);
         }
         int minPinnedNum = Integer.MAX_VALUE;
         if (filter != null && (action == pin || action == pin2) && canPinCount != 0) {
@@ -5838,6 +5852,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         int canDeleteCount = 0;
         int canUnpinCount = 0;
         int canArchiveCount = 0;
+        int canSaveCount = 0;
         canDeletePsaSelected = false;
         canUnarchiveCount = 0;
         canUnmuteCount = 0;
@@ -5917,6 +5932,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     }
                     canDeleteCount++;
                 }
+                if (chat != null && chat.username != null) {
+                    canSaveCount++;
+                }
             } else {
                 final boolean isChat = DialogObject.isChatDialog(dialog.id);
                 TLRPC.User user;
@@ -5940,6 +5958,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 }
                 canClearHistoryCount++;
                 canDeleteCount++;
+                if (chat != null && chat.username != null) {
+                    canSaveCount++;
+                }
             }
         }
 //        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
@@ -6064,6 +6085,11 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             pinItem.setIcon(R.drawable.msg_unpin);
             pinItem.setContentDescription(LocaleController.getString("UnpinFromTop", R.string.UnpinFromTop));
             pin2Item.setText(LocaleController.getString("DialogUnpin", R.string.DialogUnpin));
+        }
+        if (canSaveCount != 0) {
+            saveItem.setVisibility(View.VISIBLE);
+        } else {
+            saveItem.setVisibility(View.GONE);
         }
     }
 

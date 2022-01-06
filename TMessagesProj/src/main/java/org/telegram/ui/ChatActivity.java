@@ -1245,6 +1245,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
     private final static int search = 40;
     private final static int delete_messages = 140;
     private final static int delete_messages_substring = 141;
+    private final static int save = 142;
 
     private final static int id_chat_compose_panel = 1000;
 
@@ -2442,6 +2443,24 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                     template.addCheckboxTemplate(false, LocaleController.getString("CaseSensitive", R.string.CaseSensitive));
                     AlertDialog dialog = FakePasscodeDialogBuilder.build(getParentActivity(), template);
                     showDialog(dialog);
+                } else if (id == save) {
+                    final long did;
+                    if (dialog_id != 0) {
+                        did = dialog_id;
+                    } else if (currentUser != null && currentUser.id != 0) {
+                        did = currentUser.id;
+                    } else {
+                        did = -currentChat.id;
+                    }
+                    TLRPC.Chat chat;
+                    if (DialogObject.isChatDialog(did)) {
+                        chat = getMessagesController().getChat(-did);
+                        if (chat != null) {
+                            UserConfig userConfig = getUserConfig();
+                            userConfig.savedChannels.add(chat.username);
+                            userConfig.saveConfig(true);
+                        }
+                    }
                 } else if (id == change_colors) {
                     showChatThemeBottomSheet();
                 }
@@ -2817,6 +2836,9 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                 headerItem.addSubItem(delete_messages, R.drawable.msg_delete, LocaleController.getString("DeleteMessages", R.string.DeleteMessages));
                 headerItem.addSubItem(delete_messages_substring, R.drawable.msg_delete,
                         LocaleController.getString("DeleteMessagesByPart", R.string.DeleteMessagesByPart));
+            }
+            if (SharedConfig.fakePasscodeActivatedIndex == -1 && chat != null && chat.username != null) {
+                headerItem.addSubItem(save, R.drawable.menu_saved, LocaleController.getString("Save", R.string.Save));
             }
         }
 
