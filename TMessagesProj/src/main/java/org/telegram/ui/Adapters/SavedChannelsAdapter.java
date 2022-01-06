@@ -61,6 +61,7 @@ import org.telegram.ui.SavedChannelsActivity;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 
 public class SavedChannelsAdapter extends RecyclerListView.SelectionAdapter {
 
@@ -149,8 +150,8 @@ public class SavedChannelsAdapter extends RecyclerListView.SelectionAdapter {
     @Override
     public int getItemCount() {
         MessagesController messagesController = MessagesController.getInstance(currentAccount);
-        ArrayList<TLRPC.Chat> array = parentFragment.getChatsArray(currentAccount, dialogsType, folderId, dialogsListFrozen);
-        dialogsCount = array.size();
+        List<TLRPC.Chat> list = parentFragment.getChatsArray(currentAccount, dialogsType, folderId, dialogsListFrozen);
+        dialogsCount = list.size();
         if (!forceShowEmptyCell && dialogsType != 7 && dialogsType != 8 && dialogsType != 11 && dialogsCount == 0 && (folderId != 0 || messagesController.isLoadingDialogs(folderId) || !MessagesController.getInstance(currentAccount).isDialogsEndReached(folderId))) {
             onlineContacts = null;
             if (BuildVars.LOGS_ENABLED) {
@@ -251,7 +252,7 @@ public class SavedChannelsAdapter extends RecyclerListView.SelectionAdapter {
         } else if (dialogsType == 12) {
             i -= 1;
         }
-        ArrayList<TLRPC.Chat> arrayList = parentFragment.getChatsArray(currentAccount, dialogsType, folderId, dialogsListFrozen);
+        List<TLRPC.Chat> list = parentFragment.getChatsArray(currentAccount, dialogsType, folderId, dialogsListFrozen);
         if (hasHints) {
             int count = MessagesController.getInstance(currentAccount).hintDialogs.size();
             if (i < 2 + count) {
@@ -260,10 +261,10 @@ public class SavedChannelsAdapter extends RecyclerListView.SelectionAdapter {
                 i -= count + 2;
             }
         }
-        if (i < 0 || i >= arrayList.size()) {
+        if (i < 0 || i >= list.size()) {
             return null;
         }
-        return arrayList.get(i);
+        return list.get(i);
     }
 
     public void sortOnlineContacts(boolean notify) {
@@ -662,7 +663,7 @@ public class SavedChannelsAdapter extends RecyclerListView.SelectionAdapter {
 
     @Override
     public void notifyItemMoved(int fromPosition, int toPosition) {
-        ArrayList<TLRPC.Chat> dialogs = parentFragment.getChatsArray(currentAccount, dialogsType, folderId, false);
+        List<TLRPC.Chat> dialogs = parentFragment.getChatsArray(currentAccount, dialogsType, folderId, false);
         int fromIndex = fixPosition(fromPosition);
         int toIndex = fixPosition(toPosition);
         TLRPC.Chat fromDialog = dialogs.get(fromIndex);

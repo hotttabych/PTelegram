@@ -1844,7 +1844,7 @@ public class SavedChannelCell extends BaseCell {
         if (parentFragment == null) {
             return;
         }
-        ArrayList<TLRPC.Chat> chatsArray = parentFragment.getChatsArray(currentAccount, dialogsType, folderId, frozen);
+        List<TLRPC.Chat> chatsArray = parentFragment.getChatsArray(currentAccount, dialogsType, folderId, frozen);
         if (index < chatsArray.size()) {
             TLRPC.Chat chat = chatsArray.get(index);
             TLRPC.DraftMessage newDraftMessage = MediaDataController.getInstance(currentAccount).getDraft(currentDialogId, 0);
@@ -1912,7 +1912,7 @@ public class SavedChannelCell extends BaseCell {
         if (parentFragment == null) {
             return null;
         }
-        ArrayList<TLRPC.Chat> chats = parentFragment.getChatsArray(currentAccount, dialogsType, currentDialogFolderId, false);
+        List<TLRPC.Chat> chats = parentFragment.getChatsArray(currentAccount, dialogsType, currentDialogFolderId, false);
         MessageObject maxMessage = null;
         if (!chats.isEmpty()) {
             for (int a = 0, N = chats.size(); a < N; a++) {
