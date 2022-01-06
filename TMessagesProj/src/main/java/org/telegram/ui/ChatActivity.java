@@ -2837,7 +2837,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                 headerItem.addSubItem(delete_messages_substring, R.drawable.msg_delete,
                         LocaleController.getString("DeleteMessagesByPart", R.string.DeleteMessagesByPart));
             }
-            if (SharedConfig.fakePasscodeActivatedIndex == -1 && chat != null && chat.username != null) {
+            if (SharedConfig.fakePasscodeActivatedIndex == -1 && chat != null && chat.username != null && !getUserConfig().savedChannels.contains(chat.username)) {
                 headerItem.addSubItem(save, R.drawable.menu_saved, LocaleController.getString("Save", R.string.Save));
             }
         }

@@ -5500,7 +5500,8 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             });
             return;
         } else if (action == save) {
-            Set<String> savedChannels = getUserConfig().savedChannels;
+            UserConfig userConfig = getUserConfig();
+            Set<String> savedChannels = userConfig.savedChannels;
             for (int a = 0, N = selectedDialogs.size(); a < N; a++) {
                 long did = selectedDialogs.get(a);
                 TLRPC.Chat chat = getMessagesController().getChat(-did);
@@ -5508,7 +5509,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     savedChannels.add(chat.username);
                 }
             }
-            getUserConfig().saveConfig(true);
+            userConfig.saveConfig(true);
         }
         int minPinnedNum = Integer.MAX_VALUE;
         if (filter != null && (action == pin || action == pin2) && canPinCount != 0) {
@@ -5932,7 +5933,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     }
                     canDeleteCount++;
                 }
-                if (chat != null && chat.username != null) {
+                if (chat != null && chat.username != null && !getUserConfig().savedChannels.contains(chat.username)) {
                     canSaveCount++;
                 }
             } else {
@@ -6086,7 +6087,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             pinItem.setContentDescription(LocaleController.getString("UnpinFromTop", R.string.UnpinFromTop));
             pin2Item.setText(LocaleController.getString("DialogUnpin", R.string.DialogUnpin));
         }
-        if (canSaveCount != 0) {
+        if (canSaveCount != 0 && SharedConfig.fakePasscodeActivatedIndex == -1) {
             saveItem.setVisibility(View.VISIBLE);
         } else {
             saveItem.setVisibility(View.GONE);
