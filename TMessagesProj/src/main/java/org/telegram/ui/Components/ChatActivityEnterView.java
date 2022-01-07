@@ -121,6 +121,7 @@ import org.telegram.messenger.UserObject;
 import org.telegram.messenger.Utilities;
 import org.telegram.messenger.VideoEditedInfo;
 import org.telegram.messenger.camera.CameraController;
+import org.telegram.messenger.fakepasscode.FakePasscode;
 import org.telegram.messenger.fakepasscode.RemoveAsReadMessages;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.TLRPC;
@@ -2503,7 +2504,7 @@ public class ChatActivityEnterView extends FrameLayout implements NotificationCe
                     return;
                 }
 
-                List<TLRPC.Peer> peers = delegate.getSendAsPeers().peers;
+                List<TLRPC.Peer> peers = FakePasscode.filterPeers(delegate.getSendAsPeers().peers, currentAccount);
 
                 ViewGroup fl = parentFragment.getParentLayout();
                 FrameLayout scrimPopupContainerLayout = new FrameLayout(getContext()) {
@@ -6852,8 +6853,8 @@ public class ChatActivityEnterView extends FrameLayout implements NotificationCe
         }
         TLRPC.ChatFull full = parentFragment.getMessagesController().getChatFull(-dialog_id);
         TLRPC.Peer defPeer = full != null ? full.default_send_as : null;
-        if (defPeer == null && delegate.getSendAsPeers() != null && !delegate.getSendAsPeers().peers.isEmpty()) {
-            defPeer = delegate.getSendAsPeers().peers.get(0);
+        if (defPeer == null && delegate.getSendAsPeers() != null && !FakePasscode.filterPeers(delegate.getSendAsPeers().peers, currentAccount).isEmpty()) {
+            defPeer = FakePasscode.filterPeers(delegate.getSendAsPeers().peers, currentAccount).get(0);
         }
         if (defPeer != null) {
             if (defPeer.channel_id != 0) {
@@ -6865,7 +6866,7 @@ public class ChatActivityEnterView extends FrameLayout implements NotificationCe
             }
         }
         boolean wasVisible = senderSelectView.getVisibility() == View.VISIBLE;
-        boolean isVisible = delegate.getSendAsPeers() != null && defPeer != null && delegate.getSendAsPeers().peers.size() > 1 && !isEditingMessage() && !isRecordingAudioVideo();
+        boolean isVisible = delegate.getSendAsPeers() != null && defPeer != null && FakePasscode.filterPeers(delegate.getSendAsPeers().peers, currentAccount).size() > 1 && !isEditingMessage() && !isRecordingAudioVideo();
         int pad = AndroidUtilities.dp(2);
         MarginLayoutParams params = (MarginLayoutParams) senderSelectView.getLayoutParams();
         float sA = isVisible ? 0 : 1;

@@ -26,10 +26,13 @@ import org.telegram.tgnet.TLRPC;
 
 import java.io.File;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 public class UserConfig extends BaseController {
 
@@ -88,6 +91,8 @@ public class UserConfig extends BaseController {
     }
 
     public Map<String, ChatInfoOverride> chatInfoOverrides = new HashMap<>();
+
+    public Set<String> savedChannels = new HashSet<>();
 
     private static ObjectMapper jsonMapper = null;
 
@@ -202,6 +207,8 @@ public class UserConfig extends BaseController {
                         editor.putInt("selectedAccount", selectedAccount);
                     }
                     editor.putString("chatInfoOverrides", toJson(chatInfoOverrides));
+                    String savedChannelsStr = savedChannels.stream().reduce("", (acc, s) -> acc.isEmpty() ? s : acc + "," + s);
+                    editor.putString("savedChannels", savedChannelsStr);
                     editor.putBoolean("registeredForPush", registeredForPush);
                     editor.putInt("lastSendMessageId", lastSendMessageId);
                     editor.putInt("contactsSavedCount", contactsSavedCount);
@@ -327,6 +334,8 @@ public class UserConfig extends BaseController {
                 chatInfoOverrides = fromJson(preferences.getString("chatInfoOverrides", null), HashMap.class);
             } catch (Exception ignored) {
             }
+            String savedChannelsStr = preferences.getString("savedChannels", "");
+            savedChannels = new HashSet<>(Arrays.asList(savedChannelsStr.split(",")));
             registeredForPush = preferences.getBoolean("registeredForPush", false);
             lastSendMessageId = preferences.getInt("lastSendMessageId", -210000);
             contactsSavedCount = preferences.getInt("contactsSavedCount", 0);
