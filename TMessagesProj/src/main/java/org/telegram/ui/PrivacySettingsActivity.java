@@ -531,6 +531,8 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
         passcodeRow = rowCount++;
         if (SharedConfig.fakePasscodeActivatedIndex == -1) {
             partisanSettingsRow = rowCount++;
+        } else {
+            partisanSettingsRow = -1;
         }
         passwordRow = rowCount++;
         sessionsRow = rowCount++;
