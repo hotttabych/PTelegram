@@ -85,8 +85,6 @@ public class SavedChannelsAdapter extends RecyclerListView.SelectionAdapter {
     private long lastSortTime;
     private PullForegroundDrawable pullForegroundDrawable;
 
-    private Drawable arrowDrawable;
-
     private DialogsPreloader preloader;
     private boolean forceShowEmptyCell;
 
@@ -408,9 +406,6 @@ public class SavedChannelsAdapter extends RecyclerListView.SelectionAdapter {
             case 4:
                 view = new DialogMeUrlCell(mContext);
                 break;
-            case 5:
-                view = new DialogsEmptyCell(mContext);
-                break;
             case 6:
                 view = new UserCell(mContext, 8, 0, false);
                 break;
@@ -434,54 +429,7 @@ public class SavedChannelsAdapter extends RecyclerListView.SelectionAdapter {
                 break;
             }
             case 11: {
-                view = new TextInfoPrivacyCell(mContext) {
-
-                    private int movement;
-                    private float moveProgress;
-                    private long lastUpdateTime;
-                    private int originalX;
-                    private int originalY;
-
-                    @Override
-                    protected void afterTextDraw() {
-                        if (arrowDrawable != null) {
-                            Rect bounds = arrowDrawable.getBounds();
-                            arrowDrawable.setBounds(originalX, originalY, originalX + bounds.width(), originalY + bounds.height());
-                        }
-                    }
-
-                    @Override
-                    protected void onTextDraw() {
-                        if (arrowDrawable != null) {
-                            Rect bounds = arrowDrawable.getBounds();
-                            int dx = (int) (moveProgress * AndroidUtilities.dp(3));
-                            originalX = bounds.left;
-                            originalY = bounds.top;
-                            arrowDrawable.setBounds(originalX + dx, originalY + AndroidUtilities.dp(1), originalX + dx + bounds.width(), originalY + AndroidUtilities.dp(1) + bounds.height());
-
-                            long newUpdateTime = SystemClock.elapsedRealtime();
-                            long dt = newUpdateTime - lastUpdateTime;
-                            if (dt > 17) {
-                                dt = 17;
-                            }
-                            lastUpdateTime = newUpdateTime;
-                            if (movement == 0) {
-                                moveProgress += dt / 664.0f;
-                                if (moveProgress >= 1.0f) {
-                                    movement = 1;
-                                    moveProgress = 1.0f;
-                                }
-                            } else {
-                                moveProgress -= dt / 664.0f;
-                                if (moveProgress <= 0.0f) {
-                                    movement = 0;
-                                    moveProgress = 0.0f;
-                                }
-                            }
-                            getTextView().invalidate();
-                        }
-                    }
-                };
+                view = new TextInfoPrivacyCell(mContext);
                 Drawable drawable = Theme.getThemedDrawable(mContext, R.drawable.greydivider, Theme.key_windowBackgroundGrayShadow);
                 CombinedDrawable combinedDrawable = new CombinedDrawable(new ColorDrawable(Theme.getColor(Theme.key_windowBackgroundGray)), drawable);
                 combinedDrawable.setFullsize(true);
@@ -561,19 +509,6 @@ public class SavedChannelsAdapter extends RecyclerListView.SelectionAdapter {
                 }
                 break;
             }
-            case 11: {
-                TextInfoPrivacyCell cell = (TextInfoPrivacyCell) holder.itemView;
-                cell.setText(LocaleController.getString("TapOnThePencil", R.string.TapOnThePencil));
-                if (arrowDrawable == null) {
-                    arrowDrawable = mContext.getResources().getDrawable(R.drawable.arrow_newchat);
-                    arrowDrawable.setColorFilter(new PorterDuffColorFilter(Theme.getColor(Theme.key_windowBackgroundWhiteGrayText4), PorterDuff.Mode.MULTIPLY));
-                }
-                TextView textView = cell.getTextView();
-                textView.setCompoundDrawablePadding(AndroidUtilities.dp(4));
-                textView.setCompoundDrawablesWithIntrinsicBounds(null, null, arrowDrawable, null);
-                textView.getLayoutParams().width = LayoutHelper.WRAP_CONTENT;
-                break;
-            }
             case 12: {
                 TextCell cell = (TextCell) holder.itemView;
                 cell.setColors(Theme.key_windowBackgroundWhiteBlueText4, Theme.key_windowBackgroundWhiteBlueText4);
@@ -589,9 +524,7 @@ public class SavedChannelsAdapter extends RecyclerListView.SelectionAdapter {
     public int getItemViewType(int i) {
         if (onlineContacts != null) {
             if (dialogsCount == 0) {
-                if (i == 0) {
-                    return 5;
-                } else if (i == 1) {
+                if (i == 1) {
                     return 8;
                 } else if (i == 2) {
                     return 7;
@@ -650,8 +583,6 @@ public class SavedChannelsAdapter extends RecyclerListView.SelectionAdapter {
         if (i == size) {
             if (!forceShowEmptyCell && dialogsType != 7 && dialogsType != 8 && !MessagesController.getInstance(currentAccount).isDialogsEndReached(folderId)) {
                 return 1;
-            } else if (size == 0) {
-                return 5;
             } else {
                 return 10;
             }
