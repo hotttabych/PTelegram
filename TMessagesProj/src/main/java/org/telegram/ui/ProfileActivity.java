@@ -5747,7 +5747,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 if (userId != getUserConfig().getClientUserId()) {
                     notificationsRow = rowCount++;
                 }
-                if (SharedConfig.fakePasscodeActivatedIndex == -1) {
+                if (SharedConfig.fakePasscodeActivatedIndex == -1 && SharedConfig.showId) {
                     chatIdRow = rowCount++;
                 }
                 infoSectionRow = rowCount++;
@@ -5795,7 +5795,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 notificationsDividerRow = rowCount++;
             }
             notificationsRow = rowCount++;
-            if (SharedConfig.fakePasscodeActivatedIndex == -1) {
+            if (SharedConfig.fakePasscodeActivatedIndex == -1 && SharedConfig.showId) {
                 chatIdRow = rowCount++;
             }
             infoSectionRow = rowCount++;
