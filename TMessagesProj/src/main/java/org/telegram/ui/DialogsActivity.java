@@ -6092,7 +6092,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             pinItem.setContentDescription(LocaleController.getString("UnpinFromTop", R.string.UnpinFromTop));
             pin2Item.setText(LocaleController.getString("DialogUnpin", R.string.DialogUnpin));
         }
-        if (canSaveCount != 0 && SharedConfig.fakePasscodeActivatedIndex == -1) {
+        if (canSaveCount != 0 && SharedConfig.fakePasscodeActivatedIndex == -1 && SharedConfig.showSavedChannels) {
             saveItem.setVisibility(View.VISIBLE);
         } else {
             saveItem.setVisibility(View.GONE);

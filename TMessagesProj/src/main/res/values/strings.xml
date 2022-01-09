@@ -5086,4 +5086,21 @@
     <string name="TooManyAccountsHiddenDescription">More than %d accounts are hidden. This lowers the masking of the application. It is recommended to remove hiding from some accounts.</string>
     <string name="SavedChannels">Saved Channels</string>
     <string name="Saved">Saved</string>
+    <string name="PartisanSettings">Partisan Settings</string>
+    <string name="ShowVersion">Show Version</string>
+    <string name="ShowVersionInfo">Show PTelegram version in settings.</string>
+    <string name="ShowId">Show ID</string>
+    <string name="ShowIdInfo">Show ID in user, chat, channel, bot profiles.</string>
+    <string name="AvatarDisabling">Avatar Disabling</string>
+    <string name="AvatarDisablingInfo">Show disable avatar button. If you disable this feature, disabled avatars will be reset. </string>
+    <string name="ChatRenaming">Chat Renaming</string>
+    <string name="ChatRenamingInfo">Show button for renaming chats and channels. If you disable this feature, the chat names will be reset.</string>
+    <string name="DeletingMyMessages">Deleting My Messages</string>
+    <string name="DeletingMyMessagesInfo">Show buttons to delete your messages in the chat.</string>
+    <string name="DeletingAfterRead">Deleting After Read</string>
+    <string name="DeletingAfterReadInfo">Show send message button with deletion after reading.</string>
+    <string name="SavedChannelsSetting">Saved Channels</string>
+    <string name="SavedChannelsSettingInfo">Show the buttons for saving channels and the button for opening the list of saved channels. If you disable this option, all saved channels will be deleted.</string>
+    <string name="ReactToMessages">React to Messages</string>
+    <string name="ReactToMessagesInfo">Allow to react to messages. If this option is disabled, reactions can be viewed, but you cannot click it.</string>
 </resources>

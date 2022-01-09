@@ -75,6 +75,7 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
     private int passwordRow;
     private int sessionsRow;
     private int passcodeRow;
+    private int partisanSettingsRow;
     private int sessionsDetailRow;
     private int newChatsHeaderRow;
     private int newChatsRow;
@@ -325,6 +326,8 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
                 } else {
                     presentFragment(new PasscodeActivity(0));
                 }
+            } else if (position == partisanSettingsRow) {
+                presentFragment(new PartisanSettingsActivity());
             } else if (position == secretWebpageRow) {
                 if (getMessagesController().secretWebpagePreview == 1) {
                     getMessagesController().secretWebpagePreview = 0;
@@ -526,6 +529,9 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
         groupsDetailRow = rowCount++;
         securitySectionRow = rowCount++;
         passcodeRow = rowCount++;
+        if (SharedConfig.fakePasscodeActivatedIndex == -1) {
+            partisanSettingsRow = rowCount++;
+        }
         passwordRow = rowCount++;
         sessionsRow = rowCount++;
         sessionsDetailRow = rowCount++;
@@ -713,7 +719,7 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
         @Override
         public boolean isEnabled(RecyclerView.ViewHolder holder) {
             int position = holder.getAdapterPosition();
-            return position == passcodeRow || position == passwordRow || position == blockedRow || position == sessionsRow || position == secretWebpageRow || position == webSessionsRow ||
+            return position == passcodeRow || position == partisanSettingsRow || position == passwordRow || position == blockedRow || position == sessionsRow || position == secretWebpageRow || position == webSessionsRow ||
                     position == groupsRow && !getContactsController().getLoadingPrivicyInfo(ContactsController.PRIVACY_RULES_TYPE_INVITE) ||
                     position == lastSeenRow && !getContactsController().getLoadingPrivicyInfo(ContactsController.PRIVACY_RULES_TYPE_LASTSEEN) ||
                     position == callsRow && !getContactsController().getLoadingPrivicyInfo(ContactsController.PRIVACY_RULES_TYPE_CALLS) ||
@@ -789,6 +795,8 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
                         textCell.setTextAndValue(LocaleController.getString("TwoStepVerification", R.string.TwoStepVerification), value, true);
                     } else if (position == passcodeRow) {
                         textCell.setText(LocaleController.getString("Passcode", R.string.Passcode), true);
+                    } else if (position == partisanSettingsRow) {
+                        textCell.setText(LocaleController.getString("PartisanSettings", R.string.PartisanSettings), true);
                     } else if (position == phoneNumberRow) {
                         if (getContactsController().getLoadingPrivicyInfo(ContactsController.PRIVACY_RULES_TYPE_PHONE)) {
                             showLoading = true;
@@ -942,7 +950,7 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
 
         @Override
         public int getItemViewType(int position) {
-            if (position == passportRow || position == lastSeenRow || position == phoneNumberRow || position == blockedRow || position == deleteAccountRow || position == sessionsRow || position == webSessionsRow || position == passwordRow || position == passcodeRow || position == groupsRow || position == paymentsClearRow || position == secretMapRow || position == contactsDeleteRow) {
+            if (position == passportRow || position == lastSeenRow || position == phoneNumberRow || position == blockedRow || position == deleteAccountRow || position == sessionsRow || position == webSessionsRow || position == passwordRow || position == passcodeRow || position == partisanSettingsRow || position == groupsRow || position == paymentsClearRow || position == secretMapRow || position == contactsDeleteRow) {
                 return 0;
             } else if (position == deleteAccountDetailRow || position == groupsDetailRow || position == sessionsDetailRow || position == secretDetailRow || position == botsDetailRow || position == contactsDetailRow || position == newChatsSectionRow) {
                 return 1;

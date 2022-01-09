@@ -46,8 +46,6 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import androidx.core.content.pm.ShortcutManagerCompat;
-
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -207,6 +205,15 @@ public class SharedConfig {
 
     public static boolean oldCacheCleared = false;
 
+    public static boolean showVersion;
+    public static boolean showId;
+    public static boolean allowDisableAvatar;
+    public static boolean allowRenameChat;
+    public static boolean showDeleteMyMessages;
+    public static boolean showDeleteAfterRead;
+    public static boolean showSavedChannels;
+    public static boolean allowReactions;
+
     static {
         loadConfig();
     }
@@ -331,6 +338,14 @@ public class SharedConfig {
                 editor.putBoolean("takePhotoOnBadPasscodeBack", takePhotoWithBadPasscodeBack);
                 editor.putBoolean("takePhotoMuteAudio", takePhotoMuteAudio);
                 editor.putBoolean("oldCacheCleared", oldCacheCleared);
+                editor.putBoolean("showVersion", showVersion);
+                editor.putBoolean("showId", showId);
+                editor.putBoolean("allowDisableAvatar", allowDisableAvatar);
+                editor.putBoolean("allowRenameChat", allowRenameChat);
+                editor.putBoolean("showDeleteMyMessages", showDeleteMyMessages);
+                editor.putBoolean("showDeleteAfterRead", showDeleteAfterRead);
+                editor.putBoolean("showSavedChannels", showSavedChannels);
+                editor.putBoolean("allowReactions", allowReactions);
 
                 if (pendingAppUpdate != null) {
                     try {
@@ -457,6 +472,14 @@ public class SharedConfig {
             takePhotoWithBadPasscodeBack = preferences.getBoolean("takePhotoOnBadPasscodeBack", false);
             takePhotoMuteAudio = preferences.getBoolean("takePhotoMuteAudio", true);
             oldCacheCleared = preferences.getBoolean("oldCacheCleared", false);
+            showVersion = preferences.getBoolean("showVersion", true);
+            showId = preferences.getBoolean("showId", true);
+            allowDisableAvatar = preferences.getBoolean("allowDisableAvatar", true);
+            allowRenameChat = preferences.getBoolean("allowRenameChat", true);
+            showDeleteMyMessages = preferences.getBoolean("showDeleteMyMessages", true);
+            showDeleteAfterRead = preferences.getBoolean("showDeleteAfterRead", true);
+            showSavedChannels = preferences.getBoolean("showSavedChannels", true);
+            allowReactions = preferences.getBoolean("allowReactions", true);
 
             String authKeyString = preferences.getString("pushAuthKey", null);
             if (!TextUtils.isEmpty(authKeyString)) {
