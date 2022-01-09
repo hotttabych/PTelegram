@@ -1083,7 +1083,7 @@ public class LocaleController {
                         case "SavedChannelsSetting": value = "Сохранённые каналы"; break;
                         case "SavedChannelsSettingInfo": value = "Показывать кнопки сохранения каналов и кнопку открытия списка сохранённых каналов. При отключении этой опции  все сохранённые каналы удалятся."; break;
                         case "ReactToMessages": value = "Реагирование на сообщения"; break;
-                        case "ReactToMessagesШтащ": value = "Разрешить реагировать на сообщения. Если эта опция отключена, реакции можно будет посмотреть, но нельзя будет кликнуть по ним."; break;
+                        case "ReactToMessagesInfo": value = "Разрешить реагировать на сообщения. Если эта опция отключена, реакции можно будет посмотреть, но нельзя будет кликнуть по ним."; break;
                     }
                 } else if (languageOverride.equals("be")) {
                     switch (key) {
