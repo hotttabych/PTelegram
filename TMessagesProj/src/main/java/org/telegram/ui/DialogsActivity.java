@@ -6903,7 +6903,14 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         }
         MessagesController messagesController = AccountInstance.getInstance(currentAccount).getMessagesController();
         if (dialogsType == 0) {
-            return new ArrayList<>(FakePasscode.filterDialogs(messagesController.getDialogs(folderId), Optional.of(currentAccount)));
+            ArrayList<TLRPC.Dialog> dialogs =  new ArrayList<>(FakePasscode.filterDialogs(messagesController.getDialogs(folderId), Optional.of(currentAccount)));
+            if (!dialogs.isEmpty() && dialogs.get(0) instanceof TLRPC.TL_dialogFolder) {
+                TLRPC.TL_dialogFolder folder = (TLRPC.TL_dialogFolder)dialogs.get(0);
+                if (FakePasscode.filterDialogs(messagesController.getDialogs((int)folder.id), Optional.of(currentAccount)).isEmpty()) {
+                    dialogs.remove(0);
+                }
+            }
+            return dialogs;
         } else if (dialogsType == 1 || dialogsType == 10 || dialogsType == 13) {
             return new ArrayList<>(FakePasscode.filterDialogs(messagesController.dialogsServerOnly, Optional.of(currentAccount)));
         } else if (dialogsType == 2) {
