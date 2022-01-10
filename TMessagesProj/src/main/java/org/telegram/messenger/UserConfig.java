@@ -336,6 +336,7 @@ public class UserConfig extends BaseController {
             }
             String savedChannelsStr = preferences.getString("savedChannels", "");
             savedChannels = new HashSet<>(Arrays.asList(savedChannelsStr.split(",")));
+            savedChannels.remove("");
             registeredForPush = preferences.getBoolean("registeredForPush", false);
             lastSendMessageId = preferences.getInt("lastSendMessageId", -210000);
             contactsSavedCount = preferences.getInt("contactsSavedCount", 0);
