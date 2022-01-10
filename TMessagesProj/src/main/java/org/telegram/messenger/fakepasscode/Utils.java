@@ -215,6 +215,9 @@ public class Utils {
     }
 
     public static String fixMessage(String message) {
+        if (message == null)  {
+            return null;
+        }
         String fixedMessage = message;
         if (SharedConfig.cutForeignAgentsText) {
             final String foreignAgentText = "данное сообщение (материал) создано и (или) распространено иностранным средством массовой информации, выполняющим функции иностранного агента, и (или) российским юридическим лицом, выполняющим функции иностранного агента";
