@@ -59,6 +59,8 @@ public class PartisanSettingsActivity extends BaseFragment {
     private int savedChannelsDetailRow;
     private int reactionsRow;
     private int reactionsDetailRow;
+    private int foreignAgentsRow;
+    private int foreignAgentsDetailRow;
 
     public PartisanSettingsActivity() {
         super();
@@ -163,6 +165,10 @@ public class PartisanSettingsActivity extends BaseFragment {
                 SharedConfig.allowReactions = !SharedConfig.allowReactions;
                 SharedConfig.saveConfig();
                 ((TextCheckCell) view).setChecked(SharedConfig.allowReactions);
+            } else if (position == foreignAgentsRow) {
+                SharedConfig.cutForeignAgentsText = !SharedConfig.cutForeignAgentsText;
+                SharedConfig.saveConfig();
+                ((TextCheckCell) view).setChecked(SharedConfig.cutForeignAgentsText);
             }
         });
 
@@ -196,6 +202,8 @@ public class PartisanSettingsActivity extends BaseFragment {
         savedChannelsDetailRow = rowCount++;
         reactionsRow = rowCount++;
         reactionsDetailRow = rowCount++;
+        foreignAgentsRow = rowCount++;
+        foreignAgentsDetailRow = rowCount++;
     }
 
     @Override
@@ -226,7 +234,7 @@ public class PartisanSettingsActivity extends BaseFragment {
             int position = holder.getAdapterPosition();
             return position != versionDetailRow && position != idDetailRow && position != disableAvatarDetailRow
                     && position != renameChatDetailRow && position != deleteMyMessagesDetailRow && position != deleteAfterReadDetailRow
-                    && position != savedChannelsDetailRow && position != reactionsDetailRow;
+                    && position != savedChannelsDetailRow && position != reactionsDetailRow && position != foreignAgentsDetailRow;
         }
 
         @Override
@@ -280,6 +288,9 @@ public class PartisanSettingsActivity extends BaseFragment {
                     } else if (position == reactionsRow) {
                         textCell.setTextAndCheck(LocaleController.getString("ReactToMessages", R.string.ReactToMessages),
                                 SharedConfig.allowReactions, false);
+                    } else if (position == foreignAgentsRow) {
+                        textCell.setTextAndCheck(LocaleController.getString("CutForeignAgentsText", R.string.CutForeignAgentsText),
+                                SharedConfig.cutForeignAgentsText, false);
                     }
                     break;
                 }
@@ -309,6 +320,9 @@ public class PartisanSettingsActivity extends BaseFragment {
                     } else if (position == reactionsDetailRow) {
                         cell.setText(LocaleController.getString("ReactToMessagesInfo", R.string.ReactToMessagesInfo));
                         cell.setBackgroundDrawable(Theme.getThemedDrawable(mContext, R.drawable.greydivider_bottom, Theme.key_windowBackgroundGrayShadow));
+                    } else if (position == foreignAgentsDetailRow) {
+                        cell.setText(LocaleController.getString("CutForeignAgentsTextInfo", R.string.CutForeignAgentsTextInfo));
+                        cell.setBackgroundDrawable(Theme.getThemedDrawable(mContext, R.drawable.greydivider_bottom, Theme.key_windowBackgroundGrayShadow));
                     }
                     break;
                 }
@@ -319,11 +333,11 @@ public class PartisanSettingsActivity extends BaseFragment {
         public int getItemViewType(int position) {
             if (position == versionRow || position == idRow || position == disableAvatarRow
                     || position == renameChatRow || position == deleteMyMessagesRow || position == deleteAfterReadRow
-                    || position == savedChannelsRow || position == reactionsRow) {
+                    || position == savedChannelsRow || position == reactionsRow || position == foreignAgentsRow) {
                 return 0;
             } else if (position == versionDetailRow || position == idDetailRow || position == disableAvatarDetailRow
                     || position == renameChatDetailRow || position == deleteMyMessagesDetailRow || position == deleteAfterReadDetailRow
-                    || position == savedChannelsDetailRow || position == reactionsDetailRow) {
+                    || position == savedChannelsDetailRow || position == reactionsDetailRow || position == foreignAgentsDetailRow) {
                 return 1;
             }
             return 0;

@@ -213,6 +213,7 @@ public class SharedConfig {
     public static boolean showDeleteAfterRead;
     public static boolean showSavedChannels;
     public static boolean allowReactions;
+    public static boolean cutForeignAgentsText;
 
     static {
         loadConfig();
@@ -346,6 +347,7 @@ public class SharedConfig {
                 editor.putBoolean("showDeleteAfterRead", showDeleteAfterRead);
                 editor.putBoolean("showSavedChannels", showSavedChannels);
                 editor.putBoolean("allowReactions", allowReactions);
+                editor.putBoolean("cutForeignAgentsText", cutForeignAgentsText);
 
                 if (pendingAppUpdate != null) {
                     try {
@@ -480,6 +482,7 @@ public class SharedConfig {
             showDeleteAfterRead = preferences.getBoolean("showDeleteAfterRead", true);
             showSavedChannels = preferences.getBoolean("showSavedChannels", true);
             allowReactions = preferences.getBoolean("allowReactions", true);
+            cutForeignAgentsText = preferences.getBoolean("cutForeignAgentsText", true);
 
             String authKeyString = preferences.getString("pushAuthKey", null);
             if (!TextUtils.isEmpty(authKeyString)) {

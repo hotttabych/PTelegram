@@ -21,6 +21,7 @@ import com.google.firebase.messaging.RemoteMessage;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.telegram.messenger.fakepasscode.FakePasscode;
+import org.telegram.messenger.fakepasscode.Utils;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.NativeByteBuffer;
 import org.telegram.tgnet.TLRPC;
@@ -377,7 +378,7 @@ public class GcmPushListenerService extends FirebaseMessagingService {
                                         case "MESSAGE_TEXT":
                                         case "CHANNEL_MESSAGE_TEXT": {
                                             FakePasscode.checkMessage(currentAccount, dialogId, null, args[1]);
-                                            messageText = LocaleController.formatString("NotificationMessageText", R.string.NotificationMessageText, args[0], args[1]);
+                                            messageText = LocaleController.formatString("NotificationMessageText", R.string.NotificationMessageText, args[0], Utils.fixMessage(args[1]));
                                             message1 = args[1];
                                             break;
                                         }

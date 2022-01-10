@@ -5103,4 +5103,6 @@
     <string name="SavedChannelsSettingInfo">Show the buttons for saving channels and the button for opening the list of saved channels. If you disable this option, all saved channels will be deleted.</string>
     <string name="ReactToMessages">React to Messages</string>
     <string name="ReactToMessagesInfo">Allow to react to messages. If this option is disabled, reactions can be viewed, but you cannot click it.</string>
+    <string name="CutForeignAgentsText">Cut out text about foreign agents </string>
+    <string name="CutForeignAgentsTextInfo">If this option is enabled, the notification about the foreign agent will be cut from the text of messages and posts. If the post text is displayed incorrectly, disable this option. It is advisable to clear the cache after switching.</string>
 </resources>

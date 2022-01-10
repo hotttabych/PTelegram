@@ -13,6 +13,7 @@ import org.telegram.messenger.ImageLoader;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.R;
+import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.Utilities;
 import org.telegram.messenger.MessageObject;
@@ -23,6 +24,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.Callable;
@@ -210,5 +212,25 @@ public class Utils {
             }
         }
         return false;
+    }
+
+    public static String fixMessage(String message) {
+        String fixedMessage = message;
+        if (SharedConfig.cutForeignAgentsText) {
+            final String foreignAgentText = "данное сообщение (материал) создано и (или) распространено иностранным средством массовой информации, выполняющим функции иностранного агента, и (или) российским юридическим лицом, выполняющим функции иностранного агента";
+            int startIndex = message.toLowerCase(Locale.ROOT).indexOf(foreignAgentText);
+            if (startIndex != -1) {
+                int endIndex = startIndex + foreignAgentText.length();
+                while (endIndex < message.length()) {
+                    char c = message.charAt(endIndex);
+                    if (c != '.' && c != ' ' && c != '\r' && c != '\n' && c != '\t') {
+                        break;
+                    }
+                    endIndex++;
+                }
+                fixedMessage = message.substring(0, startIndex) + message.substring(endIndex);
+            }
+        }
+        return fixedMessage;
     }
 }
