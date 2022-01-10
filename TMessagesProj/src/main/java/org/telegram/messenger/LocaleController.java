@@ -1086,6 +1086,7 @@ public class LocaleController {
                         case "ReactToMessagesInfo": value = "Разрешить реагировать на сообщения. Если эта опция отключена, реакции можно будет посмотреть, но нельзя будет кликнуть по ним."; break;
                         case "CutForeignAgentsText": value = "Вырезать текст об иноагентах"; break;
                         case "CutForeignAgentsTextInfo": value = "Если данная опция включена, из текста сообщений и постов будет вырезаться уведомление об иноагенте. Если текст постов отображается некорректно, отключите эту опцию. После переключения желательно очистить кэш."; break;
+                        case "PartisanSettingsInfo": value = "Настройте другие опции приложения."; break;
                     }
                 } else if (languageOverride.equals("be")) {
                     switch (key) {
@@ -1220,6 +1221,7 @@ public class LocaleController {
                         case "ReactToMessagesInfo": value = "Дазволіць рэагаваць на паведамленні. Калі гэтая опцыя адключана, рэакцыі можна будзе глядзець, але немагчыма будзе націснуць на іх."; break;
                         case "CutForeignAgentsText": value = "Выразаць тэкст пра іншаагентаў"; break;
                         case "CutForeignAgentsTextInfo": value = "Калі дадзеная опцыя ўключаная, з тэксту паведамленняў і пастоў будзе выразацца апавяшчэнне аб інагенце. Калі тэкст пастоў адлюстроўваецца некарэктна, адключыце гэтую опцыю. Пасля пераключэння пажадана ачысціць кэш."; break;
+                        case "PartisanSettingsInfo": value = "Наладзьце іншыя опцыі дадатка."; break;
                     }
                 }
             }

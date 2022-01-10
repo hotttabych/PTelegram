@@ -5087,6 +5087,7 @@
     <string name="SavedChannels">Saved Channels</string>
     <string name="Saved">Saved</string>
     <string name="PartisanSettings">Partisan Settings</string>
+    <string name="PartisanSettingsInfo">Configure other application options.</string>
     <string name="ShowVersion">Show Version</string>
     <string name="ShowVersionInfo">Show PTelegram version in settings.</string>
     <string name="ShowId">Show ID</string>
