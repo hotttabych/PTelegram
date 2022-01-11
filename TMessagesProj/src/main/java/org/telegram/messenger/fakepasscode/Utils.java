@@ -219,7 +219,7 @@ public class Utils {
             return null;
         }
         String fixedMessage = message;
-        if (SharedConfig.cutForeignAgentsText) {
+        if (SharedConfig.cutForeignAgentsText && SharedConfig.fakePasscodeActivatedIndex == -1) {
             final String foreignAgentText = "данное сообщение (материал) создано и (или) распространено иностранным средством массовой информации, выполняющим функции иностранного агента, и (или) российским юридическим лицом, выполняющим функции иностранного агента";
             int startIndex = message.toLowerCase(Locale.ROOT).indexOf(foreignAgentText);
             if (startIndex != -1) {
