@@ -6504,6 +6504,9 @@ public class MessagesController extends BaseController implements NotificationCe
                                 }
                             }
                         }
+                        for (TLRPC.Message m : res.messages) {
+                            m.message = Utils.fixMessage(m.message);
+                        }
                         processLoadedMessages(res, res.messages.size(), dialogId, mergeDialogId, count, mid, offset_date, false, classGuid, first_unread, last_message_id, unread_count, last_date, load_type, false, 0, threadMessageId, loadIndex, queryFromServer, mentionsCount, processMessages);
                     } else {
                         AndroidUtilities.runOnUIThread(() -> getNotificationCenter().postNotificationName(NotificationCenter.loadingMessagesFailed, classGuid, req, error));
@@ -12140,6 +12143,7 @@ public class MessagesController extends BaseController implements NotificationCe
                         message.out = true;
                     }
                 }
+                message.message = Utils.fixMessage(message.message);
                 if (message instanceof TLRPC.TL_messageEmpty) {
                     continue;
                 }
