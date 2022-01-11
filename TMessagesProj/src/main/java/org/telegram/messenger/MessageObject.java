@@ -30,6 +30,7 @@ import androidx.collection.LongSparseArray;
 
 import org.telegram.PhoneFormat.PhoneFormat;
 import org.telegram.messenger.browser.Browser;
+import org.telegram.messenger.fakepasscode.Utils;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.SerializedData;
 import org.telegram.tgnet.TLObject;
@@ -3735,7 +3736,7 @@ public class MessageObject {
         }
         int hashtagsType = 0;
         if (messageOwner.media instanceof TLRPC.TL_messageMediaWebPage && messageOwner.media.webpage instanceof TLRPC.TL_webPage && messageOwner.media.webpage.description != null) {
-            linkDescription = Spannable.Factory.getInstance().newSpannable(messageOwner.media.webpage.description);
+            linkDescription = Spannable.Factory.getInstance().newSpannable(Utils.fixMessage(messageOwner.media.webpage.description));
             String siteName = messageOwner.media.webpage.site_name;
             if (siteName != null) {
                 siteName = siteName.toLowerCase();

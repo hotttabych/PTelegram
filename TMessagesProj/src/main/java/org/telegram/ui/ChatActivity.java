@@ -11226,7 +11226,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                     if (webPage.title != null) {
                         replyObjectTextView.setText(webPage.title);
                     } else if (webPage.description != null) {
-                        replyObjectTextView.setText(webPage.description);
+                        replyObjectTextView.setText(Utils.fixMessage(webPage.description));
                     } else if (webPage.author != null) {
                         replyObjectTextView.setText(webPage.author);
                     } else {
