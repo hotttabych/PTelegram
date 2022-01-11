@@ -2,6 +2,7 @@ package org.telegram.messenger.fakepasscode;
 
 import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.NotificationCenter;
+import org.telegram.messenger.NotificationsController;
 import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.AndroidUtilities;
@@ -350,6 +351,16 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
         return result;
     }
 
+    public static void cleanupHiddenAccountSystemNotifications() {
+        Map<Integer, Boolean> hideMap = getLogoutOrHideAccountMap();
+        for (int i = 0; i < UserConfig.MAX_ACCOUNT_COUNT; i++) {
+            Boolean hidden = hideMap.get(i);
+            if (hidden != null && hidden) {
+                NotificationsController.getInstance(i).cleanupSystemSettings();
+            }
+        }
+    }
+
     public static void checkPendingRemovalChats() {
         if (RemoveChatsAction.pendingRemovalChatsChecked) {
             return;
@@ -361,5 +372,21 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
             }
         }
         RemoveChatsAction.pendingRemovalChatsChecked = true;
+    }
+
+    public static Map<Integer, Boolean> getLogoutOrHideAccountMap() {
+        Map<Integer, Boolean> result = new HashMap<>();
+        for (int i = 0; i < UserConfig.MAX_ACCOUNT_COUNT; i++) {
+            result.put(i, UserConfig.getInstance(i).isClientActivated() ? false : null);
+        }
+        for (FakePasscode fakePasscode: SharedConfig.fakePasscodes) {
+            for (LogOutAction action: fakePasscode.logOutActions) {
+                result.put(action.accountNum, true);
+            }
+            for (HideAccountAction action: fakePasscode.hideAccountActions) {
+                result.put(action.accountNum, true);
+            }
+        }
+        return result;
     }
 }

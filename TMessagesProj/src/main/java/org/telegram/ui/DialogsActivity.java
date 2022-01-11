@@ -3599,6 +3599,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             AlertDialog alertDialog = builder.create();
             showDialog(alertDialog);
         }
+        FakePasscode.cleanupHiddenAccountSystemNotifications();
 
         return fragmentView;
     }

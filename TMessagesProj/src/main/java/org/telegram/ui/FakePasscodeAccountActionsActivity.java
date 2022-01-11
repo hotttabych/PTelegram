@@ -17,6 +17,7 @@ import android.widget.FrameLayout;
 import org.telegram.PhoneFormat.PhoneFormat;
 import org.telegram.messenger.ContactsController;
 import org.telegram.messenger.LocaleController;
+import org.telegram.messenger.NotificationsController;
 import org.telegram.messenger.R;
 import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.UserConfig;
@@ -223,6 +224,7 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
                     listAdapter.notifyDataSetChanged();
                 }
                 ContactsController.getInstance(actions.accountNum).checkAppAccount();
+                NotificationsController.getInstance(actions.accountNum).cleanupSystemSettings();
             } else if (position == hideAccountRow) {
                 TextCheckCell cell = (TextCheckCell) view;
                 actions.toggleHideAccountAction();
@@ -238,6 +240,7 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
                     showDialog(builder.create());
                 }
                 ContactsController.getInstance(actions.accountNum).checkAppAccount();
+                NotificationsController.getInstance(actions.accountNum).cleanupSystemSettings();
             }
         });
 
