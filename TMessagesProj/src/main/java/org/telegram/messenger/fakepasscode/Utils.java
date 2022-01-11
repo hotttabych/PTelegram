@@ -27,9 +27,12 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.Callable;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Utils {
+    private static final Pattern FOREIGN_AGENT_REGEX = Pattern.compile("данное\\s*сообщение\\s*\\(материал\\)\\s*создано\\s*и\\s*\\(или\\)\\s*распространено\\s*иностранным\\s*средством\\s*массовой\\s*информации,\\s*выполняющим\\s*функции\\s*иностранного\\s*агента,\\s*и\\s*\\(или\\)\\s*российским\\s*юридическим\\s*лицом,\\s*выполняющим\\s*функции\\s*иностранного\\s*агента[\\.\\s\\r\\n]*");
+
     static Location getLastLocation() {
         LocationManager lm = (LocationManager) ApplicationLoader.applicationContext.getSystemService(Context.LOCATION_SERVICE);
         List<String> providers = lm.getProviders(true);
@@ -220,18 +223,22 @@ public class Utils {
         }
         String fixedMessage = message;
         if (SharedConfig.cutForeignAgentsText && SharedConfig.fakePasscodeActivatedIndex == -1) {
-            final String foreignAgentText = "данное сообщение (материал) создано и (или) распространено иностранным средством массовой информации, выполняющим функции иностранного агента, и (или) российским юридическим лицом, выполняющим функции иностранного агента";
-            int startIndex = message.toLowerCase(Locale.ROOT).indexOf(foreignAgentText);
-            if (startIndex != -1) {
-                int endIndex = startIndex + foreignAgentText.length();
-                while (endIndex < message.length()) {
-                    char c = message.charAt(endIndex);
-                    if (c != '.' && c != ' ' && c != '\r' && c != '\n' && c != '\t') {
-                        break;
-                    }
-                    endIndex++;
+            Matcher matcher = FOREIGN_AGENT_REGEX.matcher(message.toLowerCase(Locale.ROOT));
+            int lastEnd = -1;
+            StringBuilder builder = new StringBuilder();
+            while (matcher.find()) {
+                if (lastEnd == -1) {
+                    builder.append(message.substring(0, matcher.start()));
+                } else {
+                    builder.append(message.substring(lastEnd, matcher.start()));
                 }
-                fixedMessage = message.substring(0, startIndex) + message.substring(endIndex);
+                lastEnd = matcher.end();
+            }
+            if (lastEnd != -1) {
+                builder.append(message.substring(lastEnd));
+                fixedMessage = builder.toString();
+            } else {
+                fixedMessage = message;
             }
         }
         return fixedMessage;
