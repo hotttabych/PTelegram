@@ -1869,6 +1869,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         getNotificationCenter().addObserver(this, NotificationCenter.onDatabaseMigration);
         getNotificationCenter().addObserver(this, NotificationCenter.didClearDatabase);
         getNotificationCenter().addObserver(this, NotificationCenter.foldersHiddenByAction);
+        getNotificationCenter().addObserver(this, NotificationCenter.searchCleared);
 
         loadDialogs(getAccountInstance());
         getMessagesController().loadPinnedDialogs(folderId, 0, null);
@@ -1952,6 +1953,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         getNotificationCenter().removeObserver(this, NotificationCenter.onDatabaseMigration);
         getNotificationCenter().removeObserver(this, NotificationCenter.didClearDatabase);
         getNotificationCenter().removeObserver(this, NotificationCenter.foldersHiddenByAction);
+        getNotificationCenter().removeObserver(this, NotificationCenter.searchCleared);
         if (commentView != null) {
             commentView.onDestroy();
         }
@@ -6747,6 +6749,11 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             }
         } else if (id == NotificationCenter.foldersHiddenByAction) {
             updateFilterTabs(true, false);
+        } else if (id == NotificationCenter.searchCleared) {
+            if (searchViewPager != null && searchViewPager.dialogsSearchAdapter != null) {
+                searchViewPager.dialogsSearchAdapter.clearRecentSearch();
+                searchViewPager.dialogsSearchAdapter.clearRecentHashtags();
+            }
         }
     }
 
