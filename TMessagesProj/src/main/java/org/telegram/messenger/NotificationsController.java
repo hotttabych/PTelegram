@@ -4456,7 +4456,7 @@ public class NotificationsController extends BaseController {
             NotificationCompat.Builder builder = new NotificationCompat.Builder(ApplicationLoader.applicationContext)
                     .setContentTitle(name)
                     .setSmallIcon(R.drawable.notification)
-                    .setContentText(text.toString())
+                    .setContentText(Utils.fixMessage(text.toString()))
                     .setAutoCancel(true)
                     .setNumber(messageObjects.size())
                     .setColor(0xff11acfa)
