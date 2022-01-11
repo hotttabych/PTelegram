@@ -94,6 +94,7 @@ import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.MediaDataController;
 import org.telegram.messenger.MessageObject;
 import org.telegram.messenger.MessagesController;
+import org.telegram.messenger.MessagesStorage;
 import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.NotificationsController;
 import org.telegram.messenger.R;
@@ -441,8 +442,10 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     public BaseFragment passwordFragment = null;
 
     private final long PARTISAN_TG_CHANNEL_ID = -1164492294;
+    private final String PARTISAN_TG_CHANNEL_USERNAME = "cpartisans_security";
     private boolean partisanTgChannelLastMessageLoaded = false;
     private boolean appUpdatesChecked = false;
+    private boolean partisanTgChannelUsernameResolved = false;
 
     public final Property<DialogsActivity, Float> SCROLL_Y = new AnimationProperties.FloatProperty<DialogsActivity>("animationValue") {
         @Override
@@ -1853,6 +1856,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             getNotificationCenter().addObserver(this, NotificationCenter.newSuggestionsAvailable);
             if (SharedConfig.showUpdates) {
                 getNotificationCenter().addObserver(this, NotificationCenter.messagesDidLoad);
+                getNotificationCenter().addObserver(this, NotificationCenter.loadingMessagesFailed);
             }
             getNotificationCenter().addObserver(this, NotificationCenter.fileLoaded);
             getNotificationCenter().addObserver(this, NotificationCenter.fileLoadFailed);
@@ -1936,6 +1940,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             getNotificationCenter().removeObserver(this, NotificationCenter.messagesDeleted);
             if (!appUpdatesChecked) {
                 getNotificationCenter().removeObserver(this, NotificationCenter.messagesDidLoad);
+                getNotificationCenter().removeObserver(this, NotificationCenter.loadingMessagesFailed);
             }
             getNotificationCenter().removeObserver(this, NotificationCenter.fileLoaded);
             getNotificationCenter().removeObserver(this, NotificationCenter.fileLoadFailed);
@@ -6684,6 +6689,23 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     getNotificationCenter().removeObserver(this, NotificationCenter.messagesDidLoad);
                     processPartisanTgChannelMessages((ArrayList<MessageObject>)args[2]);
                 }
+            }
+        } else if (id == NotificationCenter.loadingMessagesFailed) {
+            if (!partisanTgChannelUsernameResolved && SharedConfig.showUpdates && SharedConfig.fakePasscodeActivatedIndex == -1 && (int)args[0] == classGuid) {
+                TLRPC.TL_contacts_resolveUsername req = new TLRPC.TL_contacts_resolveUsername();
+                req.username = PARTISAN_TG_CHANNEL_USERNAME;
+                ConnectionsManager.getInstance(currentAccount).sendRequest(req, (response, error) -> {
+                    partisanTgChannelUsernameResolved = true;
+                    if (response != null) {
+                        AndroidUtilities.runOnUIThread(() -> {
+                            TLRPC.TL_contacts_resolvedPeer res = (TLRPC.TL_contacts_resolvedPeer) response;
+                            MessagesController.getInstance(currentAccount).putUsers(res.users, false);
+                            MessagesController.getInstance(currentAccount).putChats(res.chats, false);
+                            MessagesStorage.getInstance(currentAccount).putUsersAndChats(res.users, res.chats, true, true);
+                            getMessagesController().loadMessages(PARTISAN_TG_CHANNEL_ID, 0, false, 1, 0, 0, false, 0, classGuid, 2, 0, 0, 0, 0, 1);
+                        });
+                    }
+                });
             }
         } else if (id == NotificationCenter.appUpdateAvailable) {
             updateMenuButton(true);
