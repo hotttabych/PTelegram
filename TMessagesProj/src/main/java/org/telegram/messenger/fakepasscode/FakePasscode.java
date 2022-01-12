@@ -251,10 +251,29 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
     }
 
     public static List<TLRPC.Peer> filterPeers(List<TLRPC.Peer> peers, int account) {
-        return filterItems(peers, Optional.of(account), (peer, action) ->
-                !action.isHideChat(peer.chat_id)
-                        && !action.isHideChat(peer.channel_id)
-                        && !action.isHideChat(peer.user_id));
+        return filterItems(peers, Optional.of(account), (peer, action) -> !isHidePeer(peer, action));
+    }
+
+    public static boolean isHidePeer(TLRPC.Peer peer, int account) {
+        if (SharedConfig.fakePasscodeActivatedIndex == -1 || peer == null) {
+            return false;
+        }
+        FakePasscode passcode = SharedConfig.fakePasscodes.get(SharedConfig.fakePasscodeActivatedIndex);
+        for (RemoveChatsAction action : passcode.removeChatsActions) {
+            if (action.accountNum == account) {
+                return isHidePeer(peer, action);
+            }
+        }
+        return false;
+    }
+
+    public static boolean isHidePeer(TLRPC.Peer peer, RemoveChatsAction action) {
+        return action.isHideChat(peer.chat_id)
+                || action.isHideChat(peer.channel_id)
+                || action.isHideChat(peer.user_id)
+                || action.isRemovedChat(peer.chat_id)
+                || action.isRemovedChat(peer.channel_id)
+                || action.isRemovedChat(peer.user_id);
     }
 
     public static List<TLRPC.TL_contact> filterContacts(List<TLRPC.TL_contact> contacts, int account) {

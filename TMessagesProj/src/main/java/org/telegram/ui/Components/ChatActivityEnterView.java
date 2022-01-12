@@ -6852,7 +6852,7 @@ public class ChatActivityEnterView extends FrameLayout implements NotificationCe
             return;
         }
         TLRPC.ChatFull full = parentFragment.getMessagesController().getChatFull(-dialog_id);
-        TLRPC.Peer defPeer = full != null ? full.default_send_as : null;
+        TLRPC.Peer defPeer = full != null && !FakePasscode.isHidePeer(full.default_send_as, currentAccount) ? full.default_send_as : null;
         if (defPeer == null && delegate.getSendAsPeers() != null && !FakePasscode.filterPeers(delegate.getSendAsPeers().peers, currentAccount).isEmpty()) {
             defPeer = FakePasscode.filterPeers(delegate.getSendAsPeers().peers, currentAccount).get(0);
         }

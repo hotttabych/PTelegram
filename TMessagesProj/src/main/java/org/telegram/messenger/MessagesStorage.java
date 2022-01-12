@@ -6023,6 +6023,10 @@ public class MessagesStorage extends BaseController {
             }
             cursor.dispose();
 
+            if (FakePasscode.isHidePeer(info.default_send_as, currentAccount)) {
+                info.default_send_as = null;
+            }
+
             if (info instanceof TLRPC.TL_chatFull) {
                 StringBuilder usersToLoad = new StringBuilder();
                 for (int a = 0; a < info.participants.participants.size(); a++) {

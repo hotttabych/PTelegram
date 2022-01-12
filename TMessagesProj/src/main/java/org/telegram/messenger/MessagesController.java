@@ -730,6 +730,7 @@ public class MessagesController extends BaseController implements NotificationCe
             getNotificationCenter().addObserver(messagesController, NotificationCenter.fileLoadFailed);
             getNotificationCenter().addObserver(messagesController, NotificationCenter.messageReceivedByServer);
             getNotificationCenter().addObserver(messagesController, NotificationCenter.updateMessageMedia);
+            getNotificationCenter().addObserver(messagesController, NotificationCenter.dialogDeletedByAction);
         });
         addSupportUser();
         if (currentAccount == 0) {
@@ -2520,6 +2521,16 @@ public class MessagesController extends BaseController implements NotificationCe
                         existMessageObject.setType();
                         getNotificationCenter().postNotificationName(NotificationCenter.notificationsSettingsUpdated);
                     }
+                }
+            }
+        } else if (id == NotificationCenter.dialogDeletedByAction) {
+            long did = (long)args[0];
+            for (int i = 0; i < fullChats.size(); i++) {
+                TLRPC.ChatFull chatFull = fullChats.valueAt(i);
+                if (chatFull != null && chatFull.default_send_as != null &&
+                        (chatFull.default_send_as.chat_id == -did || chatFull.default_send_as.channel_id == -did
+                        || chatFull.default_send_as.user_id == did)) {
+                    chatFull.default_send_as = null;
                 }
             }
         }

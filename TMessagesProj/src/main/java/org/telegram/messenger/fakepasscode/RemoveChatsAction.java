@@ -56,6 +56,7 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
     private ArrayList<Integer> chatsToRemove = new ArrayList<>();
     private List<RemoveChatEntry> chatEntriesToRemove = new ArrayList<>();
     private ArrayList<Long> removedChats = new ArrayList<>(); // Chats to delete new messages
+    private ArrayList<Long> realRemovedChats = new ArrayList<>(); // Removed chats
     private ArrayList<Long> hiddenChats = new ArrayList<>();
     private ArrayList<Integer> hiddenFolders = new ArrayList<>();
 
@@ -97,6 +98,10 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
         }
     }
 
+    public boolean isRemovedChat(long chatId) {
+        return realRemovedChats != null && (realRemovedChats.contains(chatId) || realRemovedChats.contains(-chatId));
+    }
+
     public boolean isHideFolder(int folderId) {
         if (hiddenFolders == null || hiddenFolders.isEmpty()) {
             return false;
@@ -135,6 +140,7 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
         }
         NotificationCenter notificationCenter = NotificationCenter.getInstance(accountNum);
         removedChats.clear();
+        realRemovedChats.clear();
         hiddenChats.clear();
         hiddenFolders.clear();
         synchronized (pendingRemovalChats) {
@@ -163,6 +169,7 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
             }
         }
         removedChats = chatEntriesToRemove.stream().filter(e -> e.isExitFromChat && e.isDeleteNewMessages).map(e -> e.chatId).collect(Collectors.toCollection(ArrayList::new));
+        realRemovedChats = chatEntriesToRemove.stream().filter(e -> e.isExitFromChat).map(e -> e.chatId).collect(Collectors.toCollection(ArrayList::new));
         hiddenChats = chatEntriesToRemove.stream().filter(e -> !e.isExitFromChat).map(e -> e.chatId).collect(Collectors.toCollection(ArrayList::new));
         if (!hiddenChats.isEmpty()) {
             notificationCenter.postNotificationName(NotificationCenter.dialogHiddenByAction);
