@@ -902,7 +902,7 @@ public class MessageObject {
         currentAccount = accountNum;
         localName = name;
         localUserName = userName;
-        messageText = formattedMessage;
+        messageText = Utils.fixMessage(formattedMessage);
         messageOwner = message;
         localChannel = isChannel;
         localSupergroup = supergroup;
@@ -977,7 +977,7 @@ public class MessageObject {
                 paint = Theme.chat_msgTextPaint;
             }
             int[] emojiOnly = allowsBigEmoji() ? new int[1] : null;
-            messageText = Emoji.replaceEmoji(messageText, paint.getFontMetricsInt(), AndroidUtilities.dp(20), false, emojiOnly);
+            messageText = Utils.fixMessage(Emoji.replaceEmoji(messageText, paint.getFontMetricsInt(), AndroidUtilities.dp(20), false, emojiOnly).toString());
             checkEmojiOnly(emojiOnly);
             emojiAnimatedSticker = null;
             if (emojiOnlyCount == 1 && !(message.media instanceof TLRPC.TL_messageMediaWebPage) && !(message.media instanceof TLRPC.TL_messageMediaInvoice) && message.entities.isEmpty()) {
