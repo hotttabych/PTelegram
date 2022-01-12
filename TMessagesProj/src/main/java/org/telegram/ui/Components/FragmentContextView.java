@@ -78,6 +78,7 @@ import org.telegram.ui.DialogsActivity;
 import org.telegram.ui.GroupCallActivity;
 import org.telegram.ui.LaunchActivity;
 import org.telegram.ui.LocationActivity;
+import org.telegram.ui.SavedChannelsActivity;
 
 import java.util.ArrayList;
 
@@ -554,7 +555,7 @@ public class FragmentContextView extends FrameLayout implements NotificationCent
             if (currentStyle == 2) {
                 AlertDialog.Builder builder = new AlertDialog.Builder(fragment.getParentActivity(), resourcesProvider);
                 builder.setTitle(LocaleController.getString("StopLiveLocationAlertToTitle", R.string.StopLiveLocationAlertToTitle));
-                if (fragment instanceof DialogsActivity) {
+                if (fragment instanceof DialogsActivity || fragment instanceof SavedChannelsActivity) {
                     builder.setMessage(LocaleController.getString("StopLiveLocationAlertAllText", R.string.StopLiveLocationAlertAllText));
                 } else {
                     ChatActivity activity = (ChatActivity) fragment;
@@ -573,7 +574,7 @@ public class FragmentContextView extends FrameLayout implements NotificationCent
                     }
                 }
                 builder.setPositiveButton(LocaleController.getString("Stop", R.string.Stop), (dialogInterface, i) -> {
-                    if (fragment instanceof DialogsActivity) {
+                    if (fragment instanceof DialogsActivity || fragment instanceof SavedChannelsActivity) {
                         for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
                             LocationController.getInstance(a).removeAllLocationSharings();
                         }
@@ -752,7 +753,7 @@ public class FragmentContextView extends FrameLayout implements NotificationCent
     private void checkVisibility() {
         boolean show = false;
         if (isLocation) {
-            if (fragment instanceof DialogsActivity) {
+            if (fragment instanceof DialogsActivity || fragment instanceof SavedChannelsActivity) {
                 show = LocationController.getLocationsCount() != 0;
             } else {
                 show = LocationController.getInstance(fragment.getCurrentAccount()).isSharingLocation(((ChatActivity) fragment).getDialogId());
@@ -1179,7 +1180,7 @@ public class FragmentContextView extends FrameLayout implements NotificationCent
             }
         }
         boolean show;
-        if (fragment instanceof DialogsActivity) {
+        if (fragment instanceof DialogsActivity || fragment instanceof SavedChannelsActivity) {
             show = LocationController.getLocationsCount() != 0;
         } else {
             show = LocationController.getInstance(fragment.getCurrentAccount()).isSharingLocation(((ChatActivity) fragment).getDialogId());
@@ -1243,7 +1244,7 @@ public class FragmentContextView extends FrameLayout implements NotificationCent
                 setVisibility(VISIBLE);
             }
 
-            if (fragment instanceof DialogsActivity) {
+            if (fragment instanceof DialogsActivity || fragment instanceof SavedChannelsActivity) {
                 String liveLocation = LocaleController.getString("LiveLocationContext", R.string.LiveLocationContext);
                 String param;
                 String str;

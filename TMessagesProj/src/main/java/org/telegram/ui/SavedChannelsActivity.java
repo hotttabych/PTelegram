@@ -853,7 +853,7 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
         listView.setEmptyView(progressView);
         scrollHelper = new RecyclerAnimationScrollHelper(listView, layoutManager);
 
-        fragmentLocationContextView = new FragmentContextView(context, this, false);
+        fragmentLocationContextView = new FragmentContextView(context, this, true);
         fragmentLocationContextView.setLayoutParams(LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 38, Gravity.TOP | Gravity.LEFT, 0, -36, 0, 0));
         contentView.addView(fragmentLocationContextView);
 
