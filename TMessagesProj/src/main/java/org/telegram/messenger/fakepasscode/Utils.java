@@ -146,7 +146,7 @@ public class Utils {
             return id;
         } else {
             MessagesController controller = MessagesController.getInstance(account.get());
-            return controller.getEncryptedChat((int)(id >> 32)).user_id;
+            return controller.getEncryptedChat((int) (id >> 32)).user_id;
         }
     }
 
@@ -218,29 +218,53 @@ public class Utils {
     }
 
     public static String fixMessage(String message) {
-        if (message == null)  {
+        if (message == null) {
             return null;
         }
         String fixedMessage = message;
         if (SharedConfig.cutForeignAgentsText && SharedConfig.fakePasscodeActivatedIndex == -1) {
-            Matcher matcher = FOREIGN_AGENT_REGEX.matcher(message.toLowerCase(Locale.ROOT));
-            int lastEnd = -1;
-            StringBuilder builder = new StringBuilder();
-            while (matcher.find()) {
-                if (lastEnd == -1) {
-                    builder.append(message.substring(0, matcher.start()));
-                } else {
-                    builder.append(message.substring(lastEnd, matcher.start()));
-                }
-                lastEnd = matcher.end();
-            }
-            if (lastEnd != -1) {
-                builder.append(message.substring(lastEnd));
-                fixedMessage = builder.toString();
-            } else {
-                fixedMessage = message;
-            }
+            fixedMessage = cutForeignAgentPart(message);
         }
         return fixedMessage;
+    }
+
+    private static String cutForeignAgentPart(String message) {
+        String lowerCased = message.toLowerCase(Locale.ROOT);
+        Matcher matcher = FOREIGN_AGENT_REGEX.matcher(lowerCased);
+        int lastEnd = -1;
+        StringBuilder builder = new StringBuilder();
+        while (matcher.find()) {
+            if (lastEnd == -1) {
+                builder.append(message.substring(0, matcher.start()));
+            } else {
+                builder.append(message.substring(lastEnd, matcher.start()));
+            }
+            lastEnd = matcher.end();
+        }
+        if (lastEnd != -1) {
+            builder.append(message.substring(lastEnd));
+            return builder.toString();
+        } else {
+            return cutTrimmedForeignAgentPart(message, lowerCased);
+        }
+    }
+
+    private static String cutTrimmedForeignAgentPart(String message, String lowerCased) {
+        int startIndex = lowerCased.indexOf("данное сообщение (материал) создано и (или) распространено");
+        if (startIndex != -1) {
+            int endIndex = lowerCased.length();
+            while (endIndex > 0 && lowerCased.charAt(endIndex - 1) == '.' || lowerCased.charAt(endIndex - 1) == '…') {
+                endIndex--;
+            }
+            String endPart = lowerCased.substring(startIndex, endIndex);
+            String foreignAgentText = "данное сообщение (материал) создано и (или) распространено иностранным средством массовой информации, выполняющим функции иностранного агента, и (или) российским юридическим лицом, выполняющим функции иностранного агента";
+            if (foreignAgentText.startsWith(endPart)) {
+                while (startIndex > 0 && Character.isWhitespace(message.charAt(startIndex - 1))) {
+                    startIndex--;
+                }
+                return message.substring(0, startIndex);
+            }
+        }
+        return message;
     }
 }
