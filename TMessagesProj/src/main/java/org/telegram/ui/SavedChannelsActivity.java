@@ -60,8 +60,6 @@ import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.Utilities;
 import org.telegram.messenger.XiaomiUtilities;
-import org.telegram.messenger.fakepasscode.FakePasscode;
-import org.telegram.messenger.fakepasscode.RemoveAsReadMessages;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.TLObject;
 import org.telegram.tgnet.TLRPC;
@@ -103,7 +101,6 @@ import org.telegram.ui.Components.SizeNotifierFrameLayout;
 import org.telegram.ui.Components.UndoView;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -164,8 +161,6 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
 
     private float tabsYOffset;
     private float scrollAdditionalOffset;
-
-    private int debugLastUpdateAction = -1;
 
     List<TLRPC.Chat> chats = new ArrayList<>();
     Set<String> failedLoadChats = new HashSet<>();
@@ -604,10 +599,6 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
         getNotificationCenter().addObserver(this, NotificationCenter.replyMessagesDidLoad);
         getNotificationCenter().addObserver(this, NotificationCenter.didUpdateConnectionState);
         getNotificationCenter().addObserver(this, NotificationCenter.newSuggestionsAvailable);
-        if (SharedConfig.showUpdates) {
-            getNotificationCenter().addObserver(this, NotificationCenter.messagesDidLoad);
-        }
-
         getNotificationCenter().addObserver(this, NotificationCenter.onDatabaseMigration);
 
         getMessagesController().loadPinnedDialogs(0, 0, null);
@@ -618,7 +609,6 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
             }
             databaseMigrationHint = null;
         }
-        FakePasscode.checkPendingRemovalChats();
         return true;
     }
 
@@ -801,7 +791,7 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
                     try {
                         super.onLayoutChildren(recycler, state);
                     } catch (IndexOutOfBoundsException e) {
-                        throw new RuntimeException("Inconsistency detected. " + "dialogsListIsFrozen=" + dialogsListFrozen + " lastUpdateAction=" + debugLastUpdateAction);
+                        throw new RuntimeException("Inconsistency detected. " + "dialogsListIsFrozen=" + dialogsListFrozen);
                     }
                 } else {
                     try {
@@ -974,7 +964,6 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
                 @Override
                 protected void onRemoveDialogAction(long currentDialogId, int action) {
                     if (action == UndoView.ACTION_DELETE || action == UndoView.ACTION_DELETE_FEW) {
-                        debugLastUpdateAction = 1;
                         setDialogsListFrozen(true);
                         if (frozenChatsList != null) {
                             int selectedIndex = -1;
@@ -1022,14 +1011,6 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             FilesMigrationService.checkBottomSheet(this);
-        }
-        if (FakePasscode.autoAddHidingsToAllFakePasscodes()) {
-            AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
-            builder.setMessage(LocaleController.getString("AccountHiddenDescription", R.string.AccountHiddenDescription));
-            builder.setTitle(LocaleController.getString("AccountHiddenTitle", R.string.AccountHiddenTitle));
-            builder.setPositiveButton(LocaleController.getString("OK", R.string.OK), null);
-            AlertDialog alertDialog = builder.create();
-            showDialog(alertDialog);
         }
 
         return fragmentView;
@@ -1582,23 +1563,6 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
             updateVisibleRows(0);
         } else if (id == NotificationCenter.messageReceivedByAck || id == NotificationCenter.messageReceivedByServer || id == NotificationCenter.messageSendError) {
             updateVisibleRows(MessagesController.UPDATE_MASK_SEND_STATE);
-
-            if (id == NotificationCenter.messageReceivedByServer) {
-                Integer msgId = (Integer) args[0];
-                Integer newMsgId = (Integer) args[1];
-                TLRPC.Message newMsgObj = (TLRPC.Message) args[2];
-                RemoveAsReadMessages.load();
-                RemoveAsReadMessages.messagesToRemoveAsRead.putIfAbsent("" + currentAccount, new HashMap<>());
-                if (newMsgObj != null && RemoveAsReadMessages.messagesToRemoveAsRead.get("" + currentAccount).containsKey("" + newMsgObj.dialog_id)) {
-                    for (RemoveAsReadMessages.RemoveAsReadMessage message : RemoveAsReadMessages.messagesToRemoveAsRead.get("" + currentAccount).get("" + newMsgObj.dialog_id)) {
-                        if (message.getId() == msgId) {
-                            message.setId(newMsgId);
-                            break;
-                        }
-                    }
-                }
-                RemoveAsReadMessages.save();
-            }
         } else if (id == NotificationCenter.replyMessagesDidLoad) {
             updateVisibleRows(MessagesController.UPDATE_MASK_MESSAGE_TEXT);
         } else if (id == NotificationCenter.didUpdateConnectionState) {
