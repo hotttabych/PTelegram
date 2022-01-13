@@ -39,6 +39,7 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.core.graphics.ColorUtils;
+import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.LinearSmoothScrollerCustom;
 import androidx.recyclerview.widget.RecyclerView;
@@ -102,6 +103,7 @@ import org.telegram.ui.Components.SizeNotifierFrameLayout;
 import org.telegram.ui.Components.UndoView;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -114,6 +116,7 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
     private DialogsRecyclerView listView;
     private LinearLayoutManager layoutManager;
     private SavedChannelsAdapter dialogsAdapter;
+    private ItemTouchHelper itemTouchhelper;
     private RecyclerAnimationScrollHelper scrollHelper;
     private FlickerLoadingView progressView;
     private int lastItemsCount;
@@ -124,11 +127,15 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
 
     private View blurredView;
 
+    private SavedChannelCell movingView;
+    private boolean allowMoving;
+
     private final Paint actionBarDefaultPaint = new Paint();
 
     private NumberTextView selectedDialogsCountTextView;
     private final ArrayList<View> actionModeViews = new ArrayList<>();
     private ActionBarMenuItem deleteItem;
+    private ActionBarMenuItem pinItem;
 
     private float additionalFloatingTranslation;
     private float additionalFloatingTranslation2;
@@ -152,9 +159,11 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
     private SavedChannelsActivityDelegate delegate;
 
     private final ArrayList<Long> selectedDialogs = new ArrayList<>();
+    private int canPinCount;
 
     private int topPadding;
 
+    private final static int pin = 100;
     private final static int delete = 102;
 
     private float progressToActionMode;
@@ -380,6 +389,12 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
 
         @Override
         public boolean onInterceptTouchEvent(MotionEvent ev) {
+            int action = ev.getActionMasked();
+            if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_CANCEL) {
+                if (actionBar.isActionModeShowed()) {
+                    allowMoving = true;
+                }
+            }
             return onTouchEvent(ev);
         }
 
@@ -507,7 +522,7 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
         @Override
         protected void onMeasure(int widthSpec, int heightSpec) {
             int pos = layoutManager.findFirstVisibleItemPosition();
-            if (pos != RecyclerView.NO_POSITION && !dialogsListFrozen) {
+            if (pos != RecyclerView.NO_POSITION && !dialogsListFrozen && itemTouchhelper.isIdle()) {
                 RecyclerView.ViewHolder holder = listView.findViewHolderForAdapterPosition(pos);
                 if (holder != null) {
                     int top = holder.itemView.getTop();
@@ -576,6 +591,88 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
 
     public interface SavedChannelsActivityDelegate {
         void didSelectDialogs(SavedChannelsActivity fragment, ArrayList<Long> dids, CharSequence message, boolean param);
+    }
+
+    private class SwipeController extends ItemTouchHelper.Callback {
+        @Override
+        public int getMovementFlags(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder) {
+            if (waitingForChatsAnimationEnd() || parentLayout != null && parentLayout.isInPreviewMode()) {
+                return 0;
+            }
+            if (viewHolder.itemView instanceof SavedChannelCell) {
+                SavedChannelCell savedChannelCell = (SavedChannelCell) viewHolder.itemView;
+                String userName = savedChannelCell.getUserName();
+                if (actionBar.isActionModeShowed(null)) {
+                    if (!allowMoving || userName == null || !isPinned(userName)) {
+                        return 0;
+                    }
+                    movingView = (SavedChannelCell) viewHolder.itemView;
+                    movingView.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundWhite));
+                    return makeMovementFlags(ItemTouchHelper.UP | ItemTouchHelper.DOWN, 0);
+                }
+            }
+            return 0;
+        }
+
+        @Override
+        public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder source, RecyclerView.ViewHolder target) {
+            if (!(target.itemView instanceof SavedChannelCell)) {
+                return false;
+            }
+            SavedChannelCell savedChannelCell = (SavedChannelCell) target.itemView;
+            String userName = savedChannelCell.getUserName();
+            if (userName == null || !isPinned(userName)) {
+                return false;
+            }
+            int fromIndex = source.getAdapterPosition();
+            int toIndex = target.getAdapterPosition();
+            dialogsAdapter.notifyItemMoved(fromIndex, toIndex);
+            updateDialogIndices();
+            return true;
+        }
+
+        @Override
+        public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) { }
+
+        @Override
+        public void onSelectedChanged(RecyclerView.ViewHolder viewHolder, int actionState) {
+            if (viewHolder != null) {
+                listView.hideSelector(false);
+            }
+            if (viewHolder != null && viewHolder.itemView instanceof SavedChannelCell) {
+                ((SavedChannelCell) viewHolder.itemView).swipeCanceled = false;
+            }
+            super.onSelectedChanged(viewHolder, actionState);
+        }
+
+        @Override
+        public long getAnimationDuration(RecyclerView recyclerView, int animationType, float animateDx, float animateDy) {
+            if (animationType == ItemTouchHelper.ANIMATION_TYPE_SWIPE_CANCEL) {
+                return 200;
+            } else if (animationType == ItemTouchHelper.ANIMATION_TYPE_DRAG) {
+                if (movingView != null) {
+                    View view = movingView;
+                    AndroidUtilities.runOnUIThread(() -> view.setBackgroundDrawable(null), dialogsItemAnimator.getMoveDuration());
+                    movingView = null;
+                }
+            }
+            return super.getAnimationDuration(recyclerView, animationType, animateDx, animateDy);
+        }
+
+        @Override
+        public float getSwipeThreshold(RecyclerView.ViewHolder viewHolder) {
+            return 0.45f;
+        }
+
+        @Override
+        public float getSwipeEscapeVelocity(float defaultValue) {
+            return 3500;
+        }
+
+        @Override
+        public float getSwipeVelocityThreshold(float defaultValue) {
+            return Float.MAX_VALUE;
+        }
     }
 
     public SavedChannelsActivity(Bundle args) {
@@ -827,7 +924,11 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
                 movePreviewFragment(dy);
             }
         });
+        SwipeController swipeController = new SwipeController();
         recyclerItemsEnterAnimator = new RecyclerItemsEnterAnimator(listView, false);
+
+        itemTouchhelper = new ItemTouchHelper(swipeController);
+        itemTouchhelper.attachToRecyclerView(listView);
 
         listView.setOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
@@ -1051,8 +1152,10 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
         actionMode.addView(selectedDialogsCountTextView, LayoutHelper.createLinear(0, LayoutHelper.MATCH_PARENT, 1.0f, 72, 0, 0, 0));
         selectedDialogsCountTextView.setOnTouchListener((v, event) -> true);
 
+        pinItem = actionMode.addItemWithWidth(pin, R.drawable.msg_pin, AndroidUtilities.dp(54));
         deleteItem = actionMode.addItemWithWidth(delete, R.drawable.msg_delete, AndroidUtilities.dp(54), LocaleController.getString("Delete", R.string.Delete));
 
+        actionModeViews.add(pinItem);
         actionModeViews.add(deleteItem);
 
         actionBar.setActionBarMenuOnItemClick(new ActionBar.ActionBarMenuOnItemClick() {
@@ -1075,6 +1178,29 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
                     SavedChannelsActivity SavedChannelsActivity = new SavedChannelsActivity(arguments);
                     SavedChannelsActivity.setDelegate(oldDelegate);
                     launchActivity.presentFragment(SavedChannelsActivity, false, true);
+                } else if (id == pin) {
+                    List<String> selectedUsernames = chats.stream().filter(c -> selectedDialogs.contains(-c.id))
+                            .map(c -> c.username).collect(Collectors.toList());
+                    UserConfig userConfig = getUserConfig();
+                    for (String userName : selectedUsernames) {
+                        if (canPinCount != 0) {
+                            if (isPinned(userName)) {
+                                continue;
+                            }
+                            pinDialog(userName, true, canPinCount == 1);
+
+                        } else {
+                            if (!isPinned(userName)) {
+                                continue;
+                            }
+                            pinDialog(userName, false, selectedUsernames.size() == 1);
+                        }
+                    }
+                    userConfig.saveConfig(true);
+                    getNotificationCenter().postNotificationName(NotificationCenter.dialogsNeedReload);
+                    if (actionBar.isActionModeShowed()) {
+                        hideActionMode();
+                    }
                 } else if (id == delete) {
                     List<String> selectedUsernames = chats.stream().filter(c -> selectedDialogs.contains(-c.id))
                             .map(c -> c.username).collect(Collectors.toList());
@@ -1299,6 +1425,9 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
         if (chat == null) {
             return false;
         }
+        if (actionBar.isActionModeShowed() && isPinned(chat.username)) {
+            return false;
+        }
 
         showOrUpdateActionMode(-chat.id, view);
         return true;
@@ -1333,6 +1462,10 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
             presentFragmentAsPreview(new ChatActivity(args));
         }
         return true;
+    }
+
+    private boolean waitingForChatsAnimationEnd() {
+        return dialogsItemAnimator.isRunning() || dialogRemoveFinished != 0 || dialogInsertFinished != 0 || dialogChangeFinished != 0;
     }
 
     private void onDialogAnimationFinished() {
@@ -1422,8 +1555,81 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
         actionBarColorAnimator.setInterpolator(CubicBezierInterpolator.DEFAULT);
         actionBarColorAnimator.setDuration(200);
         actionBarColorAnimator.start();
+        allowMoving = false;
         updateCounters(true);
+        dialogsAdapter.onReorderStateChanged(false);
         updateVisibleRows(MessagesController.UPDATE_MASK_REORDER | MessagesController.UPDATE_MASK_CHECK | MessagesController.UPDATE_MASK_CHAT);
+    }
+
+    private boolean isPinned(String userName) {
+        return  UserConfig.getInstance(currentAccount).pinnedSavedChannels.contains(userName);
+    }
+
+    private void pinDialog(String userName, boolean pin, boolean animated) {
+        if (pin) {
+            getUserConfig().pinnedSavedChannels.add(userName);
+        } else {
+            getUserConfig().pinnedSavedChannels.remove(userName);
+        }
+        getUserConfig().saveConfig(true);
+        int selectedChatIndex = -1;
+        int currentChatIndex = -1;
+
+        int scrollToPosition = 0;
+        int currentPosition = layoutManager.findFirstVisibleItemPosition();
+
+        boolean needScroll = false;
+        if (currentPosition > scrollToPosition || !animated) {
+            needScroll = true;
+        } else {
+            setDialogsListFrozen(true);
+            if (frozenChatsList != null) {
+                for (int i = 0; i < frozenChatsList.size(); i++) {
+                    if (frozenChatsList.get(i).username != null && frozenChatsList.get(i).username.equals(userName)) {
+                        selectedChatIndex = i;
+                        break;
+                    }
+                }
+            }
+        }
+
+
+
+        if (needScroll) {
+            scrollToTop();
+        } else {
+            List<TLRPC.Chat> currentChats = getChatsArray(currentAccount);
+            for (int i = 0; i < currentChats.size(); i++) {
+                if (currentChats.get(i).username != null && currentChats.get(i).username.equals(userName)) {
+                    currentChatIndex = i;
+                    break;
+                }
+            }
+        }
+
+        if (!needScroll) {
+            boolean animate = false;
+            if (selectedChatIndex >= 0) {
+                if (frozenChatsList != null && currentChatIndex >= 0 && selectedChatIndex != currentChatIndex) {
+                    frozenChatsList.add(currentChatIndex, frozenChatsList.remove(selectedChatIndex));
+                    dialogsItemAnimator.prepareForRemove();
+                    dialogsAdapter.notifyItemRemoved(selectedChatIndex);
+                    dialogsAdapter.notifyItemInserted(currentChatIndex);
+                    dialogRemoveFinished = 2;
+                    dialogInsertFinished = 2;
+
+                    layoutManager.scrollToPositionWithOffset(0, (int) actionBar.getTranslationY());
+
+                    animate = true;
+                } else if (currentChatIndex >= 0 && selectedChatIndex == currentChatIndex) {
+                    animate = true;
+                    AndroidUtilities.runOnUIThread(() -> setDialogsListFrozen(false), 200);
+                }
+            }
+            if (!animate) {
+                setDialogsListFrozen(false);
+            }
+        }
     }
 
     private void scrollToTop() {
@@ -1438,8 +1644,28 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
     }
 
     private void updateCounters(boolean hide) {
+        int canUnpinCount = 0;
+        canPinCount = 0;
         if (hide) {
             return;
+        }
+        List<String> selectedUsernames = chats.stream().filter(c -> selectedDialogs.contains(-c.id))
+                .map(c -> c.username).collect(Collectors.toList());
+        for (String userName : selectedUsernames) {
+            boolean pinned = isPinned(userName);
+            if (pinned) {
+                canUnpinCount++;
+            } else {
+                canPinCount++;
+            }
+        }
+        pinItem.setVisibility(View.VISIBLE);
+        if (canPinCount != 0) {
+            pinItem.setIcon(R.drawable.msg_pin);
+            pinItem.setContentDescription(LocaleController.getString("PinToTop", R.string.PinToTop));
+        } else {
+            pinItem.setIcon(R.drawable.msg_unpin);
+            pinItem.setContentDescription(LocaleController.getString("UnpinFromTop", R.string.UnpinFromTop));
         }
         deleteItem.setVisibility(View.VISIBLE);
     }
@@ -1472,6 +1698,13 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
             animatorSet.playTogether(animators);
             animatorSet.setDuration(200);
             animatorSet.start();
+
+            if (!getUserConfig().pinnedSavedChannels.isEmpty()) {
+                if (dialogsAdapter != null) {
+                    dialogsAdapter.onReorderStateChanged(true);
+                }
+                updateVisibleRows(MessagesController.UPDATE_MASK_REORDER);
+            }
 
             if (actionBarColorAnimator != null) {
                 actionBarColorAnimator.cancel();
@@ -1701,6 +1934,7 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
     public synchronized List<TLRPC.Chat> getChatsArray(int currentAccount) {
         Set<Long> ids = chats.stream().map(c -> c.id).collect(Collectors.toSet());
         Set<String> names = new HashSet<>(UserConfig.getInstance(currentAccount).savedChannels);
+        List<String> pinnedChannels = UserConfig.getInstance(currentAccount).pinnedSavedChannels;
         Set<String> existedNames = new HashSet<>();
         MessagesController controller = MessagesController.getInstance(currentAccount);
         chats = chats.stream().filter(c -> names.contains(c.username)).collect(Collectors.toList());
@@ -1714,6 +1948,13 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
                 existedNames.add(name);
             }
         }
+        Collections.sort(chats, (a, b) -> {
+            int aIndex = pinnedChannels.indexOf(a.username);
+            aIndex = aIndex != -1 ? aIndex : pinnedChannels.size();
+            int bIndex = pinnedChannels.indexOf(b.username);
+            bIndex = bIndex != -1 ? bIndex : pinnedChannels.size();
+            return aIndex - bIndex;
+        });
         names.removeAll(existedNames);
         names.removeAll(failedLoadChats);
         if (!names.isEmpty() && !chatLoading) {
@@ -1762,6 +2003,29 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
                     }
                     chatCell.setDialogIndex(index);
                 }
+            }
+        }
+    }
+
+    private void updateDialogIndices() {
+        List<TLRPC.Chat> chats = getChatsArray(currentAccount);
+        int count = listView.getChildCount();
+        for (int a = 0; a < count; a++) {
+            View child = listView.getChildAt(a);
+            if (child instanceof SavedChannelCell) {
+                SavedChannelCell savedChannelCell = (SavedChannelCell) child;
+                String userName = savedChannelCell.getUserName();
+                int index = -1;
+                for (int i = 0; i < chats.size(); i++) {
+                    if (chats.get(i).username != null && chats.get(i).username.equals(userName)) {
+                        index = i;
+                        break;
+                    }
+                }
+                if (index < 0) {
+                    continue;
+                }
+                savedChannelCell.setDialogIndex(index);
             }
         }
     }

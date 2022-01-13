@@ -218,7 +218,9 @@ public class SavedChannelCell extends BaseCell implements NotificationCenter.Not
     private float reorderIconProgress;
     private boolean drawReorder;
     private boolean drawPinBackground;
+    private boolean drawPin;
     private int pinTop;
+    private int pinLeft;
 
     private boolean drawCount;
     private int countTop;
@@ -350,6 +352,10 @@ public class SavedChannelCell extends BaseCell implements NotificationCenter.Not
         return currentDialogId;
     }
 
+    public String getUserName() {
+        return chat != null ? chat.username : null;
+    }
+
     public int getDialogIndex() {
         return index;
     }
@@ -364,7 +370,7 @@ public class SavedChannelCell extends BaseCell implements NotificationCenter.Not
         isSliding = false;
         drawRevealBackground = false;
         currentRevealProgress = 0.0f;
-        reorderIconProgress = 0.0f;
+        reorderIconProgress = drawPin && drawReorder ? 1.0f : 0.0f;
         avatarImage.onDetachedFromWindow();
         thumbImage.onDetachedFromWindow();
         if (translationDrawable != null) {
@@ -1183,6 +1189,13 @@ public class SavedChannelCell extends BaseCell implements NotificationCenter.Not
             avatarImage.setImageCoords(avatarLeft, avatarTop, AndroidUtilities.dp(54), AndroidUtilities.dp(54));
             thumbImage.setImageCoords(thumbLeft, avatarTop + AndroidUtilities.dp(30), AndroidUtilities.dp(thumbSize), AndroidUtilities.dp(thumbSize));
         }
+        if (drawPin) {
+            if (!LocaleController.isRTL) {
+                pinLeft = getMeasuredWidth() - Theme.dialogs_pinnedDrawable.getIntrinsicWidth() - AndroidUtilities.dp(14);
+            } else {
+                pinLeft = AndroidUtilities.dp(14);
+            }
+        }
         if (drawError) {
             int w = AndroidUtilities.dp(23 + 8);
             messageWidth -= w;
@@ -1206,6 +1219,14 @@ public class SavedChannelCell extends BaseCell implements NotificationCenter.Not
             }
             drawCount = true;
         } else {
+            if (drawPin) {
+                int w = Theme.dialogs_pinnedDrawable.getIntrinsicWidth() + AndroidUtilities.dp(8);
+                messageWidth -= w;
+                if (LocaleController.isRTL) {
+                    messageLeft += w;
+                    messageNameLeft += w;
+                }
+            }
             drawCount = false;
         }
 
@@ -1488,7 +1509,8 @@ public class SavedChannelCell extends BaseCell implements NotificationCenter.Not
             if (currentDialogId != -chat.id ||
                     newMessageObject != null && newMessageObject.messageOwner.edit_date != currentEditDate ||
                     message != newMessageObject ||
-                    newDraftMessage != draftMessage) {
+                    newDraftMessage != draftMessage ||
+                    drawPin != UserConfig.getInstance(currentAccount).pinnedSavedChannels.contains(chat.username)) {
                 boolean dialogChanged = currentDialogId != -chat.id;
 
                 currentDialogId = -chat.id;
@@ -1505,7 +1527,7 @@ public class SavedChannelCell extends BaseCell implements NotificationCenter.Not
                 fullSeparator2 = false;
                 update(0, !dialogChanged);
                 if (dialogChanged) {
-                    reorderIconProgress = 0.0f;
+                    reorderIconProgress = drawPin && drawReorder ? 1.0f : 0.0f;
                 }
                 checkOnline();
                 checkGroupCall();
@@ -1559,6 +1581,7 @@ public class SavedChannelCell extends BaseCell implements NotificationCenter.Not
                 MessagesController.getInstance(currentAccount).loadMessages(currentDialogId, 0, false, 1, 0, 0, true, 0, classGuid, 2, 0, 0, 0, 0, 1);
             }
         }
+        drawPin = chat != null && UserConfig.getInstance(currentAccount).pinnedSavedChannels.contains(chat.username);
 
         if (mask != 0) {
             boolean continueUpdate = false;
@@ -1906,7 +1929,7 @@ public class SavedChannelCell extends BaseCell implements NotificationCenter.Not
         if (isSelected) {
             canvas.drawRect(0, 0, getMeasuredWidth(), getMeasuredHeight(), Theme.dialogs_tabletSeletedPaint);
         }
-        if (drawPinBackground) {
+        if (drawPin || drawPinBackground) {
             Theme.dialogs_pinnedPaint.setColor(Theme.getColor(Theme.key_chats_pinnedOverlay, resourcesProvider));
             canvas.drawRect(0, 0, getMeasuredWidth(), getMeasuredHeight(), Theme.dialogs_pinnedPaint);
         }
@@ -1918,7 +1941,7 @@ public class SavedChannelCell extends BaseCell implements NotificationCenter.Not
             rect.set(getMeasuredWidth() - AndroidUtilities.dp(64), 0, getMeasuredWidth(), getMeasuredHeight());
             canvas.drawRoundRect(rect, AndroidUtilities.dp(8) * cornerProgress, AndroidUtilities.dp(8) * cornerProgress, Theme.dialogs_pinnedPaint);
 
-            if (drawPinBackground) {
+            if (drawPin || drawPinBackground) {
                 Theme.dialogs_pinnedPaint.setColor(Theme.getColor(Theme.key_chats_pinnedOverlay, resourcesProvider));
                 canvas.drawRoundRect(rect, AndroidUtilities.dp(8) * cornerProgress, AndroidUtilities.dp(8) * cornerProgress, Theme.dialogs_pinnedPaint);
             }
@@ -2092,7 +2115,7 @@ public class SavedChannelCell extends BaseCell implements NotificationCenter.Not
 
         if (drawReorder || reorderIconProgress != 0) {
             Theme.dialogs_reorderDrawable.setAlpha((int) (reorderIconProgress * 255));
-            setDrawableBounds(Theme.dialogs_reorderDrawable, 0, pinTop);
+            setDrawableBounds(Theme.dialogs_reorderDrawable, pinLeft, pinTop);
             Theme.dialogs_reorderDrawable.draw(canvas);
         }
         float countChangeProgress = 1f;
@@ -2112,6 +2135,14 @@ public class SavedChannelCell extends BaseCell implements NotificationCenter.Not
             rect.set(x, countTop, x + countWidth + AndroidUtilities.dp(11), countTop + AndroidUtilities.dp(23));
 
             if (progressFinal != 1f) {
+                if (drawPin) {
+                    Theme.dialogs_pinnedDrawable.setAlpha((int) ((1.0f - reorderIconProgress) * 255));
+                    setDrawableBounds(Theme.dialogs_pinnedDrawable, pinLeft, pinTop);
+                    canvas.save();
+                    canvas.scale(1f - progressFinal, 1f - progressFinal, Theme.dialogs_pinnedDrawable.getBounds().centerX(), Theme.dialogs_pinnedDrawable.getBounds().centerY());
+                    Theme.dialogs_pinnedDrawable.draw(canvas);
+                    canvas.restore();
+                }
                 canvas.save();
                 canvas.scale(progressFinal, progressFinal, rect.centerX(), rect.centerY());
             }
@@ -2121,6 +2152,10 @@ public class SavedChannelCell extends BaseCell implements NotificationCenter.Not
             if (progressFinal != 1f) {
                 canvas.restore();
             }
+        } else if (drawPin) {
+            Theme.dialogs_pinnedDrawable.setAlpha((int) ((1.0f - reorderIconProgress) * 255));
+            setDrawableBounds(Theme.dialogs_pinnedDrawable, pinLeft, pinTop);
+            Theme.dialogs_pinnedDrawable.draw(canvas);
         }
 
         avatarImage.draw(canvas);
@@ -2369,8 +2404,10 @@ public class SavedChannelCell extends BaseCell implements NotificationCenter.Not
     }
 
     public void onReorderStateChanged(boolean reordering, boolean animated) {
-        if (reordering || drawReorder == reordering) {
-            drawReorder = false;
+        if (!drawPin && reordering || drawReorder == reordering) {
+            if (!drawPin) {
+                drawReorder = false;
+            }
             return;
         }
         drawReorder = reordering;

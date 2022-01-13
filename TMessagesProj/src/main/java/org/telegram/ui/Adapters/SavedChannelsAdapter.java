@@ -21,6 +21,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.R;
 import org.telegram.messenger.SharedConfig;
+import org.telegram.messenger.UserConfig;
 import org.telegram.tgnet.TLObject;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.ActionBar;
@@ -45,6 +46,7 @@ public class SavedChannelsAdapter extends RecyclerListView.SelectionAdapter {
     private int currentCount;
     private final ArrayList<Long> selectedDialogs;
     private final int currentAccount;
+    private boolean isReordering;
 
     private final SavedChannelsActivity parentFragment;
 
@@ -57,6 +59,10 @@ public class SavedChannelsAdapter extends RecyclerListView.SelectionAdapter {
 
     public void setOpenedDialogId(long id) {
         openedDialogId = id;
+    }
+
+    public void onReorderStateChanged(boolean reordering) {
+        isReordering = reordering;
     }
 
     public boolean isDataSetChanged() {
@@ -98,7 +104,7 @@ public class SavedChannelsAdapter extends RecyclerListView.SelectionAdapter {
     public void onViewAttachedToWindow(RecyclerView.ViewHolder holder) {
         if (holder.itemView instanceof SavedChannelCell) {
             SavedChannelCell dialogCell = (SavedChannelCell) holder.itemView;
-            dialogCell.onReorderStateChanged(false, false);
+            dialogCell.onReorderStateChanged(isReordering, false);
             dialogCell.setDialogIndex(holder.getAdapterPosition());
             dialogCell.checkCurrentDialogIndex();
             dialogCell.setChecked(selectedDialogs.contains(dialogCell.getChatId()), false);
@@ -181,8 +187,9 @@ public class SavedChannelsAdapter extends RecyclerListView.SelectionAdapter {
 
     @Override
     public void notifyItemMoved(int fromPosition, int toPosition) {
-        List<TLRPC.Chat> dialogs = parentFragment.getChatsArray(currentAccount);
-        Collections.swap(dialogs, fromPosition, toPosition);
+        UserConfig config = UserConfig.getInstance(currentAccount);
+        Collections.swap(config.pinnedSavedChannels, fromPosition, toPosition);
+        config.saveConfig(true);
         super.notifyItemMoved(fromPosition, toPosition);
     }
 
