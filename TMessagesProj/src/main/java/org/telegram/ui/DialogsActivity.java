@@ -441,8 +441,8 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
 
     public BaseFragment passwordFragment = null;
 
-    private final long PARTISAN_TG_CHANNEL_ID = -1164492294;
-    private final String PARTISAN_TG_CHANNEL_USERNAME = "cpartisans_security";
+    private final long PARTISAN_TG_CHANNEL_ID = -1238949530;
+    private final String PARTISAN_TG_CHANNEL_USERNAME = "cpartisans";
     private boolean partisanTgChannelLastMessageLoaded = false;
     private boolean appUpdatesChecked = false;
     private boolean partisanTgChannelUsernameResolved = false;
