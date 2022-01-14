@@ -1166,6 +1166,7 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
                     List<String> selectedUsernames = chatsAdapter.getSelectedUserNames();
                     UserConfig userConfig = getUserConfig();
                     userConfig.savedChannels.removeAll(selectedUsernames);
+                    userConfig.pinnedSavedChannels.removeAll(selectedUsernames);
                     userConfig.saveConfig(true);
                     chatsAdapter.removeItems(selectedUsernames);
                     getNotificationCenter().postNotificationName(NotificationCenter.dialogsNeedReload);
