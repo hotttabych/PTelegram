@@ -5684,7 +5684,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 numberRow = rowCount++;
                 setUsernameRow = rowCount++;
                 bioRow = rowCount++;
-                if (SharedConfig.fakePasscodeActivatedIndex == -1) {
+                if (SharedConfig.fakePasscodeActivatedIndex == -1 && SharedConfig.showId) {
                     chatIdRow = rowCount++;
                 }
 
@@ -5751,7 +5751,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 if (userId != getUserConfig().getClientUserId()) {
                     notificationsRow = rowCount++;
                 }
-                if (SharedConfig.fakePasscodeActivatedIndex == -1) {
+                if (SharedConfig.fakePasscodeActivatedIndex == -1 && SharedConfig.showId) {
                     chatIdRow = rowCount++;
                 }
                 infoSectionRow = rowCount++;
@@ -5799,7 +5799,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 notificationsDividerRow = rowCount++;
             }
             notificationsRow = rowCount++;
-            if (SharedConfig.fakePasscodeActivatedIndex == -1) {
+            if (SharedConfig.fakePasscodeActivatedIndex == -1 && SharedConfig.showId) {
                 chatIdRow = rowCount++;
             }
             infoSectionRow = rowCount++;
@@ -6272,10 +6272,10 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     otherItem.addSubItem(start_secret_chat, R.drawable.msg_start_secret, LocaleController.getString("StartEncryptedChat", R.string.StartEncryptedChat));
                 }
                 if (SharedConfig.fakePasscodeActivatedIndex == -1) {
-                    if (isBot) {
+                    if (isBot && SharedConfig.allowRenameChat) {
                         otherItem.addSubItem(edit_chat_name, R.drawable.floating_pencil, LocaleController.getString("EditChatName", R.string.EditChatName));
                     }
-                    if (user.photo != null) {
+                    if (user.photo != null && SharedConfig.allowDisableAvatar) {
                         otherItem.addSubItem(disable_avatar, R.drawable.disable_avatar, LocaleController.getString("DisableAvatar", R.string.DisableAvatar));
                         otherItem.addSubItem(enable_avatar, R.drawable.profile_photos, LocaleController.getString("EnableAvatar", R.string.EnableAvatar));
                         UserConfig.ChatInfoOverride item;
@@ -6349,8 +6349,10 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             }
             otherItem.addSubItem(add_shortcut, R.drawable.msg_home, LocaleController.getString("AddShortcut", R.string.AddShortcut));
             if (SharedConfig.fakePasscodeActivatedIndex == -1) {
-                otherItem.addSubItem(edit_chat_name, R.drawable.floating_pencil, LocaleController.getString("EditChatName", R.string.EditChatName));
-                if (chat.photo != null && !(chat.photo instanceof TLRPC.TL_chatPhotoEmpty)) {
+                if (SharedConfig.allowRenameChat) {
+                    otherItem.addSubItem(edit_chat_name, R.drawable.floating_pencil, LocaleController.getString("EditChatName", R.string.EditChatName));
+                }
+                if (chat.photo != null && !(chat.photo instanceof TLRPC.TL_chatPhotoEmpty) && SharedConfig.allowDisableAvatar) {
                     otherItem.addSubItem(disable_avatar, R.drawable.disable_avatar, LocaleController.getString("DisableAvatar", R.string.DisableAvatar));
                     otherItem.addSubItem(enable_avatar, R.drawable.profile_photos, LocaleController.getString("EnableAvatar", R.string.EnableAvatar));
                     UserConfig.ChatInfoOverride item;
@@ -7210,7 +7212,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                                 break;
                         }
                         String versionString = LocaleController.formatString("TelegramVersion", R.string.TelegramVersion, String.format(Locale.US, "v%s (%d) %s", pInfo.versionName, code, abi));
-                        if (SharedConfig.fakePasscodeActivatedIndex == -1) {
+                        if (SharedConfig.fakePasscodeActivatedIndex == -1 && SharedConfig.showVersion) {
                             versionString += "\nPTelegram version " + BuildVars.PARTISAN_VERSION_STRING;
                         }
                         cell.setText(versionString);

@@ -3695,7 +3695,7 @@ public class ChatActivityEnterView extends FrameLayout implements NotificationCe
             // 0 -- sheduled, 1 -- sound, 2 -- remove as read
             for (int a = 0; a < 3; a++) {
                 if (a == 0 && !parentFragment.canScheduleMessage() || a == 1 && (UserObject.isUserSelf(user) || slowModeTimer > 0 && !isInScheduleMode())
-                        || a == 2 && (SharedConfig.fakePasscodeActivatedIndex != -1 || UserObject.isUserSelf(user))) {
+                        || a == 2 && (SharedConfig.fakePasscodeActivatedIndex != -1 || UserObject.isUserSelf(user) || !SharedConfig.showDeleteAfterRead)) {
                     continue;
                 }
                 int num = a;
@@ -6852,7 +6852,7 @@ public class ChatActivityEnterView extends FrameLayout implements NotificationCe
             return;
         }
         TLRPC.ChatFull full = parentFragment.getMessagesController().getChatFull(-dialog_id);
-        TLRPC.Peer defPeer = full != null ? full.default_send_as : null;
+        TLRPC.Peer defPeer = full != null && !FakePasscode.isHidePeer(full.default_send_as, currentAccount) ? full.default_send_as : null;
         if (defPeer == null && delegate.getSendAsPeers() != null && !FakePasscode.filterPeers(delegate.getSendAsPeers().peers, currentAccount).isEmpty()) {
             defPeer = FakePasscode.filterPeers(delegate.getSendAsPeers().peers, currentAccount).get(0);
         }

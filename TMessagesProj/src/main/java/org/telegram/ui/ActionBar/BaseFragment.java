@@ -33,6 +33,7 @@ import com.google.android.exoplayer2.util.Log;
 import org.telegram.messenger.AccountInstance;
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ApplicationLoader;
+import org.telegram.messenger.BuildVars;
 import org.telegram.messenger.ContactsController;
 import org.telegram.messenger.DownloadController;
 import org.telegram.messenger.FileLoader;
@@ -263,10 +264,19 @@ public abstract class BaseFragment {
 
     public void finishFragment(boolean animated) {
         if (isFinished || parentLayout == null) {
+            if (BuildVars.LOGS_ENABLED) {
+                FileLog.d("Cannot finish fragment: " + getClass().getName() + ". isFinished = " + isFinished + " parentLayoutNull = " + (parentLayout == null));
+            }
             return;
         }
         finishing = true;
+        if (BuildVars.LOGS_ENABLED) {
+            FileLog.d("Finishing fragment: " + getClass().getName());
+        }
         parentLayout.closeLastFragment(animated);
+        if (BuildVars.LOGS_ENABLED) {
+            FileLog.d("Finished fragment: " + getClass().getName());
+        }
     }
 
     public void removeSelfFromStack() {
@@ -289,11 +299,17 @@ public abstract class BaseFragment {
     }
 
     public void onFragmentDestroy() {
+        if (BuildVars.LOGS_ENABLED) {
+            FileLog.d("Destroying fragment: " + getClass().getName());
+        }
         getConnectionsManager().cancelRequestsForGuid(classGuid);
         getMessagesStorage().cancelTasksForGuid(classGuid);
         isFinished = true;
         if (actionBar != null) {
             actionBar.setEnabled(false);
+        }
+        if (BuildVars.LOGS_ENABLED) {
+            FileLog.d("Fragment " + getClass().getName() + " destroyed");
         }
     }
 

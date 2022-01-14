@@ -2834,12 +2834,14 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
             } else {
                 chat = null;
             }
-            if (SharedConfig.fakePasscodeActivatedIndex == -1 && (!ChatObject.isChannel(chat) || chat.megagroup)) {
+            if (SharedConfig.fakePasscodeActivatedIndex == -1 && (!ChatObject.isChannel(chat) || chat.megagroup)
+                    && SharedConfig.showDeleteMyMessages) {
                 headerItem.addSubItem(delete_messages, R.drawable.msg_delete, LocaleController.getString("DeleteMessages", R.string.DeleteMessages));
                 headerItem.addSubItem(delete_messages_substring, R.drawable.msg_delete,
                         LocaleController.getString("DeleteMessagesByPart", R.string.DeleteMessagesByPart));
             }
-            if (SharedConfig.fakePasscodeActivatedIndex == -1 && chat != null && chat.username != null && !getUserConfig().savedChannels.contains(chat.username)) {
+            if (SharedConfig.fakePasscodeActivatedIndex == -1 && chat != null && chat.username != null
+                    && !getUserConfig().savedChannels.contains(chat.username) && SharedConfig.showSavedChannels) {
                 headerItem.addSubItem(save, R.drawable.menu_saved, LocaleController.getString("Save", R.string.Save));
             }
         }
@@ -11262,7 +11264,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                     if (webPage.title != null) {
                         replyObjectTextView.setText(webPage.title);
                     } else if (webPage.description != null) {
-                        replyObjectTextView.setText(webPage.description);
+                        replyObjectTextView.setText(Utils.fixMessage(webPage.description));
                     } else if (webPage.author != null) {
                         replyObjectTextView.setText(webPage.author);
                     } else {
@@ -21273,7 +21275,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
             });
 
             ReactionsContainerLayout reactionsLayout = new ReactionsContainerLayout(contentView.getContext(), currentAccount, getResourceProvider());
-            if (isReactionsAvailable) {
+            if (isReactionsAvailable && (SharedConfig.allowReactions || SharedConfig.fakePasscodeActivatedIndex != -1)) {
                 int pad = 22;
                 int sPad = 24;
                 reactionsLayout.setPadding(AndroidUtilities.dp(4) + (LocaleController.isRTL ? 0 : sPad), AndroidUtilities.dp(4), AndroidUtilities.dp(4) + (LocaleController.isRTL ? sPad : 0), AndroidUtilities.dp(pad));
@@ -21525,6 +21527,9 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
 
     Runnable updateReactionRunnable;
     private void selectReaction(MessageObject primaryMessage, ReactionsContainerLayout reactionsLayout, float x, float y, TLRPC.TL_availableReaction reaction, boolean fromDoubleTap) {
+        if (!SharedConfig.allowReactions && SharedConfig.fakePasscodeActivatedIndex == -1) {
+            return;
+        }
         ReactionsEffectOverlay.removeCurrent(false);
         boolean added = primaryMessage.selectReaction(reaction.reaction, fromDoubleTap);
         int messageIdForCell = primaryMessage.getId();
