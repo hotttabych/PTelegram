@@ -162,7 +162,6 @@ public class SavedChannelCell extends BaseCell {
     private TLRPC.EncryptedChat encryptedChat;
     private CharSequence lastPrintString;
     private int printingStringType;
-    private TLRPC.DraftMessage draftMessage;
 
     private CheckBox2 checkBox;
 
@@ -595,13 +594,6 @@ public class SavedChannelCell extends BaseCell {
             }
         }
 
-        draftMessage = MediaDataController.getInstance(currentAccount).getDraft(currentDialogId, 0);
-        if (draftMessage != null && (TextUtils.isEmpty(draftMessage.message) && draftMessage.reply_to_msg_id == 0) ||
-                ChatObject.isChannel(chat) && !chat.megagroup && !chat.creator && (chat.admin_rights == null || !chat.admin_rights.post_messages) ||
-                chat != null && (chat.left || chat.kicked)) {
-            draftMessage = null;
-        }
-
         if (printingString != null) {
             lastPrintString = printingString;
             printingStringType = MessagesController.getInstance(currentAccount).getPrintingStringType(currentDialogId, 0);
@@ -627,30 +619,27 @@ public class SavedChannelCell extends BaseCell {
             checkMessage = false;
         } else {
             lastPrintString = null;
-            if (draftMessage != null) {
-                checkMessage = false;
-                messageNameString = LocaleController.getString("Draft", R.string.Draft);
-                if (TextUtils.isEmpty(draftMessage.message)) {
-                    if (useForceThreeLines || SharedConfig.useThreeLinesLayout) {
-                        messageString = "";
-                    } else {
-                        SpannableStringBuilder stringBuilder = SpannableStringBuilder.valueOf(messageNameString);
-                        stringBuilder.setSpan(new ForegroundColorSpanThemable(Theme.key_chats_draft, resourcesProvider), 0, messageNameString.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-                        messageString = stringBuilder;
+            if (clearingDialog) {
+                currentMessagePaint = Theme.dialogs_messagePrintingPaint[paintIndex];
+                messageString = LocaleController.getString("HistoryCleared", R.string.HistoryCleared);
+            } else if (message == null) {
+                if (encryptedChat != null) {
+                    currentMessagePaint = Theme.dialogs_messagePrintingPaint[paintIndex];
+                    if (encryptedChat instanceof TLRPC.TL_encryptedChatRequested) {
+                        messageString = LocaleController.getString("EncryptionProcessing", R.string.EncryptionProcessing);
+                    } else if (encryptedChat instanceof TLRPC.TL_encryptedChatWaiting) {
+                        messageString = LocaleController.formatString("AwaitingEncryption", R.string.AwaitingEncryption, UserObject.getFirstName(user));
+                    } else if (encryptedChat instanceof TLRPC.TL_encryptedChatDiscarded) {
+                        messageString = LocaleController.getString("EncryptionRejected", R.string.EncryptionRejected);
+                    } else if (encryptedChat instanceof TLRPC.TL_encryptedChat) {
+                        if (encryptedChat.admin_id == UserConfig.getInstance(currentAccount).getClientUserId()) {
+                            messageString = LocaleController.formatString("EncryptedChatStartedOutgoing", R.string.EncryptedChatStartedOutgoing, UserObject.getFirstName(user));
+                        } else {
+                            messageString = LocaleController.getString("EncryptedChatStartedIncoming", R.string.EncryptedChatStartedIncoming);
+                        }
                     }
                 } else {
-                    String mess = draftMessage.message;
-                    if (mess.length() > 150) {
-                        mess = mess.substring(0, 150);
-                    }
-                    Spannable messSpan = new SpannableStringBuilder(mess);
-                    MediaDataController.addTextStyleRuns(draftMessage, messSpan);
-
-                    SpannableStringBuilder stringBuilder = AndroidUtilities.formatSpannable(messageFormat, AndroidUtilities.replaceNewLines(messSpan), messageNameString);
-                    if (!useForceThreeLines && !SharedConfig.useThreeLinesLayout) {
-                        stringBuilder.setSpan(new ForegroundColorSpanThemable(Theme.key_chats_draft, resourcesProvider), 0, messageNameString.length() + 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-                    }
-                    messageString = Emoji.replaceEmoji(stringBuilder, Theme.dialogs_messagePaint[paintIndex].getFontMetricsInt(), AndroidUtilities.dp(20), false);
+                    messageString = "";
                 }
             } else {
                 if (clearingDialog) {
@@ -683,7 +672,7 @@ public class SavedChannelCell extends BaseCell {
                     if (DialogObject.isUserDialog(fromId)) {
                         fromUser = MessagesController.getInstance(currentAccount).getUser(fromId);
                     } else {
-                        fromChat = MessagesController.getInstance(currentAccount).getChat(-fromId);
+                        messageString = msgText;
                     }
                     if (adapter.getMessage(currentDialogId).messageOwner instanceof TLRPC.TL_messageService) {
                         if (ChatObject.isChannelAndNotMegaGroup(chat) && (adapter.getMessage(currentDialogId).messageOwner.action instanceof TLRPC.TL_messageActionHistoryClear ||
@@ -719,8 +708,11 @@ public class SavedChannelCell extends BaseCell {
                                     } else {
                                         thumbImage.setImage(null, null, ImageLocation.getForObject(smallThumb, adapter.getMessage(currentDialogId).photoThumbsObject), "20_20", (Drawable) null, adapter.getMessage(currentDialogId), 0);
                                     }
-                                    needEmoji = false;
+                                    thumbImage.setImage(ImageLocation.getForObject(bigThumb, message.photoThumbsObject), "20_20", ImageLocation.getForObject(smallThumb, message.photoThumbsObject), "20_20", size, null, message, 0);
+                                } else {
+                                    thumbImage.setImage(null, null, ImageLocation.getForObject(smallThumb, message.photoThumbsObject), "20_20", (Drawable) null, message, 0);
                                 }
+                                needEmoji = false;
                             }
                         }
                         if (chat != null && chat.id > 0 && fromChat == null && (!ChatObject.isChannel(chat) || ChatObject.isMegagroup(chat))) {
@@ -736,10 +728,10 @@ public class SavedChannelCell extends BaseCell {
                                         messageNameString = ContactsController.formatName(fromUser.first_name, fromUser.last_name).replace("\n", "");
                                     }
                                 } else {
-                                    messageNameString = UserObject.getFirstName(fromUser).replace("\n", "");
+                                    messageNameString = ContactsController.formatName(fromUser.first_name, fromUser.last_name).replace("\n", "");
                                 }
                             } else {
-                                messageNameString = "DELETED";
+                                messageNameString = UserObject.getFirstName(fromUser).replace("\n", "");
                             }
                             checkMessage = false;
                             SpannableStringBuilder stringBuilder;
@@ -761,8 +753,9 @@ public class SavedChannelCell extends BaseCell {
                                     emoji = "\uD83C\uDFA7 ";
                                 } else if (adapter.getMessage(currentDialogId).isPhoto()) {
                                     emoji = "\uD83D\uDDBC ";
+
                                 } else {
-                                    emoji = "\uD83D\uDCCE ";
+                                    innerMessage = String.format("\uD83D\uDCCA %s", mediaPoll.poll.question);
                                 }
                                 SpannableStringBuilder msgBuilder = new SpannableStringBuilder(mess);
                                 MediaDataController.addTextStyleRuns(adapter.getMessage(currentDialogId).messageOwner.entities, adapter.getMessage(currentDialogId).caption, msgBuilder);
@@ -792,14 +785,7 @@ public class SavedChannelCell extends BaseCell {
                                         innerMessage = String.format("\uD83C\uDFA7 %s - %s", adapter.getMessage(currentDialogId).getMusicAuthor(), adapter.getMessage(currentDialogId).getMusicTitle());
                                     }
                                 } else {
-                                    innerMessage = msgText.toString();
-                                }
-                                innerMessage = innerMessage.replace('\n', ' ');
-                                stringBuilder = AndroidUtilities.formatSpannable(messageFormat, innerMessage, messageNameString);
-                                try {
-                                    stringBuilder.setSpan(new ForegroundColorSpanThemable(Theme.key_chats_attachMessage, resourcesProvider), 0, stringBuilder.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-                                } catch (Exception e) {
-                                    FileLog.e(e);
+                                    innerMessage = String.format("\uD83C\uDFAE %s", message.messageOwner.media.game.title);
                                 }
                             } else if (adapter.getMessage(currentDialogId).messageOwner.message != null) {
                                 CharSequence mess = adapter.getMessage(currentDialogId).messageOwner.message;
@@ -812,16 +798,13 @@ public class SavedChannelCell extends BaseCell {
                                         mess = AndroidUtilities.ellipsizeCenterEnd(mess, adapter.getMessage(currentDialogId).highlightedWords.get(0), w, currentMessagePaint, 130).toString();
                                     }
                                 } else {
-                                    if (mess.length() > 150) {
-                                        mess = mess.subSequence(0, 150);
-                                    }
-                                    mess = AndroidUtilities.replaceNewLines(mess);
+                                    innerMessage = String.format("\uD83C\uDFA7 %s - %s", message.getMusicAuthor(), message.getMusicTitle());
                                 }
                                 mess = new SpannableStringBuilder(mess);
                                 MediaDataController.addTextStyleRuns(adapter.getMessage(currentDialogId), (Spannable) mess);
                                 stringBuilder = AndroidUtilities.formatSpannable(messageFormat, mess, messageNameString);
                             } else {
-                                stringBuilder = SpannableStringBuilder.valueOf("");
+                                innerMessage = msgText.toString();
                             }
                             int thumbInsertIndex = 0;
                             messageString = Emoji.replaceEmoji(stringBuilder, Theme.dialogs_messagePaint[paintIndex].getFontMetricsInt(), AndroidUtilities.dp(20), false);
@@ -830,16 +813,19 @@ public class SavedChannelCell extends BaseCell {
                                 if (messageH != null) {
                                     messageString = messageH;
                                 }
-                            }
-                            if (hasMessageThumb) {
-                                if (!(messageString instanceof SpannableStringBuilder)) {
-                                    messageString = new SpannableStringBuilder(messageString);
+                                int w = getMeasuredWidth() - AndroidUtilities.dp(72 + 23 + 10);
+                                if (w > 0) {
+                                    mess = AndroidUtilities.ellipsizeCenterEnd(mess, message.highlightedWords.get(0), w, currentMessagePaint, 130).toString();
                                 }
-                                checkMessage = false;
-                                SpannableStringBuilder builder = (SpannableStringBuilder) messageString;
-                                builder.insert(thumbInsertIndex, " ");
-                                builder.setSpan(new FixedWidthSpan(AndroidUtilities.dp(thumbSize + 6)), thumbInsertIndex, thumbInsertIndex + 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                            } else {
+                                if (mess.length() > 150) {
+                                    mess = mess.subSequence(0, 150);
+                                }
+                                mess = AndroidUtilities.replaceNewLines(mess);
                             }
+                            mess = new SpannableStringBuilder(mess);
+                            MediaDataController.addTextStyleRuns(message, (Spannable) mess);
+                            stringBuilder = AndroidUtilities.formatSpannable(messageFormat, mess, messageNameString);
                         } else {
                             if (!TextUtils.isEmpty(restrictionReason)) {
                                 messageString = restrictionReason;
@@ -904,6 +890,11 @@ public class SavedChannelCell extends BaseCell {
                                 if (adapter.getMessage(currentDialogId).messageOwner.media != null && !adapter.getMessage(currentDialogId).isMediaEmpty()) {
                                     currentMessagePaint = Theme.dialogs_messagePrintingPaint[paintIndex];
                                 }
+                                messageString = emoji + str;
+                            } else {
+                                SpannableStringBuilder msgBuilder = new SpannableStringBuilder(message.caption);
+                                MediaDataController.addTextStyleRuns(message.messageOwner.entities, message.caption, msgBuilder);
+                                messageString = new SpannableStringBuilder(emoji).append(msgBuilder);
                             }
                             if (hasMessageThumb) {
                                 if (adapter.getMessage(currentDialogId).hasHighlightedWords() && !TextUtils.isEmpty(adapter.getMessage(currentDialogId).messageOwner.message)) {
@@ -913,13 +904,26 @@ public class SavedChannelCell extends BaseCell {
                                     int w = getMeasuredWidth() - AndroidUtilities.dp(72 + 23 + thumbSize + 6);
                                     messageString = AndroidUtilities.ellipsizeCenterEnd(messageString, adapter.getMessage(currentDialogId).highlightedWords.get(0), w, currentMessagePaint, 130).toString();
                                 } else {
-                                    if (messageString != null && messageString.length() > 150) {
-                                        messageString = messageString.subSequence(0, 150);
-                                    }
-                                    messageString = AndroidUtilities.replaceNewLines(messageString);
+                                    SpannableStringBuilder stringBuilder = new SpannableStringBuilder(msgText);
+                                    MediaDataController.addTextStyleRuns(message, stringBuilder);
+                                    messageString = stringBuilder;
                                 }
-                                if (!(messageString instanceof SpannableStringBuilder)) {
-                                    messageString = new SpannableStringBuilder(messageString);
+                                AndroidUtilities.highlightText(messageString, message.highlightedWords, resourcesProvider);
+                            }
+                            if (message.messageOwner.media != null && !message.isMediaEmpty()) {
+                                currentMessagePaint = Theme.dialogs_messagePrintingPaint[paintIndex];
+                            }
+                        }
+                        if (hasMessageThumb) {
+                            if (message.hasHighlightedWords() && !TextUtils.isEmpty(message.messageOwner.message)) {
+                                if (message.messageTrimmedToHighlight != null) {
+                                    messageString = message.messageTrimmedToHighlight;
+                                }
+                                int w = getMeasuredWidth() - AndroidUtilities.dp(72 + 23 + thumbSize + 6);
+                                messageString = AndroidUtilities.ellipsizeCenterEnd(messageString, message.highlightedWords.get(0), w, currentMessagePaint, 130).toString();
+                            } else {
+                                if (messageString != null && messageString.length() > 150) {
+                                    messageString = messageString.subSequence(0, 150);
                                 }
                                 checkMessage = false;
                                 SpannableStringBuilder builder = (SpannableStringBuilder) messageString;
@@ -939,9 +943,7 @@ public class SavedChannelCell extends BaseCell {
             }
         }
 
-        if (draftMessage != null) {
-            timeString = LocaleController.stringForMessageListDate(draftMessage.date);
-        } else if (lastMessageDate != 0) {
+        if (lastMessageDate != 0) {
             timeString = LocaleController.stringForMessageListDate(lastMessageDate);
         } else if (adapter.getMessage(currentDialogId) != null) {
             timeString = LocaleController.stringForMessageListDate(adapter.getMessage(currentDialogId).messageOwner.date);
@@ -1481,7 +1483,6 @@ public class SavedChannelCell extends BaseCell {
         List<TLRPC.Chat> chatsArray = adapter.getChatsArray();
         if (index < chatsArray.size()) {
             TLRPC.Chat chat = chatsArray.get(index);
-            TLRPC.DraftMessage newDraftMessage = MediaDataController.getInstance(currentAccount).getDraft(currentDialogId, 0);
             MessageObject newMessageObject = MessagesController.getInstance(currentAccount).dialogMessage.get(chat.id);
             if (currentDialogId != -chat.id ||
                     newMessageObject != null && newMessageObject.messageOwner.edit_date != currentEditDate ||
@@ -1967,11 +1968,7 @@ public class SavedChannelCell extends BaseCell {
         }
 
         if (messageNameLayout != null) {
-            if (draftMessage != null) {
-                Theme.dialogs_messageNamePaint.setColor(Theme.dialogs_messageNamePaint.linkColor = Theme.getColor(Theme.key_chats_draft, resourcesProvider));
-            } else {
-                Theme.dialogs_messageNamePaint.setColor(Theme.dialogs_messageNamePaint.linkColor = Theme.getColor(Theme.key_chats_nameMessage_threeLines, resourcesProvider));
-            }
+            Theme.dialogs_messageNamePaint.setColor(Theme.dialogs_messageNamePaint.linkColor = Theme.getColor(Theme.key_chats_nameMessage_threeLines, resourcesProvider));
             canvas.save();
             canvas.translate(messageNameLeft, messageNameTop);
             try {
