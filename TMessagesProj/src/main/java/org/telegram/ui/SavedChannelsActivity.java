@@ -54,15 +54,14 @@ import org.telegram.messenger.FileLog;
 import org.telegram.messenger.FilesMigrationService;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.MediaDataController;
+import org.telegram.messenger.MessageObject;
 import org.telegram.messenger.MessagesController;
-import org.telegram.messenger.MessagesStorage;
 import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.R;
 import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.Utilities;
 import org.telegram.messenger.XiaomiUtilities;
-import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.TLObject;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.ActionBar;
@@ -104,10 +103,7 @@ import org.telegram.ui.Components.UndoView;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 public class SavedChannelsActivity extends BaseFragment implements NotificationCenter.NotificationCenterDelegate {
 
@@ -115,7 +111,7 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
 
     private DialogsRecyclerView listView;
     private LinearLayoutManager layoutManager;
-    private SavedChannelsAdapter dialogsAdapter;
+    private SavedChannelsAdapter chatsAdapter;
     private ItemTouchHelper itemTouchhelper;
     private RecyclerAnimationScrollHelper scrollHelper;
     private FlickerLoadingView progressView;
@@ -143,8 +139,6 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
     private FragmentContextView fragmentLocationContextView;
     private FragmentContextView fragmentContextView;
 
-    private ArrayList<TLRPC.Chat> frozenChatsList;
-    private boolean dialogsListFrozen;
     private int dialogRemoveFinished;
     private int dialogInsertFinished;
     private int dialogChangeFinished;
@@ -158,7 +152,6 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
 
     private SavedChannelsActivityDelegate delegate;
 
-    private final ArrayList<Long> selectedDialogs = new ArrayList<>();
     private int canPinCount;
 
     private int topPadding;
@@ -171,10 +164,6 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
 
     private float tabsYOffset;
     private float scrollAdditionalOffset;
-
-    List<TLRPC.Chat> chats = new ArrayList<>();
-    Set<String> failedLoadChats = new HashSet<>();
-    private boolean chatLoading = false;
 
     private final Property<SavedChannelsActivity, Float> SCROLL_Y = new AnimationProperties.FloatProperty<SavedChannelsActivity>("animationValue") {
         @Override
@@ -512,7 +501,7 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
 
         private void checkIfAdapterValid() {
             RecyclerView.Adapter adapter = getAdapter();
-            if (lastItemsCount != adapter.getItemCount() && !dialogsListFrozen) {
+            if (lastItemsCount != adapter.getItemCount()) {
                 ignoreLayout = true;
                 adapter.notifyDataSetChanged();
                 ignoreLayout = false;
@@ -522,7 +511,7 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
         @Override
         protected void onMeasure(int widthSpec, int heightSpec) {
             int pos = layoutManager.findFirstVisibleItemPosition();
-            if (pos != RecyclerView.NO_POSITION && !dialogsListFrozen && itemTouchhelper.isIdle()) {
+            if (pos != RecyclerView.NO_POSITION && itemTouchhelper.isIdle()) {
                 RecyclerView.ViewHolder holder = listView.findViewHolderForAdapterPosition(pos);
                 if (holder != null) {
                     int top = holder.itemView.getTop();
@@ -626,7 +615,10 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
             }
             int fromIndex = source.getAdapterPosition();
             int toIndex = target.getAdapterPosition();
-            dialogsAdapter.notifyItemMoved(fromIndex, toIndex);
+            UserConfig config = UserConfig.getInstance(currentAccount);
+            Collections.swap(config.pinnedSavedChannels, fromIndex, toIndex);
+            config.saveConfig(true);
+            chatsAdapter.moveItem(fromIndex, toIndex);
             updateDialogIndices();
             return true;
         }
@@ -699,6 +691,7 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
         getNotificationCenter().addObserver(this, NotificationCenter.needDeleteDialog);
         getNotificationCenter().addObserver(this, NotificationCenter.newSuggestionsAvailable);
         getNotificationCenter().addObserver(this, NotificationCenter.onDatabaseMigration);
+        getNotificationCenter().addObserver(this, NotificationCenter.messagesDidLoad);
 
         getMessagesController().loadPinnedDialogs(0, 0, null);
         if (databaseMigrationHint != null && !getMessagesStorage().isDatabaseMigrationInProgress()) {
@@ -729,6 +722,7 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
         getNotificationCenter().removeObserver(this, NotificationCenter.newSuggestionsAvailable);
 
         getNotificationCenter().removeObserver(this, NotificationCenter.onDatabaseMigration);
+        getNotificationCenter().removeObserver(this, NotificationCenter.messagesDidLoad);
         if (undoView[0] != null) {
             undoView[0].hide(true, 0);
         }
@@ -757,8 +751,6 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
 
     @Override
     public View createView(final Context context) {
-        selectedDialogs.clear();
-
         AndroidUtilities.runOnUIThread(() -> Theme.createChatResources(context, false));
 
         actionBar.setBackButtonImage(R.drawable.ic_ab_back);
@@ -891,14 +883,14 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
                     try {
                         super.onLayoutChildren(recycler, state);
                     } catch (IndexOutOfBoundsException e) {
-                        throw new RuntimeException("Inconsistency detected. " + "dialogsListIsFrozen=" + dialogsListFrozen);
+                        throw new RuntimeException("Inconsistency detected.");
                     }
                 } else {
                     try {
                         super.onLayoutChildren(recycler, state);
                     } catch (IndexOutOfBoundsException e) {
                         FileLog.e(e);
-                        AndroidUtilities.runOnUIThread(() -> dialogsAdapter.notifyDataSetChanged());
+                        AndroidUtilities.runOnUIThread(() -> chatsAdapter.notifyDataSetChanged());
                     }
                 }
             }
@@ -907,7 +899,7 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
         listView.setLayoutManager(layoutManager);
         listView.setVerticalScrollbarPosition(LocaleController.isRTL ? RecyclerListView.SCROLLBAR_POSITION_LEFT : RecyclerListView.SCROLLBAR_POSITION_RIGHT);
         viewPage.addView(listView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
-        listView.setOnItemClickListener((view, position) -> onItemClick(view, position, dialogsAdapter));
+        listView.setOnItemClickListener((view, position) -> onItemClick(view, position, chatsAdapter));
         listView.setOnItemLongClickListener(new RecyclerListView.OnItemLongClickListenerExtended() {
             @Override
             public boolean onItemClick(View view, int position, float x, float y) {
@@ -938,7 +930,7 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
             }
         });
 
-        dialogsAdapter = new SavedChannelsAdapter(this, context, selectedDialogs, currentAccount) {
+        chatsAdapter = new SavedChannelsAdapter(context, currentAccount) {
             @Override
             public void notifyDataSetChanged() {
                 lastItemsCount = getItemCount();
@@ -949,10 +941,11 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
                 }
             }
         };
+        chatsAdapter.loadChats();
         if (AndroidUtilities.isTablet() && openedDialogId != 0) {
-            dialogsAdapter.setOpenedDialogId(openedDialogId);
+            chatsAdapter.setOpenedDialogId(openedDialogId);
         }
-        listView.setAdapter(dialogsAdapter);
+        listView.setAdapter(chatsAdapter);
 
         listView.setEmptyView(progressView);
         scrollHelper = new RecyclerAnimationScrollHelper(listView, layoutManager);
@@ -1064,37 +1057,6 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
                 protected boolean canUndo() {
                     return !dialogsItemAnimator.isRunning();
                 }
-
-                @Override
-                protected void onRemoveDialogAction(long currentDialogId, int action) {
-                    if (action == UndoView.ACTION_DELETE || action == UndoView.ACTION_DELETE_FEW) {
-                        setDialogsListFrozen(true);
-                        if (frozenChatsList != null) {
-                            int selectedIndex = -1;
-                            for (int i = 0; i < frozenChatsList.size(); i++) {
-                                if (frozenChatsList.get(i).id == currentDialogId) {
-                                    selectedIndex = i;
-                                    break;
-                                }
-                            }
-
-                            if (selectedIndex >= 0) {
-                                TLRPC.Chat chat = frozenChatsList.remove(selectedIndex);
-                                dialogsAdapter.notifyDataSetChanged();
-                                int finalSelectedIndex = selectedIndex;
-                                AndroidUtilities.runOnUIThread(() -> {
-                                    if (frozenChatsList != null) {
-                                        frozenChatsList.add(finalSelectedIndex, chat);
-                                        dialogsAdapter.notifyItemInserted(finalSelectedIndex);
-                                        dialogInsertFinished = 2;
-                                    }
-                                });
-                            } else {
-                                setDialogsListFrozen(false);
-                            }
-                        }
-                    }
-                }
             };
             contentView.addView(undoView[a], LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.BOTTOM | Gravity.LEFT, 8, 0, 8, 8));
         }
@@ -1179,21 +1141,20 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
                     SavedChannelsActivity.setDelegate(oldDelegate);
                     launchActivity.presentFragment(SavedChannelsActivity, false, true);
                 } else if (id == pin) {
-                    List<String> selectedUsernames = chats.stream().filter(c -> selectedDialogs.contains(-c.id))
-                            .map(c -> c.username).collect(Collectors.toList());
+                    List<String> selectedUsernames = chatsAdapter.getSelectedUserNames();
                     UserConfig userConfig = getUserConfig();
                     for (String userName : selectedUsernames) {
                         if (canPinCount != 0) {
                             if (isPinned(userName)) {
                                 continue;
                             }
-                            pinDialog(userName, true, canPinCount == 1);
+                            pinDialog(userName, true, true);
 
                         } else {
                             if (!isPinned(userName)) {
                                 continue;
                             }
-                            pinDialog(userName, false, selectedUsernames.size() == 1);
+                            pinDialog(userName, false, true);
                         }
                     }
                     userConfig.saveConfig(true);
@@ -1202,11 +1163,12 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
                         hideActionMode();
                     }
                 } else if (id == delete) {
-                    List<String> selectedUsernames = chats.stream().filter(c -> selectedDialogs.contains(-c.id))
-                            .map(c -> c.username).collect(Collectors.toList());
+                    List<String> selectedUsernames = chatsAdapter.getSelectedUserNames();
                     UserConfig userConfig = getUserConfig();
                     userConfig.savedChannels.removeAll(selectedUsernames);
+                    userConfig.pinnedSavedChannels.removeAll(selectedUsernames);
                     userConfig.saveConfig(true);
+                    chatsAdapter.removeItems(selectedUsernames);
                     getNotificationCenter().postNotificationName(NotificationCenter.dialogsNeedReload);
                     if (actionBar.isActionModeShowed()) {
                         hideActionMode();
@@ -1234,7 +1196,7 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
             blurredView.setBackground(null);
         }
         if (viewPage != null) {
-            dialogsAdapter.notifyDataSetChanged();
+            chatsAdapter.notifyDataSetChanged();
         }
         getMediaDataController().checkStickers(MediaDataController.TYPE_EMOJI);
         if (XiaomiUtilities.isMIUI() && Build.VERSION.SDK_INT >= 19 && !XiaomiUtilities.isCustomPermissionGranted(XiaomiUtilities.OP_SHOW_WHEN_LOCKED)) {
@@ -1314,22 +1276,16 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
     }
 
     public boolean addOrRemoveSelectedDialog(long did, View cell) {
-        if (selectedDialogs.contains(did)) {
-            selectedDialogs.remove(did);
-            if (cell instanceof SavedChannelCell) {
-                ((SavedChannelCell) cell).setChecked(false, true);
-            } else if (cell instanceof ProfileSearchCell) {
-                ((ProfileSearchCell) cell).setChecked(false, true);
-            }
-            return false;
-        } else {
-            selectedDialogs.add(did);
+        if (chatsAdapter.addOrRemoveSelectedDialog(did)) {
             if (cell instanceof SavedChannelCell) {
                 ((SavedChannelCell) cell).setChecked(true, true);
-            } else if (cell instanceof ProfileSearchCell) {
-                ((ProfileSearchCell) cell).setChecked(true, true);
             }
             return true;
+        } else {
+            if (cell instanceof SavedChannelCell) {
+                ((SavedChannelCell) cell).setChecked(false, true);
+            }
+            return false;
         }
     }
 
@@ -1339,7 +1295,7 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
         int visibleItemCount = Math.abs(layoutManager.findLastVisibleItemPosition() - firstVisibleItem) + 1;
         boolean load = false;
         boolean loadFromCache = false;
-        if (visibleItemCount > 0 && lastVisibleItem >= getChatsArray(currentAccount).size() - 10) {
+        if (visibleItemCount > 0 && lastVisibleItem >= chatsAdapter.getChatsArray().size() - 10) {
             loadFromCache = !getMessagesController().isDialogsEndReached(0);
             if (loadFromCache || !getMessagesController().isServerDialogsEndReached(0)) {
                 load = true;
@@ -1389,7 +1345,7 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
                 return;
             }
             if (viewPage != null) {
-                dialogsAdapter.setOpenedDialogId(openedDialogId = dialogId);
+                chatsAdapter.setOpenedDialogId(openedDialogId = dialogId);
             }
             updateVisibleRows(MessagesController.UPDATE_MASK_SELECT_DIALOG);
         }
@@ -1416,7 +1372,7 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
             }
         }
         TLRPC.Chat chat;
-        List<TLRPC.Chat> chats = getChatsArray(currentAccount);
+        List<TLRPC.Chat> chats = chatsAdapter.getChatsArray();
         if (position < 0 || position >= chats.size()) {
             return false;
         }
@@ -1473,7 +1429,6 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
         dialogInsertFinished = 0;
         dialogChangeFinished = 0;
         AndroidUtilities.runOnUIThread(() -> {
-            setDialogsListFrozen(false);
             updateChatsIndices();
         });
     }
@@ -1536,7 +1491,7 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
     private void hideActionMode() {
         actionBar.hideActionMode();
         actionBar.setBackButtonImage(R.drawable.ic_ab_back);
-        selectedDialogs.clear();
+        chatsAdapter.clearSelectedDialogs();
         if (actionBarColorAnimator != null) {
             actionBarColorAnimator.cancel();
         }
@@ -1557,7 +1512,7 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
         actionBarColorAnimator.start();
         allowMoving = false;
         updateCounters(true);
-        dialogsAdapter.onReorderStateChanged(false);
+        chatsAdapter.onReorderStateChanged(false);
         updateVisibleRows(MessagesController.UPDATE_MASK_REORDER | MessagesController.UPDATE_MASK_CHECK | MessagesController.UPDATE_MASK_CHAT);
     }
 
@@ -1581,54 +1536,12 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
         boolean needScroll = false;
         if (currentPosition > scrollToPosition || !animated) {
             needScroll = true;
-        } else {
-            setDialogsListFrozen(true);
-            if (frozenChatsList != null) {
-                for (int i = 0; i < frozenChatsList.size(); i++) {
-                    if (frozenChatsList.get(i).username != null && frozenChatsList.get(i).username.equals(userName)) {
-                        selectedChatIndex = i;
-                        break;
-                    }
-                }
-            }
         }
 
-
+        chatsAdapter.fixChatPosition(userName);
 
         if (needScroll) {
             scrollToTop();
-        } else {
-            List<TLRPC.Chat> currentChats = getChatsArray(currentAccount);
-            for (int i = 0; i < currentChats.size(); i++) {
-                if (currentChats.get(i).username != null && currentChats.get(i).username.equals(userName)) {
-                    currentChatIndex = i;
-                    break;
-                }
-            }
-        }
-
-        if (!needScroll) {
-            boolean animate = false;
-            if (selectedChatIndex >= 0) {
-                if (frozenChatsList != null && currentChatIndex >= 0 && selectedChatIndex != currentChatIndex) {
-                    frozenChatsList.add(currentChatIndex, frozenChatsList.remove(selectedChatIndex));
-                    dialogsItemAnimator.prepareForRemove();
-                    dialogsAdapter.notifyItemRemoved(selectedChatIndex);
-                    dialogsAdapter.notifyItemInserted(currentChatIndex);
-                    dialogRemoveFinished = 2;
-                    dialogInsertFinished = 2;
-
-                    layoutManager.scrollToPositionWithOffset(0, (int) actionBar.getTranslationY());
-
-                    animate = true;
-                } else if (currentChatIndex >= 0 && selectedChatIndex == currentChatIndex) {
-                    animate = true;
-                    AndroidUtilities.runOnUIThread(() -> setDialogsListFrozen(false), 200);
-                }
-            }
-            if (!animate) {
-                setDialogsListFrozen(false);
-            }
         }
     }
 
@@ -1644,18 +1557,14 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
     }
 
     private void updateCounters(boolean hide) {
-        int canUnpinCount = 0;
         canPinCount = 0;
         if (hide) {
             return;
         }
-        List<String> selectedUsernames = chats.stream().filter(c -> selectedDialogs.contains(-c.id))
-                .map(c -> c.username).collect(Collectors.toList());
+        List<String> selectedUsernames = chatsAdapter.getSelectedUserNames();
         for (String userName : selectedUsernames) {
             boolean pinned = isPinned(userName);
-            if (pinned) {
-                canUnpinCount++;
-            } else {
+            if (!pinned) {
                 canPinCount++;
             }
         }
@@ -1674,7 +1583,7 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
         addOrRemoveSelectedDialog(dialogId, cell);
         boolean updateAnimated = false;
         if (actionBar.isActionModeShowed()) {
-            if (selectedDialogs.isEmpty()) {
+            if (chatsAdapter.getSelectedDialogCount() == 0) {
                 hideActionMode();
                 return;
             }
@@ -1700,8 +1609,8 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
             animatorSet.start();
 
             if (!getUserConfig().pinnedSavedChannels.isEmpty()) {
-                if (dialogsAdapter != null) {
-                    dialogsAdapter.onReorderStateChanged(true);
+                if (chatsAdapter != null) {
+                    chatsAdapter.onReorderStateChanged(true);
                 }
                 updateVisibleRows(MessagesController.UPDATE_MASK_REORDER);
             }
@@ -1726,7 +1635,7 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
             actionBarColorAnimator.start();
         }
         updateCounters(false);
-        selectedDialogsCountTextView.setNumber(selectedDialogs.size(), updateAnimated);
+        selectedDialogsCountTextView.setNumber(chatsAdapter.getSelectedDialogCount(), updateAnimated);
     }
 
     public UndoView getUndoView() {
@@ -1746,22 +1655,22 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
     @Override
     public void didReceivedNotification(int id, int account, Object... args) {
         if (id == NotificationCenter.dialogsNeedReload) {
-            if (viewPage == null || dialogsListFrozen) {
+            if (viewPage == null) {
                 return;
             }
 
             if (viewPage.getVisibility() == View.VISIBLE) {
-                int oldItemCount = dialogsAdapter.getCurrentCount();
+                int oldItemCount = chatsAdapter.getCurrentCount();
 
-                if (dialogsAdapter.isDataSetChanged() || args.length > 0) {
-                    dialogsAdapter.notifyDataSetChanged();
-                    int newItemCount = dialogsAdapter.getItemCount();
+                if (chatsAdapter.isDataSetChanged() || args.length > 0) {
+                    chatsAdapter.notifyDataSetChanged();
+                    int newItemCount = chatsAdapter.getItemCount();
                     if (newItemCount > oldItemCount) {
                         recyclerItemsEnterAnimator.showItemsAnimated(oldItemCount);
                     }
                 } else {
                     updateVisibleRows(MessagesController.UPDATE_MASK_NEW_MESSAGE);
-                    int newItemCount = dialogsAdapter.getItemCount();
+                    int newItemCount = chatsAdapter.getItemCount();
                     if (newItemCount > oldItemCount) {
                         recyclerItemsEnterAnimator.showItemsAnimated(oldItemCount);
                     }
@@ -1792,7 +1701,7 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
                 } else {
                     openedDialogId = dialog_id;
                 }
-                dialogsAdapter.setOpenedDialogId(openedDialogId);
+                chatsAdapter.setOpenedDialogId(openedDialogId);
             }
             updateVisibleRows(MessagesController.UPDATE_MASK_SELECT_DIALOG);
         } else if (id == NotificationCenter.notificationsSettingsUpdated) {
@@ -1867,6 +1776,8 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
                     }
                 }
             }
+        } else if (id == NotificationCenter.messagesDidLoad) {
+            chatsAdapter.messagesDidLoad((long)args[0], (List<MessageObject>)args[2]);
         }
     }
 
@@ -1915,77 +1826,12 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
         return false;
     }
 
-    private void setDialogsListFrozen(boolean frozen) {
-        if (dialogsListFrozen == frozen) {
-            return;
-        }
-        if (frozen) {
-            frozenChatsList = new ArrayList<>(getChatsArray(currentAccount));
-        } else {
-            frozenChatsList = null;
-        }
-        dialogsListFrozen = frozen;
-        if (!frozen) {
-            dialogsAdapter.notifyDataSetChanged();
-        }
-    }
-
-    @NonNull
-    public synchronized List<TLRPC.Chat> getChatsArray(int currentAccount) {
-        Set<Long> ids = chats.stream().map(c -> c.id).collect(Collectors.toSet());
-        Set<String> names = new HashSet<>(UserConfig.getInstance(currentAccount).savedChannels);
-        List<String> pinnedChannels = UserConfig.getInstance(currentAccount).pinnedSavedChannels;
-        Set<String> existedNames = new HashSet<>();
-        MessagesController controller = MessagesController.getInstance(currentAccount);
-        chats = chats.stream().filter(c -> names.contains(c.username)).collect(Collectors.toList());
-        for (String name : names) {
-            TLObject obj = controller.getUserOrChat(name);
-            if (obj instanceof TLRPC.Chat) {
-                TLRPC.Chat chat = (TLRPC.Chat)obj;
-                if (!ids.contains(chat.id)) {
-                    chats.add(chat);
-                }
-                existedNames.add(name);
-            }
-        }
-        Collections.sort(chats, (a, b) -> {
-            int aIndex = pinnedChannels.indexOf(a.username);
-            aIndex = aIndex != -1 ? aIndex : pinnedChannels.size();
-            int bIndex = pinnedChannels.indexOf(b.username);
-            bIndex = bIndex != -1 ? bIndex : pinnedChannels.size();
-            return aIndex - bIndex;
-        });
-        names.removeAll(existedNames);
-        names.removeAll(failedLoadChats);
-        if (!names.isEmpty() && !chatLoading) {
-            chatLoading = true;
-            String username = names.iterator().next();
-            Utilities.globalQueue.postRunnable(() -> resolveUsername(username), 1000);
-        }
-        return chats;
-    }
-
-    public boolean isChatsEndReached() {
-        Set<String> names = new HashSet<>(UserConfig.getInstance(currentAccount).savedChannels);
-        Set<String> existedNames = new HashSet<>();
-        MessagesController controller = MessagesController.getInstance(currentAccount);
-        for (String name : names) {
-            TLObject obj = controller.getUserOrChat(name);
-            if (obj instanceof TLRPC.Chat) {
-                existedNames.add(name);
-            }
-        }
-        names.removeAll(existedNames);
-        names.removeAll(failedLoadChats);
-        return names.isEmpty();
-    }
-
     private void updateChatsIndices() {
         if (viewPage == null) {
             return;
         }
         if (viewPage.getVisibility() == View.VISIBLE) {
-            List<TLRPC.Chat> chats = getChatsArray(currentAccount);
+            List<TLRPC.Chat> chats = chatsAdapter.getChatsArray();
             int count = listView.getChildCount();
             for (int a = 0; a < count; a++) {
                 View child = listView.getChildAt(a);
@@ -2008,7 +1854,7 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
     }
 
     private void updateDialogIndices() {
-        List<TLRPC.Chat> chats = getChatsArray(currentAccount);
+        List<TLRPC.Chat> chats = chatsAdapter.getChatsArray();
         int count = listView.getChildCount();
         for (int a = 0; a < count; a++) {
             View child = listView.getChildAt(a);
@@ -2034,9 +1880,6 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
         updateVisibleRows(mask, true);
     }
     private void updateVisibleRows(int mask, boolean animated) {
-        if ((dialogsListFrozen && (mask & MessagesController.UPDATE_MASK_REORDER) == 0) || isPaused) {
-            return;
-        }
         if (listView != null) {
             int count = listView.getChildCount();
             for (int a = 0; a < count; a++) {
@@ -2045,9 +1888,6 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
                     SavedChannelCell cell = (SavedChannelCell) child;
                     if ((mask & MessagesController.UPDATE_MASK_REORDER) != 0) {
                         cell.onReorderStateChanged(actionBar.isActionModeShowed(), true);
-                        if (dialogsListFrozen) {
-                            continue;
-                        }
                     }
                     if ((mask & MessagesController.UPDATE_MASK_CHECK) != 0) {
                         cell.setChecked(false, (mask & MessagesController.UPDATE_MASK_CHAT) != 0);
@@ -2064,7 +1904,7 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
                         } else {
                             cell.update(mask, animated);
                         }
-                        cell.setChecked(selectedDialogs.contains(cell.getChatId()), false);
+                        cell.setChecked(chatsAdapter.containsSelectedDialog(cell.getChatId()), false);
                     }
                 }
 
@@ -2074,10 +1914,7 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
                 } else if (child instanceof ProfileSearchCell) {
                     ProfileSearchCell cell = (ProfileSearchCell) child;
                     cell.update(mask);
-                    cell.setChecked(selectedDialogs.contains(cell.getDialogId()), false);
-                }
-                if (dialogsListFrozen) {
-                    continue;
+                    cell.setChecked(chatsAdapter.containsSelectedDialog(cell.getDialogId()), false);
                 }
                 if (child instanceof RecyclerListView) {
                     RecyclerListView innerListView = (RecyclerListView) child;
@@ -2506,30 +2343,6 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
             }
         }
         setSlideTransitionProgress(1f - progress);
-    }
-
-    private void resolveUsername(String username) {
-        TLRPC.TL_contacts_resolveUsername req = new TLRPC.TL_contacts_resolveUsername();
-        req.username = username;
-        ConnectionsManager.getInstance(currentAccount).sendRequest(req, (response, error) -> {
-            chatLoading = false;
-            if (response != null) {
-                AndroidUtilities.runOnUIThread(() -> {
-                    TLRPC.TL_contacts_resolvedPeer res = (TLRPC.TL_contacts_resolvedPeer) response;
-                    MessagesController.getInstance(currentAccount).putUsers(res.users, false);
-                    MessagesController.getInstance(currentAccount).putChats(res.chats, false);
-                    MessagesStorage.getInstance(currentAccount).putUsersAndChats(res.users, res.chats, true, true);
-
-
-                    getNotificationCenter().postNotificationName(NotificationCenter.dialogsNeedReload);
-                });
-            } else {
-                synchronized (this) {
-                    failedLoadChats.add(username);
-                }
-                AndroidUtilities.runOnUIThread(() -> getNotificationCenter().postNotificationName(NotificationCenter.dialogsNeedReload));
-            }
-        });
     }
 }
 

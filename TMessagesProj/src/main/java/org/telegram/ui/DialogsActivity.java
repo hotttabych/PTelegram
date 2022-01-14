@@ -3795,7 +3795,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         readItem = otherItem.addSubItem(read, R.drawable.msg_markread, LocaleController.getString("MarkAsRead", R.string.MarkAsRead));
         clearItem = otherItem.addSubItem(clear, R.drawable.msg_clear, LocaleController.getString("ClearHistory", R.string.ClearHistory));
         blockItem = otherItem.addSubItem(block, R.drawable.msg_block, LocaleController.getString("BlockUser", R.string.BlockUser));
-        saveItem = otherItem.addSubItem(save, R.drawable.menu_saved, LocaleController.getString("Save", R.string.Save));
+        saveItem = otherItem.addSubItem(save, R.drawable.msg_fave, LocaleController.getString("Save", R.string.Save));
 
         actionModeViews.add(pinItem);
         actionModeViews.add(archive2Item);

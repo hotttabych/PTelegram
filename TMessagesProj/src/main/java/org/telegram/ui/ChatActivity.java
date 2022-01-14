@@ -2842,7 +2842,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
             }
             if (SharedConfig.fakePasscodeActivatedIndex == -1 && chat != null && chat.username != null
                     && !getUserConfig().savedChannels.contains(chat.username) && SharedConfig.showSavedChannels) {
-                headerItem.addSubItem(save, R.drawable.menu_saved, LocaleController.getString("Save", R.string.Save));
+                headerItem.addSubItem(save, R.drawable.msg_fave, LocaleController.getString("Save", R.string.Save));
             }
         }
 

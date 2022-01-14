@@ -326,7 +326,7 @@ public class DrawerLayoutAdapter extends RecyclerListView.SelectionAdapter {
         }
         items.add(new Item(11, LocaleController.getString("SavedMessages", R.string.SavedMessages), savedIcon));
         if (SharedConfig.fakePasscodeActivatedIndex == -1 && SharedConfig.showSavedChannels) {
-            items.add(new Item(100, LocaleController.getString("SavedChannels", R.string.SavedChannels), R.drawable.menu_saved));
+            items.add(new Item(100, LocaleController.getString("SavedChannels", R.string.SavedChannels), R.drawable.menu_saved_channels));
         }
         items.add(new Item(8, LocaleController.getString("Settings", R.string.Settings), settingsIcon));
         items.add(null); // divider
