@@ -622,7 +622,7 @@ public class SavedChannelCell extends BaseCell {
             if (clearingDialog) {
                 currentMessagePaint = Theme.dialogs_messagePrintingPaint[paintIndex];
                 messageString = LocaleController.getString("HistoryCleared", R.string.HistoryCleared);
-            } else if (message == null) {
+            } else if (adapter.getMessage(currentDialogId) == null) {
                 if (encryptedChat != null) {
                     currentMessagePaint = Theme.dialogs_messagePrintingPaint[paintIndex];
                     if (encryptedChat instanceof TLRPC.TL_encryptedChatRequested) {
@@ -642,180 +642,140 @@ public class SavedChannelCell extends BaseCell {
                     messageString = "";
                 }
             } else {
-                if (clearingDialog) {
-                    currentMessagePaint = Theme.dialogs_messagePrintingPaint[paintIndex];
-                    messageString = LocaleController.getString("HistoryCleared", R.string.HistoryCleared);
-                } else if (adapter.getMessage(currentDialogId) == null) {
-                    if (encryptedChat != null) {
-                        currentMessagePaint = Theme.dialogs_messagePrintingPaint[paintIndex];
-                        if (encryptedChat instanceof TLRPC.TL_encryptedChatRequested) {
-                            messageString = LocaleController.getString("EncryptionProcessing", R.string.EncryptionProcessing);
-                        } else if (encryptedChat instanceof TLRPC.TL_encryptedChatWaiting) {
-                            messageString = LocaleController.formatString("AwaitingEncryption", R.string.AwaitingEncryption, UserObject.getFirstName(user));
-                        } else if (encryptedChat instanceof TLRPC.TL_encryptedChatDiscarded) {
-                            messageString = LocaleController.getString("EncryptionRejected", R.string.EncryptionRejected);
-                        } else if (encryptedChat instanceof TLRPC.TL_encryptedChat) {
-                            if (encryptedChat.admin_id == UserConfig.getInstance(currentAccount).getClientUserId()) {
-                                messageString = LocaleController.formatString("EncryptedChatStartedOutgoing", R.string.EncryptedChatStartedOutgoing, UserObject.getFirstName(user));
-                            } else {
-                                messageString = LocaleController.getString("EncryptedChatStartedIncoming", R.string.EncryptedChatStartedIncoming);
-                            }
-                        }
-                    } else {
-                        messageString = "";
-                    }
+                String restrictionReason = MessagesController.getRestrictionReason(adapter.getMessage(currentDialogId).messageOwner.restriction_reason);
+                TLRPC.User fromUser = null;
+                TLRPC.Chat fromChat = null;
+                long fromId = adapter.getMessage(currentDialogId).getFromChatId();
+                if (DialogObject.isUserDialog(fromId)) {
+                    fromUser = MessagesController.getInstance(currentAccount).getUser(fromId);
                 } else {
-                    String restrictionReason = MessagesController.getRestrictionReason(adapter.getMessage(currentDialogId).messageOwner.restriction_reason);
-                    TLRPC.User fromUser = null;
-                    TLRPC.Chat fromChat = null;
-                    long fromId = adapter.getMessage(currentDialogId).getFromChatId();
-                    if (DialogObject.isUserDialog(fromId)) {
-                        fromUser = MessagesController.getInstance(currentAccount).getUser(fromId);
+                    fromChat = MessagesController.getInstance(currentAccount).getChat(-fromId);
+                }
+                if (adapter.getMessage(currentDialogId).messageOwner instanceof TLRPC.TL_messageService) {
+                    if (ChatObject.isChannelAndNotMegaGroup(chat) && (adapter.getMessage(currentDialogId).messageOwner.action instanceof TLRPC.TL_messageActionHistoryClear ||
+                            adapter.getMessage(currentDialogId).messageOwner.action instanceof TLRPC.TL_messageActionChannelMigrateFrom)) {
+                        messageString = "";
+                        showChecks = false;
                     } else {
                         messageString = msgText;
                     }
-                    if (adapter.getMessage(currentDialogId).messageOwner instanceof TLRPC.TL_messageService) {
-                        if (ChatObject.isChannelAndNotMegaGroup(chat) && (adapter.getMessage(currentDialogId).messageOwner.action instanceof TLRPC.TL_messageActionHistoryClear ||
-                                adapter.getMessage(currentDialogId).messageOwner.action instanceof TLRPC.TL_messageActionChannelMigrateFrom)) {
-                            messageString = "";
-                            showChecks = false;
-                        } else {
-                            messageString = msgText;
-                        }
-                        currentMessagePaint = Theme.dialogs_messagePrintingPaint[paintIndex];
-                    } else {
-                        boolean needEmoji = true;
-                        if (TextUtils.isEmpty(restrictionReason) && encryptedChat == null && !adapter.getMessage(currentDialogId).needDrawBluredPreview() && (adapter.getMessage(currentDialogId).isPhoto() || adapter.getMessage(currentDialogId).isNewGif() || adapter.getMessage(currentDialogId).isVideo())) {
-                            String type = adapter.getMessage(currentDialogId).isWebpage() ? adapter.getMessage(currentDialogId).messageOwner.media.webpage.type : null;
-                            if (!("app".equals(type) || "profile".equals(type) || "article".equals(type) || type != null && type.startsWith("telegram_"))) {
-                                TLRPC.PhotoSize smallThumb = FileLoader.getClosestPhotoSizeWithSize(adapter.getMessage(currentDialogId).photoThumbs, 40);
-                                TLRPC.PhotoSize bigThumb = FileLoader.getClosestPhotoSizeWithSize(adapter.getMessage(currentDialogId).photoThumbs, AndroidUtilities.getPhotoSize());
-                                if (smallThumb == bigThumb) {
-                                    bigThumb = null;
-                                }
-                                if (smallThumb != null) {
-                                    hasMessageThumb = true;
-                                    drawPlay = adapter.getMessage(currentDialogId).isVideo();
-                                    String fileName = FileLoader.getAttachFileName(bigThumb);
-                                    if (adapter.getMessage(currentDialogId).mediaExists || DownloadController.getInstance(currentAccount).canDownloadMedia(adapter.getMessage(currentDialogId)) || FileLoader.getInstance(currentAccount).isLoadingFile(fileName)) {
-                                        int size;
-                                        if (adapter.getMessage(currentDialogId).type == MessageObject.TYPE_PHOTO) {
-                                            size = bigThumb != null ? bigThumb.size : 0;
-                                        } else {
-                                            size = 0;
-                                        }
-                                        thumbImage.setImage(ImageLocation.getForObject(bigThumb, adapter.getMessage(currentDialogId).photoThumbsObject), "20_20", ImageLocation.getForObject(smallThumb, adapter.getMessage(currentDialogId).photoThumbsObject), "20_20", size, null, adapter.getMessage(currentDialogId), 0);
+                    currentMessagePaint = Theme.dialogs_messagePrintingPaint[paintIndex];
+                } else {
+                    boolean needEmoji = true;
+                    if (TextUtils.isEmpty(restrictionReason) && encryptedChat == null && !adapter.getMessage(currentDialogId).needDrawBluredPreview() && (adapter.getMessage(currentDialogId).isPhoto() || adapter.getMessage(currentDialogId).isNewGif() || adapter.getMessage(currentDialogId).isVideo())) {
+                        String type = adapter.getMessage(currentDialogId).isWebpage() ? adapter.getMessage(currentDialogId).messageOwner.media.webpage.type : null;
+                        if (!("app".equals(type) || "profile".equals(type) || "article".equals(type) || type != null && type.startsWith("telegram_"))) {
+                            TLRPC.PhotoSize smallThumb = FileLoader.getClosestPhotoSizeWithSize(adapter.getMessage(currentDialogId).photoThumbs, 40);
+                            TLRPC.PhotoSize bigThumb = FileLoader.getClosestPhotoSizeWithSize(adapter.getMessage(currentDialogId).photoThumbs, AndroidUtilities.getPhotoSize());
+                            if (smallThumb == bigThumb) {
+                                bigThumb = null;
+                            }
+                            if (smallThumb != null) {
+                                hasMessageThumb = true;
+                                drawPlay = adapter.getMessage(currentDialogId).isVideo();
+                                String fileName = FileLoader.getAttachFileName(bigThumb);
+                                if (adapter.getMessage(currentDialogId).mediaExists || DownloadController.getInstance(currentAccount).canDownloadMedia(adapter.getMessage(currentDialogId)) || FileLoader.getInstance(currentAccount).isLoadingFile(fileName)) {
+                                    int size;
+                                    if (adapter.getMessage(currentDialogId).type == MessageObject.TYPE_PHOTO) {
+                                        size = bigThumb != null ? bigThumb.size : 0;
                                     } else {
-                                        thumbImage.setImage(null, null, ImageLocation.getForObject(smallThumb, adapter.getMessage(currentDialogId).photoThumbsObject), "20_20", (Drawable) null, adapter.getMessage(currentDialogId), 0);
+                                        size = 0;
                                     }
-                                    thumbImage.setImage(ImageLocation.getForObject(bigThumb, message.photoThumbsObject), "20_20", ImageLocation.getForObject(smallThumb, message.photoThumbsObject), "20_20", size, null, message, 0);
+                                    thumbImage.setImage(ImageLocation.getForObject(bigThumb, adapter.getMessage(currentDialogId).photoThumbsObject), "20_20", ImageLocation.getForObject(smallThumb, adapter.getMessage(currentDialogId).photoThumbsObject), "20_20", size, null, adapter.getMessage(currentDialogId), 0);
                                 } else {
-                                    thumbImage.setImage(null, null, ImageLocation.getForObject(smallThumb, message.photoThumbsObject), "20_20", (Drawable) null, message, 0);
+                                    thumbImage.setImage(null, null, ImageLocation.getForObject(smallThumb, adapter.getMessage(currentDialogId).photoThumbsObject), "20_20", (Drawable) null, adapter.getMessage(currentDialogId), 0);
                                 }
                                 needEmoji = false;
                             }
                         }
-                        if (chat != null && chat.id > 0 && fromChat == null && (!ChatObject.isChannel(chat) || ChatObject.isMegagroup(chat))) {
-                            if (adapter.getMessage(currentDialogId).isOutOwner()) {
-                                messageNameString = LocaleController.getString("FromYou", R.string.FromYou);
-                            } else if (adapter.getMessage(currentDialogId) != null && adapter.getMessage(currentDialogId).messageOwner.fwd_from != null && adapter.getMessage(currentDialogId).messageOwner.fwd_from.from_name != null) {
-                                messageNameString = adapter.getMessage(currentDialogId).messageOwner.fwd_from.from_name;
-                            } else if (fromUser != null) {
-                                if (useForceThreeLines || SharedConfig.useThreeLinesLayout) {
-                                    if (UserObject.isDeleted(fromUser)) {
-                                        messageNameString = LocaleController.getString("HiddenName", R.string.HiddenName);
-                                    } else {
-                                        messageNameString = ContactsController.formatName(fromUser.first_name, fromUser.last_name).replace("\n", "");
-                                    }
+                    }
+                    if (chat != null && chat.id > 0 && fromChat == null && (!ChatObject.isChannel(chat) || ChatObject.isMegagroup(chat))) {
+                        if (adapter.getMessage(currentDialogId).isOutOwner()) {
+                            messageNameString = LocaleController.getString("FromYou", R.string.FromYou);
+                        } else if (adapter.getMessage(currentDialogId) != null && adapter.getMessage(currentDialogId).messageOwner.fwd_from != null && adapter.getMessage(currentDialogId).messageOwner.fwd_from.from_name != null) {
+                            messageNameString = adapter.getMessage(currentDialogId).messageOwner.fwd_from.from_name;
+                        } else if (fromUser != null) {
+                            if (useForceThreeLines || SharedConfig.useThreeLinesLayout) {
+                                if (UserObject.isDeleted(fromUser)) {
+                                    messageNameString = LocaleController.getString("HiddenName", R.string.HiddenName);
                                 } else {
                                     messageNameString = ContactsController.formatName(fromUser.first_name, fromUser.last_name).replace("\n", "");
                                 }
                             } else {
                                 messageNameString = UserObject.getFirstName(fromUser).replace("\n", "");
                             }
-                            checkMessage = false;
-                            SpannableStringBuilder stringBuilder;
-                            if (!TextUtils.isEmpty(restrictionReason)) {
-                                stringBuilder = SpannableStringBuilder.valueOf(String.format(messageFormat, restrictionReason, messageNameString));
-                            } else if (adapter.getMessage(currentDialogId).caption != null) {
-                                CharSequence mess = adapter.getMessage(currentDialogId).caption.toString();
-                                if (mess.length() > 150) {
-                                    mess = mess.subSequence(0, 150);
-                                }
-                                String emoji;
-                                if (!needEmoji) {
-                                    emoji = "";
-                                } else if (adapter.getMessage(currentDialogId).isVideo()) {
-                                    emoji = "\uD83D\uDCF9 ";
-                                } else if (adapter.getMessage(currentDialogId).isVoice()) {
-                                    emoji = "\uD83C\uDFA4 ";
-                                } else if (adapter.getMessage(currentDialogId).isMusic()) {
-                                    emoji = "\uD83C\uDFA7 ";
-                                } else if (adapter.getMessage(currentDialogId).isPhoto()) {
-                                    emoji = "\uD83D\uDDBC ";
-
+                        } else {
+                            messageNameString = "DELETED";
+                        }
+                        checkMessage = false;
+                        SpannableStringBuilder stringBuilder;
+                        if (!TextUtils.isEmpty(restrictionReason)) {
+                            stringBuilder = SpannableStringBuilder.valueOf(String.format(messageFormat, restrictionReason, messageNameString));
+                        } else if (adapter.getMessage(currentDialogId).caption != null) {
+                            CharSequence mess = adapter.getMessage(currentDialogId).caption.toString();
+                            if (mess.length() > 150) {
+                                mess = mess.subSequence(0, 150);
+                            }
+                            String emoji;
+                            if (!needEmoji) {
+                                emoji = "";
+                            } else if (adapter.getMessage(currentDialogId).isVideo()) {
+                                emoji = "\uD83D\uDCF9 ";
+                            } else if (adapter.getMessage(currentDialogId).isVoice()) {
+                                emoji = "\uD83C\uDFA4 ";
+                            } else if (adapter.getMessage(currentDialogId).isMusic()) {
+                                emoji = "\uD83C\uDFA7 ";
+                            } else if (adapter.getMessage(currentDialogId).isPhoto()) {
+                                emoji = "\uD83D\uDDBC ";
+                            } else {
+                                emoji = "\uD83D\uDCCE ";
+                            }
+                            SpannableStringBuilder msgBuilder = new SpannableStringBuilder(mess);
+                            MediaDataController.addTextStyleRuns(adapter.getMessage(currentDialogId).messageOwner.entities, adapter.getMessage(currentDialogId).caption, msgBuilder);
+                            stringBuilder = AndroidUtilities.formatSpannable(messageFormat, new SpannableStringBuilder(emoji).append(AndroidUtilities.replaceNewLines(msgBuilder)), messageNameString);
+                        } else if (adapter.getMessage(currentDialogId).messageOwner.media != null && !adapter.getMessage(currentDialogId).isMediaEmpty()) {
+                            currentMessagePaint = Theme.dialogs_messagePrintingPaint[paintIndex];
+                            String innerMessage;
+                            if (adapter.getMessage(currentDialogId).messageOwner.media instanceof TLRPC.TL_messageMediaPoll) {
+                                TLRPC.TL_messageMediaPoll mediaPoll = (TLRPC.TL_messageMediaPoll) adapter.getMessage(currentDialogId).messageOwner.media;
+                                if (Build.VERSION.SDK_INT >= 18) {
+                                    innerMessage = String.format("\uD83D\uDCCA \u2068%s\u2069", mediaPoll.poll.question);
                                 } else {
                                     innerMessage = String.format("\uD83D\uDCCA %s", mediaPoll.poll.question);
                                 }
-                                SpannableStringBuilder msgBuilder = new SpannableStringBuilder(mess);
-                                MediaDataController.addTextStyleRuns(adapter.getMessage(currentDialogId).messageOwner.entities, adapter.getMessage(currentDialogId).caption, msgBuilder);
-                                stringBuilder = AndroidUtilities.formatSpannable(messageFormat, new SpannableStringBuilder(emoji).append(AndroidUtilities.replaceNewLines(msgBuilder)), messageNameString);
-                            } else if (adapter.getMessage(currentDialogId).messageOwner.media != null && !adapter.getMessage(currentDialogId).isMediaEmpty()) {
-                                currentMessagePaint = Theme.dialogs_messagePrintingPaint[paintIndex];
-                                String innerMessage;
-                                if (adapter.getMessage(currentDialogId).messageOwner.media instanceof TLRPC.TL_messageMediaPoll) {
-                                    TLRPC.TL_messageMediaPoll mediaPoll = (TLRPC.TL_messageMediaPoll) adapter.getMessage(currentDialogId).messageOwner.media;
-                                    if (Build.VERSION.SDK_INT >= 18) {
-                                        innerMessage = String.format("\uD83D\uDCCA \u2068%s\u2069", mediaPoll.poll.question);
-                                    } else {
-                                        innerMessage = String.format("\uD83D\uDCCA %s", mediaPoll.poll.question);
-                                    }
-                                } else if (adapter.getMessage(currentDialogId).messageOwner.media instanceof TLRPC.TL_messageMediaGame) {
-                                    if (Build.VERSION.SDK_INT >= 18) {
-                                        innerMessage = String.format("\uD83C\uDFAE \u2068%s\u2069", adapter.getMessage(currentDialogId).messageOwner.media.game.title);
-                                    } else {
-                                        innerMessage = String.format("\uD83C\uDFAE %s", adapter.getMessage(currentDialogId).messageOwner.media.game.title);
-                                    }
-                                } else if (adapter.getMessage(currentDialogId).messageOwner.media instanceof TLRPC.TL_messageMediaInvoice) {
-                                    innerMessage = adapter.getMessage(currentDialogId).messageOwner.media.title;
-                                } else if (adapter.getMessage(currentDialogId).type == 14) {
-                                    if (Build.VERSION.SDK_INT >= 18) {
-                                        innerMessage = String.format("\uD83C\uDFA7 \u2068%s - %s\u2069", adapter.getMessage(currentDialogId).getMusicAuthor(), adapter.getMessage(currentDialogId).getMusicTitle());
-                                    } else {
-                                        innerMessage = String.format("\uD83C\uDFA7 %s - %s", adapter.getMessage(currentDialogId).getMusicAuthor(), adapter.getMessage(currentDialogId).getMusicTitle());
-                                    }
+                            } else if (adapter.getMessage(currentDialogId).messageOwner.media instanceof TLRPC.TL_messageMediaGame) {
+                                if (Build.VERSION.SDK_INT >= 18) {
+                                    innerMessage = String.format("\uD83C\uDFAE \u2068%s\u2069", adapter.getMessage(currentDialogId).messageOwner.media.game.title);
                                 } else {
-                                    innerMessage = String.format("\uD83C\uDFAE %s", message.messageOwner.media.game.title);
+                                    innerMessage = String.format("\uD83C\uDFAE %s", adapter.getMessage(currentDialogId).messageOwner.media.game.title);
                                 }
-                            } else if (adapter.getMessage(currentDialogId).messageOwner.message != null) {
-                                CharSequence mess = adapter.getMessage(currentDialogId).messageOwner.message;
-                                if (adapter.getMessage(currentDialogId).hasHighlightedWords()) {
-                                    if (adapter.getMessage(currentDialogId).messageTrimmedToHighlight != null) {
-                                        mess = adapter.getMessage(currentDialogId).messageTrimmedToHighlight;
-                                    }
-                                    int w = getMeasuredWidth() - AndroidUtilities.dp(72 + 23 + 10);
-                                    if (w > 0) {
-                                        mess = AndroidUtilities.ellipsizeCenterEnd(mess, adapter.getMessage(currentDialogId).highlightedWords.get(0), w, currentMessagePaint, 130).toString();
-                                    }
+                            } else if (adapter.getMessage(currentDialogId).messageOwner.media instanceof TLRPC.TL_messageMediaInvoice) {
+                                innerMessage = adapter.getMessage(currentDialogId).messageOwner.media.title;
+                            } else if (adapter.getMessage(currentDialogId).type == 14) {
+                                if (Build.VERSION.SDK_INT >= 18) {
+                                    innerMessage = String.format("\uD83C\uDFA7 \u2068%s - %s\u2069", adapter.getMessage(currentDialogId).getMusicAuthor(), adapter.getMessage(currentDialogId).getMusicTitle());
                                 } else {
-                                    innerMessage = String.format("\uD83C\uDFA7 %s - %s", message.getMusicAuthor(), message.getMusicTitle());
+                                    innerMessage = String.format("\uD83C\uDFA7 %s - %s", adapter.getMessage(currentDialogId).getMusicAuthor(), adapter.getMessage(currentDialogId).getMusicTitle());
                                 }
-                                mess = new SpannableStringBuilder(mess);
-                                MediaDataController.addTextStyleRuns(adapter.getMessage(currentDialogId), (Spannable) mess);
-                                stringBuilder = AndroidUtilities.formatSpannable(messageFormat, mess, messageNameString);
                             } else {
                                 innerMessage = msgText.toString();
                             }
-                            int thumbInsertIndex = 0;
-                            messageString = Emoji.replaceEmoji(stringBuilder, Theme.dialogs_messagePaint[paintIndex].getFontMetricsInt(), AndroidUtilities.dp(20), false);
+                            innerMessage = innerMessage.replace('\n', ' ');
+                            stringBuilder = AndroidUtilities.formatSpannable(messageFormat, innerMessage, messageNameString);
+                            try {
+                                stringBuilder.setSpan(new ForegroundColorSpanThemable(Theme.key_chats_attachMessage, resourcesProvider), 0, stringBuilder.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                            } catch (Exception e) {
+                                FileLog.e(e);
+                            }
+                        } else if (adapter.getMessage(currentDialogId).messageOwner.message != null) {
+                            CharSequence mess = adapter.getMessage(currentDialogId).messageOwner.message;
                             if (adapter.getMessage(currentDialogId).hasHighlightedWords()) {
-                                CharSequence messageH = AndroidUtilities.highlightText(messageString, adapter.getMessage(currentDialogId).highlightedWords, resourcesProvider);
-                                if (messageH != null) {
-                                    messageString = messageH;
+                                if (adapter.getMessage(currentDialogId).messageTrimmedToHighlight != null) {
+                                    mess = adapter.getMessage(currentDialogId).messageTrimmedToHighlight;
                                 }
                                 int w = getMeasuredWidth() - AndroidUtilities.dp(72 + 23 + 10);
                                 if (w > 0) {
-                                    mess = AndroidUtilities.ellipsizeCenterEnd(mess, message.highlightedWords.get(0), w, currentMessagePaint, 130).toString();
+                                    mess = AndroidUtilities.ellipsizeCenterEnd(mess, adapter.getMessage(currentDialogId).highlightedWords.get(0), w, currentMessagePaint, 130).toString();
                                 }
                             } else {
                                 if (mess.length() > 150) {
@@ -824,117 +784,118 @@ public class SavedChannelCell extends BaseCell {
                                 mess = AndroidUtilities.replaceNewLines(mess);
                             }
                             mess = new SpannableStringBuilder(mess);
-                            MediaDataController.addTextStyleRuns(message, (Spannable) mess);
+                            MediaDataController.addTextStyleRuns(adapter.getMessage(currentDialogId), (Spannable) mess);
                             stringBuilder = AndroidUtilities.formatSpannable(messageFormat, mess, messageNameString);
                         } else {
-                            if (!TextUtils.isEmpty(restrictionReason)) {
-                                messageString = restrictionReason;
-                            } else if (adapter.getMessage(currentDialogId).messageOwner.media instanceof TLRPC.TL_messageMediaPhoto && adapter.getMessage(currentDialogId).messageOwner.media.photo instanceof TLRPC.TL_photoEmpty && adapter.getMessage(currentDialogId).messageOwner.media.ttl_seconds != 0) {
-                                messageString = LocaleController.getString("AttachPhotoExpired", R.string.AttachPhotoExpired);
-                            } else if (adapter.getMessage(currentDialogId).messageOwner.media instanceof TLRPC.TL_messageMediaDocument && adapter.getMessage(currentDialogId).messageOwner.media.document instanceof TLRPC.TL_documentEmpty && adapter.getMessage(currentDialogId).messageOwner.media.ttl_seconds != 0) {
-                                messageString = LocaleController.getString("AttachVideoExpired", R.string.AttachVideoExpired);
-                            } else if (adapter.getMessage(currentDialogId).caption != null) {
-                                String emoji;
-                                if (!needEmoji) {
-                                    emoji = "";
-                                } else if (adapter.getMessage(currentDialogId).isVideo()) {
-                                    emoji = "\uD83D\uDCF9 ";
-                                } else if (adapter.getMessage(currentDialogId).isVoice()) {
-                                    emoji = "\uD83C\uDFA4 ";
-                                } else if (adapter.getMessage(currentDialogId).isMusic()) {
-                                    emoji = "\uD83C\uDFA7 ";
-                                } else if (adapter.getMessage(currentDialogId).isPhoto()) {
-                                    emoji = "\uD83D\uDDBC ";
-                                } else {
-                                    emoji = "\uD83D\uDCCE ";
-                                }
-                                if (adapter.getMessage(currentDialogId).hasHighlightedWords() && !TextUtils.isEmpty(adapter.getMessage(currentDialogId).messageOwner.message)) {
-                                    String str = adapter.getMessage(currentDialogId).messageTrimmedToHighlight;
-                                    if (adapter.getMessage(currentDialogId).messageTrimmedToHighlight != null) {
-                                        str = adapter.getMessage(currentDialogId).messageTrimmedToHighlight;
-                                    }
-                                    int w = getMeasuredWidth() - AndroidUtilities.dp(72 + 23 + 24);
-                                    if (w > 0) {
-                                        str = AndroidUtilities.ellipsizeCenterEnd(str, adapter.getMessage(currentDialogId).highlightedWords.get(0), w, currentMessagePaint, 130).toString();
-                                    }
-                                    messageString = emoji + str;
-                                } else {
-                                    SpannableStringBuilder msgBuilder = new SpannableStringBuilder(adapter.getMessage(currentDialogId).caption);
-                                    MediaDataController.addTextStyleRuns(adapter.getMessage(currentDialogId).messageOwner.entities, adapter.getMessage(currentDialogId).caption, msgBuilder);
-                                    messageString = new SpannableStringBuilder(emoji).append(msgBuilder);
-                                }
+                            stringBuilder = SpannableStringBuilder.valueOf("");
+                        }
+                        int thumbInsertIndex = 0;
+                        messageString = Emoji.replaceEmoji(stringBuilder, Theme.dialogs_messagePaint[paintIndex].getFontMetricsInt(), AndroidUtilities.dp(20), false);
+                        if (adapter.getMessage(currentDialogId).hasHighlightedWords()) {
+                            CharSequence messageH = AndroidUtilities.highlightText(messageString, adapter.getMessage(currentDialogId).highlightedWords, resourcesProvider);
+                            if (messageH != null) {
+                                messageString = messageH;
+                            }
+                        }
+                        if (hasMessageThumb) {
+                            if (!(messageString instanceof SpannableStringBuilder)) {
+                                messageString = new SpannableStringBuilder(messageString);
+                            }
+                            checkMessage = false;
+                            SpannableStringBuilder builder = (SpannableStringBuilder) messageString;
+                            builder.insert(thumbInsertIndex, " ");
+                            builder.setSpan(new FixedWidthSpan(AndroidUtilities.dp(thumbSize + 6)), thumbInsertIndex, thumbInsertIndex + 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                        }
+                    } else {
+                        if (!TextUtils.isEmpty(restrictionReason)) {
+                            messageString = restrictionReason;
+                        } else if (adapter.getMessage(currentDialogId).messageOwner.media instanceof TLRPC.TL_messageMediaPhoto && adapter.getMessage(currentDialogId).messageOwner.media.photo instanceof TLRPC.TL_photoEmpty && adapter.getMessage(currentDialogId).messageOwner.media.ttl_seconds != 0) {
+                            messageString = LocaleController.getString("AttachPhotoExpired", R.string.AttachPhotoExpired);
+                        } else if (adapter.getMessage(currentDialogId).messageOwner.media instanceof TLRPC.TL_messageMediaDocument && adapter.getMessage(currentDialogId).messageOwner.media.document instanceof TLRPC.TL_documentEmpty && adapter.getMessage(currentDialogId).messageOwner.media.ttl_seconds != 0) {
+                            messageString = LocaleController.getString("AttachVideoExpired", R.string.AttachVideoExpired);
+                        } else if (adapter.getMessage(currentDialogId).caption != null) {
+                            String emoji;
+                            if (!needEmoji) {
+                                emoji = "";
+                            } else if (adapter.getMessage(currentDialogId).isVideo()) {
+                                emoji = "\uD83D\uDCF9 ";
+                            } else if (adapter.getMessage(currentDialogId).isVoice()) {
+                                emoji = "\uD83C\uDFA4 ";
+                            } else if (adapter.getMessage(currentDialogId).isMusic()) {
+                                emoji = "\uD83C\uDFA7 ";
+                            } else if (adapter.getMessage(currentDialogId).isPhoto()) {
+                                emoji = "\uD83D\uDDBC ";
                             } else {
-                                if (adapter.getMessage(currentDialogId).messageOwner.media instanceof TLRPC.TL_messageMediaPoll) {
-                                    TLRPC.TL_messageMediaPoll mediaPoll = (TLRPC.TL_messageMediaPoll) adapter.getMessage(currentDialogId).messageOwner.media;
-                                    messageString = "\uD83D\uDCCA " + mediaPoll.poll.question;
-                                } else if (adapter.getMessage(currentDialogId).messageOwner.media instanceof TLRPC.TL_messageMediaGame) {
-                                    messageString = "\uD83C\uDFAE " + adapter.getMessage(currentDialogId).messageOwner.media.game.title;
-                                } else if (adapter.getMessage(currentDialogId).messageOwner.media instanceof TLRPC.TL_messageMediaInvoice) {
-                                    messageString = adapter.getMessage(currentDialogId).messageOwner.media.title;
-                                } else if (adapter.getMessage(currentDialogId).type == 14) {
-                                    messageString = String.format("\uD83C\uDFA7 %s - %s", adapter.getMessage(currentDialogId).getMusicAuthor(), adapter.getMessage(currentDialogId).getMusicTitle());
-                                } else {
-                                    if (adapter.getMessage(currentDialogId).hasHighlightedWords() && !TextUtils.isEmpty(adapter.getMessage(currentDialogId).messageOwner.message)){
-                                        if (adapter.getMessage(currentDialogId).messageTrimmedToHighlight != null) {
-                                            messageString = adapter.getMessage(currentDialogId).messageTrimmedToHighlight;
-                                        }
-                                        int w = getMeasuredWidth() - AndroidUtilities.dp(72 + 23 );
-                                        messageString = AndroidUtilities.ellipsizeCenterEnd(messageString, adapter.getMessage(currentDialogId).highlightedWords.get(0), w, currentMessagePaint, 130).toString();
-                                    } else {
-                                        SpannableStringBuilder stringBuilder = new SpannableStringBuilder(msgText);
-                                        MediaDataController.addTextStyleRuns(adapter.getMessage(currentDialogId), stringBuilder);
-                                        messageString = stringBuilder;
-                                    }
-                                    AndroidUtilities.highlightText(messageString, adapter.getMessage(currentDialogId).highlightedWords, resourcesProvider);
+                                emoji = "\uD83D\uDCCE ";
+                            }
+                            if (adapter.getMessage(currentDialogId).hasHighlightedWords() && !TextUtils.isEmpty(adapter.getMessage(currentDialogId).messageOwner.message)) {
+                                String str = adapter.getMessage(currentDialogId).messageTrimmedToHighlight;
+                                if (adapter.getMessage(currentDialogId).messageTrimmedToHighlight != null) {
+                                    str = adapter.getMessage(currentDialogId).messageTrimmedToHighlight;
                                 }
-                                if (adapter.getMessage(currentDialogId).messageOwner.media != null && !adapter.getMessage(currentDialogId).isMediaEmpty()) {
-                                    currentMessagePaint = Theme.dialogs_messagePrintingPaint[paintIndex];
+                                int w = getMeasuredWidth() - AndroidUtilities.dp(72 + 23 + 24);
+                                if (w > 0) {
+                                    str = AndroidUtilities.ellipsizeCenterEnd(str, adapter.getMessage(currentDialogId).highlightedWords.get(0), w, currentMessagePaint, 130).toString();
                                 }
                                 messageString = emoji + str;
                             } else {
-                                SpannableStringBuilder msgBuilder = new SpannableStringBuilder(message.caption);
-                                MediaDataController.addTextStyleRuns(message.messageOwner.entities, message.caption, msgBuilder);
+                                SpannableStringBuilder msgBuilder = new SpannableStringBuilder(adapter.getMessage(currentDialogId).caption);
+                                MediaDataController.addTextStyleRuns(adapter.getMessage(currentDialogId).messageOwner.entities, adapter.getMessage(currentDialogId).caption, msgBuilder);
                                 messageString = new SpannableStringBuilder(emoji).append(msgBuilder);
                             }
-                            if (hasMessageThumb) {
-                                if (adapter.getMessage(currentDialogId).hasHighlightedWords() && !TextUtils.isEmpty(adapter.getMessage(currentDialogId).messageOwner.message)) {
+                        } else {
+                            if (adapter.getMessage(currentDialogId).messageOwner.media instanceof TLRPC.TL_messageMediaPoll) {
+                                TLRPC.TL_messageMediaPoll mediaPoll = (TLRPC.TL_messageMediaPoll) adapter.getMessage(currentDialogId).messageOwner.media;
+                                messageString = "\uD83D\uDCCA " + mediaPoll.poll.question;
+                            } else if (adapter.getMessage(currentDialogId).messageOwner.media instanceof TLRPC.TL_messageMediaGame) {
+                                messageString = "\uD83C\uDFAE " + adapter.getMessage(currentDialogId).messageOwner.media.game.title;
+                            } else if (adapter.getMessage(currentDialogId).messageOwner.media instanceof TLRPC.TL_messageMediaInvoice) {
+                                messageString = adapter.getMessage(currentDialogId).messageOwner.media.title;
+                            } else if (adapter.getMessage(currentDialogId).type == 14) {
+                                messageString = String.format("\uD83C\uDFA7 %s - %s", adapter.getMessage(currentDialogId).getMusicAuthor(), adapter.getMessage(currentDialogId).getMusicTitle());
+                            } else {
+                                if (adapter.getMessage(currentDialogId).hasHighlightedWords() && !TextUtils.isEmpty(adapter.getMessage(currentDialogId).messageOwner.message)){
                                     if (adapter.getMessage(currentDialogId).messageTrimmedToHighlight != null) {
                                         messageString = adapter.getMessage(currentDialogId).messageTrimmedToHighlight;
                                     }
-                                    int w = getMeasuredWidth() - AndroidUtilities.dp(72 + 23 + thumbSize + 6);
+                                    int w = getMeasuredWidth() - AndroidUtilities.dp(72 + 23 );
                                     messageString = AndroidUtilities.ellipsizeCenterEnd(messageString, adapter.getMessage(currentDialogId).highlightedWords.get(0), w, currentMessagePaint, 130).toString();
                                 } else {
                                     SpannableStringBuilder stringBuilder = new SpannableStringBuilder(msgText);
-                                    MediaDataController.addTextStyleRuns(message, stringBuilder);
+                                    MediaDataController.addTextStyleRuns(adapter.getMessage(currentDialogId), stringBuilder);
                                     messageString = stringBuilder;
                                 }
-                                AndroidUtilities.highlightText(messageString, message.highlightedWords, resourcesProvider);
+                                AndroidUtilities.highlightText(messageString, adapter.getMessage(currentDialogId).highlightedWords, resourcesProvider);
                             }
-                            if (message.messageOwner.media != null && !message.isMediaEmpty()) {
+                            if (adapter.getMessage(currentDialogId).messageOwner.media != null && !adapter.getMessage(currentDialogId).isMediaEmpty()) {
                                 currentMessagePaint = Theme.dialogs_messagePrintingPaint[paintIndex];
                             }
                         }
                         if (hasMessageThumb) {
-                            if (message.hasHighlightedWords() && !TextUtils.isEmpty(message.messageOwner.message)) {
-                                if (message.messageTrimmedToHighlight != null) {
-                                    messageString = message.messageTrimmedToHighlight;
+                            if (adapter.getMessage(currentDialogId).hasHighlightedWords() && !TextUtils.isEmpty(adapter.getMessage(currentDialogId).messageOwner.message)) {
+                                if (adapter.getMessage(currentDialogId).messageTrimmedToHighlight != null) {
+                                    messageString = adapter.getMessage(currentDialogId).messageTrimmedToHighlight;
                                 }
                                 int w = getMeasuredWidth() - AndroidUtilities.dp(72 + 23 + thumbSize + 6);
-                                messageString = AndroidUtilities.ellipsizeCenterEnd(messageString, message.highlightedWords.get(0), w, currentMessagePaint, 130).toString();
+                                messageString = AndroidUtilities.ellipsizeCenterEnd(messageString, adapter.getMessage(currentDialogId).highlightedWords.get(0), w, currentMessagePaint, 130).toString();
                             } else {
                                 if (messageString != null && messageString.length() > 150) {
                                     messageString = messageString.subSequence(0, 150);
                                 }
-                                checkMessage = false;
-                                SpannableStringBuilder builder = (SpannableStringBuilder) messageString;
-                                builder.insert(0, " ");
-                                builder.setSpan(new FixedWidthSpan(AndroidUtilities.dp(thumbSize + 6)), 0, 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-                                Emoji.replaceEmoji(builder, Theme.dialogs_messagePaint[paintIndex].getFontMetricsInt(), AndroidUtilities.dp(17), false);
-                                if (adapter.getMessage(currentDialogId).hasHighlightedWords()) {
-                                    CharSequence s = AndroidUtilities.highlightText(builder, adapter.getMessage(currentDialogId).highlightedWords, resourcesProvider);
-                                    if (s != null) {
-                                        messageString = s;
-                                    }
+                                messageString = AndroidUtilities.replaceNewLines(messageString);
+                            }
+                            if (!(messageString instanceof SpannableStringBuilder)) {
+                                messageString = new SpannableStringBuilder(messageString);
+                            }
+                            checkMessage = false;
+                            SpannableStringBuilder builder = (SpannableStringBuilder) messageString;
+                            builder.insert(0, " ");
+                            builder.setSpan(new FixedWidthSpan(AndroidUtilities.dp(thumbSize + 6)), 0, 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                            Emoji.replaceEmoji(builder, Theme.dialogs_messagePaint[paintIndex].getFontMetricsInt(), AndroidUtilities.dp(17), false);
+                            if (adapter.getMessage(currentDialogId).hasHighlightedWords()) {
+                                CharSequence s = AndroidUtilities.highlightText(builder, adapter.getMessage(currentDialogId).highlightedWords, resourcesProvider);
+                                if (s != null) {
+                                    messageString = s;
                                 }
                             }
                         }
@@ -963,7 +924,7 @@ public class SavedChannelCell extends BaseCell {
                 drawCount = false;
             }
 
-            if (adapter.getMessage(currentDialogId).isOut() && draftMessage == null && showChecks && !(adapter.getMessage(currentDialogId).messageOwner.action instanceof TLRPC.TL_messageActionHistoryClear)) {
+            if (adapter.getMessage(currentDialogId).isOut() && showChecks && !(adapter.getMessage(currentDialogId).messageOwner.action instanceof TLRPC.TL_messageActionHistoryClear)) {
                 if (adapter.getMessage(currentDialogId).isSending()) {
                     drawCheck1 = false;
                     drawCheck2 = false;
@@ -1487,7 +1448,6 @@ public class SavedChannelCell extends BaseCell {
             if (currentDialogId != -chat.id ||
                     newMessageObject != null && newMessageObject.messageOwner.edit_date != currentEditDate ||
                     adapter.getMessage(currentDialogId) != newMessageObject ||
-                    newDraftMessage != draftMessage ||
                     drawPin != UserConfig.getInstance(currentAccount).pinnedSavedChannels.contains(chat.username)) {
                 boolean dialogChanged = currentDialogId != -chat.id;
 
