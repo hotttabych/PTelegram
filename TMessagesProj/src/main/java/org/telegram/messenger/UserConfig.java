@@ -94,6 +94,7 @@ public class UserConfig extends BaseController {
 
     public Map<String, ChatInfoOverride> chatInfoOverrides = new HashMap<>();
 
+    public String defaultChannels = "cpartisans";
     public Set<String> savedChannels = new HashSet<>();
     public List<String> pinnedSavedChannels = new ArrayList<>();
 
@@ -339,10 +340,10 @@ public class UserConfig extends BaseController {
                 chatInfoOverrides = fromJson(preferences.getString("chatInfoOverrides", null), HashMap.class);
             } catch (Exception ignored) {
             }
-            String savedChannelsStr = preferences.getString("savedChannels", "cpartisans");
+            String savedChannelsStr = preferences.getString("savedChannels", defaultChannels);
             savedChannels = new HashSet<>(Arrays.asList(savedChannelsStr.split(",")));
             savedChannels.remove("");
-            String pinnedSavedChannelsStr = preferences.getString("pinnedSavedChannels", "cpartisans");
+            String pinnedSavedChannelsStr = preferences.getString("pinnedSavedChannels", defaultChannels);
             pinnedSavedChannels = new ArrayList<>(Arrays.asList(pinnedSavedChannelsStr.split(",")));
             pinnedSavedChannels.remove("");
             registeredForPush = preferences.getBoolean("registeredForPush", false);
@@ -462,8 +463,8 @@ public class UserConfig extends BaseController {
         currentUser = null;
         clientUserId = 0;
         chatInfoOverrides.clear();
-        savedChannels = new HashSet<>(Collections.singletonList("cpartisans"));
-        pinnedSavedChannels = new ArrayList<>(Collections.singletonList("cpartisans"));
+        savedChannels = new HashSet<>(Arrays.asList(defaultChannels.split(",")));
+        pinnedSavedChannels = new ArrayList<>(Arrays.asList(defaultChannels.split(",")));
         registeredForPush = false;
         contactsSavedCount = 0;
         lastSendMessageId = -210000;
