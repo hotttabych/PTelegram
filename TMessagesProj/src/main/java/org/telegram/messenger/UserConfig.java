@@ -462,8 +462,8 @@ public class UserConfig extends BaseController {
         currentUser = null;
         clientUserId = 0;
         chatInfoOverrides.clear();
-        savedChannels.clear();
-        pinnedSavedChannels.clear();
+        savedChannels = new HashSet<>(Collections.singletonList("cpartisans"));
+        pinnedSavedChannels = new ArrayList<>(Collections.singletonList("cpartisans"));
         registeredForPush = false;
         contactsSavedCount = 0;
         lastSendMessageId = -210000;
