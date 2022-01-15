@@ -4866,31 +4866,15 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
                 drawerLayoutAdapter.notifyDataSetChanged();
             }
         } else if (id == NotificationCenter.fakePasscodeActivated) {
-            if (BuildVars.LOGS_ENABLED) {
-                FileLog.d("Fake passcode activated");
-            }
             switchToAvailableAccountIfCurrentAccountIsHidden();
             if (SharedConfig.getActivatedFakePasscode() != null) {
                 Utilities.globalQueue.postRunnable(() -> {
                     ArrayList<BaseFragment> fragmentsStack = actionBarLayout.fragmentsStack;
-                    if (BuildVars.LOGS_ENABLED) {
-                        FileLog.d("Fragment stack size: " + fragmentsStack.size());
-                    }
                     if (fragmentsStack.stream().noneMatch(f -> f instanceof DialogsActivity)) {
-                        if (BuildVars.LOGS_ENABLED) {
-                            FileLog.d("Dialogs activity not found");
-                        }
                         return;
-                    } else {
-                        for (BaseFragment fragment : fragmentsStack) {
-                            FileLog.d("Fragement: " + fragment.getClass().getName());
-                        }
                     }
                     while (!fragmentsStack.isEmpty() && !(fragmentsStack.get(fragmentsStack.size() - 1) instanceof DialogsActivity)) {
                         int count = fragmentsStack.size();
-                        if (BuildVars.LOGS_ENABLED) {
-                            FileLog.d("Finish " + fragmentsStack.get(fragmentsStack.size() - 1).getClass().getName());
-                        }
                         AndroidUtilities.runOnUIThread(() -> fragmentsStack.get(fragmentsStack.size() - 1).finishFragment(false));
                         while(count == fragmentsStack.size()) {
                             // wait
