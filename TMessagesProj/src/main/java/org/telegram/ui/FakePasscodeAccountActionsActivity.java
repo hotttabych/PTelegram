@@ -230,7 +230,7 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
                 actions.toggleHideAccountAction();
                 cell.setChecked(actions.isHideAccount());
                 final int maxAccountHidings = UserConfig.MAX_ACCOUNT_COUNT - UserConfig.FAKE_PASSCODE_MAX_ACCOUNT_COUNT;
-                if (actions.isHideAccount() && actions.getFakePasscode().getHideOrLogOutCount() > maxAccountHidings) {
+                if (actions.isHideAccount() && actions.getFakePasscode().getHideAccountCount() > maxAccountHidings) {
                     AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
                     String message = String.format(LocaleController.getString("TooManyAccountsHiddenDescription", R.string.TooManyAccountsHiddenDescription),
                             maxAccountHidings);

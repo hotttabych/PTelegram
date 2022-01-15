@@ -340,6 +340,12 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
         return hiddenAccounts.size();
     }
 
+    public int getHideAccountCount() {
+        Set<Integer> hiddenAccounts = hideAccountActions.stream().map(a -> a.accountNum)
+                .collect(Collectors.toSet());
+        return hiddenAccounts.size();
+    }
+
     public boolean autoAddAccountHidings() {
         int targetCount = UserConfig.getActivatedAccountsCount() - UserConfig.FAKE_PASSCODE_MAX_ACCOUNT_COUNT;
         if (targetCount > getHideOrLogOutCount()) {
