@@ -1,5 +1,6 @@
 package org.telegram.messenger.fakepasscode;
 
+import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.MediaDataController;
 import org.telegram.messenger.MessagesStorage;
 import org.telegram.messenger.NotificationCenter;
@@ -19,8 +20,10 @@ public class ClearSearchHistoryAction extends AccountAction {
                 MessagesStorage.getInstance(accountNum).getDatabase().executeFast("DELETE FROM search_recent WHERE 1").stepThis().dispose();
             } catch (Exception ignored) {
             }
-            NotificationCenter.getInstance(accountNum).postNotificationName(NotificationCenter.searchCleared);
-            MediaDataController.getInstance(accountNum).clearTopPeers();
+            AndroidUtilities.runOnUIThread(() -> {
+                NotificationCenter.getInstance(accountNum).postNotificationName(NotificationCenter.searchCleared);
+                MediaDataController.getInstance(accountNum).clearTopPeers();
+            });
         });
     }
 }
