@@ -1,14 +1,14 @@
 package org.telegram.messenger.fakepasscode;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.MediaDataController;
 import org.telegram.messenger.MessagesStorage;
 import org.telegram.messenger.NotificationCenter;
 
+@JsonIgnoreProperties(ignoreUnknown=true)
 public class ClearSearchHistoryAction extends AccountAction {
-    // Required for backward compatibility
-    public boolean enabled = false;
-
     @Override
     public void execute() {
         MessagesStorage.getInstance(accountNum).getStorageQueue().postRunnable(() -> {
