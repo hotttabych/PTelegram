@@ -1163,16 +1163,24 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
                         hideActionMode();
                     }
                 } else if (id == delete) {
-                    List<String> selectedUsernames = chatsAdapter.getSelectedUserNames();
-                    UserConfig userConfig = getUserConfig();
-                    userConfig.savedChannels.removeAll(selectedUsernames);
-                    userConfig.pinnedSavedChannels.removeAll(selectedUsernames);
-                    userConfig.saveConfig(true);
-                    chatsAdapter.removeItems(selectedUsernames);
-                    getNotificationCenter().postNotificationName(NotificationCenter.dialogsNeedReload);
-                    if (actionBar.isActionModeShowed()) {
-                        hideActionMode();
-                    }
+                    AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
+                    builder.setTitle(LocaleController.formatString("DeleteFewChatsTitle", R.string.DeleteFewChatsTitle, LocaleController.formatPluralString("ChatsSelected", chatsAdapter.getSelectedDialogCount())));
+                    builder.setMessage(LocaleController.getString("AreYouSureDeleteFewChats", R.string.AreYouSureDeleteFewChats));
+                    builder.setPositiveButton(LocaleController.getString("Delete", R.string.Delete), (dialog1, which) -> {
+                        List<String> selectedUsernames = chatsAdapter.getSelectedUserNames();
+                        UserConfig userConfig = getUserConfig();
+                        userConfig.savedChannels.removeAll(selectedUsernames);
+                        userConfig.pinnedSavedChannels.removeAll(selectedUsernames);
+                        userConfig.saveConfig(true);
+                        chatsAdapter.removeItems(selectedUsernames);
+                        getNotificationCenter().postNotificationName(NotificationCenter.dialogsNeedReload);
+                        if (actionBar.isActionModeShowed()) {
+                            hideActionMode();
+                        }
+                    });
+                    builder.setNegativeButton(LocaleController.getString("Cancel", R.string.Cancel), null);
+                    AlertDialog alertDialog = builder.create();
+                    showDialog(alertDialog);
                 }
             }
         });

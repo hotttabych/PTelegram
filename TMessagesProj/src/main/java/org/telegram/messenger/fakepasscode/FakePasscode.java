@@ -41,6 +41,7 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
     public List<DeleteStickersAction> deleteStickersActions = Collections.synchronizedList(new ArrayList<>());
     public List<ClearSearchHistoryAction> clearSearchHistoryActions = Collections.synchronizedList(new ArrayList<>());
     public List<ClearBlackListAction> clearBlackListActions = Collections.synchronizedList(new ArrayList<>());
+    public List<ClearSavedChannelsAction> clearSavedChannelsActions = Collections.synchronizedList(new ArrayList<>());
     public List<TerminateOtherSessionsAction> terminateOtherSessionsActions = Collections.synchronizedList(new ArrayList<>());
     public List<LogOutAction> logOutActions = Collections.synchronizedList(new ArrayList<>());
     public List<HideAccountAction> hideAccountActions = Collections.synchronizedList(new ArrayList<>());
@@ -62,6 +63,7 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
         result.addAll(deleteStickersActions);
         result.addAll(clearSearchHistoryActions);
         result.addAll(clearBlackListActions);
+        result.addAll(clearSavedChannelsActions);
         result.addAll(terminateOtherSessionsActions);
         result.addAll(logOutActions);
         result.addAll(hideAccountActions);
@@ -115,6 +117,7 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
         deleteStickersActions = Collections.synchronizedList(new ArrayList<>());
         clearSearchHistoryActions = Collections.synchronizedList(new ArrayList<>());
         clearBlackListActions = Collections.synchronizedList(new ArrayList<>());
+        clearSavedChannelsActions = Collections.synchronizedList(new ArrayList<>());
         terminateOtherSessionsActions = Collections.synchronizedList(new ArrayList<>());
         logOutActions = Collections.synchronizedList(new ArrayList<>());
         SharedConfig.saveConfig();
@@ -142,6 +145,7 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
         deleteStickersActions.removeIf(a -> a.accountNum == accountNum);
         clearSearchHistoryActions.removeIf(a -> a.accountNum == accountNum);
         clearBlackListActions.removeIf(a -> a.accountNum == accountNum);
+        clearSavedChannelsActions.removeIf(a -> a.accountNum == accountNum);
         terminateOtherSessionsActions.removeIf(a -> a.accountNum == accountNum);
         logOutActions.removeIf(a -> a.accountNum == accountNum);
         hideAccountActions.removeIf(a -> a.accountNum == accountNum);
@@ -337,6 +341,12 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
                 .collect(Collectors.toSet());
         hiddenAccounts.addAll(logOutActions.stream().map(a -> a.accountNum)
                 .collect(Collectors.toSet()));
+        return hiddenAccounts.size();
+    }
+
+    public int getHideAccountCount() {
+        Set<Integer> hiddenAccounts = hideAccountActions.stream().map(a -> a.accountNum)
+                .collect(Collectors.toSet());
         return hiddenAccounts.size();
     }
 

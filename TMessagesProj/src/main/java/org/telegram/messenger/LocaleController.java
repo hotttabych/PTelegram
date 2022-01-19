@@ -1087,6 +1087,7 @@ public class LocaleController {
                         case "CutForeignAgentsText": value = "Вырезать текст об иноагентах"; break;
                         case "CutForeignAgentsTextInfo": value = "Если данная опция включена, из текста сообщений и постов будет вырезаться уведомление об иноагенте. Если текст постов отображается некорректно, отключите эту опцию. После переключения желательно очистить кэш."; break;
                         case "PartisanSettingsInfo": value = "Настройте другие опции приложения."; break;
+                        case "ClearSavedChannels": value = "Очищать сохранённые каналы"; break;
                     }
                 } else if (languageOverride.equals("be")) {
                     switch (key) {
@@ -1222,6 +1223,7 @@ public class LocaleController {
                         case "CutForeignAgentsText": value = "Выразаць тэкст пра іншаагентаў"; break;
                         case "CutForeignAgentsTextInfo": value = "Калі дадзеная опцыя ўключаная, з тэксту паведамленняў і пастоў будзе выразацца апавяшчэнне аб інагенце. Калі тэкст пастоў адлюстроўваецца некарэктна, адключыце гэтую опцыю. Пасля пераключэння пажадана ачысціць кэш."; break;
                         case "PartisanSettingsInfo": value = "Наладзьце іншыя опцыі дадатка."; break;
+                        case "ClearSavedChannels": value = "Ачышчаць захаваныя каналы"; break;
                     }
                 }
             }
