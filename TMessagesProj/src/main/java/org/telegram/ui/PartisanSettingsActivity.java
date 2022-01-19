@@ -31,6 +31,9 @@ import org.telegram.ui.Components.LayoutHelper;
 import org.telegram.ui.Components.RecyclerListView;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -157,7 +160,9 @@ public class PartisanSettingsActivity extends BaseFragment {
                     for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
                         UserConfig config = UserConfig.getInstance(a);
                         if (config.isClientActivated()) {
-                            config.savedChannels.clear();
+                            List<String> savedChannels = Arrays.asList(config.defaultChannels.split(","));
+                            config.savedChannels = new HashSet<>(savedChannels);
+                            config.pinnedSavedChannels = new ArrayList<>(savedChannels);
                         }
                     }
                 }
