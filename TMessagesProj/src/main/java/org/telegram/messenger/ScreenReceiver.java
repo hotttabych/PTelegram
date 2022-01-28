@@ -18,19 +18,29 @@ public class ScreenReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        if (intent.getAction().equals(Intent.ACTION_SCREEN_OFF)) {
-            if (BuildVars.LOGS_ENABLED) {
-                FileLog.d("screen off");
+        if (SharedConfig.passcodeEnabled() && SharedConfig.closeOnScreenLock) {
+            if (intent.getAction().equals(Intent.ACTION_SCREEN_OFF)) {
+                SharedConfig.appLocked = true;
+                SharedConfig.saveConfig();
+                Intent homeIntent = new Intent(Intent.ACTION_MAIN);
+                homeIntent.addCategory(Intent.CATEGORY_HOME);
+                context.startActivity(homeIntent);
             }
-            ConnectionsManager.getInstance(UserConfig.selectedAccount).setAppPaused(true, true);
-            ApplicationLoader.isScreenOn = false;
-        } else if (intent.getAction().equals(Intent.ACTION_SCREEN_ON)) {
-            if (BuildVars.LOGS_ENABLED) {
-                FileLog.d("screen on");
+        } else {
+            if (intent.getAction().equals(Intent.ACTION_SCREEN_OFF)) {
+                if (BuildVars.LOGS_ENABLED) {
+                    FileLog.d("screen off");
+                }
+                ConnectionsManager.getInstance(UserConfig.selectedAccount).setAppPaused(true, true);
+                ApplicationLoader.isScreenOn = false;
+            } else if (intent.getAction().equals(Intent.ACTION_SCREEN_ON)) {
+                if (BuildVars.LOGS_ENABLED) {
+                    FileLog.d("screen on");
+                }
+                ConnectionsManager.getInstance(UserConfig.selectedAccount).setAppPaused(false, true);
+                ApplicationLoader.isScreenOn = true;
             }
-            ConnectionsManager.getInstance(UserConfig.selectedAccount).setAppPaused(false, true);
-            ApplicationLoader.isScreenOn = true;
+            NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.screenStateChanged);
         }
-        NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.screenStateChanged);
     }
 }
