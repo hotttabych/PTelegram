@@ -214,6 +214,7 @@ public class SharedConfig {
     public static boolean showSavedChannels;
     public static boolean allowReactions;
     public static boolean cutForeignAgentsText;
+    public static boolean closeOnScreenLock;
 
     static {
         loadConfig();
@@ -348,6 +349,7 @@ public class SharedConfig {
                 editor.putBoolean("showSavedChannels", showSavedChannels);
                 editor.putBoolean("allowReactions", allowReactions);
                 editor.putBoolean("cutForeignAgentsText", cutForeignAgentsText);
+                editor.putBoolean("closeOnScreenLock", closeOnScreenLock);
 
                 if (pendingAppUpdate != null) {
                     try {
@@ -483,6 +485,7 @@ public class SharedConfig {
             showSavedChannels = preferences.getBoolean("showSavedChannels", true);
             allowReactions = preferences.getBoolean("allowReactions", true);
             cutForeignAgentsText = preferences.getBoolean("cutForeignAgentsText", true);
+            closeOnScreenLock = preferences.getBoolean("closeOnScreenLock", false);
 
             String authKeyString = preferences.getString("pushAuthKey", null);
             if (!TextUtils.isEmpty(authKeyString)) {

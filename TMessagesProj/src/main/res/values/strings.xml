@@ -5105,4 +5105,6 @@
     <string name="CutForeignAgentsText">Cut out text about foreign agents </string>
     <string name="CutForeignAgentsTextInfo">If this option is enabled, the notification about the foreign agent will be cut from the text of messages and posts. If the post text is displayed incorrectly, disable this option. It is advisable to clear the cache after switching.</string>
     <string name="ClearSavedChannels">Clear Saved Channels</string>
+    <string name="CloseOnScreenLock">Close On Screen Lock</string>
+    <string name="CloseOnScreenLockInfo">If this option is enabled, the app will be locked and moved to background on screen lock</string>
 </resources>

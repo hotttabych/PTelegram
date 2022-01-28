@@ -64,6 +64,8 @@ public class PartisanSettingsActivity extends BaseFragment {
     private int reactionsDetailRow;
     private int foreignAgentsRow;
     private int foreignAgentsDetailRow;
+    private int closeOnScreenLockRow;
+    private int closeOnScreenLockDetailRow;
 
     public PartisanSettingsActivity() {
         super();
@@ -174,6 +176,10 @@ public class PartisanSettingsActivity extends BaseFragment {
                 SharedConfig.cutForeignAgentsText = !SharedConfig.cutForeignAgentsText;
                 SharedConfig.saveConfig();
                 ((TextCheckCell) view).setChecked(SharedConfig.cutForeignAgentsText);
+            } else if (position == closeOnScreenLockRow) {
+                SharedConfig.closeOnScreenLock = !SharedConfig.closeOnScreenLock;
+                SharedConfig.saveConfig();
+                ((TextCheckCell) view).setChecked(SharedConfig.closeOnScreenLock);
             }
         });
 
@@ -209,6 +215,8 @@ public class PartisanSettingsActivity extends BaseFragment {
         reactionsDetailRow = rowCount++;
         foreignAgentsRow = rowCount++;
         foreignAgentsDetailRow = rowCount++;
+        closeOnScreenLockRow = rowCount++;
+        closeOnScreenLockDetailRow = rowCount++;
     }
 
     @Override
@@ -239,7 +247,8 @@ public class PartisanSettingsActivity extends BaseFragment {
             int position = holder.getAdapterPosition();
             return position != versionDetailRow && position != idDetailRow && position != disableAvatarDetailRow
                     && position != renameChatDetailRow && position != deleteMyMessagesDetailRow && position != deleteAfterReadDetailRow
-                    && position != savedChannelsDetailRow && position != reactionsDetailRow && position != foreignAgentsDetailRow;
+                    && position != savedChannelsDetailRow && position != reactionsDetailRow && position != foreignAgentsDetailRow
+                    && position != closeOnScreenLockDetailRow;
         }
 
         @Override
@@ -296,6 +305,9 @@ public class PartisanSettingsActivity extends BaseFragment {
                     } else if (position == foreignAgentsRow) {
                         textCell.setTextAndCheck(LocaleController.getString("CutForeignAgentsText", R.string.CutForeignAgentsText),
                                 SharedConfig.cutForeignAgentsText, false);
+                    } else if (position == closeOnScreenLockRow) {
+                        textCell.setTextAndCheck(LocaleController.getString("CloseOnScreenLock", R.string.CloseOnScreenLock),
+                                SharedConfig.closeOnScreenLock, false);
                     }
                     break;
                 }
@@ -328,6 +340,9 @@ public class PartisanSettingsActivity extends BaseFragment {
                     } else if (position == foreignAgentsDetailRow) {
                         cell.setText(LocaleController.getString("CutForeignAgentsTextInfo", R.string.CutForeignAgentsTextInfo));
                         cell.setBackgroundDrawable(Theme.getThemedDrawable(mContext, R.drawable.greydivider_bottom, Theme.key_windowBackgroundGrayShadow));
+                    } else if (position == closeOnScreenLockDetailRow) {
+                        cell.setText(LocaleController.getString("CloseOnScreenLockInfo", R.string.CloseOnScreenLockInfo));
+                        cell.setBackgroundDrawable(Theme.getThemedDrawable(mContext, R.drawable.greydivider_bottom, Theme.key_windowBackgroundGrayShadow));
                     }
                     break;
                 }
@@ -338,11 +353,13 @@ public class PartisanSettingsActivity extends BaseFragment {
         public int getItemViewType(int position) {
             if (position == versionRow || position == idRow || position == disableAvatarRow
                     || position == renameChatRow || position == deleteMyMessagesRow || position == deleteAfterReadRow
-                    || position == savedChannelsRow || position == reactionsRow || position == foreignAgentsRow) {
+                    || position == savedChannelsRow || position == reactionsRow || position == foreignAgentsRow
+                    || position == closeOnScreenLockRow) {
                 return 0;
             } else if (position == versionDetailRow || position == idDetailRow || position == disableAvatarDetailRow
                     || position == renameChatDetailRow || position == deleteMyMessagesDetailRow || position == deleteAfterReadDetailRow
-                    || position == savedChannelsDetailRow || position == reactionsDetailRow || position == foreignAgentsDetailRow) {
+                    || position == savedChannelsDetailRow || position == reactionsDetailRow || position == foreignAgentsDetailRow
+                    || position == closeOnScreenLockDetailRow) {
                 return 1;
             }
             return 0;
