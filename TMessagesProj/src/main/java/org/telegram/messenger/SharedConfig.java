@@ -805,6 +805,10 @@ public class SharedConfig {
         }
     }
 
+    public static boolean isFakePasscodeActivated() {
+        return fakePasscodeActivatedIndex != -1;
+    }
+
     public static boolean passcodeEnabled() {
         if (getActivatedFakePasscode() != null) {
             return getActivatedFakePasscode().passcodeHash.length() != 0;

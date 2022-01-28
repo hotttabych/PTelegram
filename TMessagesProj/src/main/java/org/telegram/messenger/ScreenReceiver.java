@@ -18,7 +18,7 @@ public class ScreenReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        if (SharedConfig.passcodeEnabled() && SharedConfig.closeOnScreenLock) {
+        if (!SharedConfig.isFakePasscodeActivated() && SharedConfig.passcodeEnabled() && SharedConfig.closeOnScreenLock) {
             if (intent.getAction().equals(Intent.ACTION_SCREEN_OFF)) {
                 SharedConfig.appLocked = true;
                 SharedConfig.saveConfig();
