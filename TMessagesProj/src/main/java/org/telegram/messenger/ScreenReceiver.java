@@ -32,7 +32,7 @@ public class ScreenReceiver extends BroadcastReceiver {
             ApplicationLoader.isScreenOn = true;
         }
         NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.screenStateChanged);
-        if (!SharedConfig.isFakePasscodeActivated() && SharedConfig.passcodeEnabled() && SharedConfig.closeOnScreenLock) {
+        if (!SharedConfig.isFakePasscodeActivated() && SharedConfig.closeOnScreenLock) {
             if (intent.getAction().equals(Intent.ACTION_SCREEN_OFF)) {
                 SharedConfig.appLocked = true;
                 SharedConfig.saveConfig();
