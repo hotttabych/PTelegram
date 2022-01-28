@@ -769,6 +769,7 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
         NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.appDidLogoutByAction);
         NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.appHiddenByAction);
         NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.fakePasscodeActivated);
+        NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.shouldKillApp);
         if (actionBarLayout.fragmentsStack.isEmpty()) {
             if (!UserConfig.getInstance(currentAccount).isClientActivated()) {
                 actionBarLayout.addFragmentToStack(new LoginActivity());
@@ -4050,6 +4051,7 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
         NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.appDidLogoutByAction);
         NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.appHiddenByAction);
         NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.fakePasscodeActivated);
+        NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.shouldKillApp);
     }
 
     public void presentFragment(BaseFragment fragment) {
@@ -4882,6 +4884,13 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
                     }
                 });
             }
+        } else if (id == NotificationCenter.shouldKillApp) {
+            if (android.os.Build.VERSION.SDK_INT >= 21) {
+                finishAndRemoveTask();
+            } else {
+                finishAffinity();
+            }
+            System.exit(0);
         }
     }
 
