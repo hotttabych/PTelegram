@@ -14,12 +14,10 @@ import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.widget.FrameLayout;
 
-import org.telegram.PhoneFormat.PhoneFormat;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.R;
 import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.UserConfig;
-import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.ui.ActionBar.ActionBar;
 import org.telegram.ui.ActionBar.BaseFragment;
 import org.telegram.ui.ActionBar.Theme;
@@ -27,6 +25,7 @@ import org.telegram.ui.ActionBar.ThemeDescription;
 import org.telegram.ui.Cells.TextCheckCell;
 import org.telegram.ui.Cells.TextInfoPrivacyCell;
 import org.telegram.ui.Cells.TextSettingsCell;
+import org.telegram.ui.Components.AlertsCreator;
 import org.telegram.ui.Components.LayoutHelper;
 import org.telegram.ui.Components.RecyclerListView;
 
@@ -64,8 +63,8 @@ public class PartisanSettingsActivity extends BaseFragment {
     private int reactionsDetailRow;
     private int foreignAgentsRow;
     private int foreignAgentsDetailRow;
-    private int closeOnScreenLockRow;
-    private int closeOnScreenLockDetailRow;
+    private int onScreenLockActionRow;
+    private int onScreenLockActionDetailRow;
 
     public PartisanSettingsActivity() {
         super();
@@ -176,10 +175,8 @@ public class PartisanSettingsActivity extends BaseFragment {
                 SharedConfig.cutForeignAgentsText = !SharedConfig.cutForeignAgentsText;
                 SharedConfig.saveConfig();
                 ((TextCheckCell) view).setChecked(SharedConfig.cutForeignAgentsText);
-            } else if (position == closeOnScreenLockRow) {
-                SharedConfig.closeOnScreenLock = !SharedConfig.closeOnScreenLock;
-                SharedConfig.saveConfig();
-                ((TextCheckCell) view).setChecked(SharedConfig.closeOnScreenLock);
+            } else if (position == onScreenLockActionRow) {
+                AlertsCreator.showOnScreenLockActionsAlert(getParentActivity(), () -> listAdapter.notifyDataSetChanged(), null);
             }
         });
 
@@ -215,8 +212,8 @@ public class PartisanSettingsActivity extends BaseFragment {
         reactionsDetailRow = rowCount++;
         foreignAgentsRow = rowCount++;
         foreignAgentsDetailRow = rowCount++;
-        closeOnScreenLockRow = rowCount++;
-        closeOnScreenLockDetailRow = rowCount++;
+        onScreenLockActionRow = rowCount++;
+        onScreenLockActionDetailRow = rowCount++;
     }
 
     @Override
@@ -248,7 +245,7 @@ public class PartisanSettingsActivity extends BaseFragment {
             return position != versionDetailRow && position != idDetailRow && position != disableAvatarDetailRow
                     && position != renameChatDetailRow && position != deleteMyMessagesDetailRow && position != deleteAfterReadDetailRow
                     && position != savedChannelsDetailRow && position != reactionsDetailRow && position != foreignAgentsDetailRow
-                    && position != closeOnScreenLockDetailRow;
+                    && position != onScreenLockActionDetailRow;
         }
 
         @Override
@@ -263,6 +260,10 @@ public class PartisanSettingsActivity extends BaseFragment {
             switch (viewType) {
                 case 0:
                     view = new TextCheckCell(mContext);
+                    view.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundWhite));
+                    break;
+                case 2:
+                    view = new TextSettingsCell(mContext);
                     view.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundWhite));
                     break;
                 case 1:
@@ -305,9 +306,6 @@ public class PartisanSettingsActivity extends BaseFragment {
                     } else if (position == foreignAgentsRow) {
                         textCell.setTextAndCheck(LocaleController.getString("CutForeignAgentsText", R.string.CutForeignAgentsText),
                                 SharedConfig.cutForeignAgentsText, false);
-                    } else if (position == closeOnScreenLockRow) {
-                        textCell.setTextAndCheck(LocaleController.getString("CloseOnScreenLock", R.string.CloseOnScreenLock),
-                                SharedConfig.closeOnScreenLock, false);
                     }
                     break;
                 }
@@ -340,11 +338,29 @@ public class PartisanSettingsActivity extends BaseFragment {
                     } else if (position == foreignAgentsDetailRow) {
                         cell.setText(LocaleController.getString("CutForeignAgentsTextInfo", R.string.CutForeignAgentsTextInfo));
                         cell.setBackgroundDrawable(Theme.getThemedDrawable(mContext, R.drawable.greydivider_bottom, Theme.key_windowBackgroundGrayShadow));
-                    } else if (position == closeOnScreenLockDetailRow) {
-                        cell.setText(LocaleController.getString("CloseOnScreenLockInfo", R.string.CloseOnScreenLockInfo));
+                    } else if (position == onScreenLockActionDetailRow) {
+                        cell.setText(LocaleController.getString("OnScreenLockActionInfo", R.string.OnScreenLockActionInfo));
                         cell.setBackgroundDrawable(Theme.getThemedDrawable(mContext, R.drawable.greydivider_bottom, Theme.key_windowBackgroundGrayShadow));
                     }
                     break;
+                }
+                case 2: {
+                    TextSettingsCell textCell = (TextSettingsCell) holder.itemView;
+                    String value = null;
+                    if (position == onScreenLockActionRow) {
+                        switch (SharedConfig.onScreenLockAction) {
+                            case 0:
+                                value = LocaleController.getString("OnScreenLockActionNothing", R.string.OnScreenLockActionNothing);
+                                break;
+                            case 1:
+                                value = LocaleController.getString("OnScreenLockActionHide", R.string.OnScreenLockActionHide);
+                                break;
+                            case 2:
+                                value = LocaleController.getString("OnScreenLockActionClose", R.string.OnScreenLockActionClose);
+                                break;
+                        }
+                        textCell.setTextAndValue(LocaleController.getString("OnScreenLockActionTitle", R.string.OnScreenLockActionTitle), value, true);
+                    }
                 }
             }
         }
@@ -353,14 +369,15 @@ public class PartisanSettingsActivity extends BaseFragment {
         public int getItemViewType(int position) {
             if (position == versionRow || position == idRow || position == disableAvatarRow
                     || position == renameChatRow || position == deleteMyMessagesRow || position == deleteAfterReadRow
-                    || position == savedChannelsRow || position == reactionsRow || position == foreignAgentsRow
-                    || position == closeOnScreenLockRow) {
+                    || position == savedChannelsRow || position == reactionsRow || position == foreignAgentsRow) {
                 return 0;
             } else if (position == versionDetailRow || position == idDetailRow || position == disableAvatarDetailRow
                     || position == renameChatDetailRow || position == deleteMyMessagesDetailRow || position == deleteAfterReadDetailRow
                     || position == savedChannelsDetailRow || position == reactionsDetailRow || position == foreignAgentsDetailRow
-                    || position == closeOnScreenLockDetailRow) {
+                    || position == onScreenLockActionDetailRow) {
                 return 1;
+            } else if (position == onScreenLockActionRow) {
+                return 2;
             }
             return 0;
         }

@@ -5125,4 +5125,36 @@ public class AlertsCreator {
         });
         return popupWindow;
     }
+
+    public static AlertDialog showOnScreenLockActionsAlert(Context context, final Runnable onSelectRunnable, Theme.ResourcesProvider resourcesProvider) {
+        String[] variants = new String[]{
+                LocaleController.getString("OnScreenLockActionNothing", R.string.OnScreenLockActionNothing),
+                LocaleController.getString("OnScreenLockActionHide", R.string.OnScreenLockActionHide),
+                LocaleController.getString("OnScreenLockActionClose", R.string.OnScreenLockActionClose)
+        };
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(context, resourcesProvider);
+        builder.setTitle(LocaleController.getString("OnScreenLockActionTitle", R.string.OnScreenLockActionTitle));
+        final LinearLayout linearLayout = new LinearLayout(context);
+        linearLayout.setOrientation(LinearLayout.VERTICAL);
+        builder.setView(linearLayout);
+
+        for (int a = 0; a < variants.length; a++) {
+            RadioColorCell cell = new RadioColorCell(context, resourcesProvider);
+            cell.setPadding(AndroidUtilities.dp(4), 0, AndroidUtilities.dp(4), 0);
+            cell.setTag(a);
+            cell.setCheckColor(Theme.getColor(Theme.key_radioBackground), Theme.getColor(Theme.key_dialogRadioBackgroundChecked));
+            cell.setTextAndValue(variants[a], SharedConfig.onScreenLockAction == a);
+            linearLayout.addView(cell);
+            cell.setOnClickListener(v -> {
+                Integer which = (Integer) v.getTag();
+                SharedConfig.setOnScreenLockAction(which);
+                if (onSelectRunnable != null) {
+                    onSelectRunnable.run();
+                }
+                builder.getDismissRunnable().run();
+            });
+        }
+        return builder.show();
+    }
 }
