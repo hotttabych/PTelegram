@@ -241,6 +241,7 @@ public class NotificationCenter {
     public static final int emojiPreviewThemesChanged = totalEvents++;
     public static final int reactionsDidLoad = totalEvents++;
     public static final int chatAvailableReactionsUpdated = totalEvents++;
+    public static final int shouldKillApp = totalEvents++;
 
     private SparseArray<ArrayList<NotificationCenterDelegate>> observers = new SparseArray<>();
     private SparseArray<ArrayList<NotificationCenterDelegate>> removeAfterBroadcast = new SparseArray<>();
