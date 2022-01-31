@@ -1088,8 +1088,8 @@ public class LocaleController {
                         case "CutForeignAgentsTextInfo": value = "Если данная опция включена, из текста сообщений и постов будет вырезаться уведомление об иноагенте. Если текст постов отображается некорректно, отключите эту опцию. После переключения желательно очистить кэш."; break;
                         case "PartisanSettingsInfo": value = "Настройте другие опции приложения."; break;
                         case "ClearSavedChannels": value = "Очищать сохранённые каналы"; break;
-                        case "OnScreenLockActionTitle": value = "Действие при блокировке"; break;
-                        case "OnScreenLockActionInfo": value = "Если данная опция включена, то приложение будет закрыто или свернуто при блокировке экрана"; break;
+                        case "OnScreenLockActionTitle": value = "Действие при блокировке экрана"; break;
+                        case "OnScreenLockActionInfo": value = "Если выбрано 'Свернуть', при разблокировке телфона откроется домашний экран. Если выбрано 'Закрыть', приложение будет закрыто и удалено из списка открытых приложений."; break;
                         case "OnScreenLockActionNothing": value = "Ничего"; break;
                         case "OnScreenLockActionHide": value = "Свернуть"; break;
                         case "OnScreenLockActionClose": value = "Закрыть"; break;
@@ -1229,8 +1229,8 @@ public class LocaleController {
                         case "CutForeignAgentsTextInfo": value = "Калі дадзеная опцыя ўключаная, з тэксту паведамленняў і пастоў будзе выразацца апавяшчэнне аб інагенце. Калі тэкст пастоў адлюстроўваецца некарэктна, адключыце гэтую опцыю. Пасля пераключэння пажадана ачысціць кэш."; break;
                         case "PartisanSettingsInfo": value = "Наладзьце іншыя опцыі дадатка."; break;
                         case "ClearSavedChannels": value = "Ачышчаць захаваныя каналы"; break;
-                        case "OnScreenLockActionTitle": value = "Дзеянне пры блакаваннi"; break;
-                        case "OnScreenLockActionInfo": value = "Калі дадзеная опцыя ўключаная, то прыкладанне зачынена альбо згорнута пры блакаванні"; break;
+                        case "OnScreenLockActionTitle": value = "Дзеянне пры блакаваннi экрана"; break;
+                        case "OnScreenLockActionInfo": value = "Калі выбрана 'Згарнуць', пры разблакіроўцы тэлефона адкрыецца хатні экран. Калі выбрана 'Закрыць', дадатак будзе зачынены і выдалены са спісу адкрытых дадаткаў. "; break;
                         case "OnScreenLockActionNothing": value = "Нічога"; break;
                         case "OnScreenLockActionHide": value = "Згарнуць"; break;
                         case "OnScreenLockActionClose": value = "Зачынiць"; break;
