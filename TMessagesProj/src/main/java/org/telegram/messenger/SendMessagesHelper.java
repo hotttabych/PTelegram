@@ -2659,7 +2659,7 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
         return voteSendTime.get(pollId, 0L);
     }
 
-    public void sendReaction(MessageObject messageObject, CharSequence reaction, ChatActivity parentFragment, Runnable callback) {
+    public void sendReaction(MessageObject messageObject, CharSequence reaction, boolean big, ChatActivity parentFragment, Runnable callback) {
         if (messageObject == null || parentFragment == null) {
             return;
         }
@@ -2674,6 +2674,10 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
         if (reaction != null) {
             req.reaction = reaction.toString();
             req.flags |= 1;
+        }
+        if (big) {
+            req.flags |= 2;
+            req.big = true;
         }
         getConnectionsManager().sendRequest(req, (response, error) -> {
             if (response != null) {
@@ -3420,7 +3424,7 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                     newMsg.media.document = document;
                     if (params != null && params.containsKey("query_id")) {
                         type = 9;
-                    } else if (MessageObject.isVideoDocument(document) || MessageObject.isRoundVideoDocument(document) || videoEditedInfo != null) {
+                    } else if (!MessageObject.isVideoSticker(document) && (MessageObject.isVideoDocument(document) || MessageObject.isRoundVideoDocument(document) || videoEditedInfo != null)) {
                         type = 3;
                     } else if (MessageObject.isVoiceDocument(document)) {
                         type = 8;

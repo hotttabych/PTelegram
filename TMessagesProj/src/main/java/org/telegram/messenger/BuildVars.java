@@ -20,10 +20,11 @@ public class BuildVars {
     public static boolean USE_CLOUD_STRINGS = true;
     public static boolean CHECK_UPDATES = true;
     public static boolean NO_SCOPED_STORAGE = Build.VERSION.SDK_INT <= 29;
-    public static int BUILD_VERSION = 2538;
-    public static String BUILD_VERSION_STRING = "8.4.4";
+    public static int BUILD_VERSION = 2547;
+    public static String BUILD_VERSION_STRING = "8.5.0";
     public static int APP_ID = 12652123; // set you own APP_ID
     public static String APP_HASH = "bb81fa5b3c3f80706ac142c9b72ce9ef"; // set you own APP_HASH
+    public static String APPCENTER_HASH = "a5b5c4f5-51da-dedc-9918-d9766a22ca7c";
 
     public static String SMS_HASH = isStandaloneApp() ? "w0lkcmTZkKh" : (DEBUG_VERSION ? "O2P2z+/jBpJ" : "oLeq9AcOZkT");
     public static String PLAYSTORE_APP_URL = "https://play.google.com/store/apps/details?id=org.telegram.messenger";

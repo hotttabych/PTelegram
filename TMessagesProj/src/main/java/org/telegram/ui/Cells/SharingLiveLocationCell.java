@@ -146,7 +146,7 @@ public class SharingLiveLocationCell extends FrameLayout {
         distanceTextView.setText(address);
     }
 
-    public void setDialog(MessageObject messageObject, Location userLocation) {
+    public void setDialog(MessageObject messageObject, Location userLocation, boolean userLocationDenied) {
         long fromId = messageObject.getFromChatId();
         if (messageObject.isForwarded()) {
             fromId = MessageObject.getPeerId(messageObject.messageOwner.fwd_from.from_id);
@@ -204,8 +204,10 @@ public class SharingLiveLocationCell extends FrameLayout {
         } else {
             if (address != null) {
                 distanceTextView.setText(address);
-            } else {
+            } else if (!userLocationDenied) {
                 distanceTextView.setText(LocaleController.getString("Loading", R.string.Loading));
+            } else {
+                distanceTextView.setText("");
             }
         }
     }
