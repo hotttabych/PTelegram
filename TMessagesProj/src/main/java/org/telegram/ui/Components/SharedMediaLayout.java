@@ -1488,13 +1488,7 @@ public class SharedMediaLayout extends FrameLayout implements NotificationCenter
             actionModeViews.add(forwardItem);
             forwardItem.setOnClickListener(v -> onActionBarItemClick(v, forward));
 
-            boolean noforwards = profileActivity.getMessagesController().isChatNoForwards(-dialog_id);
-            forwardItem.setAlpha(noforwards ? 0.5f : 1f);
-            if (noforwards) {
-                if (forwardItem.getBackground() != null) forwardItem.setBackground(null);
-            } else if (forwardItem.getBackground() == null) {
-                forwardItem.setBackground(Theme.createSelectorDrawable(Theme.getColor(Theme.key_actionBarActionModeDefaultSelector), 5));
-            }
+            updateForwardItem();
         }
         deleteItem = new ActionBarMenuItem(context, null, Theme.getColor(Theme.key_actionBarActionModeDefaultSelector), Theme.getColor(Theme.key_windowBackgroundWhiteGrayText2), false);
         deleteItem.setIcon(R.drawable.msg_delete);
@@ -2224,6 +2218,37 @@ public class SharedMediaLayout extends FrameLayout implements NotificationCenter
             return cell.getMessage().getId();
         }
         return 0;
+    }
+
+    private void updateForwardItem() {
+        boolean noforwards = profileActivity.getMessagesController().isChatNoForwards(-dialog_id) || hasNoforwardsMessage();
+        forwardItem.setAlpha(noforwards ? 0.5f : 1f);
+        if (noforwards && forwardItem.getBackground() != null) {
+            forwardItem.setBackground(null);
+        } else if (!noforwards && forwardItem.getBackground() == null) {
+            forwardItem.setBackground(Theme.createSelectorDrawable(Theme.getColor(Theme.key_actionBarActionModeDefaultSelector), 5));
+        }
+    }
+    private boolean hasNoforwardsMessage() {
+        boolean hasNoforwardsMessage = false;
+        for (int a = 1; a >= 0; a--) {
+            ArrayList<Integer> ids = new ArrayList<>();
+            for (int b = 0; b < selectedFiles[a].size(); b++) {
+                ids.add(selectedFiles[a].keyAt(b));
+            }
+            for (Integer id1 : ids) {
+                if (id1 > 0) {
+                    MessageObject msg = selectedFiles[a].get(id1);
+                    if (msg != null && msg.messageOwner != null && msg.messageOwner.noforwards) {
+                        hasNoforwardsMessage = true;
+                        break;
+                    }
+                }
+            }
+            if (hasNoforwardsMessage)
+                break;
+        }
+        return hasNoforwardsMessage;
     }
 
     private boolean changeTypeAnimation;
@@ -3074,7 +3099,7 @@ public class SharedMediaLayout extends FrameLayout implements NotificationCenter
                 showActionMode(false);
                 actionBar.closeSearchField();
                 cantDeleteMessagesCount = 0;
-            }, null);
+            }, null, null);
         } else if (id == forward) {
             if (info != null) {
                 TLRPC.Chat chat = profileActivity.getMessagesController().getChat(info.id);
@@ -3086,6 +3111,13 @@ public class SharedMediaLayout extends FrameLayout implements NotificationCenter
                     }
                     return;
                 }
+            }
+            if (hasNoforwardsMessage()) {
+                if (fwdRestrictedHint != null) {
+                    fwdRestrictedHint.setText(LocaleController.getString("ForwardsRestrictedInfoBot", R.string.ForwardsRestrictedInfoBot));
+                    fwdRestrictedHint.showForView(v, true);
+                }
+                return;
             }
 
             Bundle args = new Bundle();
@@ -4517,6 +4549,7 @@ public class SharedMediaLayout extends FrameLayout implements NotificationCenter
         if (!isActionModeShowed) {
             showActionMode(true);
         }
+        updateForwardItem();
         return true;
     }
 
@@ -4638,6 +4671,7 @@ public class SharedMediaLayout extends FrameLayout implements NotificationCenter
                 }
             }
         }
+        updateForwardItem();
     }
 
     private void openUrl(String link) {
