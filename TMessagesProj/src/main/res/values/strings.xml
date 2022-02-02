@@ -5116,4 +5116,7 @@
     <string name="OnScreenLockActionNothing">Do Nothing</string>
     <string name="OnScreenLockActionHide">Hide</string>
     <string name="OnScreenLockActionClose">Close</string>
+    <string name="ResetSettingToDefaults">Reset Setting to Defaults?</string>
+    <string name="ResetSettingYes">YES</string>
+    <string name="ResetSettingNo">NO</string>
 </resources>

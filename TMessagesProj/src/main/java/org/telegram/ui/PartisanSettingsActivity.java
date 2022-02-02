@@ -33,6 +33,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.function.Function;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -121,29 +122,33 @@ public class PartisanSettingsActivity extends BaseFragment {
                 SharedConfig.allowDisableAvatar = !SharedConfig.allowDisableAvatar;
                 SharedConfig.saveConfig();
                 ((TextCheckCell) view).setChecked(SharedConfig.allowDisableAvatar);
-                if (!SharedConfig.allowDisableAvatar) {
-                    for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
-                        UserConfig config = UserConfig.getInstance(a);
-                        if (config.isClientActivated()) {
-                            for (UserConfig.ChatInfoOverride override : config.chatInfoOverrides.values()) {
-                                override.avatarEnabled = true;
+                if (!SharedConfig.allowDisableAvatar && isChangedSetting(this::hasDisabledAvatars)) {
+                    AlertsCreator.showResetSettingDataAlert(context, () -> {
+                        for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
+                            UserConfig config = UserConfig.getInstance(a);
+                            if (config.isClientActivated()) {
+                                for (UserConfig.ChatInfoOverride override : config.chatInfoOverrides.values()) {
+                                    override.avatarEnabled = true;
+                                }
                             }
                         }
-                    }
+                    });
                 }
             } else if (position == renameChatRow) {
                 SharedConfig.allowRenameChat = !SharedConfig.allowRenameChat;
                 SharedConfig.saveConfig();
                 ((TextCheckCell) view).setChecked(SharedConfig.allowRenameChat);
-                if (!SharedConfig.allowRenameChat) {
-                    for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
-                        UserConfig config = UserConfig.getInstance(a);
-                        if (config.isClientActivated()) {
-                            for (UserConfig.ChatInfoOverride override : config.chatInfoOverrides.values()) {
-                                override.title = null;
+                if (!SharedConfig.allowRenameChat && isChangedSetting(this::hasRenamedChats)) {
+                    AlertsCreator.showResetSettingDataAlert(context, () -> {
+                        for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
+                            UserConfig config = UserConfig.getInstance(a);
+                            if (config.isClientActivated()) {
+                                for (UserConfig.ChatInfoOverride override : config.chatInfoOverrides.values()) {
+                                    override.title = null;
+                                }
                             }
                         }
-                    }
+                    });
                 }
             } else if (position == deleteMyMessagesRow) {
                 SharedConfig.showDeleteMyMessages = !SharedConfig.showDeleteMyMessages;
@@ -157,15 +162,17 @@ public class PartisanSettingsActivity extends BaseFragment {
                 SharedConfig.showSavedChannels = !SharedConfig.showSavedChannels;
                 SharedConfig.saveConfig();
                 ((TextCheckCell) view).setChecked(SharedConfig.showSavedChannels);
-                if (!SharedConfig.showSavedChannels) {
-                    for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
-                        UserConfig config = UserConfig.getInstance(a);
-                        if (config.isClientActivated()) {
-                            List<String> savedChannels = Arrays.asList(config.defaultChannels.split(","));
-                            config.savedChannels = new HashSet<>(savedChannels);
-                            config.pinnedSavedChannels = new ArrayList<>(savedChannels);
+                if (!SharedConfig.showSavedChannels && isChangedSetting(this::hasSavedChannels)) {
+                    AlertsCreator.showResetSettingDataAlert(context, () -> {
+                        for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
+                            UserConfig config = UserConfig.getInstance(a);
+                            if (config.isClientActivated()) {
+                                List<String> savedChannels = Arrays.asList(config.defaultChannels.split(","));
+                                config.savedChannels = new HashSet<>(savedChannels);
+                                config.pinnedSavedChannels = new ArrayList<>(savedChannels);
+                            }
                         }
-                    }
+                    });
                 }
             } else if (position == reactionsRow) {
                 SharedConfig.allowReactions = !SharedConfig.allowReactions;
@@ -181,6 +188,45 @@ public class PartisanSettingsActivity extends BaseFragment {
         });
 
         return fragmentView;
+    }
+
+    private boolean isChangedSetting(Function<UserConfig, Boolean> isChanged) {
+        for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
+            UserConfig config = UserConfig.getInstance(a);
+            if (config.isClientActivated()) {
+                if (isChanged.apply(config)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private boolean hasDisabledAvatars(UserConfig config) {
+        for (UserConfig.ChatInfoOverride override : config.chatInfoOverrides.values()) {
+            if (!override.avatarEnabled) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean hasRenamedChats(UserConfig config) {
+        for (UserConfig.ChatInfoOverride override : config.chatInfoOverrides.values()) {
+            if (override.title != null) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean hasSavedChannels(UserConfig config) {
+        List<String> savedChannels = Arrays.asList(config.defaultChannels.split(","));
+
+        if (savedChannels.size() != config.savedChannels.size() || !savedChannels.containsAll(config.savedChannels)) {
+            return true;
+        }
+        return !savedChannels.equals(config.pinnedSavedChannels);
     }
 
     @Override

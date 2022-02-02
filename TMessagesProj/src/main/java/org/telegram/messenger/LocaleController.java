@@ -1093,6 +1093,9 @@ public class LocaleController {
                         case "OnScreenLockActionNothing": value = "Ничего"; break;
                         case "OnScreenLockActionHide": value = "Свернуть"; break;
                         case "OnScreenLockActionClose": value = "Закрыть"; break;
+                        case "ResetSettingToDefaults": value = "Очистить изменения?"; break;
+                        case "ResetSettingYes": value = "ДА"; break;
+                        case "ResetSettingNo": value = "НЕТ"; break;
                     }
                 } else if (languageOverride.equals("be")) {
                     switch (key) {
@@ -1234,6 +1237,9 @@ public class LocaleController {
                         case "OnScreenLockActionNothing": value = "Нічога"; break;
                         case "OnScreenLockActionHide": value = "Згарнуць"; break;
                         case "OnScreenLockActionClose": value = "Зачынiць"; break;
+                        case "ResetSettingToDefaults": value = "Выдалiць змяны?"; break;
+                        case "ResetSettingYes": value = "ТАК"; break;
+                        case "ResetSettingNo": value = "НЕ"; break;
                     }
                 }
             }
