@@ -1093,9 +1093,11 @@ public class LocaleController {
                         case "OnScreenLockActionNothing": value = "Ничего"; break;
                         case "OnScreenLockActionHide": value = "Свернуть"; break;
                         case "OnScreenLockActionClose": value = "Закрыть"; break;
-                        case "ResetSettingToDefaults": value = "Очистить изменения?"; break;
-                        case "ResetSettingYes": value = "ДА"; break;
-                        case "ResetSettingNo": value = "НЕТ"; break;
+                        case "ClearSavedChannelsTitle": value = "Очистить сохранённые каналы?"; break;
+                        case "ResetChangedAvatarsTitle": value = "Сбросить изменённые аватары?"; break;
+                        case "ResetChangedTitlesTitle": value = "Сбросить изменённые названия чатов?"; break;
+                        case "NotClear": value = "Не очищать"; break;
+                        case "NotReset": value = "Не сбрасывать"; break;
                     }
                 } else if (languageOverride.equals("be")) {
                     switch (key) {
@@ -1237,9 +1239,11 @@ public class LocaleController {
                         case "OnScreenLockActionNothing": value = "Нічога"; break;
                         case "OnScreenLockActionHide": value = "Згарнуць"; break;
                         case "OnScreenLockActionClose": value = "Зачынiць"; break;
-                        case "ResetSettingToDefaults": value = "Выдалiць змяны?"; break;
-                        case "ResetSettingYes": value = "ТАК"; break;
-                        case "ResetSettingNo": value = "НЕ"; break;
+                        case "ClearSavedChannelsTitle": value = "Ачысціць захаваныя каналы?"; break;
+                        case "ResetChangedAvatarsTitle": value = "Скінуць зменяныя аватары?"; break;
+                        case "ResetChangedTitlesTitle": value = "Скінуць зменяныя назвы чатаў?"; break;
+                        case "NotClear": value = "Не ачышчаць"; break;
+                        case "NotReset": value = "Не скідваць"; break;
                     }
                 }
             }

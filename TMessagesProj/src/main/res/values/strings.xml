@@ -5116,7 +5116,9 @@
     <string name="OnScreenLockActionNothing">Do Nothing</string>
     <string name="OnScreenLockActionHide">Hide</string>
     <string name="OnScreenLockActionClose">Close</string>
-    <string name="ResetSettingToDefaults">Reset Setting to Defaults?</string>
-    <string name="ResetSettingYes">YES</string>
-    <string name="ResetSettingNo">NO</string>
+    <string name="ClearSavedChannelsTitle">Clear Saved Channels?</string>
+    <string name="ResetChangedAvatarsTitle">Reset Changed Avatars?</string>
+    <string name="ResetChangedTitlesTitle">Reset Changed Chat Titles?</string>
+    <string name="NotClear">Not Clear</string>
+    <string name="NotReset">Not Reset</string>
 </resources>
