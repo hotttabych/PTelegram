@@ -2056,16 +2056,6 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
             MediaController.getInstance().stopMediaObserver();
         }
 
-        if (getOtherSameChatsDiff() == 0) {
-            try {
-                if (Build.VERSION.SDK_INT >= 23) {
-                    AndroidUtilities.setFlagSecure(this, false);
-                }
-            } catch (Throwable e) {
-                FileLog.e(e);
-            }
-        }
-
         if (unregisterFlagSecureNoforwards != null) {
             unregisterFlagSecureNoforwards.run();
             unregisterFlagSecureNoforwards = null;

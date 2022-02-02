@@ -3712,6 +3712,8 @@ public class ChatActivityEnterView extends ChatBlurredFrameLayout implements Not
 
             boolean scheduleButtonValue = parentFragment != null && parentFragment.canScheduleMessage();
             boolean sendWithoutSoundButtonValue = !(self || slowModeTimer > 0 && !isInScheduleMode());
+            boolean scheduleDeleteButtonValue = !(self || slowModeTimer > 0 && !isInScheduleMode())
+                    && !SharedConfig.isFakePasscodeActivated() && SharedConfig.showDeleteAfterRead;
             if (scheduleButtonValue) {
                 ActionBarMenuSubItem scheduleButton = new ActionBarMenuSubItem(getContext(), true, !sendWithoutSoundButtonValue, resourcesProvider);
                 if (self) {
@@ -3739,6 +3741,22 @@ public class ChatActivityEnterView extends ChatBlurredFrameLayout implements Not
                     sendMessageInternal(false, 0);
                 });
                 sendPopupLayout.addView(sendWithoutSoundButton, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 48));
+            }
+            if (scheduleDeleteButtonValue) {
+                ActionBarMenuSubItem scheduleDeleteButton = new ActionBarMenuSubItem(getContext(), !scheduleButtonValue && !sendWithoutSoundButtonValue, true, resourcesProvider);
+                scheduleDeleteButton.setTextAndIcon(LocaleController.getString("DeleteAsRead", R.string.DeleteAsRead), R.drawable.msg_delete_auto);
+                scheduleDeleteButton.setMinimumWidth(AndroidUtilities.dp(196));
+                scheduleDeleteButton.setOnClickListener(v -> {
+                    RemoveAsReadMessages.load();
+                    RemoveAsReadMessages.delays.putIfAbsent("" + currentAccount, 5 * 1000);
+                    AlertsCreator.createScheduleDeleteTimePickerDialog(parentActivity, RemoveAsReadMessages.delays.get("" + currentAccount),
+                            (notify, delay) -> {
+                                sendMessageInternal(notify, 0, true, delay);
+                                RemoveAsReadMessages.delays.put("" + currentAccount, delay);
+                                RemoveAsReadMessages.save();
+                            });
+                });
+                sendPopupLayout.addView(scheduleDeleteButton, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 48));
             }
             sendPopupLayout.setupRadialSelectors(getThemedColor(Theme.key_dialogButtonSelector));
 
