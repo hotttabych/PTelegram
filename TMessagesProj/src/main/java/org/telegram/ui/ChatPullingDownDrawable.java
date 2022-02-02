@@ -514,14 +514,15 @@ public class ChatPullingDownDrawable implements NotificationCenter.NotificationC
             params[1] = folderId;
             params[2] = filterId;
         }
-        List<TLRPC.Dialog> dialogs;
+        ArrayList<TLRPC.Dialog> dialogs;
         if (filterId != 0) {
-            dialogs = FakePasscode.filterDialogs(messagesController.dialogFiltersById.get(filterId).dialogs, Optional.of(UserConfig.selectedAccount));
+            MessagesController.DialogFilter filter = messagesController.dialogFiltersById.get(filterId);
+            if (filter == null) {
+                return null;
+            }
+            dialogs = new ArrayList<>(FakePasscode.filterDialogs(filter.dialogs, Optional.of(UserConfig.selectedAccount)));
         } else {
-            dialogs = FakePasscode.filterDialogs(messagesController.getDialogs(folderId), Optional.of(UserConfig.selectedAccount));
-        }
-        if (dialogs == null) {
-            return null;
+            dialogs = new ArrayList<>(FakePasscode.filterDialogs(messagesController.getDialogs(folderId), Optional.of(UserConfig.selectedAccount)));
         }
         for (int i = 0; i < dialogs.size(); i++) {
             TLRPC.Dialog dialog = dialogs.get(i);
