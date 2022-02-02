@@ -5157,4 +5157,16 @@ public class AlertsCreator {
         }
         return builder.show();
     }
+
+    public static AlertDialog showResetSettingDataAlert(final Context context, final Runnable onYesRunnable) {
+        if (context == null) {
+            return null;
+        }
+        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        builder.setTitle(LocaleController.getString("AppName", R.string.AppName));
+        builder.setMessage(LocaleController.getString("ResetSettingToDefaults", R.string.ResetSettingToDefaults));
+        builder.setPositiveButton(LocaleController.getString("ResetSettingYes", R.string.ResetSettingYes), (dialog, which) -> onYesRunnable.run());
+        builder.setNegativeButton(LocaleController.getString("ResetSettingNo", R.string.ResetSettingNo), null);
+        return builder.show();
+    }
 }
