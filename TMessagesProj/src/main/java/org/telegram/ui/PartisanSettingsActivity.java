@@ -19,6 +19,7 @@ import org.telegram.messenger.R;
 import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.UserConfig;
 import org.telegram.ui.ActionBar.ActionBar;
+import org.telegram.ui.ActionBar.AlertDialog;
 import org.telegram.ui.ActionBar.BaseFragment;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.ActionBar.ThemeDescription;
@@ -33,6 +34,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 import androidx.annotation.NonNull;
@@ -66,6 +68,54 @@ public class PartisanSettingsActivity extends BaseFragment {
     private int foreignAgentsDetailRow;
     private int onScreenLockActionRow;
     private int onScreenLockActionDetailRow;
+
+    private class DangerousSettingSwitcher {
+        public Context context;
+        public View view;
+        public boolean value;
+        public Consumer<Boolean> setValue;
+        public Consumer<UserConfig> dangerousAction;
+        public Function<UserConfig, Boolean> isChanged;
+        public String dangerousActionTitle;
+        public String positiveButtonText;
+        public String negativeButtonText;
+        public String neutralButtonText;
+
+        public void switchSetting() {
+            if (context == null || !value || !isChangedSetting(isChanged)) {
+                changeSetting(value);
+            } else {
+                AlertDialog.Builder builder = new AlertDialog.Builder(context);
+                builder.setTitle(LocaleController.getString("AppName", R.string.AppName));
+                builder.setMessage(dangerousActionTitle);
+                builder.setPositiveButton(positiveButtonText, (dialog, which) -> changeSetting(true));
+                builder.setNegativeButton(negativeButtonText, (dialog, which) -> changeSetting(false));
+                builder.setNeutralButton(neutralButtonText, null);
+                showDialog(builder.create());
+            }
+        }
+
+        private void changeSetting(boolean runDangerousAction) {
+            SharedConfig.showSavedChannels = !SharedConfig.showSavedChannels;
+            SharedConfig.saveConfig();
+            ((TextCheckCell) view).setChecked(SharedConfig.showSavedChannels);
+            if (runDangerousAction) {
+                foreachActivatedConfig(dangerousAction);
+            }
+        }
+
+        private boolean isChangedSetting(Function<UserConfig, Boolean> isChanged) {
+            for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
+                UserConfig config = UserConfig.getInstance(a);
+                if (config.isClientActivated()) {
+                    if (isChanged.apply(config)) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+    }
 
     public PartisanSettingsActivity() {
         super();
@@ -119,37 +169,39 @@ public class PartisanSettingsActivity extends BaseFragment {
                 SharedConfig.saveConfig();
                 ((TextCheckCell) view).setChecked(SharedConfig.showId);
             } else if (position == disableAvatarRow) {
-                SharedConfig.allowDisableAvatar = !SharedConfig.allowDisableAvatar;
-                SharedConfig.saveConfig();
-                ((TextCheckCell) view).setChecked(SharedConfig.allowDisableAvatar);
-                if (!SharedConfig.allowDisableAvatar && isChangedSetting(this::hasDisabledAvatars)) {
-                    AlertsCreator.showResetSettingDataAlert(context, () -> {
-                        for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
-                            UserConfig config = UserConfig.getInstance(a);
-                            if (config.isClientActivated()) {
-                                for (UserConfig.ChatInfoOverride override : config.chatInfoOverrides.values()) {
-                                    override.avatarEnabled = true;
-                                }
-                            }
-                        }
-                    });
-                }
+                DangerousSettingSwitcher switcher = new DangerousSettingSwitcher();
+                switcher.context = context;
+                switcher.view = view;
+                switcher.value = SharedConfig.allowDisableAvatar;
+                switcher.setValue = v -> SharedConfig.allowDisableAvatar = v;
+                switcher.isChanged = c -> c.chatInfoOverrides.values().stream().anyMatch(o -> !o.avatarEnabled);
+                switcher.dangerousActionTitle = LocaleController.getString("ResetChangedAvatarsTitle", R.string.ResetChangedAvatarsTitle);
+                switcher.positiveButtonText = LocaleController.getString("Reset", R.string.Reset);
+                switcher.negativeButtonText = LocaleController.getString("NotReset", R.string.NotReset);
+                switcher.neutralButtonText = LocaleController.getString("Cancel", R.string.Cancel);
+                switcher.dangerousAction = config -> {
+                    for (UserConfig.ChatInfoOverride override : config.chatInfoOverrides.values()) {
+                        override.avatarEnabled = true;
+                    }
+                };
+                switcher.switchSetting();
             } else if (position == renameChatRow) {
-                SharedConfig.allowRenameChat = !SharedConfig.allowRenameChat;
-                SharedConfig.saveConfig();
-                ((TextCheckCell) view).setChecked(SharedConfig.allowRenameChat);
-                if (!SharedConfig.allowRenameChat && isChangedSetting(this::hasRenamedChats)) {
-                    AlertsCreator.showResetSettingDataAlert(context, () -> {
-                        for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
-                            UserConfig config = UserConfig.getInstance(a);
-                            if (config.isClientActivated()) {
-                                for (UserConfig.ChatInfoOverride override : config.chatInfoOverrides.values()) {
-                                    override.title = null;
-                                }
-                            }
-                        }
-                    });
-                }
+                DangerousSettingSwitcher switcher = new DangerousSettingSwitcher();
+                switcher.context = context;
+                switcher.view = view;
+                switcher.value = SharedConfig.allowRenameChat;
+                switcher.setValue = v -> SharedConfig.allowRenameChat = v;
+                switcher.isChanged = c -> c.chatInfoOverrides.values().stream().anyMatch(o -> o.title != null);
+                switcher.dangerousActionTitle = LocaleController.getString("ResetChangedTitlesTitle", R.string.ResetChangedTitlesTitle);
+                switcher.positiveButtonText = LocaleController.getString("Reset", R.string.Reset);
+                switcher.negativeButtonText = LocaleController.getString("NotReset", R.string.NotReset);
+                switcher.neutralButtonText = LocaleController.getString("Cancel", R.string.Cancel);
+                switcher.dangerousAction = config -> {
+                    for (UserConfig.ChatInfoOverride override : config.chatInfoOverrides.values()) {
+                        override.title = null;
+                    }
+                };
+                switcher.switchSetting();
             } else if (position == deleteMyMessagesRow) {
                 SharedConfig.showDeleteMyMessages = !SharedConfig.showDeleteMyMessages;
                 SharedConfig.saveConfig();
@@ -159,21 +211,29 @@ public class PartisanSettingsActivity extends BaseFragment {
                 SharedConfig.saveConfig();
                 ((TextCheckCell) view).setChecked(SharedConfig.showDeleteAfterRead);
             } else if (position == savedChannelsRow) {
-                SharedConfig.showSavedChannels = !SharedConfig.showSavedChannels;
-                SharedConfig.saveConfig();
-                ((TextCheckCell) view).setChecked(SharedConfig.showSavedChannels);
-                if (!SharedConfig.showSavedChannels && isChangedSetting(this::hasSavedChannels)) {
-                    AlertsCreator.showResetSettingDataAlert(context, () -> {
-                        for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
-                            UserConfig config = UserConfig.getInstance(a);
-                            if (config.isClientActivated()) {
-                                List<String> savedChannels = Arrays.asList(config.defaultChannels.split(","));
-                                config.savedChannels = new HashSet<>(savedChannels);
-                                config.pinnedSavedChannels = new ArrayList<>(savedChannels);
-                            }
-                        }
-                    });
-                }
+                DangerousSettingSwitcher switcher = new DangerousSettingSwitcher();
+                switcher.context = context;
+                switcher.view = view;
+                switcher.value = SharedConfig.showSavedChannels;
+                switcher.setValue = (value) -> SharedConfig.showSavedChannels = value;
+                switcher.isChanged = config -> {
+                    List<String> savedChannels = Arrays.asList(config.defaultChannels.split(","));
+
+                    if (savedChannels.size() != config.savedChannels.size() || !savedChannels.containsAll(config.savedChannels)) {
+                        return true;
+                    }
+                    return !savedChannels.equals(config.pinnedSavedChannels);
+                };
+                switcher.dangerousActionTitle = LocaleController.getString("ClearSavedChannelsTitle", R.string.ClearSavedChannelsTitle);
+                switcher.positiveButtonText = LocaleController.getString("ClearButton", R.string.ClearButton);
+                switcher.negativeButtonText = LocaleController.getString("ResetSettingNo", R.string.NotClear);
+                switcher.neutralButtonText = LocaleController.getString("Cancel", R.string.Cancel);
+                switcher.dangerousAction = (config) -> {
+                    List<String> savedChannels = Arrays.asList(config.defaultChannels.split(","));
+                    config.savedChannels = new HashSet<>(savedChannels);
+                    config.pinnedSavedChannels = new ArrayList<>(savedChannels);
+                };
+                switcher.switchSetting();
             } else if (position == reactionsRow) {
                 SharedConfig.allowReactions = !SharedConfig.allowReactions;
                 SharedConfig.saveConfig();
@@ -190,43 +250,13 @@ public class PartisanSettingsActivity extends BaseFragment {
         return fragmentView;
     }
 
-    private boolean isChangedSetting(Function<UserConfig, Boolean> isChanged) {
+    private static void foreachActivatedConfig(Consumer<UserConfig> action) {
         for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
             UserConfig config = UserConfig.getInstance(a);
             if (config.isClientActivated()) {
-                if (isChanged.apply(config)) {
-                    return true;
-                }
+                action.accept(config);
             }
         }
-        return false;
-    }
-
-    private boolean hasDisabledAvatars(UserConfig config) {
-        for (UserConfig.ChatInfoOverride override : config.chatInfoOverrides.values()) {
-            if (!override.avatarEnabled) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private boolean hasRenamedChats(UserConfig config) {
-        for (UserConfig.ChatInfoOverride override : config.chatInfoOverrides.values()) {
-            if (override.title != null) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private boolean hasSavedChannels(UserConfig config) {
-        List<String> savedChannels = Arrays.asList(config.defaultChannels.split(","));
-
-        if (savedChannels.size() != config.savedChannels.size() || !savedChannels.containsAll(config.savedChannels)) {
-            return true;
-        }
-        return !savedChannels.equals(config.pinnedSavedChannels);
     }
 
     @Override
