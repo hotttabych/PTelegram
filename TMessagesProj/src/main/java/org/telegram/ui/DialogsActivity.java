@@ -68,6 +68,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.core.graphics.ColorUtils;
@@ -76,8 +77,6 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.LinearSmoothScrollerCustom;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager.widget.ViewPager;
-
-import com.google.android.exoplayer2.util.Log;
 
 import org.telegram.messenger.AccountInstance;
 import org.telegram.messenger.AndroidUtilities;
@@ -88,12 +87,14 @@ import org.telegram.messenger.ContactsController;
 import org.telegram.messenger.DialogObject;
 import org.telegram.messenger.FileLoader;
 import org.telegram.messenger.FileLog;
+import org.telegram.messenger.FilesMigrationService;
 import org.telegram.messenger.ImageLoader;
 import org.telegram.messenger.ImageLocation;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.MediaDataController;
 import org.telegram.messenger.MessageObject;
 import org.telegram.messenger.MessagesController;
+import org.telegram.messenger.MessagesStorage;
 import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.NotificationsController;
 import org.telegram.messenger.R;
@@ -169,6 +170,7 @@ import org.telegram.ui.Components.RLottieDrawable;
 import org.telegram.ui.Components.RLottieImageView;
 import org.telegram.ui.Components.RadialProgress2;
 import org.telegram.ui.Components.RecyclerAnimationScrollHelper;
+import org.telegram.ui.Components.RecyclerItemsEnterAnimator;
 import org.telegram.ui.Components.RecyclerListView;
 import org.telegram.ui.Components.SearchViewPager;
 import org.telegram.ui.Components.SizeNotifierFrameLayout;
@@ -176,12 +178,12 @@ import org.telegram.ui.Components.StickersAlert;
 import org.telegram.ui.Components.SwipeGestureSettingsView;
 import org.telegram.ui.Components.UndoView;
 import org.telegram.ui.Components.ViewPagerFixed;
-import org.telegram.ui.Components.RecyclerItemsEnterAnimator;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Optional;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -299,6 +301,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     private ActionBarMenuSubItem clearItem;
     private ActionBarMenuSubItem readItem;
     private ActionBarMenuSubItem blockItem;
+    private ActionBarMenuSubItem saveItem;
 
     private float additionalFloatingTranslation;
     private float additionalFloatingTranslation2;
@@ -360,6 +363,8 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     private boolean allowSwitchAccount;
     private boolean checkCanWrite;
     private boolean afterSignup;
+    private boolean showSetPasswordConfirm;
+    private int otherwiseReloginDays;
 
     private FrameLayout updateLayout;
     private AnimatorSet updateLayoutAnimator;
@@ -395,6 +400,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     private final static int pin2 = 108;
     private final static int add_to_folder = 109;
     private final static int remove_from_folder = 110;
+    private final static int save = 400;
 
     private final static int ARCHIVE_ITEM_STATE_PINNED = 0;
     private final static int ARCHIVE_ITEM_STATE_SHOWED = 1;
@@ -435,9 +441,11 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
 
     public BaseFragment passwordFragment = null;
 
-    private final long PARTISAN_TG_CHANNEL_ID = -1164492294;
+    private final long PARTISAN_TG_CHANNEL_ID = -1238949530;
+    private final String PARTISAN_TG_CHANNEL_USERNAME = "cpartisans";
     private boolean partisanTgChannelLastMessageLoaded = false;
     private boolean appUpdatesChecked = false;
+    private boolean partisanTgChannelUsernameResolved = false;
 
     public final Property<DialogsActivity, Float> SCROLL_Y = new AnimationProperties.FloatProperty<DialogsActivity>("animationValue") {
         @Override
@@ -1220,7 +1228,6 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
 
         @Override
         protected void dispatchDraw(Canvas canvas) {
-            parentPage.recyclerItemsEnterAnimator.dispatchDraw();
             super.dispatchDraw(canvas);
             if (drawMovingViewsOverlayed()) {
                 paint.setColor(Theme.getColor(Theme.key_windowBackgroundWhite));
@@ -1262,9 +1269,6 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         @Override
         protected void onDetachedFromWindow() {
             super.onDetachedFromWindow();
-            if (parentPage != null && parentPage.recyclerItemsEnterAnimator != null) {
-                parentPage.recyclerItemsEnterAnimator.onDetached();
-            }
         }
 
         @Override
@@ -1813,6 +1817,8 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             messagesCount = arguments.getInt("messagesCount", 0);
             hasPoll = arguments.getInt("hasPoll", 0);
             hasInvoice = arguments.getBoolean("hasInvoice", false);
+            showSetPasswordConfirm = arguments.getBoolean("showSetPasswordConfirm", showSetPasswordConfirm);
+            otherwiseReloginDays = arguments.getInt("otherwiseRelogin");
         }
 
         if (initialDialogsType == 0) {
@@ -1850,10 +1856,13 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             getNotificationCenter().addObserver(this, NotificationCenter.newSuggestionsAvailable);
             if (SharedConfig.showUpdates) {
                 getNotificationCenter().addObserver(this, NotificationCenter.messagesDidLoad);
+                getNotificationCenter().addObserver(this, NotificationCenter.loadingMessagesFailed);
             }
             getNotificationCenter().addObserver(this, NotificationCenter.fileLoaded);
             getNotificationCenter().addObserver(this, NotificationCenter.fileLoadFailed);
             getNotificationCenter().addObserver(this, NotificationCenter.fileLoadProgressChanged);
+            getNotificationCenter().addObserver(this, NotificationCenter.dialogsUnreadReactionsCounterChanged);
+
             NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.didSetPasscode);
             NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.appUpdateAvailable);
         }
@@ -1862,6 +1871,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         getNotificationCenter().addObserver(this, NotificationCenter.onDatabaseMigration);
         getNotificationCenter().addObserver(this, NotificationCenter.didClearDatabase);
         getNotificationCenter().addObserver(this, NotificationCenter.foldersHiddenByAction);
+        getNotificationCenter().addObserver(this, NotificationCenter.searchCleared);
 
         loadDialogs(getAccountInstance());
         getMessagesController().loadPinnedDialogs(folderId, 0, null);
@@ -1872,6 +1882,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             }
             databaseMigrationHint = null;
         }
+        FakePasscode.checkPendingRemovalChats();
         return true;
     }
 
@@ -1892,6 +1903,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             accountInstance.getMediaDataController().loadRecents(MediaDataController.TYPE_FAVE, false, true, false);
             accountInstance.getMediaDataController().loadRecents(MediaDataController.TYPE_GREETINGS, false, true, false);
             accountInstance.getMediaDataController().checkFeaturedStickers();
+            accountInstance.getMediaDataController().checkReactions();
             for (String emoji : messagesController.diceEmojies) {
                 accountInstance.getMediaDataController().loadStickersByEmojiOrName(emoji, true, true);
             }
@@ -1931,6 +1943,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             getNotificationCenter().removeObserver(this, NotificationCenter.messagesDeleted);
             if (!appUpdatesChecked) {
                 getNotificationCenter().removeObserver(this, NotificationCenter.messagesDidLoad);
+                getNotificationCenter().removeObserver(this, NotificationCenter.loadingMessagesFailed);
             }
             getNotificationCenter().removeObserver(this, NotificationCenter.fileLoaded);
             getNotificationCenter().removeObserver(this, NotificationCenter.fileLoadFailed);
@@ -1939,9 +1952,11 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.appUpdateAvailable);
         }
 
+        getNotificationCenter().removeObserver(this, NotificationCenter.dialogsUnreadReactionsCounterChanged);
         getNotificationCenter().removeObserver(this, NotificationCenter.onDatabaseMigration);
         getNotificationCenter().removeObserver(this, NotificationCenter.didClearDatabase);
         getNotificationCenter().removeObserver(this, NotificationCenter.foldersHiddenByAction);
+        getNotificationCenter().removeObserver(this, NotificationCenter.searchCleared);
         if (commentView != null) {
             commentView.onDestroy();
         }
@@ -2517,6 +2532,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             imageView.setImage(ImageLocation.getForUserOrChat(user, ImageLocation.TYPE_SMALL, currentAccount), "50_50", ImageLocation.getForUserOrChat(user, ImageLocation.TYPE_STRIPPED, currentAccount), "50_50", avatarDrawable, user);
 
             for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
+                if (FakePasscode.isHideAccount(a)) {
+                    continue;
+                }
                 TLRPC.User u = AccountInstance.getInstance(a).getUserConfig().getCurrentUser();
                 if (u != null) {
                     AccountSelectCell cell = new AccountSelectCell(context, false);
@@ -2563,6 +2581,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             viewPage.addView(viewPage.progressView, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER));
 
             viewPage.listView = new DialogsRecyclerView(context, viewPage);
+            viewPage.listView.setAccessibilityEnabled(false);
             viewPage.listView.setAnimateEmptyView(true, 0);
             viewPage.listView.setClipToPadding(false);
             viewPage.listView.setPivotY(0);
@@ -2612,7 +2631,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     }
                 }
             };
-            viewPage.listView.setItemAnimator(viewPage.dialogsItemAnimator);
+//            viewPage.listView.setItemAnimator(viewPage.dialogsItemAnimator);
             viewPage.listView.setVerticalScrollBarEnabled(true);
             viewPage.listView.setInstantClick(true);
             viewPage.layoutManager = new LinearLayoutManager(context) {
@@ -3387,16 +3406,16 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 private int lastGradientWidth;
 
                 @Override
-                protected void onDraw(Canvas canvas) {
-                    if (updateGradient == null) {
-                        return;
+                public void draw(Canvas canvas) {
+                    if (updateGradient != null) {
+                        paint.setColor(0xffffffff);
+                        paint.setShader(updateGradient);
+                        updateGradient.setLocalMatrix(matrix);
+                        canvas.drawRect(0, 0, getMeasuredWidth(), getMeasuredHeight(), paint);
+                        updateLayoutIcon.setBackgroundGradientDrawable(updateGradient);
+                        updateLayoutIcon.draw(canvas);
                     }
-                    paint.setColor(0xffffffff);
-                    paint.setShader(updateGradient);
-                    updateGradient.setLocalMatrix(matrix);
-                    canvas.drawRect(0, 0, getMeasuredWidth(), getMeasuredHeight(), paint);
-                    updateLayoutIcon.setBackgroundGradientDrawable(updateGradient);
-                    updateLayoutIcon.draw(canvas);
+                    super.draw(canvas);
                 }
 
                 @Override
@@ -3427,7 +3446,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             updateLayout.setVisibility(View.INVISIBLE);
             updateLayout.setTranslationY(AndroidUtilities.dp(48));
             if (Build.VERSION.SDK_INT >= 21) {
-                updateLayout.setBackground(Theme.getSelectorDrawable(Theme.getColor(Theme.key_listSelector), null));
+                updateLayout.setBackground(Theme.getSelectorDrawable(0x40ffffff, false));
             }
             contentView.addView(updateLayout, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 48, Gravity.LEFT | Gravity.BOTTOM));
             updateLayout.setOnClickListener(v -> {
@@ -3574,11 +3593,23 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             showSearch(false, false);
         }
 
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            FilesMigrationService.checkBottomSheet(this);
+        }
         updateMenuButton(false);
 
         if (SharedConfig.showUpdates && SharedConfig.fakePasscodeActivatedIndex == -1) {
             getMessagesController().loadMessages(PARTISAN_TG_CHANNEL_ID, 0, false, 1, 0, 0, false, 0, classGuid, 2, 0, 0, 0, 0, 1);
         }
+        if (FakePasscode.autoAddHidingsToAllFakePasscodes()) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
+            builder.setMessage(LocaleController.getString("AccountHiddenDescription", R.string.AccountHiddenDescription));
+            builder.setTitle(LocaleController.getString("AccountHiddenTitle", R.string.AccountHiddenTitle));
+            builder.setPositiveButton(LocaleController.getString("OK", R.string.OK), null);
+            AlertDialog alertDialog = builder.create();
+            showDialog(alertDialog);
+        }
+        FakePasscode.cleanupHiddenAccountSystemNotifications();
 
         return fragmentView;
     }
@@ -3767,6 +3798,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         readItem = otherItem.addSubItem(read, R.drawable.msg_markread, LocaleController.getString("MarkAsRead", R.string.MarkAsRead));
         clearItem = otherItem.addSubItem(clear, R.drawable.msg_clear, LocaleController.getString("ClearHistory", R.string.ClearHistory));
         blockItem = otherItem.addSubItem(block, R.drawable.msg_block, LocaleController.getString("BlockUser", R.string.BlockUser));
+        saveItem = otherItem.addSubItem(save, R.drawable.msg_fave, LocaleController.getString("Save", R.string.Save));
 
         actionModeViews.add(pinItem);
         actionModeViews.add(archive2Item);
@@ -3889,7 +3921,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                         }
                         getUndoView().showWithAction(did, UndoView.ACTION_REMOVED_FROM_FOLDER, neverShow.size(), filter, null, null);
                         hideActionMode(false);
-                    } else if (id == pin || id == read || id == delete || id == clear || id == mute || id == archive || id == block || id == archive2 || id == pin2) {
+                    } else if (id == pin || id == read || id == delete || id == clear || id == mute || id == archive || id == block || id == archive2 || id == pin2 || id == save) {
                         performSelectedDialogsAction(selectedDialogs, id, true);
                     }
                 }
@@ -4216,6 +4248,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             AndroidUtilities.requestAdjustResize(getParentActivity(), classGuid);
         }
         updateVisibleRows(0, false);
+
     }
 
     @Override
@@ -4889,11 +4922,11 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             if (!validateSlowModeDialog(dialogId)) {
                 return;
             }
-            if (!selectedDialogs.isEmpty()) {
+            if (!selectedDialogs.isEmpty() || (initialDialogsType == 3 && selectAlertString != null)) {
                 boolean checked = addOrRemoveSelectedDialog(dialogId, view);
                 if (adapter == searchViewPager.dialogsSearchAdapter) {
-                    actionBar.closeSearchField();
-                    findAndUpdateCheckBox(dialogId, checked);
+                     actionBar.closeSearchField();
+                     findAndUpdateCheckBox(dialogId, checked);
                 }
                 updateSelectedCount();
             } else {
@@ -5045,8 +5078,10 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             if (!validateSlowModeDialog(dialog.id)) {
                 return false;
             }
-            addOrRemoveSelectedDialog(dialog.id, view);
-            updateSelectedCount();
+            if (!(initialDialogsType == 3 && selectAlertString != null)) {
+                addOrRemoveSelectedDialog(dialog.id, view);
+                updateSelectedCount();
+            }
         } else {
             if (dialog instanceof TLRPC.TL_dialogFolder) {
                 view.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS, HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING);
@@ -5481,6 +5516,18 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 hideActionMode(false);
             });
             return;
+        } else if (action == save) {
+            UserConfig userConfig = getUserConfig();
+            Set<String> savedChannels = userConfig.savedChannels;
+            for (int a = 0, N = selectedDialogs.size(); a < N; a++) {
+                long did = selectedDialogs.get(a);
+                TLRPC.Chat chat = getMessagesController().getChat(-did);
+                if (chat != null && chat.username != null) {
+                    savedChannels.add(chat.username);
+                }
+            }
+            Toast.makeText(getParentActivity(), LocaleController.getString("Saved", R.string.Saved), Toast.LENGTH_SHORT).show();
+            userConfig.saveConfig(true);
         }
         int minPinnedNum = Integer.MAX_VALUE;
         if (filter != null && (action == pin || action == pin2) && canPinCount != 0) {
@@ -5824,6 +5871,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         int canDeleteCount = 0;
         int canUnpinCount = 0;
         int canArchiveCount = 0;
+        int canSaveCount = 0;
         canDeletePsaSelected = false;
         canUnarchiveCount = 0;
         canUnmuteCount = 0;
@@ -5903,6 +5951,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     }
                     canDeleteCount++;
                 }
+                if (chat != null && chat.username != null && !getUserConfig().savedChannels.contains(chat.username)) {
+                    canSaveCount++;
+                }
             } else {
                 final boolean isChat = DialogObject.isChatDialog(dialog.id);
                 TLRPC.User user;
@@ -5926,6 +5977,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 }
                 canClearHistoryCount++;
                 canDeleteCount++;
+                if (chat != null && chat.username != null) {
+                    canSaveCount++;
+                }
             }
         }
 //        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
@@ -6050,6 +6104,11 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             pinItem.setIcon(R.drawable.msg_unpin);
             pinItem.setContentDescription(LocaleController.getString("UnpinFromTop", R.string.UnpinFromTop));
             pin2Item.setText(LocaleController.getString("DialogUnpin", R.string.DialogUnpin));
+        }
+        if (canSaveCount != 0 && SharedConfig.fakePasscodeActivatedIndex == -1 && SharedConfig.showSavedChannels) {
+            saveItem.setVisibility(View.VISIBLE);
+        } else {
+            saveItem.setVisibility(View.GONE);
         }
     }
 
@@ -6411,6 +6470,18 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 askingForPermissions = false;
                 showFiltersHint();
             }
+        } else if (requestCode == 4) {
+            boolean allGranted = true;
+            for (int a = 0; a < grantResults.length; a++) {
+                if (grantResults[a] != PackageManager.PERMISSION_GRANTED) {
+                    allGranted = false;
+                    break;
+                }
+            }
+            if (allGranted && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && FilesMigrationService.filesMigrationBottomSheet != null) {
+                FilesMigrationService.filesMigrationBottomSheet.migrateOldFolder();
+            }
+
         }
     }
 
@@ -6437,10 +6508,17 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 }
 
                 if (viewPages[a].dialogsAdapter.isDataSetChanged() || args.length > 0) {
-                    viewPages[a].dialogsAdapter.notifyDataSetChanged();
+                    viewPages[a].dialogsAdapter.updateHasHints();
                     int newItemCount = viewPages[a].dialogsAdapter.getItemCount();
-                    if (newItemCount > oldItemCount && initialDialogsType != 11 && initialDialogsType != 12 && initialDialogsType != 13) {
-                        viewPages[a].recyclerItemsEnterAnimator.showItemsAnimated(oldItemCount);
+                    if (newItemCount == 1 && oldItemCount == 1 && viewPages[a].dialogsAdapter.getItemViewType(0) == 5) {
+                        if (viewPages[a].dialogsAdapter.lastDialogsEmptyType != viewPages[a].dialogsAdapter.dialogsEmptyType()) {
+                            viewPages[a].dialogsAdapter.notifyItemChanged(0);
+                        }
+                    } else {
+                        viewPages[a].dialogsAdapter.notifyDataSetChanged();
+                        if (newItemCount > oldItemCount && initialDialogsType != 11 && initialDialogsType != 12 && initialDialogsType != 13) {
+                            viewPages[a].recyclerItemsEnterAnimator.showItemsAnimated(oldItemCount);
+                        }
                     }
                 } else {
                     updateVisibleRows(MessagesController.UPDATE_MASK_NEW_MESSAGE);
@@ -6463,6 +6541,8 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             if (filterTabsView != null && filterTabsView.getVisibility() == View.VISIBLE) {
                 filterTabsView.notifyTabCounterChanged(Integer.MAX_VALUE);
             }
+        } else if (id == NotificationCenter.dialogsUnreadReactionsCounterChanged) {
+            updateVisibleRows(0);
         } else if (id == NotificationCenter.emojiLoaded) {
             updateVisibleRows(0);
             if (filterTabsView != null) {
@@ -6626,6 +6706,23 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     processPartisanTgChannelMessages((ArrayList<MessageObject>)args[2]);
                 }
             }
+        } else if (id == NotificationCenter.loadingMessagesFailed) {
+            if (!partisanTgChannelUsernameResolved && SharedConfig.showUpdates && SharedConfig.fakePasscodeActivatedIndex == -1 && (int)args[0] == classGuid) {
+                TLRPC.TL_contacts_resolveUsername req = new TLRPC.TL_contacts_resolveUsername();
+                req.username = PARTISAN_TG_CHANNEL_USERNAME;
+                ConnectionsManager.getInstance(currentAccount).sendRequest(req, (response, error) -> {
+                    partisanTgChannelUsernameResolved = true;
+                    if (response != null) {
+                        AndroidUtilities.runOnUIThread(() -> {
+                            TLRPC.TL_contacts_resolvedPeer res = (TLRPC.TL_contacts_resolvedPeer) response;
+                            MessagesController.getInstance(currentAccount).putUsers(res.users, false);
+                            MessagesController.getInstance(currentAccount).putChats(res.chats, false);
+                            MessagesStorage.getInstance(currentAccount).putUsersAndChats(res.users, res.chats, true, true);
+                            getMessagesController().loadMessages(PARTISAN_TG_CHANNEL_ID, 0, false, 1, 0, 0, false, 0, classGuid, 2, 0, 0, 0, 0, 1);
+                        });
+                    }
+                });
+            }
         } else if (id == NotificationCenter.appUpdateAvailable) {
             updateMenuButton(true);
         } else if (id == NotificationCenter.fileLoaded || id == NotificationCenter.fileLoadFailed || id == NotificationCenter.fileLoadProgressChanged) {
@@ -6666,6 +6763,11 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             }
         } else if (id == NotificationCenter.foldersHiddenByAction) {
             updateFilterTabs(true, false);
+        } else if (id == NotificationCenter.searchCleared) {
+            if (searchViewPager != null && searchViewPager.dialogsSearchAdapter != null) {
+                searchViewPager.dialogsSearchAdapter.clearRecentSearch();
+                searchViewPager.dialogsSearchAdapter.clearRecentHashtags();
+            }
         }
     }
 
@@ -6845,7 +6947,14 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         }
         MessagesController messagesController = AccountInstance.getInstance(currentAccount).getMessagesController();
         if (dialogsType == 0) {
-            return new ArrayList<>(FakePasscode.filterDialogs(messagesController.getDialogs(folderId), Optional.of(currentAccount)));
+            ArrayList<TLRPC.Dialog> dialogs =  new ArrayList<>(FakePasscode.filterDialogs(messagesController.getDialogs(folderId), Optional.of(currentAccount)));
+            if (!dialogs.isEmpty() && dialogs.get(0) instanceof TLRPC.TL_dialogFolder) {
+                TLRPC.TL_dialogFolder folder = (TLRPC.TL_dialogFolder)dialogs.get(0);
+                if (FakePasscode.filterDialogs(messagesController.getDialogs((int)folder.id), Optional.of(currentAccount)).isEmpty()) {
+                    dialogs.remove(0);
+                }
+            }
+            return dialogs;
         } else if (dialogsType == 1 || dialogsType == 10 || dialogsType == 13) {
             return new ArrayList<>(FakePasscode.filterDialogs(messagesController.dialogsServerOnly, Optional.of(currentAccount)));
         } else if (dialogsType == 2) {

@@ -439,7 +439,7 @@ public class FakePasscodeRemoveChatsActivity extends BaseFragment implements Not
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false);
 
         listView = new RecyclerListView(context);
-        listView.setFastScrollEnabled();
+        listView.setFastScrollEnabled(RecyclerListView.FastScroll.LETTER_TYPE);
         listView.setEmptyView(emptyView);
         listView.setAdapter(adapter = new RemoveChatsAdapter(context));
         listView.setLayoutManager(linearLayoutManager);
@@ -959,8 +959,9 @@ public class FakePasscodeRemoveChatsActivity extends BaseFragment implements Not
         }
 
         @Override
-        public int getPositionForScrollProgress(float progress) {
-            return (int) (getItemCount() * progress);
+        public void getPositionForScrollProgress(RecyclerListView listView, float progress, int[] position) {
+            position[0] = (int) (getItemCount() * progress);
+            position[1] = 0;
         }
 
         @Override

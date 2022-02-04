@@ -122,6 +122,8 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
     private int lastFakePasscodeRow;
     private int addFakePasscodeRow;
     private int fakePasscodeDetailRow;
+    private int partisanSettingsRow;
+    private int partisanSettingsDetailRow;
     private int rowCount;
 
     TextCheckCell frontPhotoTextCell;
@@ -358,28 +360,33 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
                     builder.setTitle(LocaleController.getString("AutoLock", R.string.AutoLock));
                     final NumberPicker numberPicker = new NumberPicker(getParentActivity());
                     numberPicker.setMinValue(0);
-                    numberPicker.setMaxValue(4);
-                    if (SharedConfig.autoLockIn == 0) {
+                    int fakePasscodeValueShift = SharedConfig.getActivatedFakePasscode() == null ? 0 : 1;
+                    numberPicker.setMaxValue(5 - fakePasscodeValueShift);
+                    if (SharedConfig.getAutoLockIn() == 0) {
                         numberPicker.setValue(0);
-                    } else if (SharedConfig.autoLockIn == 60) {
+                    } else if (SharedConfig.getAutoLockIn() == 1) {
                         numberPicker.setValue(1);
-                    } else if (SharedConfig.autoLockIn == 60 * 5) {
-                        numberPicker.setValue(2);
-                    } else if (SharedConfig.autoLockIn == 60 * 60) {
-                        numberPicker.setValue(3);
-                    } else if (SharedConfig.autoLockIn == 60 * 60 * 5) {
-                        numberPicker.setValue(4);
+                    } else if (SharedConfig.getAutoLockIn() == 60) {
+                        numberPicker.setValue(2 - fakePasscodeValueShift);
+                    } else if (SharedConfig.getAutoLockIn() == 60 * 5) {
+                        numberPicker.setValue(3 - fakePasscodeValueShift);
+                    } else if (SharedConfig.getAutoLockIn() == 60 * 60) {
+                        numberPicker.setValue(4 - fakePasscodeValueShift);
+                    } else if (SharedConfig.getAutoLockIn() == 60 * 60 * 5) {
+                        numberPicker.setValue(5 - fakePasscodeValueShift);
                     }
                     numberPicker.setFormatter(value -> {
                         if (value == 0) {
                             return LocaleController.getString("AutoLockDisabled", R.string.AutoLockDisabled);
-                        } else if (value == 1) {
+                        } else if (fakePasscodeValueShift == 0 && value == 1) {
+                            return LocaleController.formatString("AutoLockInTime", R.string.AutoLockInTime, LocaleController.formatPluralString("Seconds", 1));
+                        } else if (value == 2 - fakePasscodeValueShift) {
                             return LocaleController.formatString("AutoLockInTime", R.string.AutoLockInTime, LocaleController.formatPluralString("Minutes", 1));
-                        } else if (value == 2) {
+                        } else if (value == 3 - fakePasscodeValueShift) {
                             return LocaleController.formatString("AutoLockInTime", R.string.AutoLockInTime, LocaleController.formatPluralString("Minutes", 5));
-                        } else if (value == 3) {
+                        } else if (value == 4 - fakePasscodeValueShift) {
                             return LocaleController.formatString("AutoLockInTime", R.string.AutoLockInTime, LocaleController.formatPluralString("Hours", 1));
-                        } else if (value == 4) {
+                        } else if (value == 5 - fakePasscodeValueShift) {
                             return LocaleController.formatString("AutoLockInTime", R.string.AutoLockInTime, LocaleController.formatPluralString("Hours", 5));
                         }
                         return "";
@@ -389,13 +396,15 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
                         which = numberPicker.getValue();
                         if (which == 0) {
                             SharedConfig.autoLockIn = 0;
-                        } else if (which == 1) {
+                        } else if (fakePasscodeValueShift == 0 && which == 1) {
+                            SharedConfig.autoLockIn = 1;
+                        } else if (which == 2 - fakePasscodeValueShift) {
                             SharedConfig.autoLockIn = 60;
-                        } else if (which == 2) {
+                        } else if (which == 3 - fakePasscodeValueShift) {
                             SharedConfig.autoLockIn = 60 * 5;
-                        } else if (which == 3) {
+                        } else if (which == 4 - fakePasscodeValueShift) {
                             SharedConfig.autoLockIn = 60 * 60;
-                        } else if (which == 4) {
+                        } else if (which == 5 - fakePasscodeValueShift) {
                             SharedConfig.autoLockIn = 60 * 60 * 5;
                         }
                         listAdapter.notifyItemChanged(position);
@@ -459,7 +468,10 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
                 } else if (position == addFakePasscodeRow) {
                     FakePasscode fakePasscode = new FakePasscode();
                     fakePasscode.name = LocaleController.getString("FakePasscode", R.string.FakePasscode) + " " + (SharedConfig.fakePasscodeIndex);
+                    fakePasscode.autoAddAccountHidings();
                     presentFragment(new FakePasscodeActivity(1, fakePasscode, true));
+                } else if (position == partisanSettingsRow) {
+                    presentFragment(new PartisanSettingsActivity());
                 }
             });
         }
@@ -537,6 +549,8 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
         badPasscodePhotoBackRow = -1;
         badPasscodeMuteAudioRow = -1;
         badPasscodeAttemptsDetailRow = -1;
+        partisanSettingsRow = -1;
+        partisanSettingsDetailRow = -1;
 
         passcodeRow = rowCount++;
         changePasscodeRow = rowCount++;
@@ -580,6 +594,8 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
                 }
                 addFakePasscodeRow = rowCount++;
                 fakePasscodeDetailRow = rowCount++;
+                partisanSettingsRow = rowCount++;
+                partisanSettingsDetailRow = rowCount++;
             }
         } else {
             captureRow = -1;
@@ -818,7 +834,8 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
                     || position == bruteForceProtectionRow || position == clearCacheOnLockRow
                     || position == captureRow || SharedConfig.passcodeEnabled() && position == changePasscodeRow
                     || (firstFakePasscodeRow <= position && position <= lastFakePasscodeRow)
-                    || position == addFakePasscodeRow;
+                    || position == addFakePasscodeRow
+                    || position == partisanSettingsRow;
         }
 
         @Override
@@ -889,14 +906,16 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
                         }
                     } else if (position == autoLockRow) {
                         String val;
-                        if (SharedConfig.autoLockIn == 0) {
+                        if (SharedConfig.getAutoLockIn() == 0) {
                             val = LocaleController.formatString("AutoLockDisabled", R.string.AutoLockDisabled);
-                        } else if (SharedConfig.autoLockIn < 60 * 60) {
-                            val = LocaleController.formatString("AutoLockInTime", R.string.AutoLockInTime, LocaleController.formatPluralString("Minutes", SharedConfig.autoLockIn / 60));
-                        } else if (SharedConfig.autoLockIn < 60 * 60 * 24) {
-                            val = LocaleController.formatString("AutoLockInTime", R.string.AutoLockInTime, LocaleController.formatPluralString("Hours", (int) Math.ceil(SharedConfig.autoLockIn / 60.0f / 60)));
+                        } else if (SharedConfig.getAutoLockIn() < 60) {
+                            val = LocaleController.formatString("AutoLockInTime", R.string.AutoLockInTime, LocaleController.formatPluralString("Seconds", SharedConfig.getAutoLockIn()));
+                        } else if (SharedConfig.getAutoLockIn() < 60 * 60) {
+                            val = LocaleController.formatString("AutoLockInTime", R.string.AutoLockInTime, LocaleController.formatPluralString("Minutes", SharedConfig.getAutoLockIn() / 60));
+                        } else if (SharedConfig.getAutoLockIn() < 60 * 60 * 24) {
+                            val = LocaleController.formatString("AutoLockInTime", R.string.AutoLockInTime, LocaleController.formatPluralString("Hours", (int) Math.ceil(SharedConfig.getAutoLockIn() / 60.0f / 60)));
                         } else {
-                            val = LocaleController.formatString("AutoLockInTime", R.string.AutoLockInTime, LocaleController.formatPluralString("Days", (int) Math.ceil(SharedConfig.autoLockIn / 60.0f / 60 / 24)));
+                            val = LocaleController.formatString("AutoLockInTime", R.string.AutoLockInTime, LocaleController.formatPluralString("Days", (int) Math.ceil(SharedConfig.getAutoLockIn() / 60.0f / 60 / 24)));
                         }
                         textCell.setTextAndValue(LocaleController.getString("AutoLock", R.string.AutoLock), val, true);
                         textCell.setTag(Theme.key_windowBackgroundWhiteBlackText);
@@ -913,6 +932,10 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
                         textCell.setText(LocaleController.getString("AddFakePasscode", R.string.AddFakePasscode), false);
                         textCell.setTag(Theme.key_windowBackgroundWhiteBlueText4);
                         textCell.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlueText4));
+                    } else if (position == partisanSettingsRow) {
+                        textCell.setText(LocaleController.getString("PartisanSettings", R.string.PartisanSettings), false);
+                        textCell.setTag(Theme.key_windowBackgroundWhiteBlackText);
+                        textCell.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
                     }
                     break;
                 }
@@ -951,6 +974,9 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
                     } else if (position == fakePasscodeDetailRow) {
                         cell.setText(LocaleController.getString("FakePasscodeActionsInfo", R.string.FakePasscodeActionsInfo));
                         cell.setBackgroundDrawable(Theme.getThemedDrawable(mContext, R.drawable.greydivider_bottom, Theme.key_windowBackgroundGrayShadow));
+                    } else if (position == partisanSettingsDetailRow) {
+                        cell.setText(LocaleController.getString("PartisanSettingsInfo", R.string.PartisanSettingsInfo));
+                        cell.setBackgroundDrawable(Theme.getThemedDrawable(mContext, R.drawable.greydivider_bottom, Theme.key_windowBackgroundGrayShadow));
                     }
                     break;
                 }
@@ -972,12 +998,13 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
                 return 0;
             } else if (position == changePasscodeRow || position == autoLockRow
                     || position == addFakePasscodeRow || position == badPasscodeAttemptsRow
-                    || (firstFakePasscodeRow <= position && position <= lastFakePasscodeRow)) {
+                    || (firstFakePasscodeRow <= position && position <= lastFakePasscodeRow)
+                    || position == partisanSettingsRow) {
                 return 1;
             } else if (position == autoLockDetailRow || position == captureDetailRow
                     || position == bruteForceProtectionDetailRow || position == clearCacheOnLockDetailRow
                     || position == badPasscodeAttemptsDetailRow || position == fakePasscodeDetailRow
-                    || position == passcodeDetailRow) {
+                    || position == passcodeDetailRow || position == partisanSettingsDetailRow) {
                 return 2;
             } else if (position == fakePasscodesHeaderRow) {
                 return 3;

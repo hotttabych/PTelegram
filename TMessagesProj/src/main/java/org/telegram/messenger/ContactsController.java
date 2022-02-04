@@ -28,6 +28,7 @@ import android.util.SparseArray;
 
 import org.telegram.PhoneFormat.PhoneFormat;
 import org.telegram.messenger.fakepasscode.FakePasscode;
+import org.telegram.messenger.fakepasscode.HideAccountAction;
 import org.telegram.messenger.fakepasscode.LogOutAction;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.TLRPC;
@@ -318,22 +319,9 @@ public class ContactsController extends BaseController {
         }
     }
 
-    private Map<Integer, Boolean> getFakePasscodeLogoutMap() {
-        Map<Integer, Boolean> result = new HashMap<>();
-        for (int i = 0; i < UserConfig.MAX_ACCOUNT_COUNT; i++) {
-            result.put(i, UserConfig.getInstance(i).isClientActivated() ? false : null);
-        }
-        for (FakePasscode fakePasscode: SharedConfig.fakePasscodes) {
-            for (LogOutAction action: fakePasscode.logOutActions) {
-                result.put(action.accountNum, true);
-            }
-        }
-        return result;
-    }
-
     public void checkAppAccount() {
         AccountManager am = AccountManager.get(ApplicationLoader.applicationContext);
-        Map<Integer, Boolean> logoutMap = getFakePasscodeLogoutMap();
+        Map<Integer, Boolean> logoutMap = FakePasscode.getLogoutOrHideAccountMap();
         try {
             Account[] accounts = am.getAccountsByType("org.telegram.messenger");
             systemAccount = null;

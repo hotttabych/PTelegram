@@ -37,6 +37,7 @@ import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.R;
 import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.UserConfig;
+import org.telegram.messenger.fakepasscode.FakePasscode;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.TLObject;
 import org.telegram.tgnet.TLRPC;
@@ -55,12 +56,15 @@ import org.telegram.ui.Components.CombinedDrawable;
 import org.telegram.ui.Components.FlickerLoadingView;
 import org.telegram.ui.Components.LayoutHelper;
 import org.telegram.ui.Components.PullForegroundDrawable;
+import org.telegram.ui.Components.ReactionTabHolderView;
 import org.telegram.ui.Components.RecyclerListView;
 import org.telegram.ui.DialogsActivity;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
 
 public class DialogsAdapter extends RecyclerListView.SelectionAdapter {
 
@@ -104,9 +108,6 @@ public class DialogsAdapter extends RecyclerListView.SelectionAdapter {
             SharedPreferences preferences = MessagesController.getGlobalMainSettings();
             showArchiveHint = preferences.getBoolean("archivehint", true);
             preferences.edit().putBoolean("archivehint", false).commit();
-            if (showArchiveHint) {
-                archiveHintCell = new ArchiveHintCell(context);
-            }
         }
         if (folder == 0) {
             this.preloader = new DialogsPreloader();
@@ -333,9 +334,13 @@ public class DialogsAdapter extends RecyclerListView.SelectionAdapter {
         return archiveHintCell != null ? archiveHintCell.getViewPager() : null;
     }
 
+    public void updateHasHints() {
+        hasHints = folderId == 0 && dialogsType == 0 && !isOnlySelect && !MessagesController.getInstance(currentAccount).hintDialogs.isEmpty();
+    }
+
     @Override
     public void notifyDataSetChanged() {
-        hasHints = folderId == 0 && dialogsType == 0 && !isOnlySelect && !MessagesController.getInstance(currentAccount).hintDialogs.isEmpty();
+        updateHasHints();
         super.notifyDataSetChanged();
     }
 
@@ -428,11 +433,8 @@ public class DialogsAdapter extends RecyclerListView.SelectionAdapter {
                 break;
             }
             case 9:
+                archiveHintCell = new ArchiveHintCell(mContext);
                 view = archiveHintCell;
-                if (archiveHintCell.getParent() != null) {
-                    ViewGroup parent = (ViewGroup) archiveHintCell.getParent();
-                    parent.removeView(archiveHintCell);
-                }
                 break;
             case 10: {
                 view = new LastEmptyView(mContext);
@@ -502,6 +504,19 @@ public class DialogsAdapter extends RecyclerListView.SelectionAdapter {
         return new RecyclerListView.Holder(view);
     }
 
+    public int lastDialogsEmptyType = -1;
+    public int dialogsEmptyType() {
+        if (dialogsType == 7 || dialogsType == 8) {
+            if (MessagesController.getInstance(currentAccount).isDialogsEndReached(folderId)) {
+                return 2;
+            } else {
+                return 3;
+            }
+        } else {
+            return onlineContacts != null ? 1 : 0;
+        }
+    }
+
     @Override
     public void onBindViewHolder(RecyclerView.ViewHolder holder, int i) {
         switch (holder.getItemViewType()) {
@@ -525,15 +540,7 @@ public class DialogsAdapter extends RecyclerListView.SelectionAdapter {
             }
             case 5: {
                 DialogsEmptyCell cell = (DialogsEmptyCell) holder.itemView;
-                if (dialogsType == 7 || dialogsType == 8) {
-                    if (MessagesController.getInstance(currentAccount).isDialogsEndReached(folderId)) {
-                        cell.setType(2);
-                    } else {
-                        cell.setType(3);
-                    }
-                } else {
-                    cell.setType(onlineContacts != null ? 1 : 0);
-                }
+                cell.setType(lastDialogsEmptyType = dialogsEmptyType());
                 break;
             }
             case 4: {
@@ -828,6 +835,18 @@ public class DialogsAdapter extends RecyclerListView.SelectionAdapter {
         this.forceShowEmptyCell = forceShowEmptyCell;
     }
 
+    private boolean hasArchive() {
+        if (dialogsType != 0) {
+            return false;
+        }
+        MessagesController controller = MessagesController.getInstance(currentAccount);
+        if (controller.dialogs_dict.get(DialogObject.makeFolderDialogId(1)) == null) {
+            return false;
+        }
+        List<TLRPC.Dialog> dialogs = controller.getDialogs(1);
+        return dialogs != null && !FakePasscode.filterDialogs(dialogs, Optional.of(currentAccount)).isEmpty();
+    }
+
     public class LastEmptyView extends View {
 
         public boolean moving;
@@ -838,7 +857,7 @@ public class DialogsAdapter extends RecyclerListView.SelectionAdapter {
 
         protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
             int size = parentFragment.getDialogsArray(currentAccount, dialogsType, folderId, dialogsListFrozen).size();
-            boolean hasArchive = dialogsType == 0 && MessagesController.getInstance(currentAccount).dialogs_dict.get(DialogObject.makeFolderDialogId(1)) != null;
+            boolean hasArchive = hasArchive();
             View parent = (View) getParent();
             int height;
             int paddingTop = parent.getPaddingTop();

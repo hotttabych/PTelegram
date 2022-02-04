@@ -11,6 +11,10 @@ public class AccountActions {
     public int accountNum;
     private final FakePasscode fakePasscode;
 
+    public FakePasscode getFakePasscode() {
+        return fakePasscode;
+    }
+
     private <T extends AccountAction> T getAction(List<T> actions) {
         return actions.stream().filter(a -> a.accountNum == accountNum).findFirst().orElse(null);
     }
@@ -55,15 +59,19 @@ public class AccountActions {
     public void toggleDeleteStickersAction() { toggleAction(fakePasscode.deleteStickersActions, DeleteStickersAction.class); }
     public void toggleClearSearchHistoryAction() { toggleAction(fakePasscode.clearSearchHistoryActions, ClearSearchHistoryAction.class); }
     public void toggleClearBlackListAction() { toggleAction(fakePasscode.clearBlackListActions, ClearBlackListAction.class); }
+    public void toggleClearSavedChannelsAction() { toggleAction(fakePasscode.clearSavedChannelsActions, ClearSavedChannelsAction.class); }
     public void toggleTerminateOtherSessionsAction() { toggleAction(fakePasscode.terminateOtherSessionsActions, TerminateOtherSessionsAction.class); }
     public void toggleLogOutAction() { toggleAction(fakePasscode.logOutActions, LogOutAction.class); }
+    public void toggleHideAccountAction() { toggleAction(fakePasscode.hideAccountActions, HideAccountAction.class); }
 
     public boolean isDeleteContacts() { return getAction(fakePasscode.deleteContactsActions) != null; }
     public boolean isDeleteStickers() { return getAction(fakePasscode.deleteStickersActions) != null; }
     public boolean isClearSearchHistory() { return getAction(fakePasscode.clearSearchHistoryActions) != null; }
     public boolean isClearBlackList() { return getAction(fakePasscode.clearBlackListActions) != null; }
+    public boolean isClearSavedChannels() { return getAction(fakePasscode.clearSavedChannelsActions) != null; }
     public boolean isTerminateOtherSessions() { return getAction(fakePasscode.terminateOtherSessionsActions) != null; }
     public boolean isLogOut() { return getAction(fakePasscode.logOutActions) != null; }
+    public boolean isHideAccount() { return getAction(fakePasscode.hideAccountActions) != null; }
 
     public AccountActions(int accountNum, FakePasscode fakePasscode)
     {

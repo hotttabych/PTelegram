@@ -558,7 +558,7 @@ public class VoIPFragment implements VoIPService.StateListener, NotificationCent
         callingUserTextureView = new VoIPTextureView(context, false, true, false, false);
         callingUserTextureView.renderer.setScalingType(RendererCommon.ScalingType.SCALE_ASPECT_FIT);
         callingUserTextureView.renderer.setEnableHardwareScaler(true);
-        callingUserTextureView.scaleType = VoIPTextureView.SCALE_TYPE_NONE;
+        callingUserTextureView.scaleType = VoIPTextureView.SCALE_TYPE_FIT;
    //     callingUserTextureView.attachBackgroundRenderer();
 
         frameLayout.addView(callingUserPhotoView);
@@ -1698,7 +1698,7 @@ public class VoIPFragment implements VoIPService.StateListener, NotificationCent
             buf.write(service.getGA());
             auth_key = buf.toByteArray();
         } catch (Exception checkedExceptionsAreBad) {
-            FileLog.e(checkedExceptionsAreBad);
+            FileLog.e(checkedExceptionsAreBad, false);
         }
         if (auth_key == null) {
             return;
@@ -1706,6 +1706,7 @@ public class VoIPFragment implements VoIPService.StateListener, NotificationCent
         byte[] sha256 = Utilities.computeSHA256(auth_key, 0, auth_key.length);
         String[] emoji = EncryptionKeyEmojifier.emojifyForCall(sha256);
         for (int i = 0; i < 4; i++) {
+            Emoji.preloadEmoji(emoji[i]);
             Emoji.EmojiDrawable drawable = Emoji.getEmojiDrawable(emoji[i]);
             if (drawable != null) {
                 drawable.setBounds(0, 0, AndroidUtilities.dp(22), AndroidUtilities.dp(22));

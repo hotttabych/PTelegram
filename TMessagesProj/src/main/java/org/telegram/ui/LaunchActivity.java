@@ -33,6 +33,7 @@ import android.media.AudioManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Parcelable;
 import android.os.StatFs;
 import android.os.SystemClock;
@@ -101,6 +102,7 @@ import org.telegram.messenger.UserObject;
 import org.telegram.messenger.Utilities;
 import org.telegram.messenger.browser.Browser;
 import org.telegram.messenger.camera.CameraController;
+import org.telegram.messenger.fakepasscode.FakePasscode;
 import org.telegram.messenger.fakepasscode.RemoveAsReadMessages;
 import org.telegram.messenger.fakepasscode.Utils;
 import org.telegram.messenger.voip.VideoCapturerDevice;
@@ -153,6 +155,7 @@ import org.webrtc.voiceengine.WebRtcAudioTrack;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.text.DateFormat;
@@ -248,6 +251,7 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         ApplicationLoader.postInitApplication();
+        clearOldCache();
         AndroidUtilities.checkDisplaySize(this, getResources().getConfiguration());
         currentAccount = UserConfig.selectedAccount;
         if (!UserConfig.getInstance(currentAccount).isClientActivated()) {
@@ -624,6 +628,9 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
                 } else if (id == 13) {
                     Browser.openUrl(LaunchActivity.this, LocaleController.getString("TelegramFeaturesUrl", R.string.TelegramFeaturesUrl));
                     drawerLayoutContainer.closeDrawer(false);
+                } else if (id == 100) {
+                    presentFragment(new SavedChannelsActivity(null));
+                    drawerLayoutContainer.closeDrawer(false);
                 }
             }
         });
@@ -760,7 +767,9 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
         NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.showBulletin);
         NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.appUpdateAvailable);
         NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.appDidLogoutByAction);
+        NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.appHiddenByAction);
         NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.fakePasscodeActivated);
+        NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.shouldKillApp);
         if (actionBarLayout.fragmentsStack.isEmpty()) {
             if (!UserConfig.getInstance(currentAccount).isClientActivated()) {
                 actionBarLayout.addFragmentToStack(new LoginActivity());
@@ -954,7 +963,7 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
     }
 
     public void switchToAccount(int account, boolean removeAll) {
-        if (account == UserConfig.selectedAccount || !UserConfig.isValidAccount(account)) {
+        if (account == UserConfig.selectedAccount || !UserConfig.isValidAccount(account) || FakePasscode.isHideAccount(account)) {
             return;
         }
 
@@ -1005,7 +1014,7 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
         boolean correctAccount = false;
         int accountIndex = 0;
         for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
-            if (UserConfig.getInstance(a).isClientActivated()) {
+            if (UserConfig.getInstance(a).isClientActivated() && !FakePasscode.isHideAccount(a)) {
                 if (a == UserConfig.selectedAccount) {
                     correctAccount = true;
                     break;
@@ -1024,7 +1033,7 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
     private void switchToAvailableAccountOrLogout() {
         int account = -1;
         for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
-            if (UserConfig.getInstance(a).isClientActivated()) {
+            if (UserConfig.getInstance(a).isClientActivated() && !FakePasscode.isHideAccount(a)) {
                 account = a;
                 break;
             }
@@ -1451,6 +1460,9 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
                                     }
                                     if (exportingChatUri == null) {
                                         path = AndroidUtilities.getPath(uri);
+                                        if (!BuildVars.NO_SCOPED_STORAGE) {
+                                            path = MediaController.copyFileToCache(uri, "file");
+                                        }
                                         if (path != null) {
                                             if (path.startsWith("file:")) {
                                                 path = path.replace("file://", "");
@@ -1994,12 +2006,12 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
                                         String msgID = data.getQueryParameter("message_id");
                                         if (userID != null) {
                                             try {
-                                                push_user_id = Integer.parseInt(userID);
+                                                push_user_id = Long.parseLong(userID);
                                             } catch (NumberFormatException ignore) {
                                             }
                                         } else if (chatID != null) {
                                             try {
-                                                push_chat_id = Integer.parseInt(chatID);
+                                                push_chat_id = Long.parseLong(chatID);
                                             } catch (NumberFormatException ignore) {
                                             }
                                         }
@@ -3331,13 +3343,17 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
                 int notFound = 2;
                 if (response instanceof TLRPC.TL_theme) {
                     TLRPC.TL_theme t = (TLRPC.TL_theme) response;
-                    if (t.settings != null) {
-                        String key = Theme.getBaseThemeKey(t.settings);
+                    TLRPC.ThemeSettings settings = null;
+                    if (t.settings.size() > 0) {
+                        settings = t.settings.get(0);
+                    }
+                    if (settings != null) {
+                        String key = Theme.getBaseThemeKey(settings);
                         Theme.ThemeInfo info = Theme.getTheme(key);
                         if (info != null) {
                             TLRPC.TL_wallPaper object;
-                            if (t.settings.wallpaper instanceof TLRPC.TL_wallPaper) {
-                                object = (TLRPC.TL_wallPaper) t.settings.wallpaper;
+                            if (settings.wallpaper instanceof TLRPC.TL_wallPaper) {
+                                object = (TLRPC.TL_wallPaper) settings.wallpaper;
                                 File path = FileLoader.getPathToAttach(object.document, true);
                                 if (!path.exists()) {
                                     loadingThemeProgressDialog = progressDialog;
@@ -3568,16 +3584,16 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
             private int lastGradientWidth;
 
             @Override
-            protected void onDraw(Canvas canvas) {
-                if (updateGradient == null) {
-                    return;
+            public void draw(Canvas canvas) {
+                if (updateGradient != null) {
+                    paint.setColor(0xffffffff);
+                    paint.setShader(updateGradient);
+                    updateGradient.setLocalMatrix(matrix);
+                    canvas.drawRect(0, 0, getMeasuredWidth(), getMeasuredHeight(), paint);
+                    updateLayoutIcon.setBackgroundGradientDrawable(updateGradient);
+                    updateLayoutIcon.draw(canvas);
                 }
-                paint.setColor(0xffffffff);
-                paint.setShader(updateGradient);
-                updateGradient.setLocalMatrix(matrix);
-                canvas.drawRect(0, 0, getMeasuredWidth(), getMeasuredHeight(), paint);
-                updateLayoutIcon.setBackgroundGradientDrawable(updateGradient);
-                updateLayoutIcon.draw(canvas);
+                super.draw(canvas);
             }
 
             @Override
@@ -3594,7 +3610,7 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
         updateLayout.setVisibility(View.INVISIBLE);
         updateLayout.setTranslationY(AndroidUtilities.dp(44));
         if (Build.VERSION.SDK_INT >= 21) {
-            updateLayout.setBackground(Theme.getSelectorDrawable(Theme.getColor(Theme.key_listSelector), null));
+            updateLayout.setBackground(Theme.getSelectorDrawable(0x40ffffff, false));
         }
         sideMenuContainer.addView(updateLayout, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 44, Gravity.LEFT | Gravity.BOTTOM));
         updateLayout.setOnClickListener(v -> {
@@ -4033,7 +4049,9 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
         NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.showBulletin);
         NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.appUpdateAvailable);
         NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.appDidLogoutByAction);
+        NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.appHiddenByAction);
         NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.fakePasscodeActivated);
+        NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.shouldKillApp);
     }
 
     public void presentFragment(BaseFragment fragment) {
@@ -4172,6 +4190,8 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
         } else if (requestCode == 2) {
             if (granted) {
                 NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.locationPermissionGranted);
+            } else {
+                NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.locationPermissionDenied);
             }
         } else if (requestCode == 1000) {
             if (!granted) {
@@ -4630,6 +4650,8 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
                     themeSwitchImageView.setVisibility(View.VISIBLE);
                     themeSwitchSunDrawable = darkThemeView.getAnimatedDrawable();
                     float finalRadius = (float) Math.max(Math.sqrt((w - pos[0]) * (w - pos[0]) + (h - pos[1]) * (h - pos[1])), Math.sqrt(pos[0] * pos[0] + (h - pos[1]) * (h - pos[1])));
+                    float finalRadius2 = (float) Math.max(Math.sqrt((w - pos[0]) * (w - pos[0]) + pos[1] * pos[1]), Math.sqrt(pos[0] * pos[0] + pos[1] * pos[1]));
+                    finalRadius = Math.max(finalRadius, finalRadius2);
                     Animator anim = ViewAnimationUtils.createCircularReveal(toDark ? drawerLayoutContainer : themeSwitchImageView, pos[0], pos[1], toDark ? 0 : finalRadius, toDark ? finalRadius : 0);
                     anim.setDuration(400);
                     anim.setInterpolator(Easings.easeInOutQuad);
@@ -4842,13 +4864,35 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
             }
         } else if (id == NotificationCenter.appUpdateAvailable) {
             updateAppUpdateViews(mainFragmentsStack.size() == 1);
-        } else if (id == NotificationCenter.appDidLogoutByAction) {
+        } else if (id == NotificationCenter.appDidLogoutByAction || id == NotificationCenter.appHiddenByAction) {
             switchToAvailableAccountIfCurrentAccountIsHidden();
             if (drawerLayoutAdapter != null) {
                 drawerLayoutAdapter.notifyDataSetChanged();
             }
         } else if (id == NotificationCenter.fakePasscodeActivated) {
             switchToAvailableAccountIfCurrentAccountIsHidden();
+            if (SharedConfig.getActivatedFakePasscode() != null) {
+                Utilities.globalQueue.postRunnable(() -> {
+                    ArrayList<BaseFragment> fragmentsStack = actionBarLayout.fragmentsStack;
+                    if (fragmentsStack.stream().noneMatch(f -> f instanceof DialogsActivity)) {
+                        return;
+                    }
+                    while (!fragmentsStack.isEmpty() && !(fragmentsStack.get(fragmentsStack.size() - 1) instanceof DialogsActivity)) {
+                        int count = fragmentsStack.size();
+                        AndroidUtilities.runOnUIThread(() -> fragmentsStack.get(fragmentsStack.size() - 1).finishFragment(false));
+                        while(count == fragmentsStack.size()) {
+                            // wait
+                        }
+                    }
+                });
+            }
+        } else if (id == NotificationCenter.shouldKillApp) {
+            if (android.os.Build.VERSION.SDK_INT >= 21) {
+                finishAndRemoveTask();
+            } else {
+                finishAffinity();
+            }
+            System.exit(0);
         }
     }
 
@@ -5185,11 +5229,11 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
                 if (BuildVars.LOGS_ENABLED) {
                     FileLog.d("schedule app lock in " + 1000);
                 }
-            } else if (SharedConfig.autoLockIn != 0) {
+            } else if (SharedConfig.getAutoLockIn() != 0) {
                 if (BuildVars.LOGS_ENABLED) {
-                    FileLog.d("schedule app lock in " + (((long) SharedConfig.autoLockIn) * 1000 + 1000));
+                    FileLog.d("schedule app lock in " + (((long) SharedConfig.getAutoLockIn()) * 1000 + 1000));
                 }
-                AndroidUtilities.runOnUIThread(lockRunnable, ((long) SharedConfig.autoLockIn) * 1000 + 1000);
+                AndroidUtilities.runOnUIThread(lockRunnable, ((long) SharedConfig.getAutoLockIn()) * 1000 + 1000);
             }
         } else {
             SharedConfig.lastPauseTime = 0;
@@ -5707,5 +5751,45 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
             }
         }
         drawerLayoutAdapter.notifyDataSetChanged();
+    }
+
+    private void clearOldCache() {
+        if (SharedConfig.oldCacheCleared || Build.VERSION.SDK_INT < 30) {
+            return;
+        }
+        Utilities.cacheClearQueue.postRunnable(() -> {
+            File path = Environment.getExternalStorageDirectory();
+            if (Build.VERSION.SDK_INT >= 19 && !TextUtils.isEmpty(SharedConfig.storageCacheDir)) {
+                ArrayList<File> dirs = AndroidUtilities.getRootDirs();
+                if (dirs != null) {
+                    for (int a = 0, N = dirs.size(); a < N; a++) {
+                        File dir = dirs.get(a);
+                        if (dir.getAbsolutePath().startsWith(SharedConfig.storageCacheDir)) {
+                            path = dir;
+                            break;
+                        }
+                    }
+                }
+            }
+            File telegramPath = new File(path, "Telegram");
+            if (telegramPath.exists()) {
+                deleteFileRecursive(telegramPath);
+            }
+            SharedConfig.oldCacheCleared = true;
+            SharedConfig.saveConfig();
+        });
+    }
+
+    private void deleteFileRecursive(File fileOrDirectory) {
+        if (fileOrDirectory.isDirectory()) {
+            File[] files = fileOrDirectory.listFiles();
+            if (files != null) {
+                for (File child : files) {
+                    deleteFileRecursive(child);
+                }
+            }
+        } else {
+            fileOrDirectory.delete();
+        }
     }
 }

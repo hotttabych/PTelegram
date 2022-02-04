@@ -8,10 +8,10 @@
 
 package org.telegram.messenger;
 
-import androidx.annotation.UiThread;
-
 import android.os.SystemClock;
 import android.util.SparseArray;
+
+import androidx.annotation.UiThread;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -33,6 +33,8 @@ public class NotificationCenter {
     public static final int changeRepliesCounter = totalEvents++;
     public static final int messagesDidLoad = totalEvents++;
     public static final int didLoadSponsoredMessages = totalEvents++;
+    public static final int didLoadSendAsPeers = totalEvents++;
+    public static final int updateDefaultSendAsPeer = totalEvents++;
     public static final int messagesDidLoadWithoutProcess = totalEvents++;
     public static final int loadingMessagesFailed = totalEvents++;
     public static final int messageReceivedByAck = totalEvents++;
@@ -107,6 +109,8 @@ public class NotificationCenter {
     public static final int newPeopleNearbyAvailable = totalEvents++;
     public static final int stopAllHeavyOperations = totalEvents++;
     public static final int startAllHeavyOperations = totalEvents++;
+    public static final int stopSpoilers = totalEvents++;
+    public static final int startSpoilers = totalEvents++;
     public static final int sendingMessagesChanged = totalEvents++;
     public static final int didUpdateReactions = totalEvents++;
     public static final int didVerifyMessagesStickers = totalEvents++;
@@ -188,6 +192,9 @@ public class NotificationCenter {
     public static final int fakePasscodeActivated = totalEvents++;
     public static final int dialogHiddenByAction = totalEvents++;
     public static final int foldersHiddenByAction = totalEvents++;
+    public static final int appHiddenByAction = totalEvents++;
+    public static final int searchCleared = totalEvents++;
+
 
     //global
     public static final int pushMessagesUpdated = totalEvents++;
@@ -210,6 +217,7 @@ public class NotificationCenter {
     public static final int needSetDayNightTheme = totalEvents++;
     public static final int goingToPreviewTheme = totalEvents++;
     public static final int locationPermissionGranted = totalEvents++;
+    public static final int locationPermissionDenied = totalEvents++;
     public static final int reloadInterface = totalEvents++;
     public static final int suggestedLangpack = totalEvents++;
     public static final int didSetNewWallpapper = totalEvents++;
@@ -231,6 +239,11 @@ public class NotificationCenter {
     public static final int appUpdateAvailable = totalEvents++;
     public static final int onDatabaseMigration = totalEvents++;
     public static final int onEmojiInteractionsReceived = totalEvents++;
+    public static final int emojiPreviewThemesChanged = totalEvents++;
+    public static final int reactionsDidLoad = totalEvents++;
+    public static final int chatAvailableReactionsUpdated = totalEvents++;
+    public static final int shouldKillApp = totalEvents++;
+    public static final int dialogsUnreadReactionsCounterChanged = totalEvents++;
 
     private SparseArray<ArrayList<NotificationCenterDelegate>> observers = new SparseArray<>();
     private SparseArray<ArrayList<NotificationCenterDelegate>> removeAfterBroadcast = new SparseArray<>();
@@ -404,7 +417,7 @@ public class NotificationCenter {
             delayedRunnablesTmp.addAll(delayedRunnables);
             delayedRunnables.clear();
             for (int a = 0; a < delayedRunnablesTmp.size(); a++) {
-                delayedRunnablesTmp.get(a).run();
+                AndroidUtilities.runOnUIThread(delayedRunnablesTmp.get(a));
             }
             delayedRunnablesTmp.clear();
         }

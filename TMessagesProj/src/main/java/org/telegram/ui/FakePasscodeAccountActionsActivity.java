@@ -9,7 +9,6 @@
 package org.telegram.ui;
 
 import android.content.Context;
-import android.telephony.PhoneNumberUtils;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
@@ -18,6 +17,7 @@ import android.widget.FrameLayout;
 import org.telegram.PhoneFormat.PhoneFormat;
 import org.telegram.messenger.ContactsController;
 import org.telegram.messenger.LocaleController;
+import org.telegram.messenger.NotificationsController;
 import org.telegram.messenger.R;
 import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.UserConfig;
@@ -63,8 +63,10 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
     private int deleteAllStickersRow;
     private int clearSearchHistoryRow;
     private int clearBlackListRow;
+    private int clearSavedChannelsRow;
     private int terminateAllOtherSessionsRow;
     private int logOutRow;
+    private int hideAccountRow;
     private int actionsDetailRow;
 
     public FakePasscodeAccountActionsActivity(AccountActions actions) {
@@ -121,11 +123,34 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
         listView.setAdapter(listAdapter = new ListAdapter(context));
         listView.setOnItemClickListener((view, position) -> {
             if (!view.isEnabled()) {
+                if (position == hideAccountRow) {
+                    TextCheckCell cell = (TextCheckCell) view;
+                    String title;
+                    String message;
+                    if (cell.isChecked()) {
+                        title = LocaleController.getString("CannotRemoveHiding", R.string.CannotRemoveHiding);
+                        message = String.format(LocaleController.getString("CannotShowManyAccounts", R.string.CannotShowManyAccounts),
+                                UserConfig.FAKE_PASSCODE_MAX_ACCOUNT_COUNT);
+                    } else {
+                        title = LocaleController.getString("CannotHideAccount", R.string.CannotHideAccount);
+                        if (UserConfig.getActivatedAccountsCount() == 1) {
+                            message = LocaleController.getString("CannotHideSingleAccount", R.string.CannotHideSingleAccount);
+                        } else {
+                            message = LocaleController.getString("CannotHideAllAccounts", R.string.CannotHideAllAccounts);
+                        }
+                    }
+                    AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
+                    builder.setMessage(message);
+                    builder.setTitle(title);
+                    builder.setPositiveButton(LocaleController.getString("OK", R.string.OK), null);
+                    AlertDialog alertDialog = builder.create();
+                    showDialog(alertDialog);
+                }
                 return;
             }
             if (position == changeTelegramMessageRow) {
                 presentFragment(new FakePasscodeTelegramMessagesActivity(actions.getMessageAction()));
-            } if (position == changePhoneRow) {
+            } else if (position == changePhoneRow) {
                 DialogTemplate template = new DialogTemplate();
                 template.type = DialogType.EDIT;
                 template.title = LocaleController.getString("FakePhoneNumber", R.string.FakePhoneNumber);
@@ -169,6 +194,10 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
                 TextCheckCell cell = (TextCheckCell) view;
                 actions.toggleClearBlackListAction();
                 cell.setChecked(actions.isClearBlackList());
+            } else if (position == clearSavedChannelsRow) {
+                TextCheckCell cell = (TextCheckCell) view;
+                actions.toggleClearSavedChannelsAction();
+                cell.setChecked(actions.isClearSavedChannels());
             } else if (position == terminateAllOtherSessionsRow) {
                 TextCheckCell cell = (TextCheckCell) view;
                 actions.toggleTerminateOtherSessionsAction();
@@ -185,7 +214,38 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
                 TextCheckCell cell = (TextCheckCell) view;
                 actions.toggleLogOutAction();
                 cell.setChecked(actions.isLogOut());
+                if (!actions.isLogOut()) {
+                    int targetHideCount = UserConfig.getActivatedAccountsCount() - UserConfig.FAKE_PASSCODE_MAX_ACCOUNT_COUNT;
+                    if (!actions.isHideAccount() && actions.getFakePasscode().getHideOrLogOutCount() < targetHideCount) {
+                        actions.toggleHideAccountAction();
+                    }
+                } else {
+                    if (actions.isHideAccount()) {
+                        actions.toggleHideAccountAction();
+                    }
+                }
+                if (listAdapter != null) {
+                    updateRows();
+                    listAdapter.notifyDataSetChanged();
+                }
                 ContactsController.getInstance(actions.accountNum).checkAppAccount();
+                NotificationsController.getInstance(actions.accountNum).cleanupSystemSettings();
+            } else if (position == hideAccountRow) {
+                TextCheckCell cell = (TextCheckCell) view;
+                actions.toggleHideAccountAction();
+                cell.setChecked(actions.isHideAccount());
+                final int maxAccountHidings = UserConfig.MAX_ACCOUNT_COUNT - UserConfig.FAKE_PASSCODE_MAX_ACCOUNT_COUNT;
+                if (actions.isHideAccount() && actions.getFakePasscode().getHideAccountCount() > maxAccountHidings) {
+                    AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
+                    String message = String.format(LocaleController.getString("TooManyAccountsHiddenDescription", R.string.TooManyAccountsHiddenDescription),
+                            maxAccountHidings);
+                    builder.setMessage(message);
+                    builder.setTitle(LocaleController.getString("TooManyAccountsHiddenTitle", R.string.TooManyAccountsHiddenTitle));
+                    builder.setPositiveButton(LocaleController.getString("OK", R.string.OK), null);
+                    showDialog(builder.create());
+                }
+                ContactsController.getInstance(actions.accountNum).checkAppAccount();
+                NotificationsController.getInstance(actions.accountNum).cleanupSystemSettings();
             }
         });
 
@@ -214,8 +274,14 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
         deleteAllStickersRow = rowCount++;
         clearSearchHistoryRow = rowCount++;
         clearBlackListRow = rowCount++;
+        clearSavedChannelsRow = rowCount++;
         terminateAllOtherSessionsRow = rowCount++;
         logOutRow = rowCount++;
+        if (!actions.isLogOut()) {
+            hideAccountRow = rowCount++;
+        } else {
+            hideAccountRow = -1;
+        }
         actionsDetailRow = rowCount++;
     }
 
@@ -258,6 +324,7 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
             View view;
             switch (viewType) {
                 case 0:
+                case 3:
                     view = new TextCheckCell(mContext);
                     view.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundWhite));
                     break;
@@ -290,6 +357,9 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
                     } else if (position == clearBlackListRow) {
                         textCell.setTextAndCheck(LocaleController.getString("ClearBlackList", R.string.ClearBlackList),
                                 actions.isClearBlackList(), true);
+                    } else if (position == clearSavedChannelsRow) {
+                        textCell.setTextAndCheck(LocaleController.getString("ClearSavedChannels", R.string.ClearSavedChannels),
+                                actions.isClearSavedChannels(), true);
                     } else if (position == terminateAllOtherSessionsRow) {
                         textCell.setTextAndCheck(LocaleController.getString("TerminateAllOtherSessionsOnFakeLogin", R.string.TerminateAllOtherSessionsOnFakeLogin),
                                 actions.isTerminateOtherSessions(), true);
@@ -338,18 +408,44 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
                     }
                     break;
                 }
+                case 3: {
+                    TextCheckCell textCell = (TextCheckCell) holder.itemView;
+                    if (position == hideAccountRow) {
+                        textCell.setTextAndCheck(LocaleController.getString("HideAccount", R.string.HideAccount),
+                                actions.isHideAccount(), false);
+                    }
+                    break;
+                }
+            }
+        }
+
+        @Override
+        public void onViewAttachedToWindow(RecyclerView.ViewHolder holder) {
+            if (holder.getItemViewType() == 3) {
+                TextCheckCell textCell = (TextCheckCell) holder.itemView;
+
+                int hiddenAccountCount = actions.getFakePasscode().getHideOrLogOutCount();
+                int accountCount = UserConfig.getActivatedAccountsCount();
+                boolean enabled = actions.isHideAccount() && (accountCount - hiddenAccountCount
+                        < UserConfig.FAKE_PASSCODE_MAX_ACCOUNT_COUNT)
+                        || !actions.isHideAccount() && ((hiddenAccountCount < accountCount - 1) || actions.isLogOut());
+
+                textCell.setEnabled(enabled, null);
             }
         }
 
         @Override
         public int getItemViewType(int position) {
             if (position == deleteAllContactsRow || position == deleteAllStickersRow || position == clearSearchHistoryRow
-                    || position == clearBlackListRow || position == terminateAllOtherSessionsRow || position == logOutRow) {
+                    || position == clearBlackListRow || position == clearSavedChannelsRow || position == terminateAllOtherSessionsRow
+                    || position == logOutRow) {
                 return 0;
             } else if (position == changeChatsToRemoveRow || position == changePhoneRow ||  position == changeTelegramMessageRow) {
                 return 1;
             } else if (position == messagesDetailRow || position == phoneDetailRow || position == actionsDetailRow) {
                 return 2;
+            } else if (position == hideAccountRow) {
+                return 3;
             }
             return 0;
         }

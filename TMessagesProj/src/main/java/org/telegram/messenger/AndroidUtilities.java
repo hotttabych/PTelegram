@@ -17,6 +17,7 @@ import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.content.Context;
+import android.content.ContextWrapper;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
@@ -28,6 +29,7 @@ import android.content.res.AssetFileDescriptor;
 import android.content.res.Configuration;
 import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Paint;
@@ -47,12 +49,6 @@ import android.provider.CallLog;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 import android.provider.Settings;
-
-import androidx.core.content.FileProvider;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-import androidx.viewpager.widget.ViewPager;
-
 import android.telephony.TelephonyManager;
 import android.text.Layout;
 import android.text.Selection;
@@ -69,10 +65,9 @@ import android.text.util.Linkify;
 import android.util.DisplayMetrics;
 import android.util.StateSet;
 import android.util.TypedValue;
-import android.view.ContextThemeWrapper;
 import android.view.Display;
-import android.view.MotionEvent;
 import android.view.Gravity;
+import android.view.MotionEvent;
 import android.view.Surface;
 import android.view.View;
 import android.view.ViewGroup;
@@ -93,6 +88,11 @@ import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.ScrollView;
 import android.widget.TextView;
+
+import androidx.core.content.FileProvider;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.viewpager.widget.ViewPager;
 
 import com.android.internal.telephony.ITelephony;
 import com.google.android.gms.auth.api.phone.SmsRetriever;
@@ -146,6 +146,7 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.List;
@@ -188,6 +189,7 @@ public class AndroidUtilities {
     private static RectF bitmapRect;
 
     public static final RectF rectTmp = new RectF();
+    public static final Rect rectTmp2 = new Rect();
 
     public static Pattern WEB_URL = null;
     public static Pattern BAD_CHARS_PATTERN = null;
@@ -380,8 +382,8 @@ public class AndroidUtilities {
         if (context instanceof Activity) {
             return (Activity) context;
         }
-        if (context instanceof ContextThemeWrapper) {
-            return findActivity(((ContextThemeWrapper) context).getBaseContext());
+        if (context instanceof ContextWrapper) {
+            return findActivity(((ContextWrapper) context).getBaseContext());
         }
         return null;
     }
@@ -529,10 +531,12 @@ public class AndroidUtilities {
         if (context == null || AndroidUtilities.statusBarHeight > 0) {
             return;
         }
+        AndroidUtilities.statusBarHeight = getStatusBarHeight(context);
+    }
+
+    public static int getStatusBarHeight(Context context) {
         int resourceId = context.getResources().getIdentifier("status_bar_height", "dimen", "android");
-        if (resourceId > 0) {
-            AndroidUtilities.statusBarHeight = context.getResources().getDimensionPixelSize(resourceId);
-        }
+        return resourceId > 0 ? context.getResources().getDimensionPixelSize(resourceId) : 0;
     }
 
     public static int getThumbForNameOrMime(String name, String mime, boolean media) {
@@ -1966,6 +1970,29 @@ public class AndroidUtilities {
         }
     }
 
+    public static int charSequenceIndexOf(CharSequence cs, CharSequence needle, int fromIndex) {
+        for (int i = fromIndex; i < cs.length() - needle.length(); i++) {
+            boolean eq = true;
+            for (int j = 0; j < needle.length(); j++) {
+                if (needle.charAt(j) != cs.charAt(i + j)) {
+                    eq = false;
+                    break;
+                }
+            }
+            if (eq)
+                return i;
+        }
+        return -1;
+    }
+
+    public static int charSequenceIndexOf(CharSequence cs, CharSequence needle) {
+        return charSequenceIndexOf(cs, needle, 0);
+    }
+
+    public static boolean charSequenceContains(CharSequence cs, CharSequence needle) {
+        return charSequenceIndexOf(cs, needle) != -1;
+    }
+
     public static CharSequence getTrimmedString(CharSequence src) {
         if (src == null || src.length() == 0) {
             return src;
@@ -2164,11 +2191,11 @@ public class AndroidUtilities {
         }
         int uptime = (int) (SystemClock.elapsedRealtime() / 1000);
         if (BuildVars.LOGS_ENABLED && reset && SharedConfig.passcodeEnabled()) {
-            FileLog.d("wasInBackground = " + wasInBackground + " appLocked = " + SharedConfig.appLocked + " autoLockIn = " + SharedConfig.autoLockIn + " lastPauseTime = " + SharedConfig.lastPauseTime + " uptime = " + uptime);
+            FileLog.d("wasInBackground = " + wasInBackground + " appLocked = " + SharedConfig.appLocked + " autoLockIn = " + SharedConfig.getAutoLockIn() + " lastPauseTime = " + SharedConfig.lastPauseTime + " uptime = " + uptime);
         }
         return SharedConfig.passcodeEnabled() && wasInBackground &&
                 (SharedConfig.appLocked ||
-                        SharedConfig.autoLockIn != 0 && SharedConfig.lastPauseTime != 0 && !SharedConfig.appLocked && (SharedConfig.lastPauseTime + SharedConfig.autoLockIn) <= uptime ||
+                        SharedConfig.getAutoLockIn() != 0 && SharedConfig.lastPauseTime != 0 && !SharedConfig.appLocked && (SharedConfig.lastPauseTime + SharedConfig.getAutoLockIn()) <= uptime ||
                         uptime + 5 < SharedConfig.lastPauseTime);
     }
 
@@ -2250,6 +2277,10 @@ public class AndroidUtilities {
 
     }
 
+    public static void appCenterLog(Throwable e) {
+
+    }
+
     public static void addToClipboard(CharSequence str) {
         try {
             android.content.ClipboardManager clipboard = (android.content.ClipboardManager) ApplicationLoader.applicationContext.getSystemService(Context.CLIPBOARD_SERVICE);
@@ -2265,11 +2296,11 @@ public class AndroidUtilities {
             return;
         }
         File f = new File(fromPath);
-        Uri contentUri = Uri.fromFile(f);
-        addMediaToGallery(contentUri);
+        addMediaToGallery(f);
     }
 
-    public static void addMediaToGallery(Uri uri) {
+    public static void addMediaToGallery(File file) {
+        Uri uri = Uri.fromFile(file);
         if (uri == null) {
             return;
         }
@@ -2282,9 +2313,9 @@ public class AndroidUtilities {
         }
     }
 
-    private static File getAlbumDir(boolean secretChat) { //TODO scoped storage
-        if (secretChat || Build.VERSION.SDK_INT >= 23 && ApplicationLoader.applicationContext.checkSelfPermission(android.Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            return FileLoader.getDirectory(FileLoader.MEDIA_DIR_CACHE);
+    private static File getAlbumDir(boolean secretChat) {
+        if (secretChat || !BuildVars.NO_SCOPED_STORAGE ||(Build.VERSION.SDK_INT >= 23 && ApplicationLoader.applicationContext.checkSelfPermission(android.Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED)) {
+            return FileLoader.getDirectory(FileLoader.MEDIA_DIR_IMAGE);
         }
         File storageDir = null;
         if (Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState())) {
@@ -2397,15 +2428,23 @@ public class AndroidUtilities {
 
     public static File generatePicturePath(boolean secretChat, String ext) {
         try {
-            File storageDir = getAlbumDir(secretChat);
-            Date date = new Date();
-            date.setTime(System.currentTimeMillis() + Utilities.random.nextInt(1000) + 1);
-            String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss_SSS", Locale.US).format(date);
-            return new File(storageDir, "IMG_" + timeStamp + "." + (TextUtils.isEmpty(ext) ? "jpg" : ext));
+            File storageDir = ApplicationLoader.applicationContext.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+            return new File(storageDir, generateFileName(0, ext));
         } catch (Exception e) {
             FileLog.e(e);
         }
         return null;
+    }
+
+    public static String generateFileName(int type, String ext) {
+        Date date = new Date();
+        date.setTime(System.currentTimeMillis() + Utilities.random.nextInt(1000) + 1);
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss_SSS", Locale.US).format(date);
+        if (type == 0) {
+            return "IMG_" + timeStamp + "." + (TextUtils.isEmpty(ext) ? "jpg" : ext);
+        } else {
+            return  "VID_" + timeStamp + ".mp4";
+        }
     }
 
     public static CharSequence generateSearchName(String name, String name2, String q) {
@@ -2699,7 +2738,10 @@ public class AndroidUtilities {
     }
 
     public static boolean copyFile(InputStream sourceFile, File destFile) throws IOException {
-        OutputStream out = new FileOutputStream(destFile);
+        return copyFile(sourceFile, new FileOutputStream(destFile));
+    }
+
+    public static boolean copyFile(InputStream sourceFile, OutputStream out) throws IOException {
         byte[] buf = new byte[4096];
         int len;
         while ((len = sourceFile.read(buf)) > 0) {
@@ -2889,6 +2931,57 @@ public class AndroidUtilities {
         return openForView(f, fileName, document.mime_type, activity, null);
     }
 
+    public static SpannableStringBuilder formatSpannableSimple(String format, CharSequence... cs) {
+        return formatSpannable(format, i -> "%s", cs);
+    }
+
+    public static SpannableStringBuilder formatSpannable(String format, CharSequence... cs) {
+        if (format.contains("%s"))
+            return formatSpannableSimple(format, cs);
+        return formatSpannable(format, i -> "%" + (i + 1) + "$s", cs);
+    }
+
+    public static SpannableStringBuilder formatSpannable(String format, GenericProvider<Integer, String> keysProvider, CharSequence... cs) {
+        SpannableStringBuilder stringBuilder = new SpannableStringBuilder(format);
+        for (int i = 0; i < cs.length; i++) {
+            String key = keysProvider.provide(i);
+            int j = format.indexOf(key);
+            if (j != -1) {
+                stringBuilder.replace(j, j + key.length(), cs[i]);
+                format = format.substring(0, j) + cs[i].toString() + format.substring(j + key.length());
+            }
+        }
+        return stringBuilder;
+    }
+
+    public static CharSequence replaceTwoNewLinesToOne(CharSequence original) {
+        char[] buf = new char[2];
+        if (original instanceof StringBuilder) {
+            StringBuilder stringBuilder = (StringBuilder) original;
+            for (int a = 0, N = original.length(); a < N - 2; a++) {
+                stringBuilder.getChars(a, a + 2, buf, 0);
+                if (buf[0] == '\n' && buf[1] == '\n') {
+                    stringBuilder = stringBuilder.replace(a, a + 2, "\n");
+                    a--;
+                    N--;
+                }
+            }
+            return original;
+        } else if (original instanceof SpannableStringBuilder) {
+            SpannableStringBuilder stringBuilder = (SpannableStringBuilder) original;
+            for (int a = 0, N = original.length(); a < N - 2; a++) {
+                stringBuilder.getChars(a, a + 2, buf, 0);
+                if (buf[0] == '\n' && buf[1] == '\n') {
+                    stringBuilder = stringBuilder.replace(a, a + 2, "\n");
+                    a--;
+                    N--;
+                }
+            }
+            return original;
+        }
+        return original.toString().replace("\n\n", "\n");
+    }
+
     public static CharSequence replaceNewLines(CharSequence original) {
         if (original instanceof StringBuilder) {
             StringBuilder stringBuilder = (StringBuilder) original;
@@ -2897,6 +2990,7 @@ public class AndroidUtilities {
                     stringBuilder.setCharAt(a, ' ');
                 }
             }
+            return original;
         } else if (original instanceof SpannableStringBuilder) {
             SpannableStringBuilder stringBuilder = (SpannableStringBuilder) original;
             for (int a = 0, N = original.length(); a < N; a++) {
@@ -2904,6 +2998,7 @@ public class AndroidUtilities {
                     stringBuilder.replace(a, a + 1, " ");
                 }
             }
+            return original;
         }
         return original.toString().replace('\n', ' ');
     }
@@ -3515,6 +3610,41 @@ public class AndroidUtilities {
         }
     }
 
+    private static final HashMap<Window, ArrayList<Long>> flagSecureReasons = new HashMap<>();
+    // Sets FLAG_SECURE to true, until it gets unregistered (when returned callback is run)
+    // Useful for having multiple reasons to have this flag on.
+    public static Runnable registerFlagSecure(Window window) {
+        final long reasonId = (long) (Math.random() * 999999999);
+        final ArrayList<Long> reasonIds;
+        if (flagSecureReasons.containsKey(window)) {
+            reasonIds = flagSecureReasons.get(window);
+        } else {
+            reasonIds = new ArrayList<>();
+            flagSecureReasons.put(window, reasonIds);
+        }
+        reasonIds.add(reasonId);
+        updateFlagSecure(window);
+        return () -> {
+            reasonIds.remove(reasonId);
+            updateFlagSecure(window);
+        };
+    }
+    private static void updateFlagSecure(Window window) {
+        if (Build.VERSION.SDK_INT >= 23) {
+            if (window == null) {
+                return;
+            }
+            final boolean value = flagSecureReasons.containsKey(window) && flagSecureReasons.get(window).size() > 0;
+            try {
+                if (value) {
+                    window.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE);
+                } else {
+                    window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE);
+                }
+            } catch (Exception ignore) {}
+        }
+    }
+
     public static void openSharing(BaseFragment fragment, String url) {
         if (fragment == null || fragment.getParentActivity() == null) {
             return;
@@ -3626,6 +3756,9 @@ public class AndroidUtilities {
     }
 
     public static boolean checkHostForPunycode(String url) {
+        if (url == null) {
+            return false;
+        }
         boolean hasLatin = false;
         boolean hasNonLatin = false;
         try {
@@ -3758,5 +3891,76 @@ public class AndroidUtilities {
         } catch (Exception e) {
             return preferences.getInt(key, (int) defaultValue);
         }
+    }
+
+    public static Bitmap getScaledBitmap(float w, float h, String path, String streamPath, int streamOffset) {
+        FileInputStream stream = null;
+        try {
+            BitmapFactory.Options options = new BitmapFactory.Options();
+            options.inJustDecodeBounds = true;
+
+            if (path != null) {
+                BitmapFactory.decodeFile(path, options);
+            } else {
+                stream = new FileInputStream(streamPath);
+                stream.getChannel().position(streamOffset);
+                BitmapFactory.decodeStream(stream, null, options);
+            }
+            if (options.outWidth > 0 && options.outHeight > 0) {
+                if (w > h && options.outWidth < options.outHeight) {
+                    float temp = w;
+                    w = h;
+                    h = temp;
+                }
+                float scale = Math.min(options.outWidth / w, options.outHeight / h);
+                options.inSampleSize = 1;
+                if (scale > 1.0f) {
+                    do {
+                        options.inSampleSize *= 2;
+                    } while (options.inSampleSize < scale);
+                }
+                options.inJustDecodeBounds = false;
+                Bitmap wallpaper;
+                if (path != null) {
+                    wallpaper = BitmapFactory.decodeFile(path, options);
+                } else {
+                    stream.getChannel().position(streamOffset);
+                    wallpaper = BitmapFactory.decodeStream(stream, null, options);
+                }
+                return wallpaper;
+            }
+        } catch (Throwable e) {
+            FileLog.e(e);
+        } finally {
+            try {
+                if (stream != null) {
+                    stream.close();
+                }
+            } catch (Exception e2) {
+                FileLog.e(e2);
+            }
+        }
+        return null;
+    }
+
+    public static Uri getBitmapShareUri(Bitmap bitmap, String fileName, Bitmap.CompressFormat format) {
+        File cachePath = AndroidUtilities.getCacheDir();
+        if (!cachePath.isDirectory()) {
+            try {
+                cachePath.mkdirs();
+            } catch (Exception e) {
+                FileLog.e(e);
+                return null;
+            }
+        }
+        File file = new File(cachePath, fileName);
+        try (FileOutputStream out = new FileOutputStream(file)) {
+            bitmap.compress(format, 100, out);
+            out.close();
+            return FileProvider.getUriForFile(ApplicationLoader.applicationContext, BuildConfig.APPLICATION_ID + ".provider", file);
+        } catch (IOException e) {
+            FileLog.e(e);
+        }
+        return null;
     }
 }

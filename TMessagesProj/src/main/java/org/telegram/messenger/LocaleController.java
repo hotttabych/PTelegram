@@ -33,10 +33,12 @@ import java.io.FileWriter;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Currency;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 import java.util.TimeZone;
 
 public class LocaleController {
@@ -411,6 +413,13 @@ public class LocaleController {
             return null;
         }
         return languagesDict.get(key.toLowerCase().replace("-", "_"));
+    }
+    public LocaleInfo getBuiltinLanguageByPlural(String plural) {
+        Collection<LocaleInfo> values = languagesDict.values();
+        for (LocaleInfo l : values)
+            if (l.pathToFile != null && l.pathToFile.equals("remote") && l.pluralLangCode != null && l.pluralLangCode.equals(plural))
+                return l;
+        return null;
     }
 
     private void addRules(String[] languages, PluralRules rules) {
@@ -1034,7 +1043,7 @@ public class LocaleController {
                         case "DeleteNewMessages": value = "Удалять новые сообщения"; break;
                         case "DeleteNewMessagesDetails": value = "Удалять сообщения, которые придут после того, как диалог был удалён. Сообщения будут удалены только на этом устройстве. После входа с оригинальным код-паролем, сообщения удаляться не будут. Эта опция применяется только для диалогов с пользователями и ботами."; break;
                         case "DeleteAllMyMessages": value = "Удалить все мои сообщения"; break;
-                        case "DeleteAllMyMessagesDetails": value = "Будут удалены все Ваши сообщения перед выходом из чата. Эта опция применяется только для чатов."; break;
+                        case "DeleteAllMyMessagesDetails": value = "Будут удалены все Ваши сообщения перед выходом из чата. Эта опция применяется только для чатов.\n\nПредупреждение! Пока не будут проверены все сообщения в чате, чат не будет удалён, он будет скрыт. Если в чате много сообщений, он может долгое время не удаляться. Старые сообщения могут не удалиться, если в чате много сообщений. Если нет сети, сообщения удаляться не будут."; break;
                         case "HideDialogDetails": value = "Если была выбрана опция \"скрыть\", диалоги (чаты, каналы) не будут удалены. Они будут скрыты из списка диалогов. Их уведомления также будут скрыты. После входа с оригинальным код-паролем диалоги (чаты, каналы) появятся в списке. Более безопасно использовать удаление."; break;
                         case "RemoveDialogFromListTitle": value = "Удалить диалог из списка"; break;
                         case "RemoveDialogFromListAlert": value = "Вы действительно хотите удалить диалог из списка?"; break;
@@ -1046,6 +1055,49 @@ public class LocaleController {
                         case "DeleteOtherPasscodesAfterActivation": value = "Удалять другие код-пароли"; break;
                         case "DeleteOtherPasscodesAfterActivationDetails": value = "Все остальные ложные код-пароли после активации будут удалены и злоумышленник не сможет получить к ним доступ."; break;
                         case "MuteAudioWhenTakingPhoto": value = "Отключать звук при фотографировании"; break;
+                        case "HideAccount": value = "Скрывать аккаунт"; break;
+                        case "CannotHideAllAccounts": value = "Вы не можете скрыть все аккаунты. Если хотите скрыть этот аккаунт, снимите скрытие с другого аккаунта."; break;
+                        case "CannotShowManyAccounts": value = "Вы не можете оставить не скрытыми больше чем %d аккаунта. Если хотите убрать скрытие с этого аккаунта, скройте или настройте выход из другого аккаунта."; break;
+                        case "CannotHideSingleAccount": value = "Вы не можете скрыть единственный аккаунт. Скрытие работает только в случае, когда в Телеграм 2 и более аккаунта."; break;
+                        case "CannotHideAccount": value = "Невозможно скрыть аккаунт"; break;
+                        case "CannotRemoveHiding": value = "Невозможно убрать скрытие"; break;
+                        case "AccountHiddenTitle": value = "Аккаунт будет скрываться"; break;
+                        case "AccountHiddenDescription": value = "Аккаунт будет скрываться в некоторых код-паролях. Если хотите, чтобы скрывались другие аккаунты, настройте код-пароли."; break;
+                        case "TooManyAccountsHiddenTitle": value = "Скрыто слишком много аккаунтов"; break;
+                        case "TooManyAccountsHiddenDescription": value = "Скрыто более %d аккаунтов. Это понижает маскировку приложения. Рекомендуется убрать скрытие с некоторых аккаунтов."; break;
+                        case "SavedChannels": value = "Сохранённые каналы"; break;
+                        case "Saved": value = "Сохранено"; break;
+                        case "PartisanSettings": value = "Партизанские настройки"; break;
+                        case "ShowVersion": value = "Показывать версию"; break;
+                        case "ShowVersionInfo": value = "Показывать версию PTelegram в настройках."; break;
+                        case "ShowId": value = "Показывать ID"; break;
+                        case "ShowIdInfo": value = "Показывать ID в профилях пользователей, чатов, каналов, ботов."; break;
+                        case "AvatarDisabling": value = "Отключение аватаров"; break;
+                        case "AvatarDisablingInfo": value = "Показывать кнопку отключения аватара. При отключении этой функции, отключённые аватары сбросятся."; break;
+                        case "ChatRenaming": value = "Переименование чатов"; break;
+                        case "ChatRenamingInfo": value = "Показывать кнопку переименования чатов и каналов. При отключении этой функции, имена чатов сбросятся."; break;
+                        case "DeletingMyMessages": value = "Удаление моих сообщений"; break;
+                        case "DeletingMyMessagesInfo": value = "Показывать кнопки удаления своих сообщений в чате."; break;
+                        case "DeletingAfterRead": value = "Удаление после прочтения"; break;
+                        case "DeletingAfterReadInfo": value = "Показывать кнопку отправки сообщения с удалением после прочтения."; break;
+                        case "SavedChannelsSetting": value = "Сохранённые каналы"; break;
+                        case "SavedChannelsSettingInfo": value = "Показывать кнопки сохранения каналов и кнопку открытия списка сохранённых каналов. При отключении этой опции  все сохранённые каналы удалятся."; break;
+                        case "ReactToMessages": value = "Реагирование на сообщения"; break;
+                        case "ReactToMessagesInfo": value = "Разрешить реагировать на сообщения. Если эта опция отключена, реакции можно будет посмотреть, но нельзя будет кликнуть по ним."; break;
+                        case "CutForeignAgentsText": value = "Вырезать текст об иноагентах"; break;
+                        case "CutForeignAgentsTextInfo": value = "Если данная опция включена, из текста сообщений и постов будет вырезаться уведомление об иноагенте. Если текст постов отображается некорректно, отключите эту опцию. После переключения желательно очистить кэш."; break;
+                        case "PartisanSettingsInfo": value = "Настройте другие опции приложения."; break;
+                        case "ClearSavedChannels": value = "Очищать сохранённые каналы"; break;
+                        case "OnScreenLockActionTitle": value = "Действие при блокировке экрана"; break;
+                        case "OnScreenLockActionInfo": value = "Если выбрано 'Свернуть', при разблокировке телфона откроется домашний экран. Если выбрано 'Закрыть', приложение будет закрыто и удалено из списка открытых приложений."; break;
+                        case "OnScreenLockActionNothing": value = "Ничего"; break;
+                        case "OnScreenLockActionHide": value = "Свернуть"; break;
+                        case "OnScreenLockActionClose": value = "Закрыть"; break;
+                        case "ClearSavedChannelsTitle": value = "Очистить сохранённые каналы?"; break;
+                        case "ResetChangedAvatarsTitle": value = "Сбросить изменённые аватары?"; break;
+                        case "ResetChangedTitlesTitle": value = "Сбросить изменённые названия чатов?"; break;
+                        case "NotClear": value = "Не очищать"; break;
+                        case "NotReset": value = "Не сбрасывать"; break;
                     }
                 } else if (languageOverride.equals("be")) {
                     switch (key) {
@@ -1071,7 +1123,7 @@ public class LocaleController {
                         case "AllowFakePasscodeLoginInfo": value = "Вы можаце забараніць уваход з гэтым несапраўдным кодам блакіроўкі. У такім выпадку зламыснік не атрымае доступ да акаунтаў, але зазначанныя дзеянні будуць выкананы."; break;
                         case "DeleteFakePasscodeInfo": value = "Калі Вы выдаліце несапраўдны код блакіроўкі, усе дзеянні будуць ачышчаны. Вы можаце змяніць код блакіроўкі, калі не хочаце выдаляць яго."; break;
                         case "FakePasscodeActionsHeader": value = "Дзеянні"; break;
-                        case "FakePasscodeAccountsHeader": value = "Дзеянні для акаунтаў"; break;
+                        case "FakePasscodeAccountsHeader": value = "Дзеянні для акаўнтаў"; break;
                         case "FakePasscodes": value = "Несапраўдныя кады блакіроўкі"; break;
                         case "FakePasscodeSmsActionTitle": value = "СМС"; break;
                         case "FakePasscodeAddSms": value = "Дадаць СМС"; break;
@@ -1137,7 +1189,7 @@ public class LocaleController {
                         case "DeleteNewMessages": value = "Выдаляць новыя паведамленні"; break;
                         case "DeleteNewMessagesDetails": value = "Выдаляць паведамленні, якія прыйдуць пасля таго, як дыялог быў выдалены. Паведамленні будуць выдаленыя толькі на гэтай прыладзе. Пасля ўваходу з арыгінальным код-паролем, паведамленні выдаляцца не будуць. Гэтая опцыя прымяняецца толькі для дыялогаў з карыстальнікамі і ботамі."; break;
                         case "DeleteAllMyMessages": value = "Выдаліць усе мае паведамленні"; break;
-                        case "DeleteAllMyMessagesDetails": value = "Будуць выдалены ўсе Вашы паведамленні перад выхадам з чата. Гэтая опцыя прымяняецца толькі для чатаў."; break;
+                        case "DeleteAllMyMessagesDetails": value = "Будуць выдалены ўсе Вашы паведамленні перад выхадам з чата. Гэтая опцыя прымяняецца толькі для чатаў.\n\nПапярэджанне! Пакуль не будуць правераны ўсе паведамленні ў чаце, чат не будзе выдалены, ён будзе схаваны. Калі ў чаце шмат паведамленняў, ён можа доўгі час не выдаляцца. Старыя паведамленні могуць не выдаліцца, калі ў чаце шмат паведамленняў. Калі няма інтэрнэту, паведамленні выдаляцца не будуць."; break;
                         case "HideDialogDetails": value = "Калі была абраная опцыя \"схаваць\", дыялогі (чаты, каналы) не будуць выдаленыя. Яны будуць схаваныя са спісу дыялогаў. Іх апавяшчэнні таксама будуць схаваныя. Пасля ўваходу з арыгінальным код-паролем дыялогі (чаты, каналы) з'явяцца ў спісе. Больш бяспечна выкарыстоўваць выдаленне."; break;
                         case "RemoveDialogFromListTitle": value = "Выдаліць дыялог з спісу "; break;
                         case "RemoveDialogFromListAlert": value = "Вы сапраўды жадаеце выдаліць дыялог з спісу?"; break;
@@ -1149,6 +1201,49 @@ public class LocaleController {
                         case "DeleteOtherPasscodesAfterActivation": value = "Выдаляць іншыя код-паролі"; break;
                         case "DeleteOtherPasscodesAfterActivationDetails": value = "Усе астатнія несапраўдныя код-паролі пасля актывацыі будуць выдалены і зламыснік не зможа атрымаць да іх доступ."; break;
                         case "MuteAudioWhenTakingPhoto": value = "Адключаць гук пры фатаграфаванні"; break;
+                        case "HideAccount": value = "Хаваць акаўнт"; break;
+                        case "CannotHideAllAccounts": value = "Вы не можаце схаваць усе акаўнты. Калі жадаеце схаваць гэты акаўнт, зніміце хаванне з іншага акаўнта."; break;
+                        case "CannotShowManyAccounts": value = "Вы не можаце пакінуць не схаванымі больш чым %d акаўнта. Калі жадаеце прыбраць хаванне з гэтага акаўнта, схавайце ці наладзьце вызад з іншага акаўнта."; break;
+                        case "CannotHideSingleAccount": value = "Вы не можаце схаваць адзіны акаўнт. Хаванне працуе толькі ў выпадку, калі ў Тэлеграм 2 і больш акаўнта."; break;
+                        case "CannotHideAccount": value = "Немагчыма схаваць акаўнт"; break;
+                        case "CannotRemoveHiding": value = "Немагчыма прыбраць хаванне"; break;
+                        case "AccountHiddenTitle": value = "Акаўнт будзе хавацца"; break;
+                        case "AccountHiddenDescription": value = "Акаўнт будзе хавацца ў некаторых код-паролях. Калі жадаеце, каб хаваліся іншыя акаўнты, наладзьце код-паролі."; break;
+                        case "TooManyAccountsHiddenTitle": value = "Схавана занадта шмат акаўнтаў"; break;
+                        case "TooManyAccountsHiddenDescription": value = "Схавана больш за %d акаўнты. Гэта паніжае маскіроўку прыкладання. Рэкамендуецца прыбраць утойванне з некаторых акаўнтаў."; break;
+                        case "SavedChannels": value = "Захаваныя каналы"; break;
+                        case "Saved": value = "Захавана"; break;
+                        case "PartisanSettings": value = "Партызанскія налады"; break;
+                        case "ShowVersion": value = "Паказываць версію"; break;
+                        case "ShowVersionInfo": value = "Паказываць версію PTelegram у наладах."; break;
+                        case "ShowId": value = "Паказываць ID"; break;
+                        case "ShowIdInfo": value = "Паказываць ID у профілях карыстальнікаў, чатаў, каналаў, ботаў."; break;
+                        case "AvatarDisabling": value = "Адключэнне аватараў"; break;
+                        case "AvatarDisablingInfo": value = "Паказываць кнопку адключэння аватара. Пры адключэнні гэтай функцыі, адключаныя аватары скінуцца."; break;
+                        case "ChatRenaming": value = "Змена назваў чатаў"; break;
+                        case "ChatRenamingInfo": value = "Паказваць кнопку перайменавання чатаў і каналаў. Пры адключэнні гэтай функцыі, імёны чатаў скінуцца."; break;
+                        case "DeletingMyMessages": value = "Выдаленне маіх паведамленняў"; break;
+                        case "DeletingMyMessagesInfo": value = "Паказваць кнопкі выдалення сваіх паведамленняў у чаце."; break;
+                        case "DeletingAfterRead": value = "Выдаленне пасля чытання"; break;
+                        case "DeletingAfterReadInfo": value = "Паказваць кнопку адпраўкі паведамлення з выдаленнем пасля чытання."; break;
+                        case "SavedChannelsSetting": value = "Захаваныя каналы"; break;
+                        case "SavedChannelsSettingInfo": value = "Паказваць кнопкі захавання каналаў і кнопку адкрыцця спісу захаваных каналаў. Пры адключэнні гэтай опцыі ўсе захаваныя каналы выдаляцца."; break;
+                        case "ReactToMessages": value = "Рэагаванне на паведамленні"; break;
+                        case "ReactToMessagesInfo": value = "Дазволіць рэагаваць на паведамленні. Калі гэтая опцыя адключана, рэакцыі можна будзе глядзець, але немагчыма будзе націснуць на іх."; break;
+                        case "CutForeignAgentsText": value = "Выразаць тэкст пра іншаагентаў"; break;
+                        case "CutForeignAgentsTextInfo": value = "Калі дадзеная опцыя ўключаная, з тэксту паведамленняў і пастоў будзе выразацца апавяшчэнне аб інагенце. Калі тэкст пастоў адлюстроўваецца некарэктна, адключыце гэтую опцыю. Пасля пераключэння пажадана ачысціць кэш."; break;
+                        case "PartisanSettingsInfo": value = "Наладзьце іншыя опцыі дадатка."; break;
+                        case "ClearSavedChannels": value = "Ачышчаць захаваныя каналы"; break;
+                        case "OnScreenLockActionTitle": value = "Дзеянне пры блакаваннi экрана"; break;
+                        case "OnScreenLockActionInfo": value = "Калі выбрана 'Згарнуць', пры разблакіроўцы тэлефона адкрыецца хатні экран. Калі выбрана 'Закрыць', дадатак будзе зачынены і выдалены са спісу адкрытых дадаткаў. "; break;
+                        case "OnScreenLockActionNothing": value = "Нічога"; break;
+                        case "OnScreenLockActionHide": value = "Згарнуць"; break;
+                        case "OnScreenLockActionClose": value = "Зачынiць"; break;
+                        case "ClearSavedChannelsTitle": value = "Ачысціць захаваныя каналы?"; break;
+                        case "ResetChangedAvatarsTitle": value = "Скінуць зменяныя аватары?"; break;
+                        case "ResetChangedTitlesTitle": value = "Скінуць зменяныя назвы чатаў?"; break;
+                        case "NotClear": value = "Не ачышчаць"; break;
+                        case "NotReset": value = "Не скідваць"; break;
                     }
                 }
             }
@@ -1746,6 +1841,31 @@ public class LocaleController {
         return "LOC_ERR";
     }
 
+    public static String formatDateTime(long date) {
+        try {
+            date *= 1000;
+            Calendar rightNow = Calendar.getInstance();
+            int day = rightNow.get(Calendar.DAY_OF_YEAR);
+            int year = rightNow.get(Calendar.YEAR);
+            rightNow.setTimeInMillis(date);
+            int dateDay = rightNow.get(Calendar.DAY_OF_YEAR);
+            int dateYear = rightNow.get(Calendar.YEAR);
+
+            if (dateDay == day && year == dateYear) {
+                return LocaleController.formatString("TodayAtFormattedWithToday", R.string.TodayAtFormattedWithToday, getInstance().formatterDay.format(new Date(date)));
+            } else if (dateDay + 1 == day && year == dateYear) {
+                return LocaleController.formatString("YesterdayAtFormatted", R.string.YesterdayAtFormatted, getInstance().formatterDay.format(new Date(date)));
+            } else if (Math.abs(System.currentTimeMillis() - date) < 31536000000L) {
+                return LocaleController.formatString("formatDateAtTime", R.string.formatDateAtTime, getInstance().chatDate.format(new Date(date)), getInstance().formatterDay.format(new Date(date)));
+            } else {
+                return LocaleController.formatString("formatDateAtTime", R.string.formatDateAtTime, getInstance().chatFullDate.format(new Date(date)), getInstance().formatterDay.format(new Date(date)));
+            }
+        } catch (Exception e) {
+            FileLog.e(e);
+        }
+        return "LOC_ERR";
+    }
+
     public static String formatLocationUpdateDate(long date) {
         try {
             date *= 1000;
@@ -1931,6 +2051,11 @@ public class LocaleController {
     }
 
     public static String formatSectionDate(long date) {
+        return formatYearMont(date, false);
+    }
+
+
+    public static String formatYearMont(long date, boolean alwaysShowYear) {
         try {
             date *= 1000;
             Calendar rightNow = Calendar.getInstance();
@@ -1953,7 +2078,7 @@ public class LocaleController {
                     LocaleController.getString("November", R.string.November),
                     LocaleController.getString("December", R.string.December)
             };
-            if (year == dateYear) {
+            if (year == dateYear && !alwaysShowYear) {
                 return months[month];
             } else {
                 return months[month] + " " + dateYear;
