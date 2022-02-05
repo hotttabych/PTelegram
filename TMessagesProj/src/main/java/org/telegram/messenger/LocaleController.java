@@ -1098,6 +1098,8 @@ public class LocaleController {
                         case "ResetChangedTitlesTitle": value = "Сбросить изменённые названия чатов?"; break;
                         case "NotClear": value = "Не очищать"; break;
                         case "NotReset": value = "Не сбрасывать"; break;
+                        case "ShowUpdates": value = "Показывать обновления"; break;
+                        case "ShowUpdatesInfo": value = "Показывать уведомление, когда доступно новое обновление приложения."; break;
                     }
                 } else if (languageOverride.equals("be")) {
                     switch (key) {
@@ -1244,6 +1246,8 @@ public class LocaleController {
                         case "ResetChangedTitlesTitle": value = "Скінуць зменяныя назвы чатаў?"; break;
                         case "NotClear": value = "Не ачышчаць"; break;
                         case "NotReset": value = "Не скідваць"; break;
+                        case "ShowUpdates": value = "Показваць абнаўленне"; break;
+                        case "ShowUpdatesInfo": value = "Паказваць апавяшчэнне, калі даступна новае абнаўленне прыкладання."; break;
                     }
                 }
             }
