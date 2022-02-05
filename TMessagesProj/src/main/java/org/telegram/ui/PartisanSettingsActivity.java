@@ -96,9 +96,9 @@ public class PartisanSettingsActivity extends BaseFragment {
         }
 
         private void changeSetting(boolean runDangerousAction) {
-            SharedConfig.showSavedChannels = !SharedConfig.showSavedChannels;
+            setValue.accept(!value);
             SharedConfig.saveConfig();
-            ((TextCheckCell) view).setChecked(SharedConfig.showSavedChannels);
+            ((TextCheckCell) view).setChecked(!value);
             if (runDangerousAction) {
                 foreachActivatedConfig(dangerousAction);
             }
