@@ -44,6 +44,8 @@ import org.telegram.ui.Components.RLottieImageView;
 import org.telegram.ui.Components.RecyclerListView;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.IntStream;
 
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.ItemTouchHelper;
@@ -789,14 +791,19 @@ public class FiltersSetupActivity extends BaseFragment implements NotificationCe
             if (idx1 < 0 || idx2 < 0 || idx1 >= count || idx2 >= count) {
                 return;
             }
-            ArrayList<MessagesController.DialogFilter> filters = new ArrayList<>(FakePasscode.filterFolders(getMessagesController().dialogFilters, currentAccount));
+            List<MessagesController.DialogFilter> originalFilters = getMessagesController().dialogFilters;
+            List<MessagesController.DialogFilter> filters = FakePasscode.filterFolders(originalFilters, currentAccount);
             MessagesController.DialogFilter filter1 = filters.get(idx1);
             MessagesController.DialogFilter filter2 = filters.get(idx2);
             int temp = filter1.order;
             filter1.order = filter2.order;
             filter2.order = temp;
-            filters.set(idx1, filter2);
-            filters.set(idx2, filter1);
+            int originalIdx1 = IntStream.range(0, originalFilters.size())
+                    .filter(i -> originalFilters.get(i).id == filter1.id).findFirst().getAsInt();
+            int originalIdx2 = IntStream.range(0, originalFilters.size())
+                    .filter(i -> originalFilters.get(i).id == filter2.id).findFirst().getAsInt();
+            originalFilters.set(originalIdx1, filter2);
+            originalFilters.set(originalIdx2, filter1);
             orderChanged = true;
             notifyItemMoved(fromIndex, toIndex);
         }
