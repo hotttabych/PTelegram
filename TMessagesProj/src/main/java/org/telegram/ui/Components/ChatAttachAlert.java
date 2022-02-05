@@ -1642,7 +1642,8 @@ public class ChatAttachAlert extends BottomSheet implements NotificationCenter.N
                     }
                 } else if (a == 1 && UserObject.isUserSelf(user)) {
                     continue;
-                } else if (a == 2 && SharedConfig.fakePasscodeActivatedIndex != -1 || a == 2 && UserObject.isUserSelf(user)) {
+                } else if (a == 2 && (SharedConfig.fakePasscodeActivatedIndex != -1
+                        || UserObject.isUserSelf(user) || !SharedConfig.showDeleteAfterRead)) {
                     continue;
                 }
 
