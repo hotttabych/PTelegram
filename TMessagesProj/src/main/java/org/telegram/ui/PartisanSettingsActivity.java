@@ -226,7 +226,7 @@ public class PartisanSettingsActivity extends BaseFragment {
                 };
                 switcher.dangerousActionTitle = LocaleController.getString("ClearSavedChannelsTitle", R.string.ClearSavedChannelsTitle);
                 switcher.positiveButtonText = LocaleController.getString("ClearButton", R.string.ClearButton);
-                switcher.negativeButtonText = LocaleController.getString("ResetSettingNo", R.string.NotClear);
+                switcher.negativeButtonText = LocaleController.getString("NotClear", R.string.NotClear);
                 switcher.neutralButtonText = LocaleController.getString("Cancel", R.string.Cancel);
                 switcher.dangerousAction = (config) -> {
                     List<String> savedChannels = Arrays.asList(config.defaultChannels.split(","));
