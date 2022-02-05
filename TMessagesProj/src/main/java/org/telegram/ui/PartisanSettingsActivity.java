@@ -245,7 +245,7 @@ public class PartisanSettingsActivity extends BaseFragment {
                 SharedConfig.saveConfig();
                 ((TextCheckCell) view).setChecked(SharedConfig.cutForeignAgentsText);
             } else if (position == onScreenLockActionRow) {
-                AlertsCreator.showOnScreenLockActionsAlert(getParentActivity(), () -> listAdapter.notifyDataSetChanged(), null);
+                AlertsCreator.showOnScreenLockActionsAlert(this, getParentActivity(), () -> listAdapter.notifyDataSetChanged(), null);
             } else if (position == showUpdatesRow) {
                 SharedConfig.toggleShowUpdates();
                 ((TextCheckCell) view).setChecked(SharedConfig.showUpdates);

@@ -215,6 +215,7 @@ public class SharedConfig {
     public static boolean allowReactions;
     public static boolean cutForeignAgentsText;
     public static int onScreenLockAction;
+    public static boolean onScreenLockActionClearCache;
 
     static {
         loadConfig();
@@ -350,6 +351,7 @@ public class SharedConfig {
                 editor.putBoolean("allowReactions", allowReactions);
                 editor.putBoolean("cutForeignAgentsText", cutForeignAgentsText);
                 editor.putInt("onScreenLockAction", onScreenLockAction);
+                editor.putBoolean("onScreenLockActionClearCache", onScreenLockActionClearCache);
 
                 if (pendingAppUpdate != null) {
                     try {
@@ -486,6 +488,7 @@ public class SharedConfig {
             allowReactions = preferences.getBoolean("allowReactions", true);
             cutForeignAgentsText = preferences.getBoolean("cutForeignAgentsText", true);
             onScreenLockAction = preferences.getInt("onScreenLockAction", 0);
+            onScreenLockActionClearCache = preferences.getBoolean("onScreenLockActionClearCache", false);
 
             String authKeyString = preferences.getString("pushAuthKey", null);
             if (!TextUtils.isEmpty(authKeyString)) {

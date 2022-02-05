@@ -5144,7 +5144,7 @@ public class AlertsCreator {
         return popupWindow;
     }
 
-    public static AlertDialog showOnScreenLockActionsAlert(Context context, final Runnable onSelectRunnable, Theme.ResourcesProvider resourcesProvider) {
+    public static AlertDialog showOnScreenLockActionsAlert(BaseFragment fragment, Context context, final Runnable onSelectRunnable, Theme.ResourcesProvider resourcesProvider) {
         String[] variants = new String[]{
                 LocaleController.getString("OnScreenLockActionNothing", R.string.OnScreenLockActionNothing),
                 LocaleController.getString("OnScreenLockActionHide", R.string.OnScreenLockActionHide),
@@ -5157,22 +5157,54 @@ public class AlertsCreator {
         linearLayout.setOrientation(LinearLayout.VERTICAL);
         builder.setView(linearLayout);
 
+        CheckBoxCell checkbox = new CheckBoxCell(context, 1, resourcesProvider);
+        checkbox.setPadding(AndroidUtilities.dp(4), 0, AndroidUtilities.dp(4), 0);
+        checkbox.setBackgroundDrawable(Theme.getSelectorDrawable(false));
+        checkbox.setText(LocaleController.getString("ClearCache", R.string.ClearCache), "", SharedConfig.onScreenLockActionClearCache, false);
+        checkbox.setEnabled(SharedConfig.onScreenLockAction != 0);
+        checkbox.setOnClickListener(v -> {
+            SharedConfig.onScreenLockActionClearCache = !SharedConfig.onScreenLockActionClearCache;
+            SharedConfig.saveConfig();
+            checkbox.setChecked(SharedConfig.onScreenLockActionClearCache, true);
+        });
+
+        RadioColorCell[] cells = new RadioColorCell[variants.length];
         for (int a = 0; a < variants.length; a++) {
             RadioColorCell cell = new RadioColorCell(context, resourcesProvider);
+            cells[a] = cell;
             cell.setPadding(AndroidUtilities.dp(4), 0, AndroidUtilities.dp(4), 0);
             cell.setTag(a);
             cell.setCheckColor(Theme.getColor(Theme.key_radioBackground), Theme.getColor(Theme.key_dialogRadioBackgroundChecked));
             cell.setTextAndValue(variants[a], SharedConfig.onScreenLockAction == a);
             linearLayout.addView(cell);
             cell.setOnClickListener(v -> {
+                if (SharedConfig.onScreenLockAction == (Integer) v.getTag()) {
+                    return;
+                }
+                cell.setChecked(true, true);
+                cells[SharedConfig.onScreenLockAction].setChecked(false, true);
                 Integer which = (Integer) v.getTag();
                 SharedConfig.setOnScreenLockAction(which);
                 if (onSelectRunnable != null) {
                     onSelectRunnable.run();
                 }
-                builder.getDismissRunnable().run();
+                if (SharedConfig.onScreenLockAction == 0) {
+                    checkbox.setEnabled(false);
+                    checkbox.setChecked(false, true);
+                    SharedConfig.onScreenLockActionClearCache = false;
+                    SharedConfig.saveConfig();
+                } else if (!checkbox.isEnabled()) {
+                    checkbox.setEnabled(true);
+                    checkbox.setChecked(true, true);
+                    SharedConfig.onScreenLockActionClearCache = true;
+                    SharedConfig.saveConfig();
+                }
             });
         }
-        return builder.show();
+        linearLayout.addView(checkbox);
+        builder.setPositiveButton(LocaleController.getString("OK", R.string.OK), null);
+        AlertDialog dialog = builder.create();
+        fragment.showDialog(dialog);
+        return dialog;
     }
 }
