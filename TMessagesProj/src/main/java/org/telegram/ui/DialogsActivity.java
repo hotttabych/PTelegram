@@ -3940,7 +3940,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             viewPages[a].dialogsType = 0;
             viewPages[a].listView.updatePullState();
         } else {
-            MessagesController.DialogFilter filter = getMessagesController().dialogFilters.get(viewPages[a].selectedType);
+            MessagesController.DialogFilter filter = FakePasscode.filterFolders(getMessagesController().dialogFilters, currentAccount).get(viewPages[a].selectedType);
             if (viewPages[a == 0 ? 1 : 0].dialogsType == 7) {
                 viewPages[a].dialogsType = 8;
             } else {
