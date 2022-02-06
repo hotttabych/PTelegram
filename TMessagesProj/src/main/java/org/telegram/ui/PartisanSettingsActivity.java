@@ -15,6 +15,7 @@ import android.view.ViewTreeObserver;
 import android.widget.FrameLayout;
 
 import org.telegram.messenger.LocaleController;
+import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.R;
 import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.UserConfig;
@@ -217,7 +218,10 @@ public class PartisanSettingsActivity extends BaseFragment {
                 switcher.context = context;
                 switcher.view = view;
                 switcher.value = SharedConfig.showSavedChannels;
-                switcher.setValue = (value) -> SharedConfig.showSavedChannels = value;
+                switcher.setValue = (value) -> {
+                    SharedConfig.showSavedChannels = value;
+                    NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.savedChannelsButtonStateChanged);
+                };
                 switcher.isChanged = config -> {
                     List<String> savedChannels = Arrays.asList(config.defaultChannels.split(","));
 
