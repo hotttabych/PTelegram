@@ -40,6 +40,7 @@ public class ScreenReceiver extends BroadcastReceiver {
                     SharedConfig.saveConfig();
                     Intent homeIntent = new Intent(Intent.ACTION_MAIN);
                     homeIntent.addCategory(Intent.CATEGORY_HOME);
+                    homeIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                     context.startActivity(homeIntent);
                 } else if (SharedConfig.onScreenLockAction == 2) {
                     NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.shouldKillApp);
