@@ -21,6 +21,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
+import org.telegram.messenger.fakepasscode.FakePasscode;
 import org.telegram.tgnet.SerializedData;
 import org.telegram.tgnet.TLRPC;
 
@@ -182,7 +183,7 @@ public class UserConfig extends BaseController {
     public static int getActivatedAccountsCount() {
         int count = 0;
         for (int a = 0; a < MAX_ACCOUNT_COUNT; a++) {
-            if (AccountInstance.getInstance(a).getUserConfig().isClientActivated()) {
+            if (AccountInstance.getInstance(a).getUserConfig().isClientActivated() && !FakePasscode.isHideAccount(a)) {
                 count++;
             }
         }

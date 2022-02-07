@@ -5097,18 +5097,18 @@
     <string name="ShowId">Show ID</string>
     <string name="ShowIdInfo">Show ID in user, chat, channel, bot profiles.</string>
     <string name="AvatarDisabling">Avatar Disabling</string>
-    <string name="AvatarDisablingInfo">Show disable avatar button. If you disable this feature, disabled avatars will be reset. </string>
+    <string name="AvatarDisablingInfo">Show disable avatar button. When you disable this option, you can reset disabled avatars. </string>
     <string name="ChatRenaming">Chat Renaming</string>
-    <string name="ChatRenamingInfo">Show button for renaming chats and channels. If you disable this feature, the chat names will be reset.</string>
+    <string name="ChatRenamingInfo">Show button for renaming chats and channels. When you disable this option, you can reset the chat names.</string>
     <string name="DeletingMyMessages">Deleting My Messages</string>
     <string name="DeletingMyMessagesInfo">Show buttons to delete your messages in the chat.</string>
     <string name="DeletingAfterRead">Deleting After Read</string>
     <string name="DeletingAfterReadInfo">Show send message button with deletion after reading.</string>
     <string name="SavedChannelsSetting">Saved Channels</string>
-    <string name="SavedChannelsSettingInfo">Show the buttons for saving channels and the button for opening the list of saved channels. If you disable this option, all saved channels will be deleted.</string>
+    <string name="SavedChannelsSettingInfo">Show the buttons for saving channels and the button for opening the list of saved channels. When you disable this option, you can delete all saved channels. </string>
     <string name="ReactToMessages">React to Messages</string>
     <string name="ReactToMessagesInfo">Allow to react to messages. If this option is disabled, reactions can be viewed, but you cannot click it.</string>
-    <string name="CutForeignAgentsText">Cut out text about foreign agents </string>
+    <string name="CutForeignAgentsText">Cut out text about foreign agents</string>
     <string name="CutForeignAgentsTextInfo">If this option is enabled, the notification about the foreign agent will be cut from the text of messages and posts. If the post text is displayed incorrectly, disable this option. It is advisable to clear the cache after switching.</string>
     <string name="ClearSavedChannels">Clear Saved Channels</string>
     <string name="OnScreenLockActionTitle">Action On Screen Lock</string>
@@ -5121,4 +5121,6 @@
     <string name="ResetChangedTitlesTitle">Reset Changed Chat Titles?</string>
     <string name="NotClear">Not Clear</string>
     <string name="NotReset">Not Reset</string>
+    <string name="ShowUpdates">Show Updates</string>
+    <string name="ShowUpdatesInfo">Show a notification when a new app update is available</string>
 </resources>

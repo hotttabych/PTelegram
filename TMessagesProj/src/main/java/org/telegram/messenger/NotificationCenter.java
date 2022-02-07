@@ -194,6 +194,7 @@ public class NotificationCenter {
     public static final int foldersHiddenByAction = totalEvents++;
     public static final int appHiddenByAction = totalEvents++;
     public static final int searchCleared = totalEvents++;
+    public static final int savedChannelsButtonStateChanged = totalEvents++;
 
 
     //global
@@ -243,6 +244,7 @@ public class NotificationCenter {
     public static final int reactionsDidLoad = totalEvents++;
     public static final int chatAvailableReactionsUpdated = totalEvents++;
     public static final int shouldKillApp = totalEvents++;
+    public static final int shouldHideApp = totalEvents++;
     public static final int dialogsUnreadReactionsCounterChanged = totalEvents++;
 
     private SparseArray<ArrayList<NotificationCenterDelegate>> observers = new SparseArray<>();

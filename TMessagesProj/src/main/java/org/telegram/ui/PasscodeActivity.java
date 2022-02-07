@@ -598,6 +598,10 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
                 partisanSettingsDetailRow = rowCount++;
             }
         } else {
+            if (!SharedConfig.isFakePasscodeActivated()) {
+                partisanSettingsRow = rowCount++;
+                partisanSettingsDetailRow = rowCount++;
+            }
             captureRow = -1;
             captureDetailRow = -1;
             fingerprintRow = -1;

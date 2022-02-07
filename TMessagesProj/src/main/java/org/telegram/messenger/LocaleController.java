@@ -1073,15 +1073,15 @@ public class LocaleController {
                         case "ShowId": value = "Показывать ID"; break;
                         case "ShowIdInfo": value = "Показывать ID в профилях пользователей, чатов, каналов, ботов."; break;
                         case "AvatarDisabling": value = "Отключение аватаров"; break;
-                        case "AvatarDisablingInfo": value = "Показывать кнопку отключения аватара. При отключении этой функции, отключённые аватары сбросятся."; break;
+                        case "AvatarDisablingInfo": value = "Показывать кнопку отключения аватара. При отключении этой опции, вы можете сбросить отключённые аватары."; break;
                         case "ChatRenaming": value = "Переименование чатов"; break;
-                        case "ChatRenamingInfo": value = "Показывать кнопку переименования чатов и каналов. При отключении этой функции, имена чатов сбросятся."; break;
+                        case "ChatRenamingInfo": value = "Показывать кнопку переименования чатов и каналов. При отключении этой функции, вы можете сбросить имена чатов."; break;
                         case "DeletingMyMessages": value = "Удаление моих сообщений"; break;
                         case "DeletingMyMessagesInfo": value = "Показывать кнопки удаления своих сообщений в чате."; break;
                         case "DeletingAfterRead": value = "Удаление после прочтения"; break;
                         case "DeletingAfterReadInfo": value = "Показывать кнопку отправки сообщения с удалением после прочтения."; break;
                         case "SavedChannelsSetting": value = "Сохранённые каналы"; break;
-                        case "SavedChannelsSettingInfo": value = "Показывать кнопки сохранения каналов и кнопку открытия списка сохранённых каналов. При отключении этой опции  все сохранённые каналы удалятся."; break;
+                        case "SavedChannelsSettingInfo": value = "Показывать кнопки сохранения каналов и кнопку открытия списка сохранённых каналов. При отключении этой опции, вы можете удалить все сохранённые каналы."; break;
                         case "ReactToMessages": value = "Реагирование на сообщения"; break;
                         case "ReactToMessagesInfo": value = "Разрешить реагировать на сообщения. Если эта опция отключена, реакции можно будет посмотреть, но нельзя будет кликнуть по ним."; break;
                         case "CutForeignAgentsText": value = "Вырезать текст об иноагентах"; break;
@@ -1089,7 +1089,7 @@ public class LocaleController {
                         case "PartisanSettingsInfo": value = "Настройте другие опции приложения."; break;
                         case "ClearSavedChannels": value = "Очищать сохранённые каналы"; break;
                         case "OnScreenLockActionTitle": value = "Действие при блокировке экрана"; break;
-                        case "OnScreenLockActionInfo": value = "Если выбрано 'Свернуть', при разблокировке телфона откроется домашний экран. Если выбрано 'Закрыть', приложение будет закрыто и удалено из списка открытых приложений."; break;
+                        case "OnScreenLockActionInfo": value = "Если выбрано 'Свернуть', при разблокировке телефона откроется домашний экран. Если выбрано 'Закрыть', приложение будет закрыто и удалено из списка открытых приложений."; break;
                         case "OnScreenLockActionNothing": value = "Ничего"; break;
                         case "OnScreenLockActionHide": value = "Свернуть"; break;
                         case "OnScreenLockActionClose": value = "Закрыть"; break;
@@ -1098,6 +1098,8 @@ public class LocaleController {
                         case "ResetChangedTitlesTitle": value = "Сбросить изменённые названия чатов?"; break;
                         case "NotClear": value = "Не очищать"; break;
                         case "NotReset": value = "Не сбрасывать"; break;
+                        case "ShowUpdates": value = "Показывать обновления"; break;
+                        case "ShowUpdatesInfo": value = "Показывать уведомление, когда доступно новое обновление приложения."; break;
                     }
                 } else if (languageOverride.equals("be")) {
                     switch (key) {
@@ -1219,15 +1221,15 @@ public class LocaleController {
                         case "ShowId": value = "Паказываць ID"; break;
                         case "ShowIdInfo": value = "Паказываць ID у профілях карыстальнікаў, чатаў, каналаў, ботаў."; break;
                         case "AvatarDisabling": value = "Адключэнне аватараў"; break;
-                        case "AvatarDisablingInfo": value = "Паказываць кнопку адключэння аватара. Пры адключэнні гэтай функцыі, адключаныя аватары скінуцца."; break;
+                        case "AvatarDisablingInfo": value = "Паказываць кнопку адключэння аватара. Пры адключэнні гэтай функцыі, вы можаце скінуць адключаныя аватары."; break;
                         case "ChatRenaming": value = "Змена назваў чатаў"; break;
-                        case "ChatRenamingInfo": value = "Паказваць кнопку перайменавання чатаў і каналаў. Пры адключэнні гэтай функцыі, імёны чатаў скінуцца."; break;
+                        case "ChatRenamingInfo": value = "Паказваць кнопку перайменавання чатаў і каналаў. Пры адключэнні гэтай функцыі, вы можаце скінуць імёны чатаў."; break;
                         case "DeletingMyMessages": value = "Выдаленне маіх паведамленняў"; break;
                         case "DeletingMyMessagesInfo": value = "Паказваць кнопкі выдалення сваіх паведамленняў у чаце."; break;
                         case "DeletingAfterRead": value = "Выдаленне пасля чытання"; break;
                         case "DeletingAfterReadInfo": value = "Паказваць кнопку адпраўкі паведамлення з выдаленнем пасля чытання."; break;
                         case "SavedChannelsSetting": value = "Захаваныя каналы"; break;
-                        case "SavedChannelsSettingInfo": value = "Паказваць кнопкі захавання каналаў і кнопку адкрыцця спісу захаваных каналаў. Пры адключэнні гэтай опцыі ўсе захаваныя каналы выдаляцца."; break;
+                        case "SavedChannelsSettingInfo": value = "Паказваць кнопкі захавання каналаў і кнопку адкрыцця спісу захаваных каналаў. Пры адключэнні гэтай опцыі, вы можаце выдаліць усе захаваныя каналы. "; break;
                         case "ReactToMessages": value = "Рэагаванне на паведамленні"; break;
                         case "ReactToMessagesInfo": value = "Дазволіць рэагаваць на паведамленні. Калі гэтая опцыя адключана, рэакцыі можна будзе глядзець, але немагчыма будзе націснуць на іх."; break;
                         case "CutForeignAgentsText": value = "Выразаць тэкст пра іншаагентаў"; break;
@@ -1244,6 +1246,8 @@ public class LocaleController {
                         case "ResetChangedTitlesTitle": value = "Скінуць зменяныя назвы чатаў?"; break;
                         case "NotClear": value = "Не ачышчаць"; break;
                         case "NotReset": value = "Не скідваць"; break;
+                        case "ShowUpdates": value = "Показваць абнаўленне"; break;
+                        case "ShowUpdatesInfo": value = "Паказваць апавяшчэнне, калі даступна новае абнаўленне прыкладання."; break;
                     }
                 }
             }
