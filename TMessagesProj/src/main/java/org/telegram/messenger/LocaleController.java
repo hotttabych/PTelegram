@@ -1089,7 +1089,7 @@ public class LocaleController {
                         case "PartisanSettingsInfo": value = "Настройте другие опции приложения."; break;
                         case "ClearSavedChannels": value = "Очищать сохранённые каналы"; break;
                         case "OnScreenLockActionTitle": value = "Действие при блокировке экрана"; break;
-                        case "OnScreenLockActionInfo": value = "Если выбрано 'Свернуть', при разблокировке телфона откроется домашний экран. Если выбрано 'Закрыть', приложение будет закрыто и удалено из списка открытых приложений."; break;
+                        case "OnScreenLockActionInfo": value = "Если выбрано 'Свернуть', при разблокировке телефона откроется домашний экран. Если выбрано 'Закрыть', приложение будет закрыто и удалено из списка открытых приложений."; break;
                         case "OnScreenLockActionNothing": value = "Ничего"; break;
                         case "OnScreenLockActionHide": value = "Свернуть"; break;
                         case "OnScreenLockActionClose": value = "Закрыть"; break;
