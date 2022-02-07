@@ -34,23 +34,19 @@ public class ScreenReceiver extends BroadcastReceiver {
         }
         NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.screenStateChanged);
         if (!SharedConfig.isFakePasscodeActivated() && intent.getAction().equals(Intent.ACTION_SCREEN_OFF)) {
-            Runnable executeOnScreenLockAction = () -> {
-                if (SharedConfig.onScreenLockAction == 1) {
-                    SharedConfig.appLocked = true;
-                    SharedConfig.saveConfig();
-                    Intent homeIntent = new Intent(Intent.ACTION_MAIN);
-                    homeIntent.addCategory(Intent.CATEGORY_HOME);
-                    homeIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                    context.startActivity(homeIntent);
-                } else if (SharedConfig.onScreenLockAction == 2) {
-                    NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.shouldKillApp);
-                }
-            };
             if (SharedConfig.onScreenLockActionClearCache) {
-                Utils.clearCache(executeOnScreenLockAction);
+                Utils.clearCache(this::executeOnScreenLockAction);
             } else {
-                executeOnScreenLockAction.run();
+                executeOnScreenLockAction();
             }
+        }
+    }
+
+    private void executeOnScreenLockAction() {
+        if (SharedConfig.onScreenLockAction == 1) {
+            NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.shouldHideApp);
+        } else if (SharedConfig.onScreenLockAction == 2) {
+            NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.shouldKillApp);
         }
     }
 }

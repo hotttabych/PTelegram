@@ -244,6 +244,7 @@ public class NotificationCenter {
     public static final int reactionsDidLoad = totalEvents++;
     public static final int chatAvailableReactionsUpdated = totalEvents++;
     public static final int shouldKillApp = totalEvents++;
+    public static final int shouldHideApp = totalEvents++;
     public static final int dialogsUnreadReactionsCounterChanged = totalEvents++;
 
     private SparseArray<ArrayList<NotificationCenterDelegate>> observers = new SparseArray<>();

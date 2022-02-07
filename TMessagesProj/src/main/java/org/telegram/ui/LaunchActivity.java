@@ -770,6 +770,7 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
         NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.appHiddenByAction);
         NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.fakePasscodeActivated);
         NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.shouldKillApp);
+        NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.shouldHideApp);
         NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.savedChannelsButtonStateChanged);
         if (actionBarLayout.fragmentsStack.isEmpty()) {
             if (!UserConfig.getInstance(currentAccount).isClientActivated()) {
@@ -4053,6 +4054,7 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
         NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.appHiddenByAction);
         NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.fakePasscodeActivated);
         NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.shouldKillApp);
+        NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.shouldHideApp);
         NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.savedChannelsButtonStateChanged);
     }
 
@@ -4895,6 +4897,8 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
                 finishAffinity();
             }
             System.exit(0);
+        } else if (id == NotificationCenter.shouldHideApp) {
+            moveTaskToBack(true);
         }  else if (id == NotificationCenter.savedChannelsButtonStateChanged) {
             if (sideMenu != null) {
                 sideMenu.getAdapter().notifyDataSetChanged();
