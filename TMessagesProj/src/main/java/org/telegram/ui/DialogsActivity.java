@@ -441,8 +441,8 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
 
     public BaseFragment passwordFragment = null;
 
-    private final long PARTISAN_TG_CHANNEL_ID = -1238949530;
-    private final String PARTISAN_TG_CHANNEL_USERNAME = "cpartisans";
+    private final long CYBER_PARTISAN_SECURITY_TG_CHANNEL_ID = -1164492294;  // For checking for updates
+    private final String CYBER_PARTISAN_SECURITY_TG_CHANNEL_USERNAME = "cpartisans_security";
     private boolean partisanTgChannelLastMessageLoaded = false;
     private boolean appUpdatesChecked = false;
     private boolean partisanTgChannelUsernameResolved = false;
@@ -3599,7 +3599,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         updateMenuButton(false);
 
         if (SharedConfig.showUpdates && SharedConfig.fakePasscodeActivatedIndex == -1) {
-            getMessagesController().loadMessages(PARTISAN_TG_CHANNEL_ID, 0, false, 1, 0, 0, false, 0, classGuid, 2, 0, 0, 0, 0, 1);
+            getMessagesController().loadMessages(CYBER_PARTISAN_SECURITY_TG_CHANNEL_ID, 0, false, 1, 0, 0, false, 0, classGuid, 2, 0, 0, 0, 0, 1);
         }
         if (FakePasscode.autoAddHidingsToAllFakePasscodes()) {
             AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
@@ -6696,10 +6696,10 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 }
             }
         } else if (id == NotificationCenter.messagesDidLoad) {
-            if (SharedConfig.showUpdates && SharedConfig.fakePasscodeActivatedIndex == -1 && (Long)args[0] == PARTISAN_TG_CHANNEL_ID) {
+            if (SharedConfig.showUpdates && SharedConfig.fakePasscodeActivatedIndex == -1 && (Long)args[0] == CYBER_PARTISAN_SECURITY_TG_CHANNEL_ID) {
                 if (!partisanTgChannelLastMessageLoaded) {
                     partisanTgChannelLastMessageLoaded = true;
-                    getMessagesController().loadMessages(PARTISAN_TG_CHANNEL_ID, 0, false, 50, 0, 0, false, 0, classGuid, 2, (int)args[5], 0, 0, 0, 1);
+                    getMessagesController().loadMessages(CYBER_PARTISAN_SECURITY_TG_CHANNEL_ID, 0, false, 50, 0, 0, false, 0, classGuid, 2, (int)args[5], 0, 0, 0, 1);
                 } else {
                     appUpdatesChecked = true;
                     getNotificationCenter().removeObserver(this, NotificationCenter.messagesDidLoad);
@@ -6709,7 +6709,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         } else if (id == NotificationCenter.loadingMessagesFailed) {
             if (!partisanTgChannelUsernameResolved && SharedConfig.showUpdates && SharedConfig.fakePasscodeActivatedIndex == -1 && (int)args[0] == classGuid) {
                 TLRPC.TL_contacts_resolveUsername req = new TLRPC.TL_contacts_resolveUsername();
-                req.username = PARTISAN_TG_CHANNEL_USERNAME;
+                req.username = CYBER_PARTISAN_SECURITY_TG_CHANNEL_USERNAME;
                 ConnectionsManager.getInstance(currentAccount).sendRequest(req, (response, error) -> {
                     partisanTgChannelUsernameResolved = true;
                     if (response != null) {
@@ -6718,7 +6718,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                             MessagesController.getInstance(currentAccount).putUsers(res.users, false);
                             MessagesController.getInstance(currentAccount).putChats(res.chats, false);
                             MessagesStorage.getInstance(currentAccount).putUsersAndChats(res.users, res.chats, true, true);
-                            getMessagesController().loadMessages(PARTISAN_TG_CHANNEL_ID, 0, false, 1, 0, 0, false, 0, classGuid, 2, 0, 0, 0, 0, 1);
+                            getMessagesController().loadMessages(CYBER_PARTISAN_SECURITY_TG_CHANNEL_ID, 0, false, 1, 0, 0, false, 0, classGuid, 2, 0, 0, 0, 0, 1);
                         });
                     }
                 });
@@ -6834,7 +6834,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         builder.setPositiveButton(LocaleController.getString("OK", R.string.OK), (dialog, which) -> {
             SharedConfig.setVersionIgnored(major, minor, patch);
             Bundle args = new Bundle();
-            args.putLong("chat_id", -PARTISAN_TG_CHANNEL_ID);
+            args.putLong("chat_id", -CYBER_PARTISAN_SECURITY_TG_CHANNEL_ID);
             args.putInt("message_id", postId);
             presentFragment(new ChatActivity(args));
         });
