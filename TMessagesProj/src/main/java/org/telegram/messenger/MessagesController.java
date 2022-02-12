@@ -14192,7 +14192,7 @@ public class MessagesController extends BaseController implements NotificationCe
         return true;
     }
 
-    private void checkUnreadReactions(long dialogId, SparseBooleanArray unreadReactions) {
+    public void checkUnreadReactions(long dialogId, SparseBooleanArray unreadReactions) {
         getMessagesStorage().getStorageQueue().postRunnable(() -> {
             boolean needReload = false;
             boolean changed = false;
@@ -14259,6 +14259,7 @@ public class MessagesController extends BaseController implements NotificationCe
                         AndroidUtilities.runOnUIThread(() -> {
                             TLRPC.Dialog dialog = dialogs_dict.get(dialogId);
                             if (dialog == null) {
+                                getMessagesStorage().updateDialogUnreadReactions(dialogId, count, false);
                                 return;
                             }
                             dialog.unread_reactions_count = count;
@@ -14272,6 +14273,7 @@ public class MessagesController extends BaseController implements NotificationCe
                 AndroidUtilities.runOnUIThread(() -> {
                     TLRPC.Dialog dialog = dialogs_dict.get(dialogId);
                     if (dialog == null) {
+                        getMessagesStorage().updateDialogUnreadReactions(dialogId, finalNewUnreadCount, true);
                         return;
                     }
                     dialog.unread_reactions_count += finalNewUnreadCount;
