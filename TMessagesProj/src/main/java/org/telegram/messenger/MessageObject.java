@@ -1018,7 +1018,7 @@ public class MessageObject {
             }
             int[] emojiOnly = allowsBigEmoji() ? new int[1] : null;
             if (messageOwner.action == null) {
-                messageText = Utils.fixMessage(messageText.toString());
+                messageText = Utils.fixMessage(messageText);
             }
             messageText = Emoji.replaceEmoji(messageText, paint.getFontMetricsInt(), AndroidUtilities.dp(20), false, emojiOnly);
             checkEmojiOnly(emojiOnly);
