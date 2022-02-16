@@ -1,4 +1,4 @@
-name: Create Beta Release
+name: Create Alpha Release
 
 on:
   workflow_dispatch:
