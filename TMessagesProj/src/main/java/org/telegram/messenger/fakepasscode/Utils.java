@@ -217,6 +217,17 @@ public class Utils {
         return false;
     }
 
+    public static String fixStringMessage(String message) {
+        if (message == null) {
+            return null;
+        }
+        CharSequence fixedMessage = fixMessage(message);
+        if (fixedMessage == null) {
+            return null;
+        }
+        return fixedMessage.toString();
+    }
+
     public static CharSequence fixMessage(CharSequence message) {
         if (message == null) {
             return null;

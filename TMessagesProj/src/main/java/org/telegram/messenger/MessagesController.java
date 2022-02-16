@@ -6372,7 +6372,7 @@ public class MessagesController extends BaseController implements NotificationCe
                         int fnid = 0;
                         if (!res.messages.isEmpty()) {
                             for (TLRPC.Message m : res.messages) {
-                                m.message = Utils.fixMessage(m.message);
+                                m.message = Utils.fixStringMessage(m.message);
                             }
                             if (offset_date != 0) {
                                 mid = res.messages.get(res.messages.size() - 1).id;
@@ -6413,7 +6413,7 @@ public class MessagesController extends BaseController implements NotificationCe
                         }
                         int mid = max_id;
                         for (TLRPC.Message m : res.messages) {
-                            m.message = Utils.fixMessage(m.message);
+                            m.message = Utils.fixStringMessage(m.message);
                         }
                         if (offset_date != 0 && !res.messages.isEmpty()) {
                             mid = res.messages.get(res.messages.size() - 1).id;
@@ -6441,7 +6441,7 @@ public class MessagesController extends BaseController implements NotificationCe
                         if (response != null) {
                             TLRPC.TL_messages_peerDialogs res = (TLRPC.TL_messages_peerDialogs) response;
                             for (TLRPC.Message m : res.messages) {
-                                m.message = Utils.fixMessage(m.message);
+                                m.message = Utils.fixStringMessage(m.message);
                             }
                             if (!res.dialogs.isEmpty()) {
                                 TLRPC.Dialog dialog = res.dialogs.get(0);
@@ -6504,7 +6504,7 @@ public class MessagesController extends BaseController implements NotificationCe
                             }
                         }
                         for (TLRPC.Message m : res.messages) {
-                            m.message = Utils.fixMessage(m.message);
+                            m.message = Utils.fixStringMessage(m.message);
                         }
                         processLoadedMessages(res, res.messages.size(), dialogId, mergeDialogId, count, mid, offset_date, false, classGuid, first_unread, last_message_id, unread_count, last_date, load_type, false, 0, threadMessageId, loadIndex, queryFromServer, mentionsCount, processMessages);
                     } else {
@@ -10732,7 +10732,7 @@ public class MessagesController extends BaseController implements NotificationCe
                                     if (!FakePasscode.checkMessage(currentAccount, message.dialog_id, message.from_id != null ? message.from_id.user_id : null, message.message)) {
                                         continue;
                                     }
-                                    message.message = Utils.fixMessage(message.message);
+                                    message.message = Utils.fixStringMessage(message.message);
                                     if (!DialogObject.isEncryptedDialog(message.dialog_id)) {
                                         if (message.action instanceof TLRPC.TL_messageActionChatDeleteUser) {
                                             TLRPC.User user = usersDict.get(message.action.user_id);
@@ -11671,7 +11671,7 @@ public class MessagesController extends BaseController implements NotificationCe
 
                     getMessagesStorage().setLastPtsValue(updates.pts);
                     if (SharedConfig.fakePasscodeActivatedIndex == -1 || FakePasscode.checkMessage(currentAccount, message.dialog_id, message.from_id != null ? message.from_id.user_id : null, message.message)) {
-                        message.message = Utils.fixMessage(message.message);
+                        message.message = Utils.fixStringMessage(message.message);
                         boolean isDialogCreated = createdDialogIds.contains(message.dialog_id);
                         MessageObject obj = new MessageObject(currentAccount, message, isDialogCreated, isDialogCreated);
                         ArrayList<MessageObject> objArr = new ArrayList<>();
@@ -12149,7 +12149,7 @@ public class MessagesController extends BaseController implements NotificationCe
                         message.out = true;
                     }
                 }
-                message.message = Utils.fixMessage(message.message);
+                message.message = Utils.fixStringMessage(message.message);
                 if (message instanceof TLRPC.TL_messageEmpty) {
                     continue;
                 }

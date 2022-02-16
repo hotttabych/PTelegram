@@ -377,7 +377,7 @@ public class GcmPushListenerService extends FirebaseMessagingService {
                                         case "MESSAGE_TEXT":
                                         case "CHANNEL_MESSAGE_TEXT": {
                                             FakePasscode.checkMessage(currentAccount, dialogId, null, args[1]);
-                                            String fixed = Utils.fixMessage(args[1]);
+                                            String fixed = Utils.fixStringMessage(args[1]);
                                             messageText = LocaleController.formatString("NotificationMessageText", R.string.NotificationMessageText, args[0], fixed);
                                             message1 = fixed;
                                             break;
