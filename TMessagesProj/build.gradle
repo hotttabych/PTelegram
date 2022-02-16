@@ -99,6 +99,17 @@ android {
     }
 
     buildTypes {
+        alpha {
+            debuggable false
+            jniDebuggable false
+            signingConfig signingConfigs.debug
+            applicationIdSuffix ".alpha"
+            minifyEnabled true
+            multiDexEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            ndk.debugSymbolLevel = 'FULL'
+        }
+
         debug {
             debuggable true
             jniDebuggable true
@@ -171,6 +182,10 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
             ndk.debugSymbolLevel = 'FULL'
         }
+    }
+
+    sourceSets.alpha {
+        manifest.srcFile 'config/debug/AndroidManifest.xml'
     }
 
     sourceSets.debug {
@@ -291,6 +306,9 @@ android {
         afat {
             ndk {
                 abiFilters "armeabi-v7a", "arm64-v8a", "x86", "x86_64"
+            }
+            sourceSets.alpha {
+                manifest.srcFile 'config/debug/AndroidManifest_SDK23.xml'
             }
             sourceSets.debug {
                 manifest.srcFile 'config/debug/AndroidManifest_SDK23.xml'
