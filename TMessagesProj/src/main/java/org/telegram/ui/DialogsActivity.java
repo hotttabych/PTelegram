@@ -2605,7 +2605,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                         if (v != null) {
                             v.invalidate();
                         }
-                        if (viewPage.archivePullViewState == ARCHIVE_ITEM_STATE_HIDDEN) {
+                        if (viewPage.archivePullViewState == ARCHIVE_ITEM_STATE_HIDDEN && hasHiddenArchive()) {
                             viewPage.archivePullViewState = ARCHIVE_ITEM_STATE_SHOWED;
                         }
                         if (viewPage.pullForegroundDrawable != null) {
@@ -2684,7 +2684,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
 
                     int measuredDy = dy;
                     int pTop = viewPage.listView.getPaddingTop();
-                    if (viewPage.dialogsType == 0 && !onlySelect && folderId == 0 && dy < 0 && getMessagesController().hasHiddenArchive() && viewPage.archivePullViewState == ARCHIVE_ITEM_STATE_HIDDEN) {
+                    if (viewPage.dialogsType == 0 && !onlySelect && folderId == 0 && dy < 0 && getMessagesController().hasHiddenArchive() && viewPage.archivePullViewState == ARCHIVE_ITEM_STATE_HIDDEN && hasHiddenArchive()) {
                         viewPage.listView.setOverScrollMode(View.OVER_SCROLL_ALWAYS);
                         int currentPosition = viewPage.layoutManager.findFirstVisibleItemPosition();
                         if (currentPosition == 0) {
@@ -2746,7 +2746,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                             if (startArchivePullingTime == 0) {
                                 startArchivePullingTime = System.currentTimeMillis();
                             }
-                            if (viewPage.archivePullViewState == ARCHIVE_ITEM_STATE_HIDDEN) {
+                            if (viewPage.archivePullViewState == ARCHIVE_ITEM_STATE_HIDDEN && hasHiddenArchive()) {
                                 if (viewPage.pullForegroundDrawable != null) {
                                     viewPage.pullForegroundDrawable.showHidden();
                                 }
@@ -2759,14 +2759,14 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                             boolean canShowInternal = k > PullForegroundDrawable.SNAP_HEIGHT && pullingTime > PullForegroundDrawable.minPullingTime + 20;
                             if (canShowHiddenArchive != canShowInternal) {
                                 canShowHiddenArchive = canShowInternal;
-                                if (viewPage.archivePullViewState == ARCHIVE_ITEM_STATE_HIDDEN) {
+                                if (viewPage.archivePullViewState == ARCHIVE_ITEM_STATE_HIDDEN && hasHiddenArchive()) {
                                     viewPage.listView.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP, HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING);
                                     if (viewPage.pullForegroundDrawable != null) {
                                         viewPage.pullForegroundDrawable.colorize(canShowInternal);
                                     }
                                 }
                             }
-                            if (viewPage.archivePullViewState == ARCHIVE_ITEM_STATE_HIDDEN && measuredDy - usedDy != 0 && dy < 0 && isDragging) {
+                            if (viewPage.archivePullViewState == ARCHIVE_ITEM_STATE_HIDDEN && measuredDy - usedDy != 0 && dy < 0 && isDragging && hasHiddenArchive()) {
                                 float ty;
                                 float tk = (viewPage.listView.getViewOffset() / PullForegroundDrawable.getMaxOverscroll());
                                 tk = 1f - tk;
@@ -5273,6 +5273,14 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     }
 
     private boolean hasHiddenArchive() {
+        if (!hasHiddenArchiveOriginal()) {
+            return false;
+        }
+        ArrayList<TLRPC.Dialog> dialogs = getDialogsArray(currentAccount, 0, folderId, false);
+        return !dialogs.isEmpty() && dialogs.get(0) instanceof TLRPC.TL_dialogFolder;
+    }
+    
+    private boolean hasHiddenArchiveOriginal() {
         return !onlySelect && initialDialogsType == 0 && folderId == 0 && getMessagesController().hasHiddenArchive();
     }
 
@@ -6892,6 +6900,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             }
         } else if (id == NotificationCenter.foldersHiddenByAction) {
             updateFilterTabs(true, false);
+            filterTabsView.selectFirstTab();
         } else if (id == NotificationCenter.searchCleared) {
             if (searchViewPager != null && searchViewPager.dialogsSearchAdapter != null) {
                 searchViewPager.dialogsSearchAdapter.clearRecentSearch();

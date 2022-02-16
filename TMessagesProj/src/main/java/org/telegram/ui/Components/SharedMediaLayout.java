@@ -4686,7 +4686,7 @@ public class SharedMediaLayout extends FrameLayout implements NotificationCenter
     }
 
     private void openWebView(TLRPC.WebPage webPage, MessageObject message) {
-        EmbedBottomSheet.show(profileActivity.getParentActivity(), message, provider, webPage.site_name, Utils.fixMessage(webPage.description), webPage.url, webPage.embed_url, webPage.embed_width, webPage.embed_height, false);
+        EmbedBottomSheet.show(profileActivity.getParentActivity(), message, provider, webPage.site_name, Utils.fixStringMessage(webPage.description), webPage.url, webPage.embed_url, webPage.embed_width, webPage.embed_height, false);
     }
 
     private void recycleAdapter(RecyclerView.Adapter adapter) {

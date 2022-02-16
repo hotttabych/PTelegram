@@ -795,7 +795,7 @@ public class NotificationsController extends BaseController {
                 ) {
                     continue;
                 }
-                messageObject.messageText = Utils.fixMessage(messageObject.messageText.toString());
+                messageObject.messageText = Utils.fixMessage(messageObject.messageText);
                 int mid = messageObject.getId();
                 long randomId = messageObject.isFcmMessage() ? messageObject.messageOwner.random_id : 0;
                 long dialogId = messageObject.getDialogId();

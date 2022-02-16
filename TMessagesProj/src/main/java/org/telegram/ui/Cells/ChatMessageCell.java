@@ -3026,7 +3026,7 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                 TLRPC.WebPage webPage = currentMessageObject.messageOwner.media.webpage;
                 if (webPage != null) {
                     if (webPage.embed_url != null && webPage.embed_url.length() != 0) {
-                        delegate.needOpenWebView(currentMessageObject, webPage.embed_url, webPage.site_name, Utils.fixMessage(webPage.description), webPage.url, webPage.embed_width, webPage.embed_height);
+                        delegate.needOpenWebView(currentMessageObject, webPage.embed_url, webPage.site_name, Utils.fixStringMessage(webPage.description), webPage.url, webPage.embed_width, webPage.embed_height);
                     } else {
                         Browser.openUrl(getContext(), webPage.url);
                     }

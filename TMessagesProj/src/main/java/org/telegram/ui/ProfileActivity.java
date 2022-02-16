@@ -3544,6 +3544,9 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             return;
         }
         if (userId != 0) {
+            if (!UserConfig.isAvatarEnabled(currentAccount, userId)) {
+                return;
+            }
             TLRPC.User user = getMessagesController().getUser(userId);
             if (user.photo != null && user.photo.photo_big != null) {
                 PhotoViewer.getInstance().setParentActivity(getParentActivity());
@@ -3553,6 +3556,9 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 PhotoViewer.getInstance().openPhoto(user.photo.photo_big, provider);
             }
         } else if (chatId != 0) {
+            if (!UserConfig.isAvatarEnabled(currentAccount, chatId)) {
+                return;
+            }
             TLRPC.Chat chat = getMessagesController().getChat(chatId);
             if (chat.photo != null && chat.photo.photo_big != null) {
                 PhotoViewer.getInstance().setParentActivity(getParentActivity());

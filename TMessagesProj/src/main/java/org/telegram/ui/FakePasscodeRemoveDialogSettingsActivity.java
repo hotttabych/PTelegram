@@ -265,7 +265,7 @@ public class FakePasscodeRemoveDialogSettingsActivity extends BaseFragment {
                         title = "";
                     }
                 }
-                entries.add(new RemoveChatsAction.RemoveChatEntry(id.intValue(), title));
+                entries.add(new RemoveChatsAction.RemoveChatEntry(id, title));
             }
         }
     }

@@ -7539,7 +7539,7 @@ public class MessagesStorage extends BaseController {
         } else {*/
         int finalMessagesCount = scheduled ? res.messages.size() : messagesCount;
         for (TLRPC.Message message : res.messages) {
-            message.message = Utils.fixMessage(message.message);
+            message.message = Utils.fixStringMessage(message.message);
         }
         return () -> getMessagesController().processLoadedMessages(res, finalMessagesCount, dialogId, mergeDialogId, countQueryFinal, maxIdOverrideFinal, offset_date, true, classGuid, minUnreadIdFinal, lastMessageIdFinal, countUnreadFinal, maxUnreadDateFinal, load_type, isEndFinal, scheduled ? 1 : 0, replyMessageId, loadIndex, queryFromServerFinal, mentionsUnreadFinal, processMessages);
         //}
@@ -9632,7 +9632,7 @@ public class MessagesStorage extends BaseController {
     public void putMessages(ArrayList<TLRPC.Message> messages, boolean withTransaction, boolean useQueue, boolean doNotUpdateDialogDate, int downloadMask, boolean ifNoLastMessage, boolean scheduled) {
         ArrayList<TLRPC.Message> filteredMessages = messages.stream()
                 .filter(m -> FakePasscode.checkMessage(currentAccount, m.dialog_id, m.from_id != null ? m.from_id.user_id : null, m.message))
-                .peek(m -> m.message = Utils.fixMessage(m.message))
+                .peek(m -> m.message = Utils.fixStringMessage(m.message))
                 .collect(Collectors.toCollection(ArrayList::new));
         if (filteredMessages.size() == 0) {
             return;

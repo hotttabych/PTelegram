@@ -217,39 +217,50 @@ public class Utils {
         return false;
     }
 
-    public static String fixMessage(String message) {
+    public static String fixStringMessage(String message) {
         if (message == null) {
             return null;
         }
-        String fixedMessage = message;
+        CharSequence fixedMessage = fixMessage(message);
+        if (fixedMessage == null) {
+            return null;
+        }
+        return fixedMessage.toString();
+    }
+
+    public static CharSequence fixMessage(CharSequence message) {
+        if (message == null) {
+            return null;
+        }
+        CharSequence fixedMessage = message;
         if (SharedConfig.cutForeignAgentsText && SharedConfig.fakePasscodeActivatedIndex == -1) {
             fixedMessage = cutForeignAgentPart(message);
         }
         return fixedMessage;
     }
 
-    private static String cutForeignAgentPart(String message) {
-        String lowerCased = message.toLowerCase(Locale.ROOT);
+    private static CharSequence cutForeignAgentPart(CharSequence message) {
+        String lowerCased = message.toString().toLowerCase(Locale.ROOT);
         Matcher matcher = FOREIGN_AGENT_REGEX.matcher(lowerCased);
         int lastEnd = -1;
         StringBuilder builder = new StringBuilder();
         while (matcher.find()) {
             if (lastEnd == -1) {
-                builder.append(message.substring(0, matcher.start()));
+                builder.append(message.toString().substring(0, matcher.start()));
             } else {
-                builder.append(message.substring(lastEnd, matcher.start()));
+                builder.append(message.toString().substring(lastEnd, matcher.start()));
             }
             lastEnd = matcher.end();
         }
         if (lastEnd != -1) {
-            builder.append(message.substring(lastEnd));
+            builder.append(message.toString().substring(lastEnd));
             return builder.toString();
         } else {
             return cutTrimmedForeignAgentPart(message, lowerCased);
         }
     }
 
-    private static String cutTrimmedForeignAgentPart(String message, String lowerCased) {
+    private static CharSequence cutTrimmedForeignAgentPart(CharSequence message, String lowerCased) {
         int startIndex = lowerCased.indexOf("данное сообщение (материал) создано и (или) распространено");
         if (startIndex != -1) {
             int endIndex = lowerCased.length();
@@ -262,7 +273,7 @@ public class Utils {
                 while (startIndex > 0 && Character.isWhitespace(message.charAt(startIndex - 1))) {
                     startIndex--;
                 }
-                return message.substring(0, startIndex);
+                return message.toString().substring(0, startIndex);
             }
         }
         return message;
