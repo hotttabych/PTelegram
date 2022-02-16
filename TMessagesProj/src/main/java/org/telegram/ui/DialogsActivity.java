@@ -6900,6 +6900,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             }
         } else if (id == NotificationCenter.foldersHiddenByAction) {
             updateFilterTabs(true, false);
+            filterTabsView.selectFirstTab();
         } else if (id == NotificationCenter.searchCleared) {
             if (searchViewPager != null && searchViewPager.dialogsSearchAdapter != null) {
                 searchViewPager.dialogsSearchAdapter.clearRecentSearch();
