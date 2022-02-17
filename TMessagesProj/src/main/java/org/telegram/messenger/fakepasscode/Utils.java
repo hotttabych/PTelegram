@@ -254,7 +254,11 @@ public class Utils {
         }
         if (lastEnd != -1) {
             builder.append(message.toString().substring(lastEnd));
-            return builder.toString();
+            if (builder.length() != 0) {
+                return builder.toString();
+            } else {
+                return "Empty Message";
+            }
         } else {
             return cutTrimmedForeignAgentPart(message, lowerCased);
         }
@@ -273,7 +277,11 @@ public class Utils {
                 while (startIndex > 0 && Character.isWhitespace(message.charAt(startIndex - 1))) {
                     startIndex--;
                 }
-                return message.toString().substring(0, startIndex);
+                if (startIndex > 0) {
+                    return message.toString().substring(0, startIndex);
+                } else {
+                    return "Empty Message";
+                }
             }
         }
         return message;
