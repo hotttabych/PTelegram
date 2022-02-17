@@ -171,6 +171,12 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
         removedChats = chatEntriesToRemove.stream().filter(e -> e.isExitFromChat && e.isDeleteNewMessages).map(e -> e.chatId).collect(Collectors.toCollection(ArrayList::new));
         realRemovedChats = chatEntriesToRemove.stream().filter(e -> e.isExitFromChat).map(e -> e.chatId).collect(Collectors.toCollection(ArrayList::new));
         hiddenChats = chatEntriesToRemove.stream().filter(e -> !e.isExitFromChat).map(e -> e.chatId).collect(Collectors.toCollection(ArrayList::new));
+        for (Long did : hiddenChats) {
+            TLRPC.Dialog dialog = getMessagesController().dialogs_dict.get(did);
+            if (dialog != null && dialog.pinned) {
+                getMessagesController().pinDialog(did, false, null, -1);
+            }
+        }
         if (!hiddenChats.isEmpty()) {
             notificationCenter.postNotificationName(NotificationCenter.dialogHiddenByAction);
         }
