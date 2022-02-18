@@ -4929,7 +4929,8 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
                     if (fragmentsStack.stream().noneMatch(f -> f instanceof DialogsActivity)) {
                         return;
                     }
-                    while (!fragmentsStack.isEmpty() && !(fragmentsStack.get(fragmentsStack.size() - 1) instanceof DialogsActivity)) {
+                    while (!fragmentsStack.isEmpty() && (!(fragmentsStack.get(fragmentsStack.size() - 1) instanceof DialogsActivity)
+                            || fragmentsStack.stream().filter(f -> f instanceof DialogsActivity).count() > 1)) {
                         int count = fragmentsStack.size();
                         AndroidUtilities.runOnUIThread(() -> fragmentsStack.get(fragmentsStack.size() - 1).finishFragment(false));
                         while(count == fragmentsStack.size()) {
