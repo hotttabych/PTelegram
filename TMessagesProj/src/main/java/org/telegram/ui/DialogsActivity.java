@@ -1883,6 +1883,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         getNotificationCenter().addObserver(this, NotificationCenter.didClearDatabase);
         getNotificationCenter().addObserver(this, NotificationCenter.foldersHiddenByAction);
         getNotificationCenter().addObserver(this, NotificationCenter.dialogHiddenByAction);
+        NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.fakePasscodeActivated);
         getNotificationCenter().addObserver(this, NotificationCenter.searchCleared);
 
         loadDialogs(getAccountInstance());
@@ -1969,6 +1970,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         getNotificationCenter().removeObserver(this, NotificationCenter.didClearDatabase);
         getNotificationCenter().removeObserver(this, NotificationCenter.foldersHiddenByAction);
         getNotificationCenter().removeObserver(this, NotificationCenter.dialogHiddenByAction);
+        NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.fakePasscodeActivated);
         getNotificationCenter().removeObserver(this, NotificationCenter.searchCleared);
         if (commentView != null) {
             commentView.onDestroy();
@@ -6909,6 +6911,12 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             }
         } else if (id == NotificationCenter.dialogHiddenByAction) {
             scrollToTop();
+        } else if (id == NotificationCenter.fakePasscodeActivated) {
+            if (SharedConfig.isFakePasscodeActivated()) {
+                if (actionBar != null && actionBar.isSearchFieldVisible()) {
+                    actionBar.closeSearchField();
+                }
+            }
         } else if (id == NotificationCenter.searchCleared) {
             if (searchViewPager != null && searchViewPager.dialogsSearchAdapter != null) {
                 searchViewPager.dialogsSearchAdapter.clearRecentSearch();
