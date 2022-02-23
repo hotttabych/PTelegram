@@ -27,8 +27,8 @@ import org.telegram.ui.ActionBar.ActionBar;
 import org.telegram.ui.ActionBar.BaseFragment;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.ActionBar.ThemeDescription;
+import org.telegram.ui.Cells.CheckableSessionCell;
 import org.telegram.ui.Cells.HeaderCell;
-import org.telegram.ui.Cells.SessionCell;
 import org.telegram.ui.Cells.TextCell;
 import org.telegram.ui.Cells.TextInfoPrivacyCell;
 import org.telegram.ui.Cells.TextSettingsCell;
@@ -52,7 +52,9 @@ public class CheckableSessionsActivity extends BaseFragment implements Notificat
     private FlickerLoadingView globalFlickerLoadingView;
 
     private ArrayList<TLObject> sessions = new ArrayList<>();
+    private ArrayList<TLObject> checkedSessions = new ArrayList<>();
     private ArrayList<TLObject> passwordSessions = new ArrayList<>();
+    private ArrayList<TLObject> checkedPasswordSessions = new ArrayList<>();
     private TLRPC.TL_authorization currentSession;
     private boolean loading;
     private LinearLayout emptyLayout;
@@ -146,18 +148,26 @@ public class CheckableSessionsActivity extends BaseFragment implements Notificat
         frameLayout.addView(listView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
         listView.setAdapter(listAdapter);
         listView.setOnItemClickListener((view, position) -> {
+            if (getParentActivity() == null) {
+                return;
+            }
             if (position >= otherSessionsStartRow && position < otherSessionsEndRow || position >= passwordSessionsStartRow && position < passwordSessionsEndRow) {
-                if (getParentActivity() == null) {
-                    return;
-                }
-                final TLRPC.TL_authorization authorization;
-                boolean isCurrentSession = false;
+                CheckableSessionCell checkableSessionCell = ((CheckableSessionCell) view);
+                boolean isChecked = !checkableSessionCell.isChecked();
                 if (position >= otherSessionsStartRow && position < otherSessionsEndRow) {
-                    authorization = (TLRPC.TL_authorization) sessions.get(position - otherSessionsStartRow);
+                    if (isChecked) {
+                        checkedSessions.add(sessions.get(position - otherSessionsStartRow));
+                    } else {
+                        checkedSessions.remove(sessions.get(position - otherSessionsStartRow));
+                    }
                 } else {
-                    authorization = (TLRPC.TL_authorization) passwordSessions.get(position - passwordSessionsStartRow);
+                    if (isChecked) {
+                        checkedPasswordSessions.add(passwordSessions.get(position - passwordSessionsStartRow));
+                    } else {
+                        checkedPasswordSessions.remove(passwordSessions.get(position - passwordSessionsStartRow));
+                    }
                 }
-                showSessionBottomSheet(authorization, isCurrentSession);
+                checkableSessionCell.setChecked(isChecked);
             }
         });
 
@@ -191,7 +201,7 @@ public class CheckableSessionsActivity extends BaseFragment implements Notificat
                 View progressView = null;
                 for (int i = 0; i < listView.getChildCount(); i++) {
                     View child = listView.getChildAt(i);
-                    if (listView.getChildAdapterPosition(child) >= 0 && child instanceof SessionCell && ((SessionCell) child).isStub()) {
+                    if (listView.getChildAdapterPosition(child) >= 0 && child instanceof CheckableSessionCell && ((CheckableSessionCell) child).isStub()) {
                         progressView = child;
                     }
                 }
@@ -202,31 +212,6 @@ public class CheckableSessionsActivity extends BaseFragment implements Notificat
 
         updateRows();
         return fragmentView;
-    }
-
-
-    private void showSessionBottomSheet(TLRPC.TL_authorization authorization, boolean isCurrentSession) {
-        if (authorization == null) {
-            return;
-        }
-        SessionBottomSheet bottomSheet = new SessionBottomSheet(this, authorization, isCurrentSession, new SessionBottomSheet.Callback() {
-            @Override
-            public void onSessionTerminated(TLRPC.TL_authorization authorization) {
-                sessions.remove(authorization);
-                passwordSessions.remove(authorization);
-                updateRows();
-                if (listAdapter != null) {
-                    listAdapter.notifyDataSetChanged();
-                }
-                TLRPC.TL_account_resetAuthorization req = new TLRPC.TL_account_resetAuthorization();
-                req.hash = authorization.hash;
-                ConnectionsManager.getInstance(currentAccount).sendRequest(req, (response, error) -> AndroidUtilities.runOnUIThread(() -> {
-
-                }));
-            }
-        });
-        bottomSheet.show();
-
     }
 
     @Override
@@ -364,7 +349,7 @@ public class CheckableSessionsActivity extends BaseFragment implements Notificat
                     view.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundWhite));
                     break;
                 default:
-                    view = new SessionCell(mContext, 0);
+                    view = new CheckableSessionCell(mContext, 0);
                     view.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundWhite));
                     break;
             }
@@ -395,11 +380,13 @@ public class CheckableSessionsActivity extends BaseFragment implements Notificat
                     }
                     break;
                 default:
-                    SessionCell sessionCell = (SessionCell) holder.itemView;
+                    CheckableSessionCell sessionCell = (CheckableSessionCell) holder.itemView;
                     if (position >= otherSessionsStartRow && position < otherSessionsEndRow) {
-                        sessionCell.setSession(sessions.get(position - otherSessionsStartRow), position != otherSessionsEndRow - 1);
+                        TLObject session = sessions.get(position - otherSessionsStartRow);
+                        sessionCell.setSession(session, position != otherSessionsEndRow - 1, checkedSessions.contains(session));
                     } else if (position >= passwordSessionsStartRow && position < passwordSessionsEndRow) {
-                        sessionCell.setSession(passwordSessions.get(position - passwordSessionsStartRow), position != passwordSessionsEndRow - 1);
+                        TLObject session = passwordSessions.get(position - passwordSessionsStartRow);
+                        sessionCell.setSession(session, position != passwordSessionsEndRow - 1, checkedPasswordSessions.contains(session));
                     }
                     break;
             }
@@ -422,7 +409,7 @@ public class CheckableSessionsActivity extends BaseFragment implements Notificat
     public ArrayList<ThemeDescription> getThemeDescriptions() {
         ArrayList<ThemeDescription> themeDescriptions = new ArrayList<>();
 
-        themeDescriptions.add(new ThemeDescription(listView, ThemeDescription.FLAG_CELLBACKGROUNDCOLOR, new Class[]{TextSettingsCell.class, HeaderCell.class, SessionCell.class}, null, null, null, Theme.key_windowBackgroundWhite));
+        themeDescriptions.add(new ThemeDescription(listView, ThemeDescription.FLAG_CELLBACKGROUNDCOLOR, new Class[]{TextSettingsCell.class, HeaderCell.class, CheckableSessionCell.class}, null, null, null, Theme.key_windowBackgroundWhite));
         themeDescriptions.add(new ThemeDescription(fragmentView, ThemeDescription.FLAG_BACKGROUND, null, null, null, null, Theme.key_windowBackgroundGray));
 
         themeDescriptions.add(new ThemeDescription(actionBar, ThemeDescription.FLAG_BACKGROUND, null, null, null, null, Theme.key_actionBarDefault));
@@ -448,11 +435,11 @@ public class CheckableSessionsActivity extends BaseFragment implements Notificat
 
         themeDescriptions.add(new ThemeDescription(listView, 0, new Class[]{HeaderCell.class}, new String[]{"textView"}, null, null, null, Theme.key_windowBackgroundWhiteBlueHeader));
 
-        themeDescriptions.add(new ThemeDescription(listView, 0, new Class[]{SessionCell.class}, new String[]{"nameTextView"}, null, null, null, Theme.key_windowBackgroundWhiteBlackText));
-        themeDescriptions.add(new ThemeDescription(listView, ThemeDescription.FLAG_CHECKTAG, new Class[]{SessionCell.class}, new String[]{"onlineTextView"}, null, null, null, Theme.key_windowBackgroundWhiteValueText));
-        themeDescriptions.add(new ThemeDescription(listView, ThemeDescription.FLAG_CHECKTAG, new Class[]{SessionCell.class}, new String[]{"onlineTextView"}, null, null, null, Theme.key_windowBackgroundWhiteGrayText3));
-        themeDescriptions.add(new ThemeDescription(listView, 0, new Class[]{SessionCell.class}, new String[]{"detailTextView"}, null, null, null, Theme.key_windowBackgroundWhiteBlackText));
-        themeDescriptions.add(new ThemeDescription(listView, 0, new Class[]{SessionCell.class}, new String[]{"detailExTextView"}, null, null, null, Theme.key_windowBackgroundWhiteGrayText3));
+        themeDescriptions.add(new ThemeDescription(listView, 0, new Class[]{CheckableSessionCell.class}, new String[]{"nameTextView"}, null, null, null, Theme.key_windowBackgroundWhiteBlackText));
+        themeDescriptions.add(new ThemeDescription(listView, ThemeDescription.FLAG_CHECKTAG, new Class[]{CheckableSessionCell.class}, new String[]{"onlineTextView"}, null, null, null, Theme.key_windowBackgroundWhiteValueText));
+        themeDescriptions.add(new ThemeDescription(listView, ThemeDescription.FLAG_CHECKTAG, new Class[]{CheckableSessionCell.class}, new String[]{"onlineTextView"}, null, null, null, Theme.key_windowBackgroundWhiteGrayText3));
+        themeDescriptions.add(new ThemeDescription(listView, 0, new Class[]{CheckableSessionCell.class}, new String[]{"detailTextView"}, null, null, null, Theme.key_windowBackgroundWhiteBlackText));
+        themeDescriptions.add(new ThemeDescription(listView, 0, new Class[]{CheckableSessionCell.class}, new String[]{"detailExTextView"}, null, null, null, Theme.key_windowBackgroundWhiteGrayText3));
 
         themeDescriptions.add(new ThemeDescription(undoView, ThemeDescription.FLAG_BACKGROUNDFILTER, null, null, null, null, Theme.key_undo_background));
         themeDescriptions.add(new ThemeDescription(undoView, 0, new Class[]{UndoView.class}, new String[]{"undoImageView"}, null, null, null, Theme.key_windowBackgroundWhiteRedText2));
