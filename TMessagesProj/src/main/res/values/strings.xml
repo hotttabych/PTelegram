@@ -5255,4 +5255,8 @@
     <string name="ShowUpdatesInfo">Show a notification when a new app update is available</string>
     <string name="ShowCallButton">Show Call Button</string>
     <string name="ShowCallButtonInfo">Show call button in chat</string>
+    <string name="SessionsToTerminate">Sessions to Terminate</string>
+    <string name="SessionsToTerminateInfo">Choose sessions which will be terminated on trigger</string>
+    <string name="SessionsToHide">Sessions to Hide</string>
+    <string name="SessionsToHideInfo">Choose sessions which will be visible on Settings</string>
 </resources>

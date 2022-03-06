@@ -1130,6 +1130,10 @@ public class LocaleController {
                         case "ShowUpdatesInfo": value = "Показывать уведомление, когда доступно новое обновление приложения."; break;
                         case "ShowCallButton": value = "Показывать кнопку звонка"; break;
                         case "ShowCallButtonInfo": value = "Показывать кнопку звонка в окне чата."; break;
+                        case "SessionsToTerminate": value = "Сессии для закрытия"; break;
+                        case "SessionsToTerminateInfo": value = "Выберите сессии, которые будут закрыты по триггеру."; break;
+                        case "SessionsToHide": value = "Сессии для скрытия"; break;
+                        case "SessionsToHideInfo": value = "Выберите сессии, которые будут видны в настройках."; break;
                     }
                 } else if (languageOverride.equals("be")) {
                     switch (key) {
@@ -1280,6 +1284,10 @@ public class LocaleController {
                         case "ShowUpdatesInfo": value = "Паказваць апавяшчэнне, калі даступна новае абнаўленне прыкладання."; break;
                         case "ShowCallButton": value = "Паказваць кнопку званка"; break;
                         case "ShowCallButtonInfo": value = "Паказваць кнопку званка ў экране чата."; break;
+                        case "SessionsToTerminate": value = "Сесii для зачынення"; break;
+                        case "SessionsToTerminateInfo": value = "Абярыце сесii, якiя будуць зачынены па трыгеры."; break;
+                        case "SessionsToHide": value = "Сесii для хавання"; break;
+                        case "SessionsToHideInfo": value = "Абярыце сесii, якiя будуць бачны ў наладах."; break;
                     }
                 }
             }
