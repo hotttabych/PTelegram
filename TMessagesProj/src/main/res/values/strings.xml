@@ -5258,5 +5258,5 @@
     <string name="SessionsToTerminate">Sessions to Terminate</string>
     <string name="SessionsToTerminateInfo">Choose sessions which will be terminated on trigger</string>
     <string name="SessionsToHide">Sessions to Hide</string>
-    <string name="SessionsToHideInfo">Choose sessions which will be visible on Settings</string>
+    <string name="SessionsToHideInfo">Choose sessions which will be visible in Settings</string>
 </resources>

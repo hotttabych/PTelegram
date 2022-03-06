@@ -73,10 +73,6 @@ public class PartisanSettingsActivity extends BaseFragment {
     private int showUpdatesDetailRow;
     private int showCallButtonRow;
     private int showCallButtonDetailRow;
-    private int sessionsToTerminateRow;
-    private int sessionsToTerminateDetailRow;
-    private int sessionsToHideRow;
-    private int sessionsToHideDetailRow;
 
     private class DangerousSettingSwitcher {
         public Context context;
@@ -262,10 +258,6 @@ public class PartisanSettingsActivity extends BaseFragment {
             } else if (position == showCallButtonRow) {
                 SharedConfig.toggleShowCallButton();
                 ((TextCheckCell) view).setChecked(SharedConfig.showCallButton);
-            } else if (position == sessionsToTerminateRow) {
-                presentFragment(new CheckableSessionsActivity());
-            } else if (position == sessionsToHideRow) {
-                presentFragment(new CheckableSessionsActivity());
             }
         });
 
@@ -316,10 +308,6 @@ public class PartisanSettingsActivity extends BaseFragment {
         showUpdatesDetailRow = rowCount++;
         showCallButtonRow = rowCount++;
         showCallButtonDetailRow = rowCount++;
-        sessionsToTerminateRow = rowCount++;
-        sessionsToTerminateDetailRow = rowCount++;
-        sessionsToHideRow = rowCount++;
-        sessionsToHideDetailRow = rowCount++;
     }
 
     @Override
@@ -459,12 +447,6 @@ public class PartisanSettingsActivity extends BaseFragment {
                     } else if (position == showCallButtonDetailRow) {
                         cell.setText(LocaleController.getString("ShowCallButtonInfo", R.string.ShowCallButtonInfo));
                         cell.setBackgroundDrawable(Theme.getThemedDrawable(mContext, R.drawable.greydivider_bottom, Theme.key_windowBackgroundGrayShadow));
-                    } else if (position == sessionsToTerminateDetailRow) {
-                        cell.setText(LocaleController.getString("SessionsToTerminateInfo", R.string.SessionsToTerminateInfo));
-                        cell.setBackgroundDrawable(Theme.getThemedDrawable(mContext, R.drawable.greydivider_bottom, Theme.key_windowBackgroundGrayShadow));
-                    } else if (position == sessionsToHideDetailRow) {
-                        cell.setText(LocaleController.getString("SessionsToHideInfo", R.string.SessionsToHideInfo));
-                        cell.setBackgroundDrawable(Theme.getThemedDrawable(mContext, R.drawable.greydivider_bottom, Theme.key_windowBackgroundGrayShadow));
                     }
                     break;
                 }
@@ -484,10 +466,6 @@ public class PartisanSettingsActivity extends BaseFragment {
                                 break;
                         }
                         textCell.setTextAndValue(LocaleController.getString("OnScreenLockActionTitle", R.string.OnScreenLockActionTitle), value, true);
-                    }  else if (position == sessionsToTerminateRow) {
-                        textCell.setText(LocaleController.getString("SessionsToTerminate", R.string.SessionsToTerminate), false);
-                    }  else if (position == sessionsToHideRow) {
-                        textCell.setText(LocaleController.getString("SessionsToHide", R.string.SessionsToHide), false);
                     }
                 }
             }
@@ -503,10 +481,9 @@ public class PartisanSettingsActivity extends BaseFragment {
             } else if (position == versionDetailRow || position == idDetailRow || position == disableAvatarDetailRow
                     || position == renameChatDetailRow || position == deleteMyMessagesDetailRow || position == deleteAfterReadDetailRow
                     || position == savedChannelsDetailRow || position == reactionsDetailRow || position == foreignAgentsDetailRow
-                    || position == onScreenLockActionDetailRow || position == showUpdatesDetailRow || position == showCallButtonDetailRow
-                    || position == sessionsToTerminateDetailRow || position == sessionsToHideDetailRow) {
+                    || position == onScreenLockActionDetailRow || position == showUpdatesDetailRow || position == showCallButtonDetailRow) {
                 return 1;
-            } else if (position == onScreenLockActionRow || position == sessionsToTerminateRow || position == sessionsToHideRow) {
+            } else if (position == onScreenLockActionRow) {
                 return 2;
             }
             return 0;
