@@ -457,7 +457,7 @@ public class UserConfig extends BaseController {
     }
 
     public void clearConfig() {
-        getPreferences().edit().clear().commit();
+        getPreferences().edit().clear().apply();
 
         sharingMyLocationUntil = 0;
         lastMyLocationShareTime = 0;
