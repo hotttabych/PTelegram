@@ -367,7 +367,7 @@ public class FilterCreateActivity extends BaseFragment {
                     AlertDialog progressDialog = null;
                     if (getParentActivity() != null) {
                         progressDialog = new AlertDialog(getParentActivity(), 3);
-                        progressDialog.setCanCacnel(false);
+                        progressDialog.setCanCancel(false);
                         progressDialog.show();
                     }
                     final AlertDialog progressDialogFinal = progressDialog;
@@ -588,7 +588,7 @@ public class FilterCreateActivity extends BaseFragment {
         AlertDialog progressDialog;
         if (progress) {
             progressDialog = new AlertDialog(fragment.getParentActivity(), 3);
-            progressDialog.setCanCacnel(false);
+            progressDialog.setCanCancel(false);
             progressDialog.show();
         } else {
             progressDialog = null;

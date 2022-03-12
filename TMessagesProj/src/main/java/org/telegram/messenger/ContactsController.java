@@ -26,6 +26,8 @@ import android.provider.ContactsContract;
 import android.text.TextUtils;
 import android.util.SparseArray;
 
+import androidx.collection.LongSparseArray;
+
 import org.telegram.PhoneFormat.PhoneFormat;
 import org.telegram.messenger.fakepasscode.FakePasscode;
 import org.telegram.messenger.fakepasscode.HideAccountAction;
@@ -41,8 +43,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
-
-import androidx.collection.LongSparseArray;
 
 public class ContactsController extends BaseController {
 
