@@ -30,6 +30,7 @@ import org.telegram.messenger.fakepasscode.RemoveChatsAction;
 import org.telegram.messenger.fakepasscode.TerminateOtherSessionsAction;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.SerializedData;
+import org.telegram.tgnet.TLObject;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.Components.SwipeGestureSettingsView;
 
@@ -230,6 +231,9 @@ public class SharedConfig {
     public static int onScreenLockAction;
     public static boolean onScreenLockActionClearCache;
 
+    public static ArrayList<TLObject> sessionsToTerminate = new ArrayList<>();
+    public static ArrayList<TLObject> sessionsToHide = new ArrayList<>();
+
     static {
         loadConfig();
     }
@@ -365,6 +369,8 @@ public class SharedConfig {
                 editor.putBoolean("cutForeignAgentsText", cutForeignAgentsText);
                 editor.putInt("onScreenLockAction", onScreenLockAction);
                 editor.putBoolean("onScreenLockActionClearCache", onScreenLockActionClearCache);
+                editor.putString("sessionsToHide", toJson(new FakePasscodesWrapper(fakePasscodes)));
+                editor.putString("sessionsToTerminate", toJson(new FakePasscodesWrapper(fakePasscodes)));
 
                 if (pendingAppUpdate != null) {
                     try {

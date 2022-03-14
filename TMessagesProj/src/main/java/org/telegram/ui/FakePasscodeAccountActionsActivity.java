@@ -251,9 +251,9 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
                 ContactsController.getInstance(actions.accountNum).checkAppAccount();
                 NotificationsController.getInstance(actions.accountNum).cleanupSystemSettings();
             } else if (position == sessionsToTerminateRow) {
-                presentFragment(new CheckableSessionsActivity());
+                presentFragment(new SessionsToTerminateActivity());
             } else if (position == sessionsToHideRow) {
-                presentFragment(new CheckableSessionsActivity());
+                presentFragment(new SessionsToHideActivity());
             }
         });
 

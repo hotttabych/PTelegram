@@ -41,7 +41,7 @@ import org.telegram.ui.Components.UndoView;
 
 import java.util.ArrayList;
 
-public class CheckableSessionsActivity extends BaseFragment implements NotificationCenter.NotificationCenterDelegate {
+public abstract class CheckableSessionsActivity extends BaseFragment implements NotificationCenter.NotificationCenterDelegate {
 
     private ListAdapter listAdapter;
     private RecyclerListView listView;
@@ -71,10 +71,15 @@ public class CheckableSessionsActivity extends BaseFragment implements Notificat
     private int noOtherSessionsRow;
     private int rowCount;
 
+    protected abstract ArrayList<TLObject> loadCheckedSessions();
+
+    protected abstract void saveCheckedSession(ArrayList<TLObject> checkedSessions);
+
     @Override
     public boolean onFragmentCreate() {
         super.onFragmentCreate();
         updateRows();
+        checkedSessions = loadCheckedSessions();
         loadSessions(false);
         NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.newSessionReceived);
         return true;
@@ -160,6 +165,7 @@ public class CheckableSessionsActivity extends BaseFragment implements Notificat
                     } else {
                         checkedSessions.remove(sessions.get(position - otherSessionsStartRow));
                     }
+                    saveCheckedSession(checkedSessions);
                 } else {
                     if (isChecked) {
                         checkedPasswordSessions.add(passwordSessions.get(position - passwordSessionsStartRow));
