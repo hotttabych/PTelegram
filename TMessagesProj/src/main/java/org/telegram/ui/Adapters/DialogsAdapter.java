@@ -198,7 +198,7 @@ public class DialogsAdapter extends RecyclerListView.SelectionAdapter {
         boolean hasContacts = false;
         if (hasHints) {
             count += 2 + messagesController.hintDialogs.size();
-        } else if (dialogsType == 0 && dialogsCount <= 10 && folderId == 0 && messagesController.isDialogsEndReached(folderId)) {
+        } else if (dialogsType == 0 && folderId == 0 && messagesController.isDialogsEndReached(folderId)) {
             if (ContactsController.getInstance(currentAccount).contacts.isEmpty() && !ContactsController.getInstance(currentAccount).doneLoadingContacts && !forceUpdatingContacts) {
                 onlineContacts = null;
                 if (BuildVars.LOGS_ENABLED) {
@@ -207,7 +207,7 @@ public class DialogsAdapter extends RecyclerListView.SelectionAdapter {
                 return (currentCount = 0);
             }
 
-            if (ContactsController.getInstance(currentAccount).doneLoadingContacts && !ContactsController.getInstance(currentAccount).contacts.isEmpty()) {
+            if (messagesController.getAllFoldersDialogsCount() <= 10 && ContactsController.getInstance(currentAccount).doneLoadingContacts && !ContactsController.getInstance(currentAccount).contacts.isEmpty()) {
                 if (onlineContacts == null || prevDialogsCount != dialogsCount || prevContactsCount != ContactsController.getInstance(currentAccount).contacts.size()) {
                     onlineContacts = new ArrayList<>(ContactsController.getInstance(currentAccount).contacts);
                     prevContactsCount = onlineContacts.size();
@@ -244,7 +244,7 @@ public class DialogsAdapter extends RecyclerListView.SelectionAdapter {
                 }
             }
         }
-        if (folderId == 0 && !hasContacts && forceUpdatingContacts) {
+        if (folderId == 0 && !hasContacts && dialogsCount == 0 && forceUpdatingContacts) {
             count += 3;
         }
         if (folderId == 0 && onlineContacts != null) {
@@ -631,7 +631,7 @@ public class DialogsAdapter extends RecyclerListView.SelectionAdapter {
                         cell.setText(LocaleController.getString("ImportHeaderContacts", R.string.ImportHeaderContacts));
                     }
                 } else {
-                    cell.setText(LocaleController.getString(forceUpdatingContacts ? R.string.ConnectingYourContacts : R.string.YourContacts));
+                    cell.setText(LocaleController.getString(dialogsCount == 0 && forceUpdatingContacts ? R.string.ConnectingYourContacts : R.string.YourContacts));
                 }
                 break;
             }

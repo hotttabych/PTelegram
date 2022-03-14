@@ -769,6 +769,11 @@ public class ActionIntroActivity extends BaseFragment implements LocationControl
     }
 
     @Override
+    public boolean hasForceLightStatusBar() {
+        return true;
+    }
+
+    @Override
     public void onLocationAddressAvailable(String address, String displayAddress, Location location) {
         if (subtitleTextView == null) {
             return;
