@@ -199,20 +199,6 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     private boolean filterTabsViewIsVisible;
     private int initialSearchType = -1;
 
-    public void setShowSearch(String query, int i) {
-        if (!searching) {
-            initialSearchType = i;
-            actionBar.openSearchField(query, false);
-        } else {
-            if (!searchItem.getSearchField().getText().toString().equals(query)) {
-                searchItem.getSearchField().setText(query);
-            }
-            if (searchViewPager.getTabsView().getCurrentTabId() != i) {
-                searchViewPager.getTabsView().scrollToTab(i, i);
-            }
-        }
-    }
-
     private final String ACTION_MODE_SEARCH_DIALOGS_TAG = "search_dialogs_action_mode";
 
     private static class ViewPage extends FrameLayout {

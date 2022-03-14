@@ -15482,7 +15482,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                     chatActivityEnterView.setDialogId(dialog_id, currentAccount);
                 }
 
-                if (currentEncryptedChat != null && SharedConfig.passcodeHash.length() == 0 && !SharedConfig.allowScreenCapture && unregisterFlagSecurePasscode == null) {
+                if (currentEncryptedChat != null && !SharedConfig.passcodeEnabled() && !SharedConfig.allowScreenCapture && unregisterFlagSecurePasscode == null) {
                     unregisterFlagSecurePasscode = AndroidUtilities.registerFlagSecure(getParentActivity().getWindow());
                 }
                 if (fwdChanged) {

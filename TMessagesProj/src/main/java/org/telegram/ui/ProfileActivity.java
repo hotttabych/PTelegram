@@ -7089,7 +7089,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             return;
         }
         AlertDialog progressDialog = new AlertDialog(getParentActivity(), 3);
-        progressDialog.setCanCacnel(false);
+        progressDialog.setCanCancel(false);
         progressDialog.show();
         Utilities.globalQueue.postRunnable(() -> {
             try {
@@ -7916,10 +7916,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 new SearchResult(122, LocaleController.getString("PrivacyP2P", R.string.PrivacyP2P), LocaleController.getString("PrivacySettings", R.string.PrivacySettings), R.drawable.menu_secret, () -> presentFragment(new PrivacyControlActivity(ContactsController.PRIVACY_RULES_TYPE_P2P, true))),
                 new SearchResult(106, LocaleController.getString("Calls", R.string.Calls), LocaleController.getString("PrivacySettings", R.string.PrivacySettings), R.drawable.menu_secret, () -> presentFragment(new PrivacyControlActivity(ContactsController.PRIVACY_RULES_TYPE_CALLS, true))),
                 new SearchResult(107, LocaleController.getString("GroupsAndChannels", R.string.GroupsAndChannels), LocaleController.getString("PrivacySettings", R.string.PrivacySettings), R.drawable.menu_secret, () -> presentFragment(new PrivacyControlActivity(ContactsController.PRIVACY_RULES_TYPE_INVITE, true))),
-                /* review start */
-                new SearchResult(108, LocaleController.getString("Passcode", R.string.Passcode), LocaleController.getString("PrivacySettings", R.string.PrivacySettings), R.drawable.menu_secret, () -> presentFragment(PasscodeActivity.determineOpenFragment()))
-                /* review end */
-                ,
+                new SearchResult(108, LocaleController.getString("Passcode", R.string.Passcode), LocaleController.getString("PrivacySettings", R.string.PrivacySettings), R.drawable.menu_secret, () -> presentFragment(PasscodeActivity.determineOpenFragment())),
                 new SearchResult(109, LocaleController.getString("TwoStepVerification", R.string.TwoStepVerification), LocaleController.getString("PrivacySettings", R.string.PrivacySettings), R.drawable.menu_secret, () -> presentFragment(new TwoStepVerificationActivity())),
                 new SearchResult(110, LocaleController.getString("SessionsTitle", R.string.SessionsTitle), R.drawable.menu_secret, () -> presentFragment(new SessionsActivity(0))),
                 getMessagesController().autoarchiveAvailable ? new SearchResult(121, LocaleController.getString("ArchiveAndMute", R.string.ArchiveAndMute), "newChatsRow", LocaleController.getString("PrivacySettings", R.string.PrivacySettings), R.drawable.menu_secret, () -> presentFragment(new PrivacySettingsActivity())) : null,
