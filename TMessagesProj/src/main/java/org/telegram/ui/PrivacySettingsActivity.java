@@ -320,9 +320,7 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
                     presentFragment(new TwoStepVerificationSetupActivity(type, currentPassword));
                 }
             } else if (position == passcodeRow) {
-                /* review start */
                 presentFragment(PasscodeActivity.determineOpenFragment());
-                /* review end */
             } else if (position == secretWebpageRow) {
                 if (getMessagesController().secretWebpagePreview == 1) {
                     getMessagesController().secretWebpagePreview = 0;

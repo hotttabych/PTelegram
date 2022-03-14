@@ -1609,32 +1609,18 @@ public class GroupCallActivity extends BottomSheet implements NotificationCenter
         }
 
         int margin = 48;
-        if (VoIPService.getSharedInstance() != null && VoIPService.getSharedInstance().hasFewPeers || scheduleHasFewPeers && !isRtmpStream()) {
-            if (!anyVisible) {
-                accountSelectCell.setVisibility(View.VISIBLE);
-                accountGap.setVisibility(View.VISIBLE);
-                long peerId = MessageObject.getPeerId(selfPeer);
-                TLObject object;
-                if (DialogObject.isUserDialog(peerId)) {
-                    object = accountInstance.getMessagesController().getUser(peerId);
-                } else {
-                    object = accountInstance.getMessagesController().getChat(-peerId);
-                }
-                accountSelectCell.setObject(object);
-                margin += 48;
-                anyVisible = true;
+        if ((VoIPService.getSharedInstance() != null && VoIPService.getSharedInstance().hasFewPeers || scheduleHasFewPeers) && !isRtmpStream()) {
+            accountSelectCell.setVisibility(View.VISIBLE);
+            accountGap.setVisibility(View.VISIBLE);
+            long peerId = MessageObject.getPeerId(selfPeer);
+            TLObject object;
+            if (DialogObject.isUserDialog(peerId)) {
+                object = accountInstance.getMessagesController().getUser(peerId);
             } else {
-                accountSelectCell.setVisibility(View.VISIBLE);
-                accountGap.setVisibility(View.VISIBLE);
-                long peerId = MessageObject.getPeerId(selfPeer);
-                TLObject object;
-                if (DialogObject.isUserDialog(peerId)) {
-                    object = accountInstance.getMessagesController().getUser(peerId);
-                } else {
-                    object = accountInstance.getMessagesController().getChat(-peerId);
-                }
-                accountSelectCell.setObject(object);
+                object = accountInstance.getMessagesController().getChat(-peerId);
             }
+            accountSelectCell.setObject(object);
+            margin += 48;
         } else {
             margin += 48;
             accountSelectCell.setVisibility(View.GONE);

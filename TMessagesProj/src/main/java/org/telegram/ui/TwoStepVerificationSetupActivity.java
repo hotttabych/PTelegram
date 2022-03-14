@@ -449,7 +449,6 @@ public class TwoStepVerificationSetupActivity extends BaseFragment {
         buttonTextView.setTextColor(Theme.getColor(Theme.key_featuredStickers_buttonText));
         buttonTextView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 15);
         buttonTextView.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
-        /* review start */
         buttonTextView.setBackground(Theme.createSimpleSelectorRoundRectDrawable(AndroidUtilities.dp(6), Theme.getColor(Theme.key_featuredStickers_addButton), Theme.getColor(Theme.key_featuredStickers_addButtonPressed)));
         buttonTextView.setOnClickListener(v -> processNext());
 
@@ -465,8 +464,6 @@ public class TwoStepVerificationSetupActivity extends BaseFragment {
                 titleTextView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 18);
                 break;
         }
-
-        /* review end */
         switch (currentType) {
             case TYPE_INTRO:
             case TYPE_PASSWORD_SET:
@@ -990,8 +987,6 @@ public class TwoStepVerificationSetupActivity extends BaseFragment {
                 } else if (returnToSettings) {
                     buttonTextView.setText(LocaleController.getString("TwoStepVerificationPasswordReturnSettings", R.string.TwoStepVerificationPasswordReturnSettings));
                 } else {
-                    buttonTextView.setText(LocaleController.getString("TwoStepVerificationPasswordReturnSettings", R.string.TwoStepVerificationPasswordReturnSettings));
-                } else {
                     buttonTextView.setText(LocaleController.getString("TwoStepVerificationPasswordReturn", R.string.TwoStepVerificationPasswordReturn));
                 }
                 descriptionText.setVisibility(View.VISIBLE);
@@ -1323,12 +1318,13 @@ public class TwoStepVerificationSetupActivity extends BaseFragment {
                 TwoStepVerificationSetupActivity fragment = new TwoStepVerificationSetupActivity(currentAccount, TYPE_CREATE_PASSWORD_STEP_1, currentPassword);
                 fragment.fromRegistration = fromRegistration;
                 fragment.closeAfterSet = closeAfterSet;
+                fragment.returnToSettings = returnToSettings;
                 fragment.setBlockingAlert(otherwiseReloginDays);
                 presentFragment(fragment, true);
                 break;
             }
             case TYPE_PASSWORD_SET: {
-                if (closeAfterSet) {
+                if (closeAfterSet || !returnToSettings) {
                     finishFragment();
                 } else if (fromRegistration) {
                     Bundle args = new Bundle();
@@ -1462,6 +1458,7 @@ public class TwoStepVerificationSetupActivity extends BaseFragment {
                 fragment.fragmentsToClose.addAll(fragmentsToClose);
                 fragment.fragmentsToClose.add(this);
                 fragment.closeAfterSet = closeAfterSet;
+                fragment.returnToSettings = returnToSettings;
                 fragment.setBlockingAlert(otherwiseReloginDays);
                 presentFragment(fragment);
 
@@ -1541,13 +1538,17 @@ public class TwoStepVerificationSetupActivity extends BaseFragment {
                                         fragmentsToClose.get(a).removeSelfFromStack();
                                     }
                                     NotificationCenter.getInstance(currentAccount).postNotificationName(NotificationCenter.twoStepPasswordChanged, currentPasswordHash, currentPassword.new_algo, currentPassword.new_secure_algo, currentPassword.secure_random, email, hint, null, firstPassword);
-                                    TwoStepVerificationActivity fragment = new TwoStepVerificationActivity();
-                                    currentPassword.has_password = true;
-                                    currentPassword.has_recovery = true;
-                                    currentPassword.email_unconfirmed_pattern = "";
-                                    fragment.setCurrentPasswordParams(currentPassword, currentPasswordHash, currentSecretId, currentSecret);
-                                    fragment.setBlockingAlert(otherwiseReloginDays);
-                                    presentFragment(fragment, true);
+                                    if (returnToSettings) {
+                                        TwoStepVerificationActivity fragment = new TwoStepVerificationActivity();
+                                        currentPassword.has_password = true;
+                                        currentPassword.has_recovery = true;
+                                        currentPassword.email_unconfirmed_pattern = "";
+                                        fragment.setCurrentPasswordParams(currentPassword, currentPasswordHash, currentSecretId, currentSecret);
+                                        fragment.setBlockingAlert(otherwiseReloginDays);
+                                        presentFragment(fragment, true);
+                                    } else {
+                                        finishFragment();
+                                    }
                                     NotificationCenter.getInstance(currentAccount).postNotificationName(NotificationCenter.didSetOrRemoveTwoStepPassword, currentPassword);
                                 });
                                 if (currentPassword.has_recovery) {
@@ -1573,6 +1574,7 @@ public class TwoStepVerificationSetupActivity extends BaseFragment {
                                 fragment.setCurrentPasswordParams(currentPasswordHash, currentSecretId, currentSecret, emailOnly);
                                 fragment.fragmentsToClose.addAll(fragmentsToClose);
                                 fragment.closeAfterSet = closeAfterSet;
+                                fragment.returnToSettings = returnToSettings;
                                 fragment.setBlockingAlert(otherwiseReloginDays);
                                 presentFragment(fragment, true);
                                 NotificationCenter.getInstance(currentAccount).postNotificationName(NotificationCenter.twoStepPasswordChanged, currentPasswordHash, currentPassword.new_algo, currentPassword.new_secure_algo, currentPassword.secure_random, email, hint, null, firstPassword);

@@ -93,6 +93,10 @@ public class BasePermissionsActivity extends Activity {
             }
         } else if (requestCode == REQUEST_CODE_GEOLOCATION) {
             NotificationCenter.getGlobalInstance().postNotificationName(granted ? NotificationCenter.locationPermissionGranted : NotificationCenter.locationPermissionDenied);
+        } else if (requestCode == 1000) {
+            if (!granted) {
+                showPermissionErrorAlert(R.raw.permission_request_folder, LocaleController.getString("PermissionNoSmsSend", R.string.PermissionNoSmsSend));
+            }
         }
         return true;
     }
