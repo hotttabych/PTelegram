@@ -77,6 +77,8 @@ import org.telegram.ui.Components.URLSpanNoUnderline;
 import org.telegram.ui.Components.UndoView;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 public class SessionsActivity extends BaseFragment implements NotificationCenter.NotificationCenterDelegate {
 
@@ -573,6 +575,8 @@ public class SessionsActivity extends BaseFragment implements NotificationCenter
             loading = true;
         }
         if (currentType == 0) {
+            List<Long> sessionsToHide = loadSessionsToHide();
+
             TLRPC.TL_account_getAuthorizations req = new TLRPC.TL_account_getAuthorizations();
             int reqId = ConnectionsManager.getInstance(currentAccount).sendRequest(req, (response, error) -> AndroidUtilities.runOnUIThread(() -> {
                 loading = false;
@@ -587,7 +591,7 @@ public class SessionsActivity extends BaseFragment implements NotificationCenter
                             currentSession = authorization;
                         } else if (authorization.password_pending) {
                             passwordSessions.add(authorization);
-                        } else {
+                        } else if (!sessionsToHide.contains(authorization.hash)) {
                             sessions.add(authorization);
                         }
                     }
@@ -617,6 +621,14 @@ public class SessionsActivity extends BaseFragment implements NotificationCenter
                 }
             }));
             ConnectionsManager.getInstance(currentAccount).bindRequestToGuid(reqId, classGuid);
+        }
+    }
+
+    private List<Long> loadSessionsToHide() {
+        if (SharedConfig.isFakePasscodeActivated()) {
+            return Collections.emptyList();
+        } else {
+            return SharedConfig.sessionsToHide;
         }
     }
 
