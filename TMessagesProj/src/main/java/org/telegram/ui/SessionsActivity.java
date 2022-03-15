@@ -590,9 +590,13 @@ public class SessionsActivity extends BaseFragment implements NotificationCenter
                         if ((authorization.flags & 1) != 0) {
                             currentSession = authorization;
                         } else if (authorization.password_pending) {
-                            passwordSessions.add(authorization);
-                        } else if (!sessionsToHide.contains(authorization.hash)) {
-                            sessions.add(authorization);
+                            if (!sessionsToHide.contains(authorization.hash)) {
+                                passwordSessions.add(authorization);
+                            }
+                        } else {
+                            if (!sessionsToHide.contains(authorization.hash)) {
+                                sessions.add(authorization);
+                            }
                         }
                     }
                     ttlDays = res.authorization_ttl_days;

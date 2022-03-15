@@ -21,7 +21,6 @@ import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.R;
 import org.telegram.tgnet.ConnectionsManager;
-import org.telegram.tgnet.TLObject;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.ActionBar;
 import org.telegram.ui.ActionBar.BaseFragment;
@@ -55,7 +54,6 @@ public abstract class CheckableSessionsActivity extends BaseFragment implements 
     private ArrayList<TLRPC.TL_authorization> sessions = new ArrayList<>();
     private List<Long> checkedSessions = new ArrayList<>();
     private ArrayList<TLRPC.TL_authorization> passwordSessions = new ArrayList<>();
-    private List<Long> checkedPasswordSessions = new ArrayList<>();
     private TLRPC.TL_authorization currentSession;
     private boolean loading;
     private LinearLayout emptyLayout;
@@ -169,9 +167,9 @@ public abstract class CheckableSessionsActivity extends BaseFragment implements 
                     saveCheckedSession(checkedSessions);
                 } else {
                     if (isChecked) {
-                        checkedPasswordSessions.add(passwordSessions.get(position - passwordSessionsStartRow).hash);
+                        checkedSessions.add(passwordSessions.get(position - passwordSessionsStartRow).hash);
                     } else {
-                        checkedPasswordSessions.remove(passwordSessions.get(position - passwordSessionsStartRow).hash);
+                        checkedSessions.remove(passwordSessions.get(position - passwordSessionsStartRow).hash);
                     }
                 }
                 checkableSessionCell.setChecked(isChecked);
@@ -393,7 +391,7 @@ public abstract class CheckableSessionsActivity extends BaseFragment implements 
                         sessionCell.setSession(session, position != otherSessionsEndRow - 1, checkedSessions.contains(session.hash));
                     } else if (position >= passwordSessionsStartRow && position < passwordSessionsEndRow) {
                         TLRPC.TL_authorization session = passwordSessions.get(position - passwordSessionsStartRow);
-                        sessionCell.setSession(session, position != passwordSessionsEndRow - 1, checkedPasswordSessions.contains(session.hash));
+                        sessionCell.setSession(session, position != passwordSessionsEndRow - 1, checkedSessions.contains(session.hash));
                     }
                     break;
             }
