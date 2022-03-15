@@ -40,6 +40,7 @@ import org.telegram.ui.Components.RecyclerListView;
 import org.telegram.ui.Components.UndoView;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public abstract class CheckableSessionsActivity extends BaseFragment implements NotificationCenter.NotificationCenterDelegate {
 
@@ -51,10 +52,10 @@ public abstract class CheckableSessionsActivity extends BaseFragment implements 
     private EmptyTextProgressView emptyView;
     private FlickerLoadingView globalFlickerLoadingView;
 
-    private ArrayList<TLObject> sessions = new ArrayList<>();
-    private ArrayList<TLObject> checkedSessions = new ArrayList<>();
-    private ArrayList<TLObject> passwordSessions = new ArrayList<>();
-    private ArrayList<TLObject> checkedPasswordSessions = new ArrayList<>();
+    private ArrayList<TLRPC.TL_authorization> sessions = new ArrayList<>();
+    private List<Long> checkedSessions = new ArrayList<>();
+    private ArrayList<TLRPC.TL_authorization> passwordSessions = new ArrayList<>();
+    private List<Long> checkedPasswordSessions = new ArrayList<>();
     private TLRPC.TL_authorization currentSession;
     private boolean loading;
     private LinearLayout emptyLayout;
@@ -71,9 +72,9 @@ public abstract class CheckableSessionsActivity extends BaseFragment implements 
     private int noOtherSessionsRow;
     private int rowCount;
 
-    protected abstract ArrayList<TLObject> loadCheckedSessions();
+    protected abstract List<Long> loadCheckedSessions();
 
-    protected abstract void saveCheckedSession(ArrayList<TLObject> checkedSessions);
+    protected abstract void saveCheckedSession(List<Long> checkedSessions);
 
     @Override
     public boolean onFragmentCreate() {
@@ -161,16 +162,16 @@ public abstract class CheckableSessionsActivity extends BaseFragment implements 
                 boolean isChecked = !checkableSessionCell.isChecked();
                 if (position >= otherSessionsStartRow && position < otherSessionsEndRow) {
                     if (isChecked) {
-                        checkedSessions.add(sessions.get(position - otherSessionsStartRow));
+                        checkedSessions.add(sessions.get(position - otherSessionsStartRow).hash);
                     } else {
-                        checkedSessions.remove(sessions.get(position - otherSessionsStartRow));
+                        checkedSessions.remove(sessions.get(position - otherSessionsStartRow).hash);
                     }
                     saveCheckedSession(checkedSessions);
                 } else {
                     if (isChecked) {
-                        checkedPasswordSessions.add(passwordSessions.get(position - passwordSessionsStartRow));
+                        checkedPasswordSessions.add(passwordSessions.get(position - passwordSessionsStartRow).hash);
                     } else {
-                        checkedPasswordSessions.remove(passwordSessions.get(position - passwordSessionsStartRow));
+                        checkedPasswordSessions.remove(passwordSessions.get(position - passwordSessionsStartRow).hash);
                     }
                 }
                 checkableSessionCell.setChecked(isChecked);
@@ -388,11 +389,11 @@ public abstract class CheckableSessionsActivity extends BaseFragment implements 
                 default:
                     CheckableSessionCell sessionCell = (CheckableSessionCell) holder.itemView;
                     if (position >= otherSessionsStartRow && position < otherSessionsEndRow) {
-                        TLObject session = sessions.get(position - otherSessionsStartRow);
-                        sessionCell.setSession(session, position != otherSessionsEndRow - 1, checkedSessions.contains(session));
+                        TLRPC.TL_authorization session = sessions.get(position - otherSessionsStartRow);
+                        sessionCell.setSession(session, position != otherSessionsEndRow - 1, checkedSessions.contains(session.hash));
                     } else if (position >= passwordSessionsStartRow && position < passwordSessionsEndRow) {
-                        TLObject session = passwordSessions.get(position - passwordSessionsStartRow);
-                        sessionCell.setSession(session, position != passwordSessionsEndRow - 1, checkedPasswordSessions.contains(session));
+                        TLRPC.TL_authorization session = passwordSessions.get(position - passwordSessionsStartRow);
+                        sessionCell.setSession(session, position != passwordSessionsEndRow - 1, checkedPasswordSessions.contains(session.hash));
                     }
                     break;
             }

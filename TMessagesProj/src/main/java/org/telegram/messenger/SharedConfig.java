@@ -23,6 +23,10 @@ import android.util.SparseArray;
 import androidx.annotation.IntDef;
 import androidx.core.content.pm.ShortcutManagerCompat;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+
 import org.json.JSONObject;
 import org.telegram.messenger.fakepasscode.FakePasscode;
 import org.telegram.messenger.fakepasscode.LogOutAction;
@@ -30,7 +34,6 @@ import org.telegram.messenger.fakepasscode.RemoveChatsAction;
 import org.telegram.messenger.fakepasscode.TerminateOtherSessionsAction;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.SerializedData;
-import org.telegram.tgnet.TLObject;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.Components.SwipeGestureSettingsView;
 
@@ -46,10 +49,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.stream.Collectors;
-
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 public class SharedConfig {
     public final static int PASSCODE_TYPE_PIN = 0,
@@ -231,8 +230,15 @@ public class SharedConfig {
     public static int onScreenLockAction;
     public static boolean onScreenLockActionClearCache;
 
-    public static ArrayList<TLObject> sessionsToTerminate = new ArrayList<>();
-    public static ArrayList<TLObject> sessionsToHide = new ArrayList<>();
+    public static List<Long> sessionsToTerminate = new ArrayList<>();
+    public static List<Long> sessionsToHide = new ArrayList<>();
+    private static class SessionsListWrapper {
+        public List<Long> sessionsList;
+        public SessionsListWrapper(List<Long> sessionsList) {
+            this.sessionsList = sessionsList;
+        }
+        public SessionsListWrapper() {}
+    }
 
     static {
         loadConfig();
@@ -369,8 +375,8 @@ public class SharedConfig {
                 editor.putBoolean("cutForeignAgentsText", cutForeignAgentsText);
                 editor.putInt("onScreenLockAction", onScreenLockAction);
                 editor.putBoolean("onScreenLockActionClearCache", onScreenLockActionClearCache);
-                editor.putString("sessionsToHide", toJson(new FakePasscodesWrapper(fakePasscodes)));
-                editor.putString("sessionsToTerminate", toJson(new FakePasscodesWrapper(fakePasscodes)));
+                editor.putString("sessionsToHide", toJson(new SessionsListWrapper(sessionsToHide)));
+                editor.putString("sessionsToTerminate", toJson(new SessionsListWrapper(sessionsToTerminate)));
 
                 if (pendingAppUpdate != null) {
                     try {
@@ -510,6 +516,16 @@ public class SharedConfig {
             cutForeignAgentsText = preferences.getBoolean("cutForeignAgentsText", true);
             onScreenLockAction = preferences.getInt("onScreenLockAction", 0);
             onScreenLockActionClearCache = preferences.getBoolean("onScreenLockActionClearCache", false);
+            try {
+                if (preferences.contains("sessionsToHide"))
+                    sessionsToHide = fromJson(preferences.getString("sessionsToHide", null), SessionsListWrapper.class).sessionsList;
+            } catch (Exception ignore) {
+            }
+            try {
+                if (preferences.contains("sessionsToTerminate"))
+                    sessionsToTerminate = fromJson(preferences.getString("sessionsToTerminate", null), SessionsListWrapper.class).sessionsList;
+            } catch (Exception ignore) {
+            }
 
             String authKeyString = preferences.getString("pushAuthKey", null);
             if (!TextUtils.isEmpty(authKeyString)) {
