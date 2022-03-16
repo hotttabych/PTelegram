@@ -12,6 +12,7 @@ import org.telegram.messenger.FileLoader;
 import org.telegram.messenger.ImageLoader;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.MessagesController;
+import org.telegram.messenger.MessagesStorage;
 import org.telegram.messenger.R;
 import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.UserConfig;
@@ -106,6 +107,11 @@ public class Utils {
             AndroidUtilities.runOnUIThread(() -> {
                 if (imagesClearedFinal) {
                     ImageLoader.getInstance().clearMemory();
+                }
+                for (int i = UserConfig.MAX_ACCOUNT_COUNT - 1; i >= 0; i--) {
+                    if (UserConfig.getInstance(i).isClientActivated()) {
+                        MessagesStorage.getInstance(i).clearRecentDownloadedFiles();
+                    }
                 }
                 if (callback != null) {
                     try {
