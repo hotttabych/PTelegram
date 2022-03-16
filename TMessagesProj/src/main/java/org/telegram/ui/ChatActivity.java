@@ -20466,10 +20466,12 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
 
     @Override
     public void finishFragment() {
-        super.finishFragment();
-        if (scrimPopupWindow != null) {
-            scrimPopupWindow.setPauseNotifications(false);
-            closeMenu();
+        if (!finishing) {
+            super.finishFragment();
+            if (scrimPopupWindow != null) {
+                scrimPopupWindow.setPauseNotifications(false);
+                closeMenu();
+            }
         }
     }
 
