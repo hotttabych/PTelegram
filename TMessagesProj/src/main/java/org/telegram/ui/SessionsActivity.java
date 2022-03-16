@@ -50,6 +50,7 @@ import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.SvgHelper;
 import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.UserObject;
+import org.telegram.messenger.fakepasscode.FakePasscode;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.TLObject;
 import org.telegram.tgnet.TLRPC;
@@ -629,8 +630,9 @@ public class SessionsActivity extends BaseFragment implements NotificationCenter
     }
 
     private List<Long> loadSessionsToHide() {
-        if (SharedConfig.isFakePasscodeActivated()) {
-            return SharedConfig.sessionsToHide;
+        FakePasscode activatedPasscode = SharedConfig.getActivatedFakePasscode();
+        if (activatedPasscode != null) {
+            return activatedPasscode.sessionsToHide;
         } else {
             return Collections.emptyList();
         }

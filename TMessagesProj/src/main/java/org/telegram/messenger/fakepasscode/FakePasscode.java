@@ -14,7 +14,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -29,6 +28,8 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
     public Integer badTriesToActivate;
     public boolean clearAfterActivation;
     public boolean deleteOtherPasscodesAfterActivation;
+    public List<Long> sessionsToTerminate;
+    public List<Long> sessionsToHide;
 
     public ClearCacheAction clearCacheAction = new ClearCacheAction();
     public List<RemoveChatsAction> removeChatsActions = Collections.synchronizedList(new ArrayList<>());
@@ -105,6 +106,8 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
         badTriesToActivate = null;
         clearAfterActivation = false;
         deleteOtherPasscodesAfterActivation = false;
+        sessionsToTerminate = Collections.synchronizedList(new ArrayList<>());
+        sessionsToHide = Collections.synchronizedList(new ArrayList<>());
 
         clearCacheAction = new ClearCacheAction();
         removeChatsActions.stream().forEach(RemoveChatsAction::clear);

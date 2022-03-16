@@ -230,16 +230,6 @@ public class SharedConfig {
     public static int onScreenLockAction;
     public static boolean onScreenLockActionClearCache;
 
-    public static List<Long> sessionsToTerminate = new ArrayList<>();
-    public static List<Long> sessionsToHide = new ArrayList<>();
-    private static class SessionsListWrapper {
-        public List<Long> sessionsList;
-        public SessionsListWrapper(List<Long> sessionsList) {
-            this.sessionsList = sessionsList;
-        }
-        public SessionsListWrapper() {}
-    }
-
     static {
         loadConfig();
     }
@@ -375,8 +365,6 @@ public class SharedConfig {
                 editor.putBoolean("cutForeignAgentsText", cutForeignAgentsText);
                 editor.putInt("onScreenLockAction", onScreenLockAction);
                 editor.putBoolean("onScreenLockActionClearCache", onScreenLockActionClearCache);
-                editor.putString("sessionsToHide", toJson(new SessionsListWrapper(sessionsToHide)));
-                editor.putString("sessionsToTerminate", toJson(new SessionsListWrapper(sessionsToTerminate)));
 
                 if (pendingAppUpdate != null) {
                     try {
@@ -516,16 +504,6 @@ public class SharedConfig {
             cutForeignAgentsText = preferences.getBoolean("cutForeignAgentsText", true);
             onScreenLockAction = preferences.getInt("onScreenLockAction", 0);
             onScreenLockActionClearCache = preferences.getBoolean("onScreenLockActionClearCache", false);
-            try {
-                if (preferences.contains("sessionsToHide"))
-                    sessionsToHide = fromJson(preferences.getString("sessionsToHide", null), SessionsListWrapper.class).sessionsList;
-            } catch (Exception ignore) {
-            }
-            try {
-                if (preferences.contains("sessionsToTerminate"))
-                    sessionsToTerminate = fromJson(preferences.getString("sessionsToTerminate", null), SessionsListWrapper.class).sessionsList;
-            } catch (Exception ignore) {
-            }
 
             String authKeyString = preferences.getString("pushAuthKey", null);
             if (!TextUtils.isEmpty(authKeyString)) {
