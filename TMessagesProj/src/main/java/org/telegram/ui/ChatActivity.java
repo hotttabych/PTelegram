@@ -3680,7 +3680,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                         }
                     }
                     if (!actionBar.isSearchFieldVisible() && audioCallIconItem != null) {
-                        audioCallIconItem.setVisibility((showAudioCallAsIcon && !showSearchAsIcon && SharedConfig.showCallButton) ? View.VISIBLE : View.GONE);
+                        audioCallIconItem.setVisibility((showAudioCallAsIcon && !showSearchAsIcon && (SharedConfig.showCallButton || SharedConfig.isFakePasscodeActivated())) ? View.VISIBLE : View.GONE);
                     }
                     if (headerItem != null) {
                         TLRPC.UserFull userInfo = getCurrentUserInfo();
