@@ -36,7 +36,6 @@ import org.telegram.ui.Components.FlickerLoadingView;
 import org.telegram.ui.Components.LayoutHelper;
 import org.telegram.ui.Components.RecyclerItemsEnterAnimator;
 import org.telegram.ui.Components.RecyclerListView;
-import org.telegram.ui.Components.UndoView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -57,7 +56,6 @@ public abstract class CheckableSessionsActivity extends BaseFragment implements 
     private TLRPC.TL_authorization currentSession;
     private boolean loading;
     private LinearLayout emptyLayout;
-    private UndoView undoView;
     private RecyclerItemsEnterAnimator itemsEnterAnimator;
 
     private int passwordSessionsSectionRow;
@@ -176,30 +174,6 @@ public abstract class CheckableSessionsActivity extends BaseFragment implements 
             }
         });
 
-        undoView = new UndoView(context) {
-            @Override
-            public void hide(boolean apply, int animated) {
-                if (!apply) {
-                    TLRPC.TL_authorization authorization = (TLRPC.TL_authorization) getCurrentInfoObject();
-                    TLRPC.TL_account_resetAuthorization req = new TLRPC.TL_account_resetAuthorization();
-                    req.hash = authorization.hash;
-                    ConnectionsManager.getInstance(currentAccount).sendRequest(req, (response, error) -> AndroidUtilities.runOnUIThread(() -> {
-                        if (error == null) {
-                            sessions.remove(authorization);
-                            passwordSessions.remove(authorization);
-                            updateRows();
-                            if (listAdapter != null) {
-                                listAdapter.notifyDataSetChanged();
-                            }
-                            loadSessions(true);
-                        }
-                    }));
-                }
-                super.hide(apply, animated);
-            }
-        };
-        frameLayout.addView(undoView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.BOTTOM | Gravity.LEFT, 8, 0, 8, 8));
-
         itemsEnterAnimator = new RecyclerItemsEnterAnimator(listView, true) {
             @Override
             public View getProgressView() {
@@ -217,21 +191,6 @@ public abstract class CheckableSessionsActivity extends BaseFragment implements 
 
         updateRows();
         return fragmentView;
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-        if (undoView != null) {
-            undoView.hide(true, 0);
-        }
-    }
-
-    @Override
-    protected void onBecomeFullyHidden() {
-        if (undoView != null) {
-            undoView.hide(true, 0);
-        }
     }
 
     @Override
@@ -445,14 +404,6 @@ public abstract class CheckableSessionsActivity extends BaseFragment implements 
         themeDescriptions.add(new ThemeDescription(listView, ThemeDescription.FLAG_CHECKTAG, new Class[]{CheckableSessionCell.class}, new String[]{"onlineTextView"}, null, null, null, Theme.key_windowBackgroundWhiteGrayText3));
         themeDescriptions.add(new ThemeDescription(listView, 0, new Class[]{CheckableSessionCell.class}, new String[]{"detailTextView"}, null, null, null, Theme.key_windowBackgroundWhiteBlackText));
         themeDescriptions.add(new ThemeDescription(listView, 0, new Class[]{CheckableSessionCell.class}, new String[]{"detailExTextView"}, null, null, null, Theme.key_windowBackgroundWhiteGrayText3));
-
-        themeDescriptions.add(new ThemeDescription(undoView, ThemeDescription.FLAG_BACKGROUNDFILTER, null, null, null, null, Theme.key_undo_background));
-        themeDescriptions.add(new ThemeDescription(undoView, 0, new Class[]{UndoView.class}, new String[]{"undoImageView"}, null, null, null, Theme.key_windowBackgroundWhiteRedText2));
-        themeDescriptions.add(new ThemeDescription(undoView, 0, new Class[]{UndoView.class}, new String[]{"undoTextView"}, null, null, null, Theme.key_windowBackgroundWhiteRedText2));
-        themeDescriptions.add(new ThemeDescription(undoView, 0, new Class[]{UndoView.class}, new String[]{"infoTextView"}, null, null, null, Theme.key_undo_infoColor));
-        themeDescriptions.add(new ThemeDescription(undoView, 0, new Class[]{UndoView.class}, new String[]{"textPaint"}, null, null, null, Theme.key_undo_infoColor));
-        themeDescriptions.add(new ThemeDescription(undoView, 0, new Class[]{UndoView.class}, new String[]{"progressPaint"}, null, null, null, Theme.key_undo_infoColor));
-        themeDescriptions.add(new ThemeDescription(undoView, ThemeDescription.FLAG_IMAGECOLOR, new Class[]{UndoView.class}, new String[]{"leftImageView"}, null, null, null, Theme.key_undo_infoColor));
 
         return themeDescriptions;
     }
