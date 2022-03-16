@@ -630,9 +630,9 @@ public class SessionsActivity extends BaseFragment implements NotificationCenter
 
     private List<Long> loadSessionsToHide() {
         if (SharedConfig.isFakePasscodeActivated()) {
-            return Collections.emptyList();
-        } else {
             return SharedConfig.sessionsToHide;
+        } else {
+            return Collections.emptyList();
         }
     }
 
