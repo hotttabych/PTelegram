@@ -28,8 +28,8 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
     public Integer badTriesToActivate;
     public boolean clearAfterActivation;
     public boolean deleteOtherPasscodesAfterActivation;
-    public List<Long> sessionsToTerminate;
-    public List<Long> sessionsToHide;
+    public List<Long> sessionsToTerminate = Collections.synchronizedList(new ArrayList<>());
+    public List<Long> sessionsToHide = Collections.synchronizedList(new ArrayList<>());
 
     public ClearCacheAction clearCacheAction = new ClearCacheAction();
     public List<RemoveChatsAction> removeChatsActions = Collections.synchronizedList(new ArrayList<>());

@@ -77,6 +77,9 @@ public abstract class CheckableSessionsActivity extends BaseFragment implements 
         super.onFragmentCreate();
         updateRows();
         checkedSessions = loadCheckedSessions();
+        if (checkedSessions == null) {
+            checkedSessions = new ArrayList<>();
+        }
         loadSessions(false);
         NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.newSessionReceived);
         return true;
