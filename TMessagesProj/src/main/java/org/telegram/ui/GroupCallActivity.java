@@ -1604,7 +1604,6 @@ public class GroupCallActivity extends BottomSheet implements NotificationCenter
         } else {
             permissionItem.setVisibility(View.GONE);
         }
-        otherItem.setVisibility(anyVisible ? View.VISIBLE : View.GONE);
         soundItem.setVisibility(isRtmpStream() ? View.GONE : View.VISIBLE);
         if (editTitleItem.getVisibility() == View.VISIBLE || permissionItem.getVisibility() == View.VISIBLE || inviteItem.getVisibility() == View.VISIBLE ||
                 screenItem.getVisibility() == View.VISIBLE || recordItem.getVisibility() == View.VISIBLE || leaveItem.getVisibility() == View.VISIBLE) {
