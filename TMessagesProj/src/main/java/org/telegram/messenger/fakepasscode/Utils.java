@@ -8,6 +8,7 @@ import org.telegram.messenger.AccountInstance;
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ApplicationLoader;
 import org.telegram.messenger.ChatObject;
+import org.telegram.messenger.DownloadController;
 import org.telegram.messenger.FileLoader;
 import org.telegram.messenger.ImageLoader;
 import org.telegram.messenger.LocaleController;
@@ -108,7 +109,7 @@ public class Utils {
                 }
                 for (int i = UserConfig.MAX_ACCOUNT_COUNT - 1; i >= 0; i--) {
                     if (UserConfig.getInstance(i).isClientActivated()) {
-                        MessagesStorage.getInstance(i).clearRecentDownloadedFiles();
+                        DownloadController.getInstance(i).clearRecentDownloadedFiles();
                     }
                 }
                 if (callback != null) {
