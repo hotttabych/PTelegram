@@ -74,6 +74,7 @@ import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.UserObject;
 import org.telegram.messenger.Utilities;
 import org.telegram.messenger.browser.Browser;
+import org.telegram.messenger.fakepasscode.FakePasscode;
 import org.telegram.messenger.fakepasscode.Utils;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.TLObject;
@@ -114,6 +115,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Optional;
 
 @SuppressWarnings("unchecked")
 public class SharedMediaLayout extends FrameLayout implements NotificationCenter.NotificationCenterDelegate {
@@ -5975,7 +5977,8 @@ public class SharedMediaLayout extends FrameLayout implements NotificationCenter
                     TLRPC.messages_Chats res = (TLRPC.messages_Chats) response;
                     profileActivity.getMessagesController().putChats(res.chats, false);
                     endReached = res.chats.isEmpty() || res.chats.size() != count;
-                    chats.addAll(res.chats);
+                    chats.addAll(FakePasscode.filterItems(res.chats, Optional.of(profileActivity.getCurrentAccount()),
+                            (c, action) -> !action.isHideChat(c.id)));
                 } else {
                     endReached = true;
                 }
