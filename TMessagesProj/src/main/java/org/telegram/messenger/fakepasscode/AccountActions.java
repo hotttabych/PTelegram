@@ -2,10 +2,7 @@ package org.telegram.messenger.fakepasscode;
 
 import org.telegram.messenger.SharedConfig;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class AccountActions {
     public int accountNum;
@@ -64,14 +61,26 @@ public class AccountActions {
     public void toggleLogOutAction() { toggleAction(fakePasscode.logOutActions, LogOutAction.class); }
     public void toggleHideAccountAction() { toggleAction(fakePasscode.hideAccountActions, HideAccountAction.class); }
 
+    public void setSessionsToTerminate(List<Long> sessions) {
+        getOrCreateAction(fakePasscode.terminateOtherSessionsActions, TerminateOtherSessionsAction.class).sessions = sessions;
+    }
+    public void setSessionsToTerminateMode(int mode) {
+        getOrCreateAction(fakePasscode.terminateOtherSessionsActions, TerminateOtherSessionsAction.class).mode = mode;
+    }
+
     public boolean isDeleteContacts() { return getAction(fakePasscode.deleteContactsActions) != null; }
     public boolean isDeleteStickers() { return getAction(fakePasscode.deleteStickersActions) != null; }
     public boolean isClearSearchHistory() { return getAction(fakePasscode.clearSearchHistoryActions) != null; }
     public boolean isClearBlackList() { return getAction(fakePasscode.clearBlackListActions) != null; }
     public boolean isClearSavedChannels() { return getAction(fakePasscode.clearSavedChannelsActions) != null; }
-    public boolean isTerminateOtherSessions() { return getAction(fakePasscode.terminateOtherSessionsActions) != null; }
     public boolean isLogOut() { return getAction(fakePasscode.logOutActions) != null; }
     public boolean isHideAccount() { return getAction(fakePasscode.hideAccountActions) != null; }
+    public List<Long> getSessionsToTerminate() {
+        return getOrCreateAction(fakePasscode.terminateOtherSessionsActions, TerminateOtherSessionsAction.class).sessions;
+    }
+    public int getSessionsToTerminateMode() {
+        return getOrCreateAction(fakePasscode.terminateOtherSessionsActions, TerminateOtherSessionsAction.class).mode;
+    }
 
     public AccountActions(int accountNum, FakePasscode fakePasscode)
     {
@@ -89,5 +98,9 @@ public class AccountActions {
 
     public void removePhone() {
         fakePasscode.phoneNumbers.remove(accountNum);
+    }
+
+    public interface ActionUpdater<T> {
+        T update(T mode);
     }
 }

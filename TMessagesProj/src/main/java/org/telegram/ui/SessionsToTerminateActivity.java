@@ -17,12 +17,12 @@ public class SessionsToTerminateActivity extends CheckableSessionsActivity {
 
     @Override
     protected List<Long> loadCheckedSessions() {
-        return actions.getFakePasscode().sessionsToTerminate;
+        return actions.getSessionsToTerminate();
     }
 
     @Override
     protected void saveCheckedSession(List<Long> checkedSessions) {
-        actions.getFakePasscode().sessionsToTerminate = checkedSessions;
+        actions.setSessionsToTerminate(checkedSessions);
         SharedConfig.saveConfig();
     }
 
@@ -33,13 +33,13 @@ public class SessionsToTerminateActivity extends CheckableSessionsActivity {
 
     @Override
     public void didSelectedMode(int mode) {
-        actions.getFakePasscode().sessionsToTerminateMode = mode;
+        actions.setSessionsToTerminateMode(mode);
         SharedConfig.saveConfig();
         super.didSelectedMode(mode);
     }
 
     @Override
     public int getSelectedMode() {
-        return actions.getFakePasscode().sessionsToTerminateMode;
+        return actions.getSessionsToTerminateMode();
     }
 }
