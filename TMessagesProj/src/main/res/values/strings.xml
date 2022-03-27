@@ -5259,6 +5259,7 @@
     <string name="SessionsToTerminateInfo">Choose sessions which will be terminated on trigger</string>
     <string name="SessionsToHide">Sessions to Hide</string>
     <string name="SessionsToHideInfo">Choose sessions which will be visible in Settings</string>
+    <string name="TurnedOff">Turned off</string>
     <string name="Selected">Selected</string>
-    <string name="ExceptSelected">Except Selected</string>
+    <string name="ExceptSelected">Except selected</string>
 </resources>

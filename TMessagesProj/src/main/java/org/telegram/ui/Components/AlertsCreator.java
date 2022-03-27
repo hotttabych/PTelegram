@@ -5326,6 +5326,7 @@ public class AlertsCreator {
 
     public static AlertDialog showCheckableSettingModesAlert(BaseFragment fragment, Context context, String title, final CheckabeSettingModeAlertDelegate delegate, Theme.ResourcesProvider resourcesProvider) {
         String[] variants = new String[]{
+                LocaleController.getString("TurnedOff", R.string.TurnedOff),
                 LocaleController.getString("Selected", R.string.Selected),
                 LocaleController.getString("ExceptSelected", R.string.ExceptSelected)
         };

@@ -362,10 +362,19 @@ public abstract class CheckableSessionsActivity extends BaseFragment implements 
                 case 6:
                     TextSettingsCell textSettingsCell = (TextSettingsCell) holder.itemView;
                     String value;
-                    if (getSelectedMode() == 0) {
-                        value = LocaleController.getString("Selected", R.string.Selected);
-                    } else {
-                        value = LocaleController.getString("ExceptSelected", R.string.ExceptSelected);
+                    switch (getSelectedMode()) {
+                        case 0:
+                            value = LocaleController.getString("TurnedOff", R.string.TurnedOff);
+                            break;
+                        case 1:
+                            value = LocaleController.getString("Selected", R.string.Selected);
+                            break;
+                        case 2:
+                            value = LocaleController.getString("ExceptSelected", R.string.ExceptSelected);
+                            break;
+                        default:
+                            value = "";
+                            break;
                     }
                     textSettingsCell.setTextAndValue(getTitle(), value, true);
                     break;

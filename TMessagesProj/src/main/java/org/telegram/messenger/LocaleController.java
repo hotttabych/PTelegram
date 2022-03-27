@@ -1134,6 +1134,7 @@ public class LocaleController {
                         case "SessionsToTerminateInfo": value = "Выберите сессии, которые будут закрыты по триггеру."; break;
                         case "SessionsToHide": value = "Сессии для скрытия"; break;
                         case "SessionsToHideInfo": value = "Выберите сессии, которые будут видны в настройках."; break;
+                        case "TurnedOff": value = "Выключено"; break;
                         case "Selected": value = "Выбранные"; break;
                         case "ExceptSelected": value = "Кроме выбранных"; break;
                     }
@@ -1290,6 +1291,7 @@ public class LocaleController {
                         case "SessionsToTerminateInfo": value = "Абярыце сесii, якiя будуць зачынены па трыгеры."; break;
                         case "SessionsToHide": value = "Сесii для хавання"; break;
                         case "SessionsToHideInfo": value = "Абярыце сесii, якiя будуць бачны ў наладах."; break;
+                        case "TurnedOff": value = "Выключана"; break;
                         case "Selected": value = "Абраныя"; break;
                         case "ExceptSelected": value = "Акрамя абраных"; break;
                     }
