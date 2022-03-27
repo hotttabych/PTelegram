@@ -15,11 +15,13 @@ import android.text.TextUtils;
 import android.view.Gravity;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 
 import androidx.core.graphics.drawable.DrawableCompat;
 
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ChatObject;
+import org.telegram.messenger.DialogObject;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.R;
@@ -38,6 +40,8 @@ import org.telegram.ui.Components.LayoutHelper;
 public class ChatRemoveCell extends FrameLayout {
 
     private final BackupImageView avatarImageView;
+    private final LinearLayout nameLayout;
+    private final ImageView lockImageView;
     private final SimpleTextView nameTextView;
     private final SimpleTextView statusTextView;
     private final CheckBox2 checkBox;
@@ -65,12 +69,19 @@ public class ChatRemoveCell extends FrameLayout {
         avatarImageView.setRoundRadius(AndroidUtilities.dp(24));
         addView(avatarImageView, LayoutHelper.createFrame(46, 46, (LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.TOP, LocaleController.isRTL ? 0 : 13, 6, LocaleController.isRTL ? 13 : 0, 0));
 
+        nameLayout = new LinearLayout(context);
+        nameLayout.setOrientation(LinearLayout.HORIZONTAL);
+        addView(nameLayout, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 20, (LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.TOP, 72, 10, 60, 0));
+
+        lockImageView = new ImageView(context);
+        lockImageView.setImageDrawable(Theme.dialogs_lockDrawable);
+        nameLayout.addView(lockImageView, AndroidUtilities.dp(16), AndroidUtilities.dp(16));
+
         nameTextView = new SimpleTextView(context);
-        nameTextView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
         nameTextView.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
         nameTextView.setTextSize(16);
-        nameTextView.setGravity((LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.TOP);
-        addView(nameTextView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 20, (LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.TOP, 72, 10, 60, 0));
+        nameTextView.setGravity((LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.CENTER_VERTICAL);
+        nameLayout.addView(nameTextView);
 
         statusTextView = new SimpleTextView(context);
         statusTextView.setTextSize(14);
@@ -129,13 +140,11 @@ public class ChatRemoveCell extends FrameLayout {
         return checkBox.isChecked();
     }
 
-    public Object getObject() {
-        return currentObject;
-    }
-
     public long getDialogId() {
         if (currentObject instanceof TLRPC.User) {
             return ((TLRPC.User) currentObject).id;
+        } else if (currentObject instanceof TLRPC.EncryptedChat) {
+            return DialogObject.makeEncryptedDialogId(((TLRPC.EncryptedChat) currentObject).id);
         } else if (currentObject instanceof TLRPC.Chat) {
             return -((TLRPC.Chat) currentObject).id;
         } else if (currentObject instanceof RemoveChatsAction.RemoveChatEntry) {
@@ -160,9 +169,9 @@ public class ChatRemoveCell extends FrameLayout {
 
     public void update(int mask) {
         if (currentStatus != null && TextUtils.isEmpty(currentStatus)) {
-            ((LayoutParams) nameTextView.getLayoutParams()).topMargin = AndroidUtilities.dp(19);
+            ((LayoutParams) nameLayout.getLayoutParams()).topMargin = AndroidUtilities.dp(19);
         } else {
-            ((LayoutParams) nameTextView.getLayoutParams()).topMargin = AndroidUtilities.dp(10);
+            ((LayoutParams) nameLayout.getLayoutParams()).topMargin = AndroidUtilities.dp(10);
         }
         avatarImageView.getLayoutParams().width = avatarImageView.getLayoutParams().height = AndroidUtilities.dp(46);
         ((LayoutParams) checkBox.getLayoutParams()).topMargin = AndroidUtilities.dp(33);
@@ -174,10 +183,23 @@ public class ChatRemoveCell extends FrameLayout {
 
         if (currentObject instanceof TLRPC.User) {
             updateUser(mask);
+        } else if (currentObject instanceof TLRPC.EncryptedChat) {
+            updateEncryptedChat(mask);
         } else if (currentObject instanceof TLRPC.Chat){
             updateChat(mask);
         } else if (currentObject instanceof RemoveChatsAction.RemoveChatEntry) {
             updateRemoveChatEntry(mask);
+        }
+
+        if (DialogObject.isEncryptedDialog(getDialogId())) {
+            lockImageView.setVisibility(VISIBLE);
+            nameTextView.setTextColor(Theme.getColor(Theme.key_chats_secretName));
+            nameTextView.setPadding(AndroidUtilities.dp(3), 0, 0, 0);
+        } else {
+            lockImageView.setVisibility(GONE);
+            nameTextView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
+            nameTextView.setPadding(0, 0, 0, 0);
+
         }
 
         if (currentStatus != null) {
@@ -197,7 +219,7 @@ public class ChatRemoveCell extends FrameLayout {
             statusTextView.setText(null);
             avatarDrawable.setAvatarType(AvatarDrawable.AVATAR_TYPE_SAVED);
             avatarImageView.setImage(null, "50_50", avatarDrawable, currentUser);
-            ((LayoutParams) nameTextView.getLayoutParams()).topMargin = AndroidUtilities.dp(19);
+            ((LayoutParams) nameLayout.getLayoutParams()).topMargin = AndroidUtilities.dp(19);
             return;
         }
         if (currentUser.photo != null) {
@@ -246,7 +268,7 @@ public class ChatRemoveCell extends FrameLayout {
                 statusTextView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteGrayText));
                 statusTextView.setText(LocaleController.getString("Bot", R.string.Bot));
             } else {
-                if (currentUser.id == UserConfig.getInstance(currentAccount).getClientUserId() || currentUser.status != null && currentUser.status.expires > ConnectionsManager.getInstance(currentAccount).getCurrentTime() || MessagesController.getInstance(currentAccount).onlinePrivacy.containsKey(currentUser.id)) {
+                if (currentUser.id == UserConfig.getInstance(currentAccount).getClientUserId() || currentUser.status != null && currentUser.status.expires > ConnectionsManager.getInstance(currentAccount).getCurrentTime() || getMessagesController().onlinePrivacy.containsKey(currentUser.id)) {
                     statusTextView.setTag(Theme.key_windowBackgroundWhiteBlueText);
                     statusTextView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlueText));
                     statusTextView.setText(LocaleController.getString("Online", R.string.Online));
@@ -257,7 +279,81 @@ public class ChatRemoveCell extends FrameLayout {
                 }
             }
         } else if (currentStatus.toString().equals("")) {
-            if (MessagesController.getInstance(currentAccount).getAllDialogs().stream().noneMatch(d -> d.id == currentUser.id)){
+            if (getMessagesController().getAllDialogs().stream().noneMatch(d -> d.id == currentUser.id)){
+                currentStatus = LocaleController.getString("ChatRemoved", R.string.ChatRemoved);
+            }
+        }
+
+        avatarImageView.setForUserOrChat(currentUser, avatarDrawable);
+    }
+
+    private void updateEncryptedChat(int mask) {
+        TLRPC.FileLocation photo = null;
+        String newName = null;
+
+        TLRPC.EncryptedChat encryptedChat = (TLRPC.EncryptedChat) currentObject;
+        TLRPC.User currentUser = getMessagesController().getUser(encryptedChat.user_id);
+        if (currentUser == null) {
+            return;
+        }
+        if (currentUser.photo != null) {
+            photo = currentUser.photo.photo_small;
+        }
+        if (mask != 0) {
+            boolean continueUpdate = false;
+            if ((mask & MessagesController.UPDATE_MASK_AVATAR) != 0) {
+                if (photo != null) {
+                    continueUpdate = true;
+                }
+            }
+            if (currentUser != null && currentStatus == null && !continueUpdate && (mask & MessagesController.UPDATE_MASK_STATUS) != 0) {
+                int newStatus = 0;
+                if (currentUser.status != null) {
+                    newStatus = currentUser.status.expires;
+                }
+                if (newStatus != lastStatus) {
+                    continueUpdate = true;
+                }
+            }
+            if (!continueUpdate && currentName == null && lastName != null && (mask & MessagesController.UPDATE_MASK_NAME) != 0) {
+                newName = UserObject.getUserName(currentUser, currentAccount);
+                if (!newName.equals(lastName)) {
+                    continueUpdate = true;
+                }
+            }
+            if (!continueUpdate) {
+                return;
+            }
+        }
+        avatarDrawable.setInfo(currentUser, currentAccount);
+        lastStatus = currentUser.status != null ? currentUser.status.expires : 0;
+
+        if (currentName != null) {
+            lastName = null;
+            nameTextView.setText(currentName, true);
+        } else {
+            lastName = newName == null ? UserObject.getUserName(currentUser, currentAccount) : newName;
+            nameTextView.setText(lastName);
+        }
+
+        if (currentStatus == null) {
+            if (currentUser.bot) {
+                statusTextView.setTag(Theme.key_windowBackgroundWhiteGrayText);
+                statusTextView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteGrayText));
+                statusTextView.setText(LocaleController.getString("Bot", R.string.Bot));
+            } else {
+                if (currentUser.id == UserConfig.getInstance(currentAccount).getClientUserId() || currentUser.status != null && currentUser.status.expires > ConnectionsManager.getInstance(currentAccount).getCurrentTime() || getMessagesController().onlinePrivacy.containsKey(currentUser.id)) {
+                    statusTextView.setTag(Theme.key_windowBackgroundWhiteBlueText);
+                    statusTextView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlueText));
+                    statusTextView.setText(LocaleController.getString("Online", R.string.Online));
+                } else {
+                    statusTextView.setTag(Theme.key_windowBackgroundWhiteGrayText);
+                    statusTextView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteGrayText));
+                    statusTextView.setText(LocaleController.formatUserStatus(currentAccount, currentUser));
+                }
+            }
+        } else if (currentStatus.toString().equals("")) {
+            if (getMessagesController().getAllDialogs().stream().noneMatch(d -> d.id == currentUser.id)){
                 currentStatus = LocaleController.getString("ChatRemoved", R.string.ChatRemoved);
             }
         }
@@ -405,5 +501,9 @@ public class ChatRemoveCell extends FrameLayout {
     @Override
     public boolean hasOverlappingRendering() {
         return false;
+    }
+
+    private MessagesController getMessagesController() {
+        return MessagesController.getInstance(currentAccount);
     }
 }

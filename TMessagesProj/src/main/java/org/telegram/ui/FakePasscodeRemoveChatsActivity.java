@@ -36,6 +36,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import org.telegram.messenger.AccountInstance;
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ContactsController;
+import org.telegram.messenger.DialogObject;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.NotificationCenter;
@@ -748,7 +749,7 @@ public class FakePasscodeRemoveChatsActivity extends BaseFragment implements Not
             Set<Long> selectedIds = action.getIds();
             for (Long id: selectedIds) {
                 boolean added = false;
-                if (id > 0) {
+                if (DialogObject.isUserDialog(id)) {
                     TLRPC.User user = getMessagesController().getUser(id);
                     if (user != null) {
                         added = true;
@@ -757,7 +758,13 @@ public class FakePasscodeRemoveChatsActivity extends BaseFragment implements Not
                             hasSelf = true;
                         }
                     }
-                } else {
+                } else if (DialogObject.isEncryptedDialog(id)) {
+                    TLRPC.EncryptedChat encryptedChat = getMessagesController().getEncryptedChat(DialogObject.getEncryptedChatId(id));
+                    if (encryptedChat != null) {
+                        added = true;
+                        contacts.add(encryptedChat);
+                    }
+                } else if (DialogObject.isChatDialog(id)) {
                     TLRPC.Chat chat = getMessagesController().getChat(-id);
                     if (chat != null) {
                         added = true;
@@ -774,7 +781,7 @@ public class FakePasscodeRemoveChatsActivity extends BaseFragment implements Not
                 if (dialog.id == 0 || selectedIds.contains(dialog.id)) {
                     continue;
                 }
-                if (dialog.id > 0) {
+                if (DialogObject.isUserDialog(dialog.id)) {
                     TLRPC.User user = getMessagesController().getUser(dialog.id);
                     if (user != null) {
                         contacts.add(user);
@@ -782,7 +789,12 @@ public class FakePasscodeRemoveChatsActivity extends BaseFragment implements Not
                             hasSelf = true;
                         }
                     }
-                } else {
+                } else if (DialogObject.isEncryptedDialog(dialog.id)) {
+                    TLRPC.EncryptedChat encryptedChat = getMessagesController().getEncryptedChat(DialogObject.getEncryptedChatId(dialog.id));
+                    if (encryptedChat != null) {
+                        contacts.add(encryptedChat);
+                    }
+                } else if (DialogObject.isChatDialog(dialog.id)) {
                     TLRPC.Chat chat = getMessagesController().getChat(-dialog.id);
                     if (chat != null) {
                         contacts.add(chat);
@@ -871,6 +883,8 @@ public class FakePasscodeRemoveChatsActivity extends BaseFragment implements Not
                             String objectUserName;
                             if (object instanceof TLRPC.User) {
                                 objectUserName = ((TLRPC.User) object).username;
+                            } else if (object instanceof TLRPC.EncryptedChat){
+                                objectUserName = getMessagesController().getUser(((TLRPC.EncryptedChat) object).user_id).username;
                             } else if (object instanceof TLRPC.Chat){
                                 objectUserName = ((TLRPC.Chat) object).username;
                             } else {
@@ -918,6 +932,8 @@ public class FakePasscodeRemoveChatsActivity extends BaseFragment implements Not
                     Long id;
                     if (object instanceof TLRPC.User) {
                         id = ((TLRPC.User) object).id;
+                    } else if (object instanceof TLRPC.EncryptedChat) {
+                        id = DialogObject.makeEncryptedDialogId(((TLRPC.EncryptedChat) object).id);
                     } else if (object instanceof TLRPC.Chat) {
                         id = -((TLRPC.Chat) object).id;
                     } else if (object instanceof RemoveChatsAction.RemoveChatEntry) {
@@ -1024,6 +1040,11 @@ public class FakePasscodeRemoveChatsActivity extends BaseFragment implements Not
                                 } else if (user.self) {
                                     names[2] = LocaleController.getString("SavedMessages", R.string.SavedMessages).toLowerCase();
                                 }
+                            } else if (object instanceof TLRPC.EncryptedChat) {
+                                TLRPC.EncryptedChat encryptedChat = (TLRPC.EncryptedChat) object;
+                                TLRPC.User user = getMessagesController().getUser(encryptedChat.user_id);
+                                names[0] = ContactsController.formatName(user.first_name, user.last_name).toLowerCase();
+                                username = user.username;
                             } else if (object instanceof  TLRPC.Chat) {
                                 TLRPC.Chat chat = (TLRPC.Chat) object;
                                 names[0] = chat.title.toLowerCase();
@@ -1055,6 +1076,10 @@ public class FakePasscodeRemoveChatsActivity extends BaseFragment implements Not
                                     if (found == 1) {
                                         if (object instanceof TLRPC.User) {
                                             TLRPC.User user = (TLRPC.User) object;
+                                            resultArrayNames.add(AndroidUtilities.generateSearchName(user.first_name, user.last_name, q));
+                                        } else if (object instanceof TLRPC.EncryptedChat){
+                                            TLRPC.EncryptedChat encryptedChat = (TLRPC.EncryptedChat) object;
+                                            TLRPC.User user = getMessagesController().getUser(encryptedChat.user_id);
                                             resultArrayNames.add(AndroidUtilities.generateSearchName(user.first_name, user.last_name, q));
                                         } else if (object instanceof TLRPC.Chat){
                                             TLRPC.Chat chat = (TLRPC.Chat) object;
