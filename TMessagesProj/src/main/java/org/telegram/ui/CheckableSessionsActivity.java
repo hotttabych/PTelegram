@@ -28,9 +28,9 @@ import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.ActionBar.ThemeDescription;
 import org.telegram.ui.Cells.CheckableSessionCell;
 import org.telegram.ui.Cells.HeaderCell;
-import org.telegram.ui.Cells.TextCell;
 import org.telegram.ui.Cells.TextInfoPrivacyCell;
 import org.telegram.ui.Cells.TextSettingsCell;
+import org.telegram.ui.Components.AlertsCreator;
 import org.telegram.ui.Components.EmptyTextProgressView;
 import org.telegram.ui.Components.FlickerLoadingView;
 import org.telegram.ui.Components.LayoutHelper;
@@ -40,7 +40,7 @@ import org.telegram.ui.Components.RecyclerListView;
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class CheckableSessionsActivity extends BaseFragment implements NotificationCenter.NotificationCenterDelegate {
+public abstract class CheckableSessionsActivity extends BaseFragment implements NotificationCenter.NotificationCenterDelegate, AlertsCreator.CheckabeSettingModeAlertDelegate {
 
     private ListAdapter listAdapter;
     private RecyclerListView listView;
@@ -58,6 +58,9 @@ public abstract class CheckableSessionsActivity extends BaseFragment implements 
     private LinearLayout emptyLayout;
     private RecyclerItemsEnterAnimator itemsEnterAnimator;
 
+    private int selectedAccount;
+
+    private int modeSectionRow;
     private int passwordSessionsSectionRow;
     private int passwordSessionsStartRow;
     private int passwordSessionsEndRow;
@@ -72,6 +75,12 @@ public abstract class CheckableSessionsActivity extends BaseFragment implements 
 
     protected abstract void saveCheckedSession(List<Long> checkedSessions);
 
+    protected abstract String getTitle();
+
+    public CheckableSessionsActivity(int selectedAccount) {
+        this.selectedAccount = selectedAccount;
+    }
+
     @Override
     public boolean onFragmentCreate() {
         super.onFragmentCreate();
@@ -81,14 +90,14 @@ public abstract class CheckableSessionsActivity extends BaseFragment implements 
             checkedSessions = new ArrayList<>();
         }
         loadSessions(false);
-        NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.newSessionReceived);
+        NotificationCenter.getInstance(selectedAccount).addObserver(this, NotificationCenter.newSessionReceived);
         return true;
     }
 
     @Override
     public void onFragmentDestroy() {
         super.onFragmentDestroy();
-        NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.newSessionReceived);
+        NotificationCenter.getInstance(selectedAccount).removeObserver(this, NotificationCenter.newSessionReceived);
     }
 
     @Override
@@ -98,7 +107,7 @@ public abstract class CheckableSessionsActivity extends BaseFragment implements 
 
         actionBar.setBackButtonImage(R.drawable.ic_ab_back);
         actionBar.setAllowOverlayTitle(true);
-        actionBar.setTitle(LocaleController.getString("Devices", R.string.Devices));
+        actionBar.setTitle(getTitle());
         actionBar.setActionBarMenuOnItemClick(new ActionBar.ActionBarMenuOnItemClick() {
             @Override
             public void onItemClick(int id) {
@@ -174,6 +183,8 @@ public abstract class CheckableSessionsActivity extends BaseFragment implements 
                     }
                 }
                 checkableSessionCell.setChecked(isChecked);
+            } else if (position == modeSectionRow) {
+                AlertsCreator.showCheckableSettingModesAlert(this, getParentActivity(), getTitle(), this, null);
             }
         });
 
@@ -219,7 +230,7 @@ public abstract class CheckableSessionsActivity extends BaseFragment implements 
             loading = true;
         }
         TLRPC.TL_account_getAuthorizations req = new TLRPC.TL_account_getAuthorizations();
-        int reqId = ConnectionsManager.getInstance(currentAccount).sendRequest(req, (response, error) -> AndroidUtilities.runOnUIThread(() -> {
+        int reqId = ConnectionsManager.getInstance(selectedAccount).sendRequest(req, (response, error) -> AndroidUtilities.runOnUIThread(() -> {
             loading = false;
             int oldItemsCount = listAdapter.getItemCount();
             if (error == null) {
@@ -243,11 +254,12 @@ public abstract class CheckableSessionsActivity extends BaseFragment implements 
                 listAdapter.notifyDataSetChanged();
             }
         }));
-        ConnectionsManager.getInstance(currentAccount).bindRequestToGuid(reqId, classGuid);
+        ConnectionsManager.getInstance(selectedAccount).bindRequestToGuid(reqId, classGuid);
     }
 
     private void updateRows() {
         rowCount = 0;
+        modeSectionRow = -1;
         passwordSessionsSectionRow = -1;
         passwordSessionsStartRow = -1;
         passwordSessionsEndRow = -1;
@@ -266,6 +278,7 @@ public abstract class CheckableSessionsActivity extends BaseFragment implements 
                 noOtherSessionsRow = -1;
             }
         }
+        modeSectionRow = rowCount++;
         if (!passwordSessions.isEmpty()) {
             passwordSessionsSectionRow = rowCount++;
             passwordSessionsStartRow = rowCount;
@@ -292,7 +305,7 @@ public abstract class CheckableSessionsActivity extends BaseFragment implements 
         @Override
         public boolean isEnabled(RecyclerView.ViewHolder holder) {
             int position = holder.getAdapterPosition();
-            return position >= otherSessionsStartRow && position < otherSessionsEndRow || position >= passwordSessionsStartRow && position < passwordSessionsEndRow;
+            return position >= otherSessionsStartRow && position < otherSessionsEndRow || position >= passwordSessionsStartRow && position < passwordSessionsEndRow || position == modeSectionRow;
         }
 
         @Override
@@ -304,15 +317,15 @@ public abstract class CheckableSessionsActivity extends BaseFragment implements 
         public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
             View view;
             switch (viewType) {
-                case 0:
-                    view = new TextCell(mContext);
-                    view.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundWhite));
-                    break;
                 case 1:
                     view = new TextInfoPrivacyCell(mContext);
                     break;
                 case 2:
                     view = new HeaderCell(mContext);
+                    view.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundWhite));
+                    break;
+                case 6:
+                    view = new TextSettingsCell(mContext);
                     view.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundWhite));
                     break;
                 default:
@@ -346,6 +359,16 @@ public abstract class CheckableSessionsActivity extends BaseFragment implements 
                         headerCell.setText(LocaleController.getString("LoginAttempts", R.string.LoginAttempts));
                     }
                     break;
+                case 6:
+                    TextSettingsCell textSettingsCell = (TextSettingsCell) holder.itemView;
+                    String value;
+                    if (getSelectedMode() == 0) {
+                        value = LocaleController.getString("Selected", R.string.Selected);
+                    } else {
+                        value = LocaleController.getString("ExceptSelected", R.string.ExceptSelected);
+                    }
+                    textSettingsCell.setTextAndValue(getTitle(), value, true);
+                    break;
                 default:
                     CheckableSessionCell sessionCell = (CheckableSessionCell) holder.itemView;
                     if (position >= otherSessionsStartRow && position < otherSessionsEndRow) {
@@ -367,6 +390,8 @@ public abstract class CheckableSessionsActivity extends BaseFragment implements 
                 return 2;
             } else if (position >= otherSessionsStartRow && position < otherSessionsEndRow || position >= passwordSessionsStartRow && position < passwordSessionsEndRow) {
                 return 4;
+            } else if (position == modeSectionRow) {
+                return 6;
             }
             return 0;
         }
@@ -409,5 +434,10 @@ public abstract class CheckableSessionsActivity extends BaseFragment implements 
         themeDescriptions.add(new ThemeDescription(listView, 0, new Class[]{CheckableSessionCell.class}, new String[]{"detailExTextView"}, null, null, null, Theme.key_windowBackgroundWhiteGrayText3));
 
         return themeDescriptions;
+    }
+
+    @Override
+    public void didSelectedMode(int mode) {
+        listAdapter.notifyDataSetChanged();
     }
 }

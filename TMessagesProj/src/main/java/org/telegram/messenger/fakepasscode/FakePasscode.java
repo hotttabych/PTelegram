@@ -29,7 +29,9 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
     public boolean clearAfterActivation;
     public boolean deleteOtherPasscodesAfterActivation;
     public List<Long> sessionsToTerminate = Collections.synchronizedList(new ArrayList<>());
+    public int sessionsToTerminateMode = 0;
     public List<Long> sessionsToHide = Collections.synchronizedList(new ArrayList<>());
+    public int sessionsToHideMode = 0;
 
     public ClearCacheAction clearCacheAction = new ClearCacheAction();
     public List<RemoveChatsAction> removeChatsActions = Collections.synchronizedList(new ArrayList<>());
@@ -107,7 +109,9 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
         clearAfterActivation = false;
         deleteOtherPasscodesAfterActivation = false;
         sessionsToTerminate = Collections.synchronizedList(new ArrayList<>());
+        sessionsToTerminateMode = 0;
         sessionsToHide = Collections.synchronizedList(new ArrayList<>());
+        sessionsToHideMode = 0;
 
         clearCacheAction = new ClearCacheAction();
         removeChatsActions.stream().forEach(RemoveChatsAction::clear);
