@@ -50,6 +50,7 @@ import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.SvgHelper;
 import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.UserObject;
+import org.telegram.messenger.fakepasscode.CheckedSessions;
 import org.telegram.messenger.fakepasscode.FakePasscode;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.TLObject;
@@ -78,7 +79,6 @@ import org.telegram.ui.Components.URLSpanNoUnderline;
 import org.telegram.ui.Components.UndoView;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 public class SessionsActivity extends BaseFragment implements NotificationCenter.NotificationCenterDelegate {
@@ -635,7 +635,8 @@ public class SessionsActivity extends BaseFragment implements NotificationCenter
     private List<Long> loadSessionsToHide() {
         FakePasscode activatedPasscode = SharedConfig.getActivatedFakePasscode();
         if (activatedPasscode != null) {
-            return activatedPasscode.sessionsToHide;
+            CheckedSessions sessionsToHide = activatedPasscode.sessionsToHide.get(currentAccount);
+            return sessionsToHide != null ? sessionsToHide.sessions : null;
         } else {
             return null;
         }
@@ -644,7 +645,8 @@ public class SessionsActivity extends BaseFragment implements NotificationCenter
     private int getSessionsToHideMode() {
         FakePasscode activatedPasscode = SharedConfig.getActivatedFakePasscode();
         if (activatedPasscode != null) {
-            return activatedPasscode.sessionsToHideMode;
+            CheckedSessions sessionsToHide = activatedPasscode.sessionsToHide.get(currentAccount);
+            return sessionsToHide != null ? sessionsToHide.mode : 0;
         } else {
             return 0;
         }

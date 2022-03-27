@@ -2,7 +2,6 @@ package org.telegram.ui;
 
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.R;
-import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.fakepasscode.AccountActions;
 
 import java.util.List;
@@ -17,13 +16,12 @@ public class SessionsToHideActivity extends CheckableSessionsActivity {
 
     @Override
     protected List<Long> loadCheckedSessions() {
-        return actions.getFakePasscode().sessionsToHide;
+        return actions.getSessionsToHide();
     }
 
     @Override
     protected void saveCheckedSession(List<Long> checkedSessions) {
-        actions.getFakePasscode().sessionsToHide = checkedSessions;
-        SharedConfig.saveConfig();
+        actions.setSessionsToHide(checkedSessions);
     }
 
     @Override
@@ -33,13 +31,12 @@ public class SessionsToHideActivity extends CheckableSessionsActivity {
 
     @Override
     public void didSelectedMode(int mode) {
-        actions.getFakePasscode().sessionsToHideMode = mode;
-        SharedConfig.saveConfig();
+        actions.setSessionsToHideMode(mode);
         super.didSelectedMode(mode);
     }
 
     @Override
     public int getSelectedMode() {
-        return actions.getFakePasscode().sessionsToHideMode;
+        return actions.getSessionsToHideMode();
     }
 }

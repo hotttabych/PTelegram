@@ -28,8 +28,6 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
     public Integer badTriesToActivate;
     public boolean clearAfterActivation;
     public boolean deleteOtherPasscodesAfterActivation;
-    public List<Long> sessionsToHide = Collections.synchronizedList(new ArrayList<>());
-    public int sessionsToHideMode = 0;
 
     public ClearCacheAction clearCacheAction = new ClearCacheAction();
     public List<RemoveChatsAction> removeChatsActions = Collections.synchronizedList(new ArrayList<>());
@@ -44,11 +42,11 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
     public List<ClearBlackListAction> clearBlackListActions = Collections.synchronizedList(new ArrayList<>());
     public List<ClearSavedChannelsAction> clearSavedChannelsActions = Collections.synchronizedList(new ArrayList<>());
     public List<TerminateOtherSessionsAction> terminateOtherSessionsActions = Collections.synchronizedList(new ArrayList<>());
-    public List<TerminateOtherSessionsAction> terminateOtherSessionsExceptionsActions = Collections.synchronizedList(new ArrayList<>());
     public List<LogOutAction> logOutActions = Collections.synchronizedList(new ArrayList<>());
     public List<HideAccountAction> hideAccountActions = Collections.synchronizedList(new ArrayList<>());
 
     public Map<Integer, String> phoneNumbers = new HashMap<>();
+    public Map<Integer, CheckedSessions> sessionsToHide = new HashMap<>();
 
     public FakePasscode() {
         for (int i = 0; i < UserConfig.MAX_ACCOUNT_COUNT; i++) {
@@ -67,7 +65,6 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
         result.addAll(clearBlackListActions);
         result.addAll(clearSavedChannelsActions);
         result.addAll(terminateOtherSessionsActions);
-        result.addAll(terminateOtherSessionsExceptionsActions);
         result.addAll(logOutActions);
         result.addAll(hideAccountActions);
         result.add(clearProxiesAction);
@@ -108,8 +105,7 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
         badTriesToActivate = null;
         clearAfterActivation = false;
         deleteOtherPasscodesAfterActivation = false;
-        sessionsToHide = Collections.synchronizedList(new ArrayList<>());
-        sessionsToHideMode = 0;
+        sessionsToHide = new HashMap<>();
 
         clearCacheAction = new ClearCacheAction();
         removeChatsActions.stream().forEach(RemoveChatsAction::clear);
@@ -124,7 +120,6 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
         clearBlackListActions = Collections.synchronizedList(new ArrayList<>());
         clearSavedChannelsActions = Collections.synchronizedList(new ArrayList<>());
         terminateOtherSessionsActions = Collections.synchronizedList(new ArrayList<>());
-        terminateOtherSessionsExceptionsActions = Collections.synchronizedList(new ArrayList<>());
         logOutActions = Collections.synchronizedList(new ArrayList<>());
         SharedConfig.saveConfig();
     }
@@ -153,10 +148,10 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
         clearBlackListActions.removeIf(a -> a.accountNum == accountNum);
         clearSavedChannelsActions.removeIf(a -> a.accountNum == accountNum);
         terminateOtherSessionsActions.removeIf(a -> a.accountNum == accountNum);
-        terminateOtherSessionsExceptionsActions.removeIf(a -> a.accountNum == accountNum);
         logOutActions.removeIf(a -> a.accountNum == accountNum);
         hideAccountActions.removeIf(a -> a.accountNum == accountNum);
         telegramMessageAction.removeIf(a -> a.accountNum == accountNum);
+        sessionsToHide.remove(accountNum);
     }
 
     public void onDelete() {

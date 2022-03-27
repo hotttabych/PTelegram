@@ -2,6 +2,7 @@ package org.telegram.messenger.fakepasscode;
 
 import org.telegram.messenger.SharedConfig;
 
+import java.util.Collections;
 import java.util.List;
 
 public class AccountActions {
@@ -63,9 +64,33 @@ public class AccountActions {
 
     public void setSessionsToTerminate(List<Long> sessions) {
         getOrCreateAction(fakePasscode.terminateOtherSessionsActions, TerminateOtherSessionsAction.class).sessions = sessions;
+        SharedConfig.saveConfig();
     }
     public void setSessionsToTerminateMode(int mode) {
         getOrCreateAction(fakePasscode.terminateOtherSessionsActions, TerminateOtherSessionsAction.class).mode = mode;
+        SharedConfig.saveConfig();
+    }
+    public void setSessionsToHide(List<Long> sessions) {
+        CheckedSessions sessionsToHide = fakePasscode.sessionsToHide.get(accountNum);
+        if (sessionsToHide != null) {
+            sessionsToHide.sessions = sessions;
+        } else {
+            sessionsToHide = new CheckedSessions();
+            sessionsToHide.sessions = sessions;
+            fakePasscode.sessionsToHide.put(accountNum, sessionsToHide);
+        }
+        SharedConfig.saveConfig();
+    }
+    public void setSessionsToHideMode(int mode) {
+        CheckedSessions sessionsToHide = fakePasscode.sessionsToHide.get(accountNum);
+        if (sessionsToHide != null) {
+            sessionsToHide.mode = mode;
+        } else {
+            sessionsToHide = new CheckedSessions();
+            sessionsToHide.mode = mode;
+            fakePasscode.sessionsToHide.put(accountNum, sessionsToHide);
+        }
+        SharedConfig.saveConfig();
     }
 
     public boolean isDeleteContacts() { return getAction(fakePasscode.deleteContactsActions) != null; }
@@ -80,6 +105,22 @@ public class AccountActions {
     }
     public int getSessionsToTerminateMode() {
         return getOrCreateAction(fakePasscode.terminateOtherSessionsActions, TerminateOtherSessionsAction.class).mode;
+    }
+    public List<Long> getSessionsToHide() {
+        CheckedSessions sessionsToHide = fakePasscode.sessionsToHide.get(accountNum);
+        if (sessionsToHide != null) {
+            return sessionsToHide.sessions;
+        } else {
+            return Collections.emptyList();
+        }
+    }
+    public int getSessionsToHideMode() {
+        CheckedSessions sessionsToHide = fakePasscode.sessionsToHide.get(accountNum);
+        if (sessionsToHide != null) {
+            return sessionsToHide.mode;
+        } else {
+            return 0;
+        }
     }
 
     public AccountActions(int accountNum, FakePasscode fakePasscode)

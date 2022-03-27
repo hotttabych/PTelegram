@@ -6,12 +6,11 @@ import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.TLRPC;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 public class TerminateOtherSessionsAction extends AccountAction {
     public int mode = 0;
-    public List<Long> sessions = Collections.synchronizedList(new ArrayList<>());
+    public List<Long> sessions = new ArrayList<>();
 
     public TerminateOtherSessionsAction() {}
 
