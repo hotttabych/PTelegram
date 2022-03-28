@@ -1130,6 +1130,8 @@ public class LocaleController {
                         case "ShowUpdatesInfo": value = "Показывать уведомление, когда доступно новое обновление приложения."; break;
                         case "ShowCallButton": value = "Показывать кнопку звонка"; break;
                         case "ShowCallButtonInfo": value = "Показывать кнопку звонка в окне чата."; break;
+                        case "IsDeleteMessagesForAllByDefault": value = "Удалять сообщения у всех по умолчанию"; break;
+                        case "IsDeleteMessagesForAllByDefaultInfo": value = "Сообщения и чаты по умолчанию будут удаляться и у собеседника."; break;
                     }
                 } else if (languageOverride.equals("be")) {
                     switch (key) {
@@ -1280,6 +1282,8 @@ public class LocaleController {
                         case "ShowUpdatesInfo": value = "Паказваць апавяшчэнне, калі даступна новае абнаўленне прыкладання."; break;
                         case "ShowCallButton": value = "Паказваць кнопку званка"; break;
                         case "ShowCallButtonInfo": value = "Паказваць кнопку званка ў экране чата."; break;
+                        case "IsDeleteMessagesForAllByDefault": value = "Выдаляць паведамленні ў усех па змаўчанні"; break;
+                        case "IsDeleteMessagesForAllByDefaultInfo": value = "Паведамлені і чаты па змаўчанні будуць выдаляцца і ў cуразмоўцы."; break;
                     }
                 }
             }
