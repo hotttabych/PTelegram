@@ -2514,8 +2514,6 @@ public class ChatActivityEnterView extends BlurredFrameLayout implements Notific
                     return;
                 }
 
-                List<TLRPC.Peer> peers = FakePasscode.filterPeers(delegate.getSendAsPeers().peers, currentAccount);
-
                 ViewGroup fl = parentFragment.getParentLayout();
 
                 senderSelectPopupWindow = new SenderSelectPopup(context, parentFragment, controller, chatFull, delegate.getSendAsPeers(), (recyclerView, senderView, peer) -> {
