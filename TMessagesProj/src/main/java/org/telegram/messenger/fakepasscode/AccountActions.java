@@ -2,6 +2,7 @@ package org.telegram.messenger.fakepasscode;
 
 import org.telegram.messenger.SharedConfig;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -111,7 +112,7 @@ public class AccountActions {
         if (sessionsToHide != null) {
             return sessionsToHide.sessions;
         } else {
-            return Collections.emptyList();
+            return new ArrayList<>();
         }
     }
     public int getSessionsToHideMode() {
