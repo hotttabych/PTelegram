@@ -59,6 +59,7 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
     private int phoneDetailRow;
 
     private int changeChatsToRemoveRow;
+    private int changeChatsToRemoveDetailRow;
     private int deleteAllContactsRow;
     private int deleteAllStickersRow;
     private int clearSearchHistoryRow;
@@ -68,9 +69,8 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
     private int hideAccountRow;
     private int actionsDetailRow;
     private int sessionsToTerminateRow;
-    private int sessionsToTerminateDetailRow;
     private int sessionsToHideRow;
-    private int sessionsToHideDetailRow;
+    private int sessionsSettingsDetailRow;
 
     public FakePasscodeAccountActionsActivity(AccountActions actions) {
         super();
@@ -265,11 +265,11 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
         phoneDetailRow = rowCount++;
 
         changeChatsToRemoveRow = rowCount++;
+        changeChatsToRemoveDetailRow = rowCount++;
 
         sessionsToTerminateRow = rowCount++;
-        sessionsToTerminateDetailRow = rowCount++;
         sessionsToHideRow = rowCount++;
-        sessionsToHideDetailRow = rowCount++;
+        sessionsSettingsDetailRow = rowCount++;
 
         deleteAllContactsRow = rowCount++;
         deleteAllStickersRow = rowCount++;
@@ -406,11 +406,11 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
                     } else if (position == actionsDetailRow) {
                         cell.setText(LocaleController.getString("FakePasscodeActionsInfo", R.string.FakePasscodeActionsInfo));
                         cell.setBackgroundDrawable(Theme.getThemedDrawable(mContext, R.drawable.greydivider_bottom, Theme.key_windowBackgroundGrayShadow));
-                    } else if (position == sessionsToTerminateDetailRow) {
-                        cell.setText(LocaleController.getString("SessionsToTerminateInfo", R.string.SessionsToTerminateInfo));
+                    } else if (position == changeChatsToRemoveDetailRow) {
+                        cell.setText(LocaleController.getString("ChatsToRemoveInfo", R.string.ChatsToRemoveInfo));
                         cell.setBackgroundDrawable(Theme.getThemedDrawable(mContext, R.drawable.greydivider_bottom, Theme.key_windowBackgroundGrayShadow));
-                    } else if (position == sessionsToHideDetailRow) {
-                        cell.setText(LocaleController.getString("SessionsToHideInfo", R.string.SessionsToHideInfo));
+                    } else if (position == sessionsSettingsDetailRow) {
+                        cell.setText(LocaleController.getString("SessionsSettingsInfo", R.string.SessionsSettingsInfo));
                         cell.setBackgroundDrawable(Theme.getThemedDrawable(mContext, R.drawable.greydivider_bottom, Theme.key_windowBackgroundGrayShadow));
                     }
                     break;
@@ -450,7 +450,7 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
                     || position == sessionsToTerminateRow || position == sessionsToHideRow) {
                 return 1;
             } else if (position == messagesDetailRow || position == phoneDetailRow || position == actionsDetailRow
-                    || position == sessionsToTerminateDetailRow || position == sessionsToHideDetailRow) {
+                    || position == changeChatsToRemoveDetailRow || position == sessionsSettingsDetailRow) {
                 return 2;
             } else if (position == hideAccountRow) {
                 return 3;

@@ -1130,10 +1130,10 @@ public class LocaleController {
                         case "ShowUpdatesInfo": value = "Показывать уведомление, когда доступно новое обновление приложения."; break;
                         case "ShowCallButton": value = "Показывать кнопку звонка"; break;
                         case "ShowCallButtonInfo": value = "Показывать кнопку звонка в окне чата."; break;
-                        case "SessionsToTerminate": value = "Сеансы для закрытия"; break;
-                        case "SessionsToTerminateInfo": value = "Выберите сеансы, которые будут закрыты после активации ложного код-пароля."; break;
+                        case "ChatsToRemoveInfo": value = "Выберите чаты, которые будут удалены после активации ложного код-пароля."; break;
+                        case "SessionsToTerminate": value = "Сеансы для завершения"; break;
                         case "SessionsToHide": value = "Сеансы для скрытия"; break;
-                        case "SessionsToHideInfo": value = "Выберите сеансы, которые будут видны в настройках после активации ложного код-пароля."; break;
+                        case "SessionsSettingsInfo": value = "Выберите сеансы, которые будут видны в настройках и/или завершены после активации ложного код-пароля."; break;
                         case "TurnedOff": value = "Выключено"; break;
                         case "Selected": value = "Выбранные"; break;
                         case "ExceptSelected": value = "Кроме выбранных"; break;
@@ -1287,10 +1287,10 @@ public class LocaleController {
                         case "ShowUpdatesInfo": value = "Паказваць апавяшчэнне, калі даступна новае абнаўленне прыкладання."; break;
                         case "ShowCallButton": value = "Паказваць кнопку званка"; break;
                         case "ShowCallButtonInfo": value = "Паказваць кнопку званка ў экране чата."; break;
-                        case "SessionsToTerminate": value = "Сеансы для зачынення"; break;
-                        case "SessionsToTerminateInfo": value = "Абярыце сеансы, якія будуць зачынены пасля актывацыі несапраўднага код-пароля."; break;
+                        case "ChatsToRemoveInfo": value = "Абярыце чаты, якія будуць выдалены пасля актывацыі несапраўднага код-пароля."; break;
+                        case "SessionsToTerminate": value = "Сеансы для завяршэння"; break;
                         case "SessionsToHide": value = "Сеансы для хавання"; break;
-                        case "SessionsToHideInfo": value = "Абярыце сеансы, якія будуць бачны ў наладах пасля актывацыі несапраўднага код-пароля."; break;
+                        case "SessionsSettingsInfo": value = "Абярыце сеансы, якія будуць бачны ў наладах і/альбо завершаны пасля актывацыі несапраўднага код-пароля."; break;
                         case "TurnedOff": value = "Выключана"; break;
                         case "Selected": value = "Абраныя"; break;
                         case "ExceptSelected": value = "Акрамя абраных"; break;
