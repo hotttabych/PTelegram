@@ -385,13 +385,19 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
                         textCell.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
                     } else if (position == changeChatsToRemoveRow) {
                         textCell.setTextAndValue(LocaleController.getString("ChatsToRemove", R.string.ChatsToRemove),
-                                String.valueOf(actions.getChatsToRemoveCount()), true);
+                                String.valueOf(actions.getChatsToRemoveCount()), false);
                         textCell.setTag(Theme.key_windowBackgroundWhiteBlackText);
                         textCell.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
                     }  else if (position == sessionsToTerminateRow) {
-                        textCell.setText(LocaleController.getString("SessionsToTerminate", R.string.SessionsToTerminate), false);
+                        textCell.setTextAndValue(LocaleController.getString("SessionsToTerminate", R.string.SessionsToTerminate),
+                                getSessionsLabel(actions.getSessionsToTerminateMode(), actions.getSessionsToTerminate().size()), true);
+                        textCell.setTag(Theme.key_windowBackgroundWhiteBlackText);
+                        textCell.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
                     }  else if (position == sessionsToHideRow) {
-                        textCell.setText(LocaleController.getString("SessionsToHide", R.string.SessionsToHide), false);
+                        textCell.setTextAndValue(LocaleController.getString("SessionsToHide", R.string.SessionsToHide),
+                                getSessionsLabel(actions.getSessionsToHideMode(), actions.getSessionsToHide().size()), false);
+                        textCell.setTag(Theme.key_windowBackgroundWhiteBlackText);
+                        textCell.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
                     }
                     break;
                 }
@@ -423,6 +429,14 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
                     }
                     break;
                 }
+            }
+        }
+
+        private String getSessionsLabel(int mode, int sessionsCount) {
+            if (sessionsCount > 0) {
+                return mode == 0 ? String.valueOf(sessionsCount) : String.format("-%d", sessionsCount);
+            } else {
+                return "0";
             }
         }
 
