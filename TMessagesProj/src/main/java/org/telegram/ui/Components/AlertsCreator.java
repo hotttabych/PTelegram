@@ -5352,9 +5352,9 @@ public class AlertsCreator {
                 cells[delegate.getSelectedMode()].setChecked(false, true);
                 Integer which = (Integer) v.getTag();
                 delegate.didSelectedMode(which);
+                builder.getDismissRunnable().run();
             });
         }
-        builder.setPositiveButton(LocaleController.getString("OK", R.string.OK), null);
         AlertDialog dialog = builder.create();
         fragment.showDialog(dialog);
 
