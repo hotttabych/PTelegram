@@ -1134,7 +1134,6 @@ public class LocaleController {
                         case "SessionsToTerminate": value = "Сеансы для завершения"; break;
                         case "SessionsToHide": value = "Сеансы для скрытия"; break;
                         case "SessionsSettingsInfo": value = "Выберите сеансы, которые будут видны в настройках и/или завершены после активации ложного код-пароля."; break;
-                        case "TurnedOff": value = "Выключено"; break;
                         case "Selected": value = "Выбранные"; break;
                         case "ExceptSelected": value = "Кроме выбранных"; break;
                     }
@@ -1291,7 +1290,6 @@ public class LocaleController {
                         case "SessionsToTerminate": value = "Сеансы для завяршэння"; break;
                         case "SessionsToHide": value = "Сеансы для хавання"; break;
                         case "SessionsSettingsInfo": value = "Абярыце сеансы, якія будуць бачны ў наладах і/альбо завершаны пасля актывацыі несапраўднага код-пароля."; break;
-                        case "TurnedOff": value = "Выключана"; break;
                         case "Selected": value = "Абраныя"; break;
                         case "ExceptSelected": value = "Акрамя абраных"; break;
                     }

@@ -364,12 +364,9 @@ public abstract class CheckableSessionsActivity extends BaseFragment implements 
                     String value;
                     switch (getSelectedMode()) {
                         case 0:
-                            value = LocaleController.getString("TurnedOff", R.string.TurnedOff);
-                            break;
-                        case 1:
                             value = LocaleController.getString("Selected", R.string.Selected);
                             break;
-                        case 2:
+                        case 1:
                             value = LocaleController.getString("ExceptSelected", R.string.ExceptSelected);
                             break;
                         default:

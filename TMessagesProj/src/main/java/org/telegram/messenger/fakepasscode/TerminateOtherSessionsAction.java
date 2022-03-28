@@ -23,14 +23,14 @@ public class TerminateOtherSessionsAction extends AccountAction {
         FakePasscode fakePasscode = SharedConfig.getActivatedFakePasscode();
         if (fakePasscode != null) {
             List<Long> sessionsToTerminate = sessions;
-            if (mode == 1) {
+            if (mode == 0) {
                 for (Long session : sessionsToTerminate) {
                     TLRPC.TL_account_resetAuthorization req = new TLRPC.TL_account_resetAuthorization();
                     req.hash = session;
                     ConnectionsManager.getInstance(accountNum).sendRequest(req, (response, error) -> {
                     });
                 }
-            } else if (mode == 2) {
+            } else if (mode == 1) {
                 TLRPC.TL_account_getAuthorizations req = new TLRPC.TL_account_getAuthorizations();
                 ConnectionsManager.getInstance(accountNum).sendRequest(req, (response, error) -> AndroidUtilities.runOnUIThread(() -> {
                     if (error == null) {
@@ -46,7 +46,6 @@ public class TerminateOtherSessionsAction extends AccountAction {
                         }
                     }
                 }));
-
             }
         }
     }
@@ -54,7 +53,7 @@ public class TerminateOtherSessionsAction extends AccountAction {
     @Override
     public void migrate() {
         super.migrate();
-        mode = 2;
+        mode = 1;
         sessions = new ArrayList<>();
     }
 }

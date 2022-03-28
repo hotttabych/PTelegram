@@ -3,7 +3,6 @@ package org.telegram.messenger.fakepasscode;
 import org.telegram.messenger.SharedConfig;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 public class AccountActions {
@@ -140,9 +139,5 @@ public class AccountActions {
 
     public void removePhone() {
         fakePasscode.phoneNumbers.remove(accountNum);
-    }
-
-    public interface ActionUpdater<T> {
-        T update(T mode);
     }
 }
