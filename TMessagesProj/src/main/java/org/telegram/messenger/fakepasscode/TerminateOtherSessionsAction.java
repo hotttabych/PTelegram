@@ -50,4 +50,11 @@ public class TerminateOtherSessionsAction extends AccountAction {
             }
         }
     }
+
+    @Override
+    public void migrate() {
+        super.migrate();
+        mode = 2;
+        sessions = new ArrayList<>();
+    }
 }
