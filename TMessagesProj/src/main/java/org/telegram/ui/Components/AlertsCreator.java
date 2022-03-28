@@ -5365,4 +5365,14 @@ public class AlertsCreator {
         void didSelectedMode(int mode);
         int getSelectedMode();
     }
+
+    public static AlertDialog showConfirmationDialog(BaseFragment fragment, Context context, String positiveMessage, Runnable onConfirm) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        builder.setMessage(LocaleController.formatString("AreYouSure", R.string.AreYouSure));
+        builder.setPositiveButton(positiveMessage, (dialogInterface, i) -> onConfirm.run());
+        builder.setNegativeButton(LocaleController.getString("Cancel", R.string.Cancel), null);
+        AlertDialog dialog = builder.create();
+        fragment.showDialog(dialog);
+        return dialog;
+    }
 }
