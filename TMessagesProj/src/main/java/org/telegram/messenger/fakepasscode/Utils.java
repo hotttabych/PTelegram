@@ -109,7 +109,9 @@ public class Utils {
                 }
                 for (int i = UserConfig.MAX_ACCOUNT_COUNT - 1; i >= 0; i--) {
                     if (UserConfig.getInstance(i).isClientActivated()) {
-                        DownloadController.getInstance(i).clearRecentDownloadedFiles();
+                        DownloadController controller = DownloadController.getInstance(i);
+                        controller.deleteRecentFiles(new ArrayList<>(controller.recentDownloadingFiles));
+                        controller.deleteRecentFiles(new ArrayList<>(controller.downloadingFiles));
                     }
                 }
                 if (callback != null) {
