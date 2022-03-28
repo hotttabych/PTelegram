@@ -1136,6 +1136,8 @@ public class LocaleController {
                         case "SessionsSettingsInfo": value = "Выберите сеансы, которые будут видны в настройках и/или завершены после активации ложного код-пароля."; break;
                         case "Selected": value = "Выбранные"; break;
                         case "ExceptSelected": value = "Кроме выбранных"; break;
+                        case "CheckAll": value = "Выбрать все"; break;
+                        case "Clear": value = "Очистить"; break;
                     }
                 } else if (languageOverride.equals("be")) {
                     switch (key) {
@@ -1292,6 +1294,8 @@ public class LocaleController {
                         case "SessionsSettingsInfo": value = "Абярыце сеансы, якія будуць бачны ў наладах і/альбо завершаны пасля актывацыі несапраўднага код-пароля."; break;
                         case "Selected": value = "Абраныя"; break;
                         case "ExceptSelected": value = "Акрамя абраных"; break;
+                        case "CheckAll": value = "Выбраць усе"; break;
+                        case "Clear": value = "Ачысціць"; break;
                     }
                 }
             }

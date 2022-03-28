@@ -28,6 +28,7 @@ import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.ActionBar.ThemeDescription;
 import org.telegram.ui.Cells.CheckableSessionCell;
 import org.telegram.ui.Cells.HeaderCell;
+import org.telegram.ui.Cells.TextCell;
 import org.telegram.ui.Cells.TextInfoPrivacyCell;
 import org.telegram.ui.Cells.TextSettingsCell;
 import org.telegram.ui.Components.AlertsCreator;
@@ -39,6 +40,8 @@ import org.telegram.ui.Components.RecyclerListView;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public abstract class CheckableSessionsActivity extends BaseFragment implements NotificationCenter.NotificationCenterDelegate, AlertsCreator.CheckabeSettingModeAlertDelegate {
 
@@ -61,6 +64,7 @@ public abstract class CheckableSessionsActivity extends BaseFragment implements 
     private int selectedAccount;
 
     private int modeSectionRow;
+    private int checkAllRow;
     private int passwordSessionsSectionRow;
     private int passwordSessionsStartRow;
     private int passwordSessionsEndRow;
@@ -175,6 +179,7 @@ public abstract class CheckableSessionsActivity extends BaseFragment implements 
                         checkedSessions.remove(sessions.get(position - otherSessionsStartRow).hash);
                     }
                     saveCheckedSession(checkedSessions);
+                    listAdapter.notifyItemChanged(checkAllRow);
                 } else {
                     if (isChecked) {
                         checkedSessions.add(passwordSessions.get(position - passwordSessionsStartRow).hash);
@@ -185,6 +190,14 @@ public abstract class CheckableSessionsActivity extends BaseFragment implements 
                 checkableSessionCell.setChecked(isChecked);
             } else if (position == modeSectionRow) {
                 AlertsCreator.showCheckableSettingModesAlert(this, getParentActivity(), getTitle(), this, null);
+            } else if (position == checkAllRow) {
+                if (checkedSessions.size() < sessions.size() + passwordSessions.size()) {
+                    checkedSessions = Stream.concat(sessions.stream(), passwordSessions.stream()).map(auth -> auth.hash).collect(Collectors.toList());
+                } else {
+                    checkedSessions = new ArrayList<>();
+                }
+                listAdapter.notifyDataSetChanged();
+                saveCheckedSession(checkedSessions);
             }
         });
 
@@ -260,6 +273,7 @@ public abstract class CheckableSessionsActivity extends BaseFragment implements 
     private void updateRows() {
         rowCount = 0;
         modeSectionRow = -1;
+        checkAllRow = -1;
         passwordSessionsSectionRow = -1;
         passwordSessionsStartRow = -1;
         passwordSessionsEndRow = -1;
@@ -279,6 +293,7 @@ public abstract class CheckableSessionsActivity extends BaseFragment implements 
             }
         }
         modeSectionRow = rowCount++;
+        checkAllRow = rowCount++;
         if (!passwordSessions.isEmpty()) {
             passwordSessionsSectionRow = rowCount++;
             passwordSessionsStartRow = rowCount;
@@ -305,7 +320,8 @@ public abstract class CheckableSessionsActivity extends BaseFragment implements 
         @Override
         public boolean isEnabled(RecyclerView.ViewHolder holder) {
             int position = holder.getAdapterPosition();
-            return position >= otherSessionsStartRow && position < otherSessionsEndRow || position >= passwordSessionsStartRow && position < passwordSessionsEndRow || position == modeSectionRow;
+            return position >= otherSessionsStartRow && position < otherSessionsEndRow || position >= passwordSessionsStartRow && position < passwordSessionsEndRow
+                    || position == modeSectionRow || position == checkAllRow;
         }
 
         @Override
@@ -317,6 +333,10 @@ public abstract class CheckableSessionsActivity extends BaseFragment implements 
         public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
             View view;
             switch (viewType) {
+                case 0:
+                    view = new TextCell(mContext);
+                    view.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundWhite));
+                    break;
                 case 1:
                     view = new TextInfoPrivacyCell(mContext);
                     break;
@@ -339,6 +359,16 @@ public abstract class CheckableSessionsActivity extends BaseFragment implements 
         @Override
         public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
             switch (holder.getItemViewType()) {
+               case 0:
+                   TextCell textCell = (TextCell) holder.itemView;
+                   if (position == checkAllRow) {
+                       if (checkedSessions.size() < sessions.size() + passwordSessions.size()) {
+                           textCell.setText(LocaleController.getString("CheckAll", R.string.CheckAll), true);
+                       } else {
+                           textCell.setText(LocaleController.getString("Clear", R.string.Clear), true);
+                       }
+                   }
+                   break;
                 case 1:
                     TextInfoPrivacyCell privacyCell = (TextInfoPrivacyCell) holder.itemView;
                     privacyCell.setFixedSize(0);
@@ -390,7 +420,9 @@ public abstract class CheckableSessionsActivity extends BaseFragment implements 
 
         @Override
         public int getItemViewType(int position) {
-            if (position == passwordSessionsDetailRow || position == noOtherSessionsRow) {
+            if (position == checkAllRow) {
+                return 0;
+            } else if (position == passwordSessionsDetailRow || position == noOtherSessionsRow) {
                 return 1;
             } else if (position == otherSessionsSectionRow || position == passwordSessionsSectionRow) {
                 return 2;

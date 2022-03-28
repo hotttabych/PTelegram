@@ -5261,4 +5261,5 @@
     <string name="SessionsSettingsInfo">Choose sessions which will be visible in Settings and/or terminated on Fake Passcode Activation</string>
     <string name="Selected">Selected</string>
     <string name="ExceptSelected">Except selected</string>
+    <string name="CheckAll">Check all</string>
 </resources>
