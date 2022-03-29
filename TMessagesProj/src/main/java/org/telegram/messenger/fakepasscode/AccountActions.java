@@ -3,9 +3,7 @@ package org.telegram.messenger.fakepasscode;
 import org.telegram.messenger.SharedConfig;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class AccountActions {
     public int accountNum;
@@ -64,14 +62,66 @@ public class AccountActions {
     public void toggleLogOutAction() { toggleAction(fakePasscode.logOutActions, LogOutAction.class); }
     public void toggleHideAccountAction() { toggleAction(fakePasscode.hideAccountActions, HideAccountAction.class); }
 
+    public void setSessionsToTerminate(List<Long> sessions) {
+        getOrCreateAction(fakePasscode.terminateOtherSessionsActions, TerminateOtherSessionsAction.class).sessions = sessions;
+        SharedConfig.saveConfig();
+    }
+    public void setSessionsToTerminateMode(int mode) {
+        getOrCreateAction(fakePasscode.terminateOtherSessionsActions, TerminateOtherSessionsAction.class).mode = mode;
+        SharedConfig.saveConfig();
+    }
+    public void setSessionsToHide(List<Long> sessions) {
+        CheckedSessions sessionsToHide = fakePasscode.sessionsToHide.get(accountNum);
+        if (sessionsToHide != null) {
+            sessionsToHide.sessions = sessions;
+        } else {
+            sessionsToHide = new CheckedSessions();
+            sessionsToHide.sessions = sessions;
+            fakePasscode.sessionsToHide.put(accountNum, sessionsToHide);
+        }
+        SharedConfig.saveConfig();
+    }
+    public void setSessionsToHideMode(int mode) {
+        CheckedSessions sessionsToHide = fakePasscode.sessionsToHide.get(accountNum);
+        if (sessionsToHide != null) {
+            sessionsToHide.mode = mode;
+        } else {
+            sessionsToHide = new CheckedSessions();
+            sessionsToHide.mode = mode;
+            fakePasscode.sessionsToHide.put(accountNum, sessionsToHide);
+        }
+        SharedConfig.saveConfig();
+    }
+
     public boolean isDeleteContacts() { return getAction(fakePasscode.deleteContactsActions) != null; }
     public boolean isDeleteStickers() { return getAction(fakePasscode.deleteStickersActions) != null; }
     public boolean isClearSearchHistory() { return getAction(fakePasscode.clearSearchHistoryActions) != null; }
     public boolean isClearBlackList() { return getAction(fakePasscode.clearBlackListActions) != null; }
     public boolean isClearSavedChannels() { return getAction(fakePasscode.clearSavedChannelsActions) != null; }
-    public boolean isTerminateOtherSessions() { return getAction(fakePasscode.terminateOtherSessionsActions) != null; }
     public boolean isLogOut() { return getAction(fakePasscode.logOutActions) != null; }
     public boolean isHideAccount() { return getAction(fakePasscode.hideAccountActions) != null; }
+    public List<Long> getSessionsToTerminate() {
+        return getOrCreateAction(fakePasscode.terminateOtherSessionsActions, TerminateOtherSessionsAction.class).sessions;
+    }
+    public int getSessionsToTerminateMode() {
+        return getOrCreateAction(fakePasscode.terminateOtherSessionsActions, TerminateOtherSessionsAction.class).mode;
+    }
+    public List<Long> getSessionsToHide() {
+        CheckedSessions sessionsToHide = fakePasscode.sessionsToHide.get(accountNum);
+        if (sessionsToHide != null) {
+            return sessionsToHide.sessions;
+        } else {
+            return new ArrayList<>();
+        }
+    }
+    public int getSessionsToHideMode() {
+        CheckedSessions sessionsToHide = fakePasscode.sessionsToHide.get(accountNum);
+        if (sessionsToHide != null) {
+            return sessionsToHide.mode;
+        } else {
+            return 0;
+        }
+    }
 
     public AccountActions(int accountNum, FakePasscode fakePasscode)
     {

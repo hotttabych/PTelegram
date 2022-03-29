@@ -59,15 +59,18 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
     private int phoneDetailRow;
 
     private int changeChatsToRemoveRow;
+    private int changeChatsToRemoveDetailRow;
     private int deleteAllContactsRow;
     private int deleteAllStickersRow;
     private int clearSearchHistoryRow;
     private int clearBlackListRow;
     private int clearSavedChannelsRow;
-    private int terminateAllOtherSessionsRow;
     private int logOutRow;
     private int hideAccountRow;
     private int actionsDetailRow;
+    private int sessionsToTerminateRow;
+    private int sessionsToHideRow;
+    private int sessionsSettingsDetailRow;
 
     public FakePasscodeAccountActionsActivity(AccountActions actions) {
         super();
@@ -198,18 +201,6 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
                 TextCheckCell cell = (TextCheckCell) view;
                 actions.toggleClearSavedChannelsAction();
                 cell.setChecked(actions.isClearSavedChannels());
-            } else if (position == terminateAllOtherSessionsRow) {
-                TextCheckCell cell = (TextCheckCell) view;
-                actions.toggleTerminateOtherSessionsAction();
-                boolean terminate = actions.isTerminateOtherSessions();
-                cell.setChecked(terminate);
-                if (terminate) {
-                    AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
-                    builder.setTitle(LocaleController.getString("TerminateOtherSessionsWarningTitle", R.string.TerminateOtherSessionsWarningTitle));
-                    builder.setMessage(LocaleController.getString("TerminateOtherSessionsWarningMessage", R.string.TerminateOtherSessionsWarningMessage));
-                    builder.setPositiveButton(LocaleController.getString("OK", R.string.OK), null);
-                    showDialog(builder.create());
-                }
             } else if (position == logOutRow) {
                 TextCheckCell cell = (TextCheckCell) view;
                 actions.toggleLogOutAction();
@@ -246,6 +237,10 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
                 }
                 ContactsController.getInstance(actions.accountNum).checkAppAccount();
                 NotificationsController.getInstance(actions.accountNum).cleanupSystemSettings();
+            } else if (position == sessionsToTerminateRow) {
+                presentFragment(new SessionsToTerminateActivity(actions));
+            } else if (position == sessionsToHideRow) {
+                presentFragment(new SessionsToHideActivity(actions));
             }
         });
 
@@ -270,12 +265,17 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
         phoneDetailRow = rowCount++;
 
         changeChatsToRemoveRow = rowCount++;
+        changeChatsToRemoveDetailRow = rowCount++;
+
+        sessionsToTerminateRow = rowCount++;
+        sessionsToHideRow = rowCount++;
+        sessionsSettingsDetailRow = rowCount++;
+
         deleteAllContactsRow = rowCount++;
         deleteAllStickersRow = rowCount++;
         clearSearchHistoryRow = rowCount++;
         clearBlackListRow = rowCount++;
         clearSavedChannelsRow = rowCount++;
-        terminateAllOtherSessionsRow = rowCount++;
         logOutRow = rowCount++;
         if (!actions.isLogOut()) {
             hideAccountRow = rowCount++;
@@ -360,9 +360,6 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
                     } else if (position == clearSavedChannelsRow) {
                         textCell.setTextAndCheck(LocaleController.getString("ClearSavedChannels", R.string.ClearSavedChannels),
                                 actions.isClearSavedChannels(), true);
-                    } else if (position == terminateAllOtherSessionsRow) {
-                        textCell.setTextAndCheck(LocaleController.getString("TerminateAllOtherSessionsOnFakeLogin", R.string.TerminateAllOtherSessionsOnFakeLogin),
-                                actions.isTerminateOtherSessions(), true);
                     } else if (position == logOutRow) {
                         textCell.setTextAndCheck(LocaleController.getString("LogOutOnFakeLogin", R.string.LogOutOnFakeLogin),
                                 actions.isLogOut(), false);
@@ -388,7 +385,17 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
                         textCell.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
                     } else if (position == changeChatsToRemoveRow) {
                         textCell.setTextAndValue(LocaleController.getString("ChatsToRemove", R.string.ChatsToRemove),
-                                String.valueOf(actions.getChatsToRemoveCount()), true);
+                                String.valueOf(actions.getChatsToRemoveCount()), false);
+                        textCell.setTag(Theme.key_windowBackgroundWhiteBlackText);
+                        textCell.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
+                    }  else if (position == sessionsToTerminateRow) {
+                        textCell.setTextAndValue(LocaleController.getString("SessionsToTerminate", R.string.SessionsToTerminate),
+                                getSessionsLabel(actions.getSessionsToTerminateMode(), actions.getSessionsToTerminate().size()), true);
+                        textCell.setTag(Theme.key_windowBackgroundWhiteBlackText);
+                        textCell.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
+                    }  else if (position == sessionsToHideRow) {
+                        textCell.setTextAndValue(LocaleController.getString("SessionsToHide", R.string.SessionsToHide),
+                                getSessionsLabel(actions.getSessionsToHideMode(), actions.getSessionsToHide().size()), false);
                         textCell.setTag(Theme.key_windowBackgroundWhiteBlackText);
                         textCell.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
                     }
@@ -405,6 +412,12 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
                     } else if (position == actionsDetailRow) {
                         cell.setText(LocaleController.getString("FakePasscodeActionsInfo", R.string.FakePasscodeActionsInfo));
                         cell.setBackgroundDrawable(Theme.getThemedDrawable(mContext, R.drawable.greydivider_bottom, Theme.key_windowBackgroundGrayShadow));
+                    } else if (position == changeChatsToRemoveDetailRow) {
+                        cell.setText(LocaleController.getString("ChatsToRemoveInfo", R.string.ChatsToRemoveInfo));
+                        cell.setBackgroundDrawable(Theme.getThemedDrawable(mContext, R.drawable.greydivider_bottom, Theme.key_windowBackgroundGrayShadow));
+                    } else if (position == sessionsSettingsDetailRow) {
+                        cell.setText(LocaleController.getString("SessionsSettingsInfo", R.string.SessionsSettingsInfo));
+                        cell.setBackgroundDrawable(Theme.getThemedDrawable(mContext, R.drawable.greydivider_bottom, Theme.key_windowBackgroundGrayShadow));
                     }
                     break;
                 }
@@ -416,6 +429,14 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
                     }
                     break;
                 }
+            }
+        }
+
+        private String getSessionsLabel(int mode, int sessionsCount) {
+            if (sessionsCount > 0) {
+                return mode == 0 ? String.valueOf(sessionsCount) : String.format("-%d", sessionsCount);
+            } else {
+                return "0";
             }
         }
 
@@ -437,12 +458,13 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
         @Override
         public int getItemViewType(int position) {
             if (position == deleteAllContactsRow || position == deleteAllStickersRow || position == clearSearchHistoryRow
-                    || position == clearBlackListRow || position == clearSavedChannelsRow || position == terminateAllOtherSessionsRow
-                    || position == logOutRow) {
+                    || position == clearBlackListRow || position == clearSavedChannelsRow || position == logOutRow) {
                 return 0;
-            } else if (position == changeChatsToRemoveRow || position == changePhoneRow ||  position == changeTelegramMessageRow) {
+            } else if (position == changeChatsToRemoveRow || position == changePhoneRow ||  position == changeTelegramMessageRow
+                    || position == sessionsToTerminateRow || position == sessionsToHideRow) {
                 return 1;
-            } else if (position == messagesDetailRow || position == phoneDetailRow || position == actionsDetailRow) {
+            } else if (position == messagesDetailRow || position == phoneDetailRow || position == actionsDetailRow
+                    || position == changeChatsToRemoveDetailRow || position == sessionsSettingsDetailRow) {
                 return 2;
             } else if (position == hideAccountRow) {
                 return 3;

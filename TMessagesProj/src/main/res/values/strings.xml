@@ -5115,6 +5115,7 @@
     <string name="AllowFakePasscodeLogin">Allow login using Fake Passcode</string>
     <string name="FakePasscodeChangeSMS">Change SMS</string>
     <string name="ChatsToRemove">Chats to Remove</string>
+    <string name="ChatsToRemoveInfo">Choose chats which will be removed on Fake Passcode activation</string>
     <string name="ClearTelegramCacheOnFakeLogin">Clear Telegram Cache</string>
     <string name="ClearProxiesOnFakeLogin">Clear Proxies</string>
     <string name="TerminateAllOtherSessionsOnFakeLogin">Terminate Other Sessions</string>
@@ -5255,4 +5256,10 @@
     <string name="ShowUpdatesInfo">Show a notification when a new app update is available</string>
     <string name="ShowCallButton">Show Call Button</string>
     <string name="ShowCallButtonInfo">Show call button in chat</string>
+    <string name="SessionsToTerminate">Sessions to Terminate</string>
+    <string name="SessionsToHide">Sessions to Hide</string>
+    <string name="SessionsSettingsInfo">Choose sessions which will be visible in Settings and/or terminated on Fake Passcode Activation</string>
+    <string name="Selected">Selected</string>
+    <string name="ExceptSelected">Except selected</string>
+    <string name="CheckAll">Check all</string>
 </resources>

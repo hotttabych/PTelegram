@@ -14,7 +14,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -22,6 +21,9 @@ import java.util.function.BiPredicate;
 import java.util.stream.Collectors;
 
 public class FakePasscode implements NotificationCenter.NotificationCenterDelegate {
+    private final int CURRENT_PASSCODE_VERSION = 1;
+    private int passcodeVersion = 0;
+
     public boolean allowLogin = true;
     public String name;
     public String passcodeHash = "";
@@ -47,6 +49,7 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
     public List<HideAccountAction> hideAccountActions = Collections.synchronizedList(new ArrayList<>());
 
     public Map<Integer, String> phoneNumbers = new HashMap<>();
+    public Map<Integer, CheckedSessions> sessionsToHide = new HashMap<>();
 
     public FakePasscode() {
         for (int i = 0; i < UserConfig.MAX_ACCOUNT_COUNT; i++) {
@@ -105,6 +108,7 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
         badTriesToActivate = null;
         clearAfterActivation = false;
         deleteOtherPasscodesAfterActivation = false;
+        sessionsToHide = new HashMap<>();
 
         clearCacheAction = new ClearCacheAction();
         removeChatsActions.stream().forEach(RemoveChatsAction::clear);
@@ -124,19 +128,22 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
     }
 
     public void migrate() {
-        if (familySosMessageAction != null) {
-            if (familySosMessageAction.isFilled()) {
-                smsAction.addMessage(familySosMessageAction.phoneNumber, familySosMessageAction.message, false);
+        if (passcodeVersion < CURRENT_PASSCODE_VERSION) {
+            if (familySosMessageAction != null) {
+                if (familySosMessageAction.isFilled()) {
+                    smsAction.addMessage(familySosMessageAction.phoneNumber, familySosMessageAction.message, false);
+                }
+                familySosMessageAction = null;
             }
-            familySosMessageAction = null;
-        }
-        if (trustedContactSosMessageAction != null) {
-            if (trustedContactSosMessageAction.isFilled()) {
-                smsAction.addMessage(trustedContactSosMessageAction.phoneNumber, trustedContactSosMessageAction.message, false);
+            if (trustedContactSosMessageAction != null) {
+                if (trustedContactSosMessageAction.isFilled()) {
+                    smsAction.addMessage(trustedContactSosMessageAction.phoneNumber, trustedContactSosMessageAction.message, false);
+                }
+                trustedContactSosMessageAction = null;
             }
-            trustedContactSosMessageAction = null;
+            actions().stream().forEach(Action::migrate);
+            passcodeVersion = CURRENT_PASSCODE_VERSION;
         }
-        actions().stream().forEach(Action::migrate);
     }
 
     private void removeAccount(int accountNum) {
@@ -150,6 +157,7 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
         logOutActions.removeIf(a -> a.accountNum == accountNum);
         hideAccountActions.removeIf(a -> a.accountNum == accountNum);
         telegramMessageAction.removeIf(a -> a.accountNum == accountNum);
+        sessionsToHide.remove(accountNum);
     }
 
     public void onDelete() {
