@@ -17,12 +17,14 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import org.telegram.messenger.AndroidUtilities;
+import org.telegram.messenger.ContactsController;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.R;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.ActionBar;
+import org.telegram.ui.ActionBar.AlertDialog;
 import org.telegram.ui.ActionBar.BaseFragment;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.ActionBar.ThemeDescription;
@@ -191,13 +193,18 @@ public abstract class CheckableSessionsActivity extends BaseFragment implements 
             } else if (position == modeSectionRow) {
                 AlertsCreator.showCheckableSettingModesAlert(this, getParentActivity(), getTitle(), this, null);
             } else if (position == checkAllRow) {
-                if (checkedSessions.size() < sessions.size() + passwordSessions.size()) {
-                    checkedSessions = Stream.concat(sessions.stream(), passwordSessions.stream()).map(auth -> auth.hash).collect(Collectors.toList());
-                } else {
-                    checkedSessions = new ArrayList<>();
-                }
-                listAdapter.notifyDataSetChanged();
-                saveCheckedSession(checkedSessions);
+                AlertsCreator.showConfirmationDialog(this, context, checkedSessions.size() > 0
+                        ? LocaleController.getString("Clear", R.string.Clear)
+                        : LocaleController.getString("CheckAll", R.string.CheckAll),
+                () -> {
+                    if (checkedSessions.size() > 0) {
+                        checkedSessions = new ArrayList<>();
+                    } else {
+                        checkedSessions = Stream.concat(sessions.stream(), passwordSessions.stream()).map(auth -> auth.hash).collect(Collectors.toList());
+                    }
+                    listAdapter.notifyDataSetChanged();
+                    saveCheckedSession(checkedSessions);
+                });
             }
         });
 
@@ -362,10 +369,10 @@ public abstract class CheckableSessionsActivity extends BaseFragment implements 
                case 0:
                    TextCell textCell = (TextCell) holder.itemView;
                    if (position == checkAllRow) {
-                       if (checkedSessions.size() < sessions.size() + passwordSessions.size()) {
-                           textCell.setText(LocaleController.getString("CheckAll", R.string.CheckAll), true);
-                       } else {
+                       if (checkedSessions.size() > 0) {
                            textCell.setText(LocaleController.getString("Clear", R.string.Clear), true);
+                       } else {
+                           textCell.setText(LocaleController.getString("CheckAll", R.string.CheckAll), true);
                        }
                    }
                    break;

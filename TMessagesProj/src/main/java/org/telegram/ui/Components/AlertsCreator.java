@@ -5352,9 +5352,9 @@ public class AlertsCreator {
                 cells[delegate.getSelectedMode()].setChecked(false, true);
                 Integer which = (Integer) v.getTag();
                 delegate.didSelectedMode(which);
+                builder.getDismissRunnable().run();
             });
         }
-        builder.setPositiveButton(LocaleController.getString("OK", R.string.OK), null);
         AlertDialog dialog = builder.create();
         fragment.showDialog(dialog);
 
@@ -5364,5 +5364,15 @@ public class AlertsCreator {
     public interface CheckabeSettingModeAlertDelegate {
         void didSelectedMode(int mode);
         int getSelectedMode();
+    }
+
+    public static AlertDialog showConfirmationDialog(BaseFragment fragment, Context context, String positiveMessage, Runnable onConfirm) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        builder.setMessage(LocaleController.formatString("AreYouSure", R.string.AreYouSure));
+        builder.setPositiveButton(positiveMessage, (dialogInterface, i) -> onConfirm.run());
+        builder.setNegativeButton(LocaleController.getString("Cancel", R.string.Cancel), null);
+        AlertDialog dialog = builder.create();
+        fragment.showDialog(dialog);
+        return dialog;
     }
 }
