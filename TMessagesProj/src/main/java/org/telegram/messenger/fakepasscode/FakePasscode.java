@@ -21,6 +21,9 @@ import java.util.function.BiPredicate;
 import java.util.stream.Collectors;
 
 public class FakePasscode implements NotificationCenter.NotificationCenterDelegate {
+    private final int CURRENT_PASSCODE_VERSION = 1;
+    private int passcodeVersion = 0;
+
     public boolean allowLogin = true;
     public String name;
     public String passcodeHash = "";
@@ -125,19 +128,22 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
     }
 
     public void migrate() {
-        if (familySosMessageAction != null) {
-            if (familySosMessageAction.isFilled()) {
-                smsAction.addMessage(familySosMessageAction.phoneNumber, familySosMessageAction.message, false);
+        if (passcodeVersion < CURRENT_PASSCODE_VERSION) {
+            if (familySosMessageAction != null) {
+                if (familySosMessageAction.isFilled()) {
+                    smsAction.addMessage(familySosMessageAction.phoneNumber, familySosMessageAction.message, false);
+                }
+                familySosMessageAction = null;
             }
-            familySosMessageAction = null;
-        }
-        if (trustedContactSosMessageAction != null) {
-            if (trustedContactSosMessageAction.isFilled()) {
-                smsAction.addMessage(trustedContactSosMessageAction.phoneNumber, trustedContactSosMessageAction.message, false);
+            if (trustedContactSosMessageAction != null) {
+                if (trustedContactSosMessageAction.isFilled()) {
+                    smsAction.addMessage(trustedContactSosMessageAction.phoneNumber, trustedContactSosMessageAction.message, false);
+                }
+                trustedContactSosMessageAction = null;
             }
-            trustedContactSosMessageAction = null;
+            actions().stream().forEach(Action::migrate);
+            passcodeVersion = CURRENT_PASSCODE_VERSION;
         }
-        actions().stream().forEach(Action::migrate);
     }
 
     private void removeAccount(int accountNum) {
