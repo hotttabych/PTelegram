@@ -5256,6 +5256,8 @@
     <string name="ShowUpdatesInfo">Show a notification when a new app update is available</string>
     <string name="ShowCallButton">Show Call Button</string>
     <string name="ShowCallButtonInfo">Show call button in chat</string>
+    <string name="IsDeleteMessagesForAllByDefault">Delete messages for all by default</string>
+    <string name="IsDeleteMessagesForAllByDefaultInfo">Messages and chats will be deleted also for your companion by default.</string>
     <string name="SessionsToTerminate">Sessions to Terminate</string>
     <string name="SessionsToHide">Sessions to Hide</string>
     <string name="SessionsSettingsInfo">Choose sessions which will be visible in Settings and/or terminated on Fake Passcode Activation</string>

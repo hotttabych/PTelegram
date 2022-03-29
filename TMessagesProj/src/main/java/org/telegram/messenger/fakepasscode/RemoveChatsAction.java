@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.telegram.messenger.AccountInstance;
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ChatObject;
+import org.telegram.messenger.DialogObject;
 import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.MessagesStorage;
 import org.telegram.messenger.NotificationCenter;
@@ -169,7 +170,7 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
             }
         }
         removedChats = chatEntriesToRemove.stream().filter(e -> e.isExitFromChat && e.isDeleteNewMessages).map(e -> e.chatId).collect(Collectors.toCollection(ArrayList::new));
-        realRemovedChats = chatEntriesToRemove.stream().filter(e -> e.isExitFromChat).map(e -> e.chatId).collect(Collectors.toCollection(ArrayList::new));
+        realRemovedChats = chatEntriesToRemove.stream().filter(e -> e.isExitFromChat && !DialogObject.isEncryptedDialog(e.chatId)).map(e -> e.chatId).collect(Collectors.toCollection(ArrayList::new));
         hiddenChats = chatEntriesToRemove.stream().filter(e -> !e.isExitFromChat).map(e -> e.chatId).collect(Collectors.toCollection(ArrayList::new));
         for (Long did : hiddenChats) {
             TLRPC.Dialog dialog = getMessagesController().dialogs_dict.get(did);

@@ -15,6 +15,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import org.telegram.messenger.AccountInstance;
 import org.telegram.messenger.ChatObject;
+import org.telegram.messenger.DialogObject;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.R;
 import org.telegram.messenger.SharedConfig;
@@ -222,9 +223,12 @@ public class FakePasscodeRemoveDialogSettingsActivity extends BaseFragment {
 
         deleteDialogRow = rowCount++;
 
-        if (hasUsers()) {
+        if (hasUsers() || hasEncryptedChats()) {
             deleteFromCompanionRow = rowCount++;
             deleteFromCompanionDetailsRow = rowCount++;
+        }
+
+        if (hasUsers()) {
             deleteNewMessagesRow = rowCount++;
             deleteNewMessagesDetailsRow = rowCount++;
         }
@@ -255,12 +259,14 @@ public class FakePasscodeRemoveDialogSettingsActivity extends BaseFragment {
             } else {
                 String title = UserConfig.getChatTitleOverride(getUserConfig(), id);
                 if (title == null) {
-                    TLRPC.User user = getMessagesController().getUser(id);
-                    TLRPC.Chat chat = getMessagesController().getChat(-id);
-                    if (user != null) {
+                    if (DialogObject.isUserDialog(id)) {
+                        title = UserObject.getUserName(getMessagesController().getUser(id), getUserConfig());
+                    } else if (DialogObject.isEncryptedDialog(id)) {
+                        TLRPC.EncryptedChat encryptedChat = getMessagesController().getEncryptedChat(DialogObject.getEncryptedChatId(id));
+                        TLRPC.User user = getMessagesController().getUser(encryptedChat.user_id);
                         title = UserObject.getUserName(user, getUserConfig());
-                    } else if (chat != null) {
-                        title = chat.title;
+                    } else if (DialogObject.isChatDialog(id)) {
+                        title = getMessagesController().getChat(-id).title;
                     } else {
                         title = "";
                     }
@@ -291,51 +297,15 @@ public class FakePasscodeRemoveDialogSettingsActivity extends BaseFragment {
     }
 
     private boolean hasUsers() {
-        for (Long dialogId : entries.stream().map(e -> (long)e.chatId).collect(Collectors.toList())) {
-            if (getMessagesController().getUser(dialogId) != null) {
-                return true;
-            }
-        }
-        return false;
+        return entries.stream().map(e -> (long)e.chatId).anyMatch(DialogObject::isUserDialog);
     }
 
-    private boolean hasOnlyUsers() {
-        for (Long dialogId : entries.stream().map(e -> (long)e.chatId).collect(Collectors.toList())) {
-            if (getMessagesController().getUser(dialogId) == null) {
-                return false;
-            }
-        }
-        return true;
+    private boolean hasEncryptedChats() {
+        return entries.stream().map(e -> (long)e.chatId).anyMatch(DialogObject::isEncryptedDialog);
     }
 
     private boolean hasChats() {
-        for (Long dialogId : entries.stream().map(e -> e.chatId).collect(Collectors.toList())) {
-            TLRPC.Chat chat = getMessagesController().getChat(-dialogId);
-            if (chat != null && (!ChatObject.isChannel(chat) || chat.megagroup)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private boolean hasOnlyChats() {
-        for (Long dialogId : entries.stream().map(e -> e.chatId).collect(Collectors.toList())) {
-            TLRPC.Chat chat = getMessagesController().getChat(-dialogId);
-            if (chat == null || ChatObject.isChannel(chat) && !chat.megagroup) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    private boolean hasOnlyChannels() {
-        for (Long dialogId : entries.stream().map(e -> e.chatId).collect(Collectors.toList())) {
-            TLRPC.Chat chat = getMessagesController().getChat(-dialogId);
-            if (chat == null || !ChatObject.isChannel(chat) || chat.megagroup) {
-                return false;
-            }
-        }
-        return true;
+        return entries.stream().map(e -> (long)e.chatId).anyMatch(DialogObject::isChatDialog);
     }
 
     private boolean hasSavedMessages() {

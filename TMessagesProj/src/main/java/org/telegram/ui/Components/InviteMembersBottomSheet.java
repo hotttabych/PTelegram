@@ -216,7 +216,7 @@ public class InviteMembersBottomSheet extends UsersAlertBase implements Notifica
                         selectedContacts.remove(id);
                         spansContainer.removeSpan(groupCreateSpan);
                     } else {
-                        GroupCreateSpan groupCreateSpan = new GroupCreateSpan(context, object);
+                        GroupCreateSpan groupCreateSpan = new GroupCreateSpan(context, object, currentAccount);
                         groupCreateSpan.setOnClickListener(spanClickListener);
                         selectedContacts.put(id, groupCreateSpan);
                         spansContainer.addSpan(groupCreateSpan, true);
@@ -381,7 +381,7 @@ public class InviteMembersBottomSheet extends UsersAlertBase implements Notifica
             } else {
                 object = MessagesController.getInstance(currentAccount).getUser(dialogId);
             }
-            GroupCreateSpan span = new GroupCreateSpan(spansContainer.getContext(), object);
+            GroupCreateSpan span = new GroupCreateSpan(spansContainer.getContext(), object, currentAccount);
             spansContainer.addSpan(span, false);
             span.setOnClickListener(spanClickListener);
         }

@@ -541,7 +541,7 @@ public class InviteContactsActivity extends BaseFragment implements Notification
                 GroupCreateSpan span = selectedContacts.get(contact.key);
                 spansContainer.removeSpan(span);
             } else {
-                GroupCreateSpan span = new GroupCreateSpan(editText.getContext(), contact);
+                GroupCreateSpan span = new GroupCreateSpan(editText.getContext(), contact, currentAccount);
                 spansContainer.addSpan(span);
                 span.setOnClickListener(InviteContactsActivity.this);
             }

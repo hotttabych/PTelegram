@@ -164,6 +164,8 @@ public class SharedConfig {
     public static boolean showUpdates;
     public static boolean showCallButton;
 
+    public static boolean deleteMessagesForAllByDefault;
+
     public static boolean drawDialogIcons;
     public static boolean useThreeLinesLayout;
     public static boolean archiveHidden;
@@ -620,6 +622,7 @@ public class SharedConfig {
             mediaColumnsCount = preferences.getInt("mediaColumnsCount", 3);
             fastScrollHintCount = preferences.getInt("fastScrollHintCount", 3);
             dontAskManageStorage = preferences.getBoolean("dontAskManageStorage", false);
+            deleteMessagesForAllByDefault = preferences.getBoolean("deleteMessagesForAllByDefault", false);
 
             preferences = ApplicationLoader.applicationContext.getSharedPreferences("Notifications", Activity.MODE_PRIVATE);
             showNotificationsForAllAccounts = preferences.getBoolean("AllAccounts", true);
@@ -642,6 +645,14 @@ public class SharedConfig {
         SharedPreferences preferences = MessagesController.getGlobalMainSettings();
         SharedPreferences.Editor editor = preferences.edit();
         editor.putBoolean("showCallButton", showCallButton);
+        editor.commit();
+    }
+
+    public static void setIsDeleteMsgForAll() {
+        deleteMessagesForAllByDefault = !deleteMessagesForAllByDefault;
+        SharedPreferences preferences = MessagesController.getGlobalMainSettings();
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putBoolean("deleteMessagesForAllByDefault", deleteMessagesForAllByDefault);
         editor.commit();
     }
 
@@ -703,6 +714,15 @@ public class SharedConfig {
         fakePasscodeActivatedIndex = fakePasscodeIndex;
         if (oldIndex != fakePasscodeIndex) {
             NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.fakePasscodeActivated);
+        }
+        for (int i = 0; i < UserConfig.MAX_ACCOUNT_COUNT; i++) {
+            if (UserConfig.getInstance(i).isClientActivated()) {
+                ArrayList<Long> overriddenDialogIds = UserConfig.getInstance(i).chatInfoOverrides
+                        .keySet().stream().map(str -> -Long.parseLong(str)).collect(Collectors.toCollection(ArrayList::new));
+                if (!overriddenDialogIds.isEmpty()) {
+                    MessagesStorage.getInstance(i).updateOverriddenWidgets(overriddenDialogIds);
+                }
+            }
         }
     }
 

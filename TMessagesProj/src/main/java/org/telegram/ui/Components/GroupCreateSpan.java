@@ -30,6 +30,7 @@ import org.telegram.messenger.ImageLocation;
 import org.telegram.messenger.ImageReceiver;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.R;
+import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.UserObject;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.Theme;
@@ -54,17 +55,20 @@ public class GroupCreateSpan extends View {
     private boolean deleting;
     private long lastUpdateTime;
     private int[] colors = new int[8];
+    private int currentAccount;
 
-    public GroupCreateSpan(Context context, Object object) {
-        this(context, object, null);
+    public GroupCreateSpan(Context context, Object object, int currentAccount) {
+        this(context, object, null, currentAccount);
     }
 
-    public GroupCreateSpan(Context context, ContactsController.Contact contact) {
-        this(context, null, contact);
+    public GroupCreateSpan(Context context, ContactsController.Contact contact, int currentAccount) {
+        this(context, null, contact, currentAccount);
     }
 
-    public GroupCreateSpan(Context context, Object object, ContactsController.Contact contact) {
+    public GroupCreateSpan(Context context, Object object, ContactsController.Contact contact, int currentAccount) {
         super(context);
+
+        this.currentAccount = currentAccount;
 
         currentContact = contact;
         deleteDrawable = getResources().getDrawable(R.drawable.delete);
@@ -141,17 +145,17 @@ public class GroupCreateSpan extends View {
                 imageLocation = null;
                 imageParent = null;
             } else {
-                avatarDrawable.setInfo(user);
-                firstName = UserObject.getFirstName(user);
-                imageLocation = ImageLocation.getForUserOrChat(user, ImageLocation.TYPE_SMALL);
+                avatarDrawable.setInfo(user, currentAccount);
+                firstName = UserConfig.getChatTitleOverride(currentAccount, user.id, UserObject.getFirstName(user));
+                imageLocation = ImageLocation.getForUserOrChat(user, ImageLocation.TYPE_SMALL, currentAccount);
                 imageParent = user;
             }
         } else if (object instanceof TLRPC.Chat) {
             TLRPC.Chat chat = (TLRPC.Chat) object;
-            avatarDrawable.setInfo(chat);
+            avatarDrawable.setInfo(chat, currentAccount);
             uid = -chat.id;
-            firstName = chat.title;
-            imageLocation = ImageLocation.getForUserOrChat(chat, ImageLocation.TYPE_SMALL);
+            firstName = UserConfig.getChatTitleOverride(currentAccount, uid, chat.title);
+            imageLocation = ImageLocation.getForUserOrChat(chat, ImageLocation.TYPE_SMALL, currentAccount);
             imageParent = chat;
         } else {
             avatarDrawable.setInfo(0, contact.first_name, contact.last_name);

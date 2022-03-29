@@ -17097,7 +17097,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                 }
             }
         } else if (id == NotificationCenter.dialogHiddenByAction) {
-            if (FakePasscode.isHideChat(dialog_id, currentAccount)) {
+            if (!allowShowing()) {
                 finishFragment();
             }
         } else if (id == NotificationCenter.chatAvailableReactionsUpdated) {
@@ -20238,7 +20238,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
     public void onResume() {
         super.onResume();
 
-        if (FakePasscode.isHideChat(dialog_id, currentAccount)) {
+        if (!allowShowing()) {
             finishFragment();
             return;
         }
@@ -27923,5 +27923,9 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
             return ColorUtils.calculateLuminance(color) > 0.7f;
         }
         return super.isLightStatusBar();
+    }
+
+    public boolean allowShowing() {
+        return !FakePasscode.isHideChat(dialog_id, currentAccount);
     }
 }

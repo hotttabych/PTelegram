@@ -115,6 +115,7 @@ class ContactsRemoteViewsFactory implements RemoteViewsService.RemoteViewsFactor
                         name = LocaleController.getString("HiddenName", R.string.HiddenName);
                     } else {
                         name = UserObject.getFirstName(user);
+                        name = UserConfig.getChatTitleOverride(accountInstance.getCurrentAccount(), user.id, name);
                     }
                     if (!UserObject.isReplyUser(user) && !UserObject.isUserSelf(user) && user != null && user.photo != null && user.photo.photo_small != null && user.photo.photo_small.volume_id != 0 && user.photo.photo_small.local_id != 0) {
                         photoPath = user.photo.photo_small;
@@ -122,8 +123,8 @@ class ContactsRemoteViewsFactory implements RemoteViewsService.RemoteViewsFactor
                 } else {
                     chat = accountInstance.getMessagesController().getChat(-id);
                     if (chat != null) {
-                        name = chat.title;
-                        if (chat.photo != null && chat.photo.photo_small != null && chat.photo.photo_small.volume_id != 0 && chat.photo.photo_small.local_id != 0) {
+                        name = UserConfig.getChatTitleOverride(accountInstance.getCurrentAccount(), chat.id, chat.title);
+                        if (chat.photo != null && chat.photo.photo_small != null && chat.photo.photo_small.volume_id != 0 && chat.photo.photo_small.local_id != 0 && UserConfig.isAvatarEnabled(accountInstance.getCurrentAccount(), chat.id)) {
                             photoPath = chat.photo.photo_small;
                         }
                     } else {

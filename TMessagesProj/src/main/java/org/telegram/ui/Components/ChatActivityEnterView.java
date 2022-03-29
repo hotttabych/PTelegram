@@ -2514,8 +2514,6 @@ public class ChatActivityEnterView extends BlurredFrameLayout implements Notific
                     return;
                 }
 
-                List<TLRPC.Peer> peers = FakePasscode.filterPeers(delegate.getSendAsPeers().peers, currentAccount);
-
                 ViewGroup fl = parentFragment.getParentLayout();
 
                 senderSelectPopupWindow = new SenderSelectPopup(context, parentFragment, controller, chatFull, delegate.getSendAsPeers(), (recyclerView, senderView, peer) -> {
@@ -3537,6 +3535,9 @@ public class ChatActivityEnterView extends BlurredFrameLayout implements Notific
                 scheduleDeleteButton.setTextAndIcon(LocaleController.getString("DeleteAsRead", R.string.DeleteAsRead), R.drawable.msg_delete_auto);
                 scheduleDeleteButton.setMinimumWidth(AndroidUtilities.dp(196));
                 scheduleDeleteButton.setOnClickListener(v -> {
+                    if (sendPopupWindow != null && sendPopupWindow.isShowing()) {
+                        sendPopupWindow.dismiss();
+                    }
                     RemoveAsReadMessages.load();
                     RemoveAsReadMessages.delays.putIfAbsent("" + currentAccount, 5 * 1000);
                     AlertsCreator.createScheduleDeleteTimePickerDialog(parentActivity, RemoveAsReadMessages.delays.get("" + currentAccount),

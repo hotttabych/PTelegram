@@ -5150,7 +5150,8 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
             for (int i = 0; i < 6; i++) {
                 final int a = order[i];
 
-                if (a == 5 && (SharedConfig.fakePasscodeActivatedIndex != -1 || UserObject.isUserSelf(user))) {
+                if (a == 5 && (SharedConfig.fakePasscodeActivatedIndex != -1 || UserObject.isUserSelf(user)
+                    || !SharedConfig.showDeleteAfterRead)) {
                     continue;
                 }
 

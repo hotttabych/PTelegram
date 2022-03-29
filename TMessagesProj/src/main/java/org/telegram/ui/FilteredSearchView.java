@@ -433,16 +433,19 @@ public class FilteredSearchView extends FrameLayout implements NotificationCente
             chatTo = messageObject.messageOwner.peer_id.chat_id != 0 ? MessagesController.getInstance(UserConfig.selectedAccount).getChat(messageObject.messageOwner.peer_id.chat_id) : null;
         }
         if (user != null && chatTo != null) {
+            String fromStr = UserConfig.getChatTitleOverride(UserConfig.selectedAccount, user.id, ContactsController.formatName(user.first_name, user.last_name));
+            String toStr = UserConfig.getChatTitleOverride(UserConfig.selectedAccount, user.id, chatTo.title);
             SpannableStringBuilder spannableStringBuilder = new SpannableStringBuilder();
             spannableStringBuilder
-                    .append(ContactsController.formatName(user.first_name, user.last_name))
+                    .append(fromStr)
                     .append(' ').append(arrowSpan).append(' ')
-                    .append(chatTo.title);
+                    .append(toStr);
             fromName = spannableStringBuilder;
         } else if (user != null) {
-            fromName = ContactsController.formatName(user.first_name, user.last_name);
+            String name = ContactsController.formatName(user.first_name, user.last_name);
+            fromName = UserConfig.getChatTitleOverride(UserConfig.selectedAccount, user.id, name);
         } else if (chatFrom != null) {
-            fromName = chatFrom.title;
+            fromName = UserConfig.getChatTitleOverride(UserConfig.selectedAccount, chatFrom.id, chatFrom.title);
         }
         return fromName == null ? "" : fromName;
     }

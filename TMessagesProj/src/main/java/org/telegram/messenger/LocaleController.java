@@ -1130,6 +1130,8 @@ public class LocaleController {
                         case "ShowUpdatesInfo": value = "Показывать уведомление, когда доступно новое обновление приложения."; break;
                         case "ShowCallButton": value = "Показывать кнопку звонка"; break;
                         case "ShowCallButtonInfo": value = "Показывать кнопку звонка в окне чата."; break;
+                        case "IsDeleteMessagesForAllByDefault": value = "Удалять сообщения у всех по умолчанию"; break;
+                        case "IsDeleteMessagesForAllByDefaultInfo": value = "Сообщения и чаты по умолчанию будут удаляться и у собеседника."; break;
                         case "ChatsToRemoveInfo": value = "Выберите чаты, которые будут удалены после активации ложного код-пароля."; break;
                         case "SessionsToTerminate": value = "Сеансы для завершения"; break;
                         case "SessionsToHide": value = "Сеансы для скрытия"; break;
@@ -1287,6 +1289,8 @@ public class LocaleController {
                         case "ShowUpdatesInfo": value = "Паказваць апавяшчэнне, калі даступна новае абнаўленне прыкладання."; break;
                         case "ShowCallButton": value = "Паказваць кнопку званка"; break;
                         case "ShowCallButtonInfo": value = "Паказваць кнопку званка ў экране чата."; break;
+                        case "IsDeleteMessagesForAllByDefault": value = "Выдаляць паведамленні ў усех па змаўчанні"; break;
+                        case "IsDeleteMessagesForAllByDefaultInfo": value = "Паведамлені і чаты па змаўчанні будуць выдаляцца і ў cуразмоўцы."; break;
                         case "ChatsToRemoveInfo": value = "Абярыце чаты, якія будуць выдалены пасля актывацыі несапраўднага код-пароля."; break;
                         case "SessionsToTerminate": value = "Сеансы для завяршэння"; break;
                         case "SessionsToHide": value = "Сеансы для хавання"; break;
