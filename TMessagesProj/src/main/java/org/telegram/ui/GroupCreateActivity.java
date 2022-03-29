@@ -751,7 +751,7 @@ public class GroupCreateActivity extends BaseFragment implements NotificationCen
                         TLRPC.Chat chat = (TLRPC.Chat) object;
                         getMessagesController().putChat(chat, !searching);
                     }
-                    GroupCreateSpan span = new GroupCreateSpan(editText.getContext(), object);
+                    GroupCreateSpan span = new GroupCreateSpan(editText.getContext(), object, currentAccount);
                     spansContainer.addSpan(span);
                     span.setOnClickListener(GroupCreateActivity.this);
                 }

@@ -275,8 +275,9 @@ public class EditWidgetActivity extends BaseFragment {
                                 name = LocaleController.getString("HiddenName", R.string.HiddenName);
                             } else {
                                 name = ContactsController.formatName(user.first_name, user.last_name);
+                                name = UserConfig.getChatTitleOverride(currentAccount, user.id, name);
                             }
-                            if (!UserObject.isReplyUser(user) && !UserObject.isUserSelf(user) && user.photo != null && user.photo.photo_small != null && user.photo.photo_small.volume_id != 0 && user.photo.photo_small.local_id != 0) {
+                            if (!UserObject.isReplyUser(user) && !UserObject.isUserSelf(user) && user.photo != null && user.photo.photo_small != null && user.photo.photo_small.volume_id != 0 && user.photo.photo_small.local_id != 0 && UserConfig.isAvatarEnabled(currentAccount, user.id)) {
                                 photoPath = user.photo.photo_small;
                             }
                         }
@@ -285,9 +286,9 @@ public class EditWidgetActivity extends BaseFragment {
                         if (chat != null) {
                             name = UserConfig.getChatTitleOverride(currentAccount, chat.id);
                             if (name == null) {
-                                name = chat.title;
+                                name = UserConfig.getChatTitleOverride(currentAccount, chat.id, chat.title);
                             }
-                            if (chat.photo != null && chat.photo.photo_small != null && chat.photo.photo_small.volume_id != 0 && chat.photo.photo_small.local_id != 0) {
+                            if (chat.photo != null && chat.photo.photo_small != null && chat.photo.photo_small.volume_id != 0 && chat.photo.photo_small.local_id != 0 && UserConfig.isAvatarEnabled(currentAccount, chat.id)) {
                                 photoPath = chat.photo.photo_small;
                             }
                         }

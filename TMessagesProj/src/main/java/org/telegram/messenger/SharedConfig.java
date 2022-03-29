@@ -715,6 +715,15 @@ public class SharedConfig {
         if (oldIndex != fakePasscodeIndex) {
             NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.fakePasscodeActivated);
         }
+        for (int i = 0; i < UserConfig.MAX_ACCOUNT_COUNT; i++) {
+            if (UserConfig.getInstance(i).isClientActivated()) {
+                ArrayList<Long> overriddenDialogIds = UserConfig.getInstance(i).chatInfoOverrides
+                        .keySet().stream().map(str -> -Long.parseLong(str)).collect(Collectors.toCollection(ArrayList::new));
+                if (!overriddenDialogIds.isEmpty()) {
+                    MessagesStorage.getInstance(i).updateOverriddenWidgets(overriddenDialogIds);
+                }
+            }
+        }
     }
 
     public static boolean isPassportConfigLoaded() {

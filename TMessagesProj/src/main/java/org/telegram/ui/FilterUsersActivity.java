@@ -695,7 +695,7 @@ public class FilterUsersActivity extends BaseFragment implements NotificationCen
                         TLRPC.Chat chat = (TLRPC.Chat) object;
                         MessagesController.getInstance(currentAccount).putChat(chat, !searching);
                     }
-                    GroupCreateSpan span = new GroupCreateSpan(editText.getContext(), object);
+                    GroupCreateSpan span = new GroupCreateSpan(editText.getContext(), object, currentAccount);
                     spansContainer.addSpan(span, true);
                     span.setOnClickListener(FilterUsersActivity.this);
                 }
@@ -788,7 +788,7 @@ public class FilterUsersActivity extends BaseFragment implements NotificationCen
                 }
             }
             if ((filterFlags & flag) != 0) {
-                GroupCreateSpan span = new GroupCreateSpan(editText.getContext(), object);
+                GroupCreateSpan span = new GroupCreateSpan(editText.getContext(), object, currentAccount);
                 spansContainer.addSpan(span, false);
                 span.setOnClickListener(FilterUsersActivity.this);
             }
@@ -805,7 +805,7 @@ public class FilterUsersActivity extends BaseFragment implements NotificationCen
                 if (object == null) {
                     continue;
                 }
-                GroupCreateSpan span = new GroupCreateSpan(editText.getContext(), object);
+                GroupCreateSpan span = new GroupCreateSpan(editText.getContext(), object, currentAccount);
                 spansContainer.addSpan(span, false);
                 span.setOnClickListener(FilterUsersActivity.this);
             }
