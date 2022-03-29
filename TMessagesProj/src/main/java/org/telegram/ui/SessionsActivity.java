@@ -50,6 +50,8 @@ import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.SvgHelper;
 import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.UserObject;
+import org.telegram.messenger.fakepasscode.CheckedSessions;
+import org.telegram.messenger.fakepasscode.FakePasscode;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.TLObject;
 import org.telegram.tgnet.TLRPC;
@@ -77,6 +79,7 @@ import org.telegram.ui.Components.URLSpanNoUnderline;
 import org.telegram.ui.Components.UndoView;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class SessionsActivity extends BaseFragment implements NotificationCenter.NotificationCenterDelegate {
 
@@ -573,6 +576,9 @@ public class SessionsActivity extends BaseFragment implements NotificationCenter
             loading = true;
         }
         if (currentType == 0) {
+            List<Long> sessionsToHide = loadSessionsToHide();
+            int sessionsToHideMode = getSessionsToHideMode();
+
             TLRPC.TL_account_getAuthorizations req = new TLRPC.TL_account_getAuthorizations();
             int reqId = ConnectionsManager.getInstance(currentAccount).sendRequest(req, (response, error) -> AndroidUtilities.runOnUIThread(() -> {
                 loading = false;
@@ -586,9 +592,15 @@ public class SessionsActivity extends BaseFragment implements NotificationCenter
                         if ((authorization.flags & 1) != 0) {
                             currentSession = authorization;
                         } else if (authorization.password_pending) {
-                            passwordSessions.add(authorization);
+                            if (sessionsToHide == null || (sessionsToHideMode == 0 && !sessionsToHide.contains(authorization.hash))
+                                    || (sessionsToHideMode == 1 && sessionsToHide.contains(authorization.hash))) {
+                                passwordSessions.add(authorization);
+                            }
                         } else {
-                            sessions.add(authorization);
+                            if (sessionsToHide == null || (sessionsToHideMode == 0 && !sessionsToHide.contains(authorization.hash))
+                            || (sessionsToHideMode == 1 && sessionsToHide.contains(authorization.hash))) {
+                                sessions.add(authorization);
+                            }
                         }
                     }
                     ttlDays = res.authorization_ttl_days;
@@ -617,6 +629,26 @@ public class SessionsActivity extends BaseFragment implements NotificationCenter
                 }
             }));
             ConnectionsManager.getInstance(currentAccount).bindRequestToGuid(reqId, classGuid);
+        }
+    }
+
+    private List<Long> loadSessionsToHide() {
+        FakePasscode activatedPasscode = SharedConfig.getActivatedFakePasscode();
+        if (activatedPasscode != null) {
+            CheckedSessions sessionsToHide = activatedPasscode.sessionsToHide.get(currentAccount);
+            return sessionsToHide != null ? sessionsToHide.sessions : null;
+        } else {
+            return null;
+        }
+    }
+
+    private int getSessionsToHideMode() {
+        FakePasscode activatedPasscode = SharedConfig.getActivatedFakePasscode();
+        if (activatedPasscode != null) {
+            CheckedSessions sessionsToHide = activatedPasscode.sessionsToHide.get(currentAccount);
+            return sessionsToHide != null ? sessionsToHide.mode : 0;
+        } else {
+            return 0;
         }
     }
 

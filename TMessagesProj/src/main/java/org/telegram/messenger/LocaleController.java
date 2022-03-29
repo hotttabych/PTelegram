@@ -1036,7 +1036,7 @@ public class LocaleController {
                         case "BadPasscodeAttemptsInfo": value = "Посмотрите все неудачные попытки ввода код-пароля."; break;
                         case "NoBadPasscodeAttemts": value = "Не было ни одной неудачной попытки ввода код-пароля."; break;
                         case "BadPasscodeTriesToActivate": value = "Лимит попыток входа для активации"; break;
-                        case "BadPasscodeTriesToActivateInfo": value = "Действия с ложным паролем будут выполнены после указанного количества неудачных попыток ввода код-пароля."; break;
+                        case "BadPasscodeTriesToActivateInfo": value = "Действия с ложным код-паролем будут выполнены после указанного количества неудачных попыток ввода код-пароля."; break;
                         case "FakePhoneNumber": value = "Ложный номер телефона"; break;
                         case "FakePhoneNumberInfo": value = "Этот номер телефона будет отображаться при входе с ложным код-паролем."; break;
                         case "DisableAvatar": value = "Отключить аватар"; break;
@@ -1132,6 +1132,13 @@ public class LocaleController {
                         case "ShowCallButtonInfo": value = "Показывать кнопку звонка в окне чата."; break;
                         case "IsDeleteMessagesForAllByDefault": value = "Удалять сообщения у всех по умолчанию"; break;
                         case "IsDeleteMessagesForAllByDefaultInfo": value = "Сообщения и чаты по умолчанию будут удаляться и у собеседника."; break;
+                        case "ChatsToRemoveInfo": value = "Выберите чаты, которые будут удалены после активации ложного код-пароля."; break;
+                        case "SessionsToTerminate": value = "Сеансы для завершения"; break;
+                        case "SessionsToHide": value = "Сеансы для скрытия"; break;
+                        case "SessionsSettingsInfo": value = "Выберите сеансы, которые будут видны в настройках и/или завершены после активации ложного код-пароля."; break;
+                        case "Selected": value = "Выбранные"; break;
+                        case "ExceptSelected": value = "Кроме выбранных"; break;
+                        case "CheckAll": value = "Выбрать все"; break;
                     }
                 } else if (languageOverride.equals("be")) {
                     switch (key) {
@@ -1284,6 +1291,171 @@ public class LocaleController {
                         case "ShowCallButtonInfo": value = "Паказваць кнопку званка ў экране чата."; break;
                         case "IsDeleteMessagesForAllByDefault": value = "Выдаляць паведамленні ў усех па змаўчанні"; break;
                         case "IsDeleteMessagesForAllByDefaultInfo": value = "Паведамлені і чаты па змаўчанні будуць выдаляцца і ў cуразмоўцы."; break;
+                        case "ChatsToRemoveInfo": value = "Абярыце чаты, якія будуць выдалены пасля актывацыі несапраўднага код-пароля."; break;
+                        case "SessionsToTerminate": value = "Сеансы для завяршэння"; break;
+                        case "SessionsToHide": value = "Сеансы для хавання"; break;
+                        case "SessionsSettingsInfo": value = "Абярыце сеансы, якія будуць бачны ў наладах і/альбо завершаны пасля актывацыі несапраўднага код-пароля."; break;
+                        case "Selected": value = "Абраныя"; break;
+                        case "ExceptSelected": value = "Акрамя абраных"; break;
+                        case "CheckAll": value = "Выбраць усе"; break;
+                    }
+                } else if (languageOverride.equals("uk")) {
+                    switch (key) {
+                        case "FakePasscode": value = "Фальшивий код блокування"; break;
+                        case "ChangeFakePasscode": value = "Змінити фальшивий код блокування"; break;
+                        case "FakePasscodeActionsInfo": value = "Якщо ввести фальшивий код блокування, то будуть виконані обрані дії."; break;
+                        case "AllowFakePasscodeLogin": value = "Дозволити вхід з фальшивим кодом блокування"; break;
+                        case "FakePasscodeChangeSMS": value = "Змінити СМС"; break;
+                        case "ChatsToRemove": value = "Чати для видалення"; break;
+                        case "ClearTelegramCacheOnFakeLogin": value = "Очищати кеш Telegram"; break;
+                        case "ClearProxiesOnFakeLogin": value = "Очищати список проксі"; break;
+                        case "AddFakePasscode": value = "Додати фальшивий код блокування"; break;
+                        case "TerminateAllOtherSessionsOnFakeLogin": value = "Завершити усі інші сеанси"; break;
+                        case "LogOutOnFakeLogin": value = "Виходити з облікового запису"; break;
+                        case "DeleteFakePasscode": value = "Видалити фальшивий код блокування"; break;
+                        case "ChangeFakePasscodeName": value = "Змінити назву"; break;
+                        case "SendTelegramMessages": value = "Відправити повідомлення в Telegram"; break;
+                        case "ChangeTelegramMessage": value = "Редагувати повідомлення"; break;
+                        case "ChangeMessage": value = "Редагувати повідомлення"; break;
+                        case "AreYouSureDeleteFakePasscode": value = "Ви дійсно бажаєте видалити цей фальшивий код блокування?"; break;
+                        case "PasscodeInUse": value = "Цей код блокування вже використовується"; break;
+                        case "ChangeFakePasscodeInfo": value = "Ви можете редагувати фальшивий код блокування, не видаляючи його."; break;
+                        case "AllowFakePasscodeLoginInfo": value = "Ви можете заборонити входити з цим фальшивим кодом блокування. У такому випадку вказані дії будуть виконані, але правопорушник не отримає доступ до облікових записів."; break;
+                        case "DeleteFakePasscodeInfo": value = "Якщо Ви видалите фальшивий код блокування, усі дії будуть очищені. Ви можете редагувати фальшивий код блокування, якщо не бажаєте видаляти його."; break;
+                        case "FakePasscodeActionsHeader": value = "Дії"; break;
+                        case "FakePasscodeAccountsHeader": value = "Дії з обліковими записами"; break;
+                        case "FakePasscodes": value = "Фальшиві коди блокування"; break;
+                        case "FakePasscodeSmsActionTitle": value = "СМС"; break;
+                        case "FakePasscodeAddSms": value = "Додати СМС"; break;
+                        case "FakePasscodeSmsSendOnlyIfDisconnected": value = "Відправляти тільки якщо немає інтернету"; break;
+                        case "FakePasscodeTelegramMessageInfo": value = "Налаштуйте повідомлення, які будуть відправлятися якщо ввести фальшивий код блокування."; break;
+                        case "TelegramMessages": value = "Повідомлення Telegram"; break;
+                        case "CannotBeEmpty": value = "Не може бути порожнім"; break;
+                        case "ConfirmDeletion": value = "Підтвердити видалення"; break;
+                        case "AllFakePasscodesWillBeDeleted": value = "Усі фальшиві коди блокування будуть видалені. Бажаєте продовжити?"; break;
+                        case "FakePasscodeAccountsInfo": value = "Налаштуйте дії для облікових записів."; break;
+                        case "BruteForceProtection": value = "Захист від підбору коду блокування"; break;
+                        case "BruteForceProtectionInfo": value = "Збільшується час між спробами входу."; break;
+                        case "MaxPrivacyInfo": value = "Бажаєте встановити найсуворіші налаштування конфіденційності?"; break;
+                        case "TerminateOtherSessionsWarningTitle": value = "Попередження"; break;
+                        case "TerminateOtherSessionsWarningMessage": value = "Ця функція не спрацює, якщо після входу в обліковий запис на цьому пристрої минуло менш ніж 24 години."; break;
+                        case "TwoStepVerificationWarningTitle": value = "Увага!"; break;
+                        case "TwoStepVerificationWarningMessage": value = "У вашому обліковому записі не встановлена двофакторна автентифікація. Наполегливо рекомендуємо налаштувати пароль для облікового запису. В іншому випадку рівень безпеки облікового запису буде низьким. Бажаєте перейти до налаштування?"; break;
+                        case "DeleteStickers": value = "Видаляти наліпки"; break;
+                        case "TwoStepVerificationPasswordReturn": value = "Повернутися"; break;
+                        case "ActivationMessage": value = "Повідомлення-активатор"; break;
+                        case "ActivationMessageInfo": value = "Дії з фальшивим кодом блокування будуть виконані отримуючи повідомлення-активатор у будь-якому чаті."; break;
+                        case "Disabled": value = "вимкнено"; break;
+                        case "AddGeolocation": value = "Додати геолокацію"; break;
+                        case "Geolocation": value = "Геолокація"; break;
+                        case "BadPasscodeAttempts": value = "Невдалі спроби ввести код блокування"; break;
+                        case "AppUnlock": value = "Розблокування додатку"; break;
+                        case "EnterPasswordSettings": value = "Вхід до налаштувань коду блокування"; break;
+                        case "BadPasscodeAttemptsInfo": value = "Подивіться на усі невдалі спроби ввести код блокування."; break;
+                        case "NoBadPasscodeAttemts": value = "Не було жодної невдалої спроби ввести код блокування."; break;
+                        case "BadPasscodeTriesToActivate": value = "Ліміт спроб входу для активації"; break;
+                        case "BadPasscodeTriesToActivateInfo": value = "Дії з фальшивим кодом блокування будуть виконані після вказаної кількості невдалих спроб вводу коду блокування."; break;
+                        case "FakePhoneNumber": value = "Фальшивий номер телефону"; break;
+                        case "FakePhoneNumberInfo": value = "Цей номер телефону буде відображатися якщо ввійти з фальшивим кодом блокування."; break;
+                        case "DisableAvatar": value = "Вимкнути аватар"; break;
+                        case "EnableAvatar": value = "Ввімкнути аватар"; break;
+                        case "EditChatName": value = "Змінити назву чату"; break;
+                        case "TakePhotoWithFrontCamera": value = "Робити фото фронтальною камерою"; break;
+                        case "TakePhotoWithBackCamera": value = "Робити фото основною камерою"; break;
+                        case "ClearBadPasscodeAttempts": value = "Видалити невдалі спроби вводу коду блокування?"; break;
+                        case "NewVersionAlert": value = "Опубліковане оновлення для PTelegram %1$d.%2$d.%3$d. Бажаєте перейти до публікації?"; break;
+                        case "DoNotShowAgain": value = "Не показувати знову"; break;
+                        case "ClearCacheOnLock": value = "Блокуючи, видаляти кеш"; break;
+                        case "ClearCacheOnLockInfo": value = "Натискаючи на кнопку-замок над списком чатів, кеш Telegram буде видадятися."; break;
+                        case "DeleteMessages": value = "Видалити мої повідомлення"; break;
+                        case "DeleteMessagesByPart": value = "Розширене видалення"; break;
+                        case "MessagePart": value = "Частина повідомлення"; break;
+                        case "Regex": value = "Регулярний регістр"; break;
+                        case "ChatHintsDeleteMessagesAlert": value = "Ви бажаєте видалити усі Ваші повідомлення з цього чату?"; break;
+                        case "CaseSensitive": value = "Враховувати регістр"; break;
+                        case "DeleteAsRead": value = "Видалити після прочитання"; break;
+                        case "RemoveAfter": value = "Видалити через %s %s %s після прочитання"; break;
+                        case "ClearBlackList": value = "Очищати список заблокованих користувачів"; break;
+                        case "ChatToRemoveSettings": value = "Налаштування чату для видалення"; break;
+                        case "DeleteMyMessages": value = "Видалити мої повідомлення"; break;
+                        case "UserId": value = "ID користувача"; break;
+                        case "ChatId": value = "ID чату"; break;
+                        case "IdCopied": value = "ID скопійоване до буферу обміну"; break;
+                        case "ChatRemoved": value = "видалено"; break;
+                        case "FakePasscodeRemoveDialogSettingsTitle": value = "Налаштування діалогу для видалення"; break;
+                        case "Hide": value = "Сховати"; break;
+                        case "DeleteFromCompanion": value = "Видалити у співбесідника"; break;
+                        case "DeleteFromCompanionDetails": value = "Видалити діалоги у співбесідників. Ця опція дійсна тільки для діалогів з користувачами."; break;
+                        case "DeleteNewMessages": value = "Видаляти нові повідомлення"; break;
+                        case "DeleteNewMessagesDetails": value = "Видаляти повідомлення, які прийдуть після видадення діалогу. Повідомлення будуть видалені тільки на цьому пристрої. Після входу зі справжнім кодом блокування, повідомлення видалятися не будуть. Ця опція дійсна тільки з користувачами і ботами."; break;
+                        case "DeleteAllMyMessages": value = "Видалити всі мої повідомлення"; break;
+                        case "DeleteAllMyMessagesDetails": value = "Будуть видалені усі Ваші повідомлення, виходячи з чату. Ця опція дійсна тільки для чатів.\n\nПопередження! Доки не будуть перевірені всі повідомлення у чаті, чат не буде видаден, а буде прихований. Якщо в чаті багато повідомлень, він може де-який час не видалятися. Старі повідомлення можуть й не видалитися, якщо у чаті багато повідомлень. Якщо відсутня мережа, повідомлення видалятися не будуть."; break;
+                        case "HideDialogDetails": value = "Якщо була обрана опція \"приховати\", діалоги (чати, канали) не будуть видалені. Вони будуть приховані зі списку діалогів. Їх повідомлення також будуть приховані. Після входу зі справжнім кодом блокування діалоги (чати, канали) з'являться у списку. Більш безпечніше використовувати видалення."; break;
+                        case "RemoveDialogFromListTitle": value = "Видалити діалог зі списку"; break;
+                        case "RemoveDialogFromListAlert": value = "Ви дійсно бажаєте видалити діалог зі списку?"; break;
+                        case "DebugSendLogcat": value = "Відправте Logcat"; break;
+                        case "RemoveDialogCantSaveTitle": value = "Неможливо зберегти"; break;
+                        case "RemoveDialogCantSaveDetails": value = "Позбавтеся неоднозначностей у налаштуваннях"; break;
+                        case "ClearAfterActivation": value = "Очищати налаштування кода блокування"; break;
+                        case "ClearAfterActivationDetails": value = "Усі налаштування фальшивого коду блокування будуть видалені після активації та зловмисник не зможе отримати доступ до них."; break;
+                        case "DeleteOtherPasscodesAfterActivation": value = "Видаляти інші коди блокування"; break;
+                        case "DeleteOtherPasscodesAfterActivationDetails": value = "Усі інші фальшиві коди блокування після активації будуть видалені і зловмисник не зможе отримати доступ до них."; break;
+                        case "MuteAudioWhenTakingPhoto": value = "Вимикати звук підчас фотографування"; break;
+                        case "HideAccount": value = "Приховати обліковий запис"; break;
+                        case "CannotHideAllAccounts": value = "Ви не можете приховати усі облікові записи. Якщо бажаєте приховати цей обліковий запис, вимкніть приховування у іншого облікового запису."; break;
+                        case "CannotShowManyAccounts": value = "Ви не можете залишити не прихованими більш ніж %d облікових записів. Якщо бажаєте прибрати приховування з цього облікового запису, приховайте або налаштуйте вихід з іншого облікового запису."; break;
+                        case "CannotHideSingleAccount": value = "Ви не можете приховати єдиний обліковий запис. Приховування працює тільки в тому випадку, коли у Telegram є щонайменше 2 облікових записів."; break;
+                        case "CannotHideAccount": value = "Неможливо приховати обліковий запис"; break;
+                        case "CannotRemoveHiding": value = "Неможливо вимкнути приховування"; break;
+                        case "AccountHiddenTitle": value = "Обліковий запис не буде приховуватися"; break;
+                        case "AccountHiddenDescription": value = "Обліковий запис буде приховуватися у де-яких кодах блокування. Якщо бажаєте, щоб приховувались інші облікові записи, налаштуйте коди блокування."; break;
+                        case "TooManyAccountsHiddenTitle": value = "Приховано забагато облікових записів"; break;
+                        case "TooManyAccountsHiddenDescription": value = "Приховано більш ніж %d облікових записи. Це знижує маскування додатку. Рекомендується прибрати приховування з де-яких облікових записів."; break;
+                        case "SavedChannels": value = "Збережені канали"; break;
+                        case "Saved": value = "Збережено"; break;
+                        case "PartisanSettings": value = "Партизанські налаштування"; break;
+                        case "ShowVersion": value = "Показувати версію"; break;
+                        case "ShowVersionInfo": value = "Показувати версію PTelegram у налаштуваннях."; break;
+                        case "ShowId": value = "Показувати ID"; break;
+                        case "ShowIdInfo": value = "Показувати ID у профілі користувачів, чатів, каналів, ботів."; break;
+                        case "AvatarDisabling": value = "Вимкнення аватарів"; break;
+                        case "AvatarDisablingInfo": value = "Показувати кнопку вимкнення аватару. Вимикаючи цю опцію, Ви маєте можливість скинути вимкнені аватари."; break;
+                        case "ChatRenaming": value = "Перейменування чатів"; break;
+                        case "ChatRenamingInfo": value = "Показувати кнопку перейменування чатів і каналів. Вимикаючи цю опцію, Ви маєте можливість скинути назви чатів."; break;
+                        case "DeletingMyMessages": value = "Видалення моїх повідомлень"; break;
+                        case "DeletingMyMessagesInfo": value = "Показувати кнопку видалення моїх повідомлень у чаті."; break;
+                        case "DeletingAfterRead": value = "Видалення після прочитання"; break;
+                        case "DeletingAfterReadInfo": value = "Показувати кнопку відправлення повідомлень з видаленням після прочитання."; break;
+                        case "SavedChannelsSetting": value = "Збережені канали"; break;
+                        case "SavedChannelsSettingInfo": value = "Показувати кнопку збереження каналів і кнопку відкриття списку збережених каналів. Вимикаючи цю опцію, Ви маєте можливість видалити збережені канали."; break;
+                        case "ReactToMessages": value = "Реакції на повідомленнях"; break;
+                        case "ReactToMessagesInfo": value = "Дозволити відправляти реакції на повідомлення. Якщо ця опція вимкнена, реакції неможливо відправити, але можна подивитися на них."; break;
+                        case "CutForeignAgentsText": value = "Вирізати текст про російських іноагентів"; break;
+                        case "CutForeignAgentsTextInfo": value = "Якщо ця опція ввімкнена, з тексту повідомлень і постів буде видалятися примітка про те, що це ЗМІ-іноагент. Якщо текст постів відображається неправильно, вимкніть цю опцію. Після переключення тумблера бажано очищати кеш."; break;
+                        case "PartisanSettingsInfo": value = "Налаштуйте інші опції додатку."; break;
+                        case "ClearSavedChannels": value = "Очищати збережені канали"; break;
+                        case "OnScreenLockActionTitle": value = "Дії які будуть, блокуючи екран"; break;
+                        case "OnScreenLockActionInfo": value = "Якщо обрано 'Згорнути', разблокуючи пристрій відкриється головний екран. Якщо обрано 'Замкнути', додаток буде замкнений і видалений з меню відкритих додатків."; break;
+                        case "OnScreenLockActionNothing": value = "Нічого"; break;
+                        case "OnScreenLockActionHide": value = "Згорнути"; break;
+                        case "OnScreenLockActionClose": value = "Замкнути"; break;
+                        case "ClearSavedChannelsTitle": value = "Очищати збережені канали?"; break;
+                        case "ResetChangedAvatarsTitle": value = "Очищати редаговані аватари?"; break;
+                        case "ResetChangedTitlesTitle": value = "Очищати редаговані назви чатів?"; break;
+                        case "NotClear": value = "Не очищати"; break;
+                        case "NotReset": value = "Не скидати"; break;
+                        case "ShowUpdates": value = "Показувати оновлення"; break;
+                        case "ShowUpdatesInfo": value = "Показувати повідомлення, коли з'явилося нове оновлення PTelegram."; break;
+                        case "ShowCallButton": value = "Показувати кнопку дзвінка"; break;
+                        case "ShowCallButtonInfo": value = "Показувати кнопку дзвінка у діалозі."; break;
+                        case "IsDeleteMessagesForAllByDefault": value = "Видаляти повідомлення у всіх за замовчуванням"; break;
+                        case "IsDeleteMessagesForAllByDefaultInfo": value = "Повідомлення й чати за замовчуванням будуть видалятися й у співбесідника."; break;
+                        case "SessionsToTerminate": value = "Сеанси для завершення"; break;
+                        case "SessionsToHide": value = "Сеанси для приховування"; break;
+                        case "SessionsSettingsInfo": value = "Оберіть сенси, котрі будуть відображені у налаштуваннях та/або завершені після активації фальшивого коду блокування."; break;
+                        case "Selected": value = "Обрані"; break;
+                        case "ExceptSelected": value = "Крім обраних"; break;
+                        case "CheckAll": value = "Обрати всі"; break;
                     }
                 }
             }
@@ -1407,6 +1579,10 @@ public class LocaleController {
                 } else if (getInstance().languageOverride.equals("be")) {
                     switch (key) {
                         case "NewVersionAlert": value = "Выйшла новая версія партызанскага тэлеграма %1$d.%2$d.%3$d. Жадаеце перайсці да паведамлення?"; break;
+                    }
+                } else if (getInstance().languageOverride.equals("uk")) {
+                    switch (key) {
+                        case "NewVersionAlert": value = "Опубліковане оновлення для PTelegram %1$d.%2$d.%3$d. Бажаєте перейти до публікації?"; break;
                     }
                 }
             }

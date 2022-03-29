@@ -5321,4 +5321,56 @@ public class AlertsCreator {
         fragment.showDialog(dialog);
         return dialog;
     }
+
+    public static AlertDialog showCheckableSettingModesAlert(BaseFragment fragment, Context context, String title, final CheckabeSettingModeAlertDelegate delegate, Theme.ResourcesProvider resourcesProvider) {
+        String[] variants = new String[]{
+                LocaleController.getString("Selected", R.string.Selected),
+                LocaleController.getString("ExceptSelected", R.string.ExceptSelected)
+        };
+        AlertDialog.Builder builder = new AlertDialog.Builder(context, resourcesProvider);
+        builder.setTitle(title);
+        final LinearLayout linearLayout = new LinearLayout(context);
+        linearLayout.setOrientation(LinearLayout.VERTICAL);
+        builder.setView(linearLayout);
+
+        RadioColorCell[] cells = new RadioColorCell[variants.length];
+        for (int a = 0; a < variants.length; a++) {
+            RadioColorCell cell = new RadioColorCell(context, resourcesProvider);
+            cells[a] = cell;
+            cell.setPadding(AndroidUtilities.dp(4), 0, AndroidUtilities.dp(4), 0);
+            cell.setTag(a);
+            cell.setCheckColor(Theme.getColor(Theme.key_radioBackground), Theme.getColor(Theme.key_dialogRadioBackgroundChecked));
+            cell.setTextAndValue(variants[a], delegate.getSelectedMode() == a);
+            linearLayout.addView(cell);
+            cell.setOnClickListener(v -> {
+                if (delegate.getSelectedMode() == (Integer) v.getTag()) {
+                    return;
+                }
+                cell.setChecked(true, true);
+                cells[delegate.getSelectedMode()].setChecked(false, true);
+                Integer which = (Integer) v.getTag();
+                delegate.didSelectedMode(which);
+                builder.getDismissRunnable().run();
+            });
+        }
+        AlertDialog dialog = builder.create();
+        fragment.showDialog(dialog);
+
+        return dialog;
+    }
+
+    public interface CheckabeSettingModeAlertDelegate {
+        void didSelectedMode(int mode);
+        int getSelectedMode();
+    }
+
+    public static AlertDialog showConfirmationDialog(BaseFragment fragment, Context context, String positiveMessage, Runnable onConfirm) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        builder.setMessage(LocaleController.formatString("AreYouSure", R.string.AreYouSure));
+        builder.setPositiveButton(positiveMessage, (dialogInterface, i) -> onConfirm.run());
+        builder.setNegativeButton(LocaleController.getString("Cancel", R.string.Cancel), null);
+        AlertDialog dialog = builder.create();
+        fragment.showDialog(dialog);
+        return dialog;
+    }
 }
