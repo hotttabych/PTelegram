@@ -434,7 +434,7 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
 
         private String getSessionsLabel(int mode, int sessionsCount) {
             if (sessionsCount > 0) {
-                return mode == 0 ? String.valueOf(sessionsCount) : String.format("-%d", sessionsCount);
+                return mode == 0 ? String.valueOf(sessionsCount) : LocaleController.formatString("AllExceptCount", R.string.AllExceptCount, sessionsCount);
             } else {
                 return "0";
             }
