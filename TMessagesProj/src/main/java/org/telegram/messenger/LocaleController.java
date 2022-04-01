@@ -1575,14 +1575,17 @@ public class LocaleController {
                 if (getInstance().languageOverride.equals("ru")) {
                     switch (key) {
                         case "NewVersionAlert": value = "Вышла новая версия партизанского телеграмма %1$d.%2$d.%3$d. Желаете перейти к посту?"; break;
+                        case "AllExceptCount": value = "Все (-%s)"; break;
                     }
                 } else if (getInstance().languageOverride.equals("be")) {
                     switch (key) {
                         case "NewVersionAlert": value = "Выйшла новая версія партызанскага тэлеграма %1$d.%2$d.%3$d. Жадаеце перайсці да паведамлення?"; break;
+                        case "AllExceptCount": value = "Усе (-%s)"; break;
                     }
                 } else if (getInstance().languageOverride.equals("uk")) {
                     switch (key) {
                         case "NewVersionAlert": value = "Опубліковане оновлення для PTelegram %1$d.%2$d.%3$d. Бажаєте перейти до публікації?"; break;
+                        case "AllExceptCount": value = "Всі (-%s)"; break;
                     }
                 }
             }

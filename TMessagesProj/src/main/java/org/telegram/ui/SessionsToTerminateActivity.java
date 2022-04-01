@@ -1,5 +1,9 @@
 package org.telegram.ui;
 
+import android.app.AlertDialog;
+import android.content.Context;
+import android.view.View;
+
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.R;
 import org.telegram.messenger.fakepasscode.AccountActions;
@@ -12,6 +16,17 @@ public class SessionsToTerminateActivity extends CheckableSessionsActivity {
     SessionsToTerminateActivity(AccountActions actions) {
         super(actions.accountNum);
         this.actions = actions;
+    }
+
+
+    @Override
+    public View createView(Context context) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
+        builder.setTitle(LocaleController.getString("TerminateOtherSessionsWarningTitle", R.string.TerminateOtherSessionsWarningTitle));
+        builder.setMessage(LocaleController.getString("TerminateOtherSessionsWarningMessage", R.string.TerminateOtherSessionsWarningMessage));
+        builder.setPositiveButton(LocaleController.getString("OK", R.string.OK), null);
+        showDialog(builder.create());
+        return super.createView(context);
     }
 
     @Override
