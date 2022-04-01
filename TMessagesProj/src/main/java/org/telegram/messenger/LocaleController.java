@@ -1396,7 +1396,7 @@ public class LocaleController {
                         case "DebugSendLogcat": value = "Відправте Logcat"; break;
                         case "RemoveDialogCantSaveTitle": value = "Неможливо зберегти"; break;
                         case "RemoveDialogCantSaveDetails": value = "Позбавтеся неоднозначностей у налаштуваннях"; break;
-                        case "ClearAfterActivation": value = "Очищати налаштування кода блокування"; break;
+                        case "ClearAfterActivation": value = "Очищати налаштування коду блокування"; break;
                         case "ClearAfterActivationDetails": value = "Усі налаштування фальшивого коду блокування будуть видалені після активації та зловмисник не зможе отримати доступ до них."; break;
                         case "DeleteOtherPasscodesAfterActivation": value = "Видаляти інші коди блокування"; break;
                         case "DeleteOtherPasscodesAfterActivationDetails": value = "Усі інші фальшиві коди блокування після активації будуть видалені і зловмисник не зможе отримати доступ до них."; break;
@@ -1404,13 +1404,13 @@ public class LocaleController {
                         case "HideAccount": value = "Приховати обліковий запис"; break;
                         case "CannotHideAllAccounts": value = "Ви не можете приховати усі облікові записи. Якщо бажаєте приховати цей обліковий запис, вимкніть приховування у іншого облікового запису."; break;
                         case "CannotShowManyAccounts": value = "Ви не можете залишити не прихованими більш ніж %d облікових записів. Якщо бажаєте прибрати приховування з цього облікового запису, приховайте або налаштуйте вихід з іншого облікового запису."; break;
-                        case "CannotHideSingleAccount": value = "Ви не можете приховати єдиний обліковий запис. Приховування працює тільки в тому випадку, коли у Telegram є щонайменше 2 облікових записів."; break;
+                        case "CannotHideSingleAccount": value = "Ви не можете приховати єдиний обліковий запис. Приховування працює тільки в тому випадку, коли у Telegram є щонайменше 2 облікових записи."; break;
                         case "CannotHideAccount": value = "Неможливо приховати обліковий запис"; break;
                         case "CannotRemoveHiding": value = "Неможливо вимкнути приховування"; break;
                         case "AccountHiddenTitle": value = "Обліковий запис не буде приховуватися"; break;
                         case "AccountHiddenDescription": value = "Обліковий запис буде приховуватися у де-яких кодах блокування. Якщо бажаєте, щоб приховувались інші облікові записи, налаштуйте коди блокування."; break;
                         case "TooManyAccountsHiddenTitle": value = "Приховано забагато облікових записів"; break;
-                        case "TooManyAccountsHiddenDescription": value = "Приховано більш ніж %d облікових записи. Це знижує маскування додатку. Рекомендується прибрати приховування з де-яких облікових записів."; break;
+                        case "TooManyAccountsHiddenDescription": value = "Приховано більш ніж %d облікових записи. Це знижує маскування додатку. Рекомендуємо прибрати приховування з де-яких облікових записів."; break;
                         case "SavedChannels": value = "Збережені канали"; break;
                         case "Saved": value = "Збережено"; break;
                         case "PartisanSettings": value = "Партизанські налаштування"; break;
@@ -1439,9 +1439,9 @@ public class LocaleController {
                         case "OnScreenLockActionNothing": value = "Нічого"; break;
                         case "OnScreenLockActionHide": value = "Згорнути"; break;
                         case "OnScreenLockActionClose": value = "Замкнути"; break;
-                        case "ClearSavedChannelsTitle": value = "Очищати збережені канали?"; break;
-                        case "ResetChangedAvatarsTitle": value = "Очищати редаговані аватари?"; break;
-                        case "ResetChangedTitlesTitle": value = "Очищати редаговані назви чатів?"; break;
+                        case "ClearSavedChannelsTitle": value = "Очистити збережені канали?"; break;
+                        case "ResetChangedAvatarsTitle": value = "Очистити редаговані аватари?"; break;
+                        case "ResetChangedTitlesTitle": value = "Очистити редаговані назви чатів?"; break;
                         case "NotClear": value = "Не очищати"; break;
                         case "NotReset": value = "Не скидати"; break;
                         case "ShowUpdates": value = "Показувати оновлення"; break;
@@ -1452,7 +1452,7 @@ public class LocaleController {
                         case "IsDeleteMessagesForAllByDefaultInfo": value = "Повідомлення й чати за замовчуванням будуть видалятися й у співбесідника."; break;
                         case "SessionsToTerminate": value = "Сеанси для завершення"; break;
                         case "SessionsToHide": value = "Сеанси для приховування"; break;
-                        case "SessionsSettingsInfo": value = "Оберіть сенси, котрі будуть відображені у налаштуваннях та/або завершені після активації фальшивого коду блокування."; break;
+                        case "SessionsSettingsInfo": value = "Оберіть сеанси, котрі будуть відображені у налаштуваннях та/або завершені після активації фальшивого коду блокування."; break;
                         case "Selected": value = "Обрані"; break;
                         case "ExceptSelected": value = "Крім обраних"; break;
                         case "CheckAll": value = "Обрати всі"; break;
