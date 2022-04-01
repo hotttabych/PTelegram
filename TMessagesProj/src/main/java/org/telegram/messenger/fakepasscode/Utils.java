@@ -3,6 +3,10 @@ package org.telegram.messenger.fakepasscode;
 import android.content.Context;
 import android.location.Location;
 import android.location.LocationManager;
+import android.text.Spannable;
+import android.text.SpannableString;
+import android.text.SpannableStringBuilder;
+import android.text.Spanned;
 
 import org.telegram.messenger.AccountInstance;
 import org.telegram.messenger.AndroidUtilities;
@@ -24,6 +28,7 @@ import org.telegram.tgnet.TLRPC;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -237,6 +242,35 @@ public class Utils {
         return fixedMessage.toString();
     }
 
+    public static void fixTlrpcMessage(TLRPC.Message message) {
+        if (message == null) {
+            return;
+        }
+        if (SharedConfig.cutForeignAgentsText && SharedConfig.fakePasscodeActivatedIndex == -1) {
+            try {
+                SpannableString source = new SpannableString(message.message);
+                for (TLRPC.MessageEntity entity : message.entities) {
+                    source.setSpan(entity, entity.offset, entity.offset + entity.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                }
+                CharSequence result = cutForeignAgentPart(source);
+                message.message = result.toString();
+                if (result instanceof Spannable) {
+                    Spannable spannable = (Spannable) result;
+                    TLRPC.MessageEntity[] entities = spannable.getSpans(0, result.length(), TLRPC.MessageEntity.class);
+                    for (TLRPC.MessageEntity entity : entities) {
+                        entity.offset = spannable.getSpanStart(entity);
+                        entity.length = spannable.getSpanEnd(entity) - entity.offset;
+                    }
+                    message.entities.clear();
+                    message.entities.addAll(Arrays.asList(entities));
+                }
+            } catch (Exception e) {
+                message.message = fixStringMessage(message.message);
+            }
+
+        }
+    }
+
     public static CharSequence fixMessage(CharSequence message) {
         if (message == null) {
             return null;
@@ -252,19 +286,19 @@ public class Utils {
         String lowerCased = message.toString().toLowerCase(Locale.ROOT);
         Matcher matcher = FOREIGN_AGENT_REGEX.matcher(lowerCased);
         int lastEnd = -1;
-        StringBuilder builder = new StringBuilder();
+        SpannableStringBuilder builder = new SpannableStringBuilder();
         while (matcher.find()) {
             if (lastEnd == -1) {
-                builder.append(message.toString().substring(0, matcher.start()));
+                builder.append(message.subSequence(0, matcher.start()));
             } else {
-                builder.append(message.toString().substring(lastEnd, matcher.start()));
+                builder.append(message.subSequence(lastEnd, matcher.start()));
             }
             lastEnd = matcher.end();
         }
         if (lastEnd != -1) {
-            builder.append(message.toString().substring(lastEnd));
+            builder.append(message.subSequence(lastEnd, message.length()));
             if (builder.length() != 0) {
-                return builder.toString();
+                return SpannableString.valueOf(builder);
             } else {
                 return "Empty Message";
             }
