@@ -395,7 +395,7 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
                         textCell.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
                     }  else if (position == sessionsToHideRow) {
                         textCell.setTextAndValue(LocaleController.getString("SessionsToHide", R.string.SessionsToHide),
-                                getSessionsLabel(actions.getSessionsToHideMode(), actions.getCheckedSessionsToHide().size()), false);
+                                getSessionsLabel(actions.getSessionsToHideMode(), actions.getSessionsToHide().size()), false);
                         textCell.setTag(Theme.key_windowBackgroundWhiteBlackText);
                         textCell.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
                     }

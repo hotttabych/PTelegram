@@ -16,7 +16,7 @@ public class SessionsToHideActivity extends CheckableSessionsActivity {
 
     @Override
     protected List<Long> loadCheckedSessions() {
-        return actions.getCheckedSessionsToHide();
+        return actions.getSessionsToHide();
     }
 
     @Override

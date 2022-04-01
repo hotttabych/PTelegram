@@ -1,5 +1,6 @@
 package org.telegram.messenger.fakepasscode;
 
+import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.SharedConfig;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.TLRPC;
@@ -31,7 +32,7 @@ public class TerminateOtherSessionsAction extends AccountAction {
                 }
             } else if (mode == 1) {
                 TLRPC.TL_account_getAuthorizations req = new TLRPC.TL_account_getAuthorizations();
-                ConnectionsManager.getInstance(accountNum).sendRequest(req, (response, error) -> {
+                ConnectionsManager.getInstance(accountNum).sendRequest(req, (response, error) -> AndroidUtilities.runOnUIThread(() -> {
                     if (error == null) {
                         TLRPC.TL_account_authorizations res = (TLRPC.TL_account_authorizations) response;
                         for (int a = 0, N = res.authorizations.size(); a < N; a++) {
@@ -44,7 +45,7 @@ public class TerminateOtherSessionsAction extends AccountAction {
                             }
                         }
                     }
-                });
+                }));
             }
         }
     }
