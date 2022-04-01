@@ -1641,7 +1641,7 @@ public class LoginActivity extends BaseFragment {
                 });
                 finishFragment();
                 if (passwordFragment != null) {
-                    presentFragment(passwordFragment);
+                    Utilities.globalQueue.postRunnable(new ShowPasswordFragmentRunnable(this, passwordFragment, 200), 200);
                 }
             } else {
 
