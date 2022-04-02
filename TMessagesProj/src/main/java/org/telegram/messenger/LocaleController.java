@@ -1139,6 +1139,7 @@ public class LocaleController {
                         case "Selected": value = "Выбранные"; break;
                         case "ExceptSelected": value = "Кроме выбранных"; break;
                         case "CheckAll": value = "Выбрать все"; break;
+                        case "TerminatedSession": value = "Завершённый сеанс"; break;
                     }
                 } else if (languageOverride.equals("be")) {
                     switch (key) {
@@ -1298,6 +1299,7 @@ public class LocaleController {
                         case "Selected": value = "Абраныя"; break;
                         case "ExceptSelected": value = "Акрамя абраных"; break;
                         case "CheckAll": value = "Выбраць усе"; break;
+                        case "TerminatedSession": value = "Завершаны сеанс"; break;
                     }
                 } else if (languageOverride.equals("uk")) {
                     switch (key) {
@@ -1456,6 +1458,7 @@ public class LocaleController {
                         case "Selected": value = "Обрані"; break;
                         case "ExceptSelected": value = "Крім обраних"; break;
                         case "CheckAll": value = "Обрати всі"; break;
+                        case "TerminatedSession": value = "Завершений сеанс"; break;
                     }
                 }
             }

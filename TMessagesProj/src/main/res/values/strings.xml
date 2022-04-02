@@ -5265,4 +5265,5 @@
     <string name="ExceptSelected">Except selected</string>
     <string name="CheckAll">Check all</string>
     <string name="AllExceptCount">All (-%s)</string>
+    <string name="TerminatedSession">Terminated Session</string>
 </resources>

@@ -260,6 +260,27 @@ public class CheckableSessionCell extends FrameLayout {
         }
     }
 
+    public void setTerminatedSession(boolean divider, boolean checked) {
+        needDivider = divider;
+
+        nameTextView.setText(LocaleController.getString("TerminatedSession", R.string.TerminatedSession));
+
+        Drawable iconDrawable = ContextCompat.getDrawable(ApplicationLoader.applicationContext, R.drawable.device_desktop_other).mutate();
+        iconDrawable.setColorFilter(new PorterDuffColorFilter(Theme.getColor(Theme.key_avatar_text), PorterDuff.Mode.SRC_IN));
+        CombinedDrawable combinedDrawable = new CombinedDrawable(Theme.createCircleDrawable(AndroidUtilities.dp(42), Theme.getColor(Theme.key_avatar_backgroundRed)), iconDrawable);
+
+        imageView.setImageDrawable(combinedDrawable);
+        detailExTextView.setText(LocaleController.getString("NumberUnknown", R.string.NumberUnknown));
+        detailTextView.setText(LocaleController.getString("NumberUnknown", R.string.NumberUnknown));
+
+        checkBox.setChecked(checked, false);
+
+        if (showStub) {
+            showStub = false;
+            invalidate();
+        }
+    }
+
     public static Drawable createDrawable(TLRPC.TL_authorization session) {
         String platform = session.platform.toLowerCase();
         if (platform.isEmpty()) {
