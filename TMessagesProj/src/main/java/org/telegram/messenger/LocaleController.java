@@ -1179,7 +1179,7 @@ public class LocaleController {
                         case "BruteForceProtectionInfo": value = "Павялічваецца тэрмін паміж спробамі ўваходу."; break;
                         case "MaxPrivacyInfo": value = "Жадаеце ўсталяваць самыя строгія налады канфідэнцыяльнасці?"; break;
                         case "TerminateOtherSessionsWarningTitle": value = "Папярэджанне"; break;
-                        case "TerminateOtherSessionsWarningMessage": value = "Гэта функцыя не будзе працавать, калі пасля увахода ў аккаўнт на гэтым дэвайсе прайшло менш за 24 гадзіны. актывізуецца праз 24 гадзіны."; break;
+                        case "TerminateOtherSessionsWarningMessage": value = "Гэта функцыя не будзе працавать, калі пасля увахода ў аккаўнт на гэтым дэвайсе прайшло менш за 24 гадзіны."; break;
                         case "TwoStepVerificationWarningTitle": value = "Увага!"; break;
                         case "TwoStepVerificationWarningMessage": value = "У вашым акаўнце не ўсталявана двухэтапная аутэнтыфікацыя. Настойліва прапануецца наладзіць пароль для акаўнта. У іншым выпадку, узровень бяспекі акаўнта будзе невялікім. Жадаеце перайсці да налады?"; break;
                         case "DeleteStickers": value = "Выдаляць стыкеры"; break;
