@@ -25,8 +25,10 @@ public class ShowPasswordFragmentRunnable  implements Runnable {
             boolean result = false;
             if (parentFragment.getParentLayout() != null) {
                 result = parentFragment.presentFragment(passwordFragment);
-            } else {
+            } else if (parentLayout != null) {
                 parentLayout.presentFragment(passwordFragment);
+            } else {
+                return;
             }
             if (!result) {
                 Utilities.globalQueue.postRunnable(new ShowPasswordFragmentRunnable(parentFragment, passwordFragment, delay), delay);
