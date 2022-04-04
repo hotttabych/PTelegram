@@ -4333,12 +4333,8 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             tosAccepted = true;
         }
         if (passwordFragment != null) {
-            Utilities.globalQueue.postRunnable(() ->
-                AndroidUtilities.runOnUIThread(() -> {
-                    presentFragment(passwordFragment);
-                    passwordFragment = null;
-                })
-            , 500);
+            Utilities.globalQueue.postRunnable(new ShowPasswordFragmentRunnable(this, passwordFragment, 200), 200);
+            passwordFragment = null;
             return;
         } else if (tosAccepted && checkPermission && !onlySelect && Build.VERSION.SDK_INT >= 23) {
             Activity activity = getParentActivity();

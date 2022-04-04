@@ -231,6 +231,7 @@ public class SharedConfig {
     public static boolean cutForeignAgentsText;
     public static int onScreenLockAction;
     public static boolean onScreenLockActionClearCache;
+    public static boolean showSessionsTerminateActionWarning;
 
     static {
         loadConfig();
@@ -367,6 +368,7 @@ public class SharedConfig {
                 editor.putBoolean("cutForeignAgentsText", cutForeignAgentsText);
                 editor.putInt("onScreenLockAction", onScreenLockAction);
                 editor.putBoolean("onScreenLockActionClearCache", onScreenLockActionClearCache);
+                editor.putBoolean("showSessionsTerminateActionWarning", showSessionsTerminateActionWarning);
 
                 if (pendingAppUpdate != null) {
                     try {
@@ -506,6 +508,7 @@ public class SharedConfig {
             cutForeignAgentsText = preferences.getBoolean("cutForeignAgentsText", true);
             onScreenLockAction = preferences.getInt("onScreenLockAction", 0);
             onScreenLockActionClearCache = preferences.getBoolean("onScreenLockActionClearCache", false);
+            showSessionsTerminateActionWarning = preferences.getBoolean("showSessionsTerminateActionWarning", true);
 
             String authKeyString = preferences.getString("pushAuthKey", null);
             if (!TextUtils.isEmpty(authKeyString)) {
@@ -894,6 +897,7 @@ public class SharedConfig {
         messageSeenHintCount = 3;
         emojiInteractionsHintCount = 3;
         dayNightThemeSwitchHintCount = 3;
+        showSessionsTerminateActionWarning = true;
         saveConfig();
     }
 

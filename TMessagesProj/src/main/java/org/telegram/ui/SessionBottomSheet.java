@@ -21,6 +21,7 @@ import androidx.core.graphics.ColorUtils;
 
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ApplicationLoader;
+import org.telegram.messenger.BuildVars;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.R;
 import org.telegram.tgnet.ConnectionsManager;
@@ -106,7 +107,8 @@ public class SessionBottomSheet extends BottomSheet {
 
         ItemView applicationItemView = new ItemView(context, false);
         stringBuilder = new StringBuilder();
-        stringBuilder.append(session.app_name);
+        boolean isSessionOfThisApp = session.api_id == BuildVars.APP_ID;
+        stringBuilder.append(isSessionOfThisApp ? "Telegram Android" : session.app_name);
         stringBuilder.append(" ").append(session.app_version);
         applicationItemView.valueText.setText(stringBuilder);
         Drawable drawable = ContextCompat.getDrawable(context, R.drawable.menu_devices).mutate();

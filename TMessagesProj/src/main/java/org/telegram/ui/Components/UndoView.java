@@ -39,6 +39,7 @@ import android.widget.TextView;
 import androidx.annotation.Keep;
 
 import org.telegram.messenger.AndroidUtilities;
+import org.telegram.messenger.BuildVars;
 import org.telegram.messenger.ChatObject;
 import org.telegram.messenger.ContactsController;
 import org.telegram.messenger.DialogObject;
@@ -1193,7 +1194,8 @@ public class UndoView extends FrameLayout {
 
             layoutParams.leftMargin = AndroidUtilities.dp(58);
             layoutParams.topMargin = AndroidUtilities.dp(6);
-            subinfoTextView.setText(authorization.app_name);
+            boolean isSessionOfThisApp = authorization.api_id == BuildVars.APP_ID;
+            subinfoTextView.setText(isSessionOfThisApp ? "Telegram Android" : authorization.app_name);
             subinfoTextView.setVisibility(VISIBLE);
             infoTextView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 14);
             infoTextView.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));

@@ -433,10 +433,14 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
         }
 
         private String getSessionsLabel(int mode, int sessionsCount) {
-            if (sessionsCount > 0) {
-                return mode == 0 ? String.valueOf(sessionsCount) : LocaleController.formatString("AllExceptCount", R.string.AllExceptCount, sessionsCount);
+            if (mode == 1) {
+                if (sessionsCount > 0) {
+                    return LocaleController.formatString("AllExceptCount", R.string.AllExceptCount, sessionsCount);
+                } else {
+                    return LocaleController.getString("FilterAllChatsShort", R.string.FilterAllChatsShort);
+                }
             } else {
-                return "0";
+                return String.valueOf(sessionsCount);
             }
         }
 

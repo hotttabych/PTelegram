@@ -1,6 +1,7 @@
 package org.telegram.ui;
 
-import android.app.AlertDialog;
+import org.telegram.messenger.SharedConfig;
+import org.telegram.ui.ActionBar.AlertDialog;
 import android.content.Context;
 import android.view.View;
 
@@ -21,11 +22,17 @@ public class SessionsToTerminateActivity extends CheckableSessionsActivity {
 
     @Override
     public View createView(Context context) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
-        builder.setTitle(LocaleController.getString("TerminateOtherSessionsWarningTitle", R.string.TerminateOtherSessionsWarningTitle));
-        builder.setMessage(LocaleController.getString("TerminateOtherSessionsWarningMessage", R.string.TerminateOtherSessionsWarningMessage));
-        builder.setPositiveButton(LocaleController.getString("OK", R.string.OK), null);
-        showDialog(builder.create());
+        if (SharedConfig.showSessionsTerminateActionWarning) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
+            builder.setTitle(LocaleController.getString("TerminateOtherSessionsWarningTitle", R.string.TerminateOtherSessionsWarningTitle));
+            builder.setMessage(LocaleController.getString("TerminateOtherSessionsWarningMessage", R.string.TerminateOtherSessionsWarningMessage));
+            builder.setPositiveButton(LocaleController.getString("OK", R.string.OK), null);
+            builder.setNegativeButton(LocaleController.getString("DoNotShowAgain", R.string.DoNotShowAgain), (dialog, whichButton) -> {
+                SharedConfig.showSessionsTerminateActionWarning = false;
+                SharedConfig.saveConfig();
+            });
+            showDialog(builder.create());
+        }
         return super.createView(context);
     }
 

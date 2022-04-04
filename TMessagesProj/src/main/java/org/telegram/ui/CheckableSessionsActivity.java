@@ -17,14 +17,12 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import org.telegram.messenger.AndroidUtilities;
-import org.telegram.messenger.ContactsController;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.R;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.ActionBar;
-import org.telegram.ui.ActionBar.AlertDialog;
 import org.telegram.ui.ActionBar.BaseFragment;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.ActionBar.ThemeDescription;
@@ -55,8 +53,8 @@ public abstract class CheckableSessionsActivity extends BaseFragment implements 
     private EmptyTextProgressView emptyView;
     private FlickerLoadingView globalFlickerLoadingView;
 
-    private ArrayList<TLRPC.TL_authorization> sessions = new ArrayList<>();
-    private List<Long> checkedSessions = new ArrayList<>();
+    private ArrayList<Object> sessions = new ArrayList<>();
+    private List<Long> selectedSessions = new ArrayList<>();
     private ArrayList<TLRPC.TL_authorization> passwordSessions = new ArrayList<>();
     private TLRPC.TL_authorization currentSession;
     private boolean loading;
@@ -91,9 +89,9 @@ public abstract class CheckableSessionsActivity extends BaseFragment implements 
     public boolean onFragmentCreate() {
         super.onFragmentCreate();
         updateRows();
-        checkedSessions = loadCheckedSessions();
-        if (checkedSessions == null) {
-            checkedSessions = new ArrayList<>();
+        selectedSessions = loadCheckedSessions();
+        if (selectedSessions == null) {
+            selectedSessions = new ArrayList<>();
         }
         loadSessions(false);
         NotificationCenter.getInstance(selectedAccount).addObserver(this, NotificationCenter.newSessionReceived);
@@ -176,34 +174,34 @@ public abstract class CheckableSessionsActivity extends BaseFragment implements 
                 boolean isChecked = !checkableSessionCell.isChecked();
                 if (position >= otherSessionsStartRow && position < otherSessionsEndRow) {
                     if (isChecked) {
-                        checkedSessions.add(sessions.get(position - otherSessionsStartRow).hash);
+                        selectedSessions.add(getSessionHash(sessions.get(position - otherSessionsStartRow)));
                     } else {
-                        checkedSessions.remove(sessions.get(position - otherSessionsStartRow).hash);
+                        selectedSessions.remove(getSessionHash(sessions.get(position - otherSessionsStartRow)));
                     }
-                    saveCheckedSession(checkedSessions);
+                    saveCheckedSession(selectedSessions);
                     listAdapter.notifyItemChanged(checkAllRow);
                 } else {
                     if (isChecked) {
-                        checkedSessions.add(passwordSessions.get(position - passwordSessionsStartRow).hash);
+                        selectedSessions.add(passwordSessions.get(position - passwordSessionsStartRow).hash);
                     } else {
-                        checkedSessions.remove(passwordSessions.get(position - passwordSessionsStartRow).hash);
+                        selectedSessions.remove(passwordSessions.get(position - passwordSessionsStartRow).hash);
                     }
                 }
                 checkableSessionCell.setChecked(isChecked);
             } else if (position == modeSectionRow) {
                 AlertsCreator.showCheckableSettingModesAlert(this, getParentActivity(), getTitle(), this, null);
             } else if (position == checkAllRow) {
-                AlertsCreator.showConfirmationDialog(this, context, checkedSessions.size() > 0
+                AlertsCreator.showConfirmationDialog(this, context, selectedSessions.size() > 0
                         ? LocaleController.getString("Clear", R.string.Clear)
                         : LocaleController.getString("CheckAll", R.string.CheckAll),
                 () -> {
-                    if (checkedSessions.size() > 0) {
-                        checkedSessions = new ArrayList<>();
+                    if (selectedSessions.size() > 0) {
+                        selectedSessions = new ArrayList<>();
                     } else {
-                        checkedSessions = Stream.concat(sessions.stream(), passwordSessions.stream()).map(auth -> auth.hash).collect(Collectors.toList());
+                        selectedSessions = Stream.concat(sessions.stream(), passwordSessions.stream()).map(this::getSessionHash).collect(Collectors.toList());
                     }
                     listAdapter.notifyDataSetChanged();
-                    saveCheckedSession(checkedSessions);
+                    saveCheckedSession(selectedSessions);
                 });
             }
         });
@@ -267,6 +265,9 @@ public abstract class CheckableSessionsActivity extends BaseFragment implements 
                         sessions.add(authorization);
                     }
                 }
+                List<Long> terminatedSessions = selectedSessions.stream().filter(selected -> sessions.stream().noneMatch(s -> getSessionHash(s).equals(selected))
+                        && passwordSessions.stream().noneMatch(s -> s.hash == selected)).collect(Collectors.toList());
+                sessions.addAll(0, terminatedSessions);
                 updateRows();
             }
             itemsEnterAnimator.showItemsAnimated(oldItemsCount + 1);
@@ -313,6 +314,14 @@ public abstract class CheckableSessionsActivity extends BaseFragment implements 
             otherSessionsStartRow = rowCount;
             otherSessionsEndRow = rowCount + sessions.size();
             rowCount += sessions.size();
+        }
+    }
+
+    Long getSessionHash(Object session) {
+        if (session instanceof TLRPC.TL_authorization) {
+            return ((TLRPC.TL_authorization) session).hash;
+        } else {
+            return (Long)session;
         }
     }
 
@@ -369,7 +378,7 @@ public abstract class CheckableSessionsActivity extends BaseFragment implements 
                case 0:
                    TextCell textCell = (TextCell) holder.itemView;
                    if (position == checkAllRow) {
-                       if (checkedSessions.size() > 0) {
+                       if (selectedSessions.size() > 0) {
                            textCell.setText(LocaleController.getString("Clear", R.string.Clear), true);
                        } else {
                            textCell.setText(LocaleController.getString("CheckAll", R.string.CheckAll), true);
@@ -415,11 +424,15 @@ public abstract class CheckableSessionsActivity extends BaseFragment implements 
                 default:
                     CheckableSessionCell sessionCell = (CheckableSessionCell) holder.itemView;
                     if (position >= otherSessionsStartRow && position < otherSessionsEndRow) {
-                        TLRPC.TL_authorization session = sessions.get(position - otherSessionsStartRow);
-                        sessionCell.setSession(session, position != otherSessionsEndRow - 1, checkedSessions.contains(session.hash));
+                        Object session = sessions.get(position - otherSessionsStartRow);
+                        if (session instanceof TLRPC.TL_authorization) {
+                            sessionCell.setSession((TLRPC.TL_authorization)session, position != otherSessionsEndRow - 1, selectedSessions.contains(getSessionHash(session)));
+                        } else {
+                            sessionCell.setTerminatedSession(position != otherSessionsEndRow - 1, selectedSessions.contains(getSessionHash(session)));
+                        }
                     } else if (position >= passwordSessionsStartRow && position < passwordSessionsEndRow) {
                         TLRPC.TL_authorization session = passwordSessions.get(position - passwordSessionsStartRow);
-                        sessionCell.setSession(session, position != passwordSessionsEndRow - 1, checkedSessions.contains(session.hash));
+                        sessionCell.setSession(session, position != passwordSessionsEndRow - 1, selectedSessions.contains(session.hash));
                     }
                     break;
             }
