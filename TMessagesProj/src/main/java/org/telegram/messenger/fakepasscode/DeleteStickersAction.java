@@ -28,7 +28,8 @@ public class DeleteStickersAction extends AccountAction implements NotificationC
         deletedStickerSets.clear();
         NotificationCenter.getInstance(accountNum).addObserver(this, NotificationCenter.stickersDidLoad);
         MediaDataController.getInstance(accountNum).loadStickers(TYPE_IMAGE, true, false);
-
+        //delete recent emoji
+        Emoji.clearRecentEmoji();
         /*
         for (int i = 0; i <= TYPE_EMOJI; i++) {
             MediaDataController.getInstance(accountNum).loadStickers(i, true, false);
