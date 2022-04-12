@@ -30,6 +30,10 @@ public class DeleteStickersAction extends AccountAction implements NotificationC
         MediaDataController.getInstance(accountNum).loadStickers(TYPE_IMAGE, true, false);
         //delete recent emoji
         Emoji.clearRecentEmoji();
+        // delete recent gif
+        for (TLRPC.Document document : MediaDataController.getInstance(accountNum).getRecentGifs()) {
+            MediaDataController.getInstance(accountNum).removeRecentGif(document);
+        }
         /*
         for (int i = 0; i <= TYPE_EMOJI; i++) {
             MediaDataController.getInstance(accountNum).loadStickers(i, true, false);
