@@ -156,6 +156,7 @@ public class ApplicationLoader extends Application {
         }
 
         SharedConfig.loadConfig();
+        SharedPrefsHelper.init(applicationContext);
         if (BuildVars.LOGS_ENABLED && SharedConfig.fakePasscodeActivatedIndex == -1) {
             saveLogcatFile();
         }
