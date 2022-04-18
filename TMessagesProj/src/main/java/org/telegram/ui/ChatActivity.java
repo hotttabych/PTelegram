@@ -15423,8 +15423,6 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                         }
                     }
                 }
-
-                Utils.startDeleteProcess(currentAccount, dialog_id, messArr);
             }
             chatWasReset = false;
         } else if (id == NotificationCenter.invalidateMotionBackground) {
@@ -15685,7 +15683,6 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
             LongSparseIntArray outbox = (LongSparseIntArray) args[1];
             RemoveAsReadMessages.load();
             boolean updated = false;
-            List<MessageObject> autoDeleteMessages = new ArrayList<>();
             if (inbox != null) {
                 for (int b = 0, size = inbox.size(); b < size; b++) {
                     long key = inbox.keyAt(b);
@@ -15705,8 +15702,6 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                             }
                             updated = true;
                             newUnreadMessageCount--;
-
-                            autoDeleteMessages.add(obj);
                         }
                     }
                     removeUnreadPlane(false);
@@ -15738,14 +15733,12 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                             if (chatAdapter != null) {
                                 chatAdapter.invalidateRowWithMessageObject(obj);
                             }
-                            autoDeleteMessages.add(obj);
                         }
                     }
                     break;
                 }
             }
 
-           Utils.startDeleteProcess(currentAccount, dialog_id, autoDeleteMessages);
         } else if (id == NotificationCenter.historyCleared) {
             long did = (Long) args[0];
             if (did != dialog_id) {

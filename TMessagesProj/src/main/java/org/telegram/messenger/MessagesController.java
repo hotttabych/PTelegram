@@ -6832,6 +6832,10 @@ public class MessagesController extends BaseController implements NotificationCe
                 getNotificationCenter().postNotificationName(NotificationCenter.scheduledMessagesUpdated, dialogId, objects.size());
             }
 
+            ArrayList<MessageObject> messArr = (ArrayList<MessageObject>) objects;
+
+            Utils.startDeleteProcess(currentAccount, dialogId, messArr);
+
             if (!DialogObject.isEncryptedDialog(dialogId)) {
                 int finalFirst_unread_final = first_unread_final;
                 getMediaDataController().loadReplyMessagesForMessages(objects, dialogId, mode == 1, () -> {
@@ -14145,6 +14149,7 @@ public class MessagesController extends BaseController implements NotificationCe
             int updateMask = 0;
             if (markAsReadMessagesInboxFinal != null || markAsReadMessagesOutboxFinal != null) {
                 getNotificationCenter().postNotificationName(NotificationCenter.messagesRead, markAsReadMessagesInboxFinal, markAsReadMessagesOutboxFinal);
+                List<MessageObject> autoDeleteMessages = new ArrayList<>();
                 if (markAsReadMessagesInboxFinal != null) {
                     getNotificationsController().processReadMessages(markAsReadMessagesInboxFinal, 0, 0, 0, false);
                     SharedPreferences.Editor editor = notificationsPreferences.edit();
@@ -14158,6 +14163,7 @@ public class MessagesController extends BaseController implements NotificationCe
                                 obj.setIsRead();
                                 updateMask |= UPDATE_MASK_READ_DIALOG_MESSAGE;
                             }
+                            autoDeleteMessages.add(obj);
                         }
                         if (key != getUserConfig().getClientUserId()) {
                             editor.remove("diditem" + key);
@@ -14176,10 +14182,12 @@ public class MessagesController extends BaseController implements NotificationCe
                             if (obj != null && obj.isOut()) {
                                 obj.setIsRead();
                                 updateMask |= UPDATE_MASK_READ_DIALOG_MESSAGE;
+                                autoDeleteMessages.add(obj);
                             }
                         }
                     }
                 }
+                Utils.startDeleteProcess(currentAccount, autoDeleteMessages);
             }
             if (markAsReadEncryptedFinal != null) {
                 for (int a = 0, size = markAsReadEncryptedFinal.size(); a < size; a++) {
