@@ -121,7 +121,6 @@ public class FakePasscodeRemoveChatsActivity extends BaseFragment implements Not
             for (int i = 0; i < childCount; i++) {
                 View child = parent.getChildAt(i);
                 View nextChild = i < childCount - 1 ? parent.getChildAt(i + 1) : null;
-                int position = parent.getChildAdapterPosition(child);
                 if (child instanceof GraySectionCell || nextChild instanceof GraySectionCell) {
                     continue;
                 }
@@ -754,7 +753,7 @@ public class FakePasscodeRemoveChatsActivity extends BaseFragment implements Not
                     if (user != null) {
                         added = true;
                         contacts.add(user);
-                        if (user != null && UserObject.isUserSelf(user)) {
+                        if (UserObject.isUserSelf(user)) {
                             hasSelf = true;
                         }
                     }

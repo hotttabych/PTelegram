@@ -1,19 +1,11 @@
 package org.telegram.ui;
 
 import android.Manifest;
-import android.animation.ObjectAnimator;
-import android.animation.StateListAnimator;
-import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.graphics.Canvas;
-import android.graphics.Outline;
-import android.graphics.PorterDuff;
-import android.graphics.PorterDuffColorFilter;
 import android.graphics.Rect;
-import android.graphics.drawable.Drawable;
-import android.os.Build;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.SpannableStringBuilder;
@@ -30,16 +22,19 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.ViewOutlineProvider;
 import android.view.inputmethod.EditorInfo;
-import android.widget.CheckBox;
-import android.widget.CompoundButton;
-import android.widget.ImageView;
 import android.widget.ScrollView;
+
+import androidx.annotation.Keep;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import org.telegram.messenger.AccountInstance;
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ContactsController;
+import org.telegram.messenger.DialogObject;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.NotificationCenter;
@@ -58,7 +53,6 @@ import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.ActionBar.ThemeDescription;
 import org.telegram.ui.Adapters.SearchAdapterHelper;
 import org.telegram.ui.Cells.GroupCreateUserCell;
-import org.telegram.ui.Components.CombinedDrawable;
 import org.telegram.ui.Components.EditTextBoldCursor;
 import org.telegram.ui.Components.EditTextCaption;
 import org.telegram.ui.Components.EmptyTextProgressView;
@@ -74,12 +68,6 @@ import java.util.ArrayList;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import androidx.annotation.Keep;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-
 public class FakePasscodeTelegramMessagesActivity extends BaseFragment implements NotificationCenter.NotificationCenterDelegate {
 
     private ScrollView scrollView;
@@ -88,7 +76,6 @@ public class FakePasscodeTelegramMessagesActivity extends BaseFragment implement
     private RecyclerListView listView;
     private EmptyTextProgressView emptyView;
     private TelegramMessageAdapter adapter;
-    private ImageView floatingButton;
     private boolean ignoreScrollEvent;
 
     private int containerHeight;
@@ -207,18 +194,18 @@ public class FakePasscodeTelegramMessagesActivity extends BaseFragment implement
 
     @Override
     public boolean onFragmentCreate() {
-        NotificationCenter.getInstance(action.accountNum).addObserver(this, NotificationCenter.contactsDidLoad);
-        NotificationCenter.getInstance(action.accountNum).addObserver(this, NotificationCenter.updateInterfaces);
-        NotificationCenter.getInstance(action.accountNum).addObserver(this, NotificationCenter.chatDidCreated);
+        getNotificationCenter().addObserver(this, NotificationCenter.contactsDidLoad);
+        getNotificationCenter().addObserver(this, NotificationCenter.updateInterfaces);
+        getNotificationCenter().addObserver(this, NotificationCenter.chatDidCreated);
         return super.onFragmentCreate();
     }
 
     @Override
     public void onFragmentDestroy() {
         super.onFragmentDestroy();
-        NotificationCenter.getInstance(action.accountNum).removeObserver(this, NotificationCenter.contactsDidLoad);
-        NotificationCenter.getInstance(action.accountNum).removeObserver(this, NotificationCenter.updateInterfaces);
-        NotificationCenter.getInstance(action.accountNum).removeObserver(this, NotificationCenter.chatDidCreated);
+        getNotificationCenter().removeObserver(this, NotificationCenter.contactsDidLoad);
+        getNotificationCenter().removeObserver(this, NotificationCenter.updateInterfaces);
+        getNotificationCenter().removeObserver(this, NotificationCenter.chatDidCreated);
     }
 
     @Override
@@ -255,10 +242,6 @@ public class FakePasscodeTelegramMessagesActivity extends BaseFragment implement
                 scrollView.measure(MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(maxSize, MeasureSpec.AT_MOST));
                 listView.measure(MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(height - scrollView.getMeasuredHeight(), MeasureSpec.EXACTLY));
                 emptyView.measure(MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(height - scrollView.getMeasuredHeight(), MeasureSpec.EXACTLY));
-                if (floatingButton != null) {
-                    int w = AndroidUtilities.dp(Build.VERSION.SDK_INT >= 21 ? 56 : 60);
-                    floatingButton.measure(MeasureSpec.makeMeasureSpec(w, MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(w, MeasureSpec.EXACTLY));
-                }
             }
 
             @Override
@@ -266,12 +249,6 @@ public class FakePasscodeTelegramMessagesActivity extends BaseFragment implement
                 scrollView.layout(0, 0, scrollView.getMeasuredWidth(), scrollView.getMeasuredHeight());
                 listView.layout(0, scrollView.getMeasuredHeight(), listView.getMeasuredWidth(), scrollView.getMeasuredHeight() + listView.getMeasuredHeight());
                 emptyView.layout(0, scrollView.getMeasuredHeight(), emptyView.getMeasuredWidth(), scrollView.getMeasuredHeight() + emptyView.getMeasuredHeight());
-
-                if (floatingButton != null) {
-                    int l = LocaleController.isRTL ? AndroidUtilities.dp(14) : (right - left) - AndroidUtilities.dp(14) - floatingButton.getMeasuredWidth();
-                    int t = bottom - top - AndroidUtilities.dp(14) - floatingButton.getMeasuredHeight();
-                    floatingButton.layout(l, t, l + floatingButton.getMeasuredWidth(), t + floatingButton.getMeasuredHeight());
-                }
             }
 
             @Override
@@ -409,7 +386,7 @@ public class FakePasscodeTelegramMessagesActivity extends BaseFragment implement
         });
 
         emptyView = new EmptyTextProgressView(context);
-        if (ContactsController.getInstance(action.accountNum).isLoadingContacts()) {
+        if (getContactsController().isLoadingContacts()) {
             emptyView.showProgress();
         } else {
             emptyView.showTextView();
@@ -453,24 +430,34 @@ public class FakePasscodeTelegramMessagesActivity extends BaseFragment implement
                         entry.addGeolocation = ((DialogCheckBox)views.get(1)).isChecked();
                         SharedConfig.saveConfig();
                         cell.setChecked(true, true);
+                        if (editText.length() > 0) {
+                            editText.setText(null);
+                        }
                     };
                     template.negativeListener = (dlg, whichButton) -> {
                         action.entries.remove(entry);
                         SharedConfig.saveConfig();
                         cell.setChecked(false, true);
+                        if (editText.length() > 0) {
+                            editText.setText(null);
+                        }
                     };
                     AlertDialog dialog = FakePasscodeDialogBuilder.build(getParentActivity(), template);
-                    showDialog(dialog);
+                    showDialog(dialog, (dlg) -> {
+                        if (editText.length() > 0) {
+                            editText.setText(null);
+                        }
+                    });
                 } else {
                     if (action.entries.size() >= 100) {
                         return;
                     }
                     if (object instanceof TLRPC.User) {
                         TLRPC.User user = (TLRPC.User) object;
-                        MessagesController.getInstance(action.accountNum).putUser(user, !searching);
+                        getMessagesController().putUser(user, !searching);
                     } else if (object instanceof TLRPC.Chat) {
                         TLRPC.Chat chat = (TLRPC.Chat) object;
-                        MessagesController.getInstance(action.accountNum).putChat(chat, !searching);
+                        getMessagesController().putChat(chat, !searching);
                     }
                     DialogTemplate template = new DialogTemplate();
                     template.type = DialogType.ADD;
@@ -483,16 +470,20 @@ public class FakePasscodeTelegramMessagesActivity extends BaseFragment implement
                         action.entries.add(new TelegramMessageAction.Entry(id, message, addGeolocation));
                         SharedConfig.saveConfig();
                         cell.setChecked(true, true);
+                        if (editText.length() > 0) {
+                            editText.setText(null);
+                        }
                     };
                     AlertDialog dialog = FakePasscodeDialogBuilder.build(getParentActivity(), template);
-                    showDialog(dialog);
+                    showDialog(dialog, (dlg) -> {
+                        if (editText.length() > 0) {
+                            editText.setText(null);
+                        }
+                    });
                 }
                 updateHint();
                 if (searching || searchWas) {
                     AndroidUtilities.showKeyboard(editText);
-                }
-                if (editText.length() > 0) {
-                    editText.setText(null);
                 }
             }
         });
@@ -631,7 +622,7 @@ public class FakePasscodeTelegramMessagesActivity extends BaseFragment implement
 
             Set<Long> selectedIds = action.entries.stream().map(e -> (long) e.userId).collect(Collectors.toSet());
             for (Long id: selectedIds) {
-                if (id > 0) {
+                if (DialogObject.isUserDialog(id)) {
                     TLRPC.User user = getMessagesController().getUser(id);
                     if (user != null) {
                         contacts.add(user);
@@ -639,7 +630,12 @@ public class FakePasscodeTelegramMessagesActivity extends BaseFragment implement
                             hasSelf = true;
                         }
                     }
-                } else {
+                } else if (DialogObject.isEncryptedDialog(id)) {
+                    TLRPC.EncryptedChat encryptedChat = getMessagesController().getEncryptedChat(DialogObject.getEncryptedChatId(id));
+                    if (encryptedChat != null) {
+                        contacts.add(encryptedChat);
+                    }
+                } else if (DialogObject.isChatDialog(id)) {
                     TLRPC.Chat chat = getMessagesController().getChat(-id);
                     if (chat != null) {
                         if (!chat.broadcast || (chat.admin_rights != null && chat.admin_rights.post_messages)) {
@@ -654,7 +650,7 @@ public class FakePasscodeTelegramMessagesActivity extends BaseFragment implement
                 if (dialog.id == 0 || selectedIds.contains(dialog.id)) {
                     continue;
                 }
-                if (dialog.id > 0) {
+                if (DialogObject.isUserDialog(dialog.id)) {
                     TLRPC.User user = getMessagesController().getUser(dialog.id);
                     if (user != null) {
                         contacts.add(user);
@@ -662,7 +658,12 @@ public class FakePasscodeTelegramMessagesActivity extends BaseFragment implement
                             hasSelf = true;
                         }
                     }
-                } else {
+                } else if (DialogObject.isEncryptedDialog(dialog.id)) {
+                    TLRPC.EncryptedChat encryptedChat = getMessagesController().getEncryptedChat(DialogObject.getEncryptedChatId(dialog.id));
+                    if (encryptedChat != null) {
+                        contacts.add(encryptedChat);
+                    }
+                } else if (DialogObject.isChatDialog(dialog.id)) {
                     TLRPC.Chat chat = getMessagesController().getChat(-dialog.id);
                     if (chat != null) {
                         if (!chat.broadcast || (chat.admin_rights != null && chat.admin_rights.post_messages)) {
