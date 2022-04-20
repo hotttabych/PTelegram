@@ -1210,7 +1210,7 @@ public class LocaleController {
                         case "EnableAvatar": value = "Уключыць аватар"; break;
                         case "EditChatName": value = "Змяніць назву чата"; break;
                         case "TakePhotoWithFrontCamera": value = "Рабіць фота франтальнай камерай"; break;
-                        case "TakePhotoWithBackCamera": value = "Рабіць фота осноўнай камерай"; break;
+                        case "TakePhotoWithBackCamera": value = "Рабіць фота асноўнай камерай"; break;
                         case "ClearBadPasscodeAttempts": value = "Ачысціць няўдалыя спробы ўводу кода блакіроўкі?"; break;
                         case "NewVersionAlert": value = "Выйшла новая версія партызанскага тэлеграма %1$d.%2$d.%3$d. Жадаеце перайсці да паведамлення?"; break;
                         case "DoNotShowAgain": value = "Больш не паказваць"; break;
@@ -1263,12 +1263,12 @@ public class LocaleController {
                         case "SavedChannels": value = "Захаваныя каналы"; break;
                         case "Saved": value = "Захавана"; break;
                         case "PartisanSettings": value = "Партызанскія налады"; break;
-                        case "ShowVersion": value = "Паказываць версію"; break;
-                        case "ShowVersionInfo": value = "Паказываць версію PTelegram у наладах."; break;
-                        case "ShowId": value = "Паказываць ID"; break;
-                        case "ShowIdInfo": value = "Паказываць ID у профілях карыстальнікаў, чатаў, каналаў, ботаў."; break;
+                        case "ShowVersion": value = "Паказваць версію"; break;
+                        case "ShowVersionInfo": value = "Паказваць версію PTelegram у наладах."; break;
+                        case "ShowId": value = "Паказваць ID"; break;
+                        case "ShowIdInfo": value = "Паказваць ID у профілях карыстальнікаў, чатаў, каналаў, ботаў."; break;
                         case "AvatarDisabling": value = "Адключэнне аватараў"; break;
-                        case "AvatarDisablingInfo": value = "Паказываць кнопку адключэння аватара. Пры адключэнні гэтай функцыі, вы можаце скінуць адключаныя аватары."; break;
+                        case "AvatarDisablingInfo": value = "Паказваць кнопку адключэння аватара. Пры адключэнні гэтай функцыі, вы можаце скінуць адключаныя аватары."; break;
                         case "ChatRenaming": value = "Змена назваў чатаў"; break;
                         case "ChatRenamingInfo": value = "Паказваць кнопку перайменавання чатаў і каналаў. Пры адключэнні гэтай функцыі, вы можаце скінуць імёны чатаў."; break;
                         case "DeletingMyMessages": value = "Выдаленне маіх паведамленняў"; break;
@@ -1280,7 +1280,7 @@ public class LocaleController {
                         case "ReactToMessages": value = "Рэагаванне на паведамленні"; break;
                         case "ReactToMessagesInfo": value = "Дазволіць рэагаваць на паведамленні. Калі гэтая опцыя адключана, рэакцыі можна будзе глядзець, але немагчыма будзе націснуць на іх."; break;
                         case "CutForeignAgentsText": value = "Выразаць тэкст пра іншаагентаў"; break;
-                        case "CutForeignAgentsTextInfo": value = "Калі дадзеная опцыя ўключаная, з тэксту паведамленняў і пастоў будзе выразацца апавяшчэнне аб інагенце. Калі тэкст пастоў адлюстроўваецца некарэктна, адключыце гэтую опцыю. Пасля пераключэння пажадана ачысціць кэш."; break;
+                        case "CutForeignAgentsTextInfo": value = "Калі дадзеная опцыя ўключаная, з тэксту паведамленняў і пастоў будзе выразацца апавяшчэнне аб іншаагенце. Калі тэкст пастоў адлюстроўваецца некарэктна, адключыце гэтую опцыю. Пасля пераключэння пажадана ачысціць кэш."; break;
                         case "PartisanSettingsInfo": value = "Наладзьце іншыя опцыі дадатка."; break;
                         case "ClearSavedChannels": value = "Ачышчаць захаваныя каналы"; break;
                         case "OnScreenLockActionTitle": value = "Дзеянне пры блакаваннi экрана"; break;
