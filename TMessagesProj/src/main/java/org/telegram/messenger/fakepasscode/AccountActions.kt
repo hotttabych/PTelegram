@@ -7,6 +7,8 @@ import org.telegram.messenger.Utilities
 import org.telegram.tgnet.TLRPC
 import kotlin.reflect.KMutableProperty
 import kotlin.reflect.full.memberProperties
+import kotlin.reflect.javaType
+import kotlin.reflect.jvm.javaType
 
 class AccountActions(var accountNum: Int) : Action {
     var removeChatsAction = RemoveChatsAction()
@@ -107,7 +109,7 @@ class AccountActions(var accountNum: Int) : Action {
 
     fun <T: AccountAction> setAction(action: T) {
         for (property in AccountActions::class.memberProperties) {
-            if (property.returnType == action.javaClass && property is KMutableProperty<*>) {
+            if (property.returnType.javaType == action.javaClass && property is KMutableProperty<*>) {
                 property.setter.call(action);
             }
         }
