@@ -110,7 +110,7 @@ class AccountActions(var accountNum: Int) : Action {
     fun <T: AccountAction> setAction(action: T) {
         for (property in AccountActions::class.memberProperties) {
             if (property.returnType.javaType == action.javaClass && property is KMutableProperty<*>) {
-                property.setter.call(action);
+                property.setter.call(this, action);
             }
         }
     }
