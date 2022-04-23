@@ -22,6 +22,8 @@ import org.telegram.messenger.R;
 import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.fakepasscode.AccountActions;
+import org.telegram.messenger.fakepasscode.FakePasscode;
+import org.telegram.messenger.fakepasscode.TerminateOtherSessionsAction;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.ActionBar;
 import org.telegram.ui.ActionBar.AlertDialog;
@@ -49,6 +51,7 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
     private RecyclerListView listView;
 
     private AccountActions actions;
+    private FakePasscode fakePasscode;
 
     private int rowCount;
 
@@ -72,9 +75,10 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
     private int sessionsToHideRow;
     private int sessionsSettingsDetailRow;
 
-    public FakePasscodeAccountActionsActivity(AccountActions actions) {
+    public FakePasscodeAccountActionsActivity(AccountActions actions, FakePasscode fakePasscode) {
         super();
         this.actions = actions;
+        this.fakePasscode = fakePasscode;
     }
 
     @Override
@@ -100,7 +104,7 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
         fragmentView = new FrameLayout(context);
         FrameLayout frameLayout = (FrameLayout) fragmentView;
 
-        TLRPC.User user = UserConfig.getInstance(actions.accountNum).getCurrentUser();
+        TLRPC.User user = UserConfig.getInstance(actions.getAccountNum()).getCurrentUser();
         String activityTitle = "";
         if (user.first_name != null && user.last_name != null) {
             activityTitle = user.first_name + " " + user.last_name;
@@ -152,25 +156,25 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
                 return;
             }
             if (position == changeTelegramMessageRow) {
-                presentFragment(new FakePasscodeTelegramMessagesActivity(actions.getMessageAction()));
+                presentFragment(new FakePasscodeTelegramMessagesActivity(actions.getTelegramMessageAction()));
             } else if (position == changePhoneRow) {
                 DialogTemplate template = new DialogTemplate();
                 template.type = DialogType.EDIT;
                 template.title = LocaleController.getString("FakePhoneNumber", R.string.FakePhoneNumber);
-                template.addPhoneEditTemplate(actions.getPhone().isEmpty() ? "" : "+" + actions.getPhone(), LocaleController.getString("FakePhoneNumber", R.string.FakePhoneNumber), true);
+                template.addPhoneEditTemplate(actions.getFakePhone().isEmpty() ? "" : "+" + actions.getFakePhone(), LocaleController.getString("FakePhoneNumber", R.string.FakePhoneNumber), true);
                 template.positiveListener = views -> {
-                    actions.setPhone(((EditTextCaption)views.get(0)).getText().toString()
+                    actions.setFakePhone(((EditTextCaption)views.get(0)).getText().toString()
                             .replace("+", "").replace("-", "").replace(" ", ""));
                     SharedConfig.saveConfig();
                     TextSettingsCell cell = (TextSettingsCell) view;
-                    String value = actions.getPhone().isEmpty() ? LocaleController.getString("Disabled", R.string.Disabled) : PhoneFormat.getInstance().format("+" + actions.getPhone());
+                    String value = actions.getFakePhone().isEmpty() ? LocaleController.getString("Disabled", R.string.Disabled) : PhoneFormat.getInstance().format("+" + actions.getFakePhone());
                     cell.setTextAndValue(LocaleController.getString("ActivationMessage", R.string.ActivationMessage), value, false);
                     if (listAdapter != null) {
                         listAdapter.notifyDataSetChanged();
                     }
                 };
                 template.negativeListener = (dlg, whichButton) -> {
-                    actions.removePhone();
+                    actions.removeFakePhone();
                     TextSettingsCell cell = (TextSettingsCell) view;
                     cell.setTextAndValue(LocaleController.getString("ActivationMessage", R.string.ActivationMessage), LocaleController.getString("Disabled", R.string.Disabled), false);
                     if (listAdapter != null) {
@@ -207,7 +211,7 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
                 cell.setChecked(actions.isLogOut());
                 if (!actions.isLogOut()) {
                     int targetHideCount = UserConfig.getActivatedAccountsCount() - UserConfig.FAKE_PASSCODE_MAX_ACCOUNT_COUNT;
-                    if (!actions.isHideAccount() && actions.getFakePasscode().getHideOrLogOutCount() < targetHideCount) {
+                    if (!actions.isHideAccount() && fakePasscode.getHideOrLogOutCount() < targetHideCount) {
                         actions.toggleHideAccountAction();
                     }
                 } else {
@@ -219,14 +223,14 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
                     updateRows();
                     listAdapter.notifyDataSetChanged();
                 }
-                ContactsController.getInstance(actions.accountNum).checkAppAccount();
-                NotificationsController.getInstance(actions.accountNum).cleanupSystemSettings();
+                ContactsController.getInstance(actions.getAccountNum()).checkAppAccount();
+                NotificationsController.getInstance(actions.getAccountNum()).cleanupSystemSettings();
             } else if (position == hideAccountRow) {
                 TextCheckCell cell = (TextCheckCell) view;
                 actions.toggleHideAccountAction();
                 cell.setChecked(actions.isHideAccount());
                 final int maxAccountHidings = UserConfig.MAX_ACCOUNT_COUNT - UserConfig.FAKE_PASSCODE_MAX_ACCOUNT_COUNT;
-                if (actions.isHideAccount() && actions.getFakePasscode().getHideAccountCount() > maxAccountHidings) {
+                if (actions.isHideAccount() && fakePasscode.getHideAccountCount() > maxAccountHidings) {
                     AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
                     String message = String.format(LocaleController.getString("TooManyAccountsHiddenDescription", R.string.TooManyAccountsHiddenDescription),
                             maxAccountHidings);
@@ -235,8 +239,8 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
                     builder.setPositiveButton(LocaleController.getString("OK", R.string.OK), null);
                     showDialog(builder.create());
                 }
-                ContactsController.getInstance(actions.accountNum).checkAppAccount();
-                NotificationsController.getInstance(actions.accountNum).cleanupSystemSettings();
+                ContactsController.getInstance(actions.getAccountNum()).checkAppAccount();
+                NotificationsController.getInstance(actions.getAccountNum()).cleanupSystemSettings();
             } else if (position == sessionsToTerminateRow) {
                 presentFragment(new SessionsToTerminateActivity(actions));
             } else if (position == sessionsToHideRow) {
@@ -370,15 +374,15 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
                     TextSettingsCell textCell = (TextSettingsCell) holder.itemView;
                     if (position == changeTelegramMessageRow) {
                         textCell.setTextAndValue(LocaleController.getString("SendTelegramMessages", R.string.SendTelegramMessages),
-                                String.valueOf(actions.getMessageAction().entries.size()), false);
+                                String.valueOf(actions.getTelegramMessageAction().entries.size()), false);
                         textCell.setTag(Theme.key_windowBackgroundWhiteBlackText);
                         textCell.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
                     } else if (position == changePhoneRow) {
                         String value;
-                        if (actions.getPhone().isEmpty()) {
+                        if (actions.getFakePhone().isEmpty()) {
                             value = LocaleController.getString("Disabled", R.string.Disabled);
                         } else {
-                            value = PhoneFormat.getInstance().format("+" + actions.getPhone());
+                            value = PhoneFormat.getInstance().format("+" + actions.getFakePhone());
                         }
                         textCell.setTextAndValue(LocaleController.getString("FakePhoneNumber", R.string.FakePhoneNumber), value, true);
                         textCell.setTag(Theme.key_windowBackgroundWhiteBlackText);
@@ -389,13 +393,15 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
                         textCell.setTag(Theme.key_windowBackgroundWhiteBlackText);
                         textCell.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
                     }  else if (position == sessionsToTerminateRow) {
+                        TerminateOtherSessionsAction action = actions.getTerminateOtherSessionsAction();
                         textCell.setTextAndValue(LocaleController.getString("SessionsToTerminate", R.string.SessionsToTerminate),
-                                getSessionsLabel(actions.getSessionsToTerminateMode(), actions.getSessionsToTerminate().size()), true);
+                                getSessionsLabel(action.getMode(), action.getSessions().size()), true);
                         textCell.setTag(Theme.key_windowBackgroundWhiteBlackText);
                         textCell.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
                     }  else if (position == sessionsToHideRow) {
+                        TerminateOtherSessionsAction action = actions.getTerminateOtherSessionsAction();
                         textCell.setTextAndValue(LocaleController.getString("SessionsToHide", R.string.SessionsToHide),
-                                getSessionsLabel(actions.getSessionsToHideMode(), actions.getSessionsToHide().size()), false);
+                                getSessionsLabel(action.getMode(), action.getSessions().size()), false);
                         textCell.setTag(Theme.key_windowBackgroundWhiteBlackText);
                         textCell.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
                     }
@@ -449,7 +455,7 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
             if (holder.getItemViewType() == 3) {
                 TextCheckCell textCell = (TextCheckCell) holder.itemView;
 
-                int hiddenAccountCount = actions.getFakePasscode().getHideOrLogOutCount();
+                int hiddenAccountCount = fakePasscode.getHideOrLogOutCount();
                 int accountCount = UserConfig.getActivatedAccountsCount();
                 boolean enabled = actions.isHideAccount() && (accountCount - hiddenAccountCount
                         < UserConfig.FAKE_PASSCODE_MAX_ACCOUNT_COUNT)

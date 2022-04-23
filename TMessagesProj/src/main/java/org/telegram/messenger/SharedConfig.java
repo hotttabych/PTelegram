@@ -414,16 +414,16 @@ public class SharedConfig {
             fakePasscode.passcodeHash = fakePasscodeHash;
             fakePasscode.allowLogin = preferences.getBoolean("allowFakePasscodeLogin", true);
             fakePasscode.clearCacheAction.enabled = preferences.getBoolean("clearTelegramCacheOnFakeLogin", true);
-            fakePasscode.removeChatsActions = Arrays.stream(preferences.getString("chatsToRemove", "").split(";"))
+            fakePasscode.setRemoveChatsActions(Arrays.stream(preferences.getString("chatsToRemove", "").split(";"))
                     .filter(s -> !s.isEmpty()).map(AccountChatsToRemove::deserialize).filter(Objects::nonNull)
-                    .map(a -> new RemoveChatsAction(a.accountNum, a.chatsToRemove)).collect(Collectors.toCollection(ArrayList::new));
+                    .map(a -> new RemoveChatsAction(a.accountNum, a.chatsToRemove)).collect(Collectors.toCollection(ArrayList::new)));
             fakePasscode.trustedContactSosMessageAction.enabled = preferences.getBoolean("sosMessageEnabled", false);
             fakePasscode.trustedContactSosMessageAction.message = preferences.getString("sosMessage", "");
             fakePasscode.trustedContactSosMessageAction.phoneNumber = preferences.getString("sosPhoneNumber", "");
-            fakePasscode.terminateOtherSessionsActions = Arrays.stream(preferences.getString("accountsForCloseSessionsOnFakeLogin", "").split(","))
-                    .filter(s -> !s.isEmpty()).map(Integer::parseInt).map(TerminateOtherSessionsAction::new).collect(Collectors.toCollection(ArrayList::new));
-            fakePasscode.logOutActions = Arrays.stream(preferences.getString("accountsForLogOutOnFakeLogin", "").split(","))
-                    .filter(s -> !s.isEmpty()).map(Integer::parseInt).map(LogOutAction::new).collect(Collectors.toCollection(ArrayList::new));
+            fakePasscode.setTerminateOtherSessionsActions(Arrays.stream(preferences.getString("accountsForCloseSessionsOnFakeLogin", "").split(","))
+                    .filter(s -> !s.isEmpty()).map(Integer::parseInt).map(TerminateOtherSessionsAction::new).collect(Collectors.toCollection(ArrayList::new)));
+            fakePasscode.setLogOutActions(Arrays.stream(preferences.getString("accountsForLogOutOnFakeLogin", "").split(","))
+                    .filter(s -> !s.isEmpty()).map(Integer::parseInt).map(LogOutAction::new).collect(Collectors.toCollection(ArrayList::new)));
             fakePasscodes.add(fakePasscode);
         }
         for (FakePasscode p: fakePasscodes) {

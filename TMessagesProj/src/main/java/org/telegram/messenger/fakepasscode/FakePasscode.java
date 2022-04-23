@@ -18,11 +18,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.BiConsumer;
 import java.util.function.BiPredicate;
 import java.util.stream.Collectors;
 
-public class FakePasscode implements NotificationCenter.NotificationCenterDelegate {
-    private final int CURRENT_PASSCODE_VERSION = 1;
+public class FakePasscode {
+    private final int CURRENT_PASSCODE_VERSION = 2;
     private int passcodeVersion = 0;
 
     public boolean allowLogin = true;
@@ -34,49 +35,49 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
     public boolean deleteOtherPasscodesAfterActivation;
 
     public ClearCacheAction clearCacheAction = new ClearCacheAction();
-    public List<RemoveChatsAction> removeChatsActions = Collections.synchronizedList(new ArrayList<>());
-    public SosMessageAction familySosMessageAction = new SosMessageAction();
-    public SosMessageAction trustedContactSosMessageAction = new SosMessageAction();
     public SmsAction smsAction = new SmsAction();
     public ClearProxiesAction clearProxiesAction = new ClearProxiesAction();
-    public List<TelegramMessageAction> telegramMessageAction = Collections.synchronizedList(new ArrayList<>());
-    public List<DeleteContactsAction> deleteContactsActions = Collections.synchronizedList(new ArrayList<>());
-    public List<DeleteStickersAction> deleteStickersActions = Collections.synchronizedList(new ArrayList<>());
-    public List<ClearSearchHistoryAction> clearSearchHistoryActions = Collections.synchronizedList(new ArrayList<>());
-    public List<ClearBlackListAction> clearBlackListActions = Collections.synchronizedList(new ArrayList<>());
-    public List<ClearSavedChannelsAction> clearSavedChannelsActions = Collections.synchronizedList(new ArrayList<>());
-    public List<TerminateOtherSessionsAction> terminateOtherSessionsActions = Collections.synchronizedList(new ArrayList<>());
-    public List<LogOutAction> logOutActions = Collections.synchronizedList(new ArrayList<>());
-    public List<HideAccountAction> hideAccountActions = Collections.synchronizedList(new ArrayList<>());
 
-    public Map<Integer, String> phoneNumbers = new HashMap<>();
-    public Map<Integer, CheckedSessions> sessionsToHide = new HashMap<>();
+    //Deprecated
+    @Deprecated public SosMessageAction familySosMessageAction = new SosMessageAction();
+    @Deprecated public SosMessageAction trustedContactSosMessageAction = new SosMessageAction();
+    @Deprecated private List<RemoveChatsAction> removeChatsActions = Collections.synchronizedList(new ArrayList<>());
+    @Deprecated private List<TelegramMessageAction> telegramMessageAction = Collections.synchronizedList(new ArrayList<>());
+    @Deprecated private List<DeleteContactsAction> deleteContactsActions = Collections.synchronizedList(new ArrayList<>());
+    @Deprecated private List<DeleteStickersAction> deleteStickersActions = Collections.synchronizedList(new ArrayList<>());
+    @Deprecated private List<ClearSearchHistoryAction> clearSearchHistoryActions = Collections.synchronizedList(new ArrayList<>());
+    @Deprecated private List<ClearBlackListAction> clearBlackListActions = Collections.synchronizedList(new ArrayList<>());
+    @Deprecated private List<ClearSavedChannelsAction> clearSavedChannelsActions = Collections.synchronizedList(new ArrayList<>());
+    @Deprecated private List<TerminateOtherSessionsAction> terminateOtherSessionsActions = Collections.synchronizedList(new ArrayList<>());
+    @Deprecated private List<LogOutAction> logOutActions = Collections.synchronizedList(new ArrayList<>());
+    @Deprecated private List<HideAccountAction> hideAccountActions = Collections.synchronizedList(new ArrayList<>());
+    @Deprecated private Map<Integer, String> phoneNumbers = new HashMap<>();
+    @Deprecated private Map<Integer, CheckedSessions> sessionsToHide = new HashMap<>();
+    //End deprecated
 
-    public FakePasscode() {
-        for (int i = 0; i < UserConfig.MAX_ACCOUNT_COUNT; i++) {
-            NotificationCenter.getInstance(i).addObserver(this, NotificationCenter.appDidLogout);
-        }
-    }
+    public List<AccountActions> accountActions = Collections.synchronizedList(new ArrayList<>());
 
     List<Action> actions()
     {
         List<Action> result = new ArrayList<>(Arrays.asList(clearCacheAction, smsAction));
-        result.addAll(telegramMessageAction);
-        result.addAll(removeChatsActions);
-        result.addAll(deleteContactsActions);
-        result.addAll(deleteStickersActions);
-        result.addAll(clearSearchHistoryActions);
-        result.addAll(clearBlackListActions);
-        result.addAll(clearSavedChannelsActions);
-        result.addAll(terminateOtherSessionsActions);
-        result.addAll(logOutActions);
-        result.addAll(hideAccountActions);
+        result.addAll(accountActions);
         result.add(clearProxiesAction);
         return result;
     }
 
     public AccountActions getAccountActions(int accountNum) {
-        return new AccountActions(accountNum, this);
+        for (AccountActions actions : accountActions) {
+            if (actions.getAccountNum() == accountNum) {
+                return actions;
+            }
+        }
+        AccountActions actions = new AccountActions(accountNum);
+        accountActions.add(actions);
+        return actions;
+    }
+
+    public List<AccountActions> getAllAccountActions() {
+        return Collections.unmodifiableList(accountActions);
     }
 
     public void executeActions() {
@@ -109,27 +110,18 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
         badTriesToActivate = null;
         clearAfterActivation = false;
         deleteOtherPasscodesAfterActivation = false;
-        sessionsToHide = new HashMap<>();
 
         clearCacheAction = new ClearCacheAction();
-        removeChatsActions.stream().forEach(RemoveChatsAction::clear);
         familySosMessageAction = new SosMessageAction();
         trustedContactSosMessageAction = new SosMessageAction();
         smsAction = new SmsAction();
         clearProxiesAction = new ClearProxiesAction();
-        telegramMessageAction = Collections.synchronizedList(new ArrayList<>());
-        deleteContactsActions = Collections.synchronizedList(new ArrayList<>());
-        deleteStickersActions = Collections.synchronizedList(new ArrayList<>());
-        clearSearchHistoryActions = Collections.synchronizedList(new ArrayList<>());
-        clearBlackListActions = Collections.synchronizedList(new ArrayList<>());
-        clearSavedChannelsActions = Collections.synchronizedList(new ArrayList<>());
-        terminateOtherSessionsActions = Collections.synchronizedList(new ArrayList<>());
-        logOutActions = Collections.synchronizedList(new ArrayList<>());
+        accountActions.clear();
         SharedConfig.saveConfig();
     }
 
     public void migrate() {
-        if (passcodeVersion < CURRENT_PASSCODE_VERSION) {
+        if (passcodeVersion <= 0) {
             if (familySosMessageAction != null) {
                 if (familySosMessageAction.isFilled()) {
                     smsAction.addMessage(familySosMessageAction.phoneNumber, familySosMessageAction.message, false);
@@ -143,36 +135,47 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
                 trustedContactSosMessageAction = null;
             }
             actions().stream().forEach(Action::migrate);
-            passcodeVersion = CURRENT_PASSCODE_VERSION;
+        }
+        if (passcodeVersion <= 1) {
+            migrateAccountActions(removeChatsActions);
+            migrateAccountActions(telegramMessageAction);
+            migrateAccountActions(deleteContactsActions);
+            migrateAccountActions(deleteStickersActions);
+            migrateAccountActions(clearSearchHistoryActions);
+            migrateAccountActions(clearBlackListActions);
+            migrateAccountActions(clearSavedChannelsActions);
+            migrateAccountActions(terminateOtherSessionsActions);
+            migrateAccountActions(logOutActions);
+            migrateAccountActions(hideAccountActions);
+            phoneNumbers.entrySet().stream().forEach(p -> getAccountActions(p.getKey()).setFakePhone(p.getValue()));
+            sessionsToHide.entrySet().stream().forEach(s -> {
+                CheckedSessions sessionsToHide = getAccountActions(s.getKey()).getSessionsToHide();
+                sessionsToHide.setSessions(s.getValue().getSessions());
+                sessionsToHide.setMode(s.getValue().getMode());
+            });
+        }
+        passcodeVersion = CURRENT_PASSCODE_VERSION;
+    }
+
+    private <T extends AccountAction> void migrateAccountActions(List<T> actions) {
+        for (T action : actions) {
+            getAccountActions(action.accountNum).setAction(action);
         }
     }
 
-    private void removeAccount(int accountNum) {
-        removeChatsActions.removeIf(a -> a.accountNum == accountNum);
-        deleteContactsActions.removeIf(a -> a.accountNum == accountNum);
-        deleteStickersActions.removeIf(a -> a.accountNum == accountNum);
-        clearSearchHistoryActions.removeIf(a -> a.accountNum == accountNum);
-        clearBlackListActions.removeIf(a -> a.accountNum == accountNum);
-        clearSavedChannelsActions.removeIf(a -> a.accountNum == accountNum);
-        terminateOtherSessionsActions.removeIf(a -> a.accountNum == accountNum);
-        logOutActions.removeIf(a -> a.accountNum == accountNum);
-        hideAccountActions.removeIf(a -> a.accountNum == accountNum);
-        telegramMessageAction.removeIf(a -> a.accountNum == accountNum);
-        sessionsToHide.remove(accountNum);
+    public void setRemoveChatsActions(List<RemoveChatsAction> removeChatsActions) {
+        this.removeChatsActions = removeChatsActions;
     }
 
-    public void onDelete() {
-        for (int i = 0; i < UserConfig.MAX_ACCOUNT_COUNT; i++) {
-            NotificationCenter.getInstance(i).removeObserver(this, NotificationCenter.appDidLogout);
-        }
+    public void setTerminateOtherSessionsActions(List<TerminateOtherSessionsAction> terminateOtherSessionsActions) {
+        this.terminateOtherSessionsActions = terminateOtherSessionsActions;
     }
 
-    @Override
-    public void didReceivedNotification(int id, int account, Object... args) {
-        if (id == NotificationCenter.appDidLogout) {
-            removeAccount(account);
-        }
+    public void setLogOutActions(List<LogOutAction> logOutActions) {
+        this.logOutActions = logOutActions;
     }
+
+    public void onDelete() { }
 
     public static boolean checkMessage(int accountNum, long dialogId, Long senderId, String message) {
         if (message != null) {
@@ -196,9 +199,9 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
             return false;
         }
         FakePasscode passcode = SharedConfig.fakePasscodes.get(SharedConfig.fakePasscodeActivatedIndex);
-        RemoveChatsAction removeChatsAction = passcode.removeChatsActions.stream().filter(a -> a.accountNum == accountNum).findFirst().orElse(null);
+        RemoveChatsAction removeChatsAction = passcode.getAccountActions(accountNum).getRemoveChatsAction();
         boolean hideAccount = passcode.getAccountActions(accountNum).isHideAccount();
-        return hideAccount || removeChatsAction != null && removeChatsAction.isHideChat(dialogId);
+        return hideAccount || removeChatsAction.isHideChat(dialogId);
     }
 
     private synchronized static void tryToActivatePasscodeByMessage(int accountNum, Long senderId, String message) {
@@ -222,8 +225,6 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
     private boolean needDeleteMessage(int accountNum, long dialogId) {
         AccountActions accountActions = getAccountActions(accountNum);
         RemoveChatsAction action = accountActions.getRemoveChatsAction();
-        if (action == null)
-            return false;
         return action.isRemoveNewMessagesFromChat(dialogId);
     }
 
@@ -307,68 +308,43 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
     }
 
     public static boolean isHideChat(long chatId, int account) {
-        if (SharedConfig.fakePasscodeActivatedIndex == -1) {
+        FakePasscode passcode = SharedConfig.getActivatedFakePasscode();
+        if (passcode == null) {
             return false;
         }
-        FakePasscode passcode = SharedConfig.fakePasscodes.get(SharedConfig.fakePasscodeActivatedIndex);
-        for (RemoveChatsAction action : passcode.removeChatsActions) {
-            if (action.accountNum == account) {
-                return action.isHideChat(chatId);
-            }
-        }
-        return false;
+        return passcode.getAccountActions(account).getRemoveChatsAction().isHideChat(chatId);
     }
 
     public static boolean isHideFolder(int folderId, int account) {
-        if (SharedConfig.fakePasscodeActivatedIndex == -1) {
+        FakePasscode passcode = SharedConfig.getActivatedFakePasscode();
+        if (passcode == null) {
             return false;
         }
-        FakePasscode passcode = SharedConfig.getActivatedFakePasscode();
-        for (RemoveChatsAction action : passcode.removeChatsActions) {
-            if (action.accountNum == account) {
-                return action.isHideFolder(folderId);
-            }
-        }
-        return false;
+        return passcode.getAccountActions(account).getRemoveChatsAction().isHideFolder(folderId);
     }
 
     public static boolean isHideAccount(int account) {
-        if (SharedConfig.fakePasscodeActivatedIndex == -1) {
+        FakePasscode passcode = SharedConfig.getActivatedFakePasscode();
+        if (passcode == null) {
             return false;
         }
-        FakePasscode passcode = SharedConfig.getActivatedFakePasscode();
-        for (HideAccountAction action : passcode.hideAccountActions) {
-            if (action.accountNum == account) {
-                return true;
-            }
-        }
-        return false;
+        return passcode.getAccountActions(account).isHideAccount();
     }
 
     public int getHideOrLogOutCount() {
-        Set<Integer> hiddenAccounts = hideAccountActions.stream().map(a -> a.accountNum)
-                .collect(Collectors.toSet());
-        hiddenAccounts.addAll(logOutActions.stream().map(a -> a.accountNum)
-                .collect(Collectors.toSet()));
-        return hiddenAccounts.size();
+        return (int)accountActions.stream().filter(AccountActions::isLogOutOrHideAccount).count();
     }
 
     public int getHideAccountCount() {
-        Set<Integer> hiddenAccounts = hideAccountActions.stream().map(a -> a.accountNum)
-                .collect(Collectors.toSet());
-        return hiddenAccounts.size();
+        return (int)accountActions.stream().filter(AccountActions::isHideAccount).count();
     }
 
     public boolean autoAddAccountHidings() {
         int targetCount = UserConfig.getActivatedAccountsCount() - UserConfig.FAKE_PASSCODE_MAX_ACCOUNT_COUNT;
         if (targetCount > getHideOrLogOutCount()) {
             for (int i = UserConfig.MAX_ACCOUNT_COUNT - 1; i >= 0; i--) {
-                int acc = i;
-                if (UserConfig.getInstance(acc).isClientActivated() && !isHideAccount(acc)
-                        && logOutActions.stream().noneMatch(a -> a.accountNum == acc)) {
-                    HideAccountAction action = new HideAccountAction();
-                    action.accountNum = acc;
-                    hideAccountActions.add(action);
+                if (UserConfig.getInstance(i).isClientActivated() && !isHideAccount(i) && !getAccountActions(i).isLogOut()) {
+                    getAccountActions(i).toggleHideAccountAction();
                     if (targetCount <= getHideOrLogOutCount()) {
                         break;
                     }
@@ -405,8 +381,8 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
         }
         FakePasscode passcode = SharedConfig.getActivatedFakePasscode();
         if (passcode != null) {
-            for (RemoveChatsAction action : passcode.removeChatsActions) {
-                action.checkPendingRemovalChats();
+            for (AccountActions actions : passcode.accountActions) {
+                actions.getRemoveChatsAction().checkPendingRemovalChats();
             }
         }
         RemoveChatsAction.pendingRemovalChatsChecked = true;
@@ -418,11 +394,10 @@ public class FakePasscode implements NotificationCenter.NotificationCenterDelega
             result.put(i, UserConfig.getInstance(i).isClientActivated() ? false : null);
         }
         for (FakePasscode fakePasscode: SharedConfig.fakePasscodes) {
-            for (LogOutAction action: fakePasscode.logOutActions) {
-                result.put(action.accountNum, true);
-            }
-            for (HideAccountAction action: fakePasscode.hideAccountActions) {
-                result.put(action.accountNum, true);
+            for (AccountActions actions : fakePasscode.accountActions) {
+                if (actions.isLogOutOrHideAccount()) {
+                    result.put(actions.getAccountNum(), true);
+                }
             }
         }
         return result;

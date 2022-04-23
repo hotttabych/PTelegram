@@ -414,7 +414,7 @@ public class FakePasscodeActivity extends BaseFragment {
                     showDialog(dialog);
                 } else if (firstAccountRow <= position && position <= lastAccountRow) {
                     AccountActions actions = fakePasscode.getAccountActions(accountNumbers.get(position - firstAccountRow));
-                    presentFragment(new FakePasscodeAccountActionsActivity(actions), false);
+                    presentFragment(new FakePasscodeAccountActionsActivity(actions, fakePasscode), false);
                 } else if (position == deletePasscodeRow) {
                     if (getParentActivity() == null) {
                         return;
