@@ -11,25 +11,36 @@ import kotlin.reflect.full.memberProperties
 import kotlin.reflect.jvm.isAccessible
 import kotlin.reflect.jvm.javaType
 
-class AccountActions(var accountNum: Int?) : Action {
+class AccountActions : Action {
+    var accountNum: Int? = null
     var removeChatsAction = RemoveChatsAction()
-        private set
+        private set(value) { field = value; SharedConfig.saveConfig() }
     var telegramMessageAction = TelegramMessageAction()
-        private set
+        private set(value) { field = value; SharedConfig.saveConfig() }
     private var deleteContactsAction: DeleteContactsAction? = null
+        private set(value) { field = value; SharedConfig.saveConfig() }
     private var deleteStickersAction: DeleteStickersAction? = null
+        private set(value) { field = value; SharedConfig.saveConfig() }
     private var clearSearchHistoryAction: ClearSearchHistoryAction? = null
+        private set(value) { field = value; SharedConfig.saveConfig() }
     private var clearBlackListAction: ClearBlackListAction? = null
+        private set(value) { field = value; SharedConfig.saveConfig() }
     private var clearSavedChannelsAction: ClearSavedChannelsAction? = null
+        private set(value) { field = value; SharedConfig.saveConfig() }
     var terminateOtherSessionsAction = TerminateOtherSessionsAction()
-        private set
+        private set(value) { field = value; SharedConfig.saveConfig() }
     private var logOutAction: LogOutAction? = null
+        private set(value) { field = value; SharedConfig.saveConfig() }
     private var hideAccountAction: HideAccountAction? = null
+        private set(value) { field = value; SharedConfig.saveConfig() }
     var fakePhone = ""
+        set(value) { field = value; SharedConfig.saveConfig() }
     var sessionsToHide = CheckedSessions()
-        private set
+        private set(value) { field = value; SharedConfig.saveConfig() }
     private var salt: String? = null
+        private set(value) { field = value; SharedConfig.saveConfig() }
     private var idHash: String? = null
+        private set(value) { field = value; SharedConfig.saveConfig() }
 
     init {
         Utilities.globalQueue.postRunnable(UpdateIdHashRunnable(this), 1000)

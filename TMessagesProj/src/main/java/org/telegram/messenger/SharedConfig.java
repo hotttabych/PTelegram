@@ -26,6 +26,7 @@ import androidx.core.content.pm.ShortcutManagerCompat;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.fasterxml.jackson.module.kotlin.KotlinModule;
 
 import org.json.JSONObject;
 import org.telegram.messenger.fakepasscode.FakePasscode;
@@ -298,10 +299,12 @@ public class SharedConfig {
         }
         jsonMapper = new ObjectMapper();
         jsonMapper.registerModule(new JavaTimeModule());
+        jsonMapper.registerModule(new KotlinModule());
         jsonMapper.activateDefaultTyping(jsonMapper.getPolymorphicTypeValidator());
         jsonMapper.setVisibility(jsonMapper.getSerializationConfig().getDefaultVisibilityChecker()
                 .withFieldVisibility(JsonAutoDetect.Visibility.ANY)
                 .withGetterVisibility(JsonAutoDetect.Visibility.NONE)
+                .withIsGetterVisibility(JsonAutoDetect.Visibility.NONE)
                 .withSetterVisibility(JsonAutoDetect.Visibility.NONE)
                 .withCreatorVisibility(JsonAutoDetect.Visibility.NONE));
         return jsonMapper;
@@ -486,6 +489,11 @@ public class SharedConfig {
                     if (preferences.contains("fakePasscodes"))
                         fakePasscodes = fromJson(preferences.getString("fakePasscodes", null), FakePasscodesWrapper.class).fakePasscodes;
                 } catch (Exception ignored) {
+                    try {
+                        if (preferences.contains("fakePasscodes"))
+                            fakePasscodes = fromJson(preferences.getString("fakePasscodes", null), FakePasscodesWrapper.class).fakePasscodes;
+                    } catch (Exception ignored2) {
+                    }
                 }
             }
             try {

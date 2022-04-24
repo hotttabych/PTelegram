@@ -80,7 +80,8 @@ public class FakePasscode {
                 return actions;
             }
         }
-        AccountActions actions = new AccountActions(accountNum);
+        AccountActions actions = new AccountActions();
+        actions.setAccountNum(accountNum);
         accountActions.add(actions);
         return actions;
     }
