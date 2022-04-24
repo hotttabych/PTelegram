@@ -305,7 +305,13 @@ public class FakePasscodeRemoveDialogSettingsActivity extends BaseFragment {
     }
 
     private boolean hasChats() {
-        return entries.stream().map(e -> (long)e.chatId).anyMatch(DialogObject::isChatDialog);
+        return entries.stream().map(e -> (long)e.chatId).anyMatch(did -> {
+            if (!DialogObject.isChatDialog(did)) {
+                return false;
+            }
+            TLRPC.Chat chat = getMessagesController().getChat(-did);
+            return !ChatObject.isChannel(chat) || chat.megagroup;
+        });
     }
 
     private boolean hasSavedMessages() {
