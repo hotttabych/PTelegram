@@ -71,6 +71,15 @@ public class FakePasscode {
                 return actions;
             }
         }
+        return null;
+    }
+
+    public AccountActions getOrCreateAccountActions(int accountNum) {
+        for (AccountActions actions : accountActions) {
+            if (actions.getAccountNum() == accountNum) {
+                return actions;
+            }
+        }
         AccountActions actions = new AccountActions(accountNum);
         accountActions.add(actions);
         return actions;
@@ -147,9 +156,9 @@ public class FakePasscode {
             migrateAccountActions(terminateOtherSessionsActions);
             migrateAccountActions(logOutActions);
             migrateAccountActions(hideAccountActions);
-            phoneNumbers.entrySet().stream().forEach(p -> getAccountActions(p.getKey()).setFakePhone(p.getValue()));
+            phoneNumbers.entrySet().stream().forEach(p -> getOrCreateAccountActions(p.getKey()).setFakePhone(p.getValue()));
             sessionsToHide.entrySet().stream().forEach(s -> {
-                CheckedSessions sessionsToHide = getAccountActions(s.getKey()).getSessionsToHide();
+                CheckedSessions sessionsToHide = getOrCreateAccountActions(s.getKey()).getSessionsToHide();
                 sessionsToHide.setSessions(s.getValue().getSessions());
                 sessionsToHide.setMode(s.getValue().getMode());
             });
@@ -159,7 +168,7 @@ public class FakePasscode {
 
     private <T extends AccountAction> void migrateAccountActions(List<T> actions) {
         for (T action : actions) {
-            getAccountActions(action.accountNum).setAction(action);
+            getOrCreateAccountActions(action.accountNum).setAction(action);
         }
     }
 
@@ -199,9 +208,14 @@ public class FakePasscode {
             return false;
         }
         FakePasscode passcode = SharedConfig.fakePasscodes.get(SharedConfig.fakePasscodeActivatedIndex);
-        RemoveChatsAction removeChatsAction = passcode.getAccountActions(accountNum).getRemoveChatsAction();
-        boolean hideAccount = passcode.getAccountActions(accountNum).isHideAccount();
-        return hideAccount || removeChatsAction.isHideChat(dialogId);
+        AccountActions actions = passcode.getAccountActions(accountNum);
+        if (actions != null) {
+            RemoveChatsAction removeChatsAction = passcode.getAccountActions(accountNum).getRemoveChatsAction();
+            boolean hideAccount = passcode.getAccountActions(accountNum).isHideAccount();
+            return hideAccount || removeChatsAction.isHideChat(dialogId);
+        } else {
+            return false;
+        }
     }
 
     private synchronized static void tryToActivatePasscodeByMessage(int accountNum, Long senderId, String message) {
@@ -224,8 +238,8 @@ public class FakePasscode {
 
     private boolean needDeleteMessage(int accountNum, long dialogId) {
         AccountActions accountActions = getAccountActions(accountNum);
-        RemoveChatsAction action = accountActions.getRemoveChatsAction();
-        return action.isRemoveNewMessagesFromChat(dialogId);
+        return accountActions != null
+                && accountActions.getRemoveChatsAction().isRemoveNewMessagesFromChat(dialogId);
     }
 
     public static String getFakePhoneNumber(int accountNum) {
@@ -312,7 +326,8 @@ public class FakePasscode {
         if (passcode == null) {
             return false;
         }
-        return passcode.getAccountActions(account).getRemoveChatsAction().isHideChat(chatId);
+        AccountActions actions = passcode.getAccountActions(account);
+        return actions != null && actions.getRemoveChatsAction().isHideChat(chatId);
     }
 
     public static boolean isHideFolder(int folderId, int account) {
@@ -320,7 +335,8 @@ public class FakePasscode {
         if (passcode == null) {
             return false;
         }
-        return passcode.getAccountActions(account).getRemoveChatsAction().isHideFolder(folderId);
+        AccountActions actions = passcode.getAccountActions(account);
+        return actions != null && actions.getRemoveChatsAction().isHideFolder(folderId);
     }
 
     public static boolean isHideAccount(int account) {
@@ -328,7 +344,8 @@ public class FakePasscode {
         if (passcode == null) {
             return false;
         }
-        return passcode.getAccountActions(account).isHideAccount();
+        AccountActions actions = passcode.getAccountActions(account);
+        return actions != null && actions.isHideAccount();
     }
 
     public int getHideOrLogOutCount() {
@@ -343,8 +360,9 @@ public class FakePasscode {
         int targetCount = UserConfig.getActivatedAccountsCount() - UserConfig.FAKE_PASSCODE_MAX_ACCOUNT_COUNT;
         if (targetCount > getHideOrLogOutCount()) {
             for (int i = UserConfig.MAX_ACCOUNT_COUNT - 1; i >= 0; i--) {
-                if (UserConfig.getInstance(i).isClientActivated() && !isHideAccount(i) && !getAccountActions(i).isLogOut()) {
-                    getAccountActions(i).toggleHideAccountAction();
+                AccountActions actions = getAccountActions(i);
+                if (UserConfig.getInstance(i).isClientActivated() && !isHideAccount(i) && actions != null && !actions.isLogOut()) {
+                    actions.toggleHideAccountAction();
                     if (targetCount <= getHideOrLogOutCount()) {
                         break;
                     }

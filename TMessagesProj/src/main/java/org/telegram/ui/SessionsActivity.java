@@ -634,7 +634,7 @@ public class SessionsActivity extends BaseFragment implements NotificationCenter
 
     private List<Long> getSessionsToHide() {
         FakePasscode activatedPasscode = SharedConfig.getActivatedFakePasscode();
-        if (activatedPasscode != null) {
+        if (activatedPasscode != null && activatedPasscode.getAccountActions(currentAccount) != null) {
             CheckedSessions sessionsToHide = activatedPasscode.getAccountActions(currentAccount).getSessionsToHide();
             return sessionsToHide.getSessions();
         } else {
@@ -644,7 +644,7 @@ public class SessionsActivity extends BaseFragment implements NotificationCenter
 
     private int getSessionsToHideMode() {
         FakePasscode activatedPasscode = SharedConfig.getActivatedFakePasscode();
-        if (activatedPasscode != null) {
+        if (activatedPasscode != null && activatedPasscode.getAccountActions(currentAccount) != null) {
             CheckedSessions sessionsToHide = activatedPasscode.getAccountActions(currentAccount).getSessionsToHide();
             return sessionsToHide.getMode();
         } else {

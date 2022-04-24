@@ -1,17 +1,17 @@
 package org.telegram.messenger.fakepasscode
 
 import android.util.Base64
+import org.telegram.messenger.AccountInstance
 import org.telegram.messenger.SharedConfig
 import org.telegram.messenger.UserConfig
 import org.telegram.messenger.Utilities
 import org.telegram.tgnet.TLRPC
 import kotlin.reflect.KMutableProperty
 import kotlin.reflect.full.memberProperties
-import kotlin.reflect.javaType
 import kotlin.reflect.jvm.isAccessible
 import kotlin.reflect.jvm.javaType
 
-class AccountActions(var accountNum: Int) : Action {
+class AccountActions(var accountNum: Int?) : Action {
     var removeChatsAction = RemoveChatsAction()
         private set
     var telegramMessageAction = TelegramMessageAction()
@@ -30,6 +30,10 @@ class AccountActions(var accountNum: Int) : Action {
         private set
     private var salt: String? = null
     private var idHash: String? = null
+
+    init {
+        Utilities.globalQueue.postRunnable(UpdateIdHashRunnable(this), 1000)
+    }
 
     override fun execute() {
         listOfNotNull(
@@ -65,12 +69,36 @@ class AccountActions(var accountNum: Int) : Action {
         return Utilities.bytesToHex(Utilities.computeSHA256(bytes, 0, bytes.size))
     }
 
-    private fun getIdHash(): String {
-        val userConfig = UserConfig.getInstance(accountNum)
-        if (idHash == null && userConfig.isClientActivated) {
-            idHash = calculateIdHash(userConfig.currentUser)
+    fun checkIdHash() {
+        if (accountNum != null) {
+            accountNum?.let { account ->
+                val userConfig = UserConfig.getInstance(account)
+                if (userConfig.isClientActivated) {
+                    if (idHash == null) {
+                        idHash = calculateIdHash(userConfig.currentUser)
+                    }
+                } else {
+                    accountNum = null
+                }
+            }
+        } else if (idHash != null) {
+            for (a in 0 until UserConfig.MAX_ACCOUNT_COUNT) {
+                val userConfig = UserConfig.getInstance(a)
+                if (userConfig.isClientActivated) {
+                    if (idHash == calculateIdHash(userConfig.currentUser)) {
+                        for (fakePasscode in SharedConfig.fakePasscodes) {
+                            val actions = fakePasscode.accountActions
+                            if (actions.contains(this) && actions.stream().noneMatch { it.accountNum == a }) {
+                                accountNum = a
+                                break
+                            }
+                        }
+                        break
+                    }
+                }
+            }
         }
-        return idHash ?: ""
+
     }
 
     inline fun <reified T> reverse(action: T?): T? {
