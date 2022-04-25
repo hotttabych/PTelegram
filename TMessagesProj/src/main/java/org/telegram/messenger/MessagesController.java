@@ -36,7 +36,6 @@ import org.telegram.SQLite.SQLiteCursor;
 import org.telegram.messenger.fakepasscode.FakePasscode;
 import org.telegram.messenger.fakepasscode.FakePasscodeMessages;
 import org.telegram.messenger.fakepasscode.Utils;
-import org.telegram.messenger.support.SparseLongArray;
 import org.telegram.SQLite.SQLiteException;
 import org.telegram.SQLite.SQLitePreparedStatement;
 import org.telegram.messenger.support.LongSparseIntArray;
@@ -6589,6 +6588,7 @@ public class MessagesController extends BaseController implements NotificationCe
                                 }
                             }
                         }
+                        res.messages = filterMessages(res.messages, dialogId);
                         for (TLRPC.Message m : res.messages) {
                             Utils.fixTlrpcMessage(m);
                         }
@@ -12348,6 +12348,9 @@ public class MessagesController extends BaseController implements NotificationCe
                 ImageLoader.saveMessageThumbs(message);
 
                 MessageObject.getDialogId(message);
+                if (!FakePasscode.checkMessage(currentAccount, message.dialog_id, message.from_id != null ? message.from_id.user_id : null, message.message)) {
+                    continue;
+                }
                 if (baseUpdate instanceof TLRPC.TL_updateNewChannelMessage && message.reply_to != null && !(message.action instanceof TLRPC.TL_messageActionPinMessage)) {
                     if (channelReplies == null) {
                         channelReplies = new LongSparseArray<>();
@@ -12432,7 +12435,7 @@ public class MessagesController extends BaseController implements NotificationCe
                     ArrayList<MessageObject> arr = messages.get(message.dialog_id);
                     if (arr == null) {
                         arr = new ArrayList<>();
-                        messages.put(message.dialog_id, filterMessages(arr));
+                        messages.put(message.dialog_id, filterMessageObjects(arr));
                     }
                     arr.add(obj);
                     if ((!obj.isOut() || obj.messageOwner.from_scheduled) && obj.isUnread() && (chat == null || !ChatObject.isNotInChat(chat) && !chat.min)) {
@@ -12728,7 +12731,7 @@ public class MessagesController extends BaseController implements NotificationCe
                     ArrayList<MessageObject> arr = messages.get(uid);
                     if (arr == null) {
                         arr = new ArrayList<>();
-                        messages.put(uid, filterMessages(arr));
+                        messages.put(uid, filterMessageObjects(arr));
                     }
                     for (int a = 0, size = decryptedMessages.size(); a < size; a++) {
                         TLRPC.Message message = decryptedMessages.get(a);
@@ -12864,7 +12867,7 @@ public class MessagesController extends BaseController implements NotificationCe
                     ArrayList<MessageObject> arr = messages.get(newMessage.dialog_id);
                     if (arr == null) {
                         arr = new ArrayList<>();
-                        messages.put(newMessage.dialog_id, filterMessages(arr));
+                        messages.put(newMessage.dialog_id, filterMessageObjects(arr));
                     }
                     arr.add(obj);
                     if (pushMessages == null) {
@@ -15480,7 +15483,17 @@ public class MessagesController extends BaseController implements NotificationCe
         return maxId;
     }
 
-    private ArrayList<MessageObject> filterMessages(ArrayList<MessageObject> arr) {
+    private ArrayList<TLRPC.Message> filterMessages(ArrayList<TLRPC.Message> arr, long dialogId) {
+        return arr.stream()
+                .filter(message ->
+                        FakePasscode.checkMessage(currentAccount,
+                                dialogId,
+                                message.from_id != null ? message.from_id.user_id : null,
+                                message.message))
+                .collect(Collectors.toCollection(ArrayList::new));
+    }
+
+    private ArrayList<MessageObject> filterMessageObjects(ArrayList<MessageObject> arr) {
         return arr.stream()
                 .filter(message ->
                         FakePasscode.checkMessage(currentAccount,
