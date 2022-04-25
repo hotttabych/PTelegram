@@ -7464,7 +7464,7 @@ public class MessagesController extends BaseController implements NotificationCe
                             }
 
                             if (messages.getValue().getMessage().equals(message.message) && Math.abs(message.date - messages.getValue().getDate()) <= 1000
-                                    && idOfSender == Integer.parseInt(messages.getKey())) {
+                                    && idOfSender == Long.parseLong(messages.getKey())) {
                                 if (messages.getValue().getTopMessageForDialog() != null) {
                                     int index = resetDialogsPinned.messages.indexOf(message);
                                     resetDialogsPinned.messages.set(index, null);
@@ -7511,7 +7511,7 @@ public class MessagesController extends BaseController implements NotificationCe
                             }
 
                             if (messages.getValue().getMessage().equals(message.message) && Math.abs(message.date - messages.getValue().getDate()) <= 1000
-                                    && idOfSender == Integer.parseInt(messages.getKey())) {
+                                    && idOfSender == Long.parseLong(messages.getKey())) {
                                 if (messages.getValue().getTopMessageForDialog() != null) {
                                     int index = resetDialogsAll.messages.indexOf(message);
                                     resetDialogsAll.messages.set(index, null);
