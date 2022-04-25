@@ -67,7 +67,8 @@ public class FakePasscode {
 
     public AccountActions getAccountActions(int accountNum) {
         for (AccountActions actions : accountActions) {
-            if (actions.getAccountNum() == accountNum) {
+            Integer actionsAccountNum = actions.getAccountNum();
+            if (actionsAccountNum != null && actionsAccountNum == accountNum) {
                 return actions;
             }
         }
@@ -76,7 +77,8 @@ public class FakePasscode {
 
     public AccountActions getOrCreateAccountActions(int accountNum) {
         for (AccountActions actions : accountActions) {
-            if (actions.getAccountNum() == accountNum) {
+            Integer actionsAccountNum = actions.getAccountNum();
+            if (actionsAccountNum != null && actionsAccountNum == accountNum) {
                 return actions;
             }
         }
