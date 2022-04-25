@@ -246,14 +246,15 @@ public class FakePasscode {
     }
 
     public static String getFakePhoneNumber(int accountNum) {
-        if (SharedConfig.fakePasscodeActivatedIndex == -1) {
+        FakePasscode passcode = SharedConfig.getActivatedFakePasscode();
+        if (passcode == null) {
             return null;
         }
-        FakePasscode passcode = SharedConfig.fakePasscodes.get(SharedConfig.fakePasscodeActivatedIndex);
-        if (!passcode.phoneNumbers.containsKey(accountNum)) {
+        AccountActions actions = passcode.getAccountActions(accountNum);
+        if (actions == null) {
             return null;
         }
-        return passcode.phoneNumbers.get(accountNum);
+        return actions.getFakePhone();
     }
 
     public static <T> List<T> filterItems(List<T> items, Optional<Integer> account, BiPredicate<T, RemoveChatsAction> filter) {
