@@ -39,7 +39,7 @@ class AccountActions : Action {
         private set(value) { field = value; SharedConfig.saveConfig() }
     private var salt: String? = null
         private set(value) { field = value; SharedConfig.saveConfig() }
-    private var idHash: String? = null
+    var idHash: String? = null
         private set(value) { field = value; SharedConfig.saveConfig() }
 
     init {

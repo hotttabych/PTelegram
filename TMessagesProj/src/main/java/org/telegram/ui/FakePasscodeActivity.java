@@ -34,9 +34,15 @@ import android.widget.FrameLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+import androidx.core.util.Consumer;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
 import org.telegram.messenger.AndroidUtilities;
-import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.FileLog;
+import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.R;
 import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.UserConfig;
@@ -49,7 +55,7 @@ import org.telegram.ui.ActionBar.AlertDialog;
 import org.telegram.ui.ActionBar.BaseFragment;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.ActionBar.ThemeDescription;
-import org.telegram.ui.Cells.DrawerUserCell;
+import org.telegram.ui.Cells.AccountActionsCell;
 import org.telegram.ui.Cells.HeaderCell;
 import org.telegram.ui.Cells.TextCheckCell;
 import org.telegram.ui.Cells.TextInfoPrivacyCell;
@@ -66,12 +72,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
-
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
-import androidx.core.util.Consumer;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
 public class FakePasscodeActivity extends BaseFragment {
 
@@ -121,7 +121,7 @@ public class FakePasscodeActivity extends BaseFragment {
     private int deletePasscodeRow;
     private int deletePasscodeDetailRow;
 
-    List<Integer> accountNumbers = new ArrayList<>();
+    List<AccountActionsCellInfo> accounts = new ArrayList<>();
 
     private boolean creating;
     private FakePasscode fakePasscode;
@@ -413,8 +413,29 @@ public class FakePasscodeActivity extends BaseFragment {
                     }
                     showDialog(dialog);
                 } else if (firstAccountRow <= position && position <= lastAccountRow) {
-                    AccountActions actions = fakePasscode.getOrCreateAccountActions(accountNumbers.get(position - firstAccountRow));
-                    presentFragment(new FakePasscodeAccountActionsActivity(actions, fakePasscode), false);
+                    AccountActionsCellInfo info = accounts.get(position - firstAccountRow);
+                    if (info.accountNum != null) {
+                        AccountActions actions = fakePasscode.getOrCreateAccountActions(info.accountNum);
+                        presentFragment(new FakePasscodeAccountActionsActivity(actions, fakePasscode), false);
+                    } else {
+                        AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
+                        String buttonText;
+                        builder.setMessage(LocaleController.getString("AreYouSureDeleteFakePasscode", R.string.AreYouSureDeleteFakePasscode));
+                        builder.setTitle(LocaleController.getString("DeleteFakePasscode", R.string.DeleteFakePasscode));
+                        buttonText = LocaleController.getString("Delete", R.string.Delete);
+                        builder.setPositiveButton(buttonText, (dialogInterface, i) -> {
+                            fakePasscode.accountActions.remove(info.actions);
+                            SharedConfig.saveConfig();
+                            listAdapter.notifyDataSetChanged();
+                        });
+                        builder.setNegativeButton(LocaleController.getString("Cancel", R.string.Cancel), null);
+                        AlertDialog alertDialog = builder.create();
+                        showDialog(alertDialog);
+                        TextView button = (TextView) alertDialog.getButton(DialogInterface.BUTTON_POSITIVE);
+                        if (button != null) {
+                            button.setTextColor(Theme.getColor(Theme.key_dialogTextRed2));
+                        }
+                    }
                 } else if (position == deletePasscodeRow) {
                     if (getParentActivity() == null) {
                         return;
@@ -502,16 +523,16 @@ public class FakePasscodeActivity extends BaseFragment {
         accountHeaderRow = rowCount++;
         firstAccountRow = rowCount;
         lastAccountRow = firstAccountRow - 1;
-        accountNumbers.clear();
+        accounts.clear();
         for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
             if (UserConfig.getInstance(a).isClientActivated()) {
-                accountNumbers.add(a);
+                accounts.add(new AccountActionsCellInfo(a));
                 lastAccountRow = rowCount++;
             }
         }
-        Collections.sort(accountNumbers, (o1, o2) -> {
-            long l1 = UserConfig.getInstance(o1).loginTime;
-            long l2 = UserConfig.getInstance(o2).loginTime;
+        Collections.sort(accounts, (o1, o2) -> {
+            long l1 = UserConfig.getInstance(o1.accountNum).loginTime;
+            long l2 = UserConfig.getInstance(o2.accountNum).loginTime;
             if (l1 > l2) {
                 return 1;
             } else if (l1 < l2) {
@@ -519,6 +540,12 @@ public class FakePasscodeActivity extends BaseFragment {
             }
             return 0;
         });
+        for (AccountActions actions : fakePasscode.accountActions) {
+            if (actions.getAccountNum() == null) {
+                accounts.add(new AccountActionsCellInfo(actions));
+                lastAccountRow = rowCount++;
+            }
+        }
 
         accountDetailRow = rowCount++;
 
@@ -629,6 +656,19 @@ public class FakePasscodeActivity extends BaseFragment {
         AndroidUtilities.shakeView(titleTextView, 2, 0);
     }
 
+    private class AccountActionsCellInfo {
+        public Integer accountNum;
+        public AccountActions actions;
+
+        public AccountActionsCellInfo(Integer accountNum) {
+            this.accountNum = accountNum;
+        }
+
+        public AccountActionsCellInfo(AccountActions actions) {
+            this.actions = actions;
+        }
+    }
+
     private class ListAdapter extends RecyclerListView.SelectionAdapter {
 
         private Context mContext;
@@ -669,9 +709,8 @@ public class FakePasscodeActivity extends BaseFragment {
                     break;
                 case 3:
                 {
-                    DrawerUserCell cell = new DrawerUserCell(mContext);
+                    AccountActionsCell cell = new AccountActionsCell(mContext);
                     view = cell;
-                    cell.setFakePasscodeMode(true);
                     view.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundWhite));
                     break;
                 }
@@ -767,8 +806,9 @@ public class FakePasscodeActivity extends BaseFragment {
                     break;
                 }
                 case 3: {
-                    DrawerUserCell cell = (DrawerUserCell) holder.itemView;
-                    cell.setAccount(accountNumbers.get(position - firstAccountRow));
+                    AccountActionsCell cell = (AccountActionsCell) holder.itemView;
+                    AccountActionsCellInfo info = accounts.get(position - firstAccountRow);
+                    cell.setAccount(info.accountNum, info.actions, position != lastAccountRow);
                     break;
                 }
                 case 4: {
@@ -810,7 +850,7 @@ public class FakePasscodeActivity extends BaseFragment {
     public ArrayList<ThemeDescription> getThemeDescriptions() {
         ArrayList<ThemeDescription> themeDescriptions = new ArrayList<>();
 
-        themeDescriptions.add(new ThemeDescription(listView, ThemeDescription.FLAG_CELLBACKGROUNDCOLOR, new Class[]{TextCheckCell.class, TextSettingsCell.class, DrawerUserCell.class, HeaderCell.class}, null, null, null, Theme.key_windowBackgroundWhite));
+        themeDescriptions.add(new ThemeDescription(listView, ThemeDescription.FLAG_CELLBACKGROUNDCOLOR, new Class[]{TextCheckCell.class, TextSettingsCell.class, AccountActionsCell.class, HeaderCell.class}, null, null, null, Theme.key_windowBackgroundWhite));
         themeDescriptions.add(new ThemeDescription(fragmentView, ThemeDescription.FLAG_BACKGROUND | ThemeDescription.FLAG_CHECKTAG, null, null, null, null, Theme.key_windowBackgroundWhite));
         themeDescriptions.add(new ThemeDescription(fragmentView, ThemeDescription.FLAG_BACKGROUND | ThemeDescription.FLAG_CHECKTAG, null, null, null, null, Theme.key_windowBackgroundGray));
 
@@ -843,7 +883,7 @@ public class FakePasscodeActivity extends BaseFragment {
         themeDescriptions.add(new ThemeDescription(listView, ThemeDescription.FLAG_BACKGROUNDFILTER, new Class[]{TextInfoPrivacyCell.class}, null, null, null, Theme.key_windowBackgroundGrayShadow));
         themeDescriptions.add(new ThemeDescription(listView, 0, new Class[]{TextInfoPrivacyCell.class}, new String[]{"textView"}, null, null, null, Theme.key_windowBackgroundWhiteGrayText4));
 
-        themeDescriptions.add(new ThemeDescription(listView, ThemeDescription.FLAG_CHECKTAG, new Class[]{DrawerUserCell.class}, new String[]{"textView"}, null, null, null, Theme.key_windowBackgroundWhiteGrayText7));
+        themeDescriptions.add(new ThemeDescription(listView, ThemeDescription.FLAG_CHECKTAG, new Class[]{AccountActionsCell.class}, new String[]{"textView"}, null, null, null, Theme.key_windowBackgroundWhiteGrayText7));
 
         themeDescriptions.add(new ThemeDescription(listView, 0, new Class[]{HeaderCell.class}, new String[]{"textView"}, null, null, null, Theme.key_windowBackgroundWhiteBlueHeader));
 
