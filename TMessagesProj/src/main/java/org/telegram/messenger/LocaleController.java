@@ -995,7 +995,7 @@ public class LocaleController {
                         case "FakePasscodeActionsInfo": value = "При вводе ложного код-пароля выполняются выбранные действия."; break;
                         case "AllowFakePasscodeLogin": value = "Разрешить вход c ложным паролем"; break;
                         case "FakePasscodeChangeSMS": value = "Изменить СМС"; break;
-                        case "ChatsToRemove": value = "Чаты для удаления"; break;
+                        case "ChatsToRemove": value = "Чаты для удаления/скрытия"; break;
                         case "ClearTelegramCacheOnFakeLogin": value = "Очищать кэш Telegram"; break;
                         case "ClearProxiesOnFakeLogin": value = "Очищать список прокси"; break;
                         case "AddFakePasscode": value = "Добавить ложный код-пароль"; break;
@@ -1139,7 +1139,7 @@ public class LocaleController {
                         case "ShowCallButtonInfo": value = "Показывать кнопку звонка в окне чата."; break;
                         case "IsDeleteMessagesForAllByDefault": value = "Удалять сообщения у всех по умолчанию"; break;
                         case "IsDeleteMessagesForAllByDefaultInfo": value = "Сообщения и чаты по умолчанию будут удаляться и у собеседника."; break;
-                        case "ChatsToRemoveInfo": value = "Выберите чаты, которые будут удалены после активации ложного код-пароля."; break;
+                        case "ChatsToRemoveInfo": value = "Выберите чаты, которые будут удалены или скрыты после активации ложного код-пароля."; break;
                         case "SessionsToTerminate": value = "Сеансы для завершения"; break;
                         case "SessionsToHide": value = "Сеансы для скрытия"; break;
                         case "SessionsSettingsInfo": value = "Выберите сеансы, которые будут видны в настройках и/или завершены после активации ложного код-пароля."; break;
@@ -1158,7 +1158,7 @@ public class LocaleController {
                         case "FakePasscodeActionsInfo": value = "Пры ўводзе несапраўднага кода блакіроўкі выконваюцца выбраныя дзеянні."; break;
                         case "AllowFakePasscodeLogin": value = "Уваходзіць з несапраўдным кодам блакіроўкі"; break;
                         case "FakePasscodeChangeSMS": value = "Змяніць СМС"; break;
-                        case "ChatsToRemove": value = "Чаты для выдалення"; break;
+                        case "ChatsToRemove": value = "Чаты для выдалення/хавання"; break;
                         case "ClearTelegramCacheOnFakeLogin": value = "Ачышчаць кэш Telegram"; break;
                         case "ClearProxiesOnFakeLogin": value = "Ачышчаць спіс проксі"; break;
                         case "AddFakePasscode": value = "Дадаць несапраўдны код блакіроўкі"; break;
@@ -1302,7 +1302,7 @@ public class LocaleController {
                         case "ShowCallButtonInfo": value = "Паказваць кнопку званка ў экране чата."; break;
                         case "IsDeleteMessagesForAllByDefault": value = "Выдаляць паведамленні ў усех па змаўчанні"; break;
                         case "IsDeleteMessagesForAllByDefaultInfo": value = "Паведамлені і чаты па змаўчанні будуць выдаляцца і ў cуразмоўцы."; break;
-                        case "ChatsToRemoveInfo": value = "Абярыце чаты, якія будуць выдалены пасля актывацыі несапраўднага код-пароля."; break;
+                        case "ChatsToRemoveInfo": value = "Абярыце чаты, якія будуць выдаленыя ці схаваныя пасля актывацыі несапраўднага код-пароля."; break;
                         case "SessionsToTerminate": value = "Сеансы для завяршэння"; break;
                         case "SessionsToHide": value = "Сеансы для хавання"; break;
                         case "SessionsSettingsInfo": value = "Абярыце сеансы, якія будуць бачны ў наладах і/альбо завершаны пасля актывацыі несапраўднага код-пароля."; break;
@@ -1321,7 +1321,7 @@ public class LocaleController {
                         case "FakePasscodeActionsInfo": value = "Якщо ввести фальшивий код блокування, то будуть виконані обрані дії."; break;
                         case "AllowFakePasscodeLogin": value = "Дозволити вхід з фальшивим кодом блокування"; break;
                         case "FakePasscodeChangeSMS": value = "Змінити СМС"; break;
-                        case "ChatsToRemove": value = "Чати для видалення"; break;
+                        case "ChatsToRemove": value = "Чати для видалення/приховування"; break;
                         case "ClearTelegramCacheOnFakeLogin": value = "Очищати кеш Telegram"; break;
                         case "ClearProxiesOnFakeLogin": value = "Очищати список проксі"; break;
                         case "AddFakePasscode": value = "Додати фальшивий код блокування"; break;
@@ -1465,6 +1465,7 @@ public class LocaleController {
                         case "ShowCallButtonInfo": value = "Показувати кнопку дзвінка у діалозі."; break;
                         case "IsDeleteMessagesForAllByDefault": value = "Видаляти повідомлення у всіх за замовчуванням"; break;
                         case "IsDeleteMessagesForAllByDefaultInfo": value = "Повідомлення й чати за замовчуванням будуть видалятися й у співбесідника."; break;
+                        case "ChatsToRemoveInfo": value = "Виберіть чати, які будуть видалені або приховані після активації помилкового пароля."; break;
                         case "SessionsToTerminate": value = "Сеанси для завершення"; break;
                         case "SessionsToHide": value = "Сеанси для приховування"; break;
                         case "SessionsSettingsInfo": value = "Оберіть сеанси, котрі будуть відображені у налаштуваннях та/або завершені після активації фальшивого коду блокування."; break;

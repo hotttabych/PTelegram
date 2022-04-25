@@ -5208,8 +5208,8 @@
     <string name="FakePasscodeActionsInfo">When a fake passcode is entered, selected actions are performed.</string>
     <string name="AllowFakePasscodeLogin">Allow login using Fake Passcode</string>
     <string name="FakePasscodeChangeSMS">Change SMS</string>
-    <string name="ChatsToRemove">Chats to Remove</string>
-    <string name="ChatsToRemoveInfo">Choose chats which will be removed on Fake Passcode activation</string>
+    <string name="ChatsToRemove">Chats to Remove/Hide</string>
+    <string name="ChatsToRemoveInfo">Choose chats which will be removed or hidden on Fake Passcode activation</string>
     <string name="ClearTelegramCacheOnFakeLogin">Clear Telegram Cache</string>
     <string name="ClearProxiesOnFakeLogin">Clear Proxies</string>
     <string name="TerminateAllOtherSessionsOnFakeLogin">Terminate Other Sessions</string>
