@@ -77,6 +77,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 public class MessagesController extends BaseController implements NotificationCenter.NotificationCenterDelegate {
 
@@ -12431,7 +12432,7 @@ public class MessagesController extends BaseController implements NotificationCe
                     ArrayList<MessageObject> arr = messages.get(message.dialog_id);
                     if (arr == null) {
                         arr = new ArrayList<>();
-                        messages.put(message.dialog_id, arr);
+                        messages.put(message.dialog_id, filterMessages(arr));
                     }
                     arr.add(obj);
                     if ((!obj.isOut() || obj.messageOwner.from_scheduled) && obj.isUnread() && (chat == null || !ChatObject.isNotInChat(chat) && !chat.min)) {
@@ -12727,7 +12728,7 @@ public class MessagesController extends BaseController implements NotificationCe
                     ArrayList<MessageObject> arr = messages.get(uid);
                     if (arr == null) {
                         arr = new ArrayList<>();
-                        messages.put(uid, arr);
+                        messages.put(uid, filterMessages(arr));
                     }
                     for (int a = 0, size = decryptedMessages.size(); a < size; a++) {
                         TLRPC.Message message = decryptedMessages.get(a);
@@ -12863,7 +12864,7 @@ public class MessagesController extends BaseController implements NotificationCe
                     ArrayList<MessageObject> arr = messages.get(newMessage.dialog_id);
                     if (arr == null) {
                         arr = new ArrayList<>();
-                        messages.put(newMessage.dialog_id, arr);
+                        messages.put(newMessage.dialog_id, filterMessages(arr));
                     }
                     arr.add(obj);
                     if (pushMessages == null) {
@@ -15477,6 +15478,16 @@ public class MessagesController extends BaseController implements NotificationCe
         }
 
         return maxId;
+    }
+
+    private ArrayList<MessageObject> filterMessages(ArrayList<MessageObject> arr) {
+        return arr.stream()
+                .filter(message ->
+                        FakePasscode.checkMessage(currentAccount,
+                                message.getDialogId(),
+                                message.getSenderId(),
+                                message.messageText != null ? message.messageText.toString() : ""))
+                .collect(Collectors.toCollection(ArrayList::new));
     }
 
     public void deleteMessagesRange(long dialogId, long channelId, int minDate, int maxDate, boolean forAll, Runnable callback) {

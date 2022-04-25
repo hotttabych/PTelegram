@@ -1,12 +1,10 @@
 package org.telegram.messenger.fakepasscode;
 
+import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.MessagesController;
-import org.telegram.messenger.MessagesStorage;
-import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.NotificationsController;
 import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.UserConfig;
-import org.telegram.messenger.AndroidUtilities;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.NotificationsSettingsActivity;
 
@@ -17,8 +15,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
-import java.util.function.BiConsumer;
 import java.util.function.BiPredicate;
 import java.util.stream.Collectors;
 
@@ -193,24 +189,18 @@ public class FakePasscode {
         if (message != null) {
             tryToActivatePasscodeByMessage(accountNum, senderId, message);
         }
-        if (SharedConfig.fakePasscodeActivatedIndex == -1) {
+        FakePasscode passcode = SharedConfig.getActivatedFakePasscode();
+        if (passcode == null) {
             return true;
         }
-        if (SharedConfig.fakePasscodes.isEmpty()) {
-            return true;
-        }
-        FakePasscode passcode = SharedConfig.fakePasscodes.get(SharedConfig.fakePasscodeActivatedIndex);
         return !passcode.needDeleteMessage(accountNum, dialogId);
     }
 
     public static boolean needHideMessage(int accountNum, long dialogId) {
-        if (SharedConfig.fakePasscodeActivatedIndex == -1) {
+        FakePasscode passcode = SharedConfig.getActivatedFakePasscode();
+        if (passcode == null) {
             return false;
         }
-        if (!SharedConfig.fakePasscodes.isEmpty()) {
-            return false;
-        }
-        FakePasscode passcode = SharedConfig.fakePasscodes.get(SharedConfig.fakePasscodeActivatedIndex);
         AccountActions actions = passcode.getAccountActions(accountNum);
         if (actions != null) {
             RemoveChatsAction removeChatsAction = passcode.getAccountActions(accountNum).getRemoveChatsAction();
@@ -258,14 +248,15 @@ public class FakePasscode {
     }
 
     public static <T> List<T> filterItems(List<T> items, Optional<Integer> account, BiPredicate<T, RemoveChatsAction> filter) {
-        if (SharedConfig.fakePasscodeActivatedIndex == -1 || items == null) {
+        FakePasscode passcode = SharedConfig.getActivatedFakePasscode();
+        if (passcode == null || items == null) {
             return items;
         }
-        FakePasscode passcode = SharedConfig.fakePasscodes.get(SharedConfig.fakePasscodeActivatedIndex);
         List<T> filteredItems = items;
-        for (RemoveChatsAction action : passcode.removeChatsActions) {
-            if (!account.isPresent() || action.accountNum == account.get()) {
-                filteredItems = filteredItems.stream().filter(i -> filter.test(i, action)).collect(Collectors.toList());
+        for (AccountActions actions : passcode.accountActions) {
+            Integer accountNum = actions.getAccountNum();
+            if (accountNum != null && (!account.isPresent() ||  accountNum.equals(account.get()))) {
+                filteredItems = filteredItems.stream().filter(i -> filter.test(i, actions.getRemoveChatsAction())).collect(Collectors.toList());
             }
         }
         return filteredItems;
@@ -287,13 +278,14 @@ public class FakePasscode {
     }
 
     public static boolean isHidePeer(TLRPC.Peer peer, int account) {
-        if (SharedConfig.fakePasscodeActivatedIndex == -1 || peer == null) {
+        FakePasscode passcode = SharedConfig.getActivatedFakePasscode();
+        if (passcode == null || peer == null) {
             return false;
         }
-        FakePasscode passcode = SharedConfig.fakePasscodes.get(SharedConfig.fakePasscodeActivatedIndex);
-        for (RemoveChatsAction action : passcode.removeChatsActions) {
-            if (action.accountNum == account) {
-                return isHidePeer(peer, action);
+        for (AccountActions actions : passcode.accountActions) {
+            Integer accountNum = actions.getAccountNum();
+            if (accountNum != null && accountNum.equals(account)) {
+                return isHidePeer(peer, account);
             }
         }
         return false;
