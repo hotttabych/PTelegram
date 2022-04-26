@@ -15398,13 +15398,17 @@ public class MessagesController extends BaseController implements NotificationCe
        }
        forceResetDialogs();
        deleteMessagesDelegate = (id, account, args) -> {
-           if (args != null && Objects.equals(args[0], deleteAllMessagesGuid)) {
+           if (args != null && Objects.equals(args[0], deleteAllMessagesGuid) &&  ((ArrayList) args[1]).size() != 0) {
                if (id == NotificationCenter.chatSearchResultsAvailableAll) {
                        ArrayList<Integer> messagesIds =  ((ArrayList<MessageObject>) args[1]).stream().map(m -> m.getId()).collect(toCollection(ArrayList::new));
                        deleteMessages(messagesIds, null, null, dialogId, true, false, false, 0, null, false, false);
+
+                   getMediaDataController().searchMessagesInChat("", dialogId, mergeDialogId, deleteAllMessagesGuid, 0, threadMessageId,  getUser(userId), getChat(dialogId));
+
                }
-           MessagesController.this.getNotificationCenter().removeObserver(deleteMessagesDelegate, NotificationCenter.chatSearchResultsAvailableAll);
-           MessagesController.this.getNotificationCenter().postNotificationName(NotificationCenter.dialogCleared, dialogId);
+           }else{
+               MessagesController.this.getNotificationCenter().removeObserver(deleteMessagesDelegate, NotificationCenter.chatSearchResultsAvailableAll);
+               MessagesController.this.getNotificationCenter().postNotificationName(NotificationCenter.dialogCleared, dialogId);
            }
        };
        getNotificationCenter().addObserver(deleteMessagesDelegate, NotificationCenter.chatSearchResultsAvailableAll);
