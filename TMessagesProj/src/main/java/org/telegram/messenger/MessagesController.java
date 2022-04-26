@@ -11,6 +11,9 @@ package org.telegram.messenger;
 import static org.telegram.messenger.NotificationsController.TYPE_CHANNEL;
 import static org.telegram.messenger.NotificationsController.TYPE_PRIVATE;
 
+import static java.util.stream.Collectors.toCollection;
+import static java.util.stream.Collectors.toList;
+
 import android.app.Activity;
 import android.appwidget.AppWidgetManager;
 import android.content.Context;
@@ -73,6 +76,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
@@ -15386,6 +15390,28 @@ public class MessagesController extends BaseController implements NotificationCe
     private NotificationCenter.NotificationCenterDelegate deleteMessagesDelegate;
     private int deleteAllMessagesGuid = -1;
 
+
+   public void deleteAllMessagesFromDialogByUser(long userId, long dialogId, long mergeDialogId, int threadMessageId ){
+
+       if (deleteAllMessagesGuid < 0) {
+           deleteAllMessagesGuid = ConnectionsManager.generateClassGuid();
+       }
+       forceResetDialogs();
+       deleteMessagesDelegate = (id, account, args) -> {
+           if (args != null && Objects.equals(args[0], deleteAllMessagesGuid)) {
+               if (id == NotificationCenter.chatSearchResultsAvailableAll) {
+                       ArrayList<Integer> messagesIds =  ((ArrayList<MessageObject>) args[1]).stream().map(m -> m.getId()).collect(toCollection(ArrayList::new));
+                       deleteMessages(messagesIds, null, null, dialogId, true, false, false, 0, null, false, false);
+               }
+           }
+           MessagesController.this.getNotificationCenter().removeObserver(deleteMessagesDelegate, NotificationCenter.chatSearchResultsAvailableAll);
+           MessagesController.this.getNotificationCenter().postNotificationName(NotificationCenter.dialogCleared, dialogId);
+       };
+       getNotificationCenter().addObserver(deleteMessagesDelegate, NotificationCenter.chatSearchResultsAvailableAll);
+       getMediaDataController().searchMessagesInChat("", dialogId, mergeDialogId, deleteAllMessagesGuid, 0, threadMessageId,  getUser(userId), getChat(dialogId));
+
+    }
+
     public void deleteAllMessagesFromDialog(long dialogId, long ownerId) {
         deleteAllMessagesFromDialog(dialogId, ownerId, null);
     }
@@ -15407,18 +15433,18 @@ public class MessagesController extends BaseController implements NotificationCe
                     ArrayList<MessageObject> messArr = (ArrayList<MessageObject>) args[2];
 
                     if (!messArr.isEmpty()) {
-                        prevMaxId[0] = clearMessages(dialogId, ownerId, deleteAllMessagesGuid, loadIndex[0]++,
+                        prevMaxId[0] = MessagesController.this.clearMessages(dialogId, ownerId, deleteAllMessagesGuid, loadIndex[0]++,
                                 prevMaxId[0], condition, messArr);
                     } else {
-                        getNotificationCenter().removeObserver(deleteMessagesDelegate, NotificationCenter.messagesDidLoad);
-                        getNotificationCenter().postNotificationName(NotificationCenter.dialogCleared, dialogId);
+                        MessagesController.this.getNotificationCenter().removeObserver(deleteMessagesDelegate, NotificationCenter.messagesDidLoad);
+                        MessagesController.this.getNotificationCenter().postNotificationName(NotificationCenter.dialogCleared, dialogId);
                     }
                 }
             } else if (id == NotificationCenter.loadingMessagesFailed) {
                 int guid = (Integer) args[0];
                 if (guid == deleteAllMessagesGuid) {
-                    getNotificationCenter().removeObserver(deleteMessagesDelegate, NotificationCenter.messagesDidLoad);
-                    getNotificationCenter().postNotificationName(NotificationCenter.dialogCleared, dialogId);
+                    MessagesController.this.getNotificationCenter().removeObserver(deleteMessagesDelegate, NotificationCenter.messagesDidLoad);
+                    MessagesController.this.getNotificationCenter().postNotificationName(NotificationCenter.dialogCleared, dialogId);
                 }
             }
 

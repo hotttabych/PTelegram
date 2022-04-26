@@ -2625,11 +2625,14 @@ public class MediaDataController extends BaseController {
                                 }
                                 MessageObject messageObject = searchResultMessages.get(lastReturnedNum);
                                 getNotificationCenter().postNotificationName(NotificationCenter.chatSearchResultsAvailable, guid, messageObject.getId(), getMask(), messageObject.getDialogId(), lastReturnedNum, messagesSearchCount[0] + messagesSearchCount[1], jumpToMessage);
+
                             }
                         }
                         if (queryWithDialogFinal == dialogId && messagesSearchEndReached[0] && mergeDialogId != 0 && !messagesSearchEndReached[1]) {
                             searchMessagesInChat(lastSearchQuery, dialogId, mergeDialogId, guid, 0, replyMessageId, true, user, chat, jumpToMessage);
                         }
+                        getNotificationCenter().postNotificationName(NotificationCenter.chatSearchResultsAvailableAll, guid, searchResultMessages);
+
                     }
                 }
             });

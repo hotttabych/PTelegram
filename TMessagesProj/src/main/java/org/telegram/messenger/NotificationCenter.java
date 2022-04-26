@@ -256,6 +256,7 @@ public class NotificationCenter {
     public static final int onActivityResultReceived = totalEvents++;
     public static final int onRequestPermissionResultReceived = totalEvents++;
     public static final int onUserRingtonesUpdated = totalEvents++;
+    public static final int chatSearchResultsAvailableAll = totalEvents++;
 
     private SparseArray<ArrayList<NotificationCenterDelegate>> observers = new SparseArray<>();
     private SparseArray<ArrayList<NotificationCenterDelegate>> removeAfterBroadcast = new SparseArray<>();
