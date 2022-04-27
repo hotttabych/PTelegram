@@ -22,6 +22,7 @@ import org.telegram.messenger.R;
 import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.fakepasscode.AccountActions;
+import org.telegram.messenger.fakepasscode.CheckedSessions;
 import org.telegram.messenger.fakepasscode.FakePasscode;
 import org.telegram.messenger.fakepasscode.TerminateOtherSessionsAction;
 import org.telegram.tgnet.TLRPC;
@@ -399,7 +400,7 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
                         textCell.setTag(Theme.key_windowBackgroundWhiteBlackText);
                         textCell.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
                     }  else if (position == sessionsToHideRow) {
-                        TerminateOtherSessionsAction action = actions.getTerminateOtherSessionsAction();
+                        CheckedSessions action = actions.getSessionsToHide();
                         textCell.setTextAndValue(LocaleController.getString("SessionsToHide", R.string.SessionsToHide),
                                 getSessionsLabel(action.getMode(), action.getSessions().size()), false);
                         textCell.setTag(Theme.key_windowBackgroundWhiteBlackText);
