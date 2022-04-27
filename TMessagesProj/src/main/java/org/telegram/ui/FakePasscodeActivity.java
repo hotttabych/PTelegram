@@ -420,8 +420,8 @@ public class FakePasscodeActivity extends BaseFragment {
                     } else {
                         AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
                         String buttonText;
-                        builder.setMessage(LocaleController.getString("AreYouSureDeleteFakePasscode", R.string.AreYouSureDeleteFakePasscode));
-                        builder.setTitle(LocaleController.getString("DeleteFakePasscode", R.string.DeleteFakePasscode));
+                        builder.setMessage(LocaleController.getString("DeleteOldAccountActionsInfo", R.string.DeleteOldAccountActionsInfo));
+                        builder.setTitle(LocaleController.getString("DeleteOldAccountActions", R.string.DeleteOldAccountActions));
                         buttonText = LocaleController.getString("Delete", R.string.Delete);
                         builder.setPositiveButton(buttonText, (dialogInterface, i) -> {
                             fakePasscode.accountActions.remove(info.actions);
