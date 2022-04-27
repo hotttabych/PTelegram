@@ -562,7 +562,7 @@ public class FakePasscodeRemoveChatsActivity extends BaseFragment implements Not
 
     @Override
     public AccountInstance getAccountInstance() {
-        return AccountInstance.getInstance(action.accountNum);
+        return AccountInstance.getInstance(action.getAccountNum());
     }
 
     @Keep
@@ -849,7 +849,7 @@ public class FakePasscodeRemoveChatsActivity extends BaseFragment implements Not
             switch (viewType) {
                 default:
                 case 1:
-                    view = new ChatRemoveCell(context, action.accountNum);
+                    view = new ChatRemoveCell(context, action.getAccountNum());
                     break;
             }
             return new RecyclerListView.Holder(view);

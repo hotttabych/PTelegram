@@ -1,9 +1,20 @@
 package org.telegram.messenger.fakepasscode;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import org.telegram.messenger.UserConfig;
 
 public abstract class AccountAction implements Action {
-    public int accountNum = 0;
+    @JsonIgnore
+    protected int accountNum = 0;
+
+    public int getAccountNum() {
+        return accountNum;
+    }
+
+    public void setAccountNum(int accountNum) {
+        this.accountNum = accountNum;
+    }
 
     protected UserConfig getUserConfig() {
         return UserConfig.getInstance(accountNum);

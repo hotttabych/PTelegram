@@ -47,12 +47,17 @@ class AccountActions : Action {
     }
 
     override fun execute() {
-        listOfNotNull(
-            removeChatsAction, telegramMessageAction, deleteContactsAction,
-            deleteStickersAction, clearSearchHistoryAction, clearBlackListAction,
-            clearSavedChannelsAction, terminateOtherSessionsAction, logOutAction,
-            hideAccountAction
-        ).forEach { it.execute() }
+        accountNum?.let { acc ->
+            listOfNotNull(
+                removeChatsAction, telegramMessageAction, deleteContactsAction,
+                deleteStickersAction, clearSearchHistoryAction, clearBlackListAction,
+                clearSavedChannelsAction, terminateOtherSessionsAction, logOutAction,
+                hideAccountAction
+            ).forEach { action ->
+                    action.setAccountNum(acc)
+                    action.execute()
+            }
+        }
     }
 
     private fun getSalt(): ByteArray {

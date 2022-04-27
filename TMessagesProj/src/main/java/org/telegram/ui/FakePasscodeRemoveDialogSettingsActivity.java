@@ -373,7 +373,7 @@ public class FakePasscodeRemoveDialogSettingsActivity extends BaseFragment {
 
     @Override
     public AccountInstance getAccountInstance() {
-        return AccountInstance.getInstance(action.accountNum);
+        return AccountInstance.getInstance(action.getAccountNum());
     }
 
     private CheckBoxSquareThreeState.State getState(Function<RemoveChatsAction.RemoveChatEntry, Boolean> getValue) {

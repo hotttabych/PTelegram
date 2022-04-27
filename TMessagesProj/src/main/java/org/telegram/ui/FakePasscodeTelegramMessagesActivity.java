@@ -537,7 +537,7 @@ public class FakePasscodeTelegramMessagesActivity extends BaseFragment implement
 
     @Override
     public AccountInstance getAccountInstance() {
-        return AccountInstance.getInstance(action.accountNum);
+        return AccountInstance.getInstance(action.getAccountNum());
     }
 
     @Keep
@@ -926,7 +926,7 @@ public class FakePasscodeTelegramMessagesActivity extends BaseFragment implement
                                             resultArrayNames.add(AndroidUtilities.generateSearchName(user.first_name, user.last_name, q));
                                         } else {
                                             TLRPC.Chat chat = (TLRPC.Chat) object;
-                                            String title = UserConfig.getChatTitleOverride(action.accountNum, chat.id);
+                                            String title = UserConfig.getChatTitleOverride(action.getAccountNum(), chat.id);
                                             if (title == null) {
                                                 title = chat.title;
                                             }
