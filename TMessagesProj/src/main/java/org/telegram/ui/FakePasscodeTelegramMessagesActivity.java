@@ -52,7 +52,7 @@ import org.telegram.ui.ActionBar.BaseFragment;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.ActionBar.ThemeDescription;
 import org.telegram.ui.Adapters.SearchAdapterHelper;
-import org.telegram.ui.Cells.GroupCreateUserCell;
+import org.telegram.ui.Cells.SendMessageChatCell;
 import org.telegram.ui.Components.EditTextBoldCursor;
 import org.telegram.ui.Components.EditTextCaption;
 import org.telegram.ui.Components.EmptyTextProgressView;
@@ -407,8 +407,8 @@ public class FakePasscodeTelegramMessagesActivity extends BaseFragment implement
         listView.addItemDecoration(new ItemDecoration());
         frameLayout.addView(listView);
         listView.setOnItemClickListener((view, position) -> {
-            if (view instanceof GroupCreateUserCell) {
-                GroupCreateUserCell cell = (GroupCreateUserCell) view;
+            if (view instanceof SendMessageChatCell) {
+                SendMessageChatCell cell = (SendMessageChatCell) view;
                 Object object = cell.getObject();
                 long id;
                 if (object instanceof TLRPC.User) {
@@ -524,8 +524,8 @@ public class FakePasscodeTelegramMessagesActivity extends BaseFragment implement
                 if ((mask & MessagesController.UPDATE_MASK_AVATAR) != 0 || (mask & MessagesController.UPDATE_MASK_NAME) != 0 || (mask & MessagesController.UPDATE_MASK_STATUS) != 0) {
                     for (int a = 0; a < count; a++) {
                         View child = listView.getChildAt(a);
-                        if (child instanceof GroupCreateUserCell) {
-                            ((GroupCreateUserCell) child).update(mask);
+                        if (child instanceof SendMessageChatCell) {
+                            ((SendMessageChatCell) child).update(mask);
                         }
                     }
                 }
@@ -557,8 +557,8 @@ public class FakePasscodeTelegramMessagesActivity extends BaseFragment implement
         int count = listView.getChildCount();
         for (int a = 0; a < count; a++) {
             View child = listView.getChildAt(a);
-            if (child instanceof GroupCreateUserCell) {
-                GroupCreateUserCell cell = (GroupCreateUserCell) child;
+            if (child instanceof SendMessageChatCell) {
+                SendMessageChatCell cell = (SendMessageChatCell) child;
                 Object object = cell.getObject();
                 long id;
                 if (object instanceof TLRPC.User) {
@@ -719,7 +719,7 @@ public class FakePasscodeTelegramMessagesActivity extends BaseFragment implement
             switch (viewType) {
                 case 1:
                 default:
-                    view = new GroupCreateUserCell(context, 1, 0, true);
+                    view = new SendMessageChatCell(context);
                     break;
             }
             return new RecyclerListView.Holder(view);
@@ -729,9 +729,8 @@ public class FakePasscodeTelegramMessagesActivity extends BaseFragment implement
         public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
             switch (holder.getItemViewType()) {
                 case 1: {
-                    GroupCreateUserCell cell = (GroupCreateUserCell) holder.itemView;
+                    SendMessageChatCell cell = (SendMessageChatCell) holder.itemView;
                     Object object;
-                    CharSequence username = null;
                     CharSequence name = null;
                     if (searching) {
                         int localCount = searchResult.size();
@@ -758,7 +757,6 @@ public class FakePasscodeTelegramMessagesActivity extends BaseFragment implement
                                 name = searchResultNames.get(position);
                                 if (name != null && !TextUtils.isEmpty(objectUserName)) {
                                     if (name.toString().startsWith("@" + objectUserName)) {
-                                        username = name;
                                         name = null;
                                     }
                                 }
@@ -781,9 +779,7 @@ public class FakePasscodeTelegramMessagesActivity extends BaseFragment implement
                                         }
                                         spannableStringBuilder.setSpan(new ForegroundColorSpan(Theme.getColor(Theme.key_windowBackgroundWhiteBlueText4)), index, index + len, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                                     }
-                                    username = spannableStringBuilder;
-                                } catch (Exception e) {
-                                    username = objectUserName;
+                                } catch (Exception ignored) {
                                 }
                             }
                         }
@@ -801,21 +797,7 @@ public class FakePasscodeTelegramMessagesActivity extends BaseFragment implement
                     } else {
                         id = 0;
                     }
-                    if (!searching) {
-                        StringBuilder builder = new StringBuilder();
-                        ArrayList<MessagesController.DialogFilter> filters = getMessagesController().dialogFilters;
-                        for (int a = 0, N = filters.size(); a < N; a++) {
-                            MessagesController.DialogFilter filter = filters.get(a);
-                            if (filter.includesDialog(getAccountInstance(), id)) {
-                                if (builder.length() > 0) {
-                                    builder.append(", ");
-                                }
-                                builder.append(filter.name);
-                            }
-                        }
-                        username = builder;
-                    }
-                    cell.setObject(object, name, username);
+                    cell.setObject(object, name, true);
                     if (id != 0) {
                         cell.setChecked(action.entries.stream().anyMatch(e -> e.userId == id), false);
                         cell.setCheckBoxEnabled(true);
@@ -838,8 +820,8 @@ public class FakePasscodeTelegramMessagesActivity extends BaseFragment implement
 
         @Override
         public void onViewRecycled(RecyclerView.ViewHolder holder) {
-            if (holder.itemView instanceof GroupCreateUserCell) {
-                ((GroupCreateUserCell) holder.itemView).recycle();
+            if (holder.itemView instanceof SendMessageChatCell) {
+                ((SendMessageChatCell) holder.itemView).recycle();
             }
         }
 
@@ -972,8 +954,8 @@ public class FakePasscodeTelegramMessagesActivity extends BaseFragment implement
                 int count = listView.getChildCount();
                 for (int a = 0; a < count; a++) {
                     View child = listView.getChildAt(a);
-                    if (child instanceof GroupCreateUserCell) {
-                        ((GroupCreateUserCell) child).update(0);
+                    if (child instanceof SendMessageChatCell) {
+                        ((SendMessageChatCell) child).update(0);
                     }
                 }
             }
@@ -1004,13 +986,13 @@ public class FakePasscodeTelegramMessagesActivity extends BaseFragment implement
         themeDescriptions.add(new ThemeDescription(editText, ThemeDescription.FLAG_HINTTEXTCOLOR, null, null, null, null, Theme.key_groupcreate_hintText));
         themeDescriptions.add(new ThemeDescription(editText, ThemeDescription.FLAG_CURSORCOLOR, null, null, null, null, Theme.key_groupcreate_cursor));
 
-        themeDescriptions.add(new ThemeDescription(listView, ThemeDescription.FLAG_TEXTCOLOR, new Class[]{GroupCreateUserCell.class}, new String[]{"textView"}, null, null, null, Theme.key_groupcreate_sectionText));
-        themeDescriptions.add(new ThemeDescription(listView, ThemeDescription.FLAG_TEXTCOLOR, new Class[]{GroupCreateUserCell.class}, new String[]{"checkBox"}, null, null, null, Theme.key_checkbox));
-        themeDescriptions.add(new ThemeDescription(listView, ThemeDescription.FLAG_TEXTCOLOR, new Class[]{GroupCreateUserCell.class}, new String[]{"checkBox"}, null, null, null, Theme.key_checkboxDisabled));
-        themeDescriptions.add(new ThemeDescription(listView, ThemeDescription.FLAG_TEXTCOLOR, new Class[]{GroupCreateUserCell.class}, new String[]{"checkBox"}, null, null, null, Theme.key_checkboxCheck));
-        themeDescriptions.add(new ThemeDescription(listView, ThemeDescription.FLAG_TEXTCOLOR | ThemeDescription.FLAG_CHECKTAG, new Class[]{GroupCreateUserCell.class}, new String[]{"statusTextView"}, null, null, null, Theme.key_windowBackgroundWhiteBlueText));
-        themeDescriptions.add(new ThemeDescription(listView, ThemeDescription.FLAG_TEXTCOLOR | ThemeDescription.FLAG_CHECKTAG, new Class[]{GroupCreateUserCell.class}, new String[]{"statusTextView"}, null, null, null, Theme.key_windowBackgroundWhiteGrayText));
-        themeDescriptions.add(new ThemeDescription(listView, 0, new Class[]{GroupCreateUserCell.class}, null, Theme.avatarDrawables, null, Theme.key_avatar_text));
+        themeDescriptions.add(new ThemeDescription(listView, ThemeDescription.FLAG_TEXTCOLOR, new Class[]{SendMessageChatCell.class}, new String[]{"textView"}, null, null, null, Theme.key_groupcreate_sectionText));
+        themeDescriptions.add(new ThemeDescription(listView, ThemeDescription.FLAG_TEXTCOLOR, new Class[]{SendMessageChatCell.class}, new String[]{"checkBox"}, null, null, null, Theme.key_checkbox));
+        themeDescriptions.add(new ThemeDescription(listView, ThemeDescription.FLAG_TEXTCOLOR, new Class[]{SendMessageChatCell.class}, new String[]{"checkBox"}, null, null, null, Theme.key_checkboxDisabled));
+        themeDescriptions.add(new ThemeDescription(listView, ThemeDescription.FLAG_TEXTCOLOR, new Class[]{SendMessageChatCell.class}, new String[]{"checkBox"}, null, null, null, Theme.key_checkboxCheck));
+        themeDescriptions.add(new ThemeDescription(listView, ThemeDescription.FLAG_TEXTCOLOR | ThemeDescription.FLAG_CHECKTAG, new Class[]{SendMessageChatCell.class}, new String[]{"statusTextView"}, null, null, null, Theme.key_windowBackgroundWhiteBlueText));
+        themeDescriptions.add(new ThemeDescription(listView, ThemeDescription.FLAG_TEXTCOLOR | ThemeDescription.FLAG_CHECKTAG, new Class[]{SendMessageChatCell.class}, new String[]{"statusTextView"}, null, null, null, Theme.key_windowBackgroundWhiteGrayText));
+        themeDescriptions.add(new ThemeDescription(listView, 0, new Class[]{SendMessageChatCell.class}, null, Theme.avatarDrawables, null, Theme.key_avatar_text));
         themeDescriptions.add(new ThemeDescription(null, 0, null, null, null, cellDelegate, Theme.key_avatar_backgroundRed));
         themeDescriptions.add(new ThemeDescription(null, 0, null, null, null, cellDelegate, Theme.key_avatar_backgroundOrange));
         themeDescriptions.add(new ThemeDescription(null, 0, null, null, null, cellDelegate, Theme.key_avatar_backgroundViolet));
