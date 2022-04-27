@@ -8,10 +8,6 @@ public abstract class AccountAction implements Action {
     @JsonIgnore
     protected int accountNum = 0;
 
-    public int getAccountNum() {
-        return accountNum;
-    }
-
     public void setAccountNum(int accountNum) {
         this.accountNum = accountNum;
     }

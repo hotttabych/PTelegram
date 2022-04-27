@@ -81,6 +81,7 @@ public class FakePasscodeTelegramMessagesActivity extends BaseFragment implement
     private int containerHeight;
 
     TelegramMessageAction action;
+    int accountNum;
 
     private boolean searchWas;
     private boolean searching;
@@ -187,9 +188,10 @@ public class FakePasscodeTelegramMessagesActivity extends BaseFragment implement
         }
     }
 
-    public FakePasscodeTelegramMessagesActivity(TelegramMessageAction action) {
+    public FakePasscodeTelegramMessagesActivity(TelegramMessageAction action, int accountNum) {
         super();
         this.action = action;
+        this.accountNum = accountNum;
     }
 
     @Override
@@ -537,7 +539,7 @@ public class FakePasscodeTelegramMessagesActivity extends BaseFragment implement
 
     @Override
     public AccountInstance getAccountInstance() {
-        return AccountInstance.getInstance(action.getAccountNum());
+        return AccountInstance.getInstance(accountNum);
     }
 
     @Keep
@@ -908,7 +910,7 @@ public class FakePasscodeTelegramMessagesActivity extends BaseFragment implement
                                             resultArrayNames.add(AndroidUtilities.generateSearchName(user.first_name, user.last_name, q));
                                         } else {
                                             TLRPC.Chat chat = (TLRPC.Chat) object;
-                                            String title = UserConfig.getChatTitleOverride(action.getAccountNum(), chat.id);
+                                            String title = UserConfig.getChatTitleOverride(accountNum, chat.id);
                                             if (title == null) {
                                                 title = chat.title;
                                             }

@@ -84,6 +84,7 @@ public class FakePasscodeRemoveChatsActivity extends BaseFragment implements Not
     private int containerHeight;
 
     RemoveChatsAction action;
+    protected int accountNum;
 
     private boolean searchWas;
     private boolean searching;
@@ -204,9 +205,10 @@ public class FakePasscodeRemoveChatsActivity extends BaseFragment implements Not
         }
     }
 
-    public FakePasscodeRemoveChatsActivity(RemoveChatsAction action) {
+    public FakePasscodeRemoveChatsActivity(RemoveChatsAction action, int accountNum) {
         super();
         this.action = action;
+        this.accountNum = accountNum;
     }
 
     @Override
@@ -251,7 +253,7 @@ public class FakePasscodeRemoveChatsActivity extends BaseFragment implements Not
                     hideActionMode(true);
                     updateHint();
                 } else if (id == add || id == edit) {
-                    presentFragment(new FakePasscodeRemoveDialogSettingsActivity(action, selectedDialogs));
+                    presentFragment(new FakePasscodeRemoveDialogSettingsActivity(action, selectedDialogs, accountNum));
                     selectedDialogs.clear();
                     if (listView != null) {
                         listView.getAdapter().notifyDataSetChanged();
@@ -488,7 +490,7 @@ public class FakePasscodeRemoveChatsActivity extends BaseFragment implements Not
                         if (editText.length() > 0) {
                             editText.setText(null);
                         }
-                        presentFragment(new FakePasscodeRemoveDialogSettingsActivity(action, Collections.singletonList(cell.getDialogId())));
+                        presentFragment(new FakePasscodeRemoveDialogSettingsActivity(action, Collections.singletonList(cell.getDialogId()), accountNum));
                     }
                 }
             }
@@ -562,7 +564,7 @@ public class FakePasscodeRemoveChatsActivity extends BaseFragment implements Not
 
     @Override
     public AccountInstance getAccountInstance() {
-        return AccountInstance.getInstance(action.getAccountNum());
+        return AccountInstance.getInstance(accountNum);
     }
 
     @Keep
@@ -849,7 +851,7 @@ public class FakePasscodeRemoveChatsActivity extends BaseFragment implements Not
             switch (viewType) {
                 default:
                 case 1:
-                    view = new ChatRemoveCell(context, action.getAccountNum());
+                    view = new ChatRemoveCell(context, accountNum);
                     break;
             }
             return new RecyclerListView.Holder(view);
@@ -1131,7 +1133,7 @@ public class FakePasscodeRemoveChatsActivity extends BaseFragment implements Not
             }
             hideActionMode(true);
             updateHint();
-            presentFragment(new FakePasscodeRemoveDialogSettingsActivity(action, entry));
+            presentFragment(new FakePasscodeRemoveDialogSettingsActivity(action, entry, accountNum));
         }
     }
 

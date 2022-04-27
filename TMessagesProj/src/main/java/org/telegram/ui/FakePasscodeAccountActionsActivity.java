@@ -157,7 +157,7 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
                 return;
             }
             if (position == changeTelegramMessageRow) {
-                presentFragment(new FakePasscodeTelegramMessagesActivity(actions.getTelegramMessageAction()));
+                presentFragment(new FakePasscodeTelegramMessagesActivity(actions.getTelegramMessageAction(), actions.getAccountNum()));
             } else if (position == changePhoneRow) {
                 DialogTemplate template = new DialogTemplate();
                 template.type = DialogType.EDIT;
@@ -185,7 +185,7 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
                 AlertDialog dialog = FakePasscodeDialogBuilder.build(getParentActivity(), template);
                 showDialog(dialog);
             } else if (position == changeChatsToRemoveRow) {
-                presentFragment(new FakePasscodeRemoveChatsActivity(actions.getRemoveChatsAction()));
+                presentFragment(new FakePasscodeRemoveChatsActivity(actions.getRemoveChatsAction(), actions.getAccountNum()));
             } else if (position == deleteAllContactsRow) {
                 TextCheckCell cell = (TextCheckCell) view;
                 actions.toggleDeleteContactsAction();

@@ -51,6 +51,7 @@ public class FakePasscodeRemoveDialogSettingsActivity extends BaseFragment {
     private RecyclerListView listView;
 
     private RemoveChatsAction action;
+    int accountNum;
     Collection<Long> dialogIds;
     private List<RemoveChatsAction.RemoveChatEntry> entries = new ArrayList<>();
     private boolean isNew;
@@ -71,18 +72,20 @@ public class FakePasscodeRemoveDialogSettingsActivity extends BaseFragment {
 
     private static final int done_button = 1;
 
-    public FakePasscodeRemoveDialogSettingsActivity(RemoveChatsAction action, Collection<Long> dialogIds) {
+    public FakePasscodeRemoveDialogSettingsActivity(RemoveChatsAction action, Collection<Long> dialogIds, int accountNum) {
         super();
         this.action = action;
         this.dialogIds = new ArrayList<>(dialogIds);
         this.isNew = dialogIds.stream().allMatch(id -> !action.contains(id));
+        this.accountNum = accountNum;
     }
 
-    public FakePasscodeRemoveDialogSettingsActivity(RemoveChatsAction action, RemoveChatsAction.RemoveChatEntry entry) {
+    public FakePasscodeRemoveDialogSettingsActivity(RemoveChatsAction action, RemoveChatsAction.RemoveChatEntry entry, int accountNum) {
         super();
         this.action = action;
         this.entries.add(entry);
         this.isNew = false;
+        this.accountNum = accountNum;
     }
 
     @Override
@@ -373,7 +376,7 @@ public class FakePasscodeRemoveDialogSettingsActivity extends BaseFragment {
 
     @Override
     public AccountInstance getAccountInstance() {
-        return AccountInstance.getInstance(action.getAccountNum());
+        return AccountInstance.getInstance(accountNum);
     }
 
     private CheckBoxSquareThreeState.State getState(Function<RemoveChatsAction.RemoveChatEntry, Boolean> getValue) {
