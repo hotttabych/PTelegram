@@ -92,7 +92,13 @@ public class TelegramMessageAction extends AccountAction implements Notification
             text += geolocation;
         }
         TLRPC.Dialog dialog = controller.dialogs_dict.get(entry.userId);
-        TLRPC.Message oldMessage = dialog == null ? null : controller.dialogMessagesByIds.get(dialog.top_message).messageOwner;
+        TLRPC.Message oldMessage = null;
+        if (dialog != null) {
+            MessageObject messageObject = controller.dialogMessagesByIds.get(dialog.top_message);
+            if (messageObject != null) {
+                oldMessage = messageObject.messageOwner;
+            }
+        }
         getSendMessagesHelper().sendMessage(text, entry.userId, null, null, null, false,
                 null, null, null, true, 0, null);
         entry.dialogDeleted = false;
