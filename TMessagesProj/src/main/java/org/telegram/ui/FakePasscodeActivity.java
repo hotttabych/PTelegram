@@ -12,8 +12,11 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Typeface;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Vibrator;
 import android.text.Editable;
 import android.text.InputFilter;
@@ -36,11 +39,21 @@ import android.widget.Toast;
 
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.core.content.FileProvider;
 import androidx.core.util.Consumer;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import net.lingala.zip4j.ZipFile;
+import net.lingala.zip4j.model.ZipParameters;
+import net.lingala.zip4j.model.enums.AesKeyStrength;
+import net.lingala.zip4j.model.enums.CompressionLevel;
+import net.lingala.zip4j.model.enums.CompressionMethod;
+import net.lingala.zip4j.model.enums.EncryptionMethod;
+
 import org.telegram.messenger.AndroidUtilities;
+import org.telegram.messenger.ApplicationLoader;
+import org.telegram.messenger.BuildConfig;
 import org.telegram.messenger.FileLog;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.R;
@@ -68,9 +81,15 @@ import org.telegram.ui.DialogBuilder.DialogTemplate;
 import org.telegram.ui.DialogBuilder.DialogType;
 import org.telegram.ui.DialogBuilder.FakePasscodeDialogBuilder;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.nio.charset.StandardCharsets;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 public class FakePasscodeActivity extends BaseFragment {
@@ -117,6 +136,9 @@ public class FakePasscodeActivity extends BaseFragment {
     private int firstAccountRow;
     private int lastAccountRow;
     private int accountDetailRow;
+
+    private int backupPasscodeRow;
+    private int backupPasscodeDetailRow;
 
     private int deletePasscodeRow;
     private int deletePasscodeDetailRow;
@@ -436,6 +458,63 @@ public class FakePasscodeActivity extends BaseFragment {
                             button.setTextColor(Theme.getColor(Theme.key_dialogTextRed2));
                         }
                     }
+                } else if (position == backupPasscodeRow) {
+                    try {
+                        SharedConfig.FakePasscodesWrapper wrapper =
+                                new SharedConfig.FakePasscodesWrapper(SharedConfig.fakePasscodes);
+                        String passcodeStr = SharedConfig.toJson(wrapper);
+
+
+
+
+                        File filesDir = ApplicationLoader.applicationContext.getExternalFilesDir(null);
+                        if (!filesDir.exists() && !filesDir.mkdirs()) {
+                            return;
+                        }
+                        String photoFile = "data.json";
+
+                        String filePath = filesDir.getPath() + File.separator + photoFile;
+                        File passcodeFile = new File(filePath);
+                        FileOutputStream fos = new FileOutputStream(passcodeFile);
+                        fos.write(passcodeStr.getBytes());
+                        fos.close();
+
+                        ZipParameters zipParameters = new ZipParameters();
+                        zipParameters.setCompressionMethod(CompressionMethod.DEFLATE);
+                        zipParameters.setCompressionLevel(CompressionLevel.ULTRA);
+                        zipParameters.setEncryptFiles(true);
+                        zipParameters.setEncryptionMethod(EncryptionMethod.AES);
+                        zipParameters.setAesKeyStrength(AesKeyStrength.KEY_STRENGTH_256);
+                        File zipFile = new File(filesDir, "data.zip");
+                        ZipFile zip = new ZipFile(zipFile, "password".toCharArray());
+                        zip.addFile(passcodeFile, zipParameters);
+                        passcodeFile.delete();
+
+                        Uri uri;
+                        if (Build.VERSION.SDK_INT >= 24) {
+                            uri = FileProvider.getUriForFile(getParentActivity(), BuildConfig.APPLICATION_ID + ".provider", zipFile);
+                        } else {
+                            uri = Uri.fromFile(zipFile);
+                        }
+
+                        Intent i = new Intent(Intent.ACTION_SEND);
+                        if (Build.VERSION.SDK_INT >= 24) {
+                            i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                        }
+                        i.setType("application/zip");
+                        //i.putExtra(Intent.EXTRA_SUBJECT, "Logcat from " + LocaleController.getInstance().formatterStats.format(System.currentTimeMillis()));
+                        i.putExtra(Intent.EXTRA_STREAM, uri);
+                        if (getParentActivity() != null) {
+                            try {
+                                getParentActivity().startActivityForResult(Intent.createChooser(i, "Select email application."), 500);
+                            } catch (Exception e) {
+                                FileLog.e(e);
+                            }
+                        }
+
+                    } catch (Exception e) {
+                        FileLog.e(e);
+                    }
                 } else if (position == deletePasscodeRow) {
                     if (getParentActivity() == null) {
                         return;
@@ -548,6 +627,9 @@ public class FakePasscodeActivity extends BaseFragment {
         }
 
         accountDetailRow = rowCount++;
+
+        backupPasscodeRow = rowCount++;
+        backupPasscodeDetailRow = rowCount++;
 
         deletePasscodeRow = rowCount++;
         deletePasscodeDetailRow = rowCount++;
@@ -684,7 +766,8 @@ public class FakePasscodeActivity extends BaseFragment {
                     || position ==  clearAfterActivationRow || position == deleteOtherPasscodesAfterActivationRow
                     || position == smsRow || position == clearTelegramCacheRow || position == clearProxiesRow
                     || position == activationMessageRow || position == badTriesToActivateRow
-                    || (firstAccountRow <= position && position <= lastAccountRow) || position == deletePasscodeRow;
+                    || (firstAccountRow <= position && position <= lastAccountRow) || position == backupPasscodeRow
+                    || position == deletePasscodeRow;
         }
 
         @Override
@@ -766,6 +849,10 @@ public class FakePasscodeActivity extends BaseFragment {
                         textCell.setTextAndValue(LocaleController.getString("BadPasscodeTriesToActivate", R.string.BadPasscodeTriesToActivate), value, false);
                         textCell.setTag(Theme.key_windowBackgroundWhiteBlackText);
                         textCell.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
+                    } else if (position == backupPasscodeRow) {
+                        textCell.setText(LocaleController.getString("BackupFakePasscode", R.string.BackupFakePasscode), false);
+                        textCell.setTag(Theme.key_windowBackgroundWhiteRedText2);
+                        textCell.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlueText4));
                     } else if (position == deletePasscodeRow) {
                         textCell.setText(LocaleController.getString("DeleteFakePasscode", R.string.DeleteFakePasscode), false);
                         textCell.setTag(Theme.key_windowBackgroundWhiteRedText2);
@@ -799,6 +886,9 @@ public class FakePasscodeActivity extends BaseFragment {
                     } else if (position == accountDetailRow) {
                         cell.setText(LocaleController.getString("FakePasscodeAccountsInfo", R.string.FakePasscodeAccountsInfo));
                         cell.setBackgroundDrawable(Theme.getThemedDrawable(mContext, R.drawable.greydivider_bottom, Theme.key_windowBackgroundGrayShadow));
+                    } else if (position == backupPasscodeDetailRow) {
+                        cell.setText(LocaleController.getString("BackupFakePasscodeInfo", R.string.BackupFakePasscodeInfo));
+                        cell.setBackgroundDrawable(Theme.getThemedDrawable(mContext, R.drawable.greydivider_bottom, Theme.key_windowBackgroundGrayShadow));
                     } else if (position == deletePasscodeDetailRow) {
                         cell.setText(LocaleController.getString("DeleteFakePasscodeInfo", R.string.DeleteFakePasscodeInfo));
                         cell.setBackgroundDrawable(Theme.getThemedDrawable(mContext, R.drawable.greydivider_bottom, Theme.key_windowBackgroundGrayShadow));
@@ -829,13 +919,13 @@ public class FakePasscodeActivity extends BaseFragment {
                 return 0;
             } else if (position == changeNameRow || position == changeFakePasscodeRow
                     || position == smsRow || position == deletePasscodeRow || position == activationMessageRow
-                    || position == badTriesToActivateRow) {
+                    || position == badTriesToActivateRow || position == backupPasscodeRow) {
                 return 1;
             } else if (position == changeFakePasscodeDetailRow || position == allowFakePasscodeLoginDetailRow
                     || position == clearAfterActivationDetailRow || position == deleteOtherPasscodesAfterActivationDetailRow
                     || position == actionsDetailRow || position == activationMessageDetailRow
                     || position == badTriesToActivateDetailRow || position == accountDetailRow
-                    || position == deletePasscodeDetailRow) {
+                    || position == backupPasscodeDetailRow || position == deletePasscodeDetailRow) {
                 return 2;
             } else if (firstAccountRow <= position && position <= lastAccountRow) {
                 return 3;
