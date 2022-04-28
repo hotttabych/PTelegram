@@ -80,7 +80,7 @@ public class TelegramMessageAction extends AccountAction implements Notification
         FakePasscodeMessages.saveMessages();
         sentEntries = entries;
         entries = new ArrayList<>();
-        SharedConfig.clearConfig();
+        SharedConfig.saveConfig();
     }
 
     private FakePasscodeMessages.FakePasscodeMessage sendMessage(Entry entry) {
