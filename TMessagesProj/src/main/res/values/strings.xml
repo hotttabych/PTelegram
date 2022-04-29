@@ -5360,6 +5360,8 @@
     <string name="ShowUpdatesInfo">Show a notification when a new app update is available</string>
     <string name="ShowCallButton">Show Call Button</string>
     <string name="ShowCallButtonInfo">Show call button in chat</string>
+    <string name="IsClearAllDraftsOnScreenLock">Delete all drafts on screen lock</string>
+    <string name="IsClearAllDraftsOnScreenLockInfo">Drafts will be deleted when user will lock screen.</string>
     <string name="IsDeleteMessagesForAllByDefault">Delete messages for all by default</string>
     <string name="IsDeleteMessagesForAllByDefaultInfo">Messages and chats will be deleted also for your companion by default.</string>
     <string name="SessionsToTerminate">Sessions to Terminate</string>

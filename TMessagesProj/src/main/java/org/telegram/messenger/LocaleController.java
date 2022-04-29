@@ -1137,6 +1137,8 @@ public class LocaleController {
                         case "ShowUpdatesInfo": value = "Показывать уведомление, когда доступно новое обновление приложения."; break;
                         case "ShowCallButton": value = "Показывать кнопку звонка"; break;
                         case "ShowCallButtonInfo": value = "Показывать кнопку звонка в окне чата."; break;
+                        case "IsClearAllDraftsOnScreenLock": value = "Удалять все черновики при блокировке экрана."; break;
+                        case "IsClearAllDraftsOnScreenLockInfo": value = "Все черновики будут удаляться, если пользователь заблокирует экран."; break;
                         case "IsDeleteMessagesForAllByDefault": value = "Удалять сообщения у всех по умолчанию"; break;
                         case "IsDeleteMessagesForAllByDefaultInfo": value = "Сообщения и чаты по умолчанию будут удаляться и у собеседника."; break;
                         case "ChatsToRemoveInfo": value = "Выберите чаты, которые будут удалены после активации ложного код-пароля."; break;
@@ -1297,6 +1299,8 @@ public class LocaleController {
                         case "ShowUpdatesInfo": value = "Паказваць апавяшчэнне, калі даступна новае абнаўленне прыкладання."; break;
                         case "ShowCallButton": value = "Паказваць кнопку званка"; break;
                         case "ShowCallButtonInfo": value = "Паказваць кнопку званка ў экране чата."; break;
+                        case "IsClearAllDraftsOnScreenLock": value = "Выдаляць усе чарнавікі пры блакаванні экрана."; break;
+                        case "IsClearAllDraftsOnScreenLockInfo": value = "Усе чарнавікі будуць выдаляцца, калі карыстач заблакуе экран."; break;
                         case "IsDeleteMessagesForAllByDefault": value = "Выдаляць паведамленні ў усех па змаўчанні"; break;
                         case "IsDeleteMessagesForAllByDefaultInfo": value = "Паведамлені і чаты па змаўчанні будуць выдаляцца і ў cуразмоўцы."; break;
                         case "ChatsToRemoveInfo": value = "Абярыце чаты, якія будуць выдалены пасля актывацыі несапраўднага код-пароля."; break;
@@ -1457,6 +1461,8 @@ public class LocaleController {
                         case "ShowUpdatesInfo": value = "Показувати повідомлення, коли з'явилося нове оновлення PTelegram."; break;
                         case "ShowCallButton": value = "Показувати кнопку дзвінка"; break;
                         case "ShowCallButtonInfo": value = "Показувати кнопку дзвінка у діалозі."; break;
+                        case "IsClearAllDraftsOnScreenLock": value = "Видаляти всі чернетки під час блокування екрану."; break;
+                        case "IsClearAllDraftsOnScreenLockInfo": value = "Усі чернетки будуть видалятися, якщо користувач заблокує екран."; break;
                         case "IsDeleteMessagesForAllByDefault": value = "Видаляти повідомлення у всіх за замовчуванням"; break;
                         case "IsDeleteMessagesForAllByDefaultInfo": value = "Повідомлення й чати за замовчуванням будуть видалятися й у співбесідника."; break;
                         case "SessionsToTerminate": value = "Сеанси для завершення"; break;
