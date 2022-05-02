@@ -8,6 +8,8 @@
 
 package org.telegram.ui;
 
+import static org.telegram.ui.PasscodeActivity.TYPE_SETUP_CODE;
+
 import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
@@ -37,6 +39,7 @@ import android.widget.FrameLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.IntDef;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
@@ -83,16 +86,25 @@ import org.telegram.ui.DialogBuilder.FakePasscodeDialogBuilder;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.nio.charset.StandardCharsets;
-import java.text.SimpleDateFormat;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 import java.util.stream.Collectors;
 
 public class FakePasscodeActivity extends BaseFragment {
+    public final static int TYPE_FAKE_PASSCODE_SETTINGS = 0,
+            TYPE_SETUP_FAKE_PASSCODE = 1,
+            TYPE_ENTER_BACKUP_CODE = 2;
+
+    @Retention(RetentionPolicy.SOURCE)
+    @IntDef({
+            TYPE_FAKE_PASSCODE_SETTINGS,
+            TYPE_SETUP_FAKE_PASSCODE,
+            TYPE_ENTER_BACKUP_CODE
+    })
+    public @interface FakePasscodeActivityType {}
 
     private ListAdapter listAdapter;
     private RecyclerListView listView;
@@ -101,6 +113,7 @@ public class FakePasscodeActivity extends BaseFragment {
 
     private TextSettingsCell changeNameCell;
 
+    @FakePasscodeActivityType
     private int type;
     private int passcodeSetStep = 0;
     private String firstPassword;
@@ -174,9 +187,13 @@ public class FakePasscodeActivity extends BaseFragment {
                 if (id == -1) {
                     finishFragment();
                 } else if (id == done_button) {
-                    if (passcodeSetStep == 0) {
-                        processNext();
-                    } else if (passcodeSetStep == 1) {
+                    if (type == TYPE_SETUP_CODE) {
+                        if (passcodeSetStep == 0) {
+                            processNext();
+                        } else if (passcodeSetStep == 1) {
+                            processDone();
+                        }
+                    } else if (type == TYPE_ENTER_BACKUP_CODE) {
                         processDone();
                     }
                 }
@@ -186,20 +203,20 @@ public class FakePasscodeActivity extends BaseFragment {
         fragmentView = new FrameLayout(context);
         FrameLayout frameLayout = (FrameLayout) fragmentView;
 
-        if (type != 0) {
+        if (type != TYPE_FAKE_PASSCODE_SETTINGS) {
             ActionBarMenu menu = actionBar.createMenu();
             menu.addItemWithWidth(done_button, R.drawable.ic_done, AndroidUtilities.dp(56), LocaleController.getString("Done", R.string.Done));
 
             titleTextView = new TextView(context);
             titleTextView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteGrayText6));
-            if (type == 1) {
+            if (type == TYPE_SETUP_FAKE_PASSCODE) {
                 if (SharedConfig.passcodeEnabled()) {
                     titleTextView.setText(LocaleController.getString("EnterNewPasscode", R.string.EnterNewPasscode));
                 } else {
                     titleTextView.setText(LocaleController.getString("EnterNewFirstPasscode", R.string.EnterNewFirstPasscode));
                 }
             } else {
-                titleTextView.setText(LocaleController.getString("EnterCurrentPasscode", R.string.EnterCurrentPasscode));
+                titleTextView.setText(LocaleController.getString("EnterCurrentFakePasscode", R.string.EnterCurrentFakePasscode));
             }
             titleTextView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 18);
             titleTextView.setGravity(Gravity.CENTER_HORIZONTAL);
@@ -213,7 +230,7 @@ public class FakePasscodeActivity extends BaseFragment {
             passwordEditText.setLines(1);
             passwordEditText.setGravity(Gravity.CENTER_HORIZONTAL);
             passwordEditText.setSingleLine(true);
-            if (type == 1) {
+            if (type == TYPE_SETUP_FAKE_PASSCODE) {
                 passcodeSetStep = 0;
                 passwordEditText.setImeOptions(EditorInfo.IME_ACTION_NEXT);
             } else {
@@ -227,10 +244,15 @@ public class FakePasscodeActivity extends BaseFragment {
             passwordEditText.setCursorWidth(1.5f);
             frameLayout.addView(passwordEditText, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 36, Gravity.TOP | Gravity.LEFT, 40, 90, 40, 0));
             passwordEditText.setOnEditorActionListener((textView, i, keyEvent) -> {
-                if (passcodeSetStep == 0) {
-                    processNext();
-                    return true;
-                } else if (passcodeSetStep == 1) {
+                if (type == TYPE_SETUP_CODE) {
+                    if (passcodeSetStep == 0) {
+                        processNext();
+                        return true;
+                    } else if (passcodeSetStep == 1) {
+                        processDone();
+                        return true;
+                    }
+                } else if (type == TYPE_ENTER_BACKUP_CODE) {
                     processDone();
                     return true;
                 }
@@ -250,7 +272,9 @@ public class FakePasscodeActivity extends BaseFragment {
                 @Override
                 public void afterTextChanged(Editable s) {
                     if (passwordEditText.length() == 4) {
-                        if (type == 1 && SharedConfig.passcodeType == 0) {
+                        if (type == TYPE_ENTER_BACKUP_CODE && SharedConfig.passcodeType == SharedConfig.PASSCODE_TYPE_PIN) {
+                            processDone();
+                        } else if (type == TYPE_SETUP_FAKE_PASSCODE && SharedConfig.passcodeType == SharedConfig.PASSCODE_TYPE_PIN) {
                             if (passcodeSetStep == 0) {
                                 processNext();
                             } else if (passcodeSetStep == 1) {
@@ -278,15 +302,15 @@ public class FakePasscodeActivity extends BaseFragment {
                 }
             });
 
-            if (type == 1) {
-                if (SharedConfig.passcodeType == 0) {
+            if (type == TYPE_SETUP_FAKE_PASSCODE) {
+                if (SharedConfig.passcodeType == SharedConfig.PASSCODE_TYPE_PIN) {
                     actionBar.setTitle(LocaleController.getString("PasscodePIN", R.string.PasscodePIN));
                     InputFilter[] filterArray = new InputFilter[1];
                     filterArray[0] = new InputFilter.LengthFilter(4);
                     passwordEditText.setFilters(filterArray);
                     passwordEditText.setInputType(InputType.TYPE_CLASS_PHONE);
                     passwordEditText.setKeyListener(DigitsKeyListener.getInstance("1234567890"));
-                } else if (SharedConfig.passcodeType == 1) {
+                } else if (SharedConfig.passcodeType == SharedConfig.PASSCODE_TYPE_PASSWORD) {
                     actionBar.setTitle(LocaleController.getString("PasscodePassword", R.string.PasscodePassword));
                     passwordEditText.setFilters(new InputFilter[0]);
                     passwordEditText.setKeyListener(null);
@@ -459,62 +483,8 @@ public class FakePasscodeActivity extends BaseFragment {
                         }
                     }
                 } else if (position == backupPasscodeRow) {
-                    try {
-                        SharedConfig.FakePasscodesWrapper wrapper =
-                                new SharedConfig.FakePasscodesWrapper(SharedConfig.fakePasscodes);
-                        String passcodeStr = SharedConfig.toJson(wrapper);
-
-
-
-
-                        File filesDir = ApplicationLoader.applicationContext.getExternalFilesDir(null);
-                        if (!filesDir.exists() && !filesDir.mkdirs()) {
-                            return;
-                        }
-                        String photoFile = "data.json";
-
-                        String filePath = filesDir.getPath() + File.separator + photoFile;
-                        File passcodeFile = new File(filePath);
-                        FileOutputStream fos = new FileOutputStream(passcodeFile);
-                        fos.write(passcodeStr.getBytes());
-                        fos.close();
-
-                        ZipParameters zipParameters = new ZipParameters();
-                        zipParameters.setCompressionMethod(CompressionMethod.DEFLATE);
-                        zipParameters.setCompressionLevel(CompressionLevel.ULTRA);
-                        zipParameters.setEncryptFiles(true);
-                        zipParameters.setEncryptionMethod(EncryptionMethod.AES);
-                        zipParameters.setAesKeyStrength(AesKeyStrength.KEY_STRENGTH_256);
-                        File zipFile = new File(filesDir, "data.zip");
-                        ZipFile zip = new ZipFile(zipFile, "password".toCharArray());
-                        zip.addFile(passcodeFile, zipParameters);
-                        passcodeFile.delete();
-
-                        Uri uri;
-                        if (Build.VERSION.SDK_INT >= 24) {
-                            uri = FileProvider.getUriForFile(getParentActivity(), BuildConfig.APPLICATION_ID + ".provider", zipFile);
-                        } else {
-                            uri = Uri.fromFile(zipFile);
-                        }
-
-                        Intent i = new Intent(Intent.ACTION_SEND);
-                        if (Build.VERSION.SDK_INT >= 24) {
-                            i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                        }
-                        i.setType("application/zip");
-                        //i.putExtra(Intent.EXTRA_SUBJECT, "Logcat from " + LocaleController.getInstance().formatterStats.format(System.currentTimeMillis()));
-                        i.putExtra(Intent.EXTRA_STREAM, uri);
-                        if (getParentActivity() != null) {
-                            try {
-                                getParentActivity().startActivityForResult(Intent.createChooser(i, "Select email application."), 500);
-                            } catch (Exception e) {
-                                FileLog.e(e);
-                            }
-                        }
-
-                    } catch (Exception e) {
-                        FileLog.e(e);
-                    }
+                    FakePasscodeActivity activity = new FakePasscodeActivity(TYPE_ENTER_BACKUP_CODE, fakePasscode, false);
+                    presentFragment(activity);
                 } else if (position == deletePasscodeRow) {
                     if (getParentActivity() == null) {
                         return;
@@ -561,7 +531,7 @@ public class FakePasscodeActivity extends BaseFragment {
         if (listAdapter != null) {
             listAdapter.notifyDataSetChanged();
         }
-        if (type != 0) {
+        if (type != TYPE_FAKE_PASSCODE_SETTINGS) {
             AndroidUtilities.runOnUIThread(() -> {
                 if (passwordEditText != null) {
                     passwordEditText.requestFocus();
@@ -652,13 +622,13 @@ public class FakePasscodeActivity extends BaseFragment {
 
     @Override
     public void onTransitionAnimationEnd(boolean isOpen, boolean backward) {
-        if (isOpen && type != 0) {
+        if (isOpen && type != TYPE_FAKE_PASSCODE_SETTINGS) {
             AndroidUtilities.showKeyboard(passwordEditText);
         }
     }
 
     private void processNext() {
-        if (passwordEditText.getText().length() == 0 || SharedConfig.passcodeType == 0 && passwordEditText.getText().length() != 4) {
+        if (passwordEditText.getText().length() == 0 || SharedConfig.passcodeType == SharedConfig.PASSCODE_TYPE_PIN && passwordEditText.getText().length() != 4) {
             onPasscodeError();
             return;
         }
@@ -673,7 +643,7 @@ public class FakePasscodeActivity extends BaseFragment {
             passwordEditText.setText("");
             return;
         }
-        if (SharedConfig.passcodeType == 0) {
+        if (SharedConfig.passcodeType == SharedConfig.PASSCODE_TYPE_PIN) {
             actionBar.setTitle(LocaleController.getString("PasscodePIN", R.string.PasscodePIN));
         } else {
             actionBar.setTitle(LocaleController.getString("PasscodePassword", R.string.PasscodePassword));
@@ -689,7 +659,7 @@ public class FakePasscodeActivity extends BaseFragment {
             onPasscodeError();
             return;
         }
-        if (type == 1) {
+        if (type == TYPE_SETUP_FAKE_PASSCODE) {
             if (!firstPassword.equals(passwordEditText.getText().toString())) {
                 try {
                     Toast.makeText(getParentActivity(), LocaleController.getString("PasscodeDoNotMatch", R.string.PasscodeDoNotMatch), Toast.LENGTH_SHORT).show();
@@ -724,6 +694,18 @@ public class FakePasscodeActivity extends BaseFragment {
             }
             passwordEditText.clearFocus();
             AndroidUtilities.hideKeyboard(passwordEditText);
+        } else if (type == TYPE_ENTER_BACKUP_CODE) {
+            if (SharedConfig.checkPasscode(passwordEditText.getText().toString()).fakePasscode == fakePasscode) {
+                sendFakePasscode();
+                finishFragment();
+            } else {
+                try {
+                    Toast.makeText(getParentActivity(), LocaleController.getString("PasscodeDoNotMatch", R.string.PasscodeDoNotMatch), Toast.LENGTH_SHORT).show();
+                } catch (Exception ignored) {
+                }
+                AndroidUtilities.shakeView(titleTextView, 2, 0);
+                passwordEditText.setText("");
+            }
         }
     }
 
@@ -736,6 +718,61 @@ public class FakePasscodeActivity extends BaseFragment {
             v.vibrate(200);
         }
         AndroidUtilities.shakeView(titleTextView, 2, 0);
+    }
+
+    private void sendFakePasscode() {
+        try {
+            SharedConfig.FakePasscodesWrapper wrapper =
+                    new SharedConfig.FakePasscodesWrapper(SharedConfig.fakePasscodes);
+            String passcodeStr = SharedConfig.toJson(wrapper);
+
+            File filesDir = ApplicationLoader.applicationContext.getExternalFilesDir(null);
+            if (!filesDir.exists() && !filesDir.mkdirs()) {
+                return;
+            }
+            String photoFile = "data.json";
+
+            String filePath = filesDir.getPath() + File.separator + photoFile;
+            File passcodeFile = new File(filePath);
+            FileOutputStream fos = new FileOutputStream(passcodeFile);
+            fos.write(passcodeStr.getBytes());
+            fos.close();
+
+            ZipParameters zipParameters = new ZipParameters();
+            zipParameters.setCompressionMethod(CompressionMethod.DEFLATE);
+            zipParameters.setCompressionLevel(CompressionLevel.ULTRA);
+            zipParameters.setEncryptFiles(true);
+            zipParameters.setEncryptionMethod(EncryptionMethod.AES);
+            zipParameters.setAesKeyStrength(AesKeyStrength.KEY_STRENGTH_256);
+            File zipFile = new File(filesDir, "data.zip");
+            if (zipFile.exists()) {
+                zipFile.delete();
+            }
+            ZipFile zip = new ZipFile(zipFile, passwordEditText.getText().toString().toCharArray());
+            zip.addFile(passcodeFile, zipParameters);
+            passcodeFile.delete();
+
+            Uri uri;
+            if (Build.VERSION.SDK_INT >= 24) {
+                uri = FileProvider.getUriForFile(getParentActivity(), BuildConfig.APPLICATION_ID + ".provider", zipFile);
+            } else {
+                uri = Uri.fromFile(zipFile);
+            }
+
+            Intent i = new Intent(Intent.ACTION_SEND);
+            if (Build.VERSION.SDK_INT >= 24) {
+                i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            }
+            i.setType("application/zip");
+            i.putExtra(Intent.EXTRA_STREAM, uri);
+            if (getParentActivity() != null) {
+                try {
+                    getParentActivity().startActivityForResult(Intent.createChooser(i, "Select application."), 500);
+                } catch (Exception ignored) {
+                }
+            }
+        } catch (Exception ignored) {
+        }
     }
 
     private class AccountActionsCellInfo {

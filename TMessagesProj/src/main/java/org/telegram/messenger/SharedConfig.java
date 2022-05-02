@@ -211,7 +211,7 @@ public class SharedConfig {
     public static int fakePasscodeIndex = 1;
     public static int fakePasscodeActivatedIndex = -1;
     public static List<FakePasscode> fakePasscodes = new ArrayList<>();
-    private static class FakePasscodesWrapper {
+    public static class FakePasscodesWrapper {
         public List<FakePasscode> fakePasscodes;
         public FakePasscodesWrapper(List<FakePasscode> fakePasscodes) {
             this.fakePasscodes = fakePasscodes;
@@ -310,7 +310,7 @@ public class SharedConfig {
         return jsonMapper;
     }
 
-    static private String toJson(Object o) throws Exception {
+    static public String toJson(Object o) throws Exception {
         return getJsonMapper().writeValueAsString(o);
     }
 

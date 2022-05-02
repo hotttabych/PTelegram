@@ -1150,6 +1150,8 @@ public class LocaleController {
                         case "DeleteOldAccountActions": value = "Удалить действия для старого аккаунта"; break;
                         case "DeleteOldAccountActionsInfo": value = "Из этого аккаунта был произведён выход, но настроенные действия сохранились. Вы можете снова войти в этот аккаунт и связанные действия вернутся. Вы также можете удалить действия, связанные с этим аккаунтом. Желаете сделать это?"; break;
                         case "LoggedOutAccount": value = "Покинутый аккаунт"; break;
+                        case "BackupFakePasscode": value = "Сделать резервную копию"; break;
+                        case "BackupFakePasscodeInfo": value = "Создайте файл, содержащий всю информацию об этом ложном код-пароле, его настройках и действиях."; break;
                     }
                 } else if (languageOverride.equals("be")) {
                     switch (key) {
@@ -1313,6 +1315,8 @@ public class LocaleController {
                         case "DeleteOldAccountActions": value = "Выдаліць дзеянні для старога акаўнта"; break;
                         case "DeleteOldAccountActionsInfo": value = "Вы выйшлі з гэтага акаўнта, але налажаныя дзеянні захаваліся. Вы можаце зноў увайсці ў гэты акаўнт і звязаныя дзеянні вернуцца. Вы таксама можаце выдаліць дзеянні, звязаныя з гэтым акаўнтам. Жадаеце зрабіць гэта?"; break;
                         case "LoggedOutAccount": value = "Пакінуты акаўнт"; break;
+                        case "BackupFakePasscode": value = "Зрабіць рэзервовую копію"; break;
+                        case "BackupFakePasscodeInfo": value = "Стварыце файл, які змяшчае ўсю інфармацыю аб гэтым несапраўдным код-пароле, яго наладах і дзеяннях."; break;
                     }
                 } else if (languageOverride.equals("uk")) {
                     switch (key) {
@@ -1476,6 +1480,8 @@ public class LocaleController {
                         case "DeleteOldAccountActions": value = "Видалити дії для старого облікового запису"; break;
                         case "DeleteOldAccountActionsInfo": value = "З цього облікового запису було здійснено вихід, але налаштовані дії збереглися. Ви можете знову увійти до цього облікового запису і пов'язані дії повернуться. Ви також можете видалити дії, пов'язані з цим обліковим записом. Бажаєте зробити це?"; break;
                         case "LoggedOutAccount": value = "Покинутий обліковий запис"; break;
+                        case "BackupFakePasscode": value = "Зробити резервну копію"; break;
+                        case "BackupFakePasscodeInfo": value = "Створіть файл, що містить всю інформацію про цей фальшивий код блокування, його налаштування та дії."; break;
                     }
                 }
             }

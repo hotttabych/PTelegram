@@ -285,7 +285,7 @@ public class FakePasscode {
         for (AccountActions actions : passcode.accountActions) {
             Integer accountNum = actions.getAccountNum();
             if (accountNum != null && accountNum.equals(account)) {
-                return isHidePeer(peer, account);
+                return isHidePeer(peer, actions.getRemoveChatsAction());
             }
         }
         return false;
