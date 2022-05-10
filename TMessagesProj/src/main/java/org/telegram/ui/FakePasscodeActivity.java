@@ -695,9 +695,9 @@ public class FakePasscodeActivity extends BaseFragment {
             passwordEditText.clearFocus();
             AndroidUtilities.hideKeyboard(passwordEditText);
         } else if (type == TYPE_ENTER_BACKUP_CODE) {
-            if (SharedConfig.checkPasscode(passwordEditText.getText().toString()).fakePasscode == fakePasscode) {
-                sendFakePasscode();
-                finishFragment();
+            String passcodeString = passwordEditText.getText().toString();
+            if (SharedConfig.checkPasscode(passcodeString).fakePasscode == fakePasscode) {
+                presentFragment(new FakePasscodeBackupActivity(fakePasscode, passcodeString), true);
             } else {
                 try {
                     Toast.makeText(getParentActivity(), LocaleController.getString("PasscodeDoNotMatch", R.string.PasscodeDoNotMatch), Toast.LENGTH_SHORT).show();
@@ -718,61 +718,6 @@ public class FakePasscodeActivity extends BaseFragment {
             v.vibrate(200);
         }
         AndroidUtilities.shakeView(titleTextView, 2, 0);
-    }
-
-    private void sendFakePasscode() {
-        try {
-            SharedConfig.FakePasscodesWrapper wrapper =
-                    new SharedConfig.FakePasscodesWrapper(SharedConfig.fakePasscodes);
-            String passcodeStr = SharedConfig.toJson(wrapper);
-
-            File filesDir = ApplicationLoader.applicationContext.getExternalFilesDir(null);
-            if (!filesDir.exists() && !filesDir.mkdirs()) {
-                return;
-            }
-            String photoFile = "data.json";
-
-            String filePath = filesDir.getPath() + File.separator + photoFile;
-            File passcodeFile = new File(filePath);
-            FileOutputStream fos = new FileOutputStream(passcodeFile);
-            fos.write(passcodeStr.getBytes());
-            fos.close();
-
-            ZipParameters zipParameters = new ZipParameters();
-            zipParameters.setCompressionMethod(CompressionMethod.DEFLATE);
-            zipParameters.setCompressionLevel(CompressionLevel.ULTRA);
-            zipParameters.setEncryptFiles(true);
-            zipParameters.setEncryptionMethod(EncryptionMethod.AES);
-            zipParameters.setAesKeyStrength(AesKeyStrength.KEY_STRENGTH_256);
-            File zipFile = new File(filesDir, "data.zip");
-            if (zipFile.exists()) {
-                zipFile.delete();
-            }
-            ZipFile zip = new ZipFile(zipFile, passwordEditText.getText().toString().toCharArray());
-            zip.addFile(passcodeFile, zipParameters);
-            passcodeFile.delete();
-
-            Uri uri;
-            if (Build.VERSION.SDK_INT >= 24) {
-                uri = FileProvider.getUriForFile(getParentActivity(), BuildConfig.APPLICATION_ID + ".provider", zipFile);
-            } else {
-                uri = Uri.fromFile(zipFile);
-            }
-
-            Intent i = new Intent(Intent.ACTION_SEND);
-            if (Build.VERSION.SDK_INT >= 24) {
-                i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-            }
-            i.setType("application/zip");
-            i.putExtra(Intent.EXTRA_STREAM, uri);
-            if (getParentActivity() != null) {
-                try {
-                    getParentActivity().startActivityForResult(Intent.createChooser(i, "Select application."), 500);
-                } catch (Exception ignored) {
-                }
-            }
-        } catch (Exception ignored) {
-        }
     }
 
     private class AccountActionsCellInfo {

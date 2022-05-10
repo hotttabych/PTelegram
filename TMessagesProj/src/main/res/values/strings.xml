@@ -5366,4 +5366,5 @@
     <string name="BackupFakePasscode">Backup Fake Passcode</string>
     <string name="BackupFakePasscodeInfo">Create a file containing all the information about this fake passcode, its settings and actions.</string>
     <string name="EnterCurrentFakePasscode">Enter this fake passcode</string>
+    <string name="FakePasscodeBackupInfo">Copy and save whenever this string.</string>
 </resources>

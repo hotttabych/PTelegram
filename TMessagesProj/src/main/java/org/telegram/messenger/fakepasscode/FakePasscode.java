@@ -1,13 +1,17 @@
 package org.telegram.messenger.fakepasscode;
 
+import android.util.Base64;
+
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.NotificationsController;
 import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.UserConfig;
+import org.telegram.messenger.Utilities;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.NotificationsSettingsActivity;
 
+import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -17,6 +21,10 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiPredicate;
 import java.util.stream.Collectors;
+
+import javax.crypto.Cipher;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
 
 public class FakePasscode {
     private final int CURRENT_PASSCODE_VERSION = 2;
@@ -415,5 +423,32 @@ public class FakePasscode {
             }
         }
         return result;
+    }
+
+    public byte[] serializeEncrypted(String passcodeString) {
+        try {
+            SharedConfig.FakePasscodesWrapper wrapper =
+                    new SharedConfig.FakePasscodesWrapper(SharedConfig.fakePasscodes);
+            byte[] fakePasscodeBytes = SharedConfig.toJson(wrapper).getBytes();
+            byte[] initializationVector = new byte[16];
+            Utilities.random.nextBytes(initializationVector);
+            byte[] key = MessageDigest.getInstance("MD5").digest(passcodeString.getBytes());
+            byte[] encryptedBytes = encryptBytes(initializationVector, key, fakePasscodeBytes);
+            byte[] resultBytes = new byte[16 + fakePasscodeBytes.length];
+            System.arraycopy(initializationVector, 0, resultBytes, 0, 16);
+            System.arraycopy(encryptedBytes, 0, resultBytes, 16, encryptedBytes.length);
+            return resultBytes;
+        } catch (Exception ignored) {
+            return null;
+        }
+    }
+
+    private byte[] encryptBytes(byte[] initializationVector, byte[] key, byte[] data) throws Exception {
+        IvParameterSpec ivParameterSpec = new IvParameterSpec(initializationVector);
+        Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5PADDING");
+        SecretKeySpec keySpec = new SecretKeySpec(key, "AES");
+        cipher.init(Cipher.ENCRYPT_MODE, keySpec, ivParameterSpec);
+        cipher.update(data);
+        return cipher.doFinal();
     }
 }
