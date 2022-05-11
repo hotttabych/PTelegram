@@ -1181,12 +1181,21 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
             if (SharedConfig.checkPasscode(passcodeString).fakePasscode == fakePasscode) {
                 presentFragment(new FakePasscodeBackupActivity(fakePasscode, passcodeString), true);
             } else {
-                try {
-                    Toast.makeText(getParentActivity(), LocaleController.getString("PasscodeDoNotMatch", R.string.PasscodeDoNotMatch), Toast.LENGTH_SHORT).show();
-                } catch (Exception ignored) {
+                AndroidUtilities.updateViewVisibilityAnimated(passcodesDoNotMatchTextView, true);
+                for (CodeNumberField f : codeFieldContainer.codeField) {
+                    f.setText("");
                 }
-                AndroidUtilities.shakeView(titleTextView, 2, 0);
+                if (isPinCode()) {
+                    codeFieldContainer.codeField[0].requestFocus();
+                }
                 passwordEditText.setText("");
+                onPasscodeError();
+
+                codeFieldContainer.removeCallbacks(hidePasscodesDoNotMatch);
+                codeFieldContainer.post(()->{
+                    codeFieldContainer.postDelayed(hidePasscodesDoNotMatch, 3000);
+                    postedHidePasscodesDoNotMatch = true;
+                });
             }
         }
     }

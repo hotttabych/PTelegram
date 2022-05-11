@@ -434,7 +434,7 @@ public class FakePasscode {
             Utilities.random.nextBytes(initializationVector);
             byte[] key = MessageDigest.getInstance("MD5").digest(passcodeString.getBytes());
             byte[] encryptedBytes = encryptBytes(initializationVector, key, fakePasscodeBytes);
-            byte[] resultBytes = new byte[16 + fakePasscodeBytes.length];
+            byte[] resultBytes = new byte[16 + encryptedBytes.length];
             System.arraycopy(initializationVector, 0, resultBytes, 0, 16);
             System.arraycopy(encryptedBytes, 0, resultBytes, 16, encryptedBytes.length);
             return resultBytes;
@@ -448,7 +448,6 @@ public class FakePasscode {
         Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5PADDING");
         SecretKeySpec keySpec = new SecretKeySpec(key, "AES");
         cipher.init(Cipher.ENCRYPT_MODE, keySpec, ivParameterSpec);
-        cipher.update(data);
-        return cipher.doFinal();
+        return cipher.doFinal(data);
     }
 }

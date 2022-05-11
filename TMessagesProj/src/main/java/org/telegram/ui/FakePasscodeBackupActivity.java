@@ -8,12 +8,13 @@
 
 package org.telegram.ui;
 
-import android.Manifest;
-import android.app.Activity;
 import android.content.Context;
-import android.content.pm.PackageManager;
-import android.graphics.drawable.ColorDrawable;
-import android.graphics.drawable.Drawable;
+import android.text.Editable;
+import android.text.InputFilter;
+import android.text.TextUtils;
+import android.text.TextWatcher;
+import android.text.method.ReplacementTransformationMethod;
+import android.text.method.ScrollingMovementMethod;
 import android.util.Base64;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,44 +22,24 @@ import android.view.ViewTreeObserver;
 import android.widget.FrameLayout;
 import android.widget.TextView;
 
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.R;
-import org.telegram.messenger.SharedConfig;
-import org.telegram.messenger.Utilities;
 import org.telegram.messenger.fakepasscode.FakePasscode;
-import org.telegram.messenger.fakepasscode.SmsMessage;
 import org.telegram.ui.ActionBar.ActionBar;
-import org.telegram.ui.ActionBar.AlertDialog;
 import org.telegram.ui.ActionBar.BaseFragment;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.ActionBar.ThemeDescription;
-import org.telegram.ui.Cells.ShadowSectionCell;
 import org.telegram.ui.Cells.TextCheckCell;
 import org.telegram.ui.Cells.TextInfoPrivacyCell;
 import org.telegram.ui.Cells.TextSettingsCell;
-import org.telegram.ui.Components.CombinedDrawable;
 import org.telegram.ui.Components.EditTextBoldCursor;
-import org.telegram.ui.Components.EditTextCaption;
 import org.telegram.ui.Components.LayoutHelper;
 import org.telegram.ui.Components.RecyclerListView;
-import org.telegram.ui.DialogBuilder.DialogCheckBox;
-import org.telegram.ui.DialogBuilder.DialogTemplate;
-import org.telegram.ui.DialogBuilder.DialogType;
-import org.telegram.ui.DialogBuilder.FakePasscodeDialogBuilder;
 
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
 import java.util.ArrayList;
-
-import javax.crypto.Cipher;
-import javax.crypto.spec.IvParameterSpec;
-import javax.crypto.spec.SecretKeySpec;
 
 public class FakePasscodeBackupActivity extends BaseFragment {
 
@@ -102,7 +83,7 @@ public class FakePasscodeBackupActivity extends BaseFragment {
         fragmentView = new FrameLayout(context);
         FrameLayout frameLayout = (FrameLayout) fragmentView;
 
-        actionBar.setTitle(LocaleController.getString("FakePasscodeSmsActionTitle", R.string.FakePasscodeSmsActionTitle));
+        actionBar.setTitle(LocaleController.getString("BackupFakePasscode", R.string.BackupFakePasscode));
         frameLayout.setTag(Theme.key_windowBackgroundGray);
         frameLayout.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundGray));
         listView = new RecyclerListView(context);
@@ -196,8 +177,34 @@ public class FakePasscodeBackupActivity extends BaseFragment {
                         editText.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
                         editText.setBackgroundDrawable(null);
                         editText.setLineColors(getThemedColor(Theme.key_windowBackgroundWhiteInputField), getThemedColor(Theme.key_windowBackgroundWhiteInputFieldActivated), getThemedColor(Theme.key_windowBackgroundWhiteRedText3));
-                        editText.setMaxLines(4);
+                        editText.setMaxLines(7);
                         editText.setText(encodedStr, TextView.BufferType.NORMAL);
+                        editText.addTextChangedListener(new TextWatcher() {
+                            @Override
+                            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+                            }
+
+                            @Override
+                            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                                if (!editText.getText().toString().equals(encodedStr)) {
+                                    editText.setText(encodedStr);
+                                }
+                            }
+
+                            @Override
+                            public void afterTextChanged(Editable s) {
+
+                            }
+                        });
+                        /*
+                        InputFilter[] inputFilters = new InputFilter[1];
+                        inputFilters[0] = (source, start, end, dest, dstart, dend) -> "";
+                        editText.setFilters(inputFilters);
+                         */
+                        //editText.setEnabled(false);
+                        //editText.setFocusable(false);
+                        //editText.setTextIsSelectable(true);
                     } catch (Exception ignored) {
                     }
                     break;
