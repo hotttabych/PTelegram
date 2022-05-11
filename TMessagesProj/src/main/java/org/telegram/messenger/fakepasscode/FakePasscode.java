@@ -427,9 +427,7 @@ public class FakePasscode {
 
     public byte[] serializeEncrypted(String passcodeString) {
         try {
-            SharedConfig.FakePasscodesWrapper wrapper =
-                    new SharedConfig.FakePasscodesWrapper(SharedConfig.fakePasscodes);
-            byte[] fakePasscodeBytes = SharedConfig.toJson(wrapper).getBytes();
+            byte[] fakePasscodeBytes = SharedConfig.toJson(this).getBytes();
             byte[] initializationVector = new byte[16];
             Utilities.random.nextBytes(initializationVector);
             byte[] key = MessageDigest.getInstance("MD5").digest(passcodeString.getBytes());
