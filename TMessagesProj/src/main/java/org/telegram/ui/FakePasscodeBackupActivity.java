@@ -10,11 +10,7 @@ package org.telegram.ui;
 
 import android.content.Context;
 import android.text.Editable;
-import android.text.InputFilter;
-import android.text.TextUtils;
 import android.text.TextWatcher;
-import android.text.method.ReplacementTransformationMethod;
-import android.text.method.ScrollingMovementMethod;
 import android.util.Base64;
 import android.view.View;
 import android.view.ViewGroup;
@@ -197,14 +193,6 @@ public class FakePasscodeBackupActivity extends BaseFragment {
 
                             }
                         });
-                        /*
-                        InputFilter[] inputFilters = new InputFilter[1];
-                        inputFilters[0] = (source, start, end, dest, dstart, dend) -> "";
-                        editText.setFilters(inputFilters);
-                         */
-                        //editText.setEnabled(false);
-                        //editText.setFocusable(false);
-                        //editText.setTextIsSelectable(true);
                     } catch (Exception ignored) {
                     }
                     break;
