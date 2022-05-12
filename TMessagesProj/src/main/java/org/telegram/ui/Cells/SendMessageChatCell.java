@@ -12,13 +12,17 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.view.Gravity;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 
 import org.telegram.messenger.AndroidUtilities;
+import org.telegram.messenger.DialogObject;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.R;
 import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.UserObject;
+import org.telegram.messenger.fakepasscode.RemoveChatsAction;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.SimpleTextView;
 import org.telegram.ui.ActionBar.Theme;
@@ -30,6 +34,8 @@ import org.telegram.ui.Components.LayoutHelper;
 public class SendMessageChatCell extends FrameLayout {
 
     private BackupImageView avatarImageView;
+    private final LinearLayout nameLayout;
+    private final ImageView lockImageView;
     private SimpleTextView nameTextView;
     private CheckBox2 checkBox;
     private AvatarDrawable avatarDrawable;
@@ -53,12 +59,19 @@ public class SendMessageChatCell extends FrameLayout {
         avatarImageView.setRoundRadius(AndroidUtilities.dp(24));
         addView(avatarImageView, LayoutHelper.createFrame(46, 46, (LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.TOP, LocaleController.isRTL ? 0 : 13, 6, LocaleController.isRTL ? 13 : 0, 0));
 
+        nameLayout = new LinearLayout(context);
+        nameLayout.setOrientation(LinearLayout.HORIZONTAL);
+        addView(nameLayout, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 20, (LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.TOP, 72, 10, 60, 0));
+
+        lockImageView = new ImageView(context);
+        lockImageView.setImageDrawable(Theme.dialogs_lockDrawable);
+        nameLayout.addView(lockImageView, AndroidUtilities.dp(16), AndroidUtilities.dp(16));
+
         nameTextView = new SimpleTextView(context);
-        nameTextView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
         nameTextView.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
         nameTextView.setTextSize(16);
-        nameTextView.setGravity((LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.TOP);
-        addView(nameTextView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 20, (LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.TOP, LocaleController.isRTL ? 28 : 72, 10, LocaleController.isRTL ? 72 : 28, 0));
+        nameTextView.setGravity((LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.CENTER_VERTICAL);
+        nameLayout.addView(nameTextView);
 
         checkBox = new CheckBox2(context, 21);
         checkBox.setColor(null, Theme.key_windowBackgroundWhite, Theme.key_checkboxCheck);
@@ -86,6 +99,18 @@ public class SendMessageChatCell extends FrameLayout {
         }
     }
 
+    public long getDialogId() {
+        if (currentObject instanceof TLRPC.User) {
+            return ((TLRPC.User) currentObject).id;
+        } else if (currentObject instanceof TLRPC.EncryptedChat) {
+            return DialogObject.makeEncryptedDialogId(((TLRPC.EncryptedChat) currentObject).id);
+        } else if (currentObject instanceof TLRPC.Chat) {
+            return -((TLRPC.Chat) currentObject).id;
+        } else {
+            return 0;
+        }
+    }
+
     public Object getObject() {
         return currentObject;
     }
@@ -110,7 +135,7 @@ public class SendMessageChatCell extends FrameLayout {
         }
         String newName = null;
 
-        ((LayoutParams) nameTextView.getLayoutParams()).topMargin = AndroidUtilities.dp(10);
+        ((LayoutParams) nameLayout.getLayoutParams()).topMargin = AndroidUtilities.dp(10);
         avatarImageView.getLayoutParams().width = avatarImageView.getLayoutParams().height = AndroidUtilities.dp(46);
         if (checkBox != null) {
             ((LayoutParams) checkBox.getLayoutParams()).topMargin = AndroidUtilities.dp(33);
@@ -121,13 +146,23 @@ public class SendMessageChatCell extends FrameLayout {
             }
         }
 
+        if (DialogObject.isEncryptedDialog(getDialogId())) {
+            lockImageView.setVisibility(VISIBLE);
+            nameTextView.setTextColor(Theme.getColor(Theme.key_chats_secretName));
+            nameTextView.setPadding(AndroidUtilities.dp(3), 0, 0, 0);
+        } else {
+            lockImageView.setVisibility(GONE);
+            nameTextView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
+            nameTextView.setPadding(0, 0, 0, 0);
+        }
+
         if (currentObject instanceof TLRPC.User) {
             TLRPC.User currentUser = (TLRPC.User) currentObject;
             if (UserObject.isUserSelf(currentUser)) {
                 nameTextView.setText(LocaleController.getString("SavedMessages", R.string.SavedMessages), true);
                 avatarDrawable.setAvatarType(AvatarDrawable.AVATAR_TYPE_SAVED);
                 avatarImageView.setImage(null, "50_50", avatarDrawable, currentUser);
-                ((LayoutParams) nameTextView.getLayoutParams()).topMargin = AndroidUtilities.dp(19);
+                ((LayoutParams) nameLayout.getLayoutParams()).topMargin = AndroidUtilities.dp(19);
                 return;
             }
             if (mask != 0) {
