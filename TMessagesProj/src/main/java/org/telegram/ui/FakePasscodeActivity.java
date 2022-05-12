@@ -26,13 +26,10 @@ import android.graphics.PorterDuffColorFilter;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
-import android.os.Vibrator;
 import android.text.Editable;
-import android.text.InputFilter;
 import android.text.InputType;
 import android.text.TextUtils;
 import android.text.TextWatcher;
-import android.text.method.DigitsKeyListener;
 import android.text.method.PasswordTransformationMethod;
 import android.util.TypedValue;
 import android.view.ActionMode;
@@ -43,17 +40,14 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewOutlineProvider;
-import android.view.ViewTreeObserver;
 import android.view.inputmethod.EditorInfo;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.IntDef;
-import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.util.Consumer;
@@ -61,7 +55,6 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import org.telegram.messenger.AndroidUtilities;
-import org.telegram.messenger.BadPasscodeAttempt;
 import org.telegram.messenger.FileLog;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.NotificationCenter;
@@ -72,7 +65,6 @@ import org.telegram.messenger.Utilities;
 import org.telegram.messenger.fakepasscode.AccountActions;
 import org.telegram.messenger.fakepasscode.FakePasscode;
 import org.telegram.ui.ActionBar.ActionBar;
-import org.telegram.ui.ActionBar.ActionBarMenu;
 import org.telegram.ui.ActionBar.ActionBarMenuItem;
 import org.telegram.ui.ActionBar.AlertDialog;
 import org.telegram.ui.ActionBar.BaseFragment;
@@ -106,6 +98,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
@@ -113,13 +106,15 @@ import java.util.stream.Collectors;
 public class FakePasscodeActivity extends BaseFragment implements NotificationCenter.NotificationCenterDelegate {
     public final static int TYPE_FAKE_PASSCODE_SETTINGS = 0,
             TYPE_SETUP_FAKE_PASSCODE = 1,
-            TYPE_ENTER_BACKUP_CODE = 2;
+            TYPE_ENTER_BACKUP_CODE = 2,
+            TYPE_ENTER_RESTORE_CODE = 3;
 
     @Retention(RetentionPolicy.SOURCE)
     @IntDef({
             TYPE_FAKE_PASSCODE_SETTINGS,
             TYPE_SETUP_FAKE_PASSCODE,
-            TYPE_ENTER_BACKUP_CODE
+            TYPE_ENTER_BACKUP_CODE,
+            TYPE_ENTER_RESTORE_CODE
     })
     public @interface FakePasscodeActivityType {}
 
@@ -192,6 +187,7 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
 
     private boolean creating;
     private FakePasscode fakePasscode;
+    private byte[] encryptedPasscode;
 
     TextCheckCell frontPhotoTextCell;
     TextCheckCell backPhotoTextCell;
@@ -213,6 +209,12 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
         this.type = type;
         this.fakePasscode = fakePasscode;
         this.creating = creating;
+    }
+
+    public FakePasscodeActivity(byte[] encodedPasscode) {
+        super();
+        this.type = TYPE_ENTER_RESTORE_CODE;
+        this.encryptedPasscode = encodedPasscode;
     }
 
     @Override
@@ -244,7 +246,7 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
                         } else if (passcodeSetStep == 1) {
                             processDone();
                         }
-                    } else if (type == TYPE_ENTER_BACKUP_CODE) {
+                    } else if (type == TYPE_ENTER_BACKUP_CODE || type == TYPE_ENTER_RESTORE_CODE) {
                         processDone();
                     }
                 }
@@ -501,6 +503,7 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
                 break;
             }
             case TYPE_ENTER_BACKUP_CODE:
+            case TYPE_ENTER_RESTORE_CODE:
             case TYPE_SETUP_FAKE_PASSCODE: {
                 if (actionBar != null) {
                     actionBar.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundWhite));
@@ -758,7 +761,7 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
                         } else {
                             processDone();
                         }
-                    } else if (type == TYPE_ENTER_BACKUP_CODE) {
+                    } else if (type == TYPE_ENTER_BACKUP_CODE || type == TYPE_ENTER_RESTORE_CODE) {
                         processDone();
                     }
                 });
@@ -1011,10 +1014,12 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
             }
             return 0;
         });
-        for (AccountActions actions : fakePasscode.accountActions) {
-            if (actions.getAccountNum() == null) {
-                accounts.add(new AccountActionsCellInfo(actions));
-                lastAccountRow = rowCount++;
+        if (fakePasscode != null) {
+            for (AccountActions actions : fakePasscode.accountActions) {
+                if (actions.getAccountNum() == null) {
+                    accounts.add(new AccountActionsCellInfo(actions));
+                    lastAccountRow = rowCount++;
+                }
             }
         }
 
@@ -1125,35 +1130,11 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
         String password = isPinCode() ? codeFieldContainer.getCode() : passwordEditText.getText().toString();
         if (type == TYPE_SETUP_FAKE_PASSCODE) {
             if (!firstPassword.equals(password)) {
-                AndroidUtilities.updateViewVisibilityAnimated(passcodesDoNotMatchTextView, true);
-                for (CodeNumberField f : codeFieldContainer.codeField) {
-                    f.setText("");
-                }
-                if (isPinCode()) {
-                    codeFieldContainer.codeField[0].requestFocus();
-                }
-                passwordEditText.setText("");
-                onPasscodeError();
-
-                codeFieldContainer.removeCallbacks(hidePasscodesDoNotMatch);
-                codeFieldContainer.post(()->{
-                    codeFieldContainer.postDelayed(hidePasscodesDoNotMatch, 3000);
-                    postedHidePasscodesDoNotMatch = true;
-                });
+                invalidPasscodeEntered();
                 return;
             }
 
-            try {
-                byte[] passcodeBytes = firstPassword.getBytes("UTF-8");
-                byte[] bytes = new byte[32 + passcodeBytes.length];
-                System.arraycopy(SharedConfig.passcodeSalt, 0, bytes, 0, 16);
-                System.arraycopy(passcodeBytes, 0, bytes, 16, passcodeBytes.length);
-                System.arraycopy(SharedConfig.passcodeSalt, 0, bytes, passcodeBytes.length + 16, 16);
-                fakePasscode.passcodeHash = Utilities.bytesToHex(Utilities.computeSHA256(bytes, 0, bytes.length));
-            } catch (Exception e) {
-                FileLog.e(e);
-            }
-
+            fakePasscode.passcodeHash = FakePasscode.calculateHash(firstPassword, SharedConfig.passcodeSalt);
             SharedConfig.saveConfig();
 
             passwordEditText.clearFocus();
@@ -1178,26 +1159,43 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
             });
         } else if (type == TYPE_ENTER_BACKUP_CODE) {
             String passcodeString = isPinCode() ? codeFieldContainer.getCode() : passwordEditText.getText().toString();
-            if (SharedConfig.checkPasscode(passcodeString).fakePasscode == fakePasscode) {
+            if (Objects.equals(FakePasscode.calculateHash(passcodeString, SharedConfig.passcodeSalt), fakePasscode.passcodeHash)) {
                 presentFragment(new FakePasscodeBackupActivity(fakePasscode, passcodeString), true);
             } else {
-                AndroidUtilities.updateViewVisibilityAnimated(passcodesDoNotMatchTextView, true);
-                for (CodeNumberField f : codeFieldContainer.codeField) {
-                    f.setText("");
+                invalidPasscodeEntered();
+            }
+        } else if (type == TYPE_ENTER_RESTORE_CODE) {
+            String passcodeString = isPinCode() ? codeFieldContainer.getCode() : passwordEditText.getText().toString();
+            FakePasscode passcode = FakePasscode.deserializeEncrypted(encryptedPasscode, passcodeString);
+            if (passcode != null) {
+                SharedConfig.fakePasscodes.add(passcode);
+                SharedConfig.saveConfig();
+                if (parentLayout.fragmentsStack.size() >= 2) {
+                    parentLayout.removeFragmentFromStack(parentLayout.fragmentsStack.size() - 2);
                 }
-                if (isPinCode()) {
-                    codeFieldContainer.codeField[0].requestFocus();
-                }
-                passwordEditText.setText("");
-                onPasscodeError();
-
-                codeFieldContainer.removeCallbacks(hidePasscodesDoNotMatch);
-                codeFieldContainer.post(()->{
-                    codeFieldContainer.postDelayed(hidePasscodesDoNotMatch, 3000);
-                    postedHidePasscodesDoNotMatch = true;
-                });
+                presentFragment(new FakePasscodeActivity(TYPE_FAKE_PASSCODE_SETTINGS, passcode, false), true);
+            } else {
+                invalidPasscodeEntered();
             }
         }
+    }
+
+    private void invalidPasscodeEntered() {
+        AndroidUtilities.updateViewVisibilityAnimated(passcodesDoNotMatchTextView, true);
+        for (CodeNumberField f : codeFieldContainer.codeField) {
+            f.setText("");
+        }
+        if (isPinCode()) {
+            codeFieldContainer.codeField[0].requestFocus();
+        }
+        passwordEditText.setText("");
+        onPasscodeError();
+
+        codeFieldContainer.removeCallbacks(hidePasscodesDoNotMatch);
+        codeFieldContainer.post(()->{
+            codeFieldContainer.postDelayed(hidePasscodesDoNotMatch, 3000);
+            postedHidePasscodesDoNotMatch = true;
+        });
     }
 
     private void onPasscodeError() {

@@ -5367,4 +5367,7 @@
     <string name="BackupFakePasscodeInfo">Create a file containing all the information about this fake passcode, its settings and actions.</string>
     <string name="EnterCurrentFakePasscode">Enter this fake passcode</string>
     <string name="FakePasscodeBackupInfo">Copy and save whenever this string.</string>
+    <string name="FakePasscodeRestoreHint">Fake Passcode Base64 Backup</string>
+    <string name="FakePasscodeRestoreInfo">Paste fake passcode backup string.</string>
+    <string name="FakePasscodeRestore">Restore Fake Passcode</string>
 </resources>

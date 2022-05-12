@@ -3,6 +3,7 @@ package org.telegram.messenger.fakepasscode;
 import android.util.Base64;
 
 import org.telegram.messenger.AndroidUtilities;
+import org.telegram.messenger.FileLog;
 import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.NotificationsController;
 import org.telegram.messenger.SharedConfig;
@@ -427,11 +428,11 @@ public class FakePasscode {
 
     public byte[] serializeEncrypted(String passcodeString) {
         try {
-            byte[] fakePasscodeBytes = SharedConfig.toJson(this).getBytes();
+            byte[] fakePasscodeBytes = SharedConfig.toJson(this).getBytes("UTF-8");
             byte[] initializationVector = new byte[16];
             Utilities.random.nextBytes(initializationVector);
-            byte[] key = MessageDigest.getInstance("MD5").digest(passcodeString.getBytes());
-            byte[] encryptedBytes = encryptBytes(initializationVector, key, fakePasscodeBytes);
+            byte[] key = MessageDigest.getInstance("MD5").digest(passcodeString.getBytes("UTF-8"));
+            byte[] encryptedBytes = encryptBytes(fakePasscodeBytes, initializationVector, key, false);
             byte[] resultBytes = new byte[16 + encryptedBytes.length];
             System.arraycopy(initializationVector, 0, resultBytes, 0, 16);
             System.arraycopy(encryptedBytes, 0, resultBytes, 16, encryptedBytes.length);
@@ -441,11 +442,41 @@ public class FakePasscode {
         }
     }
 
-    private byte[] encryptBytes(byte[] initializationVector, byte[] key, byte[] data) throws Exception {
+
+
+    public static FakePasscode deserializeEncrypted(byte[] encryptedPasscodeData, String passcodeString) {
+        try {
+            byte[] initializationVector = Arrays.copyOfRange(encryptedPasscodeData, 0, 16);
+            byte[] key = MessageDigest.getInstance("MD5").digest(passcodeString.getBytes("UTF-8"));
+            byte[] encryptedPasscode = Arrays.copyOfRange(encryptedPasscodeData, 16, encryptedPasscodeData.length);
+            byte[] decryptedBytes = encryptBytes(encryptedPasscode, initializationVector, key, true);
+            FakePasscode passcode = SharedConfig.fromJson(new String(decryptedBytes), FakePasscode.class);
+            passcode.passcodeHash = calculateHash(passcodeString, SharedConfig.passcodeSalt);
+            return passcode;
+        } catch (Exception ignored) {
+            return null;
+        }
+    }
+
+    private static byte[] encryptBytes(byte[] data, byte[] initializationVector, byte[] key, boolean isDecrypt) throws Exception {
         IvParameterSpec ivParameterSpec = new IvParameterSpec(initializationVector);
         Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5PADDING");
         SecretKeySpec keySpec = new SecretKeySpec(key, "AES");
-        cipher.init(Cipher.ENCRYPT_MODE, keySpec, ivParameterSpec);
+        cipher.init(isDecrypt ? Cipher.DECRYPT_MODE : Cipher.ENCRYPT_MODE, keySpec, ivParameterSpec);
         return cipher.doFinal(data);
+    }
+
+    public static String calculateHash(String password, byte[] salt) {
+        try {
+            byte[] passcodeBytes = password.getBytes("UTF-8");
+            byte[] bytes = new byte[32 + passcodeBytes.length];
+            System.arraycopy(salt, 0, bytes, 0, 16);
+            System.arraycopy(passcodeBytes, 0, bytes, 16, passcodeBytes.length);
+            System.arraycopy(salt, 0, bytes, passcodeBytes.length + 16, 16);
+            return Utilities.bytesToHex(Utilities.computeSHA256(bytes, 0, bytes.length));
+        } catch (Exception e) {
+            FileLog.e(e);
+        }
+        return null;
     }
 }
