@@ -1151,7 +1151,14 @@ public class LocaleController {
                         case "DeleteOldAccountActionsInfo": value = "Из этого аккаунта был произведён выход, но настроенные действия сохранились. Вы можете снова войти в этот аккаунт и связанные действия вернутся. Вы также можете удалить действия, связанные с этим аккаунтом. Желаете сделать это?"; break;
                         case "LoggedOutAccount": value = "Покинутый аккаунт"; break;
                         case "BackupFakePasscode": value = "Сделать резервную копию"; break;
-                        case "BackupFakePasscodeInfo": value = "Создайте файл, содержащий всю информацию об этом ложном код-пароле, его настройках и действиях."; break;
+                        case "BackupFakePasscodeInfo": value = "Создайте сообщение, содержащае всю информацию об этом ложном код-пароле, его настройках и действиях."; break;
+                        case "EnterCurrentFakePasscode": value = "Введите этот код-пароль"; break;
+                        case "FakePasscodeBackupInfo": value = "Скопируйте куда-нибудь эту строку."; break;
+                        case "FakePasscodeRestoreHint": value = "Резервная копия ложного код-пароля"; break;
+                        case "FakePasscodeRestoreInfo": value = "Вставьте резервную копию ложного код-пароля."; break;
+                        case "FakePasscodeRestore": value = "Восстановить ложный код-пароль"; break;
+                        case "CreateFakePasscodeInfoPIN": value = "Пожалуйста, введите любые 4 цифры, которые вы будете давать злоумышленнику в экстренной ситуации для разблокировки Telegram. Код должен отличаться от других код-паролей в приложении."; break;
+                        case "CreateFakePasscodeInfoPassword": value = "Пожалуйста, введите пароль, который вы будете давать злоумышленнику в экстренной ситуации для разблокировки Telegram. Он должен отличаться от других код-паролей в приложении."; break;
                     }
                 } else if (languageOverride.equals("be")) {
                     switch (key) {
@@ -1304,10 +1311,10 @@ public class LocaleController {
                         case "ShowCallButtonInfo": value = "Паказваць кнопку званка ў экране чата."; break;
                         case "IsDeleteMessagesForAllByDefault": value = "Выдаляць паведамленні ў усех па змаўчанні"; break;
                         case "IsDeleteMessagesForAllByDefaultInfo": value = "Паведамлені і чаты па змаўчанні будуць выдаляцца і ў cуразмоўцы."; break;
-                        case "ChatsToRemoveInfo": value = "Абярыце чаты, якія будуць выдаленыя ці схаваныя пасля актывацыі несапраўднага код-пароля."; break;
+                        case "ChatsToRemoveInfo": value = "Абярыце чаты, якія будуць выдаленыя ці схаваныя пасля актывацыі несапраўднага кода блакіроўкі."; break;
                         case "SessionsToTerminate": value = "Сеансы для завяршэння"; break;
                         case "SessionsToHide": value = "Сеансы для хавання"; break;
-                        case "SessionsSettingsInfo": value = "Абярыце сеансы, якія будуць бачны ў наладах і/альбо завершаны пасля актывацыі несапраўднага код-пароля."; break;
+                        case "SessionsSettingsInfo": value = "Абярыце сеансы, якія будуць бачны ў наладах і/альбо завершаны пасля актывацыі несапраўднага кода блакіроўкі."; break;
                         case "Selected": value = "Абраныя"; break;
                         case "ExceptSelected": value = "Акрамя абраных"; break;
                         case "CheckAll": value = "Выбраць усе"; break;
@@ -1316,7 +1323,14 @@ public class LocaleController {
                         case "DeleteOldAccountActionsInfo": value = "Вы выйшлі з гэтага акаўнта, але налажаныя дзеянні захаваліся. Вы можаце зноў увайсці ў гэты акаўнт і звязаныя дзеянні вернуцца. Вы таксама можаце выдаліць дзеянні, звязаныя з гэтым акаўнтам. Жадаеце зрабіць гэта?"; break;
                         case "LoggedOutAccount": value = "Пакінуты акаўнт"; break;
                         case "BackupFakePasscode": value = "Зрабіць рэзервовую копію"; break;
-                        case "BackupFakePasscodeInfo": value = "Стварыце файл, які змяшчае ўсю інфармацыю аб гэтым несапраўдным код-пароле, яго наладах і дзеяннях."; break;
+                        case "BackupFakePasscodeInfo": value = "Стварыце паведамленне, якое змяшчае ўсю інфармацыю аб гэтым несапраўдным кодзе блакіроўкі, яго наладах і дзеяннях."; break;
+                        case "EnterCurrentFakePasscode": value = "Увядзіце гэты кода блакіроўкі"; break;
+                        case "FakePasscodeBackupInfo": value = "Скапіюйце куды-небудзь гэты радок."; break;
+                        case "FakePasscodeRestoreHint": value = "Рэзервовая копія несапраўднага кода блакіроўкі"; break;
+                        case "FakePasscodeRestoreInfo": value = "Устаўце рэзервовую копію несапраўднага кода блакіроўкі."; break;
+                        case "FakePasscodeRestore": value = "Аднавіць несапраўдны код блакіроўкі"; break;
+                        case "CreateFakePasscodeInfoPIN": value = "Калі ласка, увядзіце любыя 4 лічбы, якія вы будзеце даваць зламысніку ў экстранай сітуацыі для разблакіроўкі Telegram. Код павінен адрознівацца ад іншых кодаў блакіроўкі ў дадатку."; break;
+                        case "CreateFakePasscodeInfoPassword": value = "Калі ласка, увядзіце пароль, які вы будзеце даваць зламысніку ў экстранай сітуацыі для разблакіроўкі Telegram. Ён павінен адрознівацца ад іншых кодаў блакіроўкі ў дадатку."; break;
                     }
                 } else if (languageOverride.equals("uk")) {
                     switch (key) {
@@ -1481,7 +1495,14 @@ public class LocaleController {
                         case "DeleteOldAccountActionsInfo": value = "З цього облікового запису було здійснено вихід, але налаштовані дії збереглися. Ви можете знову увійти до цього облікового запису і пов'язані дії повернуться. Ви також можете видалити дії, пов'язані з цим обліковим записом. Бажаєте зробити це?"; break;
                         case "LoggedOutAccount": value = "Покинутий обліковий запис"; break;
                         case "BackupFakePasscode": value = "Зробити резервну копію"; break;
-                        case "BackupFakePasscodeInfo": value = "Створіть файл, що містить всю інформацію про цей фальшивий код блокування, його налаштування та дії."; break;
+                        case "BackupFakePasscodeInfo": value = "Створіть повідомлення, що містить всю інформацію про цей фальшивий код блокування, його налаштування та дії."; break;
+                        case "EnterCurrentFakePasscode": value = "Введіть цей код блокування"; break;
+                        case "FakePasscodeBackupInfo": value = "Скопіюйте кудись цей рядок."; break;
+                        case "FakePasscodeRestoreHint": value = "Резервна копія фальшивого коду блокування"; break;
+                        case "FakePasscodeRestoreInfo": value = "Вставте резервну копію фальшивого коду блокування."; break;
+                        case "FakePasscodeRestore": value = "Відновити фальшивий код блокування"; break;
+                        case "CreateFakePasscodeInfoPIN": value = "Будь ласка, введіть будь-які 4 цифри, які ви даватимете зловмиснику в екстреній ситуації для розблокування Telegram. Код повинен відрізнятися від інших кодів блокування у програмі."; break;
+                        case "CreateFakePasscodeInfoPassword": value = "Будь ласка, введіть пароль, які ви даватимете зловмиснику в екстреній ситуації для розблокування Telegram. Він повинен відрізнятися від інших кодів блокування у програмі."; break;
                     }
                 }
             }

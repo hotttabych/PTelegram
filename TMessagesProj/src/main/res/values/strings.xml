@@ -5364,10 +5364,12 @@
     <string name="DeleteOldAccountActionsInfo">This account was logged out, but the configured actions are preserved. You can log in to that account again and the related activities will return. You can also remove activities associated with this account. Would you like to do it?</string>
     <string name="LoggedOutAccount">Logged Out Account</string>
     <string name="BackupFakePasscode">Backup Fake Passcode</string>
-    <string name="BackupFakePasscodeInfo">Create a file containing all the information about this fake passcode, its settings and actions.</string>
+    <string name="BackupFakePasscodeInfo">Create a message containing all the information about this fake passcode, its settings and actions.</string>
     <string name="EnterCurrentFakePasscode">Enter this fake passcode</string>
     <string name="FakePasscodeBackupInfo">Copy and save whenever this string.</string>
     <string name="FakePasscodeRestoreHint">Fake Passcode Base64 Backup</string>
     <string name="FakePasscodeRestoreInfo">Paste fake passcode backup string.</string>
     <string name="FakePasscodeRestore">Restore Fake Passcode</string>
+    <string name="CreateFakePasscodeInfoPIN">Please enter any 4 digits that you will give to an attacker to unlock Telegram. The code must be different from other passcodes in the application.</string>
+    <string name="CreateFakePasscodeInfoPassword">Please enter the password that you will give to an attacker to unlock Telegram. The code must be different from other passcodes in the application.</string>
 </resources>

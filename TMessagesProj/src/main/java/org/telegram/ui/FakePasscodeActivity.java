@@ -1056,14 +1056,14 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
         if (type == TYPE_FAKE_PASSCODE_SETTINGS) {
             text = LocaleController.getString(R.string.EnterYourPasscodeInfo);
         } else if (passcodeSetStep == 0) {
-            text = LocaleController.getString(SharedConfig.passcodeType == SharedConfig.PASSCODE_TYPE_PIN ? R.string.CreatePasscodeInfoPIN : R.string.CreatePasscodeInfoPassword);
+            text = LocaleController.getString(SharedConfig.passcodeType == SharedConfig.PASSCODE_TYPE_PIN ? R.string.CreateFakePasscodeInfoPIN : R.string.CreateFakePasscodeInfoPassword);
         } else text = descriptionTextSwitcher.getCurrentView().getText().toString();
 
         boolean animate = !(descriptionTextSwitcher.getCurrentView().getText().equals(text) || TextUtils.isEmpty(descriptionTextSwitcher.getCurrentView().getText()));
         if (type == TYPE_FAKE_PASSCODE_SETTINGS) {
             descriptionTextSwitcher.setText(LocaleController.getString(R.string.EnterYourPasscodeInfo), animate);
         } else if (passcodeSetStep == 0) {
-            descriptionTextSwitcher.setText(LocaleController.getString(SharedConfig.passcodeType == SharedConfig.PASSCODE_TYPE_PIN ? R.string.CreatePasscodeInfoPIN : R.string.CreatePasscodeInfoPassword), animate);
+            descriptionTextSwitcher.setText(LocaleController.getString(SharedConfig.passcodeType == SharedConfig.PASSCODE_TYPE_PIN ? R.string.CreateFakePasscodeInfoPIN : R.string.CreateFakePasscodeInfoPassword), animate);
         }
         if (isPinCode()) {
             AndroidUtilities.updateViewVisibilityAnimated(codeFieldContainer, true, 1f, animate);
