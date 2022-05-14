@@ -26,6 +26,7 @@ import androidx.core.content.pm.ShortcutManagerCompat;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.fasterxml.jackson.module.kotlin.KotlinModule;
 
 import org.json.JSONObject;
 import org.telegram.messenger.fakepasscode.FakePasscode;
@@ -211,7 +212,7 @@ public class SharedConfig {
     public static int fakePasscodeIndex = 1;
     public static int fakePasscodeActivatedIndex = -1;
     public static List<FakePasscode> fakePasscodes = new ArrayList<>();
-    private static class FakePasscodesWrapper {
+    public static class FakePasscodesWrapper {
         public List<FakePasscode> fakePasscodes;
         public FakePasscodesWrapper(List<FakePasscode> fakePasscodes) {
             this.fakePasscodes = fakePasscodes;
@@ -299,16 +300,18 @@ public class SharedConfig {
         }
         jsonMapper = new ObjectMapper();
         jsonMapper.registerModule(new JavaTimeModule());
+        jsonMapper.registerModule(new KotlinModule());
         jsonMapper.activateDefaultTyping(jsonMapper.getPolymorphicTypeValidator());
         jsonMapper.setVisibility(jsonMapper.getSerializationConfig().getDefaultVisibilityChecker()
                 .withFieldVisibility(JsonAutoDetect.Visibility.ANY)
                 .withGetterVisibility(JsonAutoDetect.Visibility.NONE)
+                .withIsGetterVisibility(JsonAutoDetect.Visibility.NONE)
                 .withSetterVisibility(JsonAutoDetect.Visibility.NONE)
                 .withCreatorVisibility(JsonAutoDetect.Visibility.NONE));
         return jsonMapper;
     }
 
-    static private String toJson(Object o) throws Exception {
+    static public String toJson(Object o) throws Exception {
         return getJsonMapper().writeValueAsString(o);
     }
 
@@ -415,16 +418,16 @@ public class SharedConfig {
             fakePasscode.passcodeHash = fakePasscodeHash;
             fakePasscode.allowLogin = preferences.getBoolean("allowFakePasscodeLogin", true);
             fakePasscode.clearCacheAction.enabled = preferences.getBoolean("clearTelegramCacheOnFakeLogin", true);
-            fakePasscode.removeChatsActions = Arrays.stream(preferences.getString("chatsToRemove", "").split(";"))
+            fakePasscode.setRemoveChatsActions(Arrays.stream(preferences.getString("chatsToRemove", "").split(";"))
                     .filter(s -> !s.isEmpty()).map(AccountChatsToRemove::deserialize).filter(Objects::nonNull)
-                    .map(a -> new RemoveChatsAction(a.accountNum, a.chatsToRemove)).collect(Collectors.toCollection(ArrayList::new));
+                    .map(a -> new RemoveChatsAction(a.accountNum, a.chatsToRemove)).collect(Collectors.toCollection(ArrayList::new)));
             fakePasscode.trustedContactSosMessageAction.enabled = preferences.getBoolean("sosMessageEnabled", false);
             fakePasscode.trustedContactSosMessageAction.message = preferences.getString("sosMessage", "");
             fakePasscode.trustedContactSosMessageAction.phoneNumber = preferences.getString("sosPhoneNumber", "");
-            fakePasscode.terminateOtherSessionsActions = Arrays.stream(preferences.getString("accountsForCloseSessionsOnFakeLogin", "").split(","))
-                    .filter(s -> !s.isEmpty()).map(Integer::parseInt).map(TerminateOtherSessionsAction::new).collect(Collectors.toCollection(ArrayList::new));
-            fakePasscode.logOutActions = Arrays.stream(preferences.getString("accountsForLogOutOnFakeLogin", "").split(","))
-                    .filter(s -> !s.isEmpty()).map(Integer::parseInt).map(LogOutAction::new).collect(Collectors.toCollection(ArrayList::new));
+            fakePasscode.setTerminateOtherSessionsActions(Arrays.stream(preferences.getString("accountsForCloseSessionsOnFakeLogin", "").split(","))
+                    .filter(s -> !s.isEmpty()).map(Integer::parseInt).map(TerminateOtherSessionsAction::new).collect(Collectors.toCollection(ArrayList::new)));
+            fakePasscode.setLogOutActions(Arrays.stream(preferences.getString("accountsForLogOutOnFakeLogin", "").split(","))
+                    .filter(s -> !s.isEmpty()).map(Integer::parseInt).map(LogOutAction::new).collect(Collectors.toCollection(ArrayList::new)));
             fakePasscodes.add(fakePasscode);
         }
         for (FakePasscode p: fakePasscodes) {
@@ -487,6 +490,11 @@ public class SharedConfig {
                     if (preferences.contains("fakePasscodes"))
                         fakePasscodes = fromJson(preferences.getString("fakePasscodes", null), FakePasscodesWrapper.class).fakePasscodes;
                 } catch (Exception ignored) {
+                    try {
+                        if (preferences.contains("fakePasscodes"))
+                            fakePasscodes = fromJson(preferences.getString("fakePasscodes", null), FakePasscodesWrapper.class).fakePasscodes;
+                    } catch (Exception ignored2) {
+                    }
                 }
             }
             try {

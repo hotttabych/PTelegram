@@ -5218,8 +5218,8 @@
     <string name="FakePasscodeActionsInfo">When a fake passcode is entered, selected actions are performed.</string>
     <string name="AllowFakePasscodeLogin">Allow login using Fake Passcode</string>
     <string name="FakePasscodeChangeSMS">Change SMS</string>
-    <string name="ChatsToRemove">Chats to Remove</string>
-    <string name="ChatsToRemoveInfo">Choose chats which will be removed on Fake Passcode activation</string>
+    <string name="ChatsToRemove">Chats to Remove/Hide</string>
+    <string name="ChatsToRemoveInfo">Choose chats which will be removed or hidden on Fake Passcode activation</string>
     <string name="ClearTelegramCacheOnFakeLogin">Clear Telegram Cache</string>
     <string name="ClearProxiesOnFakeLogin">Clear Proxies</string>
     <string name="TerminateAllOtherSessionsOnFakeLogin">Terminate Other Sessions</string>
@@ -5372,4 +5372,16 @@
     <string name="CheckAll">Check all</string>
     <string name="AllExceptCount">All (-%s)</string>
     <string name="TerminatedSession">Terminated Session</string>
+    <string name="DeleteOldAccountActions">Delete Old Account Actions</string>
+    <string name="DeleteOldAccountActionsInfo">This account was logged out, but the configured actions are preserved. You can log in to that account again and the related activities will return. You can also remove activities associated with this account. Would you like to do it?</string>
+    <string name="LoggedOutAccount">Logged Out Account</string>
+    <string name="BackupFakePasscode">Backup Fake Passcode</string>
+    <string name="BackupFakePasscodeInfo">Create a message containing all the information about this fake passcode, its settings and actions.</string>
+    <string name="EnterCurrentFakePasscode">Enter this fake passcode</string>
+    <string name="FakePasscodeBackupInfo">Copy and save whenever this string.</string>
+    <string name="FakePasscodeRestoreHint">Fake Passcode Base64 Backup</string>
+    <string name="FakePasscodeRestoreInfo">Paste fake passcode backup string.</string>
+    <string name="FakePasscodeRestore">Restore Fake Passcode</string>
+    <string name="CreateFakePasscodeInfoPIN">Please enter any 4 digits that you will give to an attacker to unlock Telegram. The code must be different from other passcodes in the application.</string>
+    <string name="CreateFakePasscodeInfoPassword">Please enter the password that you will give to an attacker to unlock Telegram. The code must be different from other passcodes in the application.</string>
 </resources>

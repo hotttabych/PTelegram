@@ -11688,7 +11688,9 @@ public class MessagesStorage extends BaseController {
             LongSparseArray<TLRPC.Message> new_dialogMessage = new LongSparseArray<>(dialogs.messages.size());
             for (int a = 0; a < dialogs.messages.size(); a++) {
                 TLRPC.Message message = dialogs.messages.get(a);
-                new_dialogMessage.put(MessageObject.getDialogId(message), message);
+                if (FakePasscode.checkMessage(currentAccount, message.dialog_id, message.from_id != null ? message.from_id.user_id : null, message.message)) {
+                    new_dialogMessage.put(MessageObject.getDialogId(message), message);
+                }
             }
 
             if (!dialogs.dialogs.isEmpty()) {

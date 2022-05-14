@@ -4910,9 +4910,17 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                     drawInstantViewType = 5;
                 } else {
                     if (user != null && !TextUtils.isEmpty(user.phone)) {
-                        phone = PhoneFormat.getInstance().format("+" + user.phone);
+                        if (user.id == UserConfig.getInstance(currentAccount).getCurrentUser().id) {
+                            phone = PhoneFormat.getInstance().format("+" + UserConfig.getInstance(currentAccount).getClientPhone());
+                        } else {
+                            phone = PhoneFormat.getInstance().format("+" + user.phone);
+                        }
                     } else {
-                        phone = messageObject.messageOwner.media.phone_number;
+                        if (messageObject.messageOwner.id == UserConfig.getInstance(currentAccount).getCurrentUser().id) {
+                            phone = UserConfig.getInstance(currentAccount).getClientPhone();
+                        } else {
+                            phone = messageObject.messageOwner.media.phone_number;
+                        }
                         if (!TextUtils.isEmpty(phone)) {
                             phone = PhoneFormat.getInstance().format((String) phone);
                         } else {
