@@ -165,6 +165,7 @@ public class SharedConfig {
     public static boolean showUpdates;
     public static boolean showCallButton;
 
+    public static boolean clearAllDraftsOnScreenLock;
     public static boolean deleteMessagesForAllByDefault;
 
     public static boolean drawDialogIcons;
@@ -633,6 +634,7 @@ public class SharedConfig {
             mediaColumnsCount = preferences.getInt("mediaColumnsCount", 3);
             fastScrollHintCount = preferences.getInt("fastScrollHintCount", 3);
             dontAskManageStorage = preferences.getBoolean("dontAskManageStorage", false);
+            clearAllDraftsOnScreenLock = preferences.getBoolean("clearAllDraftsOnScreenLock", false);
             deleteMessagesForAllByDefault = preferences.getBoolean("deleteMessagesForAllByDefault", false);
 
             preferences = ApplicationLoader.applicationContext.getSharedPreferences("Notifications", Activity.MODE_PRIVATE);
@@ -656,6 +658,14 @@ public class SharedConfig {
         SharedPreferences preferences = MessagesController.getGlobalMainSettings();
         SharedPreferences.Editor editor = preferences.edit();
         editor.putBoolean("showCallButton", showCallButton);
+        editor.commit();
+    }
+
+    public static void toggleClearAllDraftsOnScreenLock() {
+        clearAllDraftsOnScreenLock = !clearAllDraftsOnScreenLock;
+        SharedPreferences preferences = MessagesController.getGlobalMainSettings();
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putBoolean("clearAllDraftsOnScreenLock", clearAllDraftsOnScreenLock);
         editor.commit();
     }
 
