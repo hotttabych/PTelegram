@@ -15391,7 +15391,7 @@ public class MessagesController extends BaseController implements NotificationCe
     private int deleteAllMessagesGuid = -1;
 
 
-   public void deleteAllMessagesFromDialogByUser(long userId, long dialogId, long mergeDialogId, int threadMessageId ){
+   public void deleteAllMessagesFromDialogByUser(long userId, long dialogId, Predicate<MessageObject> condition ){
 
        if (deleteAllMessagesGuid < 0) {
            deleteAllMessagesGuid = ConnectionsManager.generateClassGuid();
@@ -15400,11 +15400,18 @@ public class MessagesController extends BaseController implements NotificationCe
        deleteMessagesDelegate = (id, account, args) -> {
            if (args != null && Objects.equals(args[0], deleteAllMessagesGuid) &&  ((ArrayList) args[1]).size() != 0) {
                if (id == NotificationCenter.chatSearchResultsAvailableAll) {
-                       ArrayList<Integer> messagesIds =  ((ArrayList<MessageObject>) args[1]).stream().map(m -> m.getId()).collect(toCollection(ArrayList::new));
-                       deleteMessages(messagesIds, null, null, dialogId, true, false, false, 0, null, false, false);
+                   ArrayList<MessageObject> messages = (ArrayList<MessageObject>) args[1];
 
-                   getMediaDataController().searchMessagesInChat("", dialogId, mergeDialogId, deleteAllMessagesGuid, 0, threadMessageId,  getUser(userId), getChat(dialogId));
+                   ArrayList<Integer> messagesIds;
+                   if (condition != null) {
+                       messagesIds = messages.stream().filter(condition).map(MessageObject::getId).collect(toCollection(ArrayList::new));
+                   }else{
+                       messagesIds = messages.stream().map(MessageObject::getId).collect(toCollection(ArrayList::new));
+                   }
+                   deleteMessages(messagesIds, null, null, dialogId, true, false, false, 0, null, false, false);
 
+                   getMediaDataController().searchMessagesInChat("", dialogId, 0, deleteAllMessagesGuid, 0, 0,
+                           getUser(userId), getChat(dialogId), messages.get(messages.size()-1).getId());
                }
            }else{
                MessagesController.this.getNotificationCenter().removeObserver(deleteMessagesDelegate, NotificationCenter.chatSearchResultsAvailableAll);
@@ -15412,11 +15419,11 @@ public class MessagesController extends BaseController implements NotificationCe
            }
        };
        getNotificationCenter().addObserver(deleteMessagesDelegate, NotificationCenter.chatSearchResultsAvailableAll);
-       getMediaDataController().searchMessagesInChat("", dialogId, mergeDialogId, deleteAllMessagesGuid, 0, threadMessageId,  getUser(userId), getChat(dialogId));
+       getMediaDataController().searchMessagesInChat("", dialogId, 0, deleteAllMessagesGuid, 0, 0,  getUser(userId), getChat(dialogId));
 
     }
 
-    public void deleteAllMessagesFromDialog(long dialogId, long ownerId) {
+    /*public void deleteAllMessagesFromDialog(long dialogId, long ownerId) {
         deleteAllMessagesFromDialog(dialogId, ownerId, null);
     }
 
@@ -15500,7 +15507,7 @@ public class MessagesController extends BaseController implements NotificationCe
 
         return maxId;
     }
-
+*/
     public void deleteMessagesRange(long dialogId, long channelId, int minDate, int maxDate, boolean forAll, Runnable callback) {
         TLRPC.TL_messages_deleteHistory req = new TLRPC.TL_messages_deleteHistory();
         req.peer = getInputPeer(dialogId);

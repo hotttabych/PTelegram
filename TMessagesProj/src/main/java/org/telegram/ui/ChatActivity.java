@@ -2467,7 +2467,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                     builder.setTitle(LocaleController.getString("DeleteMessages", R.string.DeleteMessages));
                     builder.setMessage(LocaleController.getString("ChatHintsDeleteMessagesAlert", R.string.ChatHintsDeleteMessagesAlert));
                     builder.setPositiveButton(LocaleController.getString("Delete", R.string.Delete), (dialogInterface, i) -> {
-                        getMessagesController().deleteAllMessagesFromDialogByUser(UserConfig.getInstance(currentAccount).clientUserId, did,  mergeDialogId, threadMessageId );
+                        getMessagesController().deleteAllMessagesFromDialogByUser(UserConfig.getInstance(currentAccount).clientUserId, did, null );
                     });
                     builder.setNegativeButton(LocaleController.getString("Cancel", R.string.Cancel), null);
                     showDialog(builder.create());
@@ -2487,35 +2487,34 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                     template.positiveListener = views -> {
                         boolean isRegex = ((DialogCheckBox) views.get(1)).isChecked();
                         boolean isCaseSensitive = ((DialogCheckBox) views.get(2)).isChecked();
-                        getMessagesController().deleteAllMessagesFromDialog(did,
-                                UserConfig.getInstance(currentAccount).clientUserId, msg -> {
-                                    String msgText;
-                                    if (msg.caption != null) {
-                                        msgText = msg.caption.toString();
-                                    } else if (msg.messageText != null) {
-                                        msgText = msg.messageText.toString();
-                                    } else {
-                                        return false;
-                                    }
+                        getMessagesController().deleteAllMessagesFromDialogByUser(UserConfig.getInstance(currentAccount).clientUserId, did, msg -> {
+                            String msgText;
+                            if (msg.caption != null) {
+                                msgText = msg.caption.toString();
+                            } else if (msg.messageText != null) {
+                                msgText = msg.messageText.toString();
+                            } else {
+                                return false;
+                            }
 
-                                    String part = ((EditTextCaption)views.get(0)).getText().toString();
-                                    if (!isRegex) {
-                                        if (!isCaseSensitive) {
-                                            msgText = msgText.toLowerCase();
-                                            part = part.toLowerCase();
-                                        }
+                            String part = ((EditTextCaption)views.get(0)).getText().toString();
+                            if (!isRegex) {
+                                if (!isCaseSensitive) {
+                                    msgText = msgText.toLowerCase();
+                                    part = part.toLowerCase();
+                                }
 
-                                        return msgText.contains(part);
-                                    } else {
-                                        Pattern regex;
-                                        if (isCaseSensitive) {
-                                            regex = Pattern.compile(part);
-                                        } else {
-                                            regex = Pattern.compile(part, Pattern.CASE_INSENSITIVE);
-                                        }
-                                        return regex.matcher(msgText).matches();
-                                    }
-                                });
+                                return msgText.contains(part);
+                            } else {
+                                Pattern regex;
+                                if (isCaseSensitive) {
+                                    regex = Pattern.compile(part);
+                                } else {
+                                    regex = Pattern.compile(part, Pattern.CASE_INSENSITIVE);
+                                }
+                                return regex.matcher(msgText).matches();
+                            }
+                        });
                     };
                     template.addCheckboxTemplate(false, LocaleController.getString("Regex", R.string.Regex));
                     template.addCheckboxTemplate(false, LocaleController.getString("CaseSensitive", R.string.CaseSensitive));
