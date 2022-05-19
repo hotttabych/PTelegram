@@ -234,6 +234,7 @@ public class SharedConfig {
     public static int onScreenLockAction;
     public static boolean onScreenLockActionClearCache;
     public static boolean showSessionsTerminateActionWarning;
+    public static int activatedTesterSettingType;
 
     static {
         loadConfig();
@@ -373,6 +374,7 @@ public class SharedConfig {
                 editor.putInt("onScreenLockAction", onScreenLockAction);
                 editor.putBoolean("onScreenLockActionClearCache", onScreenLockActionClearCache);
                 editor.putBoolean("showSessionsTerminateActionWarning", showSessionsTerminateActionWarning);
+                editor.putInt("activatedTesterSettingType", activatedTesterSettingType);
 
                 if (pendingAppUpdate != null) {
                     try {
@@ -518,6 +520,7 @@ public class SharedConfig {
             onScreenLockAction = preferences.getInt("onScreenLockAction", 0);
             onScreenLockActionClearCache = preferences.getBoolean("onScreenLockActionClearCache", false);
             showSessionsTerminateActionWarning = preferences.getBoolean("showSessionsTerminateActionWarning", true);
+            activatedTesterSettingType = preferences.getInt("activatedTesterSettingType", 0);
 
             String authKeyString = preferences.getString("pushAuthKey", null);
             if (!TextUtils.isEmpty(authKeyString)) {

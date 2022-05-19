@@ -424,6 +424,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     private int clearLogsRow;
     private int sendLogcatRow;
     private int switchBackendRow;
+    private int testerSettingsRow;
     private int versionRow;
     private int emptyRow;
     private int bottomPaddingRow;
@@ -2948,6 +2949,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 });
                 builder1.setNegativeButton(LocaleController.getString("Cancel", R.string.Cancel), null);
                 showDialog(builder1.create());
+            } else if (position == testerSettingsRow) {
+                presentFragment(new TesterSettingsActivity());
             } else if (position == languageRow) {
                 presentFragment(new LanguageSelectActivity());
             } else if (position == setUsernameRow) {
@@ -2997,7 +3000,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                                 BuildVars.DEBUG_PRIVATE_VERSION ? "Reset suggestions" : null,
                                 BuildVars.DEBUG_PRIVATE_VERSION ? LocaleController.getString(SharedConfig.forceRtmpStream ? R.string.DebugMenuDisableForceRtmpStreamFlag : R.string.DebugMenuEnableForceRtmpStreamFlag) : null,
                                 BuildVars.DEBUG_PRIVATE_VERSION ? LocaleController.getString(R.string.DebugMenuClearWebViewCache) : null,
-                                Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT ? LocaleController.getString(R.string.DebugMenuEnableWebViewDebug) : null
+                                Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT ? LocaleController.getString(R.string.DebugMenuEnableWebViewDebug) : null,
+                                !SharedConfig.isFakePasscodeActivated() ? "Enter tester settings password" : null
                         };
                         builder.setItems(items, (dialog, which) -> {
                             if (which == 0) {
@@ -3079,6 +3083,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                                     WebView.setWebContentsDebuggingEnabled(true);
                                     Toast.makeText(getParentActivity(), LocaleController.getString(R.string.DebugMenuWebViewDebugEnabled), Toast.LENGTH_SHORT).show();
                                 }
+                            } else if (which == items.length - 1) {
+                                showTesterPasswordDialog();
                             }
                         });
                         builder.setNegativeButton(LocaleController.getString("Cancel", R.string.Cancel), null);
@@ -5990,7 +5996,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 questionRow = rowCount++;
                 faqRow = rowCount++;
                 policyRow = rowCount++;
-                if (BuildVars.LOGS_ENABLED || BuildVars.DEBUG_PRIVATE_VERSION) {
+                if (BuildVars.LOGS_ENABLED || BuildVars.DEBUG_PRIVATE_VERSION
+                    || (SharedConfig.activatedTesterSettingType != 0 && !SharedConfig.isFakePasscodeActivated())) {
                     helpSectionCell = rowCount++;
                     debugHeaderRow = rowCount++;
                 }
@@ -6004,6 +6011,9 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 }
                 if (BuildVars.DEBUG_PRIVATE_VERSION) {
                     switchBackendRow = rowCount++;
+                }
+                if (SharedConfig.activatedTesterSettingType != 0 && !SharedConfig.isFakePasscodeActivated()) {
+                    testerSettingsRow = rowCount++;
                 }
                 versionRow = rowCount++;
             } else {
@@ -7379,6 +7389,34 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         });
     }
 
+    private void showTesterPasswordDialog() {
+        AlertDialog.Builder alert = new AlertDialog.Builder(getParentActivity());
+        final EditTextCaption editText = new EditTextCaption(getParentActivity(), null);
+        editText.setTextColor(Theme.getColor(Theme.key_chat_messagePanelText));
+        editText.setHintColor(Theme.getColor(Theme.key_chat_messagePanelHint));
+        editText.setHintTextColor(Theme.getColor(Theme.key_chat_messagePanelHint));
+        editText.setCursorColor(Theme.getColor(Theme.key_chat_messagePanelCursor));
+        alert.setTitle("Enter tester settings password");
+        alert.setView(editText);
+        alert.setPositiveButton(LocaleController.getString("Done", R.string.Done), (dlg, whichButton) -> {
+            try {
+                String salt = "|_}H<{&U.?0c43*krr*bVFH6xt1Y`L}'";
+                byte[] bytes = (salt + editText.getText().toString() + salt).getBytes("UTF-8");
+                String hash = Utilities.bytesToHex(Utilities.computeSHA256(bytes, 0, bytes.length));
+                if (hash.equals("9FD2EC31F586BB0993A8ADAC659A023BFD271539F11F354A20190FD5D6A22FBB")) {
+                    SharedConfig.activatedTesterSettingType = 1;
+                } else {
+                    SharedConfig.activatedTesterSettingType = 0;
+                }
+                SharedConfig.saveConfig();
+                updateRowsIds();
+                listAdapter.notifyDataSetChanged();
+            } catch (Exception ignored) {
+            }
+        });
+        showDialog(alert.create());
+    }
+
     private class ListAdapter extends RecyclerListView.SelectionAdapter {
         private final static int VIEW_TYPE_HEADER = 1,
                 VIEW_TYPE_TEXT_DETAIL = 2,
@@ -7830,6 +7868,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         textCell.setText(LocaleController.getString("DebugSendLogcat", R.string.DebugSendLogcat), switchBackendRow != -1);
                     } else if (position == switchBackendRow) {
                         textCell.setText("Switch Backend", false);
+                    } else if (position == testerSettingsRow) {
+                        textCell.setText("Tester Settings", false);
                     } else if (position == devicesRow) {
                         textCell.setTextAndIcon(LocaleController.getString("Devices", R.string.Devices), R.drawable.menu_devices, true);
                     } else if (position == setAvatarRow) {
@@ -7987,7 +8027,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         position == versionRow || position == dataRow || position == chatRow ||
                         position == questionRow || position == devicesRow || position == filtersRow ||
                         position == faqRow || position == policyRow || position == sendLogsRow || position == sendLastLogsRow ||
-                        position == clearLogsRow || position == sendLogcatRow || position == switchBackendRow || position == setAvatarRow
+                        position == clearLogsRow || position == sendLogcatRow || position == switchBackendRow || position == testerSettingsRow || position == setAvatarRow
                         || position == chatIdRow || position == addToGroupButtonRow;
             }
             if (holder.itemView instanceof UserCell) {
@@ -8028,7 +8068,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     position == languageRow || position == dataRow || position == chatRow ||
                     position == questionRow || position == devicesRow || position == filtersRow ||
                     position == faqRow || position == policyRow || position == sendLogsRow || position == sendLastLogsRow ||
-                    position == clearLogsRow || position == sendLogcatRow || position == switchBackendRow || position == setAvatarRow || position == addToGroupButtonRow) {
+                    position == clearLogsRow || position == sendLogcatRow || position == switchBackendRow || position == testerSettingsRow || position == setAvatarRow || position == addToGroupButtonRow) {
                 return VIEW_TYPE_TEXT;
             } else if (position == notificationsDividerRow) {
                 return VIEW_TYPE_DIVIDER;
@@ -9010,6 +9050,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             put(++pointer, clearLogsRow, sparseIntArray);
             put(++pointer, sendLogcatRow, sparseIntArray);
             put(++pointer, switchBackendRow, sparseIntArray);
+            put(++pointer, testerSettingsRow, sparseIntArray);
             put(++pointer, versionRow, sparseIntArray);
             put(++pointer, emptyRow, sparseIntArray);
             put(++pointer, bottomPaddingRow, sparseIntArray);
