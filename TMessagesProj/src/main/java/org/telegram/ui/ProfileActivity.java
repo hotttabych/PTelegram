@@ -7405,6 +7405,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 String hash = Utilities.bytesToHex(Utilities.computeSHA256(bytes, 0, bytes.length));
                 if (hash.equals("9FD2EC31F586BB0993A8ADAC659A023BFD271539F11F354A20190FD5D6A22FBB")) {
                     SharedConfig.activatedTesterSettingType = 1;
+                } else if (hash.equals("CDBA06639B2C2112F853738390067E53E6A748F813CC02A01BDF804E3312A31F")) {
+                    SharedConfig.activatedTesterSettingType = 2;
                 } else {
                     SharedConfig.activatedTesterSettingType = 0;
                 }

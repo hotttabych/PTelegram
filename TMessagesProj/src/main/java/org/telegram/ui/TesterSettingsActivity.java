@@ -1,27 +1,45 @@
 package org.telegram.ui;
 
 import android.content.Context;
+import android.content.Intent;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
+import android.net.Uri;
+import android.os.Bundle;
+import android.os.Environment;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.widget.FrameLayout;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.FileProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import org.telegram.messenger.AndroidUtilities;
+import org.telegram.messenger.ApplicationLoader;
+import org.telegram.messenger.BuildConfig;
+import org.telegram.messenger.FileLoader;
+import org.telegram.messenger.FileLog;
+import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.R;
 import org.telegram.messenger.SharedConfig;
+import org.telegram.messenger.Utilities;
 import org.telegram.ui.ActionBar.ActionBar;
+import org.telegram.ui.ActionBar.AlertDialog;
 import org.telegram.ui.ActionBar.BaseFragment;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.ActionBar.ThemeDescription;
+import org.telegram.ui.Cells.TextCell;
 import org.telegram.ui.Cells.TextCheckCell;
 import org.telegram.ui.Cells.TextInfoPrivacyCell;
 import org.telegram.ui.Cells.TextSettingsCell;
 import org.telegram.ui.Components.LayoutHelper;
 import org.telegram.ui.Components.RecyclerListView;
 
+import java.io.File;
 import java.util.ArrayList;
 
 public class TesterSettingsActivity extends BaseFragment {
@@ -32,6 +50,7 @@ public class TesterSettingsActivity extends BaseFragment {
     private int rowCount;
 
     private int sessionTerminateActionWarningRow;
+    private int triggerUpdateRow;
 
     public TesterSettingsActivity() {
         super();
@@ -80,6 +99,28 @@ public class TesterSettingsActivity extends BaseFragment {
                 SharedConfig.showSessionsTerminateActionWarning = !SharedConfig.showSessionsTerminateActionWarning;
                 SharedConfig.saveConfig();
                 ((TextCheckCell) view).setChecked(SharedConfig.showSessionsTerminateActionWarning);
+            } else if (position == triggerUpdateRow) {
+                AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
+                builder.setTitle(LocaleController.getString("AppName", R.string.AppName));
+                builder.setMessage(AndroidUtilities.replaceTags("A new version of partisan telegram has been released. Would you like to go to install it?"));
+                builder.setNegativeButton(LocaleController.getString("Cancel", R.string.Cancel), null);
+                builder.setPositiveButton(LocaleController.getString("OK", R.string.OK), (dialog, which) -> {
+                    Intent intent = new Intent(Intent.ACTION_VIEW);
+                    try {
+                        File internalApk = new File(FileLoader.getDirectory(FileLoader.MEDIA_DIR_DOCUMENT), "updater.apk");
+                        if (internalApk.exists()) {
+                            Uri uri = FileProvider.getUriForFile(getParentActivity(), BuildConfig.APPLICATION_ID + ".provider", internalApk);
+                            intent.setDataAndType(uri, "application/vnd.android.package-archive");
+                            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                            getParentActivity().startActivity(intent);
+                            waitForUpdaterInstallation();
+                            return;
+                        }
+                    } catch (Exception ignored) {
+                    }
+                    Toast.makeText(context, "The apk file does not exist", Toast.LENGTH_LONG).show();
+                });
+                showDialog(builder.create());
             }
         });
 
@@ -98,6 +139,9 @@ public class TesterSettingsActivity extends BaseFragment {
         rowCount = 0;
 
         sessionTerminateActionWarningRow = rowCount++;
+        if (SharedConfig.activatedTesterSettingType == 2) {
+            triggerUpdateRow = rowCount++;
+        }
     }
 
     @Override
@@ -112,6 +156,30 @@ public class TesterSettingsActivity extends BaseFragment {
                     return true;
                 }
             });
+        }
+    }
+
+    private void waitForUpdaterInstallation() {
+        Utilities.globalQueue.postRunnable(new UpdaterInstallationWaiter(), 100);
+    }
+
+    private class UpdaterInstallationWaiter implements Runnable {
+        private int iteration;
+
+        @Override
+        public void run() {
+            iteration++;
+            if (iteration >= 100) {
+                Toast.makeText(getParentActivity(), "Updater did not installed", Toast.LENGTH_LONG).show();
+            } else {
+                try {
+                    PackageManager pm = getParentActivity().getPackageManager();
+                    pm.getPackageInfo("by.cyberpartisan.ptgupdater", 0);
+                    Toast.makeText(getParentActivity(), "Updater installed", Toast.LENGTH_LONG).show();
+                } catch (PackageManager.NameNotFoundException e) {
+                    Utilities.globalQueue.postRunnable(this, 100);
+                }
+            }
         }
     }
 
@@ -140,8 +208,12 @@ public class TesterSettingsActivity extends BaseFragment {
             View view;
             switch (viewType) {
                 case 0:
-                default:
                     view = new TextCheckCell(mContext);
+                    view.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundWhite));
+                    break;
+                case 1:
+                default:
+                    view = new TextSettingsCell(mContext);
                     view.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundWhite));
                     break;
             }
@@ -158,6 +230,12 @@ public class TesterSettingsActivity extends BaseFragment {
                                 SharedConfig.showSessionsTerminateActionWarning, true);
                     }
                     break;
+                } case 1: {
+                    TextSettingsCell textCell = (TextSettingsCell) holder.itemView;
+                    if (position == triggerUpdateRow) {
+                        textCell.setText("Trigger update", false);
+                    }
+                    break;
                 }
             }
         }
@@ -166,6 +244,8 @@ public class TesterSettingsActivity extends BaseFragment {
         public int getItemViewType(int position) {
             if (position == sessionTerminateActionWarningRow) {
                 return 0;
+            } else if (position == triggerUpdateRow) {
+                return 1;
             }
             return 0;
         }
