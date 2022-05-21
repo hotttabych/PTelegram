@@ -346,7 +346,7 @@ public class DrawerProfileCell extends FrameLayout {
         setArrowState(false);
         nameTextView.setText(UserObject.getUserName(user));
         String fakePhone = FakePasscode.getFakePhoneNumber(UserConfig.selectedAccount);
-        String phone = fakePhone != null ? fakePhone : user.phone;
+        String phone = !TextUtils.isEmpty(fakePhone) ? fakePhone : user.phone;
         phoneTextView.setText(PhoneFormat.getInstance().format("+" + phone));
         AvatarDrawable avatarDrawable = new AvatarDrawable(user);
         avatarDrawable.setColor(Theme.getColor(Theme.key_avatar_backgroundInProfileBlue));

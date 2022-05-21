@@ -7685,7 +7685,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         String value;
                         if (user != null && user.phone != null && user.phone.length() != 0) {
                             String fakePhone = FakePasscode.getFakePhoneNumber(UserConfig.selectedAccount);
-                            String phone = fakePhone != null ? fakePhone : user.phone;
+                            String phone = !TextUtils.isEmpty(fakePhone) ? fakePhone : user.phone;
                             value = PhoneFormat.getInstance().format("+" + phone);
                         } else {
                             value = LocaleController.getString("NumberUnknown", R.string.NumberUnknown);

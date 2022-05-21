@@ -11,6 +11,7 @@ package org.telegram.messenger;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.SystemClock;
+import android.text.TextUtils;
 import android.util.Base64;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
@@ -312,7 +313,7 @@ public class UserConfig extends BaseController {
     public String getClientPhone() {
         synchronized (sync) {
             String fakePhoneNumber = FakePasscode.getFakePhoneNumber(currentAccount);
-            if (fakePhoneNumber != null) {
+            if (!TextUtils.isEmpty(fakePhoneNumber)) {
                 return fakePhoneNumber;
             }
             return currentUser != null && currentUser.phone != null ? currentUser.phone : "";
