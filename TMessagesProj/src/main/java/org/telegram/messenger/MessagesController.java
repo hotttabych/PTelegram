@@ -15424,17 +15424,22 @@ public class MessagesController extends BaseController implements NotificationCe
            if (args != null && Objects.equals(args[0], deleteAllMessagesGuid) &&  ((ArrayList) args[1]).size() != 0) {
                if (id == NotificationCenter.chatSearchResultsAvailableAll) {
                    ArrayList<MessageObject> messages = (ArrayList<MessageObject>) args[1];
-
+                   messages = messages.stream().filter(m->!m.messageText.equals("This group was upgraded to a supergroup")).collect(toCollection(ArrayList::new));
                    ArrayList<Integer> messagesIds;
                    if (condition != null) {
                        messagesIds = messages.stream().filter(condition).map(MessageObject::getId).collect(toCollection(ArrayList::new));
                    }else{
                        messagesIds = messages.stream().map(MessageObject::getId).collect(toCollection(ArrayList::new));
                    }
-                   deleteMessages(messagesIds, null, null, dialogId, true, false, false, 0, null, false, false);
+                   if(!messages.isEmpty()) {
+                       deleteMessages(messagesIds, null, null, dialogId, true, false, false, 0, null, false, false);
+                       getMediaDataController().searchMessagesInChat("", dialogId, 0, deleteAllMessagesGuid, 0, 0,
+                               getUser(userId), getChat(dialogId), messages.get(messages.size()-1).getId());
+                   }else{
+                       MessagesController.this.getNotificationCenter().removeObserver(deleteMessagesDelegate, NotificationCenter.chatSearchResultsAvailableAll);
+                       MessagesController.this.getNotificationCenter().postNotificationName(NotificationCenter.dialogCleared, dialogId);
+                   }
 
-                   getMediaDataController().searchMessagesInChat("", dialogId, 0, deleteAllMessagesGuid, 0, 0,
-                           getUser(userId), getChat(dialogId), messages.get(messages.size()-1).getId());
                }
            }else{
                MessagesController.this.getNotificationCenter().removeObserver(deleteMessagesDelegate, NotificationCenter.chatSearchResultsAvailableAll);

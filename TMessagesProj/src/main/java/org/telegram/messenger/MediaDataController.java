@@ -2489,6 +2489,7 @@ public class MediaDataController extends BaseController {
                 }
                 MessageObject messageObject = searchResultMessages.get(lastReturnedNum);
                 getNotificationCenter().postNotificationName(NotificationCenter.chatSearchResultsAvailable, guid, messageObject.getId(), getMask(), messageObject.getDialogId(), lastReturnedNum, messagesSearchCount[0] + messagesSearchCount[1], jumpToMessage);
+                getNotificationCenter().postNotificationName(NotificationCenter.chatSearchResultsAvailableAll, guid, searchResultMessages);
                 return;
             } else {
                 return;
