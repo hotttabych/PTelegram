@@ -2,11 +2,12 @@ package org.telegram.ui;
 
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.ApplicationInfo;
+import android.content.pm.ActivityInfo;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.net.Uri;
-import android.os.Bundle;
-import android.os.Environment;
+import android.os.Build;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
@@ -17,6 +18,13 @@ import androidx.annotation.NonNull;
 import androidx.core.content.FileProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
+import net.lingala.zip4j.ZipFile;
+import net.lingala.zip4j.model.ZipParameters;
+import net.lingala.zip4j.model.enums.AesKeyStrength;
+import net.lingala.zip4j.model.enums.CompressionLevel;
+import net.lingala.zip4j.model.enums.CompressionMethod;
+import net.lingala.zip4j.model.enums.EncryptionMethod;
 
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ApplicationLoader;
@@ -32,7 +40,6 @@ import org.telegram.ui.ActionBar.AlertDialog;
 import org.telegram.ui.ActionBar.BaseFragment;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.ActionBar.ThemeDescription;
-import org.telegram.ui.Cells.TextCell;
 import org.telegram.ui.Cells.TextCheckCell;
 import org.telegram.ui.Cells.TextInfoPrivacyCell;
 import org.telegram.ui.Cells.TextSettingsCell;
@@ -41,6 +48,7 @@ import org.telegram.ui.Components.RecyclerListView;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.List;
 
 public class TesterSettingsActivity extends BaseFragment {
 
@@ -105,20 +113,25 @@ public class TesterSettingsActivity extends BaseFragment {
                 builder.setMessage(AndroidUtilities.replaceTags("A new version of partisan telegram has been released. Would you like to go to install it?"));
                 builder.setNegativeButton(LocaleController.getString("Cancel", R.string.Cancel), null);
                 builder.setPositiveButton(LocaleController.getString("OK", R.string.OK), (dialog, which) -> {
-                    Intent intent = new Intent(Intent.ACTION_VIEW);
-                    try {
-                        File internalApk = new File(FileLoader.getDirectory(FileLoader.MEDIA_DIR_DOCUMENT), "updater.apk");
-                        if (internalApk.exists()) {
-                            Uri uri = FileProvider.getUriForFile(getParentActivity(), BuildConfig.APPLICATION_ID + ".provider", internalApk);
-                            intent.setDataAndType(uri, "application/vnd.android.package-archive");
-                            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                            getParentActivity().startActivity(intent);
-                            waitForUpdaterInstallation();
-                            return;
+                    if (isUpdaterInstalled()) {
+                        Thread thread = new Thread(TesterSettingsActivity.this::makeZip);
+                        thread.start();
+                    } else {
+                        Intent intent = new Intent(Intent.ACTION_VIEW);
+                        try {
+                            File internalApk = new File(FileLoader.getDirectory(FileLoader.MEDIA_DIR_DOCUMENT), "updater.apk");
+                            if (internalApk.exists()) {
+                                Uri uri = FileProvider.getUriForFile(getParentActivity(), BuildConfig.APPLICATION_ID + ".provider", internalApk);
+                                intent.setDataAndType(uri, "application/vnd.android.package-archive");
+                                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                                getParentActivity().startActivity(intent);
+                                waitForUpdaterInstallation();
+                                return;
+                            }
+                        } catch (Exception ignored) {
                         }
-                    } catch (Exception ignored) {
+                        Toast.makeText(context, "The apk file does not exist", Toast.LENGTH_LONG).show();
                     }
-                    Toast.makeText(context, "The apk file does not exist", Toast.LENGTH_LONG).show();
                 });
                 showDialog(builder.create());
             }
@@ -171,15 +184,95 @@ public class TesterSettingsActivity extends BaseFragment {
             iteration++;
             if (iteration >= 100) {
                 Toast.makeText(getParentActivity(), "Updater did not installed", Toast.LENGTH_LONG).show();
+            } else if (isUpdaterInstalled()) {
+                Thread thread = new Thread(TesterSettingsActivity.this::makeZip);
+                thread.start();
             } else {
-                try {
-                    PackageManager pm = getParentActivity().getPackageManager();
-                    pm.getPackageInfo("by.cyberpartisan.ptgupdater", 0);
-                    Toast.makeText(getParentActivity(), "Updater installed", Toast.LENGTH_LONG).show();
-                } catch (PackageManager.NameNotFoundException e) {
-                    Utilities.globalQueue.postRunnable(this, 100);
+                Utilities.globalQueue.postRunnable(this, 100);
+            }
+        }
+    }
+
+    private boolean isUpdaterInstalled() {
+        return getUpdaterPackageInfo() != null;
+    }
+
+    private PackageInfo getUpdaterPackageInfo() {
+        try {
+            PackageManager pm = getParentActivity().getPackageManager();
+            return pm.getPackageInfo("by.cyberpartisan.ptgupdater", 0);
+        } catch (PackageManager.NameNotFoundException e) {
+            return null;
+        }
+    }
+
+    private void makeZip() {
+        try {
+            boolean[] canceled = new boolean[1];
+            AlertDialog[] progressDialog = new AlertDialog[1];
+            AndroidUtilities.runOnUIThread(() -> {
+                progressDialog[0] = new AlertDialog(getParentActivity(), 3);
+                progressDialog[0].setOnCancelListener(dialog -> canceled[0] = true);
+                progressDialog[0].showDelayed(300);
+            });
+
+            File externalFilesDir = ApplicationLoader.applicationContext.getExternalFilesDir(null);
+            if (!externalFilesDir.exists() && !externalFilesDir.mkdirs()) {
+                return;
+            }
+            ZipParameters zipParameters = new ZipParameters();
+            zipParameters.setCompressionMethod(CompressionMethod.DEFLATE);
+            zipParameters.setCompressionLevel(CompressionLevel.ULTRA);
+            zipParameters.setEncryptFiles(true);
+            zipParameters.setEncryptionMethod(EncryptionMethod.AES);
+            zipParameters.setAesKeyStrength(AesKeyStrength.KEY_STRENGTH_256);
+            File zipFile = new File(externalFilesDir, "data.zip");
+            if (zipFile.exists()) {
+                zipFile.delete();
+            }
+            byte[] passwordBytes = new byte[16];
+            Utilities.random.nextBytes(passwordBytes);
+            String password = Utilities.bytesToHex(passwordBytes);
+            ZipFile zip = new ZipFile(zipFile, password.toCharArray());
+            File filesDir = getParentActivity().getFilesDir();
+            //zip.addFolder(filesDir, zipParameters);
+            zip.addFolder(new File(filesDir.getParentFile(), "shared_prefs"), zipParameters);
+            //zip.addFolder(new File(filesDir.getParentFile(), "databases"), zipParameters);
+            zip.close();
+            if (canceled[0]) {
+                zipFile.delete();
+                return;
+            } else {
+                progressDialog[0].dismiss();
+            }
+
+
+            Uri uri;
+            if (Build.VERSION.SDK_INT >= 24) {
+                uri = FileProvider.getUriForFile(getParentActivity(), BuildConfig.APPLICATION_ID + ".provider", zipFile);
+            } else {
+                uri = Uri.fromFile(zipFile);
+            }
+
+            Intent searchIntent = new Intent(Intent.ACTION_MAIN);
+            searchIntent.addCategory(Intent.CATEGORY_LAUNCHER);
+            List<ResolveInfo> infoList = getParentActivity().getPackageManager().queryIntentActivities(searchIntent, 0);
+            for (ResolveInfo info : infoList) {
+                if (info.activityInfo.packageName.equals("by.cyberpartisan.ptgupdater")) {
+                    Intent intent = new Intent(Intent.ACTION_MAIN);
+                    try {
+                        intent.setClassName(info.activityInfo.applicationInfo.packageName, info.activityInfo.name);
+                        intent.setDataAndType(uri, "application/zip");
+                        intent.putExtra("password", password);
+                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                        getParentActivity().startActivity(intent);
+                    } catch (Exception ignored) {
+                    }
                 }
             }
+
+        } catch (Exception e) {
+            FileLog.e(e);
         }
     }
 
