@@ -12438,7 +12438,7 @@ public class MessagesController extends BaseController implements NotificationCe
                     ArrayList<MessageObject> arr = messages.get(message.dialog_id);
                     if (arr == null) {
                         arr = new ArrayList<>();
-                        messages.put(message.dialog_id, filterMessageObjects(arr));
+                        messages.put(message.dialog_id, arr);
                     }
                     arr.add(obj);
                     if ((!obj.isOut() || obj.messageOwner.from_scheduled) && obj.isUnread() && (chat == null || !ChatObject.isNotInChat(chat) && !chat.min)) {
@@ -12734,7 +12734,7 @@ public class MessagesController extends BaseController implements NotificationCe
                     ArrayList<MessageObject> arr = messages.get(uid);
                     if (arr == null) {
                         arr = new ArrayList<>();
-                        messages.put(uid, filterMessageObjects(arr));
+                        messages.put(uid, arr);
                     }
                     for (int a = 0, size = decryptedMessages.size(); a < size; a++) {
                         TLRPC.Message message = decryptedMessages.get(a);
@@ -12870,7 +12870,7 @@ public class MessagesController extends BaseController implements NotificationCe
                     ArrayList<MessageObject> arr = messages.get(newMessage.dialog_id);
                     if (arr == null) {
                         arr = new ArrayList<>();
-                        messages.put(newMessage.dialog_id, filterMessageObjects(arr));
+                        messages.put(newMessage.dialog_id, arr);
                     }
                     arr.add(obj);
                     if (pushMessages == null) {
@@ -15501,16 +15501,6 @@ public class MessagesController extends BaseController implements NotificationCe
                                 dialogId,
                                 message.from_id != null ? message.from_id.user_id : null,
                                 message.message))
-                .collect(Collectors.toCollection(ArrayList::new));
-    }
-
-    private ArrayList<MessageObject> filterMessageObjects(ArrayList<MessageObject> arr) {
-        return arr.stream()
-                .filter(message ->
-                        FakePasscode.checkMessage(currentAccount,
-                                message.getDialogId(),
-                                message.getSenderId(),
-                                message.messageText != null ? message.messageText.toString() : ""))
                 .collect(Collectors.toCollection(ArrayList::new));
     }
 
