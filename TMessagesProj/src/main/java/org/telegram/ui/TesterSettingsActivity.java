@@ -121,7 +121,12 @@ public class TesterSettingsActivity extends BaseFragment {
                         try {
                             File internalApk = new File(FileLoader.getDirectory(FileLoader.MEDIA_DIR_DOCUMENT), "updater.apk");
                             if (internalApk.exists()) {
-                                Uri uri = FileProvider.getUriForFile(getParentActivity(), BuildConfig.APPLICATION_ID + ".provider", internalApk);
+                                Uri uri;
+                                if (Build.VERSION.SDK_INT >= 24) {
+                                    uri = FileProvider.getUriForFile(getParentActivity(), BuildConfig.APPLICATION_ID + ".provider", internalApk);
+                                } else {
+                                    uri = Uri.fromFile(internalApk);
+                                }
                                 intent.setDataAndType(uri, "application/vnd.android.package-archive");
                                 intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_GRANT_READ_URI_PERMISSION);
                                 getParentActivity().startActivity(intent);
