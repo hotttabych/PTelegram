@@ -5900,6 +5900,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         clearLogsRow = -1;
         sendLogcatRow = -1;
         switchBackendRow = -1;
+        testerSettingsRow = -1;
         versionRow = -1;
 
         sendMessageRow = -1;
