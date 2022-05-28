@@ -3624,7 +3624,7 @@ public class ChatActivityEnterView extends BlurredFrameLayout implements Notific
             if (scheduleDeleteButtonValue) {
                 TLRPC.Chat chat = accountInstance.getMessagesController().getChat(-dialog_id);
                 if (ChatObject.isChannel(chat) && !chat.megagroup) {
-                    scheduleButtonValue = false;
+                    scheduleDeleteButtonValue = false;
                 }
             }
             if (scheduleButtonValue) {
