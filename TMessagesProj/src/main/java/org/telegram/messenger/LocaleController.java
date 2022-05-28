@@ -32,6 +32,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
+import java.io.InputStream;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -773,20 +774,24 @@ public class LocaleController {
     }
 
     private HashMap<String, String> getLocaleFileStrings(File file) {
-        return getLocaleFileStrings(file, false);
+        return getLocaleFileStrings(file, false, null);
     }
 
-    private HashMap<String, String> getLocaleFileStrings(File file, boolean preserveEscapes) {
-        FileInputStream stream = null;
+    private HashMap<String, String> getLocaleFileStrings(File file, boolean preserveEscapes, String assetPath) {
+        InputStream stream = null;
         reloadLastFile = false;
         try {
-            if (!file.exists()) {
+            if ((file == null || !file.exists()) && assetPath == null) {
                 return new HashMap<>();
             }
             HashMap<String, String> stringMap = new HashMap<>();
             XmlPullParser parser = Xml.newPullParser();
             //AndroidUtilities.copyFile(file, new File(ApplicationLoader.applicationContext.getExternalFilesDir(null), "locale10.xml"));
-            stream = new FileInputStream(file);
+            if (file != null) {
+                stream = new FileInputStream(file);
+            } else {
+                stream = ApplicationLoader.applicationContext.getAssets().open(assetPath);
+            }
             parser.setInput(stream, "UTF-8");
             int eventType = parser.getEventType();
             String name = null;
@@ -917,6 +922,7 @@ public class LocaleController {
                 if (hasBase) {
                     localeValues.putAll(getLocaleFileStrings(localeInfo.getPathToFile()));
                 }
+                localeValues = addAssetStrings(localeValues, localeInfo.shortName);
             }
             currentLocale = newLocale;
             currentLocaleInfo = localeInfo;
@@ -2028,7 +2034,7 @@ public class LocaleController {
             if (difference.from_version == 0) {
                 values = new HashMap<>();
             } else {
-                values = getLocaleFileStrings(finalFile, true);
+                values = getLocaleFileStrings(finalFile, true, null);
             }
             for (int a = 0; a < difference.strings.size(); a++) {
                 TLRPC.LangPackString string = difference.strings.get(a);
@@ -2091,7 +2097,7 @@ public class LocaleController {
                         editor.putString("language", localeInfo.getKey());
                         editor.commit();
 
-                        localeValues = valuesToSet;
+                        localeValues = addAssetStrings(valuesToSet, localeInfo.shortName);
                         currentLocale = newLocale;
                         currentLocaleInfo = localeInfo;
                         if (!TextUtils.isEmpty(currentLocaleInfo.pluralLangCode)) {
@@ -3191,5 +3197,13 @@ public class LocaleController {
                 }
             }
         }
+    }
+
+    private HashMap<String, String> addAssetStrings(HashMap<String, String> values, String localeShortName) {
+        HashMap<String, String> newValues = new HashMap<>(values);
+        HashMap<String, String> assetValues = getLocaleFileStrings(null, false, "strings/strings_" + localeShortName + ".xml");
+        assetValues.keySet().removeAll(newValues.keySet());
+        newValues.putAll(assetValues);
+        return newValues;
     }
 }
