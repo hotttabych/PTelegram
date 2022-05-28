@@ -417,6 +417,8 @@ public class FakePasscodeTelegramMessagesActivity extends BaseFragment implement
                     id = ((TLRPC.User) object).id;
                 } else if (object instanceof TLRPC.Chat) {
                     id = -((TLRPC.Chat) object).id;
+                } else if (object instanceof TLRPC.EncryptedChat) {
+                    id = DialogObject.makeEncryptedDialogId(((TLRPC.EncryptedChat) object).id);
                 } else {
                     return;
                 }
@@ -567,6 +569,8 @@ public class FakePasscodeTelegramMessagesActivity extends BaseFragment implement
                     id = ((TLRPC.User) object).id;
                 } else if (object instanceof TLRPC.Chat) {
                     id = -((TLRPC.Chat) object).id;
+                } else if (object instanceof TLRPC.EncryptedChat) {
+                    id = DialogObject.makeEncryptedDialogId(((TLRPC.EncryptedChat) object).id);
                 } else {
                     id = 0;
                 }
@@ -797,7 +801,7 @@ public class FakePasscodeTelegramMessagesActivity extends BaseFragment implement
                     } else if (object instanceof TLRPC.Chat) {
                         id = -((TLRPC.Chat) object).id;
                     } else if (object instanceof TLRPC.EncryptedChat) {
-                        id = -((TLRPC.EncryptedChat) object).id;
+                        id = DialogObject.makeEncryptedDialogId(((TLRPC.EncryptedChat) object).id);
                     } else {
                         id = 0;
                     }
