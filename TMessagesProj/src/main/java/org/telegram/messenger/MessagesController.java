@@ -15419,6 +15419,8 @@ public class MessagesController extends BaseController implements NotificationCe
        if (deleteAllMessagesGuid < 0) {
            deleteAllMessagesGuid = ConnectionsManager.generateClassGuid();
        }
+       final int[] loadIndex = new int[]{0};
+
        forceResetDialogs();
        deleteMessagesDelegate = (id, account, args) -> {
            if (args != null && Objects.equals(args[0], deleteAllMessagesGuid) &&  ((ArrayList) args[1]).size() != 0) {
@@ -15436,8 +15438,13 @@ public class MessagesController extends BaseController implements NotificationCe
                        getMediaDataController().searchMessagesInChat("", dialogId, 0, deleteAllMessagesGuid, 0, 0,
                                getUser(userId), getChat(dialogId), messages.get(messages.size()-1).getId());
                    }else{
-                       MessagesController.this.getNotificationCenter().removeObserver(deleteMessagesDelegate, NotificationCenter.chatSearchResultsAvailableAll);
-                       MessagesController.this.getNotificationCenter().postNotificationName(NotificationCenter.dialogCleared, dialogId);
+//                       MessagesController.this.getNotificationCenter().removeObserver(deleteMessagesDelegate, NotificationCenter.chatSearchResultsAvailableAll);
+//                       MessagesController.this.getNotificationCenter().postNotificationName(NotificationCenter.dialogCleared, dialogId);
+                       loadMessages(dialogId, 0, false,
+                               100, 0, 0, false, 0,
+                               deleteAllMessagesGuid, 0, 0,
+                               0, 0, 0, loadIndex[0]++);
+
                    }
 
                }
