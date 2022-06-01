@@ -80,6 +80,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -15420,58 +15421,61 @@ public class MessagesController extends BaseController implements NotificationCe
        if (deleteAllMessagesGuid < 0) {
            deleteAllMessagesGuid = ConnectionsManager.generateClassGuid();
        }
-       final int[] loadIndex = new int[]{0};
-       final int[] prevMaxId = new int[]{0};
+       AtomicInteger count = new AtomicInteger(5);
        forceResetDialogs();
        deleteMessagesDelegate = (id, account, args) -> {
-           if (args != null) {
-               if (id == NotificationCenter.chatSearchResultsAvailableAll  && Objects.equals(args[0], deleteAllMessagesGuid) &&  ((ArrayList) args[1]).size() != 0) {
+//           if (args != null) {
+               if (args != null || id == NotificationCenter.chatSearchResultsAvailableAll  && Objects.equals(args[0], deleteAllMessagesGuid) &&  ((ArrayList) args[1]).size() != 0) {
                    ArrayList<MessageObject> messages = (ArrayList<MessageObject>) args[1];
-                   messages = messages.stream().filter(m->!m.messageText.equals("This group was upgraded to a supergroup")).collect(toCollection(ArrayList::new));
+                   messages = messages.stream().filter(m->!m.messageText.toString().equals(LocaleController.getString("ActionMigrateFromGroup"))).collect(toCollection(ArrayList::new));
                    ArrayList<Integer> messagesIds = getMessagesIds(condition, messages, null);
                    if(!messages.isEmpty()) {
-                       deleteMessages(messagesIds, null, null, dialogId, true, false, false, 0, null, false, false);
+                       deleteMessages(messagesIds, null, null, dialogId, true, false, false, 0, null, false, true);
                        getMediaDataController().searchMessagesInChat("", dialogId, 0, deleteAllMessagesGuid, 0, 0,
                                getUser(userId), getChat(dialogId), messages.get(messages.size()-1).getId());
                    }else{
-                       loadMessages(dialogId, 0, false,
-                               100, 0, 0, false, 0,
-                               deleteAllMessagesGuid, 0, 0,
-                               0, 0, 0, loadIndex[0]++);
-                       getNotificationCenter().addObserver(deleteMessagesDelegate, NotificationCenter.messagesDidLoad);
+//                       loadMessages(dialogId, 0, false,
+//                               100, 0, 0, false, 0,
+//                               deleteAllMessagesGuid, 0, 0,
+//                               0, 0, 0, loadIndex[0]++);
+//                       getNotificationCenter().addObserver(deleteMessagesDelegate, NotificationCenter.messagesDidLoad);
+
+                         getNotificationCenter().removeObserver(deleteMessagesDelegate, NotificationCenter.chatSearchResultsAvailableAll);
+                         deleteAllMessagesFromDialog(dialogId, userId, condition);
+
 
                    }
-                   getNotificationCenter().postNotificationName(NotificationCenter.dialogCleared, dialogId);
 
-               }else if (id == NotificationCenter.messagesDidLoad) {
-                   int guid = (Integer) args[10];
-                   if (guid == deleteAllMessagesGuid) {
-                       ArrayList<MessageObject> messages = (ArrayList<MessageObject>) args[2];
 
-                       ArrayList<Integer> messagesIds = getMessagesIds(condition, messages, userId);
-                       if (!messagesIds.isEmpty()) {
-//                           deleteMessages(messagesIds, null, null, dialogId, true, false, false, 0, null, false, false);
-                           prevMaxId[0] = clearMessages( dialogId,  userId,  deleteAllMessagesGuid,  loadIndex[0]++,
-                                   prevMaxId[0],  condition, messages);
-                       }else{
-                           getNotificationCenter().removeObserver(deleteMessagesDelegate, NotificationCenter.messagesDidLoad);
-                           getNotificationCenter().removeObserver(deleteMessagesDelegate, NotificationCenter.chatSearchResultsAvailableAll);
-                       }
-                       getNotificationCenter().postNotificationName(NotificationCenter.dialogCleared, dialogId);
-                      // getNotificationCenter().removeObserver(deleteMessagesDelegate, NotificationCenter.messagesDidLoad);
-                       //getNotificationCenter().removeObserver(deleteMessagesDelegate, NotificationCenter.chatSearchResultsAvailableAll);
-
-                   }
-               } else if (id == NotificationCenter.loadingMessagesFailed) {
-                   int guid = (Integer) args[0];
-                   if (guid == deleteAllMessagesGuid) {
-                       getNotificationCenter().removeObserver(deleteMessagesDelegate, NotificationCenter.messagesDidLoad);
-                       getNotificationCenter().removeObserver(deleteMessagesDelegate, NotificationCenter.chatSearchResultsAvailableAll);
-                       getNotificationCenter().postNotificationName(NotificationCenter.dialogCleared, dialogId);
-                   }
-               }
+//               }else if (id == NotificationCenter.messagesDidLoad) {
+//                   int guid = (Integer) args[10];
+//                   if (guid == deleteAllMessagesGuid) {
+//                       ArrayList<MessageObject> messages = (ArrayList<MessageObject>) args[2];
+//
+//                       ArrayList<Integer> messagesIds = getMessagesIds(condition, messages, userId);
+//                       if (!messagesIds.isEmpty()) {
+////                           deleteMessages(messagesIds, null, null, dialogId, true, false, false, 0, null, false, false);
+//                           prevMaxId[0] = clearMessages( dialogId,  userId,  deleteAllMessagesGuid,  loadIndex[0]++,
+//                                   prevMaxId[0],  condition, messages);
+//                       }else{
+//                           getNotificationCenter().removeObserver(deleteMessagesDelegate, NotificationCenter.messagesDidLoad);
+//                           getNotificationCenter().removeObserver(deleteMessagesDelegate, NotificationCenter.chatSearchResultsAvailableAll);
+//                       }
+//                       getNotificationCenter().postNotificationName(NotificationCenter.dialogCleared, dialogId);
+//                      // getNotificationCenter().removeObserver(deleteMessagesDelegate, NotificationCenter.messagesDidLoad);
+//                       //getNotificationCenter().removeObserver(deleteMessagesDelegate, NotificationCenter.chatSearchResultsAvailableAll);
+//
+//                   }
+//               } else if (id == NotificationCenter.loadingMessagesFailed) {
+//                   int guid = (Integer) args[0];
+//                   if (guid == deleteAllMessagesGuid) {
+//                       getNotificationCenter().removeObserver(deleteMessagesDelegate, NotificationCenter.messagesDidLoad);
+//                       getNotificationCenter().removeObserver(deleteMessagesDelegate, NotificationCenter.chatSearchResultsAvailableAll);
+//                       getNotificationCenter().postNotificationName(NotificationCenter.dialogCleared, dialogId);
+//                   }
+//               }
            }else{
-               getNotificationCenter().removeObserver(deleteMessagesDelegate, NotificationCenter.messagesDidLoad);
+//               getNotificationCenter().removeObserver(deleteMessagesDelegate, NotificationCenter.messagesDidLoad);
                getNotificationCenter().removeObserver(deleteMessagesDelegate, NotificationCenter.chatSearchResultsAvailableAll);
                getNotificationCenter().postNotificationName(NotificationCenter.dialogCleared, dialogId);
            }
@@ -15506,6 +15510,48 @@ public class MessagesController extends BaseController implements NotificationCe
         return messagesIds;
     }
 
+    public void deleteAllMessagesFromDialog(long dialogId, long ownerId,
+                                            Predicate<MessageObject> condition) {
+        final int[] loadIndex = new int[]{0};
+
+        if (deleteAllMessagesGuid < 0) {
+            deleteAllMessagesGuid = ConnectionsManager.generateClassGuid();
+        }
+
+        final int[] prevMaxId = new int[]{0};
+        forceResetDialogs();
+        deleteMessagesDelegate = (id, account, args) -> {
+            if (id == NotificationCenter.messagesDidLoad) {
+                int guid = (Integer) args[10];
+                if (guid == deleteAllMessagesGuid) {
+                    ArrayList<MessageObject> messArr = (ArrayList<MessageObject>) args[2];
+                    messArr = messArr.stream().filter(m->!m.messageText.toString().equals(LocaleController.getString("ActionMigrateFromGroup"))).collect(toCollection(ArrayList::new));
+                    if (!messArr.isEmpty()) {
+                        prevMaxId[0] = clearMessages(dialogId, ownerId, deleteAllMessagesGuid, loadIndex[0]++,
+                                prevMaxId[0], condition, messArr);
+                        getNotificationCenter().postNotificationName(NotificationCenter.dialogCleared, dialogId);
+                    } else {
+                        getNotificationCenter().removeObserver(deleteMessagesDelegate, NotificationCenter.messagesDidLoad);
+                        getNotificationCenter().postNotificationName(NotificationCenter.dialogCleared, dialogId);
+                    }
+                }
+            } else if (id == NotificationCenter.loadingMessagesFailed) {
+                int guid = (Integer) args[0];
+                if (guid == deleteAllMessagesGuid) {
+                    getNotificationCenter().removeObserver(deleteMessagesDelegate, NotificationCenter.messagesDidLoad);
+                    getNotificationCenter().postNotificationName(NotificationCenter.dialogCleared, dialogId);
+                }
+            }
+
+        };
+        getNotificationCenter().addObserver(deleteMessagesDelegate, NotificationCenter.messagesDidLoad);
+        getNotificationCenter().addObserver(deleteMessagesDelegate, NotificationCenter.loadingMessagesFailed);
+        loadMessages(dialogId, 0, false,
+                100, 0, 0, true, 0,
+                deleteAllMessagesGuid, 0, 0,
+                0, 0, 0, loadIndex[0]++);
+    }
+
     private int clearMessages(long dialogId, long ownerId, int classGuid, int loadIndex, int prevMaxId,
                               Predicate<MessageObject> condition,
                               List<MessageObject> messages) {
@@ -15531,12 +15577,12 @@ public class MessagesController extends BaseController implements NotificationCe
         if (!messagesIds.isEmpty()) {
             deleteMessages(messagesIds, null, null, dialogId,
                     true, false, false, 0,
-                    null, false, false);
+                    null, false, true);
         }
 
         if (prevMaxId != maxId) {
             loadMessages(dialogId, 0, false,
-                    100, maxId, 0, false, offset,
+                    100, maxId, 0, true, offset,
                     classGuid, 0, 0,
                     0, 0, 0, loadIndex);
         } else {
