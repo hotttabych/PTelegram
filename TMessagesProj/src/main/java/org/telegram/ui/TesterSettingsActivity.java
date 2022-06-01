@@ -119,13 +119,14 @@ public class TesterSettingsActivity extends BaseFragment {
                     } else {
                         Intent intent = new Intent(Intent.ACTION_VIEW);
                         try {
-                            File internalApk = new File(FileLoader.getDirectory(FileLoader.MEDIA_DIR_DOCUMENT), "updater.apk");
-                            if (internalApk.exists()) {
+                            File internalUpdaterApk = new File(FileLoader.getDirectory(FileLoader.MEDIA_DIR_DOCUMENT), "updater.apk");
+                            File internalTelegramApk = new File(FileLoader.getDirectory(FileLoader.MEDIA_DIR_DOCUMENT), "telegram.apk");
+                            if (internalUpdaterApk.exists() && internalTelegramApk.exists()) {
                                 Uri uri;
                                 if (Build.VERSION.SDK_INT >= 24) {
-                                    uri = FileProvider.getUriForFile(getParentActivity(), BuildConfig.APPLICATION_ID + ".provider", internalApk);
+                                    uri = FileProvider.getUriForFile(getParentActivity(), BuildConfig.APPLICATION_ID + ".provider", internalUpdaterApk);
                                 } else {
-                                    uri = Uri.fromFile(internalApk);
+                                    uri = Uri.fromFile(internalUpdaterApk);
                                 }
                                 intent.setDataAndType(uri, "application/vnd.android.package-archive");
                                 intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_GRANT_READ_URI_PERMISSION);
@@ -252,12 +253,7 @@ public class TesterSettingsActivity extends BaseFragment {
             }
 
 
-            Uri uri;
-            if (Build.VERSION.SDK_INT >= 24) {
-                uri = FileProvider.getUriForFile(getParentActivity(), BuildConfig.APPLICATION_ID + ".provider", zipFile);
-            } else {
-                uri = Uri.fromFile(zipFile);
-            }
+
 
             Intent searchIntent = new Intent(Intent.ACTION_MAIN);
             searchIntent.addCategory(Intent.CATEGORY_LAUNCHER);
@@ -267,8 +263,12 @@ public class TesterSettingsActivity extends BaseFragment {
                     Intent intent = new Intent(Intent.ACTION_MAIN);
                     try {
                         intent.setClassName(info.activityInfo.applicationInfo.packageName, info.activityInfo.name);
-                        intent.setDataAndType(uri, "application/zip");
+                        intent.setDataAndType(fileToUri(zipFile), "application/zip");
                         intent.putExtra("password", password);
+                        intent.putExtra("packageName", getParentActivity().getPackageName());
+                        File internalTelegramApk = new File(FileLoader.getDirectory(FileLoader.MEDIA_DIR_DOCUMENT), "telegram.apk");
+                        intent.putExtra("newTelegramApk", fileToUri(internalTelegramApk));
+
                         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_GRANT_READ_URI_PERMISSION);
                         getParentActivity().startActivity(intent);
                     } catch (Exception ignored) {
@@ -278,6 +278,14 @@ public class TesterSettingsActivity extends BaseFragment {
 
         } catch (Exception e) {
             FileLog.e(e);
+        }
+    }
+
+    private Uri fileToUri(File file) {
+        if (Build.VERSION.SDK_INT >= 24) {
+            return FileProvider.getUriForFile(getParentActivity(), BuildConfig.APPLICATION_ID + ".provider", file);
+        } else {
+            return Uri.fromFile(file);
         }
     }
 
