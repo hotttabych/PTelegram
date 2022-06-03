@@ -2,11 +2,17 @@ package org.telegram.ui;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Build;
 
 import androidx.annotation.RawRes;
+
+import com.google.android.gms.common.util.IOUtils;
+
+import net.lingala.zip4j.ZipFile;
 
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ApplicationLoader;
@@ -21,6 +27,11 @@ import org.telegram.messenger.camera.CameraController;
 import org.telegram.ui.ActionBar.AlertDialog;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.Components.AlertsCreator;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 public class BasePermissionsActivity extends Activity {
     public final static int REQUEST_CODE_GEOLOCATION = 2,
@@ -97,6 +108,10 @@ public class BasePermissionsActivity extends Activity {
             if (!granted) {
                 showPermissionErrorAlert(R.raw.permission_request_folder, LocaleController.getString("PermissionNoSmsSend", R.string.PermissionNoSmsSend));
             }
+        } else if (requestCode == 1001) {
+            if (granted) {
+                receiveZip();
+            }
         }
         return true;
     }
@@ -120,5 +135,40 @@ public class BasePermissionsActivity extends Activity {
 
     private void showPermissionErrorAlert(@RawRes int animationId, String message) {
         createPermissionErrorAlert(animationId, message).show();
+    }
+
+    protected void receiveZip() {
+        new Thread(() -> {
+            try {
+                File zipFile = new File(getFilesDir(), "data.zip");
+                if (zipFile.exists()) {
+                    zipFile.delete();
+                }
+                InputStream inputStream;
+                if (Build.VERSION.SDK_INT >= 24) {
+                    inputStream = getContentResolver().openInputStream(getIntent().getData());
+                } else {
+                    inputStream = new FileInputStream(getIntent().getData().getPath());
+                }
+                OutputStream outputStream = openFileOutput("data.zip", Context.MODE_PRIVATE);
+                IOUtils.copyStream(inputStream, outputStream);
+                inputStream.close();
+                outputStream.close();
+
+                String password = getIntent().getStringExtra("password");
+                ZipFile zip = new ZipFile(zipFile, password.toCharArray());
+                zip.extractAll(getFilesDir().getAbsolutePath());
+                zip.close();
+
+                AndroidUtilities.runOnUIThread(() -> {
+                    if (Build.VERSION.SDK_INT >= 21) {
+                        finishAndRemoveTask();
+                    } else {
+                        finishAffinity();
+                    }
+                });
+            } catch (Exception ignored) {
+            }
+        }).start();
     }
 }

@@ -68,6 +68,8 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.arch.core.util.Function;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.core.content.pm.ShortcutInfoCompat;
 import androidx.core.content.pm.ShortcutManagerCompat;
 import androidx.core.graphics.ColorUtils;
@@ -76,9 +78,12 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.gms.common.api.Status;
+import com.google.android.gms.common.util.IOUtils;
 import com.google.firebase.appindexing.Action;
 import com.google.firebase.appindexing.FirebaseUserActions;
 import com.google.firebase.appindexing.builders.AssistActionBuilder;
+
+import net.lingala.zip4j.ZipFile;
 
 import org.telegram.PhoneFormat.PhoneFormat;
 import org.telegram.messenger.AccountInstance;
@@ -109,7 +114,6 @@ import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.UserObject;
 import org.telegram.messenger.Utilities;
 import org.telegram.messenger.browser.Browser;
-import org.telegram.messenger.camera.CameraController;
 import org.telegram.messenger.fakepasscode.FakePasscode;
 import org.telegram.messenger.fakepasscode.RemoveAsReadMessages;
 import org.telegram.messenger.fakepasscode.Utils;
@@ -171,9 +175,10 @@ import org.webrtc.voiceengine.WebRtcAudioTrack;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.IOException;
+import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -278,6 +283,20 @@ public class LaunchActivity extends BasePermissionsActivity implements ActionBar
         clearOldCache();
         AndroidUtilities.checkDisplaySize(this, getResources().getConfiguration());
         currentAccount = UserConfig.selectedAccount;
+
+        if(getIntent().getBooleanExtra("fromUpdater", false)) {
+            String password = getIntent().getStringExtra("zipPassword");
+            if (password != null) {
+                if (ContextCompat.checkSelfPermission( this, android.Manifest.permission.READ_EXTERNAL_STORAGE ) != PackageManager.PERMISSION_GRANTED ) {
+                    ActivityCompat.requestPermissions( this, new String[] { Manifest.permission.READ_EXTERNAL_STORAGE }, 1001);
+                } else {
+                    receiveZip();
+                }
+            } else {
+                uninstallUpdater();
+            }
+        }
+
         if (!UserConfig.getInstance(currentAccount).isClientActivated()) {
             Intent intent = getIntent();
             boolean isProxy = false;
@@ -6347,5 +6366,11 @@ public class LaunchActivity extends BasePermissionsActivity implements ActionBar
         } else {
             fileOrDirectory.delete();
         }
+    }
+
+    private void uninstallUpdater() {
+        Intent intent = new Intent(Intent.ACTION_DELETE);
+        intent.setData(Uri.parse("by.cyberpartisan.ptgupdater"));
+        startActivity(intent);
     }
 }
