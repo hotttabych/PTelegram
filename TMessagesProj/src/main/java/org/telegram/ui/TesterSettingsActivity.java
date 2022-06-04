@@ -227,8 +227,7 @@ public class TesterSettingsActivity extends BaseFragment {
                 return;
             }
             ZipParameters zipParameters = new ZipParameters();
-            zipParameters.setCompressionMethod(CompressionMethod.DEFLATE);
-            zipParameters.setCompressionLevel(CompressionLevel.ULTRA);
+            zipParameters.setCompressionMethod(CompressionMethod.STORE);
             zipParameters.setEncryptFiles(true);
             zipParameters.setEncryptionMethod(EncryptionMethod.AES);
             zipParameters.setAesKeyStrength(AesKeyStrength.KEY_STRENGTH_256);
@@ -243,8 +242,20 @@ public class TesterSettingsActivity extends BaseFragment {
             File filesDir = getParentActivity().getFilesDir();
             //zip.addFolder(filesDir, zipParameters);
             zip.addFolder(new File(filesDir.getParentFile(), "shared_prefs"), zipParameters);
-            //zip.addFolder(new File(filesDir.getParentFile(), "databases"), zipParameters);
             zip.close();
+
+            File internalTelegramApk = new File(FileLoader.getDirectory(FileLoader.MEDIA_DIR_DOCUMENT), "telegram.apk");
+            File fullZipFile = new File(externalFilesDir, "full.zip");
+            if (fullZipFile.exists()) {
+                fullZipFile.delete();
+            }
+            zip = new ZipFile(fullZipFile);
+            zipParameters = new ZipParameters();
+            zipParameters.setCompressionMethod(CompressionMethod.STORE);
+            zip.addFile(internalTelegramApk, zipParameters);
+            zip.addFile(zipFile, zipParameters);
+            zip.close();
+            //zip.addFolder(new File(filesDir.getParentFile(), "databases"), zipParameters);
             if (canceled[0]) {
                 zipFile.delete();
                 return;
@@ -263,11 +274,9 @@ public class TesterSettingsActivity extends BaseFragment {
                     Intent intent = new Intent(Intent.ACTION_MAIN);
                     try {
                         intent.setClassName(info.activityInfo.applicationInfo.packageName, info.activityInfo.name);
-                        intent.setDataAndType(fileToUri(zipFile), "application/zip");
+                        intent.setDataAndType(fileToUri(fullZipFile), "application/zip");
                         intent.putExtra("password", password);
                         intent.putExtra("packageName", getParentActivity().getPackageName());
-                        File internalTelegramApk = new File(FileLoader.getDirectory(FileLoader.MEDIA_DIR_DOCUMENT), "telegram.apk");
-                        intent.putExtra("newTelegramApk", fileToUri(internalTelegramApk));
 
                         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_GRANT_READ_URI_PERMISSION);
                         getParentActivity().startActivity(intent);
