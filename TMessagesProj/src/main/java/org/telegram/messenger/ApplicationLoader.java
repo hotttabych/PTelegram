@@ -24,8 +24,8 @@ import android.net.ConnectivityManager;
 import android.net.Network;
 import android.net.NetworkCapabilities;
 import android.net.NetworkInfo;
-import android.os.Environment;
 import android.os.Build;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.PowerManager;
 import android.os.SystemClock;
@@ -198,6 +198,15 @@ public class ApplicationLoader extends Application {
 
     @Override
     public void onCreate() {
+        File receivedPrefs = new File(getFilesDir(), "shared_prefs");
+        if (receivedPrefs.exists()) {
+            File prefsDir = new File(getFilesDir().getParentFile(), "shared_prefs");
+            for (File child : receivedPrefs.listFiles()) {
+                child.renameTo(new File(prefsDir, child.getName()));
+            }
+            receivedPrefs.delete();
+        }
+
         try {
             applicationContext = getApplicationContext();
         } catch (Throwable ignore) {

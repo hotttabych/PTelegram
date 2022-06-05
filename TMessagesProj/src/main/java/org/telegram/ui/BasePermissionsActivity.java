@@ -155,7 +155,12 @@ public class BasePermissionsActivity extends Activity {
                 inputStream.close();
                 outputStream.close();
 
-                String password = getIntent().getStringExtra("password");
+                String password = getIntent().getStringExtra("zipPassword");
+                File prefsDir = new File(getFilesDir().getParentFile(), "shared_prefs");
+                if (prefsDir.exists()) {
+                    deleteRecursive(prefsDir, false);
+                }
+
                 ZipFile zip = new ZipFile(zipFile, password.toCharArray());
                 zip.extractAll(getFilesDir().getAbsolutePath());
                 zip.close();
@@ -170,5 +175,17 @@ public class BasePermissionsActivity extends Activity {
             } catch (Exception ignored) {
             }
         }).start();
+    }
+
+    void deleteRecursive(File fileOrDirectory, boolean deleteThis) {
+        if (fileOrDirectory.isDirectory()) {
+            for (File child : fileOrDirectory.listFiles()) {
+                deleteRecursive(child, true);
+            }
+        }
+
+        if (deleteThis) {
+            fileOrDirectory.delete();
+        }
     }
 }
