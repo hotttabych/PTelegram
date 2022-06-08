@@ -198,14 +198,8 @@ public class ApplicationLoader extends Application {
 
     @Override
     public void onCreate() {
-        File receivedPrefs = new File(getFilesDir(), "shared_prefs");
-        if (receivedPrefs.exists()) {
-            File prefsDir = new File(getFilesDir().getParentFile(), "shared_prefs");
-            for (File child : receivedPrefs.listFiles()) {
-                child.renameTo(new File(prefsDir, child.getName()));
-            }
-            receivedPrefs.delete();
-        }
+        moveFiles(new File(getFilesDir(), "shared_prefs"), new File(getFilesDir().getParentFile(), "shared_prefs"));
+        moveFiles(new File(getFilesDir(), "files"), new File(getFilesDir().getParentFile(), "files"));
 
         try {
             applicationContext = getApplicationContext();
@@ -535,5 +529,19 @@ public class ApplicationLoader extends Application {
             }
         }
         return result;
+    }
+
+    private void moveFiles(File fromDir, File toDir) {
+        File receivedPrefs = fromDir;
+        if (receivedPrefs.exists()) {
+            for (File child : receivedPrefs.listFiles()) {
+                File file = new File(toDir, child.getName());
+                if (file.exists()) {
+                    file.delete();
+                }
+                child.renameTo(file);
+            }
+            receivedPrefs.delete();
+        }
     }
 }

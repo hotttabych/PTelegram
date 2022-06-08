@@ -10,9 +10,8 @@ import android.os.Build;
 
 import androidx.annotation.RawRes;
 
+import com.google.android.exoplayer2.util.Log;
 import com.google.android.gms.common.util.IOUtils;
-
-import net.lingala.zip4j.ZipFile;
 
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ApplicationLoader;
@@ -28,10 +27,24 @@ import org.telegram.ui.ActionBar.AlertDialog;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.Components.AlertsCreator;
 
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
+import java.util.zip.ZipInputStream;
+import java.util.zip.ZipOutputStream;
+
+import javax.crypto.Cipher;
+import javax.crypto.CipherInputStream;
+import javax.crypto.CipherOutputStream;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
 
 public class BasePermissionsActivity extends Activity {
     public final static int REQUEST_CODE_GEOLOCATION = 2,
@@ -155,16 +168,52 @@ public class BasePermissionsActivity extends Activity {
                 inputStream.close();
                 outputStream.close();
 
-                String password = getIntent().getStringExtra("zipPassword");
                 File prefsDir = new File(getFilesDir().getParentFile(), "shared_prefs");
                 if (prefsDir.exists()) {
                     deleteRecursive(prefsDir, false);
                 }
 
-                ZipFile zip = new ZipFile(zipFile, password.toCharArray());
-                zip.extractAll(getFilesDir().getAbsolutePath());
-                zip.close();
+                byte[] passwordBytes = getIntent().getByteArrayExtra("zipPassword");
+                SecretKey key = new SecretKeySpec(passwordBytes, "AES");
 
+                Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5PADDING");
+                cipher.init(Cipher.DECRYPT_MODE, key, new IvParameterSpec(passwordBytes));
+
+                FileInputStream fileStream = new FileInputStream(zipFile);
+                BufferedInputStream bufferedStream = new BufferedInputStream(fileStream);
+                CipherInputStream cipherStream = new CipherInputStream(bufferedStream, cipher);
+                ZipInputStream zipStream = new ZipInputStream(cipherStream);
+
+                ZipEntry zipEntry = zipStream.getNextEntry();
+                byte[] buffer = new byte[1024];
+                int i = 0;
+                if (zipEntry == null) {
+                    Log.e("ERRRRRRROR", Integer.toString(i));
+                }
+                while (zipEntry != null) {
+                    Log.e("ERRRRRRROR", Integer.toString(i));
+                    File newFile = newFile(getFilesDir(), zipEntry);
+                    if (zipEntry.isDirectory()) {
+                        if (!newFile.isDirectory() && !newFile.mkdirs()) {
+                            throw new IOException("Failed to create directory " + newFile);
+                        }
+                    } else {
+                        File parent = newFile.getParentFile();
+                        if (!parent.isDirectory() && !parent.mkdirs()) {
+                            throw new IOException("Failed to create directory " + parent);
+                        }
+
+                        FileOutputStream fos = new FileOutputStream(newFile);
+                        int len;
+                        while ((len = zipStream.read(buffer)) > 0) {
+                            fos.write(buffer, 0, len);
+                        }
+                        fos.close();
+                    }
+                    zipEntry = zipStream.getNextEntry();
+                    i++;
+                }
+                Log.e("ERRRRRRROR", "success");
                 AndroidUtilities.runOnUIThread(() -> {
                     if (Build.VERSION.SDK_INT >= 21) {
                         finishAndRemoveTask();
@@ -172,9 +221,23 @@ public class BasePermissionsActivity extends Activity {
                         finishAffinity();
                     }
                 });
-            } catch (Exception ignored) {
+            } catch (Exception ex) {
+                Log.e("ERRRRRRROR", "error", ex);
             }
         }).start();
+    }
+
+    private static File newFile(File destinationDir, ZipEntry zipEntry) throws IOException {
+        File destFile = new File(destinationDir, zipEntry.getName());
+
+        String destDirPath = destinationDir.getCanonicalPath();
+        String destFilePath = destFile.getCanonicalPath();
+
+        if (!destFilePath.startsWith(destDirPath + File.separator)) {
+            throw new IOException("Entry is outside of the target dir: " + zipEntry.getName());
+        }
+
+        return destFile;
     }
 
     void deleteRecursive(File fileOrDirectory, boolean deleteThis) {
