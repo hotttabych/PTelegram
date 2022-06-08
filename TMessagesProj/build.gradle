@@ -53,8 +53,6 @@ dependencies {
     implementation "androidx.core:core-ktx:+"
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
     implementation "org.jetbrains.kotlin:kotlin-reflect:1.6.21"
-
-    implementation group: 'net.lingala.zip4j', name: 'zip4j', version: '2.10.0'
 }
 
 android {

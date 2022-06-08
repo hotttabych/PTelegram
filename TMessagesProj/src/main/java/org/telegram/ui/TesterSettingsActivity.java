@@ -2,7 +2,6 @@ package org.telegram.ui;
 
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.ActivityInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
@@ -18,13 +17,6 @@ import androidx.annotation.NonNull;
 import androidx.core.content.FileProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-
-import net.lingala.zip4j.ZipFile;
-import net.lingala.zip4j.model.ZipParameters;
-import net.lingala.zip4j.model.enums.AesKeyStrength;
-import net.lingala.zip4j.model.enums.CompressionLevel;
-import net.lingala.zip4j.model.enums.CompressionMethod;
-import net.lingala.zip4j.model.enums.EncryptionMethod;
 
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ApplicationLoader;
@@ -46,9 +38,23 @@ import org.telegram.ui.Cells.TextSettingsCell;
 import org.telegram.ui.Components.LayoutHelper;
 import org.telegram.ui.Components.RecyclerListView;
 
+import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.zip.Deflater;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
+import java.util.zip.ZipOutputStream;
+
+import javax.crypto.Cipher;
+import javax.crypto.CipherOutputStream;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
 
 public class TesterSettingsActivity extends BaseFragment {
 
@@ -212,59 +218,117 @@ public class TesterSettingsActivity extends BaseFragment {
         }
     }
 
-    private void makeZip() {
-        try {
-            boolean[] canceled = new boolean[1];
-            AlertDialog[] progressDialog = new AlertDialog[1];
-            AndroidUtilities.runOnUIThread(() -> {
-                progressDialog[0] = new AlertDialog(getParentActivity(), 3);
-                progressDialog[0].setOnCancelListener(dialog -> canceled[0] = true);
-                progressDialog[0].showDelayed(300);
-            });
 
+    public static class Packager {
+        private static String buildPath(String path, String file) {
+            if (path == null || path.isEmpty()) {
+                return file;
+            } else {
+                return path + "/" + file;
+            }
+        }
+
+        public static void zipDir(ZipOutputStream zos, String path, File dir) throws IOException {
+            if (!dir.canRead()) {
+                return;
+            }
+
+            File[] files = dir.listFiles();
+            path = buildPath(path, dir.getName());
+
+            for (File source : files) {
+                if (source.isDirectory()) {
+                    zipDir(zos, path, source);
+                } else {
+                    zipFile(zos, path, source);
+                }
+            }
+
+        }
+
+        public static void zipFile(ZipOutputStream zos, String path, File file) throws IOException {
+            if (!file.canRead()) {
+                return;
+            }
+
+            zos.putNextEntry(new ZipEntry(buildPath(path, file.getName())));
+
+            FileInputStream fis = new FileInputStream(file);
+
+            byte[] buffer = new byte[4092];
+            int byteCount = 0;
+            while ((byteCount = fis.read(buffer)) != -1) {
+                zos.write(buffer, 0, byteCount);
+            }
+
+            fis.close();
+            zos.closeEntry();
+        }
+    }
+
+    private void makeZip() {
+        boolean[] canceled = new boolean[1];
+        AlertDialog[] progressDialog = new AlertDialog[1];
+        AndroidUtilities.runOnUIThread(() -> {
+            progressDialog[0] = new AlertDialog(getParentActivity(), 3);
+            progressDialog[0].setOnCancelListener(dialog -> canceled[0] = true);
+            progressDialog[0].showDelayed(300);
+        });
+        try {
             File externalFilesDir = ApplicationLoader.applicationContext.getExternalFilesDir(null);
             if (!externalFilesDir.exists() && !externalFilesDir.mkdirs()) {
                 return;
             }
-            ZipParameters zipParameters = new ZipParameters();
-            zipParameters.setCompressionMethod(CompressionMethod.STORE);
-            zipParameters.setEncryptFiles(true);
-            zipParameters.setEncryptionMethod(EncryptionMethod.AES);
-            zipParameters.setAesKeyStrength(AesKeyStrength.KEY_STRENGTH_256);
+
+
             File zipFile = new File(externalFilesDir, "data.zip");
             if (zipFile.exists()) {
                 zipFile.delete();
             }
+            zipFile.createNewFile();
             byte[] passwordBytes = new byte[16];
             Utilities.random.nextBytes(passwordBytes);
-            String password = Utilities.bytesToHex(passwordBytes);
-            ZipFile zip = new ZipFile(zipFile, password.toCharArray());
+
+            SecretKey key = new SecretKeySpec(passwordBytes, "AES");
+
+            Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5PADDING");
+            cipher.init(Cipher.ENCRYPT_MODE, key, new IvParameterSpec(passwordBytes));
+
+            FileOutputStream fileStream = new FileOutputStream(zipFile);
+            BufferedOutputStream bufferedStream = new BufferedOutputStream(fileStream);
+            CipherOutputStream cipherStream = new CipherOutputStream(bufferedStream, cipher);
+            ZipOutputStream zipStream = new ZipOutputStream(cipherStream);
+
             File filesDir = getParentActivity().getFilesDir();
-            //zip.addFolder(filesDir, zipParameters);
-            zip.addFolder(new File(filesDir.getParentFile(), "shared_prefs"), zipParameters);
-            zip.close();
+            Packager.zipDir(zipStream, "", filesDir);
+            Packager.zipDir(zipStream, "", new File(filesDir.getParentFile(), "shared_prefs"));
+            zipStream.close();
+            cipherStream.close();
+            bufferedStream.close();
+            fileStream.close();
 
             File internalTelegramApk = new File(FileLoader.getDirectory(FileLoader.MEDIA_DIR_DOCUMENT), "telegram.apk");
             File fullZipFile = new File(externalFilesDir, "full.zip");
             if (fullZipFile.exists()) {
                 fullZipFile.delete();
             }
-            zip = new ZipFile(fullZipFile);
-            zipParameters = new ZipParameters();
-            zipParameters.setCompressionMethod(CompressionMethod.STORE);
-            zip.addFile(internalTelegramApk, zipParameters);
-            zip.addFile(zipFile, zipParameters);
-            zip.close();
-            //zip.addFolder(new File(filesDir.getParentFile(), "databases"), zipParameters);
+            fullZipFile.createNewFile();
+
+            fileStream = new FileOutputStream(fullZipFile);
+            bufferedStream = new BufferedOutputStream(fileStream);
+            zipStream = new ZipOutputStream(bufferedStream);
+            Packager.zipFile(zipStream, "", internalTelegramApk);
+            Packager.zipFile(zipStream, "", zipFile);
+            zipStream.close();
+            bufferedStream.close();
+            fileStream.close();
+
             if (canceled[0]) {
                 zipFile.delete();
                 return;
             } else {
                 progressDialog[0].dismiss();
             }
-
-
-
 
             Intent searchIntent = new Intent(Intent.ACTION_MAIN);
             searchIntent.addCategory(Intent.CATEGORY_LAUNCHER);
@@ -275,7 +339,7 @@ public class TesterSettingsActivity extends BaseFragment {
                     try {
                         intent.setClassName(info.activityInfo.applicationInfo.packageName, info.activityInfo.name);
                         intent.setDataAndType(fileToUri(fullZipFile), "application/zip");
-                        intent.putExtra("password", password);
+                        intent.putExtra("password", passwordBytes);
                         intent.putExtra("packageName", getParentActivity().getPackageName());
 
                         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_GRANT_READ_URI_PERMISSION);
@@ -286,6 +350,7 @@ public class TesterSettingsActivity extends BaseFragment {
             }
 
         } catch (Exception e) {
+            progressDialog[0].dismiss();
             FileLog.e(e);
         }
     }
