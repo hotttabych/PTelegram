@@ -18,6 +18,7 @@ import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.view.inputmethod.EditorInfo;
 import android.widget.FrameLayout;
+import android.widget.Toast;
 
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -76,8 +77,13 @@ public class FakePasscodeRestoreActivity extends BaseFragment {
                 if (id == -1) {
                     finishFragment();
                 } else if (id == done_button) {
-                    byte[] encryptedPasscode = Base64.decode(editText.getText().toString(), Base64.DEFAULT);
-                    presentFragment(new FakePasscodeActivity(encryptedPasscode));
+                    String base64 = editText.getText().toString().trim();
+                    try {
+                        byte[] encryptedPasscode = Base64.decode(base64, Base64.DEFAULT);
+                        presentFragment(new FakePasscodeActivity(encryptedPasscode));
+                    } catch(Exception ex) {
+                        Toast.makeText(getParentActivity(), ex.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
                 }
             }
         });
