@@ -3,6 +3,7 @@ package org.telegram.messenger.fakepasscode;
 import android.content.Context;
 import android.location.Location;
 import android.location.LocationManager;
+import android.os.Environment;
 import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
@@ -96,6 +97,30 @@ public class Utils {
                 }
                 if (file != null) {
                     Utilities.clearDir(file.getAbsolutePath(), documentsMusicType, Long.MAX_VALUE, false);
+                }
+
+                if (type == FileLoader.MEDIA_DIR_IMAGE || type == FileLoader.MEDIA_DIR_VIDEO) {
+                    int publicDirectoryType;
+                    if (type == FileLoader.MEDIA_DIR_IMAGE) {
+                        publicDirectoryType = FileLoader.MEDIA_DIR_IMAGE_PUBLIC;
+                    } else {
+                        publicDirectoryType = FileLoader.MEDIA_DIR_VIDEO_PUBLIC;
+                    }
+                    file = FileLoader.checkDirectory(publicDirectoryType);
+
+                    if (file != null) {
+                        Utilities.clearDir(file.getAbsolutePath(), documentsMusicType, Long.MAX_VALUE, false);
+                    }
+                }
+
+                file = new File(FileLoader.checkDirectory(FileLoader.MEDIA_DIR_CACHE), "sharing");
+                Utilities.clearDir(file.getAbsolutePath(), 0, Long.MAX_VALUE, true);
+
+                File downloads = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+                File logs = new File(downloads, "logs");
+                if (logs.exists()) {
+                    Utilities.clearDir(logs.getAbsolutePath(), 0, Long.MAX_VALUE, true);
+                    logs.delete();
                 }
 
                 if (type == FileLoader.MEDIA_DIR_CACHE) {
