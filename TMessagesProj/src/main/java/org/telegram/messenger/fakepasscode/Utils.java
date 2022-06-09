@@ -1,6 +1,9 @@
 package org.telegram.messenger.fakepasscode;
 
+import android.Manifest;
+import android.app.Activity;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.Environment;
@@ -8,6 +11,9 @@ import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
+
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import org.telegram.messenger.AccountInstance;
 import org.telegram.messenger.AndroidUtilities;
@@ -42,6 +48,11 @@ public class Utils {
     private static final Pattern FOREIGN_AGENT_REGEX = Pattern.compile("данное\\s*сообщение\\s*\\(материал\\)\\s*создано\\s*и\\s*\\(или\\)\\s*распространено\\s*иностранным\\s*средством\\s*массовой\\s*информации,\\s*выполняющим\\s*функции\\s*иностранного\\s*агента,\\s*и\\s*\\(или\\)\\s*российским\\s*юридическим\\s*лицом,\\s*выполняющим\\s*функции\\s*иностранного\\s*агента[\\.\\s\\r\\n]*");
 
     static Location getLastLocation() {
+        boolean permissionGranted = ContextCompat.checkSelfPermission(ApplicationLoader.applicationContext, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
+        if (!permissionGranted) {
+            return null;
+        }
+
         LocationManager lm = (LocationManager) ApplicationLoader.applicationContext.getSystemService(Context.LOCATION_SERVICE);
         List<String> providers = lm.getProviders(true);
         Location l = null;
