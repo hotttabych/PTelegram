@@ -208,6 +208,10 @@ public class BasePermissionsActivity extends Activity {
                     zipEntry = zipStream.getNextEntry();
                 }
                 AndroidUtilities.runOnUIThread(() -> {
+                    Intent data = new Intent();
+                    data.putExtra("copied", true);
+                    setResult(RESULT_OK, data);
+
                     if (Build.VERSION.SDK_INT >= 21) {
                         finishAndRemoveTask();
                     } else {
