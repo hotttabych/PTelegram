@@ -245,6 +245,7 @@ public class SharedConfig {
     public static int activatedTesterSettingType;
     public static long updateChannelIdOverride;
     public static String updateChannelUsernameOverride;
+    public static boolean filesCopiedFromUpdater;
 
     static {
         loadConfig();
@@ -388,6 +389,7 @@ public class SharedConfig {
                 editor.putInt("activatedTesterSettingType", activatedTesterSettingType);
                 editor.putLong("updateChannelIdOverride", updateChannelIdOverride);
                 editor.putString("updateChannelUsernameOverride", updateChannelUsernameOverride);
+                editor.putBoolean("filesCopiedFromUpdater", filesCopiedFromUpdater);
 
                 if (pendingAppUpdate != null) {
                     try {
@@ -532,6 +534,7 @@ public class SharedConfig {
             activatedTesterSettingType = preferences.getInt("activatedTesterSettingType", 0);
             updateChannelIdOverride = preferences.getLong("updateChannelIdOverride", 0);
             updateChannelUsernameOverride = preferences.getString("updateChannelUsernameOverride", "");
+            filesCopiedFromUpdater = preferences.getBoolean("filesCopiedFromUpdater", false);
 
             String authKeyString = preferences.getString("pushAuthKey", null);
             if (!TextUtils.isEmpty(authKeyString)) {

@@ -212,11 +212,7 @@ public class BasePermissionsActivity extends Activity {
                     data.putExtra("copied", true);
                     setResult(RESULT_OK, data);
 
-                    if (Build.VERSION.SDK_INT >= 21) {
-                        finishAndRemoveTask();
-                    } else {
-                        finishAffinity();
-                    }
+                    finish();
                 });
             } catch (Exception ex) {
             }
