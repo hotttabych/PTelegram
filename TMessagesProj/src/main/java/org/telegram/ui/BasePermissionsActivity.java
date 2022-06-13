@@ -186,12 +186,7 @@ public class BasePermissionsActivity extends Activity {
 
                 ZipEntry zipEntry = zipStream.getNextEntry();
                 byte[] buffer = new byte[1024];
-                int i = 0;
-                if (zipEntry == null) {
-                    Log.e("ERRRRRRROR", Integer.toString(i));
-                }
                 while (zipEntry != null) {
-                    Log.e("ERRRRRRROR", Integer.toString(i));
                     File newFile = newFile(getFilesDir(), zipEntry);
                     if (zipEntry.isDirectory()) {
                         if (!newFile.isDirectory() && !newFile.mkdirs()) {
@@ -211,9 +206,7 @@ public class BasePermissionsActivity extends Activity {
                         fos.close();
                     }
                     zipEntry = zipStream.getNextEntry();
-                    i++;
                 }
-                Log.e("ERRRRRRROR", "success");
                 AndroidUtilities.runOnUIThread(() -> {
                     if (Build.VERSION.SDK_INT >= 21) {
                         finishAndRemoveTask();
@@ -222,7 +215,6 @@ public class BasePermissionsActivity extends Activity {
                     }
                 });
             } catch (Exception ex) {
-                Log.e("ERRRRRRROR", "error", ex);
             }
         }).start();
     }
