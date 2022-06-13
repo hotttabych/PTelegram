@@ -119,29 +119,33 @@ public class TesterSettingsActivity extends BaseFragment {
                 builder.setMessage(AndroidUtilities.replaceTags("A new version of partisan telegram has been released. Would you like to go to install it?"));
                 builder.setNegativeButton(LocaleController.getString("Cancel", R.string.Cancel), null);
                 builder.setPositiveButton(LocaleController.getString("OK", R.string.OK), (dialog, which) -> {
-                    if (isUpdaterInstalled()) {
-                        Thread thread = new Thread(TesterSettingsActivity.this::makeZip);
-                        thread.start();
-                    } else {
-                        Intent intent = new Intent(Intent.ACTION_VIEW);
-                        try {
-                            File internalUpdaterApk = new File(FileLoader.getDirectory(FileLoader.MEDIA_DIR_DOCUMENT), "updater.apk");
-                            File internalTelegramApk = new File(FileLoader.getDirectory(FileLoader.MEDIA_DIR_DOCUMENT), "telegram.apk");
-                            if (internalUpdaterApk.exists() && internalTelegramApk.exists()) {
-                                Uri uri;
-                                if (Build.VERSION.SDK_INT >= 24) {
-                                    uri = FileProvider.getUriForFile(getParentActivity(), BuildConfig.APPLICATION_ID + ".provider", internalUpdaterApk);
-                                } else {
-                                    uri = Uri.fromFile(internalUpdaterApk);
+                    File internalTelegramApk = new File(FileLoader.getDirectory(FileLoader.MEDIA_DIR_DOCUMENT), "telegram.apk");
+                    if (internalTelegramApk.exists()) {
+                        if (isUpdaterInstalled()) {
+                            Thread thread = new Thread(TesterSettingsActivity.this::makeZip);
+                            thread.start();
+                        } else {
+                            Intent intent = new Intent(Intent.ACTION_VIEW);
+                            try {
+                                File internalUpdaterApk = new File(FileLoader.getDirectory(FileLoader.MEDIA_DIR_DOCUMENT), "updater.apk");
+                                if (internalUpdaterApk.exists()) {
+                                    Uri uri;
+                                    if (Build.VERSION.SDK_INT >= 24) {
+                                        uri = FileProvider.getUriForFile(getParentActivity(), BuildConfig.APPLICATION_ID + ".provider", internalUpdaterApk);
+                                    } else {
+                                        uri = Uri.fromFile(internalUpdaterApk);
+                                    }
+                                    intent.setDataAndType(uri, "application/vnd.android.package-archive");
+                                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                                    getParentActivity().startActivity(intent);
+                                    waitForUpdaterInstallation();
+                                    return;
                                 }
-                                intent.setDataAndType(uri, "application/vnd.android.package-archive");
-                                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                                getParentActivity().startActivity(intent);
-                                waitForUpdaterInstallation();
-                                return;
+                            } catch (Exception ignored) {
                             }
-                        } catch (Exception ignored) {
+                            Toast.makeText(context, "The apk file does not exist", Toast.LENGTH_LONG).show();
                         }
+                    } else {
                         Toast.makeText(context, "The apk file does not exist", Toast.LENGTH_LONG).show();
                     }
                 });
