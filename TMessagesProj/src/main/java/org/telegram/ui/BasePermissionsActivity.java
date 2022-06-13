@@ -213,6 +213,7 @@ public class BasePermissionsActivity extends Activity {
                     setResult(RESULT_OK, data);
 
                     finish();
+                    android.os.Process.killProcess(android.os.Process.myPid());
                 });
             } catch (Exception ex) {
             }
