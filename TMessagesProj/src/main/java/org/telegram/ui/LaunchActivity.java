@@ -997,7 +997,7 @@ public class LaunchActivity extends BasePermissionsActivity implements ActionBar
 
     private BaseFragment getClientNotActivatedFragment() {
         if (!SharedConfig.filesCopiedFromUpdater && isUpdaterInstalled()) {
-            return new UpdaterWarningActivity();
+            return new UpdaterWarningActivity(getIntent().getBooleanExtra("fromUpdater", false));
         }
         if (LoginActivity.loadCurrentState(false).getInt("currentViewNum", 0) != 0) {
             return new LoginActivity();

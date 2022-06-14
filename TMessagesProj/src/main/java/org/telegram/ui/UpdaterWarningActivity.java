@@ -55,6 +55,11 @@ public class UpdaterWarningActivity extends BaseFragment implements Notification
     private LocaleController.LocaleInfo localeInfo;
 
     private boolean destroyed;
+    private boolean updaterDataReceiver;
+
+    public UpdaterWarningActivity(boolean updaterDataReceiver) {
+        this.updaterDataReceiver = updaterDataReceiver;
+    }
 
     @Override
     public View createView(Context context) {
@@ -217,11 +222,20 @@ public class UpdaterWarningActivity extends BaseFragment implements Notification
 
         NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.suggestedLangpack);
         NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.configLoaded);
+        NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.updaterDataReceived);
         ConnectionsManager.getInstance(currentAccount).updateDcSettings();
         LocaleController.getInstance().loadRemoteLanguages(currentAccount);
         checkContinueText();
 
         updateColors(false);
+
+        if (updaterDataReceiver) {
+            AndroidUtilities.runOnUIThread(() -> {
+                AlertDialog progressDialog = new AlertDialog(getParentActivity(), 3);
+                progressDialog.setCanCancel(false);
+                progressDialog.show();
+            });
+        }
 
         return fragmentView;
     }
@@ -261,6 +275,7 @@ public class UpdaterWarningActivity extends BaseFragment implements Notification
         destroyed = true;
         NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.suggestedLangpack);
         NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.configLoaded);
+        NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.updaterDataReceived);
         MessagesController.getGlobalMainSettings().edit().putLong("intro_crashed_time", 0).apply();
     }
 
@@ -327,6 +342,12 @@ public class UpdaterWarningActivity extends BaseFragment implements Notification
     public void didReceivedNotification(int id, int account, Object... args) {
         if (id == NotificationCenter.suggestedLangpack || id == NotificationCenter.configLoaded) {
             checkContinueText();
+        } else if (id == NotificationCenter.updaterDataReceived) {
+            AndroidUtilities.runOnUIThread(() -> {
+                AlertDialog progressDialog = new AlertDialog(getParentActivity(), 3);
+                progressDialog.setCanCancel(false);
+                progressDialog.show();
+            });
         }
     }
 

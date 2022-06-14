@@ -153,6 +153,7 @@ public class BasePermissionsActivity extends Activity {
     protected void receiveZip() {
         new Thread(() -> {
             try {
+                NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.updaterDataReceived);
                 File zipFile = new File(getFilesDir(), "data.zip");
                 if (zipFile.exists()) {
                     zipFile.delete();
