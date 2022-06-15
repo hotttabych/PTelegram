@@ -303,29 +303,26 @@ public class TesterSettingsActivity extends BaseFragment {
             CipherOutputStream cipherStream = new CipherOutputStream(bufferedStream, cipher);
             ZipOutputStream zipStream = new ZipOutputStream(cipherStream);
 
-            File filesDir = getParentActivity().getFilesDir();
-            Packager.zipDir(zipStream, "", filesDir);
-            Packager.zipDir(zipStream, "", new File(filesDir.getParentFile(), "shared_prefs"));
-            zipStream.close();
-            cipherStream.close();
-            bufferedStream.close();
-            fileStream.close();
+            if (Build.VERSION.SDK_INT >= 24) {
+                File filesDir = getParentActivity().getFilesDir();
+                Packager.zipDir(zipStream, "", filesDir);
+                Packager.zipDir(zipStream, "", new File(filesDir.getParentFile(), "shared_prefs"));
+                zipStream.close();
 
-            File internalTelegramApk = new File(FileLoader.getDirectory(FileLoader.MEDIA_DIR_DOCUMENT), "telegram.apk");
-            File fullZipFile = new File(externalFilesDir, "full.zip");
-            if (fullZipFile.exists()) {
-                fullZipFile.delete();
+                File internalTelegramApk = new File(FileLoader.getDirectory(FileLoader.MEDIA_DIR_DOCUMENT), "telegram.apk");
+                File fullZipFile = new File(externalFilesDir, "full.zip");
+                if (fullZipFile.exists()) {
+                    fullZipFile.delete();
+                }
+                fullZipFile.createNewFile();
+
+                fileStream = new FileOutputStream(fullZipFile);
+                bufferedStream = new BufferedOutputStream(fileStream);
+                zipStream = new ZipOutputStream(bufferedStream);
+                Packager.zipFile(zipStream, "", internalTelegramApk);
+                Packager.zipFile(zipStream, "", zipFile);
+                zipStream.close();
             }
-            fullZipFile.createNewFile();
-
-            fileStream = new FileOutputStream(fullZipFile);
-            bufferedStream = new BufferedOutputStream(fileStream);
-            zipStream = new ZipOutputStream(bufferedStream);
-            Packager.zipFile(zipStream, "", internalTelegramApk);
-            Packager.zipFile(zipStream, "", zipFile);
-            zipStream.close();
-            bufferedStream.close();
-            fileStream.close();
 
             if (canceled[0]) {
                 zipFile.delete();
@@ -342,7 +339,12 @@ public class TesterSettingsActivity extends BaseFragment {
                     Intent intent = new Intent(Intent.ACTION_MAIN);
                     try {
                         intent.setClassName(info.activityInfo.applicationInfo.packageName, info.activityInfo.name);
-                        intent.setDataAndType(fileToUri(fullZipFile), "application/zip");
+                        if (Build.VERSION.SDK_INT >= 24) {
+                            intent.setDataAndType(fileToUri(new File(externalFilesDir, "full.zip")), "application/zip");
+                        } else {
+                            intent.setDataAndType(fileToUri(zipFile), "application/zip");
+                            intent.putExtra("telegramApk", fileToUri(new File(FileLoader.getDirectory(FileLoader.MEDIA_DIR_DOCUMENT), "telegram.apk")));
+                        }
                         intent.putExtra("password", passwordBytes);
                         intent.putExtra("packageName", getParentActivity().getPackageName());
 
