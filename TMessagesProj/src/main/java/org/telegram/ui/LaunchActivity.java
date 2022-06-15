@@ -283,17 +283,6 @@ public class LaunchActivity extends BasePermissionsActivity implements ActionBar
         AndroidUtilities.checkDisplaySize(this, getResources().getConfiguration());
         currentAccount = UserConfig.selectedAccount;
 
-        if (getIntent().getBooleanExtra("fromUpdater", false)) {
-            byte[] password = getIntent().getByteArrayExtra("zipPassword");
-            if (password != null) {
-                if (ContextCompat.checkSelfPermission( this, android.Manifest.permission.READ_EXTERNAL_STORAGE ) != PackageManager.PERMISSION_GRANTED ) {
-                    ActivityCompat.requestPermissions( this, new String[] { Manifest.permission.READ_EXTERNAL_STORAGE }, 1001);
-                } else {
-                    receiveZip();
-                }
-            }
-        }
-
         if (!UserConfig.getInstance(currentAccount).isClientActivated()) {
             Intent intent = getIntent();
             boolean isProxy = false;
@@ -4873,6 +4862,8 @@ public class LaunchActivity extends BasePermissionsActivity implements ActionBar
         if (VoIPFragment.getInstance() != null) {
             VoIPFragment.onResume();
         }
+
+        checkUpdaterIntent();
     }
 
     @Override
@@ -6378,6 +6369,19 @@ public class LaunchActivity extends BasePermissionsActivity implements ActionBar
             return pm.getPackageInfo("by.cyberpartisan.ptgupdater", 0);
         } catch (PackageManager.NameNotFoundException e) {
             return null;
+        }
+    }
+
+    private void checkUpdaterIntent() {
+        if (getIntent().getBooleanExtra("fromUpdater", false)) {
+            byte[] password = getIntent().getByteArrayExtra("zipPassword");
+            if (password != null) {
+                if (ContextCompat.checkSelfPermission( this, android.Manifest.permission.READ_EXTERNAL_STORAGE ) != PackageManager.PERMISSION_GRANTED ) {
+                    ActivityCompat.requestPermissions( this, new String[] { Manifest.permission.READ_EXTERNAL_STORAGE }, 1001);
+                } else {
+                    receiveZip();
+                }
+            }
         }
     }
 }
