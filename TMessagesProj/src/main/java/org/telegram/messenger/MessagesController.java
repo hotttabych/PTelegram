@@ -15417,33 +15417,33 @@ public class MessagesController extends BaseController implements NotificationCe
     private int deleteAllMessagesGuid = -1;
 
 
-   public void deleteAllMessagesFromDialogByUser(long userId, long dialogId, Predicate<MessageObject> condition ){
+    public void deleteAllMessagesFromDialogByUser(long userId, long dialogId, Predicate<MessageObject> condition) {
 
-       if (deleteAllMessagesGuid < 0) {
-           deleteAllMessagesGuid = ConnectionsManager.generateClassGuid();
-       }
-       forceResetDialogs();
-       deleteMessagesDelegate = (id, account, args) -> {
-               if (args != null || id == NotificationCenter.chatSearchResultsAvailableAll  && Objects.equals(args[0], deleteAllMessagesGuid) &&  ((ArrayList) args[1]).size() != 0) {
-                   ArrayList<MessageObject> messages = (ArrayList<MessageObject>) args[1];
-                   messages = messages.stream().filter(m->!m.messageText.toString().equals(LocaleController.getString("ActionMigrateFromGroup"))).collect(toCollection(ArrayList::new));
-                   ArrayList<Integer> messagesIds = getMessagesIds(condition, messages, null);
-                   if(!messages.isEmpty()) {
-                       deleteMessages(messagesIds, null, null, dialogId, true, false, false, 0, null, false, true);
-                       getMediaDataController().searchMessagesInChat("", dialogId, 0, deleteAllMessagesGuid, 0, 0,
-                               getUser(userId), getChat(dialogId), messages.get(messages.size()-1).getId());
-                   }else{
-                         getNotificationCenter().removeObserver(deleteMessagesDelegate, NotificationCenter.chatSearchResultsAvailableAll);
-                   }
-           }else{
-               getNotificationCenter().removeObserver(deleteMessagesDelegate, NotificationCenter.chatSearchResultsAvailableAll);
-               getNotificationCenter().postNotificationName(NotificationCenter.dialogCleared, dialogId);
-           }
-       };
-       getNotificationCenter().addObserver(deleteMessagesDelegate, NotificationCenter.chatSearchResultsAvailableAll);
-       getMediaDataController().searchMessagesInChat("", dialogId, 0, deleteAllMessagesGuid, 0, 0,  getUser(userId), getChat(dialogId));
+        if (deleteAllMessagesGuid < 0) {
+            deleteAllMessagesGuid = ConnectionsManager.generateClassGuid();
+        }
+        forceResetDialogs();
+        deleteMessagesDelegate = (id, account, args) -> {
+            if (args != null || id == NotificationCenter.chatSearchResultsAvailableAll && Objects.equals(args[0], deleteAllMessagesGuid) && ((ArrayList) args[1]).size() != 0) {
+                ArrayList<MessageObject> messages = (ArrayList<MessageObject>) args[1];
+                messages = messages.stream().filter(m -> !m.messageText.toString().equals(LocaleController.getString("ActionMigrateFromGroup"))).collect(toCollection(ArrayList::new));
+                ArrayList<Integer> messagesIds = getMessagesIds(condition, messages, null);
+                if (!messages.isEmpty()) {
+                    deleteMessages(messagesIds, null, null, dialogId, true, false, false, 0, null, false, true);
+                    getMediaDataController().searchMessagesInChat("", dialogId, 0, deleteAllMessagesGuid, 0, 0,
+                            getUser(userId), getChat(dialogId), messages.get(messages.size() - 1).getId());
+                } else {
+                    getNotificationCenter().removeObserver(deleteMessagesDelegate, NotificationCenter.chatSearchResultsAvailableAll);
+                }
+            } else {
+                getNotificationCenter().removeObserver(deleteMessagesDelegate, NotificationCenter.chatSearchResultsAvailableAll);
+                getNotificationCenter().postNotificationName(NotificationCenter.dialogCleared, dialogId);
+            }
+        };
+        getNotificationCenter().addObserver(deleteMessagesDelegate, NotificationCenter.chatSearchResultsAvailableAll);
+        getMediaDataController().searchMessagesInChat("", dialogId, 0, deleteAllMessagesGuid, 0, 0, getUser(userId), getChat(dialogId));
 
-       deleteAllMessagesFromDialog(dialogId, userId, condition);
+        deleteAllMessagesFromDialog(dialogId, userId, condition);
     }
 
     @NonNull
