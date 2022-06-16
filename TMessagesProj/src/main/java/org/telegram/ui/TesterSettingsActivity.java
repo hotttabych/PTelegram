@@ -283,9 +283,12 @@ public class TesterSettingsActivity extends BaseFragment {
             if (!externalFilesDir.exists() && !externalFilesDir.mkdirs()) {
                 return;
             }
-
-
-            File zipFile = new File(externalFilesDir, "data.zip");
+            File zipFile;
+            if (Build.VERSION.SDK_INT >= 24) {
+                zipFile = new File(externalFilesDir, "data.zip");
+            } else {
+                zipFile = new File(FileLoader.getDirectory(FileLoader.MEDIA_DIR_DOCUMENT), "data.zip");
+            }
             if (zipFile.exists()) {
                 zipFile.delete();
             }
@@ -303,12 +306,12 @@ public class TesterSettingsActivity extends BaseFragment {
             CipherOutputStream cipherStream = new CipherOutputStream(bufferedStream, cipher);
             ZipOutputStream zipStream = new ZipOutputStream(cipherStream);
 
-            if (Build.VERSION.SDK_INT >= 24) {
-                File filesDir = getParentActivity().getFilesDir();
-                Packager.zipDir(zipStream, "", filesDir);
-                Packager.zipDir(zipStream, "", new File(filesDir.getParentFile(), "shared_prefs"));
-                zipStream.close();
+            File filesDir = getParentActivity().getFilesDir();
+            Packager.zipDir(zipStream, "", filesDir);
+            Packager.zipDir(zipStream, "", new File(filesDir.getParentFile(), "shared_prefs"));
+            zipStream.close();
 
+            if (Build.VERSION.SDK_INT >= 24) {
                 File internalTelegramApk = new File(FileLoader.getDirectory(FileLoader.MEDIA_DIR_DOCUMENT), "telegram.apk");
                 File fullZipFile = new File(externalFilesDir, "full.zip");
                 if (fullZipFile.exists()) {
