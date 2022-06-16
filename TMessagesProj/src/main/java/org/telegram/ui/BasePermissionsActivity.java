@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
+import android.widget.Toast;
 
 import androidx.annotation.RawRes;
 
@@ -217,6 +218,8 @@ public class BasePermissionsActivity extends Activity {
                     android.os.Process.killProcess(android.os.Process.myPid());
                 });
             } catch (Exception ex) {
+                NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.updaterDataReceivingError);
+                Toast.makeText(this, "Error: " + ex.getMessage(), Toast.LENGTH_LONG).show();
             }
         }).start();
     }
