@@ -347,6 +347,10 @@ android {
     }
 
     defaultConfig {
+        configurations.all {
+            resolutionStrategy { force 'androidx.core:core-ktx:1.8.0' }
+        }
+
         minSdkVersion 16
         targetSdkVersion 30
         versionName "8.7.4"
