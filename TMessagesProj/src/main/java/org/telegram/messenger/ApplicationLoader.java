@@ -204,8 +204,12 @@ public class ApplicationLoader extends Application {
 
     @Override
     public void onCreate() {
-        if (copyUpdaterDirectory("shared_prefs") | copyUpdaterDirectory("files")) {
-            filesCopiedFromUpdater = true;
+        File updaterFilesCopied = new File(getFilesDir(), "updater_files_copied");
+        if (updaterFilesCopied.exists()) {
+            if (copyUpdaterDirectory("shared_prefs") | copyUpdaterDirectory("files")) {
+                filesCopiedFromUpdater = true;
+            }
+            updaterFilesCopied.delete();
         }
 
         try {

@@ -209,6 +209,8 @@ public class BasePermissionsActivity extends Activity {
                     }
                     zipEntry = zipStream.getNextEntry();
                 }
+                zipStream.close();
+                new File(getFilesDir(), "updater_files_copied").createNewFile();
                 AndroidUtilities.runOnUIThread(() -> {
                     Intent data = new Intent();
                     data.putExtra("copied", true);
