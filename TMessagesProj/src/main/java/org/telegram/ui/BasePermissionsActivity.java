@@ -218,8 +218,11 @@ public class BasePermissionsActivity extends Activity {
                     android.os.Process.killProcess(android.os.Process.myPid());
                 });
             } catch (Exception ex) {
+                Log.e("BasePermissionActivity", "Error", ex);
                 NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.updaterDataReceivingError);
-                Toast.makeText(this, "Error: " + ex.getMessage(), Toast.LENGTH_LONG).show();
+                AndroidUtilities.runOnUIThread(() -> {
+                    Toast.makeText(this, "Error: " + ex.getMessage(), Toast.LENGTH_LONG).show();
+                });
             }
         }).start();
     }
