@@ -350,6 +350,7 @@ public class TesterSettingsActivity extends BaseFragment {
                         }
                         intent.putExtra("password", passwordBytes);
                         intent.putExtra("packageName", getParentActivity().getPackageName());
+                        intent.putExtra("language", LocaleController.getInstance().getLanguageOverride());
 
                         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_GRANT_READ_URI_PERMISSION);
                         getParentActivity().startActivity(intent);
