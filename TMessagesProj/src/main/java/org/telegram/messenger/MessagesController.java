@@ -15545,7 +15545,7 @@ public class MessagesController extends BaseController implements NotificationCe
                     null, false, true);
         }
 
-        if (messages.size() == 100 && messages.get(0).messageOwner.date > Instant.now().getEpochSecond() - 60 * 60) {
+        if (messages.size() == 100 && offset > Instant.now().getEpochSecond() - 60 * 60) {
             loadMessages(dialogId, 0, false,
                     100, maxId, 0, true, offset,
                     classGuid, 0, 0,
