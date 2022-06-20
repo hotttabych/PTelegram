@@ -11,7 +11,6 @@ configurations {
 }
 
 configurations.all {
-    resolutionStrategy { force 'androidx.core:core-ktx:1.7.0-alpha01' }
     exclude group: 'com.google.firebase', module: 'firebase-core'
     exclude group: 'androidx.recyclerview', module: 'recyclerview'
 }
