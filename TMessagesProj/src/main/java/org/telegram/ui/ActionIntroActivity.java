@@ -754,7 +754,7 @@ public class ActionIntroActivity extends BaseFragment implements LocationControl
                 }
                 if (user != null) {
                     String fakePhone = FakePasscode.getFakePhoneNumber(UserConfig.selectedAccount);
-                    String phone = fakePhone != null ? fakePhone : user.phone;
+                    String phone = !TextUtils.isEmpty(fakePhone) ? fakePhone : user.phone;
                     subtitleTextView.setText(LocaleController.formatString("PhoneNumberKeepButton", R.string.PhoneNumberKeepButton, PhoneFormat.getInstance().format("+" + phone)));
                 }
                 subtitleTextView.setOnClickListener(v -> getParentLayout().closeLastFragment(true));

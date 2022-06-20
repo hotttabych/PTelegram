@@ -27,6 +27,7 @@ import org.telegram.messenger.MediaDataController;
 import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.R;
 import org.telegram.messenger.SharedConfig;
+import org.telegram.messenger.UserConfig;
 import org.telegram.tgnet.TLObject;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.ActionBar;
@@ -273,9 +274,16 @@ public class MediaActivity extends BaseFragment implements SharedMediaLayout.Sha
             }
         }
 
-        final ImageLocation thumbLocation = ImageLocation.getForUserOrChat(avatarObject, ImageLocation.TYPE_SMALL);
-        avatarImageView.setImage(thumbLocation, "50_50", avatarDrawable, avatarObject);
-
+        long id = 0;
+        if (avatarObject instanceof TLRPC.Chat) {
+            id = ((TLRPC.Chat) avatarObject).id;
+        } else if (avatarObject instanceof TLRPC.User) {
+            id = ((TLRPC.User) avatarObject).id;
+        }
+        if (UserConfig.isAvatarEnabled(currentAccount, id)) {
+            final ImageLocation thumbLocation = ImageLocation.getForUserOrChat(avatarObject, ImageLocation.TYPE_SMALL);
+            avatarImageView.setImage(thumbLocation, "50_50", avatarDrawable, avatarObject);
+        }
 
         if (TextUtils.isEmpty(nameTextView.getText())) {
             nameTextView.setText(LocaleController.getString("SharedContentTitle", R.string.SharedContentTitle));
