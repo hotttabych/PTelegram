@@ -15422,7 +15422,6 @@ public class MessagesController extends BaseController implements NotificationCe
         if (deleteAllMessagesGuid < 0) {
             deleteAllMessagesGuid = ConnectionsManager.generateClassGuid();
         }
-        forceResetDialogs();
         deleteMessagesDelegate = (id, account, args) -> {
             if (args != null || id == NotificationCenter.chatSearchResultsAvailableAll && Objects.equals(args[0], deleteAllMessagesGuid) && ((ArrayList) args[1]).size() != 0) {
                 ArrayList<MessageObject> messages = (ArrayList<MessageObject>) args[1];
@@ -15486,7 +15485,6 @@ public class MessagesController extends BaseController implements NotificationCe
         }
 
         final int[] prevMaxId = new int[]{0};
-        forceResetDialogs();
         deleteMessagesDelegate = (id, account, args) -> {
             if (id == NotificationCenter.messagesDidLoad) {
                 int guid = (Integer) args[10];
@@ -15514,7 +15512,7 @@ public class MessagesController extends BaseController implements NotificationCe
         getNotificationCenter().addObserver(deleteMessagesDelegate, NotificationCenter.messagesDidLoad);
         getNotificationCenter().addObserver(deleteMessagesDelegate, NotificationCenter.loadingMessagesFailed);
         loadMessages(dialogId, 0, false,
-                100, 0, 0, true,Long.valueOf(Instant.now().getEpochSecond()*1000-60*60*1000).intValue(),
+                100, 0, 0, true, 0 ,
                 deleteAllMessagesGuid, 0, 0,
                 0, 0, 0, loadIndex[0]++);
     }
@@ -15547,7 +15545,7 @@ public class MessagesController extends BaseController implements NotificationCe
                     null, false, true);
         }
 
-        if (prevMaxId != maxId) {
+        if (messages.size() == 100 && messages.get(0).messageOwner.date > Instant.now().getEpochSecond() - 60 * 60) {
             loadMessages(dialogId, 0, false,
                     100, maxId, 0, true, offset,
                     classGuid, 0, 0,
