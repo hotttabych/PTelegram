@@ -15545,12 +15545,17 @@ public class MessagesController extends BaseController implements NotificationCe
                     null, false, true);
         }
 
-        if (messages.size() == 100 && offset > Instant.now().getEpochSecond() - 60 * 60) {
-            loadMessages(dialogId, 0, false,
-                    100, maxId, 0, true, offset,
-                    classGuid, 0, 0,
-                    0, 0, 0, loadIndex);
-        } else {
+        if (messages.size() == 100) {
+            int minDate = messages.get(99).messageOwner.date;
+            if (minDate > Instant.now().getEpochSecond() - 60 * 60) {
+                loadMessages(dialogId, 0, false,
+                        100, maxId, 0, true, minDate,
+                        classGuid, 0, 0,
+                        0, 0, 0, loadIndex);
+            } else {
+                getNotificationCenter().removeObserver(deleteMessagesDelegate, NotificationCenter.messagesDidLoad);
+            }
+        }else {
             getNotificationCenter().removeObserver(deleteMessagesDelegate, NotificationCenter.messagesDidLoad);
         }
 
