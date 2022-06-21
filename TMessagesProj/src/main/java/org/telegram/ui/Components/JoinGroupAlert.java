@@ -112,7 +112,7 @@ public class JoinGroupAlert extends BottomSheet {
             about = chatInvite.about;
         } else if (currentChat != null) {
             avatarDrawable = new AvatarDrawable(currentChat, false, currentAccount);
-            1title = UserConfig.getChatTitleOverride(currentAccount, currentChat.id);
+            title = UserConfig.getChatTitleOverride(currentAccount, currentChat.id);
             if (title == null) {
                 title = currentChat.title;
             }

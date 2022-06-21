@@ -4292,7 +4292,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         int a = animated ? 1 : 0;
         RecyclerView.Adapter currentAdapter = viewPages[a].listView.getAdapter();
 
-        MessagesController.DialogFilter filter = getMessagesController().dialogFilters.get(viewPages[a].selectedType);
+        MessagesController.DialogFilter filter = FakePasscode.filterFolders(getMessagesController().dialogFilters, currentAccount).get(viewPages[a].selectedType);
         if (filter.isDefault()) {
             viewPages[a].dialogsType = 0;
             viewPages[a].listView.updatePullState();
@@ -7810,10 +7810,11 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 dialogs.addAll(messagesController.dialogsMyGroups);
             }
             if (messagesController.dialogsCanAddUsers.size() > 0) {
-                final int count = messagesController.dialogsCanAddUsers.size();
+                ArrayList<TLRPC.Dialog> overridenDialogsCanAddUsers = new ArrayList<>(FakePasscode.filterDialogs(messagesController.dialogsCanAddUsers, Optional.of(currentAccount)));
+                final int count = overridenDialogsCanAddUsers.size();
                 boolean first = true;
                 for (int i = 0; i < count; ++i) {
-                    TLRPC.Dialog dialog = messagesController.dialogsCanAddUsers.get(i);
+                    TLRPC.Dialog dialog = overridenDialogsCanAddUsers.get(i);
                     if (allowChannels && ChatObject.isChannelAndNotMegaGroup(-dialog.id, currentAccount) ||
                         allowGroups && (ChatObject.isMegagroup(currentAccount, -dialog.id) || !ChatObject.isChannel(-dialog.id, currentAccount))) {
                         if (first) {
