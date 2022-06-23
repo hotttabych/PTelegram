@@ -31,6 +31,14 @@ public class DialogTemplate {
         viewTemplates.add(editTemplate);
     }
 
+    public void addNumberEditTemplate(String text, String name, boolean singleLine) {
+        NumberEditTemplate editTemplate = new NumberEditTemplate();
+        editTemplate.text = text;
+        editTemplate.name = name;
+        editTemplate.singleLine = singleLine;
+        viewTemplates.add(editTemplate);
+    }
+
     public void addCheckboxTemplate(boolean checked, String name) {
         addCheckboxTemplate(checked, name, true);
     }

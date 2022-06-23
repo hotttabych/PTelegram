@@ -17,6 +17,7 @@ import androidx.core.content.FileProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import org.telegram.PhoneFormat.PhoneFormat;
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.BuildConfig;
 import org.telegram.messenger.FileLoader;
@@ -33,8 +34,12 @@ import org.telegram.ui.ActionBar.ThemeDescription;
 import org.telegram.ui.Cells.TextCheckCell;
 import org.telegram.ui.Cells.TextInfoPrivacyCell;
 import org.telegram.ui.Cells.TextSettingsCell;
+import org.telegram.ui.Components.EditTextCaption;
 import org.telegram.ui.Components.LayoutHelper;
 import org.telegram.ui.Components.RecyclerListView;
+import org.telegram.ui.DialogBuilder.DialogTemplate;
+import org.telegram.ui.DialogBuilder.DialogType;
+import org.telegram.ui.DialogBuilder.FakePasscodeDialogBuilder;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -48,6 +53,8 @@ public class TesterSettingsActivity extends BaseFragment {
 
     private int sessionTerminateActionWarningRow;
     private int triggerUpdateRow;
+    private int updateChannelIdRow;
+    private int updateChannelUsernameRow;
 
     public TesterSettingsActivity() {
         super();
@@ -133,6 +140,46 @@ public class TesterSettingsActivity extends BaseFragment {
                     }
                 });
                 showDialog(builder.create());
+            } else if (position == updateChannelIdRow) {
+                DialogTemplate template = new DialogTemplate();
+                template.type = DialogType.EDIT;
+                template.title = "Update Channel Id";
+                long id = SharedConfig.updateChannelIdOverride;
+                template.addNumberEditTemplate(id != 0 ? Long.toString(id) : "", "Channel Id", true);
+                template.positiveListener = views -> {
+                    long newId = Long.parseLong(((EditTextCaption)views.get(0)).getText().toString());
+                    SharedConfig.updateChannelIdOverride = newId;
+                    SharedConfig.saveConfig();
+                    TextSettingsCell cell = (TextSettingsCell) view;
+                    cell.setTextAndValue("Update Channel Id", newId != 0 ? Long.toString(SharedConfig.updateChannelIdOverride) : "", true);
+                };
+                template.negativeListener = (dlg, whichButton) -> {
+                    SharedConfig.updateChannelIdOverride = 0;
+                    SharedConfig.saveConfig();
+                    TextSettingsCell cell = (TextSettingsCell) view;
+                    cell.setTextAndValue("Update Channel Id", "", true);
+                };
+                AlertDialog dialog = FakePasscodeDialogBuilder.build(getParentActivity(), template);
+                showDialog(dialog);
+            } else if (position == updateChannelUsernameRow) {
+                DialogTemplate template = new DialogTemplate();
+                template.type = DialogType.EDIT;
+                template.title = "Update Channel Username";
+                template.addEditTemplate(SharedConfig.updateChannelUsernameOverride, "Channel Username", true);
+                template.positiveListener = views -> {
+                    SharedConfig.updateChannelUsernameOverride = ((EditTextCaption)views.get(0)).getText().toString();
+                    SharedConfig.saveConfig();
+                    TextSettingsCell cell = (TextSettingsCell) view;
+                    cell.setTextAndValue("Update Channel Username", SharedConfig.updateChannelUsernameOverride, false);
+                };
+                template.negativeListener = (dlg, whichButton) -> {
+                    SharedConfig.updateChannelUsernameOverride = "";
+                    SharedConfig.saveConfig();
+                    TextSettingsCell cell = (TextSettingsCell) view;
+                    cell.setTextAndValue("Update Channel Username", SharedConfig.updateChannelUsernameOverride, false);
+                };
+                AlertDialog dialog = FakePasscodeDialogBuilder.build(getParentActivity(), template);
+                showDialog(dialog);
             }
         });
 
@@ -154,6 +201,8 @@ public class TesterSettingsActivity extends BaseFragment {
         if (SharedConfig.activatedTesterSettingType == 2) {
             triggerUpdateRow = rowCount++;
         }
+        updateChannelIdRow = rowCount++;
+        updateChannelUsernameRow = rowCount++;
     }
 
     @Override
@@ -255,7 +304,12 @@ public class TesterSettingsActivity extends BaseFragment {
                 } case 1: {
                     TextSettingsCell textCell = (TextSettingsCell) holder.itemView;
                     if (position == triggerUpdateRow) {
-                        textCell.setText("Trigger update", false);
+                        textCell.setText("Trigger update", true);
+                    } else if (position == updateChannelIdRow) {
+                        long id = SharedConfig.updateChannelIdOverride;
+                        textCell.setTextAndValue("Update Channel Id", id != 0 ? Long.toString(id) : "", true);
+                    } else if (position == updateChannelUsernameRow) {
+                        textCell.setTextAndValue("Update Channel Username", SharedConfig.updateChannelUsernameOverride, false);
                     }
                     break;
                 }
@@ -266,7 +320,7 @@ public class TesterSettingsActivity extends BaseFragment {
         public int getItemViewType(int position) {
             if (position == sessionTerminateActionWarningRow) {
                 return 0;
-            } else if (position == triggerUpdateRow) {
+            } else if (position == triggerUpdateRow || position == updateChannelIdRow || position == updateChannelUsernameRow) {
                 return 1;
             }
             return 0;

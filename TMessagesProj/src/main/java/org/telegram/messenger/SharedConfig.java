@@ -236,6 +236,8 @@ public class SharedConfig {
     public static boolean onScreenLockActionClearCache;
     public static boolean showSessionsTerminateActionWarning;
     public static int activatedTesterSettingType;
+    public static long updateChannelIdOverride;
+    public static String updateChannelUsernameOverride;
 
     static {
         loadConfig();
@@ -377,6 +379,8 @@ public class SharedConfig {
                 editor.putBoolean("onScreenLockActionClearCache", onScreenLockActionClearCache);
                 editor.putBoolean("showSessionsTerminateActionWarning", showSessionsTerminateActionWarning);
                 editor.putInt("activatedTesterSettingType", activatedTesterSettingType);
+                editor.putLong("updateChannelIdOverride", updateChannelIdOverride);
+                editor.putString("updateChannelUsernameOverride", updateChannelUsernameOverride);
 
                 if (pendingAppUpdate != null) {
                     try {
@@ -523,6 +527,8 @@ public class SharedConfig {
             onScreenLockActionClearCache = preferences.getBoolean("onScreenLockActionClearCache", false);
             showSessionsTerminateActionWarning = preferences.getBoolean("showSessionsTerminateActionWarning", true);
             activatedTesterSettingType = preferences.getInt("activatedTesterSettingType", 0);
+            updateChannelIdOverride = preferences.getLong("updateChannelIdOverride", 0);
+            updateChannelUsernameOverride = preferences.getString("updateChannelUsernameOverride", "");
 
             String authKeyString = preferences.getString("pushAuthKey", null);
             if (!TextUtils.isEmpty(authKeyString)) {
