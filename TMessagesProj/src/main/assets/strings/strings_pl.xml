@@ -171,4 +171,6 @@
     <string name="FakePasscodeRestore">Przywracanie fałszywego hasła</string>
     <string name="CreateFakePasscodeInfoPIN">Wprowadź 4 dowolne cyfry, które podasz osobie atakującej w celu odblokowania Telegrama. Kod ten musi być inny niż pozostałe kody w aplikacji.</string>
     <string name="CreateFakePasscodeInfoPassword">Wprowadź hasło, które podasz osobie atakującej w celu odblokowania Telegrama. Kod ten musi być inny niż pozostałe kody w aplikacji.</string>
+
+    <string name="NewVersion30Alert">To nie jest normalna aktualizacja, a jej instalacja jest trudniejsza niż zwykle. Pomożemy Ci. Po prostu postępuj zgodnie z instrukcjami, które teraz zobaczysz.</string>
 </resources>

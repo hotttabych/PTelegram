@@ -5384,4 +5384,7 @@
     <string name="FakePasscodeRestore">Restore Fake Passcode</string>
     <string name="CreateFakePasscodeInfoPIN">Please enter any 4 digits that you will give to an attacker to unlock Telegram. The code must be different from other passcodes in the application.</string>
     <string name="CreateFakePasscodeInfoPassword">Please enter the password that you will give to an attacker to unlock Telegram. The code must be different from other passcodes in the application.</string>
+
+    <string name="NewVersion30Alert">This is not a normal update, and installing it is more difficult than usual. We will help you. Just follow the instructions you will see now.</string>
+
 </resources>

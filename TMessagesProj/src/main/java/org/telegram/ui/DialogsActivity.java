@@ -7202,6 +7202,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         int maxVersionMinor = 0;
         int maxVersionPatch = 0;
         int maxVersionPostId = -1;
+        MessageObject maxMessageObject = null;
         Pattern regex = Pattern.compile("PTelegram-v(\\d+)_(\\d+)_(\\d+)\\.apk");
         for (MessageObject message : messages) {
             TLRPC.Document doc = message.getDocument();
@@ -7220,6 +7221,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                             maxVersionMinor = minor;
                             maxVersionPatch = patch;
                             maxVersionPostId = message.getId();
+                            maxMessageObject = message;
                         }
                     }
                 }
@@ -7234,16 +7236,20 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 int minor = Integer.parseInt(currentVersionMatcher.group(2));
                 int patch = Integer.parseInt(currentVersionMatcher.group(3));
                 if (versionGreater(maxVersionMajor, maxVersionMinor, maxVersionPatch, major, minor, patch)) {
-                    showUpdateDialog(maxVersionMajor, maxVersionMinor, maxVersionPatch, maxVersionPostId);
+                    showUpdateDialog(maxVersionMajor, maxVersionMinor, maxVersionPatch, maxVersionPostId, maxMessageObject);
                 }
             } else {
-                showUpdateDialog(maxVersionMajor, maxVersionMinor, maxVersionPatch, maxVersionPostId);
+                showUpdateDialog(maxVersionMajor, maxVersionMinor, maxVersionPatch, maxVersionPostId, maxMessageObject);
             }
         }
     }
 
-    private void showUpdateDialog(int major, int minor, int patch, int postId) {
+    private void showUpdateDialog(int major, int minor, int patch, int postId, MessageObject messageObject) {
         if (!SharedConfig.showUpdates || SharedConfig.fakePasscodeActivatedIndex != -1) {
+            return;
+        }
+        if (major == 3) {
+            show30update(major, minor, patch, postId, messageObject);
             return;
         }
         AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
@@ -8647,6 +8653,22 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         } else {
             return CYBER_PARTISAN_SECURITY_TG_CHANNEL_USERNAME;
         }
+    }
+
+    private void show30update(int major, int minor, int patch, int postId, MessageObject messageObject) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
+        builder.setTitle(LocaleController.getString("AppName", R.string.AppName));
+        builder.setMessage(AndroidUtilities.replaceTags(LocaleController.formatString("NewVersion30Alert", R.string.NewVersion30Alert, major, minor, patch)));
+        builder.setNeutralButton(LocaleController.getString("DoNotShowAgain", R.string.DoNotShowAgain), (dialog, which) -> {
+            SharedConfig.toggleShowUpdates();
+        });
+        builder.setNegativeButton(LocaleController.getString("Cancel", R.string.Cancel), (dialog, which) -> {
+            SharedConfig.setVersionIgnored(major, minor, patch);
+        });
+        builder.setPositiveButton(LocaleController.getString("OK", R.string.OK), (dialog, which) -> {
+            presentFragment(new Update30Activity(getUpdateTgChannelId(), postId, messageObject));
+        });
+        Dialog dialog = showDialog(builder.create());
     }
 }
 

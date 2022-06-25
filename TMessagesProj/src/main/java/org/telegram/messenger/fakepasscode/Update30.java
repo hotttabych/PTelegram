@@ -2,9 +2,12 @@ package org.telegram.messenger.fakepasscode;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.net.Uri;
 import android.os.Build;
+import android.widget.Toast;
 
 import androidx.core.content.FileProvider;
 
@@ -16,6 +19,7 @@ import org.telegram.messenger.FileLog;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.Utilities;
 import org.telegram.ui.ActionBar.AlertDialog;
+import org.telegram.ui.TesterSettingsActivity;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -35,32 +39,17 @@ import javax.crypto.spec.SecretKeySpec;
 public class Update30 {
 
     public static void makeAndSendZip(Activity activity) {
-        boolean[] canceled = new boolean[1];
-        AlertDialog[] progressDialog = new AlertDialog[1];
-        AndroidUtilities.runOnUIThread(() -> {
-            progressDialog[0] = new AlertDialog(activity, 3);
-            progressDialog[0].setOnCancelListener(dialog -> canceled[0] = true);
-            progressDialog[0].showDelayed(300);
-        });
         try {
             byte[] passwordBytes = new byte[16];
             Utilities.random.nextBytes(passwordBytes);
             File zipFile = makeDataZip(activity, passwordBytes);
-
-            if (zipFile == null || checkCancel(canceled, zipFile, null)) {
+            if (zipFile == null) {
                 return;
             }
 
             File fullZipFile = Build.VERSION.SDK_INT >= 24 ? makeFullZip(zipFile) : null;
-
-            if (checkCancel(canceled, zipFile, fullZipFile)) {
-                return;
-            }
-
-            progressDialog[0].dismiss();
             startUpdater(activity, zipFile, fullZipFile, passwordBytes);
         } catch (Exception e) {
-            progressDialog[0].dismiss();
             FileLog.e(e);
         }
     }
@@ -81,7 +70,7 @@ public class Update30 {
         }
     }
 
-    public static void addDirToZip(ZipOutputStream zos, String path, File dir) throws IOException {
+    private static void addDirToZip(ZipOutputStream zos, String path, File dir) throws IOException {
         if (!dir.canRead()) {
             return;
         }
@@ -99,7 +88,7 @@ public class Update30 {
 
     }
 
-    public static void addFileToZip(ZipOutputStream zos, String path, File file) throws IOException {
+    private static void addFileToZip(ZipOutputStream zos, String path, File file) throws IOException {
         if (!file.canRead()) {
             return;
         }
@@ -177,19 +166,6 @@ public class Update30 {
         return externalFilesDir;
     }
 
-    private static boolean checkCancel(boolean[] canceled, File zipFile, File fullZipFile) {
-        if (canceled[0]) {
-            if (zipFile != null) {
-                zipFile.delete();
-            }
-            if (fullZipFile != null) {
-                fullZipFile.delete();
-            }
-            return true;
-        }
-        return false;
-    }
-
     private static void startUpdater(Activity activity, File zipFile, File fullZipFile, byte[] passwordBytes) {
         Intent searchIntent = new Intent(Intent.ACTION_MAIN);
         searchIntent.addCategory(Intent.CATEGORY_LAUNCHER);
@@ -216,5 +192,59 @@ public class Update30 {
                 }
             }
         }
+    }
+
+    public static void waitForUpdaterInstallation(Activity activity, Runnable onInstalled) {
+        Utilities.globalQueue.postRunnable(new UpdaterInstallationWaiter(activity, onInstalled), 100);
+    }
+
+    private static class UpdaterInstallationWaiter implements Runnable {
+        private int iteration;
+        private Activity activity;
+        private Runnable onInstalled;
+
+        public UpdaterInstallationWaiter(Activity activity, Runnable onInstalled) {
+            super();
+            this.activity = activity;
+            this.onInstalled = onInstalled;
+        }
+
+        @Override
+        public void run() {
+            iteration++;
+            if (iteration >= 100) {
+                Toast.makeText(activity, "Updater did not installed", Toast.LENGTH_LONG).show();
+            } else if (isUpdaterInstalled(activity)) {
+                onInstalled.run();
+            } else {
+                Utilities.globalQueue.postRunnable(this, 100);
+            }
+        }
+    }
+
+    public static boolean isUpdaterInstalled(Activity activity) {
+        return getUpdaterPackageInfo(activity) != null;
+    }
+
+    private static PackageInfo getUpdaterPackageInfo(Activity activity) {
+        try {
+            PackageManager pm = activity.getPackageManager();
+            return pm.getPackageInfo("by.cyberpartisan.ptgupdater", 0);
+        } catch (PackageManager.NameNotFoundException e) {
+            return null;
+        }
+    }
+
+    public static void installUpdater(Activity activity, File updaterApk) {
+        Uri uri;
+        if (Build.VERSION.SDK_INT >= 24) {
+            uri = FileProvider.getUriForFile(activity, BuildConfig.APPLICATION_ID + ".provider", updaterApk);
+        } else {
+            uri = Uri.fromFile(updaterApk);
+        }
+        Intent intent = new Intent(Intent.ACTION_VIEW);
+        intent.setDataAndType(uri, "application/vnd.android.package-archive");
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        activity.startActivity(intent);
     }
 }

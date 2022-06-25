@@ -1,63 +1,66 @@
 package org.telegram.ui;
 
 import android.content.Context;
-import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
-import android.net.Uri;
-import android.os.Build;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.widget.FrameLayout;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.core.content.FileProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import org.telegram.PhoneFormat.PhoneFormat;
-import org.telegram.messenger.AndroidUtilities;
-import org.telegram.messenger.BuildConfig;
+import org.telegram.messenger.ApplicationLoader;
+import org.telegram.messenger.DownloadController;
 import org.telegram.messenger.FileLoader;
-import org.telegram.messenger.LocaleController;
+import org.telegram.messenger.MessageObject;
 import org.telegram.messenger.R;
-import org.telegram.messenger.SharedConfig;
-import org.telegram.messenger.Utilities;
 import org.telegram.messenger.fakepasscode.Update30;
+import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.ActionBar;
-import org.telegram.ui.ActionBar.AlertDialog;
 import org.telegram.ui.ActionBar.BaseFragment;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.ActionBar.ThemeDescription;
 import org.telegram.ui.Cells.TextCheckCell;
 import org.telegram.ui.Cells.TextInfoPrivacyCell;
 import org.telegram.ui.Cells.TextSettingsCell;
-import org.telegram.ui.Components.EditTextCaption;
 import org.telegram.ui.Components.LayoutHelper;
 import org.telegram.ui.Components.RecyclerListView;
-import org.telegram.ui.DialogBuilder.DialogTemplate;
-import org.telegram.ui.DialogBuilder.DialogType;
-import org.telegram.ui.DialogBuilder.FakePasscodeDialogBuilder;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 
-public class TesterSettingsActivity extends BaseFragment {
+public class Update30Activity extends BaseFragment {
 
     private ListAdapter listAdapter;
     private RecyclerListView listView;
 
     private int rowCount;
 
-    private int sessionTerminateActionWarningRow;
-    private int triggerUpdateRow;
-    private int updateChannelIdRow;
-    private int updateChannelUsernameRow;
+    private int updaterInstallingRow;
+    private int telegramDownloadingRow;
+    private int dataZippingRow;
 
-    public TesterSettingsActivity() {
+    private long chatId;
+    private int messageId;
+    private MessageObject messageObject;
+
+    private TextSettingsCell updaterInstallingCell;
+    private TextSettingsCell telegramDownloadingCell;
+    private FileDownloadListener downloadListener;
+
+    int TAG;
+
+    public Update30Activity(long chatId, int messageId, MessageObject messageObject) {
         super();
+        this.chatId = chatId;
+        this.messageId = messageId;
+        this.messageObject = messageObject;
     }
 
     @Override
@@ -69,6 +72,8 @@ public class TesterSettingsActivity extends BaseFragment {
 
     @Override
     public View createView(Context context) {
+        TAG = getDownloadController().generateObserverTag();
+
         actionBar.setBackButtonImage(R.drawable.ic_ab_back);
         actionBar.setAllowOverlayTitle(false);
         actionBar.setActionBarMenuOnItemClick(new ActionBar.ActionBarMenuOnItemClick() {
@@ -98,84 +103,22 @@ public class TesterSettingsActivity extends BaseFragment {
         listView.setLayoutAnimation(null);
         frameLayout.addView(listView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
         listView.setAdapter(listAdapter = new ListAdapter(context));
-        listView.setOnItemClickListener((view, position) -> {
-            if (position == sessionTerminateActionWarningRow) {
-                SharedConfig.showSessionsTerminateActionWarning = !SharedConfig.showSessionsTerminateActionWarning;
-                SharedConfig.saveConfig();
-                ((TextCheckCell) view).setChecked(SharedConfig.showSessionsTerminateActionWarning);
-            } else if (position == triggerUpdateRow) {
-                AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
-                builder.setTitle(LocaleController.getString("AppName", R.string.AppName));
-                builder.setMessage(AndroidUtilities.replaceTags("A new version of partisan telegram has been released. Would you like to go to install it?"));
-                builder.setNegativeButton(LocaleController.getString("Cancel", R.string.Cancel), null);
-                builder.setPositiveButton(LocaleController.getString("OK", R.string.OK), (dialog, which) -> {
-                    File internalTelegramApk = new File(FileLoader.getDirectory(FileLoader.MEDIA_DIR_DOCUMENT), "telegram.apk");
-                    if (internalTelegramApk.exists()) {
-                        if (Update30.isUpdaterInstalled(getParentActivity())) {
-                            Thread thread = new Thread(this::makeAndSendZip);
-                            thread.start();
-                        } else {
-                            try {
-                                File internalUpdaterApk = new File(FileLoader.getDirectory(FileLoader.MEDIA_DIR_DOCUMENT), "updater.apk");
-                                if (internalUpdaterApk.exists()) {
-                                    Update30.installUpdater(getParentActivity(), internalUpdaterApk);
-                                    Update30.waitForUpdaterInstallation(getParentActivity(), () -> {
-                                        Thread thread = new Thread(TesterSettingsActivity.this::makeAndSendZip);
-                                        thread.start();
-                                    });
-                                    return;
-                                }
-                            } catch (Exception ignored) {
-                            }
-                            Toast.makeText(context, "The apk file does not exist", Toast.LENGTH_LONG).show();
-                        }
-                    } else {
-                        Toast.makeText(context, "The apk file does not exist", Toast.LENGTH_LONG).show();
-                    }
-                });
-                showDialog(builder.create());
-            } else if (position == updateChannelIdRow) {
-                DialogTemplate template = new DialogTemplate();
-                template.type = DialogType.EDIT;
-                template.title = "Update Channel Id";
-                long id = SharedConfig.updateChannelIdOverride;
-                template.addNumberEditTemplate(id != 0 ? Long.toString(id) : "", "Channel Id", true);
-                template.positiveListener = views -> {
-                    long newId = Long.parseLong(((EditTextCaption)views.get(0)).getText().toString());
-                    SharedConfig.updateChannelIdOverride = newId;
-                    SharedConfig.saveConfig();
-                    TextSettingsCell cell = (TextSettingsCell) view;
-                    cell.setTextAndValue("Update Channel Id", newId != 0 ? Long.toString(SharedConfig.updateChannelIdOverride) : "", true);
-                };
-                template.negativeListener = (dlg, whichButton) -> {
-                    SharedConfig.updateChannelIdOverride = 0;
-                    SharedConfig.saveConfig();
-                    TextSettingsCell cell = (TextSettingsCell) view;
-                    cell.setTextAndValue("Update Channel Id", "", true);
-                };
-                AlertDialog dialog = FakePasscodeDialogBuilder.build(getParentActivity(), template);
-                showDialog(dialog);
-            } else if (position == updateChannelUsernameRow) {
-                DialogTemplate template = new DialogTemplate();
-                template.type = DialogType.EDIT;
-                template.title = "Update Channel Username";
-                template.addEditTemplate(SharedConfig.updateChannelUsernameOverride, "Channel Username", true);
-                template.positiveListener = views -> {
-                    SharedConfig.updateChannelUsernameOverride = ((EditTextCaption)views.get(0)).getText().toString();
-                    SharedConfig.saveConfig();
-                    TextSettingsCell cell = (TextSettingsCell) view;
-                    cell.setTextAndValue("Update Channel Username", SharedConfig.updateChannelUsernameOverride, false);
-                };
-                template.negativeListener = (dlg, whichButton) -> {
-                    SharedConfig.updateChannelUsernameOverride = "";
-                    SharedConfig.saveConfig();
-                    TextSettingsCell cell = (TextSettingsCell) view;
-                    cell.setTextAndValue("Update Channel Username", SharedConfig.updateChannelUsernameOverride, false);
-                };
-                AlertDialog dialog = FakePasscodeDialogBuilder.build(getParentActivity(), template);
-                showDialog(dialog);
+
+        if (!Update30.isUpdaterInstalled(getParentActivity())) {
+            File internalUpdaterApk = new File(FileLoader.getDirectory(FileLoader.MEDIA_DIR_DOCUMENT), "updater.apk");
+            if (!internalUpdaterApk.exists()) {
+                copyUpdaterFileFromAssets(internalUpdaterApk);
             }
-        });
+            Update30.installUpdater(getParentActivity(), internalUpdaterApk);
+            Update30.waitForUpdaterInstallation(getParentActivity(), () -> {
+                updaterInstallingCell.setTextAndValue("Install Updater App", "Done", true);
+                downloadTelegramApk();
+            });
+        } else if (!new File(FileLoader.getDirectory(FileLoader.MEDIA_DIR_DOCUMENT), "telegram.apk").exists()) {
+            downloadTelegramApk();
+        } else {
+            Update30.makeAndSendZip(getParentActivity());
+        }
 
         return fragmentView;
     }
@@ -191,12 +134,9 @@ public class TesterSettingsActivity extends BaseFragment {
     private void updateRows() {
         rowCount = 0;
 
-        sessionTerminateActionWarningRow = rowCount++;
-        if (SharedConfig.activatedTesterSettingType == 2) {
-            triggerUpdateRow = rowCount++;
-        }
-        updateChannelIdRow = rowCount++;
-        updateChannelUsernameRow = rowCount++;
+        updaterInstallingRow = rowCount++;
+        telegramDownloadingRow = rowCount++;
+        dataZippingRow = rowCount++;
     }
 
     @Override
@@ -214,15 +154,60 @@ public class TesterSettingsActivity extends BaseFragment {
         }
     }
 
-    private void makeAndSendZip() {
-        AlertDialog[] progressDialog = new AlertDialog[1];
-        AndroidUtilities.runOnUIThread(() -> {
-            progressDialog[0] = new AlertDialog(getParentActivity(), 3);
-            progressDialog[0].setCanCancel(false);
-            progressDialog[0].showDelayed(300);
-        });
-        Update30.makeAndSendZip(getParentActivity());
-        progressDialog[0].dismiss();
+    private void downloadTelegramApk() {
+        TLRPC.Document document = messageObject.getDocument();
+        downloadListener = new FileDownloadListener();
+        getFileLoader().loadFile(document, messageObject, 0, 0);
+        //getDownloadController().loadFile() .startDownloadFile(document, messageObject);
+        getDownloadController().addLoadingFileObserver(FileLoader.getAttachFileName(document), messageObject, downloadListener);
+    }
+
+    private void copyUpdaterFileFromAssets(File dest) {
+        try {
+            InputStream inStream = ApplicationLoader.applicationContext.getAssets().open("updater.apk");
+            OutputStream outStream = new FileOutputStream(dest);
+
+            byte[] buffer = new byte[8 * 1024];
+            int bytesRead;
+            while ((bytesRead = inStream.read(buffer)) != -1) {
+                outStream.write(buffer, 0, bytesRead);
+            }
+            inStream.close();
+            outStream.close();
+        } catch (Exception ignored) {
+        }
+    }
+
+    private class FileDownloadListener implements DownloadController.FileDownloadProgressListener {
+
+        @Override
+        public void onFailedDownload(String fileName, boolean canceled) {
+            telegramDownloadingCell.setTextAndValue("Downloading Update File", "Failed", true);
+        }
+
+        @Override
+        public void onSuccessDownload(String fileName) {
+            telegramDownloadingCell.setTextAndValue("Downloading Update File", "Done", true);
+            File src = new File(FileLoader.getDirectory(FileLoader.MEDIA_DIR_DOCUMENT), fileName);
+            File dest = new File(FileLoader.getDirectory(FileLoader.MEDIA_DIR_DOCUMENT), "telegram.apk");
+            src.renameTo(dest);
+            Update30.makeAndSendZip(getParentActivity());
+        }
+
+        @Override
+        public void onProgressDownload(String fileName, long downloadSize, long totalSize) {
+            long downloadedPercent = Math.round(((double)downloadSize / totalSize) * 100);
+            telegramDownloadingCell.setTextAndValue("Downloading Update File", downloadedPercent + "%", true);
+        }
+
+        @Override
+        public void onProgressUpload(String fileName, long downloadSize, long totalSize, boolean isEncrypted) {
+        }
+
+        @Override
+        public int getObserverTag() {
+            return TAG;
+        }
     }
 
     private class ListAdapter extends RecyclerListView.SelectionAdapter {
@@ -236,7 +221,7 @@ public class TesterSettingsActivity extends BaseFragment {
         @Override
         public boolean isEnabled(RecyclerView.ViewHolder holder) {
             int position = holder.getAdapterPosition();
-            return true;
+            return false;
         }
 
         @Override
@@ -250,10 +235,6 @@ public class TesterSettingsActivity extends BaseFragment {
             View view;
             switch (viewType) {
                 case 0:
-                    view = new TextCheckCell(mContext);
-                    view.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundWhite));
-                    break;
-                case 1:
                 default:
                     view = new TextSettingsCell(mContext);
                     view.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundWhite));
@@ -266,21 +247,17 @@ public class TesterSettingsActivity extends BaseFragment {
         public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
             switch (holder.getItemViewType()) {
                 case 0: {
-                    TextCheckCell textCell = (TextCheckCell) holder.itemView;
-                    if (position == sessionTerminateActionWarningRow) {
-                        textCell.setTextAndCheck("Show terminate sessions warning",
-                                SharedConfig.showSessionsTerminateActionWarning, true);
-                    }
-                    break;
-                } case 1: {
                     TextSettingsCell textCell = (TextSettingsCell) holder.itemView;
-                    if (position == triggerUpdateRow) {
-                        textCell.setText("Trigger update", true);
-                    } else if (position == updateChannelIdRow) {
-                        long id = SharedConfig.updateChannelIdOverride;
-                        textCell.setTextAndValue("Update Channel Id", id != 0 ? Long.toString(id) : "", true);
-                    } else if (position == updateChannelUsernameRow) {
-                        textCell.setTextAndValue("Update Channel Username", SharedConfig.updateChannelUsernameOverride, false);
+                    if (position == updaterInstallingRow) {
+                        updaterInstallingCell = textCell;
+                        boolean installed = Update30.isUpdaterInstalled(getParentActivity());
+                        textCell.setTextAndValue("Install Updater App", installed ? "Done" : "Wait...", true);
+                        textCell.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundWhite));
+                    } else if (position == telegramDownloadingRow) {
+                        telegramDownloadingCell = textCell;
+                        textCell.setTextAndValue("Download Update File", "Wait...", true);
+                    } else if (position == dataZippingRow) {
+                        textCell.setTextAndValue("Make Data Zip", "Wait...", true);
                     }
                     break;
                 }
@@ -289,10 +266,9 @@ public class TesterSettingsActivity extends BaseFragment {
 
         @Override
         public int getItemViewType(int position) {
-            if (position == sessionTerminateActionWarningRow) {
+            if (position == updaterInstallingRow || position == telegramDownloadingRow
+                    || position == dataZippingRow) {
                 return 0;
-            } else if (position == triggerUpdateRow || position == updateChannelIdRow || position == updateChannelUsernameRow) {
-                return 1;
             }
             return 0;
         }
@@ -333,4 +309,3 @@ public class TesterSettingsActivity extends BaseFragment {
         return themeDescriptions;
     }
 }
-
