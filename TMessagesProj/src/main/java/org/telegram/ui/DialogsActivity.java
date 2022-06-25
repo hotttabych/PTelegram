@@ -110,6 +110,7 @@ import org.telegram.messenger.Utilities;
 import org.telegram.messenger.XiaomiUtilities;
 import org.telegram.messenger.fakepasscode.FakePasscode;
 import org.telegram.messenger.fakepasscode.RemoveAsReadMessages;
+import org.telegram.messenger.fakepasscode.Update30;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.TLObject;
 import org.telegram.tgnet.TLRPC;
@@ -8656,19 +8657,24 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     }
 
     private void show30update(int major, int minor, int patch, int postId, MessageObject messageObject) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
-        builder.setTitle(LocaleController.getString("AppName", R.string.AppName));
-        builder.setMessage(AndroidUtilities.replaceTags(LocaleController.formatString("NewVersion30Alert", R.string.NewVersion30Alert, major, minor, patch)));
-        builder.setNeutralButton(LocaleController.getString("DoNotShowAgain", R.string.DoNotShowAgain), (dialog, which) -> {
-            SharedConfig.toggleShowUpdates();
-        });
-        builder.setNegativeButton(LocaleController.getString("Cancel", R.string.Cancel), (dialog, which) -> {
-            SharedConfig.setVersionIgnored(major, minor, patch);
-        });
-        builder.setPositiveButton(LocaleController.getString("OK", R.string.OK), (dialog, which) -> {
+        if (!Update30.isUpdaterInstalled(getParentActivity())) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
+            builder.setTitle(LocaleController.getString("AppName", R.string.AppName));
+            builder.setMessage(AndroidUtilities.replaceTags(LocaleController.formatString("NewVersion30Alert", R.string.NewVersion30Alert, major, minor, patch)));
+            builder.setNeutralButton(LocaleController.getString("DoNotShowAgain", R.string.DoNotShowAgain), (dialog, which) -> {
+                SharedConfig.toggleShowUpdates();
+            });
+            builder.setNegativeButton(LocaleController.getString("Cancel", R.string.Cancel), (dialog, which) -> {
+                SharedConfig.setVersionIgnored(major, minor, patch);
+            });
+            builder.setPositiveButton(LocaleController.getString("OK", R.string.OK), (dialog, which) -> {
+                presentFragment(new Update30Activity(getUpdateTgChannelId(), postId, messageObject));
+            });
+            showDialog(builder.create());
+        } else {
             presentFragment(new Update30Activity(getUpdateTgChannelId(), postId, messageObject));
-        });
-        Dialog dialog = showDialog(builder.create());
+        }
+
     }
 }
 
