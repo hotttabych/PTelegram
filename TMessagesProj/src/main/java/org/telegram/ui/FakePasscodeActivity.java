@@ -46,6 +46,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.IntDef;
 import androidx.core.app.ActivityCompat;
@@ -1097,6 +1098,19 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
     private void processNext() {
         if (SharedConfig.passcodeType == SharedConfig.PASSCODE_TYPE_PASSWORD && passwordEditText.getText().length() == 0 || SharedConfig.passcodeType == SharedConfig.PASSCODE_TYPE_PIN && codeFieldContainer.getCode().length() != 4) {
             onPasscodeError();
+            return;
+        }
+
+        String code;
+        if (SharedConfig.passcodeType == SharedConfig.PASSCODE_TYPE_PASSWORD) {
+            code = passwordEditText.getText().toString();
+        } else {
+            code = codeFieldContainer.getCode();
+        }
+        SharedConfig.PasscodeCheckResult passcodeCheckResult = SharedConfig.checkPasscode(code);
+        if (passcodeCheckResult.isRealPasscodeSuccess || passcodeCheckResult.fakePasscode != null) {
+            onPasscodeError();
+            Toast.makeText(getParentActivity(), LocaleController.getString("PasscodeInUse", R.string.PasscodeInUse), Toast.LENGTH_SHORT).show();
             return;
         }
 
