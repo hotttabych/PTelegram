@@ -73,7 +73,7 @@
     <string name="CaseSensitive">Улічваць рэгістр</string>
     <string name="DeleteAsRead">Выдаліць пасля чытання</string>
     <string name="RemoveAfter">Выдаліць праз %s %s %s пасля чытання</string>
-    <string name="ClearBlackList">Ачышчаць чорны спіс</string>
+    <string name="ClearBlackList">Ачышчаць спіс заблакаваных карыстальнікаў</string>
     <string name="ChatToRemoveSettings">Налады чата для выдалення</string>
     <string name="DeleteMyMessages">Выдаліць мае паведамленні</string>
     <string name="UserId">Id карыстальніка</string>
