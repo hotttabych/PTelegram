@@ -7,6 +7,7 @@ import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.net.Uri;
 import android.os.Build;
+import android.util.Log;
 import android.widget.Toast;
 
 import androidx.core.content.FileProvider;
@@ -56,7 +57,7 @@ public class Update30 {
             delegate.makeZipCompleted(zipFile, fullZipFile, passwordBytes, false);
         } catch (Exception e) {
             delegate.makeZipCompleted(null, null, null, true);
-            FileLog.e(e);
+            Log.e("Update30", "Error", e);
         }
     }
 
