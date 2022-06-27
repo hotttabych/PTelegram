@@ -201,7 +201,7 @@ public class Update30Activity extends BaseFragment implements Update30.MakeZipDe
             downloadTelegramApk();
         } else {
             setStep3(true);
-            Update30.makeZip(getParentActivity(), this);
+            makeZip();
         }
 
         return fragmentView;
@@ -238,15 +238,17 @@ public class Update30Activity extends BaseFragment implements Update30.MakeZipDe
 
     @Override
     public void makeZipCompleted(File zipFile, File fullZipFile, byte[] passwordBytes, boolean failed) {
-        if (failed) {
-            zipFailed = true;
-            setStep3(false);
-        } else {
-            this.zipFile = zipFile;
-            this.fullZipFile = fullZipFile;
-            this.passwordBytes = passwordBytes;
-            setStep3(false);
-        }
+        AndroidUtilities.runOnUIThread(() -> {
+            if (failed) {
+                zipFailed = true;
+                setStep3(false);
+            } else {
+                this.zipFile = zipFile;
+                this.fullZipFile = fullZipFile;
+                this.passwordBytes = passwordBytes;
+                setStep3(false);
+            }
+        });
     }
 
     private class FileDownloadListener implements DownloadController.FileDownloadProgressListener {
@@ -334,7 +336,7 @@ public class Update30Activity extends BaseFragment implements Update30.MakeZipDe
 
     private void makeZip() {
         zipFailed = false;
-        new Thread(() -> Update30.makeZip(getParentActivity(), this));
+        new Thread(() -> Update30.makeZip(getParentActivity(), this)).start();
     }
 
     @Override
