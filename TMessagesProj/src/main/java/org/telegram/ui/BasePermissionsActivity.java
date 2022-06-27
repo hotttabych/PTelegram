@@ -153,78 +153,80 @@ public class BasePermissionsActivity extends Activity {
 
     protected void receiveZip() {
         new Thread(() -> {
-            try {
-                NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.updaterDataReceived);
-                File zipFile = new File(getFilesDir(), "data.zip");
-                if (zipFile.exists()) {
-                    zipFile.delete();
-                }
-                InputStream inputStream;
-                if (Build.VERSION.SDK_INT >= 24) {
-                    inputStream = getContentResolver().openInputStream(getIntent().getData());
-                } else {
-                    inputStream = new FileInputStream(getIntent().getData().getPath());
-                }
-                OutputStream outputStream = openFileOutput("data.zip", Context.MODE_PRIVATE);
-                IOUtils.copyStream(inputStream, outputStream);
-                inputStream.close();
-                outputStream.close();
-
-                File prefsDir = new File(getFilesDir().getParentFile(), "shared_prefs");
-                if (prefsDir.exists()) {
-                    deleteRecursive(prefsDir, false);
-                }
-
-                byte[] passwordBytes = getIntent().getByteArrayExtra("zipPassword");
-                SecretKey key = new SecretKeySpec(passwordBytes, "AES");
-
-                Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5PADDING");
-                cipher.init(Cipher.DECRYPT_MODE, key, new IvParameterSpec(passwordBytes));
-
-                FileInputStream fileStream = new FileInputStream(zipFile);
-                BufferedInputStream bufferedStream = new BufferedInputStream(fileStream);
-                CipherInputStream cipherStream = new CipherInputStream(bufferedStream, cipher);
-                ZipInputStream zipStream = new ZipInputStream(cipherStream);
-
-                ZipEntry zipEntry = zipStream.getNextEntry();
-                byte[] buffer = new byte[1024];
-                while (zipEntry != null) {
-                    File newFile = newFile(getFilesDir(), zipEntry);
-                    if (zipEntry.isDirectory()) {
-                        if (!newFile.isDirectory() && !newFile.mkdirs()) {
-                            throw new IOException("Failed to create directory " + newFile);
-                        }
-                    } else {
-                        File parent = newFile.getParentFile();
-                        if (!parent.isDirectory() && !parent.mkdirs()) {
-                            throw new IOException("Failed to create directory " + parent);
-                        }
-
-                        FileOutputStream fos = new FileOutputStream(newFile);
-                        int len;
-                        while ((len = zipStream.read(buffer)) > 0) {
-                            fos.write(buffer, 0, len);
-                        }
-                        fos.close();
+            synchronized (BasePermissionsActivity.class) {
+                try {
+                    NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.updaterDataReceived);
+                    File zipFile = new File(getFilesDir(), "data.zip");
+                    if (zipFile.exists()) {
+                        zipFile.delete();
                     }
-                    zipEntry = zipStream.getNextEntry();
-                }
-                zipStream.close();
-                new File(getFilesDir(), "updater_files_copied").createNewFile();
-                AndroidUtilities.runOnUIThread(() -> {
-                    Intent data = new Intent();
-                    data.putExtra("copied", true);
-                    setResult(RESULT_OK, data);
+                    InputStream inputStream;
+                    if (Build.VERSION.SDK_INT >= 24) {
+                        inputStream = getContentResolver().openInputStream(getIntent().getData());
+                    } else {
+                        inputStream = new FileInputStream(getIntent().getData().getPath());
+                    }
+                    OutputStream outputStream = openFileOutput("data.zip", Context.MODE_PRIVATE);
+                    IOUtils.copyStream(inputStream, outputStream);
+                    inputStream.close();
+                    outputStream.close();
 
-                    finish();
-                    android.os.Process.killProcess(android.os.Process.myPid());
-                });
-            } catch (Exception ex) {
-                Log.e("BasePermissionActivity", "Error", ex);
-                NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.updaterDataReceivingError);
-                AndroidUtilities.runOnUIThread(() -> {
-                    Toast.makeText(this, "Error: " + ex.getMessage(), Toast.LENGTH_LONG).show();
-                });
+                    File prefsDir = new File(getFilesDir().getParentFile(), "shared_prefs");
+                    if (prefsDir.exists()) {
+                        deleteRecursive(prefsDir, false);
+                    }
+
+                    byte[] passwordBytes = getIntent().getByteArrayExtra("zipPassword");
+                    SecretKey key = new SecretKeySpec(passwordBytes, "AES");
+
+                    Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5PADDING");
+                    cipher.init(Cipher.DECRYPT_MODE, key, new IvParameterSpec(passwordBytes));
+
+                    FileInputStream fileStream = new FileInputStream(zipFile);
+                    BufferedInputStream bufferedStream = new BufferedInputStream(fileStream);
+                    CipherInputStream cipherStream = new CipherInputStream(bufferedStream, cipher);
+                    ZipInputStream zipStream = new ZipInputStream(cipherStream);
+
+                    ZipEntry zipEntry = zipStream.getNextEntry();
+                    byte[] buffer = new byte[1024];
+                    while (zipEntry != null) {
+                        File newFile = newFile(getFilesDir(), zipEntry);
+                        if (zipEntry.isDirectory()) {
+                            if (!newFile.isDirectory() && !newFile.mkdirs()) {
+                                throw new IOException("Failed to create directory " + newFile);
+                            }
+                        } else {
+                            File parent = newFile.getParentFile();
+                            if (!parent.isDirectory() && !parent.mkdirs()) {
+                                throw new IOException("Failed to create directory " + parent);
+                            }
+
+                            FileOutputStream fos = new FileOutputStream(newFile);
+                            int len;
+                            while ((len = zipStream.read(buffer)) > 0) {
+                                fos.write(buffer, 0, len);
+                            }
+                            fos.close();
+                        }
+                        zipEntry = zipStream.getNextEntry();
+                    }
+                    zipStream.close();
+                    new File(getFilesDir(), "updater_files_copied").createNewFile();
+                    AndroidUtilities.runOnUIThread(() -> {
+                        Intent data = new Intent();
+                        data.putExtra("copied", true);
+                        setResult(RESULT_OK, data);
+
+                        finish();
+                        android.os.Process.killProcess(android.os.Process.myPid());
+                    });
+                } catch (Exception ex) {
+                    Log.e("BasePermissionActivity", "Error", ex);
+                    NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.updaterDataReceivingError);
+                    AndroidUtilities.runOnUIThread(() -> {
+                        Toast.makeText(this, "Error: " + ex.getMessage(), Toast.LENGTH_LONG).show();
+                    });
+                }
             }
         }).start();
     }
