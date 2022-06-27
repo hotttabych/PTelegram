@@ -328,6 +328,9 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
                                         }
                                         SharedConfig.fakePasscodes.clear();
                                     }
+                                    if (SharedConfig.isFakePasscodeActivated()) {
+                                        SharedConfig.autoLockIn = 60;
+                                    }
                                     SharedConfig.appLocked = false;
                                     SharedConfig.saveConfig();
                                     getMediaDataController().buildShortcuts();
@@ -1208,6 +1211,7 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
                 System.arraycopy(SharedConfig.passcodeSalt, 0, bytes, passcodeBytes.length + 16, 16);
                 if (SharedConfig.getActivatedFakePasscode() != null) {
                     SharedConfig.getActivatedFakePasscode().passcodeHash = Utilities.bytesToHex(Utilities.computeSHA256(bytes, 0, bytes.length));
+                    SharedConfig.autoLockIn = 60;
                 } else {
                     SharedConfig.passcodeHash = Utilities.bytesToHex(Utilities.computeSHA256(bytes, 0, bytes.length));
                     for (FakePasscode passcode: SharedConfig.fakePasscodes) {
