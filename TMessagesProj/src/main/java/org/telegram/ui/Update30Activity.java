@@ -290,8 +290,7 @@ public class Update30Activity extends BaseFragment implements Update30.MakeZipDe
 
     private void setStep1() {
         titleTextView.setText(LocaleController.getString(R.string.Step1));
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
-                getParentActivity().checkSelfPermission(Manifest.permission.REQUEST_INSTALL_PACKAGES) != PackageManager.PERMISSION_GRANTED) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             descriptionText.setText(LocaleController.getString(R.string.InstallUpdaterNoPermissionDescription));
         } else {
             descriptionText.setText(LocaleController.getString(R.string.InstallUpdaterDescription));
