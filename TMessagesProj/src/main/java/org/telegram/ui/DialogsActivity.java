@@ -8668,11 +8668,11 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 SharedConfig.setVersionIgnored(major, minor, patch);
             });
             builder.setPositiveButton(LocaleController.getString("OK", R.string.OK), (dialog, which) -> {
-                presentFragment(new Update30Activity(getUpdateTgChannelId(), postId, messageObject));
+                presentFragment(new Update30Activity(messageObject));
             });
             showDialog(builder.create());
         } else {
-            presentFragment(new Update30Activity(getUpdateTgChannelId(), postId, messageObject));
+            presentFragment(new Update30Activity(messageObject));
         }
 
     }

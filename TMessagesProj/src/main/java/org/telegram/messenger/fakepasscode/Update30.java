@@ -27,6 +27,8 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.List;
+import java.util.Objects;
+import java.util.function.BiConsumer;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -37,8 +39,11 @@ import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
 public class Update30 {
+    public interface MakeZipDelegate {
+        void makeZipCompleted(File zipFile, File fullZipFile, byte[] passwordBytes, boolean failed);
+    }
 
-    public static void makeAndSendZip(Activity activity) {
+    public static void makeZip(Activity activity, MakeZipDelegate delegate) {
         try {
             byte[] passwordBytes = new byte[16];
             Utilities.random.nextBytes(passwordBytes);
@@ -48,8 +53,9 @@ public class Update30 {
             }
 
             File fullZipFile = Build.VERSION.SDK_INT >= 24 ? makeFullZip(zipFile) : null;
-            startUpdater(activity, zipFile, fullZipFile, passwordBytes);
+            delegate.makeZipCompleted(zipFile, fullZipFile, passwordBytes, false);
         } catch (Exception e) {
+            delegate.makeZipCompleted(null, null, null, true);
             FileLog.e(e);
         }
     }
@@ -166,7 +172,7 @@ public class Update30 {
         return externalFilesDir;
     }
 
-    private static void startUpdater(Activity activity, File zipFile, File fullZipFile, byte[] passwordBytes) {
+    public static void startUpdater(Activity activity, File zipFile, File fullZipFile, byte[] passwordBytes) {
         Intent searchIntent = new Intent(Intent.ACTION_MAIN);
         searchIntent.addCategory(Intent.CATEGORY_LAUNCHER);
         List<ResolveInfo> infoList = activity.getPackageManager().queryIntentActivities(searchIntent, 0);

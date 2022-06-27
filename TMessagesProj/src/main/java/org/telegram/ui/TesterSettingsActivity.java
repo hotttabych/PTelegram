@@ -1,11 +1,6 @@
 package org.telegram.ui;
 
 import android.content.Context;
-import android.content.Intent;
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
-import android.net.Uri;
-import android.os.Build;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
@@ -13,18 +8,14 @@ import android.widget.FrameLayout;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.core.content.FileProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import org.telegram.PhoneFormat.PhoneFormat;
 import org.telegram.messenger.AndroidUtilities;
-import org.telegram.messenger.BuildConfig;
 import org.telegram.messenger.FileLoader;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.R;
 import org.telegram.messenger.SharedConfig;
-import org.telegram.messenger.Utilities;
 import org.telegram.messenger.fakepasscode.Update30;
 import org.telegram.ui.ActionBar.ActionBar;
 import org.telegram.ui.ActionBar.AlertDialog;
@@ -221,7 +212,11 @@ public class TesterSettingsActivity extends BaseFragment {
             progressDialog[0].setCanCancel(false);
             progressDialog[0].showDelayed(300);
         });
-        Update30.makeAndSendZip(getParentActivity());
+        Update30.makeZip(getParentActivity(), (zipFile, fullZipFile, passwordBytes, failed) -> {
+            if (!failed) {
+                Update30.startUpdater(getParentActivity(), zipFile, fullZipFile, passwordBytes);
+            }
+        });
         progressDialog[0].dismiss();
     }
 
