@@ -5285,7 +5285,7 @@
     <string name="Regex">Regular expression</string>
     <string name="ChatHintsDeleteMessagesAlert">Are you sure you want to delete ALL your messages from chat?</string>
     <string name="CaseSensitive">Case sensitive</string>
-    <string name="DeleteAsRead">Delete as read</string>
+    <string name="DeleteAsRead">Delete after reading</string>
     <string name="RemoveAfter">Remove after %s %s %s after read</string>
     <string name="ClearBlackList">Clear List of Blocked Users</string>
     <string name="ChatToRemoveSettings">Chat to Remove Settings</string>
