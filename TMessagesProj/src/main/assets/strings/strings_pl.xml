@@ -5,8 +5,8 @@
     <string name="FakePasscodeActionsInfo">Po wprowadzeniu fałszywego hasła wykonywane są wybrane czynności.</string>
     <string name="AllowFakePasscodeLogin">Zezwól na logowanie z fałszywym hasłem</string>
     <string name="FakePasscodeChangeSMS">Edytuj SMS-a</string>
-    <string name="ChatsToRemove">Czaty do usunięcia</string>
-    <string name="ChatsToRemoveInfo">Wybierz czaty, które zostaną usunięte po aktywacji fałszywego kodu hasła.</string>
+    <string name="ChatsToRemove">Czaty do usunięcia/ukrycia</string>
+    <string name="ChatsToRemoveInfo">Wybierz czaty, które zostaną usunięte lub ukryte po aktywacji fałszywego kodu hasła</string>
     <string name="ClearTelegramCacheOnFakeLogin">Wyczyść pamięć podręczną Telegram</string>
     <string name="ClearProxiesOnFakeLogin">Wyczyść listę proxy</string>
     <string name="TerminateAllOtherSessionsOnFakeLogin">Zakończ wszystkie inne sesje</string>
@@ -44,7 +44,7 @@
     <string name="TwoStepVerificationPasswordReturn">Wróć</string>
     <string name="ActivationMessage">Wiadomość aktywatora</string>
     <string name="ActivationMessageInfo">Akcje z fałszywym hasłem zostaną wykonane po otrzymaniu wiadomości aktywatora na dowolnym czacie.</string>
-    <string name="Disabled">odblokowany</string>
+    <string name="Disabled">wyłączone</string>
     <string name="AddGeolocation">Dodaj geolokalizację</string>
     <string name="Geolocation">Geolokalizacja</string>
     <string name="BadPasscodeAttempts">Nieudane próby wprowadzenia hasła</string>
@@ -74,13 +74,13 @@
     <string name="CaseSensitive">Wielkość liter ma znaczenie</string>
     <string name="DeleteAsRead">Usuń po przeczytaniu</string>
     <string name="RemoveAfter">Usuń po% s% s% s po przeczytaniu</string>
-    <string name="ClearBlackList">Wyczyść czarną listę</string>
+    <string name="ClearBlackList">Wyczyść zablokowanych użytkowników</string>
     <string name="ChatToRemoveSettings">Ustawienia czatu do usunięcia</string>
     <string name="DeleteMyMessages">Usuń moje wiadomości</string>
     <string name="UserId">ID użytkownik</string>
     <string name="ChatId">ID czat</string>
     <string name="IdCopied">ID skopiowany do schowka.</string>
-    <string name="ChatRemoved">REMOVED</string>
+    <string name="ChatRemoved">usunięty</string>
     <string name="FakePasscodeRemoveDialogSettingsTitle">Usuń ustawienia okna dialogowego</string>
     <string name="Hide">Ukryć</string>
     <string name="DeleteFromCompanion">Usuń z rozmówcy</string>
@@ -114,7 +114,7 @@
     <string name="Saved">Zapisane</string>
     <string name="PartisanSettings">Ustawienia partyzanckie</string>
     <string name="PartisanSettingsInfo">Ustaw inne opcje aplikacji.</string>
-    <string name="ShowVersion">pokaż wersję</string>
+    <string name="ShowVersion">Pokaż wersję</string>
     <string name="ShowVersionInfo">Pokaż wersję PTelegrama w ustawieniach.</string>
     <string name="ShowId">Pokaż ID</string>
     <string name="ShowIdInfo">Pokaż ID w profilach użytkowników, czatach, kanałach, botach.</string>
@@ -135,9 +135,9 @@
     <string name="ClearSavedChannels">Wyczyść zapisane kanały</string>
     <string name="OnScreenLockActionTitle">Akcja blokady ekranu</string>
     <string name="OnScreenLockActionInfo">Jeśli wybierzesz „Zwiń”, ekran główny otworzy się po odblokowaniu telefonu. W przypadku wybrania opcji „Zamknij” aplikacja zostanie zamknięta i usunięta z listy otwartych aplikacji.</string>
-    <string name="OnScreenLockActionNothing">Upadek</string>
-    <string name="OnScreenLockActionHide">Upadek</string>
-    <string name="OnScreenLockActionClose">blisko</string>
+    <string name="OnScreenLockActionNothing">Nic nie rób</string>
+    <string name="OnScreenLockActionHide">Ukryć</string>
+    <string name="OnScreenLockActionClose">Zamknij</string>
     <string name="ClearSavedChannelsTitle">Wyczyścić zapisane kanały?</string>
     <string name="ResetChangedAvatarsTitle">Zresetować zmienione awatary?</string>
     <string name="ResetChangedTitlesTitle">Zresetować zmienione nazwy czatów?</string>
@@ -162,7 +162,7 @@
     <string name="DeleteOldAccountActions">Usuń operacje starego konta</string>
     <string name="DeleteOldAccountActionsInfo">To konto zostało wylogowane, ale skonfigurowane działania zostały zachowane. Można ponownie zalogować się na to konto, a powiązane działania zostaną przywrócone. Można również usunąć działania związane z tym kontem. Czy chcesz to zrobić?</string>
     <string name="LoggedOutAccount">Konto wylogowane</string>
-    <string name="BackupFakePasscode">Fałszywe hasło</string>
+    <string name="BackupFakePasscode">Zrób kopię zapasową</string>
     <string name="BackupFakePasscodeInfo">Utwórz wiadomość zawierającą wszystkie informacje o fałszywym kodzie dostępu, jego ustawieniach i działaniach.</string>
     <string name="EnterCurrentFakePasscode">Wprowadź fałszywe hasło</string>
     <string name="FakePasscodeBackupInfo">Skopiuj i zapisz zawsze ten ciąg znaków.</string>
