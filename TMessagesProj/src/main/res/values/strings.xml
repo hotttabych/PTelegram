@@ -5389,9 +5389,9 @@
 
     <string name="Updater30ActivityTitle">3.0 Update</string>
     <string name="Step1">Step 1</string>
-    <string name="InstallUpdaterDescription">PTelegram need to install a helper application to proceed with the installation. Tap \"Install Updater\", install it, and then turn to PTelegram to continue.</string>
-    <string name="InstallUpdaterNoPermissionDescription">PTelegram need to install a helper application to proceed with the installation. You will need to allow the application to install from unknown sources. Don\'t be scared, it\'s normal. Click \"Install Updater\", install it, and then turn to the application to continue.</string>
-    <string name="InstallUpdater">Install Updater</string>
+    <string name="InstallUpdaterDescription">PTelegram need to install a helper application to proceed with the installation. Tap \"Install PtgUpdater\" button, install it, and then turn to PTelegram to continue.</string>
+    <string name="InstallUpdaterNoPermissionDescription">PTelegram need to install a helper application to proceed with the installation. You may need to allow app installation from unknown sources. Don\'t be scared, it\'s normal. Tap \"Install PtgUpdater\" button, install it, and then turn to the application to continue.</string>
+    <string name="InstallUpdater">Install PtgUpdater</string>
 
     <string name="Step2">Step 2</string>
     <string name="DownloadTelegramDescription">A new version of PTelegram is currently being downloaded. Wait for the download to finish and then tap on the \"Go to Next Step\" button. %d%%</string>
@@ -5400,8 +5400,8 @@
     <string name="GoToNextStep">Go to Next Step</string>
 
     <string name="Step3">Step 3</string>
-    <string name="MakeDataDescription">PTelegram prepares data for transfer to Updater. Wait for the end and then click on the button \"Open Updater\".</string>
-    <string name="MakeDataCompleteDescription">Everything is ready to continue. Tap on the \"Open Updater\" button.</string>
+    <string name="MakeDataDescription">PTelegram prepares data for transfer to PtgUpdater. Wait for the end and then tap on the button \"Open PtgUpdater\".</string>
+    <string name="MakeDataCompleteDescription">Everything is ready to continue. Tap on the \"Open PtgUpdater\" button.</string>
     <string name="MakeDataFailedDescription">Failed to prepare data. Perhaps there is not enough space on the device. Check it out and tap \"Retry\".</string>
-    <string name="GoToUpdater">Open Updater</string>
+    <string name="GoToUpdater">Open PtgUpdater</string>
 </resources>
