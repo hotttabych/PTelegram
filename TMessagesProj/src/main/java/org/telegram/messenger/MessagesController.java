@@ -150,7 +150,7 @@ public class MessagesController extends BaseController implements NotificationCe
     private int pollsToCheckSize;
     private long lastViewsCheckTime;
     public SparseIntArray premiumFeaturesTypesToPosition = new SparseIntArray();
-
+    
     public ArrayList<DialogFilter> dialogFilters = new ArrayList<>();
     public SparseArray<DialogFilter> dialogFiltersById = new SparseArray<>();
     private boolean loadingSuggestedFilters;
@@ -878,7 +878,7 @@ public class MessagesController extends BaseController implements NotificationCe
     };
 
     private static volatile MessagesController[] Instance = new MessagesController[UserConfig.MAX_ACCOUNT_COUNT];
-    private static volatile Object[] lockObjects = new Object[UserConfig.MAX_ACCOUNT_COUNT];
+    private static final Object[] lockObjects = new Object[UserConfig.MAX_ACCOUNT_COUNT];
     static {
         for (int i = 0; i < UserConfig.MAX_ACCOUNT_COUNT; i++) {
             lockObjects[i] = new Object();
@@ -1630,6 +1630,7 @@ public class MessagesController extends BaseController implements NotificationCe
                 SharedPreferences.Editor editor = mainPreferences.edit();
                 boolean changed = false;
                 boolean keelAliveChanged = false;
+                resetAppConfig();
                 TLRPC.TL_jsonObject object = (TLRPC.TL_jsonObject) response;
                 for (int a = 0, N = object.value.size(); a < N; a++) {
                     TLRPC.TL_jsonObjectValue value = object.value.get(a);
@@ -2414,6 +2415,11 @@ public class MessagesController extends BaseController implements NotificationCe
             }
             loadingAppConfig = false;
         }));
+    }
+
+    private void resetAppConfig() {
+        getfileExperimentalParams = false;
+        mainPreferences.edit().remove("getfileExperimentalParams");
     }
 
     private boolean savePremiumFeaturesPreviewOrder(SharedPreferences.Editor editor, ArrayList<TLRPC.JSONValue> value) {
@@ -9319,7 +9325,7 @@ public class MessagesController extends BaseController implements NotificationCe
                         }
                         MessageObject oldMsg = dialogMessage.get(key);
                         if (BuildVars.LOGS_ENABLED) {
-                            FileLog.d("processDialogsUpdate oldMsg " + oldMsg + " old top_message = " + currentDialog.top_message + " new top_message = " + value.top_message);
+                            FileLog.d("processDialogsUpdate oldMsg " + oldMsg + " old top_message = " + currentDialog.top_message + " new top_message = " + value.top_message + "  unread_count =" + currentDialog.unread_count + " fromCache=" + fromCache);
                             FileLog.d("processDialogsUpdate oldMsgDeleted " + (oldMsg != null && oldMsg.deleted));
                         }
                         if (oldMsg == null || currentDialog.top_message > 0) {
