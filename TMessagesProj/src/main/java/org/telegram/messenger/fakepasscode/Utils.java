@@ -134,6 +134,12 @@ public class Utils {
                     logs.delete();
                 }
 
+                logs = new File(ApplicationLoader.applicationContext.getExternalFilesDir(null), "logs");
+                if (logs.exists()) {
+                    Utilities.clearDir(logs.getAbsolutePath(), 0, Long.MAX_VALUE, true);
+                    logs.delete();
+                }
+
                 if (type == FileLoader.MEDIA_DIR_CACHE) {
                     imagesCleared = true;
                 } else if (type == FileLoader.MEDIA_DIR_IMAGE) {
