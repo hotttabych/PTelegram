@@ -1109,7 +1109,7 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
         }
         SharedConfig.PasscodeCheckResult passcodeCheckResult = SharedConfig.checkPasscode(code);
         if (passcodeCheckResult.isRealPasscodeSuccess || passcodeCheckResult.fakePasscode != null) {
-            onPasscodeError();
+            invalidPasscodeEntered();
             Toast.makeText(getParentActivity(), LocaleController.getString("PasscodeInUse", R.string.PasscodeInUse), Toast.LENGTH_SHORT).show();
             return;
         }
