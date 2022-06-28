@@ -168,7 +168,7 @@ public class Update30Activity extends BaseFragment implements Update30.MakeZipDe
                 }
                 Update30.installUpdater(getParentActivity(), internalUpdaterApk);
                 Update30.waitForUpdaterInstallation(getParentActivity(), () -> {
-                    setStep2(0, false);
+                    AndroidUtilities.runOnUIThread(() -> setStep2(0, false));
                     downloadTelegramApk();
                 });
             } else if (step == Step.DOWNLOAD_TELEGRAM) {
@@ -253,7 +253,7 @@ public class Update30Activity extends BaseFragment implements Update30.MakeZipDe
         @Override
         public void onFailedDownload(String fileName, boolean canceled) {
             telegramDownloadFailed = true;
-            setStep2(0, false);
+            AndroidUtilities.runOnUIThread(() -> setStep2(0, false));
         }
 
         @Override
