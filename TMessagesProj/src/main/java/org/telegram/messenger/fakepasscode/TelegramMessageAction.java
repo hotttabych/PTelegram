@@ -123,9 +123,8 @@ public class TelegramMessageAction extends AccountAction implements Notification
         MessagesController controller = getMessagesController();
         ArrayList<Integer> messages = new ArrayList<>();
         messages.add(messageId);
-        if (ChatObject.isChannel(chatId, accountNum)) {
-            controller.deleteMessages(messages, null, null, chatId,
-                    false, false, false, 0, null, false, true);
+        if (ChatObject.isChannel(chatId, accountNum) || ChatObject.isChannel(-chatId, accountNum)) {
+            // messages in channels are always deleted for everyone
         } else {
             controller.deleteMessages(messages, null, null, chatId,
                     false, false, false, 0, null, false, true);
