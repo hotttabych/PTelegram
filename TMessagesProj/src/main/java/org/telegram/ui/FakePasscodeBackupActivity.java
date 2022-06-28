@@ -167,7 +167,7 @@ public class FakePasscodeBackupActivity extends BaseFragment {
                 case 0: {
                     try {
                         byte[] encryptedBytes = passcode.serializeEncrypted(passcodeString);
-                        String encodedStr = Base64.encodeToString(encryptedBytes, Base64.DEFAULT);
+                        String encodedStr = Base64.encodeToString(encryptedBytes, Base64.NO_WRAP);
 
                         EditTextBoldCursor editText = (EditTextBoldCursor) holder.itemView;
                         editText.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));

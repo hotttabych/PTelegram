@@ -79,7 +79,7 @@ public class FakePasscodeRestoreActivity extends BaseFragment {
                 } else if (id == done_button) {
                     String base64 = editText.getText().toString().trim();
                     try {
-                        byte[] encryptedPasscode = Base64.decode(base64, Base64.DEFAULT);
+                        byte[] encryptedPasscode = Base64.decode(base64, Base64.NO_WRAP);
                         presentFragment(new FakePasscodeActivity(encryptedPasscode));
                     } catch(Exception ex) {
                         Toast.makeText(getParentActivity(), ex.getMessage(), Toast.LENGTH_SHORT).show();

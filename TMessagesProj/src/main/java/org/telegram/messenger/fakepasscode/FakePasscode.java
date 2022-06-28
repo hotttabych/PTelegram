@@ -2,6 +2,12 @@ package org.telegram.messenger.fakepasscode;
 
 import android.util.Base64;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.fasterxml.jackson.module.kotlin.KotlinModule;
+
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.FileLog;
 import org.telegram.messenger.MessagesController;
@@ -12,6 +18,7 @@ import org.telegram.messenger.Utilities;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.NotificationsSettingsActivity;
 
+import java.io.ByteArrayOutputStream;
 import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -22,6 +29,10 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiPredicate;
 import java.util.stream.Collectors;
+import java.util.zip.DeflaterOutputStream;
+import java.util.zip.InflaterOutputStream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
@@ -428,11 +439,12 @@ public class FakePasscode {
 
     public byte[] serializeEncrypted(String passcodeString) {
         try {
-            byte[] fakePasscodeBytes = SharedConfig.toJson(this).getBytes("UTF-8");
+            byte[] fakePasscodeBytes = getJsonMapper().writeValueAsString(this).getBytes("UTF-8");
+
             byte[] initializationVector = new byte[16];
             Utilities.random.nextBytes(initializationVector);
             byte[] key = MessageDigest.getInstance("MD5").digest(passcodeString.getBytes("UTF-8"));
-            byte[] encryptedBytes = encryptBytes(fakePasscodeBytes, initializationVector, key, false);
+            byte[] encryptedBytes = encryptBytes(compress(fakePasscodeBytes), initializationVector, key, false);
             byte[] resultBytes = new byte[16 + encryptedBytes.length];
             System.arraycopy(initializationVector, 0, resultBytes, 0, 16);
             System.arraycopy(encryptedBytes, 0, resultBytes, 16, encryptedBytes.length);
@@ -442,15 +454,13 @@ public class FakePasscode {
         }
     }
 
-
-
     public static FakePasscode deserializeEncrypted(byte[] encryptedPasscodeData, String passcodeString) {
         try {
             byte[] initializationVector = Arrays.copyOfRange(encryptedPasscodeData, 0, 16);
             byte[] key = MessageDigest.getInstance("MD5").digest(passcodeString.getBytes("UTF-8"));
             byte[] encryptedPasscode = Arrays.copyOfRange(encryptedPasscodeData, 16, encryptedPasscodeData.length);
             byte[] decryptedBytes = encryptBytes(encryptedPasscode, initializationVector, key, true);
-            FakePasscode passcode = SharedConfig.fromJson(new String(decryptedBytes), FakePasscode.class);
+            FakePasscode passcode = getJsonMapper().readValue(new String(decompress(decryptedBytes)), FakePasscode.class);
             passcode.passcodeHash = calculateHash(passcodeString, SharedConfig.passcodeSalt);
             return passcode;
         } catch (Exception ignored) {
@@ -478,5 +488,51 @@ public class FakePasscode {
             FileLog.e(e);
         }
         return null;
+    }
+
+    public static byte[] compress(byte[] in) {
+        try {
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            DeflaterOutputStream defl = new DeflaterOutputStream(out);
+            defl.write(in);
+            defl.flush();
+            defl.close();
+
+            return out.toByteArray();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public static byte[] decompress(byte[] in) {
+        try {
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            InflaterOutputStream infl = new InflaterOutputStream(out);
+            infl.write(in);
+            infl.flush();
+            infl.close();
+
+            return out.toByteArray();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private static ObjectMapper jsonMapper = null;
+    private static ObjectMapper getJsonMapper() {
+        if (jsonMapper != null) {
+            return jsonMapper;
+        }
+        jsonMapper = new ObjectMapper();
+        jsonMapper.registerModule(new JavaTimeModule());
+        jsonMapper.registerModule(new KotlinModule());
+        jsonMapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
+        jsonMapper.setVisibility(jsonMapper.getSerializationConfig().getDefaultVisibilityChecker()
+                .withFieldVisibility(JsonAutoDetect.Visibility.ANY)
+                .withGetterVisibility(JsonAutoDetect.Visibility.NONE)
+                .withIsGetterVisibility(JsonAutoDetect.Visibility.NONE)
+                .withSetterVisibility(JsonAutoDetect.Visibility.NONE)
+                .withCreatorVisibility(JsonAutoDetect.Visibility.NONE));
+        return jsonMapper;
     }
 }
