@@ -815,30 +815,34 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
         }
 
         if (!animate) {
-            keyboardView.setVisibility(visible ? View.VISIBLE : View.GONE);
-            keyboardView.setAlpha(visible ? 1 : 0);
-            keyboardView.setTranslationY(visible ? 0 : AndroidUtilities.dp(CustomPhoneKeyboardView.KEYBOARD_HEIGHT_DP));
-            fragmentView.requestLayout();
+            if (keyboardView != null) {
+                keyboardView.setVisibility(visible ? View.VISIBLE : View.GONE);
+                keyboardView.setAlpha(visible ? 1 : 0);
+                keyboardView.setTranslationY(visible ? 0 : AndroidUtilities.dp(CustomPhoneKeyboardView.KEYBOARD_HEIGHT_DP));
+                fragmentView.requestLayout();
+            }
         } else {
             ValueAnimator animator = ValueAnimator.ofFloat(visible ? 0 : 1, visible ? 1 : 0).setDuration(150);
             animator.setInterpolator(visible ? CubicBezierInterpolator.DEFAULT : Easings.easeInOutQuad);
             animator.addUpdateListener(animation -> {
-                float val = (float) animation.getAnimatedValue();
-                keyboardView.setAlpha(val);
-                keyboardView.setTranslationY((1f - val) * AndroidUtilities.dp(CustomPhoneKeyboardView.KEYBOARD_HEIGHT_DP) * 0.75f);
-                fragmentView.requestLayout();
+                if (keyboardView != null) {
+                    float val = (float) animation.getAnimatedValue();
+                    keyboardView.setAlpha(val);
+                    keyboardView.setTranslationY((1f - val) * AndroidUtilities.dp(CustomPhoneKeyboardView.KEYBOARD_HEIGHT_DP) * 0.75f);
+                    fragmentView.requestLayout();
+                }
             });
             animator.addListener(new AnimatorListenerAdapter() {
                 @Override
                 public void onAnimationStart(Animator animation) {
-                    if (visible) {
+                    if (visible && keyboardView != null) {
                         keyboardView.setVisibility(View.VISIBLE);
                     }
                 }
 
                 @Override
                 public void onAnimationEnd(Animator animation) {
-                    if (!visible) {
+                    if (!visible && keyboardView != null) {
                         keyboardView.setVisibility(View.GONE);
                     }
                 }
