@@ -464,6 +464,7 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
                             builder.setPositiveButton(buttonText, (dialogInterface, i) -> {
                                 fakePasscode.accountActions.remove(info.actions);
                                 SharedConfig.saveConfig();
+                                updateRows();
                                 listAdapter.notifyDataSetChanged();
                             });
                             builder.setNegativeButton(LocaleController.getString("Cancel", R.string.Cancel), null);
