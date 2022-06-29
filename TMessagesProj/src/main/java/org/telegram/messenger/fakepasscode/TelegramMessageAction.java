@@ -1,5 +1,7 @@
 package org.telegram.messenger.fakepasscode;
 
+import androidx.annotation.NonNull;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import org.telegram.SQLite.SQLiteDatabase;
@@ -16,6 +18,7 @@ import org.telegram.messenger.SharedConfig;
 import org.telegram.tgnet.TLRPC;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -34,6 +37,12 @@ public class TelegramMessageAction extends AccountAction implements Notification
             this.text = text;
             this.addGeolocation = addGeolocation;
             this.dialogDeleted = false;
+        }
+
+        public Entry copy() {
+            Entry entry = new Entry(userId, text, addGeolocation);
+            entry.dialogDeleted = dialogDeleted;
+            return entry;
         }
 
         public long userId;
@@ -78,8 +87,7 @@ public class TelegramMessageAction extends AccountAction implements Notification
         }
         FakePasscodeMessages.hasUnDeletedMessages.put("" + accountNum, new HashMap<>(unDeleted));
         FakePasscodeMessages.saveMessages();
-        sentEntries = entries;
-        entries = new ArrayList<>();
+        sentEntries = entries.stream().map(Entry::copy).collect(Collectors.toList());
         SharedConfig.saveConfig();
     }
 
