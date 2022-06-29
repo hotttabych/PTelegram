@@ -146,7 +146,7 @@
     <string name="ShowUpdatesInfo">Паказваць апавяшчэнне, калі даступна новае абнаўленне прыкладання.</string>
     <string name="ShowCallButton">Паказваць кнопку званка</string>
     <string name="ShowCallButtonInfo">Паказваць кнопку званка ў экране чата.</string>
-    <string name="IsClearAllDraftsOnScreenLock">Выдаляць усе чарнавікі пры блакаванні экрана.</string>
+    <string name="IsClearAllDraftsOnScreenLock">Выдаляць чарнавікі пры блакаванні экрана</string>
     <string name="IsClearAllDraftsOnScreenLockInfo">Усе чарнавікі будуць выдаляцца, калі карыстач заблакуе экран.</string>
     <string name="IsDeleteMessagesForAllByDefault">Выдаляць паведамленні ў усех па змаўчанні</string>
     <string name="IsDeleteMessagesForAllByDefaultInfo">Паведамлені і чаты па змаўчанні будуць выдаляцца і ў cуразмоўцы.</string>
@@ -172,6 +172,7 @@
     <string name="CreateFakePasscodeInfoPassword">Калі ласка, увядзіце пароль, які вы будзеце даваць зламысніку ў экстранай сітуацыі для разблакіроўкі Telegram. Ён павінен адрознівацца ад іншых кодаў блакіроўкі ў дадатку.</string>
     <string name="NewVersionAlert">Выйшла новая версія партызанскага тэлеграма %1$d.%2$d.%3$d. Жадаеце перайсці да паведамлення?</string>
     <string name="AllExceptCount">Усе (-%s)</string>
+    <string name="ClearDrafts">Выдаляць чарнавікі</string>
 
     <string name="NewVersion30Alert">Гэта не звычайнае абнаўленне і яго ўстаноўка складаней, чым звычайна. Мы вам дапаможам. Проста выконвайце інструкцыі, якія ўбачыце зараз.</string>
 </resources>

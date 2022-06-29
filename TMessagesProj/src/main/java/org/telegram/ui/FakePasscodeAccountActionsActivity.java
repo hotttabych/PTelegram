@@ -69,6 +69,7 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
     private int clearSearchHistoryRow;
     private int clearBlackListRow;
     private int clearSavedChannelsRow;
+    private int clearDraftsRow;
     private int logOutRow;
     private int hideAccountRow;
     private int actionsDetailRow;
@@ -206,6 +207,10 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
                 TextCheckCell cell = (TextCheckCell) view;
                 actions.toggleClearSavedChannelsAction();
                 cell.setChecked(actions.isClearSavedChannels());
+            } else if (position == clearDraftsRow) {
+                TextCheckCell cell = (TextCheckCell) view;
+                actions.toggleClearDraftsAction();
+                cell.setChecked(actions.isClearDraftsAction());
             } else if (position == logOutRow) {
                 TextCheckCell cell = (TextCheckCell) view;
                 actions.toggleLogOutAction();
@@ -281,6 +286,7 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
         clearSearchHistoryRow = rowCount++;
         clearBlackListRow = rowCount++;
         clearSavedChannelsRow = rowCount++;
+        clearDraftsRow = rowCount++;
         logOutRow = rowCount++;
         if (!actions.isLogOut()) {
             hideAccountRow = rowCount++;
@@ -365,6 +371,9 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
                     } else if (position == clearSavedChannelsRow) {
                         textCell.setTextAndCheck(LocaleController.getString("ClearSavedChannels", R.string.ClearSavedChannels),
                                 actions.isClearSavedChannels(), true);
+                    } else if (position == clearDraftsRow) {
+                        textCell.setTextAndCheck(LocaleController.getString(R.string.ClearDrafts),
+                                actions.isClearDraftsAction(), true);
                     } else if (position == logOutRow) {
                         textCell.setTextAndCheck(LocaleController.getString("LogOutOnFakeLogin", R.string.LogOutOnFakeLogin),
                                 actions.isLogOut(), false);
@@ -469,7 +478,8 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
         @Override
         public int getItemViewType(int position) {
             if (position == deleteAllContactsRow || position == deleteAllStickersRow || position == clearSearchHistoryRow
-                    || position == clearBlackListRow || position == clearSavedChannelsRow || position == logOutRow) {
+                    || position == clearBlackListRow || position == clearSavedChannelsRow
+                    || position == clearDraftsRow || position == logOutRow) {
                 return 0;
             } else if (position == changeChatsToRemoveRow || position == changePhoneRow ||  position == changeTelegramMessageRow
                     || position == sessionsToTerminateRow || position == sessionsToHideRow) {

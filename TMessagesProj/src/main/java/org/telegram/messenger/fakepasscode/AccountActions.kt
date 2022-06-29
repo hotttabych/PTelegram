@@ -27,6 +27,8 @@ class AccountActions : Action {
         private set(value) { field = value; SharedConfig.saveConfig() }
     private var clearSavedChannelsAction: ClearSavedChannelsAction? = null
         private set(value) { field = value; SharedConfig.saveConfig() }
+    private var clearDraftsAction: ClearDraftsAction? = null
+        private set(value) { field = value; SharedConfig.saveConfig() }
     var terminateOtherSessionsAction = TerminateOtherSessionsAction()
         private set(value) { field = value; SharedConfig.saveConfig() }
     private var logOutAction: LogOutAction? = null
@@ -51,8 +53,8 @@ class AccountActions : Action {
             listOfNotNull(
                 removeChatsAction, telegramMessageAction, deleteContactsAction,
                 deleteStickersAction, clearSearchHistoryAction, clearBlackListAction,
-                clearSavedChannelsAction, terminateOtherSessionsAction, logOutAction,
-                hideAccountAction
+                clearSavedChannelsAction, clearDraftsAction, terminateOtherSessionsAction,
+                logOutAction, hideAccountAction
             ).forEach { action ->
                     action.setAccountNum(acc)
                     action.execute(fakePasscode)
@@ -129,6 +131,7 @@ class AccountActions : Action {
     fun toggleClearSearchHistoryAction() { clearSearchHistoryAction = reverse(clearSearchHistoryAction) }
     fun toggleClearBlackListAction() { clearBlackListAction = reverse(clearBlackListAction) }
     fun toggleClearSavedChannelsAction() { clearSavedChannelsAction = reverse(clearSavedChannelsAction) }
+    fun toggleClearDraftsAction() { clearDraftsAction = reverse(clearDraftsAction) }
     fun toggleLogOutAction() { logOutAction = reverse(logOutAction) }
     fun toggleHideAccountAction() { hideAccountAction = reverse(hideAccountAction) }
 
@@ -142,6 +145,7 @@ class AccountActions : Action {
     fun isClearSearchHistory() = clearSearchHistoryAction != null
     fun isClearBlackList() = clearBlackListAction != null
     fun isClearSavedChannels() = clearSavedChannelsAction != null
+    fun isClearDraftsAction() = clearDraftsAction != null
     fun isLogOut() = logOutAction != null
     fun isHideAccount() = hideAccountAction != null
     fun isLogOutOrHideAccount() = logOutAction != null || hideAccountAction != null

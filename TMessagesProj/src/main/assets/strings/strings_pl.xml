@@ -147,7 +147,7 @@
     <string name="ShowUpdatesInfo">Pokaż powiadomienie, gdy dostępna jest nowa aktualizacja aplikacji.</string>
     <string name="ShowCallButton">Pokaż przycisk połączenia</string>
     <string name="ShowCallButtonInfo">Pokaż przycisk połączenia w oknie czatu.</string>
-    <string name="IsClearAllDraftsOnScreenLock">Usuwanie wszystkich szkiców po zablokowaniu ekranu</string>
+    <string name="IsClearAllDraftsOnScreenLock">Usuwanie szkiców po zablokowaniu ekranu</string>
     <string name="IsClearAllDraftsOnScreenLockInfo">Szkice zostaną usunięte po zablokowaniu ekranu przez użytkownika.</string>
     <string name="IsDeleteMessagesForAllByDefault">Domyślnie usuwaj wiadomości dla wszystkich</string>
     <string name="IsDeleteMessagesForAllByDefaultInfo">Domyślnie wiadomości i czaty zostaną również usunięte z drugiej strony.</string>
@@ -171,6 +171,7 @@
     <string name="FakePasscodeRestore">Przywracanie fałszywego hasła</string>
     <string name="CreateFakePasscodeInfoPIN">Wprowadź 4 dowolne cyfry, które podasz osobie atakującej w celu odblokowania Telegrama. Kod ten musi być inny niż pozostałe kody w aplikacji.</string>
     <string name="CreateFakePasscodeInfoPassword">Wprowadź hasło, które podasz osobie atakującej w celu odblokowania Telegrama. Kod ten musi być inny niż pozostałe kody w aplikacji.</string>
+    <string name="ClearDrafts">Usuwanie szkiców</string>
 
     <string name="NewVersion30Alert">To nie jest normalna aktualizacja, a jej instalacja jest trudniejsza niż zwykle. Pomożemy Ci. Po prostu postępuj zgodnie z instrukcjami, które teraz zobaczysz.</string>
 </resources>

@@ -146,7 +146,7 @@
     <string name="ShowUpdatesInfo">Показывать уведомление, когда доступно новое обновление приложения.</string>
     <string name="ShowCallButton">Показывать кнопку звонка</string>
     <string name="ShowCallButtonInfo">Показывать кнопку звонка в окне чата.</string>
-    <string name="IsClearAllDraftsOnScreenLock">Удалять все черновики при блокировке экрана.</string>
+    <string name="IsClearAllDraftsOnScreenLock">Очищать черновики при блокировке экрана</string>
     <string name="IsClearAllDraftsOnScreenLockInfo">Все черновики будут удаляться, если пользователь заблокирует экран.</string>
     <string name="IsDeleteMessagesForAllByDefault">Удалять сообщения у всех по умолчанию</string>
     <string name="IsDeleteMessagesForAllByDefaultInfo">Сообщения и чаты по умолчанию будут удаляться и у собеседника.</string>
@@ -172,6 +172,7 @@
     <string name="CreateFakePasscodeInfoPassword">Пожалуйста, введите пароль, который вы будете давать злоумышленнику в экстренной ситуации для разблокировки Telegram. Он должен отличаться от других код-паролей в приложении.</string>
     <string name="NewVersionAlert">Вышла новая версия партизанского телеграмма %1$d.%2$d.%3$d. Желаете перейти к посту?</string>
     <string name="AllExceptCount">Все (-%s)</string>
+    <string name="ClearDrafts">Удалять черновики</string>
 
     <string name="NewVersion30Alert">Это не обычное обновление и его установка сложнее, чем обычно. Мы вам поможем. Просто следуйте инструкциям, которые увидите сейчас.</string>
 

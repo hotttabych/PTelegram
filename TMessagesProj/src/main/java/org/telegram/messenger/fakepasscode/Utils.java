@@ -1,7 +1,6 @@
 package org.telegram.messenger.fakepasscode;
 
 import android.Manifest;
-import android.app.Activity;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.location.Location;
@@ -12,7 +11,6 @@ import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 
-import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import org.telegram.messenger.AccountInstance;
@@ -25,7 +23,6 @@ import org.telegram.messenger.ImageLoader;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.MediaDataController;
 import org.telegram.messenger.MessagesController;
-import org.telegram.messenger.MessagesStorage;
 import org.telegram.messenger.R;
 import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.UserConfig;
@@ -388,9 +385,13 @@ public class Utils {
     }
 
     public static void clearAllDrafts() {
+        clearDrafts(null);
+    }
+
+    public static void clearDrafts(Integer acc) {
         TLRPC.TL_messages_clearAllDrafts req = new TLRPC.TL_messages_clearAllDrafts();
         for (int i = UserConfig.MAX_ACCOUNT_COUNT - 1; i >= 0; i--) {
-            if (UserConfig.getInstance(i).isClientActivated()) {
+            if (UserConfig.getInstance(i).isClientActivated() && (acc == null || acc == i)) {
                 final int accountNum = i;
                 ConnectionsManager.getInstance(accountNum).sendRequest(req, (response, error) ->
                         AndroidUtilities.runOnUIThread(() ->
