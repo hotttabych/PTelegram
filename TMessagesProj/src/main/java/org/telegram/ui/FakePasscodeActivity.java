@@ -65,6 +65,7 @@ import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.Utilities;
 import org.telegram.messenger.fakepasscode.AccountActions;
 import org.telegram.messenger.fakepasscode.FakePasscode;
+import org.telegram.messenger.fakepasscode.FakePasscodeSerializer;
 import org.telegram.ui.ActionBar.ActionBar;
 import org.telegram.ui.ActionBar.ActionBarMenuItem;
 import org.telegram.ui.ActionBar.AlertDialog;
@@ -1148,7 +1149,7 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
                 return;
             }
 
-            fakePasscode.passcodeHash = FakePasscode.calculateHash(firstPassword, SharedConfig.passcodeSalt);
+            fakePasscode.passcodeHash = FakePasscodeSerializer.calculateHash(firstPassword, SharedConfig.passcodeSalt);
             SharedConfig.saveConfig();
 
             passwordEditText.clearFocus();
@@ -1173,14 +1174,14 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
             });
         } else if (type == TYPE_ENTER_BACKUP_CODE) {
             String passcodeString = isPinCode() ? codeFieldContainer.getCode() : passwordEditText.getText().toString();
-            if (Objects.equals(FakePasscode.calculateHash(passcodeString, SharedConfig.passcodeSalt), fakePasscode.passcodeHash)) {
+            if (Objects.equals(FakePasscodeSerializer.calculateHash(passcodeString, SharedConfig.passcodeSalt), fakePasscode.passcodeHash)) {
                 presentFragment(new FakePasscodeBackupActivity(fakePasscode, passcodeString), true);
             } else {
                 invalidPasscodeEntered();
             }
         } else if (type == TYPE_ENTER_RESTORE_CODE) {
             String passcodeString = isPinCode() ? codeFieldContainer.getCode() : passwordEditText.getText().toString();
-            FakePasscode passcode = FakePasscode.deserializeEncrypted(encryptedPasscode, passcodeString);
+            FakePasscode passcode = FakePasscodeSerializer.deserializeEncrypted(encryptedPasscode, passcodeString);
             if (passcode != null) {
                 SharedConfig.fakePasscodes.add(passcode);
                 SharedConfig.saveConfig();

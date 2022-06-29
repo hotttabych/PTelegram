@@ -24,6 +24,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.R;
 import org.telegram.messenger.fakepasscode.FakePasscode;
+import org.telegram.messenger.fakepasscode.FakePasscodeSerializer;
 import org.telegram.ui.ActionBar.ActionBar;
 import org.telegram.ui.ActionBar.BaseFragment;
 import org.telegram.ui.ActionBar.Theme;
@@ -166,7 +167,7 @@ public class FakePasscodeBackupActivity extends BaseFragment {
             switch (holder.getItemViewType()) {
                 case 0: {
                     try {
-                        byte[] encryptedBytes = passcode.serializeEncrypted(passcodeString);
+                        byte[] encryptedBytes = FakePasscodeSerializer.serializeEncrypted(passcode, passcodeString);
                         String encodedStr = Base64.encodeToString(encryptedBytes, Base64.NO_WRAP);
 
                         EditTextBoldCursor editText = (EditTextBoldCursor) holder.itemView;
