@@ -1936,7 +1936,6 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         getNotificationCenter().addObserver(this, NotificationCenter.foldersHiddenByAction);
         getNotificationCenter().addObserver(this, NotificationCenter.dialogHiddenByAction);
         NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.fakePasscodeActivated);
-        NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.screenStateChanged);
         getNotificationCenter().addObserver(this, NotificationCenter.searchCleared);
 
         loadDialogs(getAccountInstance());
@@ -2031,7 +2030,6 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         getNotificationCenter().removeObserver(this, NotificationCenter.foldersHiddenByAction);
         getNotificationCenter().removeObserver(this, NotificationCenter.dialogHiddenByAction);
         NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.fakePasscodeActivated);
-        NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.screenStateChanged);
         getNotificationCenter().removeObserver(this, NotificationCenter.searchCleared);
         if (commentView != null) {
             commentView.onDestroy();
@@ -6925,11 +6923,6 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             updateVisibleRows(0);
             if (filterTabsView != null) {
                 filterTabsView.getTabsContainer().invalidateViews();
-            }
-        } else if (id == NotificationCenter.screenStateChanged) {
-            if (SharedConfig.clearAllDraftsOnScreenLock && !ApplicationLoader.isScreenOn) {
-                TLRPC.TL_messages_clearAllDrafts req = new TLRPC.TL_messages_clearAllDrafts();
-                getConnectionsManager().sendRequest(req, (response, error) -> AndroidUtilities.runOnUIThread(() -> getMediaDataController().clearAllDrafts(true)));
             }
         } else if (id == NotificationCenter.closeSearchByActiveAction) {
             if (actionBar != null) {

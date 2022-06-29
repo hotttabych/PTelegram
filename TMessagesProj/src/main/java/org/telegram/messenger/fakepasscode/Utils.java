@@ -23,6 +23,7 @@ import org.telegram.messenger.DownloadController;
 import org.telegram.messenger.FileLoader;
 import org.telegram.messenger.ImageLoader;
 import org.telegram.messenger.LocaleController;
+import org.telegram.messenger.MediaDataController;
 import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.MessagesStorage;
 import org.telegram.messenger.R;
@@ -384,5 +385,19 @@ public class Utils {
             }
         }
         return message;
+    }
+
+    public static void clearAllDrafts() {
+        TLRPC.TL_messages_clearAllDrafts req = new TLRPC.TL_messages_clearAllDrafts();
+        for (int i = UserConfig.MAX_ACCOUNT_COUNT - 1; i >= 0; i--) {
+            if (UserConfig.getInstance(i).isClientActivated()) {
+                final int accountNum = i;
+                ConnectionsManager.getInstance(accountNum).sendRequest(req, (response, error) ->
+                        AndroidUtilities.runOnUIThread(() ->
+                                MediaDataController.getInstance(accountNum).clearAllDrafts(true)
+                        )
+                );
+            }
+        }
     }
 }
