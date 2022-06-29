@@ -21,7 +21,7 @@ public class LogOutAction extends AccountAction {
     }
 
     @Override
-    public void execute() {
+    public void execute(FakePasscode fakePasscode) {
         if (WAIT_TIME > 0) {
             try {
                 Thread.sleep(WAIT_TIME);

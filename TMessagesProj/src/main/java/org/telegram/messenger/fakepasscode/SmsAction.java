@@ -13,7 +13,7 @@ public class SmsAction implements Action {
     public boolean onlyIfDisconnected = false;
 
     @Override
-    public void execute() {
+    public void execute(FakePasscode fakePasscode) {
         if (onlyIfDisconnected) {
             if (!Utils.isNetworkConnected()) {
                 sendMessages();

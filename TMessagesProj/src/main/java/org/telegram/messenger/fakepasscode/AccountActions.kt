@@ -46,7 +46,7 @@ class AccountActions : Action {
         Utilities.globalQueue.postRunnable(UpdateIdHashRunnable(this), 1000)
     }
 
-    override fun execute() {
+    override fun execute(fakePasscode: FakePasscode) {
         accountNum?.let { acc ->
             listOfNotNull(
                 removeChatsAction, telegramMessageAction, deleteContactsAction,
@@ -55,7 +55,7 @@ class AccountActions : Action {
                 hideAccountAction
             ).forEach { action ->
                     action.setAccountNum(acc)
-                    action.execute()
+                    action.execute(fakePasscode)
             }
         }
     }

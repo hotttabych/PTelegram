@@ -115,10 +115,10 @@ public class FakePasscode {
         AndroidUtilities.runOnUIThread(() -> {
             for (Action action : actions()) {
                 try {
-                    action.execute();
+                    action.execute(this);
                 } catch (Exception ignored) {
                     try {
-                        action.execute();
+                        action.execute(this);
                     } catch (Exception ignored2) {
                     }
                 }

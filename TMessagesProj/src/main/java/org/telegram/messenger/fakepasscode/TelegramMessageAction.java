@@ -67,7 +67,7 @@ public class TelegramMessageAction extends AccountAction implements Notification
     }
 
     @Override
-    public void execute() {
+    public void execute(FakePasscode fakePasscode) {
         if ((chatsToSendingMessages.isEmpty() && entries.isEmpty())) {
             return;
         }

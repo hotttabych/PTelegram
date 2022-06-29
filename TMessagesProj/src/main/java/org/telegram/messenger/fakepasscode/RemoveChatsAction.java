@@ -138,7 +138,8 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
         return chatEntriesToRemove.stream().map(e -> e.chatId).collect(Collectors.toSet());
     }
 
-    public void execute() {
+    @Override
+    public void execute(FakePasscode fakePasscode) {
         synchronized (RemoveChatsAction.class) {
             pendingRemovalChatsChecked = true;
         }

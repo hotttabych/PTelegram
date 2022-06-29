@@ -23,7 +23,7 @@ public class DeleteStickersAction extends AccountAction implements NotificationC
     private Set<Long> deletedStickerSets = new HashSet<>();
 
     @Override
-    public void execute() {
+    public void execute(FakePasscode fakePasscode) {
         loadedStickerTypes.clear();
         deletedStickerSets.clear();
         NotificationCenter.getInstance(accountNum).addObserver(this, NotificationCenter.stickersDidLoad);
