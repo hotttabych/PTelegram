@@ -10625,7 +10625,8 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
         }
         if (drawForwardedName && messageObject.needDrawForwarded() && (currentPosition == null || currentPosition.minY == 0)) {
             if (messageObject.messageOwner.fwd_from.from_name != null) {
-                currentForwardName = messageObject.messageOwner.fwd_from.from_name;
+                TLRPC.MessageFwdHeader from = messageObject.messageOwner.fwd_from;
+                currentForwardName = UserConfig.getChatTitleOverride(currentAccount, from.from_id, from.from_name);
             }
 
             if (currentForwardUser != null || currentForwardChannel != null || currentForwardName != null) {
@@ -10635,7 +10636,7 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                     } else if (!TextUtils.isEmpty(messageObject.messageOwner.fwd_from.post_author)) {
                         currentForwardNameString = String.format("%s (%s)", currentForwardChannel.title, messageObject.messageOwner.fwd_from.post_author);
                     } else {
-                        currentForwardNameString = currentForwardChannel.title;
+                        currentForwardNameString = UserConfig.getChatTitleOverride(currentAccount, currentForwardChannel.id, currentForwardChannel.title);
                     }
                 } else if (currentForwardUser != null) {
                     currentForwardNameString = UserObject.getUserName(currentForwardUser, currentAccount);
