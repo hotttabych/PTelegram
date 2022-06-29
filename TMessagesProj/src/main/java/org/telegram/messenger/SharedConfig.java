@@ -28,6 +28,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.module.kotlin.KotlinModule;
+import com.google.android.exoplayer2.util.Log;
 
 import org.json.JSONObject;
 import org.telegram.messenger.fakepasscode.FakePasscode;
@@ -497,12 +498,8 @@ public class SharedConfig {
                 try {
                     if (preferences.contains("fakePasscodes"))
                         fakePasscodes = fromJson(preferences.getString("fakePasscodes", null), FakePasscodesWrapper.class).fakePasscodes;
-                } catch (Exception ignored) {
-                    try {
-                        if (preferences.contains("fakePasscodes"))
-                            fakePasscodes = fromJson(preferences.getString("fakePasscodes", null), FakePasscodesWrapper.class).fakePasscodes;
-                    } catch (Exception ignored2) {
-                    }
+                } catch (Exception e) {
+                    Log.e("SharedConfig", "error", e);
                 }
             }
             try {
