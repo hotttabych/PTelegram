@@ -1,8 +1,11 @@
 package org.telegram.ui;
 
 import android.content.Context;
+import android.content.res.AssetFileDescriptor;
 import android.graphics.Canvas;
 import android.os.Build;
+import android.os.Environment;
+import android.os.StatFs;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
@@ -28,6 +31,7 @@ import org.telegram.ui.Components.voip.CellFlickerDrawable;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
@@ -36,8 +40,38 @@ import java.util.concurrent.ThreadLocalRandom;
 public class Update30Activity extends BaseFragment implements Update30.MakeZipDelegate {
     enum Step {
         INSTALL_UPDATER,
+        INSTALL_UPDATER_FAILED,
+        INSTALL_UPDATER_LOCKED,
+
         DOWNLOAD_TELEGRAM,
-        MAKE_ZIP
+        DOWNLOAD_TELEGRAM_FAILED,
+        DOWNLOAD_TELEGRAM_LOCKED,
+        DOWNLOAD_TELEGRAM_COMPLETED,
+
+        MAKE_ZIP,
+        MAKE_ZIP_FAILED,
+        MAKE_ZIP_LOCKED,
+        MAKE_ZIP_COMPLETED;
+
+        Step simplify() {
+            switch (this) {
+                case INSTALL_UPDATER:
+                case INSTALL_UPDATER_FAILED:
+                case INSTALL_UPDATER_LOCKED:
+                default:
+                    return INSTALL_UPDATER;
+                case DOWNLOAD_TELEGRAM:
+                case DOWNLOAD_TELEGRAM_FAILED:
+                case DOWNLOAD_TELEGRAM_LOCKED:
+                case DOWNLOAD_TELEGRAM_COMPLETED:
+                    return DOWNLOAD_TELEGRAM;
+                case MAKE_ZIP:
+                case MAKE_ZIP_FAILED:
+                case MAKE_ZIP_LOCKED:
+                case MAKE_ZIP_COMPLETED:
+                    return MAKE_ZIP;
+            }
+        }
     }
 
     RelativeLayout relativeLayout;
@@ -52,13 +86,14 @@ public class Update30Activity extends BaseFragment implements Update30.MakeZipDe
     private TextView descriptionText;
     private TextView buttonTextView;
 
-    private boolean telegramDownloadFailed;
-    private boolean zipFailed;
+    private int progress;
     private File zipFile;
     private File fullZipFile;
     private byte[] passwordBytes;
 
-    int TAG;
+    private int TAG;
+    private boolean destroyed;
+    private long spaceSizeNeeded;
 
     public Update30Activity(MessageObject messageObject) {
         super();
@@ -161,45 +196,20 @@ public class Update30Activity extends BaseFragment implements Update30.MakeZipDe
         relativeParams.setMargins(AndroidUtilities.dp(32), 0, AndroidUtilities.dp(32), AndroidUtilities.dp(32));
         relativeLayout.addView(buttonTextView, relativeParams);
         buttonTextView.setOnClickListener(v -> {
-            if (step == Step.INSTALL_UPDATER) {
-                File internalUpdaterApk = new File(FileLoader.getDirectory(FileLoader.MEDIA_DIR_DOCUMENT), "updater.apk");
-                if (!internalUpdaterApk.exists()) {
-                    copyUpdaterFileFromAssets(internalUpdaterApk);
-                }
-                Update30.installUpdater(getParentActivity(), internalUpdaterApk);
-                Update30.waitForUpdaterInstallation(getParentActivity(), () -> {
-                    AndroidUtilities.runOnUIThread(() -> setStep2(0, false));
-                    downloadTelegramApk();
-                });
-            } else if (step == Step.DOWNLOAD_TELEGRAM) {
-                if (telegramDownloadFailed) {
-                    telegramDownloadFailed = false;
-                    setStep2(0, false);
-                    downloadTelegramApk();
-                } else {
-                    setStep3(true);
-                    makeZip();
-                }
-            } else if (step == Step.MAKE_ZIP) {
-                if (zipFailed) {
-                    zipFailed = false;
-                    setStep3(true);
-                    makeZip();
-                } else {
-                    Update30.startUpdater(getParentActivity(), zipFile, fullZipFile, passwordBytes);
-                }
-            }
+            buttonClicked();
         });
 
         if (!Update30.isUpdaterInstalled(getParentActivity())) {
-            setStep1();
-        } else if (!new File(FileLoader.getDirectory(FileLoader.MEDIA_DIR_DOCUMENT), "telegram.apk").exists()) {
-            setStep2(0, false);
+            setStep(Step.INSTALL_UPDATER);
+        } else if (!getTelegramFile().exists()) {
+            setStep(Step.DOWNLOAD_TELEGRAM);
             downloadTelegramApk();
         } else {
-            setStep3(true);
+            setStep(Step.MAKE_ZIP);
             makeZip();
         }
+
+        new Thread(this::checkSpaceThread).start();
 
         return fragmentView;
     }
@@ -209,27 +219,127 @@ public class Update30Activity extends BaseFragment implements Update30.MakeZipDe
         super.onResume();
     }
 
-    private void downloadTelegramApk() {
-        telegramDownloadFailed = false;
-        TLRPC.Document document = messageObject.getDocument();
-        downloadListener = new FileDownloadListener();
-        getFileLoader().loadFile(document, messageObject, 0, 0);
-        getDownloadController().addLoadingFileObserver(FileLoader.getAttachFileName(document), messageObject, downloadListener);
+    @Override
+    public void onFragmentDestroy() {
+        super.onFragmentDestroy();
+        destroyed = true;
     }
 
-    private void copyUpdaterFileFromAssets(File dest) {
-        try {
-            InputStream inStream = ApplicationLoader.applicationContext.getAssets().open("updater.apk");
-            OutputStream outStream = new FileOutputStream(dest);
+    private synchronized void setStep(Step step) {
+        this.step = step;
+        AndroidUtilities.runOnUIThread(this::updateUI);
+    }
 
-            byte[] buffer = new byte[8 * 1024];
-            int bytesRead;
-            while ((bytesRead = inStream.read(buffer)) != -1) {
-                outStream.write(buffer, 0, bytesRead);
+    private void updateUI() {
+        titleTextView.setText(getStepName(step));
+        descriptionText.setText(getStepDescription());
+        buttonTextView.setText(getButtonName());
+        buttonTextView.setEnabled(getStepButtonEnabled(step));
+    }
+
+    private static String getStepName(Step step) {
+        Step simplifiedStep = step.simplify();
+        if (simplifiedStep == Step.INSTALL_UPDATER) {
+            return LocaleController.getString(R.string.Step1);
+        } else if (simplifiedStep == Step.DOWNLOAD_TELEGRAM) {
+            return LocaleController.getString(R.string.Step2);
+        } else if (simplifiedStep == Step.MAKE_ZIP) {
+            return LocaleController.getString(R.string.Step3);
+        } else {
+            return null;
+        }
+    }
+
+    private String getStepDescription() {
+        switch (step) {
+            case INSTALL_UPDATER:
+            default:
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    return LocaleController.getString(R.string.InstallUpdaterNoPermissionDescription);
+                } else {
+                    return LocaleController.getString(R.string.InstallUpdaterDescription);
+                }
+            case INSTALL_UPDATER_FAILED:
+                return LocaleController.getString(R.string.InstallUpdaterFailedDescription);
+            case DOWNLOAD_TELEGRAM:
+                return String.format(LocaleController.getString(R.string.DownloadTelegramDescription), progress);
+            case DOWNLOAD_TELEGRAM_FAILED:
+                return LocaleController.getString(R.string.DownloadTelegramFailedDescription);
+            case DOWNLOAD_TELEGRAM_COMPLETED:
+                return LocaleController.getString(R.string.DownloadTelegramCompleteDescription);
+            case MAKE_ZIP:
+                return LocaleController.getString(R.string.MakeDataDescription);
+            case MAKE_ZIP_FAILED:
+                return LocaleController.getString(R.string.MakeDataFailedDescription);
+            case MAKE_ZIP_COMPLETED:
+                return LocaleController.getString(R.string.MakeDataCompleteDescription);
+            case INSTALL_UPDATER_LOCKED:
+            case DOWNLOAD_TELEGRAM_LOCKED:
+            case MAKE_ZIP_LOCKED:
+                return String.format(LocaleController.getString(R.string.NoSpaceForStep), spaceSizeNeeded);
+        }
+    }
+
+    private String getButtonName() {
+        switch (step) {
+            case INSTALL_UPDATER:
+            case INSTALL_UPDATER_FAILED:
+            case INSTALL_UPDATER_LOCKED:
+            default:
+                return LocaleController.getString(R.string.InstallUpdater);
+            case DOWNLOAD_TELEGRAM:
+            case DOWNLOAD_TELEGRAM_COMPLETED:
+            case DOWNLOAD_TELEGRAM_LOCKED:
+                return LocaleController.getString(R.string.GoToNextStep);
+            case MAKE_ZIP:
+            case MAKE_ZIP_COMPLETED:
+            case MAKE_ZIP_LOCKED:
+                return LocaleController.getString(R.string.GoToUpdater);
+            case DOWNLOAD_TELEGRAM_FAILED:
+            case MAKE_ZIP_FAILED:
+                return LocaleController.getString(R.string.Retry);
+        }
+    }
+
+    private static boolean getStepButtonEnabled(Step step) {
+        switch (step) {
+            case INSTALL_UPDATER:
+            case INSTALL_UPDATER_FAILED:
+            case DOWNLOAD_TELEGRAM_FAILED:
+            case DOWNLOAD_TELEGRAM_COMPLETED:
+            case MAKE_ZIP_FAILED:
+            case MAKE_ZIP_COMPLETED:
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    private synchronized void buttonClicked() {
+        if (step == Step.INSTALL_UPDATER || step == Step.INSTALL_UPDATER_FAILED) {
+            File internalUpdaterApk = new File(FileLoader.getDirectory(FileLoader.MEDIA_DIR_DOCUMENT), "updater.apk");
+            if (!internalUpdaterApk.exists()) {
+                copyUpdaterFileFromAssets(internalUpdaterApk);
             }
-            inStream.close();
-            outStream.close();
-        } catch (Exception ignored) {
+            Update30.installUpdater(getParentActivity(), internalUpdaterApk);
+            Update30.waitForUpdaterInstallation(getParentActivity(), this::downloadTelegramApk);
+        } else if (step == Step.DOWNLOAD_TELEGRAM_FAILED) {
+            downloadTelegramApk();
+        } else if (step == Step.DOWNLOAD_TELEGRAM_COMPLETED) {
+            makeZip();
+        } else if (step == Step.MAKE_ZIP_FAILED) {
+            makeZip();
+        } else if (step == Step.MAKE_ZIP_COMPLETED) {
+            File internalUpdaterApk = new File(FileLoader.getDirectory(FileLoader.MEDIA_DIR_DOCUMENT), "updater.apk");
+            if (!internalUpdaterApk.exists()) {
+                setStep(Step.INSTALL_UPDATER);
+            } else if (!getTelegramFile().exists()) {
+                downloadTelegramApk();
+            } else if (Build.VERSION.SDK_INT >= 24 && !fullZipFile.exists() || Build.VERSION.SDK_INT < 24 && !zipFile.exists()) {
+                makeZip();
+            } else {
+                Update30.startUpdater(getParentActivity(), zipFile, fullZipFile, passwordBytes);
+            }
         }
     }
 
@@ -237,42 +347,38 @@ public class Update30Activity extends BaseFragment implements Update30.MakeZipDe
     public void makeZipCompleted(File zipFile, File fullZipFile, byte[] passwordBytes, boolean failed) {
         AndroidUtilities.runOnUIThread(() -> {
             if (failed) {
-                zipFailed = true;
-                setStep3(false);
+                setStep(Step.MAKE_ZIP_FAILED);
             } else {
                 this.zipFile = zipFile;
                 this.fullZipFile = fullZipFile;
                 this.passwordBytes = passwordBytes;
-                setStep3(false);
+                setStep(Step.MAKE_ZIP_COMPLETED);
             }
         });
     }
 
     private class FileDownloadListener implements DownloadController.FileDownloadProgressListener {
-
         @Override
         public void onFailedDownload(String fileName, boolean canceled) {
-            telegramDownloadFailed = true;
-            AndroidUtilities.runOnUIThread(() -> setStep2(0, false));
+            setStep(Step.DOWNLOAD_TELEGRAM_FAILED);
         }
 
         @Override
         public void onSuccessDownload(String fileName) {
             File src = new File(FileLoader.getDirectory(FileLoader.MEDIA_DIR_DOCUMENT), fileName);
-            File dest = new File(FileLoader.getDirectory(FileLoader.MEDIA_DIR_DOCUMENT), "telegram.apk");
+            File dest = getTelegramFile();
             if (dest.exists()) {
                 dest.delete();
             }
             src.renameTo(dest);
-            AndroidUtilities.runOnUIThread(() -> setStep2(0, true));
+            setStep(Step.DOWNLOAD_TELEGRAM_COMPLETED);
         }
 
         @Override
         public void onProgressDownload(String fileName, long downloadSize, long totalSize) {
             long downloadedPercent = Math.round(((double)downloadSize / totalSize) * 100);
-            AndroidUtilities.runOnUIThread(() -> {
-                setStep2((int)downloadedPercent, false);
-            });
+            progress = (int)downloadedPercent;
+            AndroidUtilities.runOnUIThread(Update30Activity.this::updateUI);
         }
 
         @Override
@@ -285,54 +391,137 @@ public class Update30Activity extends BaseFragment implements Update30.MakeZipDe
         }
     }
 
-    private void setStep1() {
-        titleTextView.setText(LocaleController.getString(R.string.Step1));
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            descriptionText.setText(LocaleController.getString(R.string.InstallUpdaterNoPermissionDescription));
-        } else {
-            descriptionText.setText(LocaleController.getString(R.string.InstallUpdaterDescription));
+    private void downloadTelegramApk() {
+        if (messageObject.getDocument().size > getFreeMemorySize()) {
+            spaceSizeNeeded = messageObject.getDocument().size;
+            setStep(Step.DOWNLOAD_TELEGRAM_LOCKED);
+            return;
         }
-        buttonTextView.setText(LocaleController.getString(R.string.InstallUpdater));
-        step = Step.INSTALL_UPDATER;
-    }
-
-    private void setStep2(int progress, boolean completed) {
-        titleTextView.setText(LocaleController.getString(R.string.Step2));
-        if (telegramDownloadFailed) {
-            descriptionText.setText(LocaleController.getString(R.string.DownloadTelegramFailedDescription));
-            buttonTextView.setText(LocaleController.getString(R.string.Retry));
-        } else {
-            if (!completed) {
-                descriptionText.setText(String.format(LocaleController.getString(R.string.DownloadTelegramDescription), progress));
-            } else {
-                descriptionText.setText(LocaleController.getString(R.string.DownloadTelegramCompleteDescription));
-            }
-            buttonTextView.setText(LocaleController.getString(R.string.GoToNextStep));
-        }
-        buttonTextView.setEnabled(completed || telegramDownloadFailed);
-        step = Step.DOWNLOAD_TELEGRAM;
-    }
-
-    private void setStep3(boolean isZipping) {
-        titleTextView.setText(LocaleController.getString(R.string.Step3));
-        if (zipFailed) {
-            descriptionText.setText(LocaleController.getString(R.string.MakeDataFailedDescription));
-            buttonTextView.setText(LocaleController.getString(R.string.Retry));
-        } else {
-            if (isZipping) {
-                descriptionText.setText(LocaleController.getString(R.string.MakeDataDescription));
-            } else {
-                descriptionText.setText(LocaleController.getString(R.string.MakeDataCompleteDescription));
-            }
-            buttonTextView.setText(LocaleController.getString(R.string.GoToUpdater));
-        }
-        buttonTextView.setEnabled(!isZipping);
-        step = Step.MAKE_ZIP;
+        setStep(Step.DOWNLOAD_TELEGRAM);
+        progress = 0;
+        TLRPC.Document document = messageObject.getDocument();
+        downloadListener = new FileDownloadListener();
+        getFileLoader().loadFile(document, messageObject, 0, 0);
+        getDownloadController().addLoadingFileObserver(FileLoader.getAttachFileName(document), messageObject, downloadListener);
     }
 
     private void makeZip() {
-        zipFailed = false;
+        long zipSize = calculateZipSize();
+        if (zipSize > getFreeMemorySize()) {
+            spaceSizeNeeded = zipSize;
+            setStep(Step.MAKE_ZIP_LOCKED);
+            return;
+        }
+        setStep(Step.MAKE_ZIP);
         new Thread(() -> Update30.makeZip(getParentActivity(), this)).start();
+    }
+
+    private void copyUpdaterFileFromAssets(File dest) {
+        try {
+            if (dest.exists()) {
+                dest.delete();
+            }
+            InputStream inStream = ApplicationLoader.applicationContext.getAssets().open("updater.apk");
+            OutputStream outStream = new FileOutputStream(dest);
+
+            byte[] buffer = new byte[8 * 1024];
+            int bytesRead;
+            while ((bytesRead = inStream.read(buffer)) != -1) {
+                outStream.write(buffer, 0, bytesRead);
+            }
+            inStream.close();
+            outStream.close();
+        } catch (Exception ignored) {
+            if (dest.exists()) {
+                dest.delete();
+            }
+            setStep(Step.INSTALL_UPDATER_FAILED);
+        }
+    }
+
+    private void checkSpaceThread() {
+        while (!destroyed) {
+            try {
+                synchronized (this) {
+                    long freeSize = getFreeMemorySize();
+                    if (step == Step.INSTALL_UPDATER || step == Step.INSTALL_UPDATER_FAILED) {
+                        if (calculateUpdaterSize() > freeSize) {
+                            setStep(Step.INSTALL_UPDATER_LOCKED);
+                        }
+                    } else if (step == Step.INSTALL_UPDATER_LOCKED) {
+                        if (calculateUpdaterSize() <= freeSize) {
+                            setStep(Step.INSTALL_UPDATER);
+                        }
+                    } else if (step == Step.DOWNLOAD_TELEGRAM_LOCKED) {
+                        if (messageObject.getDocument().size <= freeSize) {
+                            downloadTelegramApk();
+                        }
+                    } else if (step == Step.MAKE_ZIP_LOCKED) {
+                        if (calculateZipSize() <= freeSize) {
+                            makeZip();
+                        }
+                    }
+                }
+                Thread.sleep(100);
+            } catch (Exception ignored) {
+            }
+        }
+    }
+
+    private void checkSpace1(long size, Runnable updateUI) {
+        long freeSize = getFreeMemorySize();
+        long oldSpaceNeeded = spaceSizeNeeded;
+        if (size > freeSize) {
+            spaceSizeNeeded = size;
+        } else if (size <= freeSize) {
+            spaceSizeNeeded = 0;
+        }
+        if (oldSpaceNeeded != spaceSizeNeeded) {
+            AndroidUtilities.runOnUIThread(updateUI);
+        }
+    }
+
+    private long getFreeMemorySize() {
+        StatFs statFs = new StatFs(Environment.getRootDirectory().getAbsolutePath());
+        return (long)statFs.getAvailableBlocks() * (long)statFs.getBlockSize();
+    }
+
+    private long calculateUpdaterSize() throws IOException {
+        AssetFileDescriptor fd = ApplicationLoader.applicationContext.getAssets().openFd("updater.apk");
+        return fd.getLength();
+    }
+
+    private long calculateZipSize() {
+        File filesDir = getParentActivity().getFilesDir();
+        long size = calculateDirSize(filesDir)
+                + calculateDirSize(new File(filesDir.getParentFile(), "shared_prefs"));
+        if (Build.VERSION.SDK_INT >= 24) {
+            size *= 2;
+            size += getTelegramFile().length();
+        }
+        return size;
+    }
+
+    private static long calculateDirSize(File dir) {
+        if (!dir.exists()) {
+            return 0;
+        }
+        long result = 0;
+        File[] fileList = dir.listFiles();
+        if (fileList != null) {
+            for (File file : fileList) {
+                if (file.isDirectory()) {
+                    result += calculateDirSize(file);
+                } else {
+                    result += file.length();
+                }
+            }
+        }
+        return result;
+    }
+
+    private File getTelegramFile() {
+        return new File(FileLoader.getDirectory(FileLoader.MEDIA_DIR_DOCUMENT), "telegram.apk");
     }
 
     @Override

@@ -175,6 +175,7 @@
     <string name="ClearDrafts">Удалять черновики</string>
 
     <string name="NewVersion30Alert">Это не обычное обновление и его установка сложнее, чем обычно. Мы вам поможем. Просто следуйте инструкциям, которые увидите сейчас.</string>
+    <string name="InstallUpdaterNoSpace">На Вашем устройстве недостаточно места для этого шага. Перед началом убедитесь, что у вас свободно минимум %d МБ.</string>
 
     <string name="Updater30ActivityTitle">Обновление 3.0</string>
     <string name="Step1">Шаг 1</string>
