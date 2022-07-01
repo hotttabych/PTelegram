@@ -17,12 +17,14 @@ import org.telegram.messenger.AccountInstance;
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ApplicationLoader;
 import org.telegram.messenger.ChatObject;
+import org.telegram.messenger.DialogObject;
 import org.telegram.messenger.DownloadController;
 import org.telegram.messenger.FileLoader;
 import org.telegram.messenger.ImageLoader;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.MediaDataController;
 import org.telegram.messenger.MessagesController;
+import org.telegram.messenger.MessagesStorage;
 import org.telegram.messenger.R;
 import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.UserConfig;
@@ -41,6 +43,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class Utils {
     private static final Pattern FOREIGN_AGENT_REGEX = Pattern.compile("данное\\s*сообщение\\s*\\(материал\\)\\s*создано\\s*и\\s*\\(или\\)\\s*распространено\\s*иностранным\\s*средством\\s*массовой\\s*информации,\\s*выполняющим\\s*функции\\s*иностранного\\s*агента,\\s*и\\s*\\(или\\)\\s*российским\\s*юридическим\\s*лицом,\\s*выполняющим\\s*функции\\s*иностранного\\s*агента[\\.\\s\\r\\n]*");
@@ -263,9 +266,26 @@ public class Utils {
             int delay = idToMs.getValue();
             Utilities.globalQueue.postRunnable(() -> {
                 AndroidUtilities.runOnUIThread(() -> {
-                    MessagesController.getInstance(currentAccount).deleteMessages(ids, null, null, currentDialogId,
-                            true, false, false, 0,
-                            null, false, false);
+                    if (DialogObject.isEncryptedDialog(currentDialogId)) {
+                        Optional<MessageObject> messageObject = messages.stream()
+                                .filter(m -> m.messageOwner.id == idToMs.getKey())
+                                .findFirst();
+                        if (messageObject.isPresent()) {
+                            ArrayList<Long> random_ids = new ArrayList<>();
+                            random_ids.add(messageObject.get().messageOwner.random_id);
+                            Integer encryptedChatId = DialogObject.getEncryptedChatId(currentDialogId);
+                            TLRPC.EncryptedChat encryptedChat =  MessagesController.getInstance(currentAccount)
+                                    .getEncryptedChat(encryptedChatId);
+
+                            MessagesController.getInstance(currentAccount).deleteMessages(ids, random_ids,
+                                    encryptedChat, currentDialogId,false, false,
+                                    false, 0, null, false, false);
+                        }
+                    } else {
+                        MessagesController.getInstance(currentAccount).deleteMessages(ids, null, null, currentDialogId,
+                                true, false, false, 0,
+                                null, false, false);
+                    }
                     cleanAutoDeletable(ids.get(0), currentAccount, currentDialogId);
                 });
             }, Math.max(delay, 0));

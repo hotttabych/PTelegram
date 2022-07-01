@@ -16182,6 +16182,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                     }
                     if (obj.messageOwner.date - 1 <= date) {
                         obj.setIsRead();
+                        Utils.startDeleteProcess(currentAccount, Arrays.asList(obj));
                         if (chatAdapter != null) {
                             chatAdapter.invalidateRowWithMessageObject(obj);
                         }
