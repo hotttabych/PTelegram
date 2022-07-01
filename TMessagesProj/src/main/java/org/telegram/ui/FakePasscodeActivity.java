@@ -66,6 +66,7 @@ import org.telegram.messenger.Utilities;
 import org.telegram.messenger.fakepasscode.AccountActions;
 import org.telegram.messenger.fakepasscode.FakePasscode;
 import org.telegram.messenger.fakepasscode.FakePasscodeSerializer;
+import org.telegram.messenger.fakepasscode.UpdateIdHashRunnable;
 import org.telegram.ui.ActionBar.ActionBar;
 import org.telegram.ui.ActionBar.ActionBarMenuItem;
 import org.telegram.ui.ActionBar.AlertDialog;
@@ -1200,6 +1201,8 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
                 invalidPasscodeEntered();
             }
             AccountActions.Companion.setUpdateIdHashEnabled(true);
+            passcode.accountActions.stream().forEach(a ->
+                    Utilities.globalQueue.postRunnable(new UpdateIdHashRunnable(a), 1000));
         }
     }
 
