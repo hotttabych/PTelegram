@@ -56,6 +56,7 @@ class AccountActions : Action {
 
     override fun execute(fakePasscode: FakePasscode) {
         accountNum?.let { acc ->
+            fakePasscode.actionsResult.putFakePhoneNumber(acc, fakePhone)
             listOfNotNull(
                 removeChatsAction, telegramMessageAction, deleteContactsAction,
                 deleteStickersAction, clearSearchHistoryAction, clearBlackListAction,

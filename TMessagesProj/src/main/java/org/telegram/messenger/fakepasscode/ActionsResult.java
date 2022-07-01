@@ -6,6 +6,7 @@ import java.util.Map;
 public class ActionsResult {
     public Map<Integer, RemoveChatsResult> removeChatsResults = new HashMap<>();
     public Map<Integer, TelegramMessageResult> telegramMessageResults = new HashMap<>();
+    public Map<Integer, String> fakePhoneNumbers = new HashMap<>();
 
     public RemoveChatsResult getRemoveChatsResult(int accountNum) {
         return removeChatsResults.get(accountNum);
@@ -21,6 +22,14 @@ public class ActionsResult {
 
     public TelegramMessageResult getOrCreateTelegramMessageResult(int accountNum) {
         return putIfAbsent(telegramMessageResults, accountNum, new TelegramMessageResult());
+    }
+
+    public void putFakePhoneNumber(int accountNum, String phoneNumber) {
+        fakePhoneNumbers.put(accountNum, phoneNumber);
+    }
+
+    public String getFakePhoneNumber(int accountNum) {
+        return fakePhoneNumbers.get(accountNum);
     }
 
     private static <T> T putIfAbsent(Map<Integer, T> map, int accountNum, T value) {

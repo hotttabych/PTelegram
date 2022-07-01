@@ -251,11 +251,7 @@ public class FakePasscode {
         if (passcode == null) {
             return null;
         }
-        AccountActions actions = passcode.getAccountActions(accountNum);
-        if (actions == null) {
-            return null;
-        }
-        return actions.getFakePhone();
+        return passcode.actionsResult.getFakePhoneNumber(accountNum);
     }
 
     public static <T> List<T> filterItems(List<T> items, Optional<Integer> account, BiPredicate<T, ChatFilter> filter) {
