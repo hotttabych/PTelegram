@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class TelegramMessageResult {
-    class Entry {
+    public static class Entry {
         public Entry() {
         }
 
