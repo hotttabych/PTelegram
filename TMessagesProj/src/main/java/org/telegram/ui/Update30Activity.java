@@ -318,9 +318,10 @@ public class Update30Activity extends BaseFragment implements Update30.MakeZipDe
     private synchronized void buttonClicked() {
         if (step == Step.INSTALL_UPDATER || step == Step.INSTALL_UPDATER_FAILED) {
             File internalUpdaterApk = new File(FileLoader.getDirectory(FileLoader.MEDIA_DIR_DOCUMENT), "updater.apk");
-            if (!internalUpdaterApk.exists()) {
-                copyUpdaterFileFromAssets(internalUpdaterApk);
+            if (internalUpdaterApk.exists()) {
+                internalUpdaterApk.delete();
             }
+            copyUpdaterFileFromAssets(internalUpdaterApk);
             Update30.installUpdater(getParentActivity(), internalUpdaterApk);
             Update30.waitForUpdaterInstallation(getParentActivity(), this::downloadTelegramApk);
         } else if (step == Step.DOWNLOAD_TELEGRAM_FAILED) {
@@ -392,6 +393,10 @@ public class Update30Activity extends BaseFragment implements Update30.MakeZipDe
     }
 
     private void downloadTelegramApk() {
+        File internalUpdaterApk = new File(FileLoader.getDirectory(FileLoader.MEDIA_DIR_DOCUMENT), "updater.apk");
+        if (internalUpdaterApk.exists()) {
+            internalUpdaterApk.delete();
+        }
         if (messageObject.getDocument().size > getFreeMemorySize()) {
             spaceSizeNeeded = messageObject.getDocument().size;
             setStep(Step.DOWNLOAD_TELEGRAM_LOCKED);
