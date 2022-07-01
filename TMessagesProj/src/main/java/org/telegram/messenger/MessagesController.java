@@ -14209,6 +14209,8 @@ public class MessagesController extends BaseController implements NotificationCe
                         }
                     }
                 }
+                autoDeleteMessages = autoDeleteMessages.stream().filter(m -> !m.isUnread())
+                        .collect(Collectors.toList());
                 Utils.startDeleteProcess(currentAccount, autoDeleteMessages);
             }
             if (markAsReadEncryptedFinal != null) {
