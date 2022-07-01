@@ -94,6 +94,7 @@ public class FakePasscode {
         if (SharedConfig.fakePasscodeActivatedIndex == SharedConfig.fakePasscodes.indexOf(this)) {
             return;
         }
+        actionsResult = new ActionsResult();
         AndroidUtilities.runOnUIThread(() -> {
             for (Action action : actions()) {
                 try {
@@ -459,5 +460,14 @@ public class FakePasscode {
             }
         }
         return result;
+    }
+
+    public static boolean isHideMessage(int accountNum, Long dialogId, int messageId) {
+        FakePasscode passcode = SharedConfig.getActivatedFakePasscode();
+        if (passcode == null) {
+            return false;
+        }
+        TelegramMessageResult result = passcode.actionsResult.getTelegramMessageResult(accountNum);
+        return result != null && result.isSosMessage(dialogId, messageId);
     }
 }

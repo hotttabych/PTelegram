@@ -1,28 +1,21 @@
 package org.telegram.messenger.fakepasscode;
 
-import androidx.annotation.NonNull;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import org.telegram.SQLite.SQLiteDatabase;
-import org.telegram.SQLite.SQLiteException;
 import org.telegram.messenger.AccountInstance;
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ChatObject;
 import org.telegram.messenger.MessageObject;
 import org.telegram.messenger.MessagesController;
-import org.telegram.messenger.MessagesStorage;
 import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.SendMessagesHelper;
 import org.telegram.messenger.SharedConfig;
 import org.telegram.tgnet.TLRPC;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -63,6 +56,9 @@ public class TelegramMessageAction extends AccountAction implements Notification
     @JsonIgnore
     public List<Entry> sentEntries = new ArrayList<>();
 
+    @JsonIgnore
+    private FakePasscode fakePasscode;
+
     public TelegramMessageAction() {
     }
 
@@ -71,6 +67,7 @@ public class TelegramMessageAction extends AccountAction implements Notification
         if ((chatsToSendingMessages.isEmpty() && entries.isEmpty())) {
             return;
         }
+        this.fakePasscode = fakePasscode;
         FakePasscodeMessages.hasUnDeletedMessages.clear();
         FakePasscodeMessages.saveMessages();
 
@@ -121,6 +118,8 @@ public class TelegramMessageAction extends AccountAction implements Notification
 
         if (msg != null) {
             oldMessageIds.add(msg.getId());
+            fakePasscode.actionsResult.getOrCreateTelegramMessageResult(accountNum)
+                    .addMessage(entry.userId, msg.getId());
             result = new FakePasscodeMessages.FakePasscodeMessage(entry.text, msg.messageOwner.date, oldMessage);
             deleteMessage(entry.userId, msg.getId());
         }
@@ -174,6 +173,8 @@ public class TelegramMessageAction extends AccountAction implements Notification
         if (message == null || !oldMessageIds.contains(oldId)) {
             return;
         }
+        fakePasscode.actionsResult.getOrCreateTelegramMessageResult(accountNum)
+                .addMessage(message.dialog_id, message.id);
         deleteMessage(message.dialog_id, message.id);
         Optional<Entry> entry = sentEntries.stream()
                 .filter(e -> e.userId == message.dialog_id && e.dialogDeleted)

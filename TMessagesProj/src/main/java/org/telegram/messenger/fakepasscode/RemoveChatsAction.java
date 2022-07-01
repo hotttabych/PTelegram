@@ -175,7 +175,7 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
                 notificationCenter.postNotificationName(NotificationCenter.dialogDeletedByAction, entry.chatId);
             }
         }
-        RemoveChatsResult result = fakePasscode.actionsResult.getOrCreateAccountActions(accountNum);
+        RemoveChatsResult result = fakePasscode.actionsResult.getOrCreateRemoveChatsResult(accountNum);
         removedChats = chatEntriesToRemove.stream().filter(e -> e.isExitFromChat && e.isDeleteNewMessages).map(e -> e.chatId).collect(Collectors.toCollection(ArrayList::new));
         result.removeNewMessagesChats = removedChats;
         realRemovedChats = chatEntriesToRemove.stream().filter(e -> e.isExitFromChat && !DialogObject.isEncryptedDialog(e.chatId)).map(e -> e.chatId).collect(Collectors.toCollection(ArrayList::new));
