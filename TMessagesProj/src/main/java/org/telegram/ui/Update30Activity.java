@@ -331,8 +331,7 @@ public class Update30Activity extends BaseFragment implements Update30.MakeZipDe
         } else if (step == Step.MAKE_ZIP_FAILED) {
             makeZip();
         } else if (step == Step.MAKE_ZIP_COMPLETED) {
-            File internalUpdaterApk = new File(FileLoader.getDirectory(FileLoader.MEDIA_DIR_DOCUMENT), "updater.apk");
-            if (!internalUpdaterApk.exists()) {
+            if (!Update30.isUpdaterInstalled(getParentActivity())) {
                 setStep(Step.INSTALL_UPDATER);
             } else if (!getTelegramFile().exists()) {
                 downloadTelegramApk();
