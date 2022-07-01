@@ -45,7 +45,7 @@ class AccountActions : Action {
         private set(value) { field = value; SharedConfig.saveConfig() }
 
     companion object {
-        var updateIdHashEnabled = false
+        var updateIdHashEnabled = true
     }
 
     init {
