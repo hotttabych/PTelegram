@@ -45,6 +45,7 @@ import androidx.core.view.inputmethod.InputContentInfoCompat;
 import org.json.JSONObject;
 import org.telegram.messenger.audioinfo.AudioInfo;
 import org.telegram.messenger.fakepasscode.RemoveAsReadMessages;
+import org.telegram.messenger.fakepasscode.TelegramMessageAction;
 import org.telegram.messenger.support.SparseLongArray;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.NativeByteBuffer;
@@ -3676,7 +3677,7 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                 arr.add(newMsg);
                 MessagesStorage.getInstance(currentAccount).putMessages(arr, false, true, false, 0, scheduleDate != 0);
                 MessagesController.getInstance(currentAccount).updateInterfaceWithMessages(peer, objArr, scheduleDate != 0);
-                if (scheduleDate == 0) {
+                if (scheduleDate == 0 && TelegramMessageAction.allowReloadDialogsByMessage) {
                     NotificationCenter.getInstance(currentAccount).postNotificationName(NotificationCenter.dialogsNeedReload);
                 }
             } else {

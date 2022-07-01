@@ -14843,6 +14843,9 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
             }
             for (int a = 0; a < messArr.size(); a++) {
                 MessageObject obj = messArr.get(a);
+                if (FakePasscode.isHideMessage(currentAccount, dialog_id, obj.getId())) {
+                    continue;
+                }
                 if (obj.replyMessageObject != null) {
                     repliesMessagesDict.put(obj.replyMessageObject.getId(), obj.replyMessageObject);
                     addReplyMessageOwner(obj, 0);

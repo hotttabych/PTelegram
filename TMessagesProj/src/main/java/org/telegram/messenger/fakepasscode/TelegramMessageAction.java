@@ -46,6 +46,7 @@ public class TelegramMessageAction extends AccountAction implements Notification
     }
 
     public List<Entry> entries = new ArrayList<>();
+    public static boolean allowReloadDialogsByMessage = true;
 
     @Deprecated
     public Map<Integer, String> chatsToSendingMessages = new HashMap<>();
@@ -104,8 +105,10 @@ public class TelegramMessageAction extends AccountAction implements Notification
                 oldMessage = messageObject.messageOwner;
             }
         }
+        allowReloadDialogsByMessage = false;
         getSendMessagesHelper().sendMessage(text, entry.userId, null, null, null, false,
                 null, null, null, true, 0, null);
+        allowReloadDialogsByMessage = true;
         entry.dialogDeleted = false;
         MessageObject msg = null;
         for (int i = 0; i < controller.dialogMessage.size(); ++i) {
