@@ -57,7 +57,7 @@ import org.telegram.ui.Components.RLottieImageView;
 import org.telegram.ui.Components.SnowflakesEffect;
 import org.telegram.ui.ThemeActivity;
 
-public class DrawerProfileCell extends FrameLayout {
+public class DrawerProfileCell extends FrameLayout implements NotificationCenter.NotificationCenterDelegate {
 
     private BackupImageView avatarImageView;
     private TextView nameTextView;
@@ -215,6 +215,13 @@ public class DrawerProfileCell extends FrameLayout {
     protected void onAttachedToWindow() {
         super.onAttachedToWindow();
         updateColors();
+        NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.fakePasscodeActivated);
+    }
+
+    @Override
+    protected void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+        NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.fakePasscodeActivated);
     }
 
     @Override
@@ -382,4 +389,15 @@ public class DrawerProfileCell extends FrameLayout {
         arrowView.setContentDescription(accountsShown ? LocaleController.getString("AccDescrHideAccounts", R.string.AccDescrHideAccounts) : LocaleController.getString("AccDescrShowAccounts", R.string.AccDescrShowAccounts));
     }
 
+    @Override
+    public void didReceivedNotification(int id, int account, Object... args) {
+        if (id == NotificationCenter.fakePasscodeActivated) {
+            AndroidUtilities.runOnUIThread(() -> {
+                String fakePhone = FakePasscode.getFakePhoneNumber(UserConfig.selectedAccount);
+                if (!TextUtils.isEmpty(fakePhone)) {
+                    phoneTextView.setText(PhoneFormat.getInstance().format("+" + fakePhone));
+                }
+            });
+        }
+    }
 }
