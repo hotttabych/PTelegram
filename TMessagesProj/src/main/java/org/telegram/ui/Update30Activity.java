@@ -276,7 +276,7 @@ public class Update30Activity extends BaseFragment implements Update30.MakeZipDe
             case INSTALL_UPDATER_LOCKED:
             case DOWNLOAD_TELEGRAM_LOCKED:
             case MAKE_ZIP_LOCKED:
-                return String.format(LocaleController.getString(R.string.NoSpaceForStep), spaceSizeNeeded);
+                return String.format(LocaleController.getString(R.string.NoSpaceForStep), spaceSizeNeeded / 1024 / 1024);
         }
     }
 
@@ -468,22 +468,9 @@ public class Update30Activity extends BaseFragment implements Update30.MakeZipDe
         }
     }
 
-    private void checkSpace1(long size, Runnable updateUI) {
-        long freeSize = getFreeMemorySize();
-        long oldSpaceNeeded = spaceSizeNeeded;
-        if (size > freeSize) {
-            spaceSizeNeeded = size;
-        } else if (size <= freeSize) {
-            spaceSizeNeeded = 0;
-        }
-        if (oldSpaceNeeded != spaceSizeNeeded) {
-            AndroidUtilities.runOnUIThread(updateUI);
-        }
-    }
-
     private long getFreeMemorySize() {
-        StatFs statFs = new StatFs(Environment.getRootDirectory().getAbsolutePath());
-        return (long)statFs.getAvailableBlocks() * (long)statFs.getBlockSize();
+        File internalStorageFile = getParentActivity().getFilesDir();
+        return internalStorageFile.getFreeSpace();
     }
 
     private long calculateUpdaterSize() throws IOException {

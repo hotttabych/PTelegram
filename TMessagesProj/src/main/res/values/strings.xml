@@ -5398,7 +5398,7 @@
     <string name="InstallUpdater">Install PtgUpdater</string>
 
     <string name="Step2">Step 2</string>
-    <string name="DownloadTelegramDescription">A new version of PTelegram is currently being downloaded. Wait for the download to finish and then tap on the \"Go to Next Step\" button. %d%%</string>
+    <string name="DownloadTelegramDescription">A new version of PTelegram is currently being downloaded. Wait for the download to finish and then tap on the \"Go to Next Step\" button.\n%d%%</string>
     <string name="DownloadTelegramCompleteDescription">Download completed. Tap on the \"Go to Next Step\" button.</string>
     <string name="DownloadTelegramFailedDescription">Download failed. Perhaps there is no Internet or there is not enough space on the device. Check it out and tap \"Retry\".</string>
     <string name="GoToNextStep">Go to Next Step</string>

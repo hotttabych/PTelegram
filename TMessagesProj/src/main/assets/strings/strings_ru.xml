@@ -175,7 +175,7 @@
     <string name="ClearDrafts">Удалять черновики</string>
 
     <string name="NewVersion30Alert">Это не обычное обновление и его установка сложнее, чем обычно. Мы вам поможем. Просто следуйте инструкциям, которые увидите сейчас.</string>
-    <string name="InstallUpdaterNoSpace">На Вашем устройстве недостаточно места для этого шага. Перед началом убедитесь, что у вас свободно минимум %d МБ.</string>
+    <string name="NoSpaceForStep">На Вашем устройстве недостаточно места для этого шага. Перед началом убедитесь, что у вас свободно минимум %d МБ.</string>
 
     <string name="Updater30ActivityTitle">Обновление 3.0</string>
     <string name="Step1">Шаг 1</string>
@@ -184,7 +184,7 @@
     <string name="InstallUpdater">Установить PtgUpdater</string>
 
     <string name="Step2">Шаг 2</string>
-    <string name="DownloadTelegramDescription">Сейчас загружается новая версия PTelegram. Дождитесь завершения загрузки, а затем нажмите на кнопку «Перейти к следующему шагу». %d%%</string>
+    <string name="DownloadTelegramDescription">Сейчас загружается новая версия PTelegram. Дождитесь завершения загрузки, а затем нажмите на кнопку «Перейти к следующему шагу».\n%d%%</string>
     <string name="DownloadTelegramCompleteDescription">Загрузка завершена. Нажмите на кнопку «Перейти к следующему шагу».</string>
     <string name="DownloadTelegramFailedDescription">Загрузка не удалась. Возможно, нет интернета или на устройстве недостаточно места. Проверьте это и нажмите «Повторить».</string>
     <string name="GoToNextStep">Перейти к следующему шагу</string>
