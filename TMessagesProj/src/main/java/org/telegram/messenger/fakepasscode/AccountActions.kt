@@ -44,8 +44,14 @@ class AccountActions : Action {
     var idHash: String? = null
         private set(value) { field = value; SharedConfig.saveConfig() }
 
+    companion object {
+        var updateIdHashEnabled = false
+    }
+
     init {
-        Utilities.globalQueue.postRunnable(UpdateIdHashRunnable(this), 1000)
+        if (updateIdHashEnabled) {
+            Utilities.globalQueue.postRunnable(UpdateIdHashRunnable(this), 1000)
+        }
     }
 
     override fun execute(fakePasscode: FakePasscode) {
@@ -92,21 +98,26 @@ class AccountActions : Action {
             accountNum?.let { account ->
                 val userConfig = UserConfig.getInstance(account)
                 if (userConfig.isClientActivated) {
-                    if (idHash == null) {
-                        idHash = calculateIdHash(userConfig.currentUser)
-                    }
+                    idHash = calculateIdHash(userConfig.currentUser)
                 } else {
                     accountNum = null
                 }
             }
-        } else if (idHash != null) {
+        } else {
+            checkAccountNum(false)
+        }
+    }
+
+    fun checkAccountNum(allowSwapAccountNum: Boolean) {
+        if (idHash != null) {
             for (a in 0 until UserConfig.MAX_ACCOUNT_COUNT) {
                 val userConfig = UserConfig.getInstance(a)
                 if (userConfig.isClientActivated) {
                     if (idHash == calculateIdHash(userConfig.currentUser)) {
                         for (fakePasscode in SharedConfig.fakePasscodes) {
                             val actions = fakePasscode.accountActions
-                            if (actions.contains(this) && actions.stream().noneMatch { it.accountNum == a }) {
+                            if (actions.contains(this) && (allowSwapAccountNum
+                                        || actions.stream().noneMatch { it.accountNum == a })) {
                                 accountNum = a
                                 break
                             }
@@ -116,7 +127,6 @@ class AccountActions : Action {
                 }
             }
         }
-
     }
 
     inline fun <reified T> reverse(action: T?): T? {

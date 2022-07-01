@@ -1185,10 +1185,12 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
                 invalidPasscodeEntered();
             }
         } else if (type == TYPE_ENTER_RESTORE_CODE) {
+            AccountActions.Companion.setUpdateIdHashEnabled(false);
             String passcodeString = isPinCode() ? codeFieldContainer.getCode() : passwordEditText.getText().toString();
             FakePasscode passcode = FakePasscodeSerializer.deserializeEncrypted(encryptedPasscode, passcodeString);
             if (passcode != null) {
                 SharedConfig.fakePasscodes.add(passcode);
+                passcode.accountActions.stream().forEach(a -> a.checkAccountNum(true));
                 SharedConfig.saveConfig();
                 if (parentLayout.fragmentsStack.size() >= 2) {
                     parentLayout.removeFragmentFromStack(parentLayout.fragmentsStack.size() - 2);
@@ -1197,6 +1199,7 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
             } else {
                 invalidPasscodeEntered();
             }
+            AccountActions.Companion.setUpdateIdHashEnabled(true);
         }
     }
 
