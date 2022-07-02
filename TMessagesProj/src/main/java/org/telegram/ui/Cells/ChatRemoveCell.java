@@ -90,7 +90,7 @@ public class ChatRemoveCell extends FrameLayout {
 
         settingsButton = new ImageView(getContext());
         settingsButton.setScaleType(ImageView.ScaleType.CENTER);
-        settingsButton.setImageResource(R.drawable.menu_settings);
+        settingsButton.setImageResource(R.drawable.msg_settings_old);
         Drawable drawable = DrawableCompat.wrap(settingsButton.getDrawable());
         DrawableCompat.setTintList(drawable, new ColorStateList(new int[][]{
                 {}
