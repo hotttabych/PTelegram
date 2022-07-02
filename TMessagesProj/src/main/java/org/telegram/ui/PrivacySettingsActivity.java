@@ -525,7 +525,7 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
         passwordRow = rowCount++;
         sessionsRow = rowCount++;
         sessionsDetailRow = rowCount++;
-        if (getMessagesController().autoarchiveAvailable) {
+        if (getMessagesController().autoarchiveAvailable || getUserConfig().isPremium()) {
             newChatsHeaderRow = rowCount++;
             newChatsRow = rowCount++;
             newChatsSectionRow = rowCount++;

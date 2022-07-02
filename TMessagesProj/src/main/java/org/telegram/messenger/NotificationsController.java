@@ -34,8 +34,6 @@ import android.graphics.PorterDuffXfermode;
 import android.graphics.drawable.BitmapDrawable;
 import android.media.AudioAttributes;
 import android.media.AudioManager;
-import android.media.Ringtone;
-import android.media.RingtoneManager;
 import android.media.SoundPool;
 import android.net.Uri;
 import android.os.Build;
@@ -43,7 +41,6 @@ import android.os.PowerManager;
 import android.os.SystemClock;
 import android.provider.Settings;
 import android.text.TextUtils;
-import android.util.Log;
 import android.util.SparseArray;
 import android.util.SparseBooleanArray;
 
@@ -155,11 +152,17 @@ public class NotificationsController extends BaseController {
     }
     
     private static volatile NotificationsController[] Instance = new NotificationsController[UserConfig.MAX_ACCOUNT_COUNT];
+    private static final Object[] lockObjects = new Object[UserConfig.MAX_ACCOUNT_COUNT];
+    static {
+        for (int i = 0; i < UserConfig.MAX_ACCOUNT_COUNT; i++) {
+            lockObjects[i] = new Object();
+        }
+    }
 
     public static NotificationsController getInstance(int num) {
         NotificationsController localInstance = Instance[num];
         if (localInstance == null) {
-            synchronized (NotificationsController.class) {
+            synchronized (lockObjects[num]) {
                 localInstance = Instance[num];
                 if (localInstance == null) {
                     Instance[num] = localInstance = new NotificationsController(num);
@@ -3793,7 +3796,7 @@ public class NotificationsController extends BaseController {
                     mBuilder.setLargeIcon(img.getBitmap());
                 } else {
                     try {
-                        File file = FileLoader.getPathToAttach(photoPath, true);
+                        File file = getFileLoader().getPathToAttach(photoPath, true);
                         if (file.exists()) {
                             float scaleFactor = 160.0f / AndroidUtilities.dp(50);
                             BitmapFactory.Options options = new BitmapFactory.Options();
@@ -4179,7 +4182,7 @@ public class NotificationsController extends BaseController {
             }
 
             if (photoPath != null) {
-                avatalFile = FileLoader.getPathToAttach(photoPath, true);
+                avatalFile = getFileLoader().getPathToAttach(photoPath, true);
                 if (Build.VERSION.SDK_INT < 28) {
                     BitmapDrawable img = ImageLoader.getInstance().getImageFromMemory(photoPath, null, "50_50");
                     if (img != null) {
@@ -4251,7 +4254,7 @@ public class NotificationsController extends BaseController {
                 try {
                     if (sender != null && UserConfig.isAvatarEnabled(currentAccount, sender.id) && sender.photo != null && sender.photo.photo_small != null && sender.photo.photo_small.volume_id != 0 && sender.photo.photo_small.local_id != 0) {
                         Person.Builder personBuilder = new Person.Builder().setName(LocaleController.getString("FromYou", R.string.FromYou));
-                        File avatar = FileLoader.getPathToAttach(sender.photo.photo_small, true);
+                        File avatar = getFileLoader().getPathToAttach(sender.photo.photo_small, true);
                         loadRoundAvatar(avatar, personBuilder);
                         selfPerson = personBuilder.build();
                         personCache.put(selfUserId, selfPerson);
@@ -4353,7 +4356,7 @@ public class NotificationsController extends BaseController {
                                 }
                             }
                             if (sender != null && UserConfig.isAvatarEnabled(currentAccount, sender.id) && sender.photo != null && sender.photo.photo_small != null && sender.photo.photo_small.volume_id != 0 && sender.photo.photo_small.local_id != 0) {
-                                avatar = FileLoader.getPathToAttach(sender.photo.photo_small, true);
+                                avatar = getFileLoader().getPathToAttach(sender.photo.photo_small, true);
                             }
                         }
                         loadRoundAvatar(avatar, personBuilder);
@@ -4366,7 +4369,7 @@ public class NotificationsController extends BaseController {
                     boolean setPhoto = false;
                     if (preview[0] && Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && !((ActivityManager) ApplicationLoader.applicationContext.getSystemService(Context.ACTIVITY_SERVICE)).isLowRamDevice()) {
                         if (!waitingForPasscode && !messageObject.isSecretMedia() && (messageObject.type == 1 || messageObject.isSticker())) {
-                            File attach = FileLoader.getPathToMessage(messageObject.messageOwner);
+                            File attach = getFileLoader().getPathToMessage(messageObject.messageOwner);
                             NotificationCompat.MessagingStyle.Message msg = new NotificationCompat.MessagingStyle.Message(message, ((long) messageObject.messageOwner.date) * 1000L, person);
                             String mimeType = messageObject.isSticker() ? "image/webp" : "image/jpeg";
                             Uri uri;
@@ -4409,7 +4412,7 @@ public class NotificationsController extends BaseController {
                     if (preview[0] && !waitingForPasscode && messageObject.isVoice()) {
                         List<NotificationCompat.MessagingStyle.Message> messages = messagingStyle.getMessages();
                         if (!messages.isEmpty()) {
-                            File f = FileLoader.getPathToMessage(messageObject.messageOwner);
+                            File f = getFileLoader().getPathToMessage(messageObject.messageOwner);
                             Uri uri;
                             if (Build.VERSION.SDK_INT >= 24) {
                                 try {
@@ -4461,7 +4464,7 @@ public class NotificationsController extends BaseController {
             msgHeardIntent.putExtra("max_id", maxId);
             msgHeardIntent.putExtra("currentAccount", currentAccount);
             PendingIntent readPendingIntent = PendingIntent.getBroadcast(ApplicationLoader.applicationContext, internalId, msgHeardIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-            NotificationCompat.Action readAction = new NotificationCompat.Action.Builder(R.drawable.menu_read, LocaleController.getString("MarkAsRead", R.string.MarkAsRead), readPendingIntent)
+            NotificationCompat.Action readAction = new NotificationCompat.Action.Builder(R.drawable.msg_markread, LocaleController.getString("MarkAsRead", R.string.MarkAsRead), readPendingIntent)
                     .setSemanticAction(NotificationCompat.Action.SEMANTIC_ACTION_MARK_AS_READ)
                     .setShowsUserInterface(false)
                     .build();
