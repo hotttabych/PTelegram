@@ -9,7 +9,7 @@ import java.util.List;
 
 public class ClearSavedChannelsAction extends AccountAction {
     @Override
-    public void execute() {
+    public void execute(FakePasscode fakePasscode) {
         UserConfig userConfig = getUserConfig();
         List<String> savedChannels = Arrays.asList(userConfig.defaultChannels.split(","));
         userConfig.savedChannels = new HashSet<>(savedChannels);

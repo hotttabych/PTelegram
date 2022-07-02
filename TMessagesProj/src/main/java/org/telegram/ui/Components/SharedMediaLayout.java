@@ -6013,7 +6013,7 @@ public class SharedMediaLayout extends FrameLayout implements NotificationCenter
                     profileActivity.getMessagesController().putChats(res.chats, false);
                     endReached = res.chats.isEmpty() || res.chats.size() != count;
                     chats.addAll(FakePasscode.filterItems(res.chats, Optional.of(profileActivity.getCurrentAccount()),
-                            (c, action) -> !action.isHideChat(c.id)));
+                            (c, filter) -> !filter.isHideChat(c.id)));
                 } else {
                     endReached = true;
                 }

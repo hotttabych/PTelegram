@@ -46,6 +46,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.IntDef;
 import androidx.core.app.ActivityCompat;
@@ -64,6 +65,8 @@ import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.Utilities;
 import org.telegram.messenger.fakepasscode.AccountActions;
 import org.telegram.messenger.fakepasscode.FakePasscode;
+import org.telegram.messenger.fakepasscode.FakePasscodeSerializer;
+import org.telegram.messenger.fakepasscode.UpdateIdHashRunnable;
 import org.telegram.ui.ActionBar.ActionBar;
 import org.telegram.ui.ActionBar.ActionBarMenuItem;
 import org.telegram.ui.ActionBar.AlertDialog;
@@ -462,6 +465,7 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
                             builder.setPositiveButton(buttonText, (dialogInterface, i) -> {
                                 fakePasscode.accountActions.remove(info.actions);
                                 SharedConfig.saveConfig();
+                                updateRows();
                                 listAdapter.notifyDataSetChanged();
                             });
                             builder.setNegativeButton(LocaleController.getString("Cancel", R.string.Cancel), null);
@@ -812,30 +816,34 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
         }
 
         if (!animate) {
-            keyboardView.setVisibility(visible ? View.VISIBLE : View.GONE);
-            keyboardView.setAlpha(visible ? 1 : 0);
-            keyboardView.setTranslationY(visible ? 0 : AndroidUtilities.dp(CustomPhoneKeyboardView.KEYBOARD_HEIGHT_DP));
-            fragmentView.requestLayout();
+            if (keyboardView != null) {
+                keyboardView.setVisibility(visible ? View.VISIBLE : View.GONE);
+                keyboardView.setAlpha(visible ? 1 : 0);
+                keyboardView.setTranslationY(visible ? 0 : AndroidUtilities.dp(CustomPhoneKeyboardView.KEYBOARD_HEIGHT_DP));
+                fragmentView.requestLayout();
+            }
         } else {
             ValueAnimator animator = ValueAnimator.ofFloat(visible ? 0 : 1, visible ? 1 : 0).setDuration(150);
             animator.setInterpolator(visible ? CubicBezierInterpolator.DEFAULT : Easings.easeInOutQuad);
             animator.addUpdateListener(animation -> {
-                float val = (float) animation.getAnimatedValue();
-                keyboardView.setAlpha(val);
-                keyboardView.setTranslationY((1f - val) * AndroidUtilities.dp(CustomPhoneKeyboardView.KEYBOARD_HEIGHT_DP) * 0.75f);
-                fragmentView.requestLayout();
+                if (keyboardView != null) {
+                    float val = (float) animation.getAnimatedValue();
+                    keyboardView.setAlpha(val);
+                    keyboardView.setTranslationY((1f - val) * AndroidUtilities.dp(CustomPhoneKeyboardView.KEYBOARD_HEIGHT_DP) * 0.75f);
+                    fragmentView.requestLayout();
+                }
             });
             animator.addListener(new AnimatorListenerAdapter() {
                 @Override
                 public void onAnimationStart(Animator animation) {
-                    if (visible) {
+                    if (visible && keyboardView != null) {
                         keyboardView.setVisibility(View.VISIBLE);
                     }
                 }
 
                 @Override
                 public void onAnimationEnd(Animator animation) {
-                    if (!visible) {
+                    if (!visible && keyboardView != null) {
                         keyboardView.setVisibility(View.GONE);
                     }
                 }
@@ -1100,6 +1108,19 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
             return;
         }
 
+        String code;
+        if (SharedConfig.passcodeType == SharedConfig.PASSCODE_TYPE_PASSWORD) {
+            code = passwordEditText.getText().toString();
+        } else {
+            code = codeFieldContainer.getCode();
+        }
+        SharedConfig.PasscodeCheckResult passcodeCheckResult = SharedConfig.checkPasscode(code);
+        if (passcodeCheckResult.isRealPasscodeSuccess || passcodeCheckResult.fakePasscode != null) {
+            invalidPasscodeEntered();
+            Toast.makeText(getParentActivity(), LocaleController.getString("PasscodeInUse", R.string.PasscodeInUse), Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         if (otherItem != null) {
             otherItem.setVisibility(View.GONE);
         }
@@ -1134,7 +1155,7 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
                 return;
             }
 
-            fakePasscode.passcodeHash = FakePasscode.calculateHash(firstPassword, SharedConfig.passcodeSalt);
+            fakePasscode.passcodeHash = FakePasscodeSerializer.calculateHash(firstPassword, SharedConfig.passcodeSalt);
             SharedConfig.saveConfig();
 
             passwordEditText.clearFocus();
@@ -1159,16 +1180,18 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
             });
         } else if (type == TYPE_ENTER_BACKUP_CODE) {
             String passcodeString = isPinCode() ? codeFieldContainer.getCode() : passwordEditText.getText().toString();
-            if (Objects.equals(FakePasscode.calculateHash(passcodeString, SharedConfig.passcodeSalt), fakePasscode.passcodeHash)) {
+            if (Objects.equals(FakePasscodeSerializer.calculateHash(passcodeString, SharedConfig.passcodeSalt), fakePasscode.passcodeHash)) {
                 presentFragment(new FakePasscodeBackupActivity(fakePasscode, passcodeString), true);
             } else {
                 invalidPasscodeEntered();
             }
         } else if (type == TYPE_ENTER_RESTORE_CODE) {
+            AccountActions.Companion.setUpdateIdHashEnabled(false);
             String passcodeString = isPinCode() ? codeFieldContainer.getCode() : passwordEditText.getText().toString();
-            FakePasscode passcode = FakePasscode.deserializeEncrypted(encryptedPasscode, passcodeString);
+            FakePasscode passcode = FakePasscodeSerializer.deserializeEncrypted(encryptedPasscode, passcodeString);
             if (passcode != null) {
                 SharedConfig.fakePasscodes.add(passcode);
+                passcode.accountActions.stream().forEach(a -> a.checkAccountNum(true));
                 SharedConfig.saveConfig();
                 if (parentLayout.fragmentsStack.size() >= 2) {
                     parentLayout.removeFragmentFromStack(parentLayout.fragmentsStack.size() - 2);
@@ -1177,6 +1200,9 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
             } else {
                 invalidPasscodeEntered();
             }
+            AccountActions.Companion.setUpdateIdHashEnabled(true);
+            passcode.accountActions.stream().forEach(a ->
+                    Utilities.globalQueue.postRunnable(new UpdateIdHashRunnable(a), 1000));
         }
     }
 

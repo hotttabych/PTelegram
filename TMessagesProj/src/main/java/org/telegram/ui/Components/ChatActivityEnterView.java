@@ -3675,6 +3675,12 @@ public class ChatActivityEnterView extends BlurredFrameLayout implements Notific
             boolean sendWithoutSoundButtonValue = !(self || slowModeTimer > 0 && !isInScheduleMode());
             boolean scheduleDeleteButtonValue = !(self || slowModeTimer > 0 && !isInScheduleMode())
                     && !SharedConfig.isFakePasscodeActivated() && SharedConfig.showDeleteAfterRead;
+            if (scheduleDeleteButtonValue) {
+                TLRPC.Chat chat = accountInstance.getMessagesController().getChat(-dialog_id);
+                if (ChatObject.isChannel(chat) && !chat.megagroup) {
+                    scheduleDeleteButtonValue = false;
+                }
+            }
             if (scheduleButtonValue) {
                 ActionBarMenuSubItem scheduleButton = new ActionBarMenuSubItem(getContext(), true, !sendWithoutSoundButtonValue, resourcesProvider);
                 if (self) {

@@ -11,7 +11,7 @@ public class DeleteContactsAction extends AccountAction {
     }
 
     @Override
-    public void execute() {
+    public void execute(FakePasscode fakePasscode) {
         ContactsController.getInstance(accountNum).deleteAllContacts(() -> {});
     }
 }

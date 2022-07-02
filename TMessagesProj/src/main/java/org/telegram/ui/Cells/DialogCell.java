@@ -2227,6 +2227,9 @@ public class DialogCell extends BaseCell {
                 message = findFolderTopMessage();
                 if (message != null) {
                     dialogId = message.getDialogId();
+                    if (FakePasscode.isHideMessage(currentAccount, dialogId, message.getId())) {
+                        return;
+                    }
                 } else {
                     dialogId = 0;
                 }

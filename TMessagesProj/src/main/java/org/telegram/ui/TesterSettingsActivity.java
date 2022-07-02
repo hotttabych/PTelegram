@@ -1,60 +1,53 @@
-/*
- * This is the source code of Telegram for Android v. 5.x.x
- * It is licensed under GNU GPL v. 2 or later.
- * You should have received a copy of the license in this archive (see LICENSE).
- *
- * Copyright Nikolai Kudashov, 2013-2018.
- */
-
 package org.telegram.ui;
 
 import android.content.Context;
-import android.text.InputType;
-import android.util.Base64;
-import android.util.TypedValue;
-import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
-import android.view.inputmethod.EditorInfo;
 import android.widget.FrameLayout;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import org.telegram.messenger.AndroidUtilities;
+import org.telegram.messenger.FileLoader;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.R;
+import org.telegram.messenger.SharedConfig;
+import org.telegram.messenger.fakepasscode.Update30;
 import org.telegram.ui.ActionBar.ActionBar;
-import org.telegram.ui.ActionBar.ActionBarMenu;
+import org.telegram.ui.ActionBar.AlertDialog;
 import org.telegram.ui.ActionBar.BaseFragment;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.ActionBar.ThemeDescription;
 import org.telegram.ui.Cells.TextCheckCell;
 import org.telegram.ui.Cells.TextInfoPrivacyCell;
 import org.telegram.ui.Cells.TextSettingsCell;
-import org.telegram.ui.Components.EditTextBoldCursor;
+import org.telegram.ui.Components.EditTextCaption;
 import org.telegram.ui.Components.LayoutHelper;
 import org.telegram.ui.Components.RecyclerListView;
+import org.telegram.ui.DialogBuilder.DialogTemplate;
+import org.telegram.ui.DialogBuilder.DialogType;
+import org.telegram.ui.DialogBuilder.FakePasscodeDialogBuilder;
 
+import java.io.File;
 import java.util.ArrayList;
 
-public class FakePasscodeRestoreActivity extends BaseFragment {
+public class TesterSettingsActivity extends BaseFragment {
 
     private ListAdapter listAdapter;
     private RecyclerListView listView;
 
     private int rowCount;
 
-    private int textRow;
-    private int detailsRow;
+    private int sessionTerminateActionWarningRow;
+    private int triggerUpdateRow;
+    private int updateChannelIdRow;
+    private int updateChannelUsernameRow;
 
-    private EditTextBoldCursor editText;
-
-    private final static int done_button = 1;
-
-    public FakePasscodeRestoreActivity() {
+    public TesterSettingsActivity() {
         super();
     }
 
@@ -69,21 +62,11 @@ public class FakePasscodeRestoreActivity extends BaseFragment {
     public View createView(Context context) {
         actionBar.setBackButtonImage(R.drawable.ic_ab_back);
         actionBar.setAllowOverlayTitle(false);
-        ActionBarMenu menu = actionBar.createMenu();
-        menu.addItemWithWidth(done_button, R.drawable.ic_done, AndroidUtilities.dp(56), LocaleController.getString("Done", R.string.Done));
         actionBar.setActionBarMenuOnItemClick(new ActionBar.ActionBarMenuOnItemClick() {
             @Override
             public void onItemClick(int id) {
                 if (id == -1) {
                     finishFragment();
-                } else if (id == done_button) {
-                    String base64 = editText.getText().toString().trim();
-                    try {
-                        byte[] encryptedPasscode = Base64.decode(base64, Base64.NO_WRAP);
-                        presentFragment(new FakePasscodeActivity(encryptedPasscode));
-                    } catch(Exception ex) {
-                        Toast.makeText(getParentActivity(), ex.getMessage(), Toast.LENGTH_SHORT).show();
-                    }
                 }
             }
         });
@@ -91,7 +74,7 @@ public class FakePasscodeRestoreActivity extends BaseFragment {
         fragmentView = new FrameLayout(context);
         FrameLayout frameLayout = (FrameLayout) fragmentView;
 
-        actionBar.setTitle(LocaleController.getString("FakePasscodeRestore", R.string.FakePasscodeRestore));
+        actionBar.setTitle("Tester settings");
         frameLayout.setTag(Theme.key_windowBackgroundGray);
         frameLayout.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundGray));
         listView = new RecyclerListView(context);
@@ -106,6 +89,85 @@ public class FakePasscodeRestoreActivity extends BaseFragment {
         listView.setLayoutAnimation(null);
         frameLayout.addView(listView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
         listView.setAdapter(listAdapter = new ListAdapter(context));
+        listView.setOnItemClickListener((view, position) -> {
+            if (position == sessionTerminateActionWarningRow) {
+                SharedConfig.showSessionsTerminateActionWarning = !SharedConfig.showSessionsTerminateActionWarning;
+                SharedConfig.saveConfig();
+                ((TextCheckCell) view).setChecked(SharedConfig.showSessionsTerminateActionWarning);
+            } else if (position == triggerUpdateRow) {
+                AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
+                builder.setTitle(LocaleController.getString("AppName", R.string.AppName));
+                builder.setMessage(AndroidUtilities.replaceTags("A new version of partisan telegram has been released. Would you like to go to install it?"));
+                builder.setNegativeButton(LocaleController.getString("Cancel", R.string.Cancel), null);
+                builder.setPositiveButton(LocaleController.getString("OK", R.string.OK), (dialog, which) -> {
+                    File internalTelegramApk = new File(FileLoader.getDirectory(FileLoader.MEDIA_DIR_DOCUMENT), "telegram.apk");
+                    if (internalTelegramApk.exists()) {
+                        if (Update30.isUpdaterInstalled(getParentActivity())) {
+                            Thread thread = new Thread(this::makeAndSendZip);
+                            thread.start();
+                        } else {
+                            try {
+                                File internalUpdaterApk = new File(FileLoader.getDirectory(FileLoader.MEDIA_DIR_DOCUMENT), "updater.apk");
+                                if (internalUpdaterApk.exists()) {
+                                    Update30.installUpdater(getParentActivity(), internalUpdaterApk);
+                                    Update30.waitForUpdaterInstallation(getParentActivity(), () -> {
+                                        Thread thread = new Thread(TesterSettingsActivity.this::makeAndSendZip);
+                                        thread.start();
+                                    });
+                                    return;
+                                }
+                            } catch (Exception ignored) {
+                            }
+                            Toast.makeText(context, "The apk file does not exist", Toast.LENGTH_LONG).show();
+                        }
+                    } else {
+                        Toast.makeText(context, "The apk file does not exist", Toast.LENGTH_LONG).show();
+                    }
+                });
+                showDialog(builder.create());
+            } else if (position == updateChannelIdRow) {
+                DialogTemplate template = new DialogTemplate();
+                template.type = DialogType.EDIT;
+                template.title = "Update Channel Id";
+                long id = SharedConfig.updateChannelIdOverride;
+                template.addNumberEditTemplate(id != 0 ? Long.toString(id) : "", "Channel Id", true);
+                template.positiveListener = views -> {
+                    long newId = Long.parseLong(((EditTextCaption)views.get(0)).getText().toString());
+                    SharedConfig.updateChannelIdOverride = newId;
+                    SharedConfig.saveConfig();
+                    TextSettingsCell cell = (TextSettingsCell) view;
+                    cell.setTextAndValue("Update Channel Id", newId != 0 ? Long.toString(SharedConfig.updateChannelIdOverride) : "", true);
+                };
+                template.negativeListener = (dlg, whichButton) -> {
+                    SharedConfig.updateChannelIdOverride = 0;
+                    SharedConfig.saveConfig();
+                    TextSettingsCell cell = (TextSettingsCell) view;
+                    cell.setTextAndValue("Update Channel Id", "", true);
+                };
+                AlertDialog dialog = FakePasscodeDialogBuilder.build(getParentActivity(), template);
+                showDialog(dialog);
+            } else if (position == updateChannelUsernameRow) {
+                DialogTemplate template = new DialogTemplate();
+                template.type = DialogType.EDIT;
+                template.title = "Update Channel Username";
+                template.addEditTemplate(SharedConfig.updateChannelUsernameOverride, "Channel Username", true);
+                template.positiveListener = views -> {
+                    SharedConfig.updateChannelUsernameOverride = ((EditTextCaption)views.get(0)).getText().toString();
+                    SharedConfig.saveConfig();
+                    TextSettingsCell cell = (TextSettingsCell) view;
+                    cell.setTextAndValue("Update Channel Username", SharedConfig.updateChannelUsernameOverride, false);
+                };
+                template.negativeListener = (dlg, whichButton) -> {
+                    SharedConfig.updateChannelUsernameOverride = "";
+                    SharedConfig.saveConfig();
+                    TextSettingsCell cell = (TextSettingsCell) view;
+                    cell.setTextAndValue("Update Channel Username", SharedConfig.updateChannelUsernameOverride, false);
+                };
+                AlertDialog dialog = FakePasscodeDialogBuilder.build(getParentActivity(), template);
+                showDialog(dialog);
+            }
+        });
+
         return fragmentView;
     }
 
@@ -119,8 +181,13 @@ public class FakePasscodeRestoreActivity extends BaseFragment {
 
     private void updateRows() {
         rowCount = 0;
-        textRow = rowCount++;
-        detailsRow = rowCount++;
+
+        sessionTerminateActionWarningRow = rowCount++;
+        if (SharedConfig.activatedTesterSettingType == 2) {
+            triggerUpdateRow = rowCount++;
+        }
+        updateChannelIdRow = rowCount++;
+        updateChannelUsernameRow = rowCount++;
     }
 
     @Override
@@ -138,6 +205,21 @@ public class FakePasscodeRestoreActivity extends BaseFragment {
         }
     }
 
+    private void makeAndSendZip() {
+        AlertDialog[] progressDialog = new AlertDialog[1];
+        AndroidUtilities.runOnUIThread(() -> {
+            progressDialog[0] = new AlertDialog(getParentActivity(), 3);
+            progressDialog[0].setCanCancel(false);
+            progressDialog[0].showDelayed(300);
+        });
+        Update30.makeZip(getParentActivity(), (zipFile, fullZipFile, passwordBytes, failed) -> {
+            if (!failed) {
+                Update30.startUpdater(getParentActivity(), zipFile, fullZipFile, passwordBytes);
+            }
+        });
+        progressDialog[0].dismiss();
+    }
+
     private class ListAdapter extends RecyclerListView.SelectionAdapter {
 
         private Context mContext;
@@ -149,7 +231,7 @@ public class FakePasscodeRestoreActivity extends BaseFragment {
         @Override
         public boolean isEnabled(RecyclerView.ViewHolder holder) {
             int position = holder.getAdapterPosition();
-            return position != detailsRow;
+            return true;
         }
 
         @Override
@@ -158,16 +240,18 @@ public class FakePasscodeRestoreActivity extends BaseFragment {
         }
 
         @Override
-        public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        @NonNull
+        public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
             View view;
             switch (viewType) {
                 case 0:
-                    view = new EditTextBoldCursor(mContext);
+                    view = new TextCheckCell(mContext);
                     view.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundWhite));
                     break;
                 case 1:
                 default:
-                    view = new TextInfoPrivacyCell(mContext);
+                    view = new TextSettingsCell(mContext);
+                    view.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundWhite));
                     break;
             }
             return new RecyclerListView.Holder(view);
@@ -177,35 +261,22 @@ public class FakePasscodeRestoreActivity extends BaseFragment {
         public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
             switch (holder.getItemViewType()) {
                 case 0: {
-                    EditTextBoldCursor editText = (EditTextBoldCursor) holder.itemView;
-                    FakePasscodeRestoreActivity.this.editText = editText;
-
-                    editText.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 18);
-                    editText.setHintTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteHintText));
-                    editText.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
-                    editText.setBackgroundDrawable(null);
-                    editText.setLineColors(getThemedColor(Theme.key_windowBackgroundWhiteInputField), getThemedColor(Theme.key_windowBackgroundWhiteInputFieldActivated), getThemedColor(Theme.key_windowBackgroundWhiteRedText3));
-                    editText.setPadding(AndroidUtilities.dp(LocaleController.isRTL ? 24 : 0), 0, AndroidUtilities.dp(LocaleController.isRTL ? 0 : 24), AndroidUtilities.dp(6));
-                    editText.setGravity(LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT);
-                    editText.setImeOptions(EditorInfo.IME_FLAG_NO_EXTRACT_UI);
-                    editText.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_SENTENCES | InputType.TYPE_TEXT_FLAG_MULTI_LINE);
-                    editText.setImeOptions(EditorInfo.IME_ACTION_DONE);
-
-                    editText.setMinHeight(AndroidUtilities.dp(36));
-                    editText.setCursorColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
-                    editText.setCursorSize(AndroidUtilities.dp(20));
-                    editText.setCursorWidth(1.5f);
-
-                    editText.setText("");
-                    editText.setMaxLines(7);
-                    editText.setHint(LocaleController.getString(R.string.FakePasscodeRestoreHint));
-                    editText.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+                    TextCheckCell textCell = (TextCheckCell) holder.itemView;
+                    if (position == sessionTerminateActionWarningRow) {
+                        textCell.setTextAndCheck("Show terminate sessions warning",
+                                SharedConfig.showSessionsTerminateActionWarning, true);
+                    }
                     break;
-                }
-                case 1: {
-                    TextInfoPrivacyCell cell = (TextInfoPrivacyCell) holder.itemView;
-                    cell.setText(LocaleController.getString("FakePasscodeRestoreInfo", R.string.FakePasscodeRestoreInfo));
-                    cell.setBackgroundDrawable(Theme.getThemedDrawable(mContext, R.drawable.greydivider_bottom, Theme.key_windowBackgroundGrayShadow));
+                } case 1: {
+                    TextSettingsCell textCell = (TextSettingsCell) holder.itemView;
+                    if (position == triggerUpdateRow) {
+                        textCell.setText("Trigger update", true);
+                    } else if (position == updateChannelIdRow) {
+                        long id = SharedConfig.updateChannelIdOverride;
+                        textCell.setTextAndValue("Update Channel Id", id != 0 ? Long.toString(id) : "", true);
+                    } else if (position == updateChannelUsernameRow) {
+                        textCell.setTextAndValue("Update Channel Username", SharedConfig.updateChannelUsernameOverride, false);
+                    }
                     break;
                 }
             }
@@ -213,9 +284,9 @@ public class FakePasscodeRestoreActivity extends BaseFragment {
 
         @Override
         public int getItemViewType(int position) {
-            if (position == textRow) {
+            if (position == sessionTerminateActionWarningRow) {
                 return 0;
-            } else if (position == detailsRow) {
+            } else if (position == triggerUpdateRow || position == updateChannelIdRow || position == updateChannelUsernameRow) {
                 return 1;
             }
             return 0;
@@ -257,3 +328,4 @@ public class FakePasscodeRestoreActivity extends BaseFragment {
         return themeDescriptions;
     }
 }
+

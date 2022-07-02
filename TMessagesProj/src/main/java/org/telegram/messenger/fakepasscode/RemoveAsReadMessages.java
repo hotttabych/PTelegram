@@ -96,7 +96,7 @@ public class RemoveAsReadMessages {
                     continue;
                 }
                 dialogsToLoad.remove(dialogEntry.getKey());
-                long dialogId = Integer.parseInt(dialogEntry.getKey());
+                long dialogId = Long.parseLong(dialogEntry.getKey());
                 if (dialogId > 0 && controller.getUser(dialogId) == null) {
                     continue;
                 }

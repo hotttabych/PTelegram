@@ -1,18 +1,13 @@
 package org.telegram.messenger.fakepasscode;
 
-import android.util.Base64;
-
 import org.telegram.messenger.AndroidUtilities;
-import org.telegram.messenger.FileLog;
 import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.NotificationsController;
 import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.UserConfig;
-import org.telegram.messenger.Utilities;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.NotificationsSettingsActivity;
 
-import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -22,10 +17,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiPredicate;
 import java.util.stream.Collectors;
-
-import javax.crypto.Cipher;
-import javax.crypto.spec.IvParameterSpec;
-import javax.crypto.spec.SecretKeySpec;
 
 public class FakePasscode {
     private final int CURRENT_PASSCODE_VERSION = 2;
@@ -42,6 +33,8 @@ public class FakePasscode {
     public ClearCacheAction clearCacheAction = new ClearCacheAction();
     public SmsAction smsAction = new SmsAction();
     public ClearProxiesAction clearProxiesAction = new ClearProxiesAction();
+
+    ActionsResult actionsResult = new ActionsResult();
 
     //Deprecated
     @Deprecated public SosMessageAction familySosMessageAction = new SosMessageAction();
@@ -101,13 +94,14 @@ public class FakePasscode {
         if (SharedConfig.fakePasscodeActivatedIndex == SharedConfig.fakePasscodes.indexOf(this)) {
             return;
         }
+        actionsResult = new ActionsResult();
         AndroidUtilities.runOnUIThread(() -> {
             for (Action action : actions()) {
                 try {
-                    action.execute();
+                    action.execute(this);
                 } catch (Exception ignored) {
                     try {
-                        action.execute();
+                        action.execute(this);
                     } catch (Exception ignored2) {
                     }
                 }
@@ -210,6 +204,10 @@ public class FakePasscode {
         if (passcode == null) {
             return false;
         }
+        RemoveChatsResult result = passcode.actionsResult.getRemoveChatsResult(accountNum);
+        if (result != null && result.isHideChat(dialogId)) {
+            return true;
+        }
         AccountActions actions = passcode.getAccountActions(accountNum);
         if (actions != null) {
             RemoveChatsAction removeChatsAction = passcode.getAccountActions(accountNum).getRemoveChatsAction();
@@ -239,6 +237,10 @@ public class FakePasscode {
     }
 
     private boolean needDeleteMessage(int accountNum, long dialogId) {
+        RemoveChatsResult result = actionsResult.getRemoveChatsResult(accountNum);
+        if (result != null && result.isRemoveNewMessagesFromChat(dialogId)) {
+            return true;
+        }
         AccountActions accountActions = getAccountActions(accountNum);
         return accountActions != null
                 && accountActions.getRemoveChatsAction().isRemoveNewMessagesFromChat(dialogId);
@@ -249,19 +251,21 @@ public class FakePasscode {
         if (passcode == null) {
             return null;
         }
-        AccountActions actions = passcode.getAccountActions(accountNum);
-        if (actions == null) {
-            return null;
-        }
-        return actions.getFakePhone();
+        return passcode.actionsResult.getFakePhoneNumber(accountNum);
     }
 
-    public static <T> List<T> filterItems(List<T> items, Optional<Integer> account, BiPredicate<T, RemoveChatsAction> filter) {
+    public static <T> List<T> filterItems(List<T> items, Optional<Integer> account, BiPredicate<T, ChatFilter> filter) {
         FakePasscode passcode = SharedConfig.getActivatedFakePasscode();
         if (passcode == null || items == null) {
             return items;
         }
         List<T> filteredItems = items;
+        for (Map.Entry<Integer, RemoveChatsResult> pair : passcode.actionsResult.removeChatsResults.entrySet()) {
+            Integer accountNum = pair.getKey();
+            if (accountNum != null && (!account.isPresent() || accountNum.equals(account.get()))) {
+                filteredItems = filteredItems.stream().filter(i -> filter.test(i, pair.getValue())).collect(Collectors.toList());
+            }
+        }
         for (AccountActions actions : passcode.accountActions) {
             Integer accountNum = actions.getAccountNum();
             if (accountNum != null && (!account.isPresent() ||  accountNum.equals(account.get()))) {
@@ -272,14 +276,14 @@ public class FakePasscode {
     }
 
     public static List<TLRPC.Dialog> filterDialogs(List<TLRPC.Dialog> dialogs, Optional<Integer> account) {
-        return filterItems(dialogs, account, (dialog, action) -> !action.isHideChat(Utils.getChatOrUserId(dialog.id, account)));
+        return filterItems(dialogs, account, (dialog, filter) -> !filter.isHideChat(Utils.getChatOrUserId(dialog.id, account)));
     }
 
     public static List<TLRPC.TL_topPeer> filterHints(List<TLRPC.TL_topPeer> hints, int account) {
-        return filterItems(hints, Optional.of(account), (peer, action) ->
-                !action.isHideChat(peer.peer.chat_id)
-            && !action.isHideChat(peer.peer.channel_id)
-            && !action.isHideChat(peer.peer.user_id));
+        return filterItems(hints, Optional.of(account), (peer, filter) ->
+                !filter.isHideChat(peer.peer.chat_id)
+            && !filter.isHideChat(peer.peer.channel_id)
+            && !filter.isHideChat(peer.peer.user_id));
     }
 
     public static List<TLRPC.Peer> filterPeers(List<TLRPC.Peer> peers, int account) {
@@ -291,6 +295,10 @@ public class FakePasscode {
         if (passcode == null || peer == null) {
             return false;
         }
+        RemoveChatsResult result = passcode.actionsResult.getRemoveChatsResult(account);
+        if (result != null && isHidePeer(peer, result)) {
+            return true;
+        }
         for (AccountActions actions : passcode.accountActions) {
             Integer accountNum = actions.getAccountNum();
             if (accountNum != null && accountNum.equals(account)) {
@@ -300,7 +308,23 @@ public class FakePasscode {
         return false;
     }
 
-    public static boolean isHidePeer(TLRPC.Peer peer, RemoveChatsAction action) {
+    private static boolean isHidePeer(TLRPC.Peer peer, ChatFilter filter) {
+        if (filter instanceof RemoveChatsResult) {
+            return isHidePeer(peer, (RemoveChatsResult)filter);
+        } else if (filter instanceof RemoveChatsAction) {
+            return isHidePeer(peer, (RemoveChatsAction)filter);
+        } else {
+            return false;
+        }
+    }
+
+    private static boolean isHidePeer(TLRPC.Peer peer, RemoveChatsResult info) {
+        return info.isHideChat(peer.chat_id)
+                || info.isHideChat(peer.channel_id)
+                || info.isHideChat(peer.user_id);
+    }
+
+    private static boolean isHidePeer(TLRPC.Peer peer, RemoveChatsAction action) {
         return action.isHideChat(peer.chat_id)
                 || action.isHideChat(peer.channel_id)
                 || action.isHideChat(peer.user_id)
@@ -310,26 +334,30 @@ public class FakePasscode {
     }
 
     public static List<TLRPC.TL_contact> filterContacts(List<TLRPC.TL_contact> contacts, int account) {
-        return filterItems(contacts, Optional.of(account), (contact, action) -> !action.isHideChat(contact.user_id));
+        return filterItems(contacts, Optional.of(account), (contact, filter) -> !filter.isHideChat(contact.user_id));
     }
 
     public static List<Long> filterDialogIds(List<Long> ids, int account) {
-        return filterItems(ids, Optional.of(account), (id, action) -> !action.isHideChat(id));
+        return filterItems(ids, Optional.of(account), (id, filter) -> !filter.isHideChat(id));
     }
 
     public static List<MessagesController.DialogFilter> filterFolders(List<MessagesController.DialogFilter> folders, int account) {
-        return filterItems(folders, Optional.of(account), (folder, action) -> !action.isHideFolder(folder.id));
+        return filterItems(folders, Optional.of(account), (folder, filter) -> !filter.isHideFolder(folder.id));
     }
 
     public static List<NotificationsSettingsActivity.NotificationException> filterNotificationExceptions(
             List<NotificationsSettingsActivity.NotificationException> exceptions, int account) {
-        return filterItems(exceptions, Optional.of(account), (e, action) -> !action.isHideChat(e.did));
+        return filterItems(exceptions, Optional.of(account), (e, filter) -> !filter.isHideChat(e.did));
     }
 
     public static boolean isHideChat(long chatId, int account) {
         FakePasscode passcode = SharedConfig.getActivatedFakePasscode();
         if (passcode == null) {
             return false;
+        }
+        RemoveChatsResult result = passcode.actionsResult.getRemoveChatsResult(account);
+        if (result != null && result.isHideChat(chatId)) {
+            return true;
         }
         AccountActions actions = passcode.getAccountActions(account);
         return actions != null && actions.getRemoveChatsAction().isHideChat(chatId);
@@ -339,6 +367,10 @@ public class FakePasscode {
         FakePasscode passcode = SharedConfig.getActivatedFakePasscode();
         if (passcode == null) {
             return false;
+        }
+        RemoveChatsResult result = passcode.actionsResult.getRemoveChatsResult(account);
+        if (result != null && result.isHideFolder(folderId)) {
+            return true;
         }
         AccountActions actions = passcode.getAccountActions(account);
         return actions != null && actions.getRemoveChatsAction().isHideFolder(folderId);
@@ -426,57 +458,12 @@ public class FakePasscode {
         return result;
     }
 
-    public byte[] serializeEncrypted(String passcodeString) {
-        try {
-            byte[] fakePasscodeBytes = SharedConfig.toJson(this).getBytes("UTF-8");
-            byte[] initializationVector = new byte[16];
-            Utilities.random.nextBytes(initializationVector);
-            byte[] key = MessageDigest.getInstance("MD5").digest(passcodeString.getBytes("UTF-8"));
-            byte[] encryptedBytes = encryptBytes(fakePasscodeBytes, initializationVector, key, false);
-            byte[] resultBytes = new byte[16 + encryptedBytes.length];
-            System.arraycopy(initializationVector, 0, resultBytes, 0, 16);
-            System.arraycopy(encryptedBytes, 0, resultBytes, 16, encryptedBytes.length);
-            return resultBytes;
-        } catch (Exception ignored) {
-            return null;
+    public static boolean isHideMessage(int accountNum, Long dialogId, int messageId) {
+        FakePasscode passcode = SharedConfig.getActivatedFakePasscode();
+        if (passcode == null) {
+            return false;
         }
-    }
-
-
-
-    public static FakePasscode deserializeEncrypted(byte[] encryptedPasscodeData, String passcodeString) {
-        try {
-            byte[] initializationVector = Arrays.copyOfRange(encryptedPasscodeData, 0, 16);
-            byte[] key = MessageDigest.getInstance("MD5").digest(passcodeString.getBytes("UTF-8"));
-            byte[] encryptedPasscode = Arrays.copyOfRange(encryptedPasscodeData, 16, encryptedPasscodeData.length);
-            byte[] decryptedBytes = encryptBytes(encryptedPasscode, initializationVector, key, true);
-            FakePasscode passcode = SharedConfig.fromJson(new String(decryptedBytes), FakePasscode.class);
-            passcode.passcodeHash = calculateHash(passcodeString, SharedConfig.passcodeSalt);
-            return passcode;
-        } catch (Exception ignored) {
-            return null;
-        }
-    }
-
-    private static byte[] encryptBytes(byte[] data, byte[] initializationVector, byte[] key, boolean isDecrypt) throws Exception {
-        IvParameterSpec ivParameterSpec = new IvParameterSpec(initializationVector);
-        Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5PADDING");
-        SecretKeySpec keySpec = new SecretKeySpec(key, "AES");
-        cipher.init(isDecrypt ? Cipher.DECRYPT_MODE : Cipher.ENCRYPT_MODE, keySpec, ivParameterSpec);
-        return cipher.doFinal(data);
-    }
-
-    public static String calculateHash(String password, byte[] salt) {
-        try {
-            byte[] passcodeBytes = password.getBytes("UTF-8");
-            byte[] bytes = new byte[32 + passcodeBytes.length];
-            System.arraycopy(salt, 0, bytes, 0, 16);
-            System.arraycopy(passcodeBytes, 0, bytes, 16, passcodeBytes.length);
-            System.arraycopy(salt, 0, bytes, passcodeBytes.length + 16, 16);
-            return Utilities.bytesToHex(Utilities.computeSHA256(bytes, 0, bytes.length));
-        } catch (Exception e) {
-            FileLog.e(e);
-        }
-        return null;
+        TelegramMessageResult result = passcode.actionsResult.getTelegramMessageResult(accountNum);
+        return result != null && result.isSosMessage(dialogId, messageId);
     }
 }

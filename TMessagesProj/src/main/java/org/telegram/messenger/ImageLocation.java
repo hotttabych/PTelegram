@@ -180,7 +180,8 @@ public class ImageLocation {
     }
 
     public static ImageLocation getForChat(TLRPC.Chat chat, int type, Integer accountNum) {
-        if (chat == null || chat.photo == null || (accountNum != null && !UserConfig.isAvatarEnabled(accountNum, chat.id))) {
+        if (chat == null || chat.photo == null || (accountNum != null && !UserConfig.isAvatarEnabled(accountNum, chat.id)
+                || !UserConfig.isAvatarEnabled(UserConfig.selectedAccount, chat.id))) {
             return null;
         }
 

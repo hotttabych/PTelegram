@@ -5523,7 +5523,7 @@
     <string name="Regex">Regular expression</string>
     <string name="ChatHintsDeleteMessagesAlert">Are you sure you want to delete ALL your messages from chat?</string>
     <string name="CaseSensitive">Case sensitive</string>
-    <string name="DeleteAsRead">Delete as read</string>
+    <string name="DeleteAsRead">Delete after reading</string>
     <string name="RemoveAfter">Remove after %s %s %s after read</string>
     <string name="ClearBlackList">Clear List of Blocked Users</string>
     <string name="ChatToRemoveSettings">Chat to Remove Settings</string>
@@ -5622,4 +5622,28 @@
     <string name="FakePasscodeRestore">Restore Fake Passcode</string>
     <string name="CreateFakePasscodeInfoPIN">Please enter any 4 digits that you will give to an attacker to unlock Telegram. The code must be different from other passcodes in the application.</string>
     <string name="CreateFakePasscodeInfoPassword">Please enter the password that you will give to an attacker to unlock Telegram. The code must be different from other passcodes in the application.</string>
+    <string name="ClearDrafts">Clear Drafts</string>
+
+    <string name="NewVersion30Alert">This is not a standard update, and installing it is more difficult than usual. We will help you. Just follow the instructions you will see now.</string>
+
+    <string name="Updater30ActivityTitle">3.0 Update</string>
+    <string name="NoSpaceForStep">Your device does not have enough space for this step. Before starting, make sure you have at least %d MB free.</string>
+
+    <string name="Step1">Step 1</string>
+    <string name="InstallUpdaterDescription">PTelegram need to install a helper application to proceed with the installation. Tap \"Install PtgUpdater\" button, install it, and then return to PTelegram to continue.</string>
+    <string name="InstallUpdaterNoPermissionDescription">PTelegram needs to install a helper application to proceed with the installation. You may need to allow \"app installation from unknown sources\". Tap \"Install PtgUpdater\" button, install it, and then return to the application to continue.</string>
+    <string name="InstallUpdaterFailedDescription">Failed to copy PtgUpdater.apk. Make sure you have enough free space on your device and try again.</string>
+    <string name="InstallUpdater">Install PtgUpdater</string>
+
+    <string name="Step2">Step 2</string>
+    <string name="DownloadTelegramDescription">A new version of PTelegram is currently being downloaded. Wait for the download to finish and then tap on the \"Go to Next Step\" button.\n%d%%</string>
+    <string name="DownloadTelegramCompleteDescription">Download completed. Tap on \"Go to Next Step\".</string>
+    <string name="DownloadTelegramFailedDescription">Download failed. Perhaps there is no internet connection or not enough space on the device. Once fixed tap \"Retry\".</string>
+    <string name="GoToNextStep">Go to Next Step</string>
+
+    <string name="Step3">Step 3</string>
+    <string name="MakeDataDescription">PTelegram prepares data for transfer to PtgUpdater. Wait for the end and then tap on the button \"Open PtgUpdater\".</string>
+    <string name="MakeDataCompleteDescription">Everything is ready to continue. Tap on the \"Open PtgUpdater\" button.</string>
+    <string name="MakeDataFailedDescription">Failed to prepare data. Perhaps there is not enough space on the device. Fix it and tap \"Retry\".</string>
+    <string name="GoToUpdater">Open PtgUpdater</string>
 </resources>

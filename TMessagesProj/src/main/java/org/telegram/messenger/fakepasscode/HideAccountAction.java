@@ -5,7 +5,7 @@ import org.telegram.messenger.NotificationCenter;
 
 public class HideAccountAction extends AccountAction {
     @Override
-    public void execute() {
+    public void execute(FakePasscode fakePasscode) {
         NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.appHiddenByAction, accountNum);
         AccountInstance.getInstance(accountNum).getNotificationsController().removeAllNotifications();
     }

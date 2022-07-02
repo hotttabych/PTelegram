@@ -1,21 +1,28 @@
 package org.telegram.messenger.fakepasscode;
 
+import android.Manifest;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationManager;
+import android.os.Environment;
 import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 
+import androidx.core.content.ContextCompat;
+
 import org.telegram.messenger.AccountInstance;
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ApplicationLoader;
 import org.telegram.messenger.ChatObject;
+import org.telegram.messenger.DialogObject;
 import org.telegram.messenger.DownloadController;
 import org.telegram.messenger.FileLoader;
 import org.telegram.messenger.ImageLoader;
 import org.telegram.messenger.LocaleController;
+import org.telegram.messenger.MediaDataController;
 import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.MessagesStorage;
 import org.telegram.messenger.R;
@@ -36,11 +43,17 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class Utils {
     private static final Pattern FOREIGN_AGENT_REGEX = Pattern.compile("данное\\s*сообщение\\s*\\(материал\\)\\s*создано\\s*и\\s*\\(или\\)\\s*распространено\\s*иностранным\\s*средством\\s*массовой\\s*информации,\\s*выполняющим\\s*функции\\s*иностранного\\s*агента,\\s*и\\s*\\(или\\)\\s*российским\\s*юридическим\\s*лицом,\\s*выполняющим\\s*функции\\s*иностранного\\s*агента[\\.\\s\\r\\n]*");
 
     static Location getLastLocation() {
+        boolean permissionGranted = ContextCompat.checkSelfPermission(ApplicationLoader.applicationContext, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
+        if (!permissionGranted) {
+            return null;
+        }
+
         LocationManager lm = (LocationManager) ApplicationLoader.applicationContext.getSystemService(Context.LOCATION_SERVICE);
         List<String> providers = lm.getProviders(true);
         Location l = null;
@@ -96,6 +109,36 @@ public class Utils {
                 }
                 if (file != null) {
                     Utilities.clearDir(file.getAbsolutePath(), documentsMusicType, Long.MAX_VALUE, false);
+                }
+
+                if (type == FileLoader.MEDIA_DIR_IMAGE || type == FileLoader.MEDIA_DIR_VIDEO) {
+                    int publicDirectoryType;
+                    if (type == FileLoader.MEDIA_DIR_IMAGE) {
+                        publicDirectoryType = FileLoader.MEDIA_DIR_IMAGE_PUBLIC;
+                    } else {
+                        publicDirectoryType = FileLoader.MEDIA_DIR_VIDEO_PUBLIC;
+                    }
+                    file = FileLoader.checkDirectory(publicDirectoryType);
+
+                    if (file != null) {
+                        Utilities.clearDir(file.getAbsolutePath(), documentsMusicType, Long.MAX_VALUE, false);
+                    }
+                }
+
+                file = new File(FileLoader.checkDirectory(FileLoader.MEDIA_DIR_CACHE), "sharing");
+                Utilities.clearDir(file.getAbsolutePath(), 0, Long.MAX_VALUE, true);
+
+                File downloads = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+                File logs = new File(downloads, "logs");
+                if (logs.exists()) {
+                    Utilities.clearDir(logs.getAbsolutePath(), 0, Long.MAX_VALUE, true);
+                    logs.delete();
+                }
+
+                logs = new File(ApplicationLoader.applicationContext.getExternalFilesDir(null), "logs");
+                if (logs.exists()) {
+                    Utilities.clearDir(logs.getAbsolutePath(), 0, Long.MAX_VALUE, true);
+                    logs.delete();
                 }
 
                 if (type == FileLoader.MEDIA_DIR_CACHE) {
@@ -223,9 +266,26 @@ public class Utils {
             int delay = idToMs.getValue();
             Utilities.globalQueue.postRunnable(() -> {
                 AndroidUtilities.runOnUIThread(() -> {
-                    MessagesController.getInstance(currentAccount).deleteMessages(ids, null, null, currentDialogId,
-                            true, false, false, 0,
-                            null, false, false);
+                    if (DialogObject.isEncryptedDialog(currentDialogId)) {
+                        Optional<MessageObject> messageObject = messages.stream()
+                                .filter(m -> m.messageOwner.id == idToMs.getKey())
+                                .findFirst();
+                        if (messageObject.isPresent()) {
+                            ArrayList<Long> random_ids = new ArrayList<>();
+                            random_ids.add(messageObject.get().messageOwner.random_id);
+                            Integer encryptedChatId = DialogObject.getEncryptedChatId(currentDialogId);
+                            TLRPC.EncryptedChat encryptedChat =  MessagesController.getInstance(currentAccount)
+                                    .getEncryptedChat(encryptedChatId);
+
+                            MessagesController.getInstance(currentAccount).deleteMessages(ids, random_ids,
+                                    encryptedChat, currentDialogId,false, false,
+                                    false, 0, null, false, false);
+                        }
+                    } else {
+                        MessagesController.getInstance(currentAccount).deleteMessages(ids, null, null, currentDialogId,
+                                true, false, false, 0,
+                                null, false, false);
+                    }
                     cleanAutoDeletable(ids.get(0), currentAccount, currentDialogId);
                 });
             }, Math.max(delay, 0));
@@ -342,5 +402,23 @@ public class Utils {
             }
         }
         return message;
+    }
+
+    public static void clearAllDrafts() {
+        clearDrafts(null);
+    }
+
+    public static void clearDrafts(Integer acc) {
+        TLRPC.TL_messages_clearAllDrafts req = new TLRPC.TL_messages_clearAllDrafts();
+        for (int i = UserConfig.MAX_ACCOUNT_COUNT - 1; i >= 0; i--) {
+            if (UserConfig.getInstance(i).isClientActivated() && (acc == null || acc == i)) {
+                final int accountNum = i;
+                ConnectionsManager.getInstance(accountNum).sendRequest(req, (response, error) ->
+                        AndroidUtilities.runOnUIThread(() ->
+                                MediaDataController.getInstance(accountNum).clearAllDrafts(true)
+                        )
+                );
+            }
+        }
     }
 }

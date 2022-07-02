@@ -401,7 +401,7 @@ public class DialogsSearchAdapter extends RecyclerListView.SelectionAdapter {
     }
 
     private List<RecentSearchObject> filteredRecentSearchObjects() {
-        return FakePasscode.filterItems(recentSearchObjects, Optional.of(currentAccount), (obj, action) -> !action.isHideChat(Utils.getChatOrUserId(obj.did, Optional.of(currentAccount))));
+        return FakePasscode.filterItems(recentSearchObjects, Optional.of(currentAccount), (obj, filter) -> !filter.isHideChat(Utils.getChatOrUserId(obj.did, Optional.of(currentAccount))));
     }
 
     public boolean hasRecentSearch() {
@@ -615,7 +615,7 @@ public class DialogsSearchAdapter extends RecyclerListView.SelectionAdapter {
     }
 
     private void setRecentSearch(ArrayList<RecentSearchObject> arrayList, LongSparseArray<RecentSearchObject> hashMap) {
-        recentSearchObjects = new ArrayList<>(FakePasscode.filterItems(arrayList, Optional.of(currentAccount), (s, action) -> !action.isHideChat(Utils.getChatOrUserId(s.did, Optional.of(currentAccount)))));
+        recentSearchObjects = new ArrayList<>(FakePasscode.filterItems(arrayList, Optional.of(currentAccount), (s, filter) -> !filter.isHideChat(Utils.getChatOrUserId(s.did, Optional.of(currentAccount)))));
         recentSearchObjectsById = hashMap;
         for (int a = 0; a < filteredRecentSearchObjects().size(); a++) {
             RecentSearchObject recentSearchObject = filteredRecentSearchObjects().get(a);

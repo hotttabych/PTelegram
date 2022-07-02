@@ -17,6 +17,7 @@ import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ImageLocation;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.R;
+import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.UserObject;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.ActionBarLayout;
@@ -92,7 +93,7 @@ public class BackButtonMenu {
                     thumb = chat.photo.strippedBitmap;
                 }
                 imageView.setImage(ImageLocation.getForChat(chat, ImageLocation.TYPE_SMALL), "50_50", thumb, chat);
-                titleView.setText(chat.title);
+                titleView.setText(UserConfig.getChatTitleOverride(UserConfig.selectedAccount, chat.id, chat.title));
             } else if (user != null) {
                 String name;
                 if (user.photo != null && user.photo.strippedBitmap != null) {

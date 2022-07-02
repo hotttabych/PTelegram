@@ -5213,7 +5213,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                 final int a = order[i];
 
                 if (a == 5 && (SharedConfig.fakePasscodeActivatedIndex != -1 || UserObject.isUserSelf(user)
-                    || !SharedConfig.showDeleteAfterRead)) {
+                    || !SharedConfig.showDeleteAfterRead || (ChatObject.isChannel(chat) && !chat.megagroup))) {
                     continue;
                 }
 

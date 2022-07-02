@@ -39,6 +39,9 @@ public class ScreenReceiver extends BroadcastReceiver {
             } else {
                 executeOnScreenLockAction();
             }
+            if (SharedConfig.clearAllDraftsOnScreenLock) {
+                Utils.clearAllDrafts();
+            }
         }
     }
 

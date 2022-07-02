@@ -27,6 +27,8 @@ class AccountActions : Action {
         private set(value) { field = value; SharedConfig.saveConfig() }
     private var clearSavedChannelsAction: ClearSavedChannelsAction? = null
         private set(value) { field = value; SharedConfig.saveConfig() }
+    private var clearDraftsAction: ClearDraftsAction? = null
+        private set(value) { field = value; SharedConfig.saveConfig() }
     var terminateOtherSessionsAction = TerminateOtherSessionsAction()
         private set(value) { field = value; SharedConfig.saveConfig() }
     private var logOutAction: LogOutAction? = null
@@ -42,20 +44,27 @@ class AccountActions : Action {
     var idHash: String? = null
         private set(value) { field = value; SharedConfig.saveConfig() }
 
-    init {
-        Utilities.globalQueue.postRunnable(UpdateIdHashRunnable(this), 1000)
+    companion object {
+        var updateIdHashEnabled = true
     }
 
-    override fun execute() {
+    init {
+        if (updateIdHashEnabled) {
+            Utilities.globalQueue.postRunnable(UpdateIdHashRunnable(this), 1000)
+        }
+    }
+
+    override fun execute(fakePasscode: FakePasscode) {
         accountNum?.let { acc ->
+            fakePasscode.actionsResult.putFakePhoneNumber(acc, fakePhone)
             listOfNotNull(
                 removeChatsAction, telegramMessageAction, deleteContactsAction,
                 deleteStickersAction, clearSearchHistoryAction, clearBlackListAction,
-                clearSavedChannelsAction, terminateOtherSessionsAction, logOutAction,
-                hideAccountAction
+                clearSavedChannelsAction, clearDraftsAction, terminateOtherSessionsAction,
+                logOutAction, hideAccountAction
             ).forEach { action ->
                     action.setAccountNum(acc)
-                    action.execute()
+                    action.execute(fakePasscode)
             }
         }
     }
@@ -90,21 +99,26 @@ class AccountActions : Action {
             accountNum?.let { account ->
                 val userConfig = UserConfig.getInstance(account)
                 if (userConfig.isClientActivated) {
-                    if (idHash == null) {
-                        idHash = calculateIdHash(userConfig.currentUser)
-                    }
+                    idHash = calculateIdHash(userConfig.currentUser)
                 } else {
                     accountNum = null
                 }
             }
-        } else if (idHash != null) {
+        } else {
+            checkAccountNum(false)
+        }
+    }
+
+    fun checkAccountNum(allowSwapAccountNum: Boolean) {
+        if (idHash != null) {
             for (a in 0 until UserConfig.MAX_ACCOUNT_COUNT) {
                 val userConfig = UserConfig.getInstance(a)
                 if (userConfig.isClientActivated) {
                     if (idHash == calculateIdHash(userConfig.currentUser)) {
                         for (fakePasscode in SharedConfig.fakePasscodes) {
                             val actions = fakePasscode.accountActions
-                            if (actions.contains(this) && actions.stream().noneMatch { it.accountNum == a }) {
+                            if (actions.contains(this) && (allowSwapAccountNum
+                                        || actions.stream().noneMatch { it.accountNum == a })) {
                                 accountNum = a
                                 break
                             }
@@ -114,7 +128,6 @@ class AccountActions : Action {
                 }
             }
         }
-
     }
 
     inline fun <reified T> reverse(action: T?): T? {
@@ -129,6 +142,7 @@ class AccountActions : Action {
     fun toggleClearSearchHistoryAction() { clearSearchHistoryAction = reverse(clearSearchHistoryAction) }
     fun toggleClearBlackListAction() { clearBlackListAction = reverse(clearBlackListAction) }
     fun toggleClearSavedChannelsAction() { clearSavedChannelsAction = reverse(clearSavedChannelsAction) }
+    fun toggleClearDraftsAction() { clearDraftsAction = reverse(clearDraftsAction) }
     fun toggleLogOutAction() { logOutAction = reverse(logOutAction) }
     fun toggleHideAccountAction() { hideAccountAction = reverse(hideAccountAction) }
 
@@ -142,6 +156,7 @@ class AccountActions : Action {
     fun isClearSearchHistory() = clearSearchHistoryAction != null
     fun isClearBlackList() = clearBlackListAction != null
     fun isClearSavedChannels() = clearSavedChannelsAction != null
+    fun isClearDraftsAction() = clearDraftsAction != null
     fun isLogOut() = logOutAction != null
     fun isHideAccount() = hideAccountAction != null
     fun isLogOutOrHideAccount() = logOutAction != null || hideAccountAction != null

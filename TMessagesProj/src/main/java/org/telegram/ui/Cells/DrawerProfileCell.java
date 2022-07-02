@@ -229,12 +229,14 @@ public class DrawerProfileCell extends FrameLayout implements NotificationCenter
     protected void onAttachedToWindow() {
         super.onAttachedToWindow();
         updateColors();
+        NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.fakePasscodeActivated);
         NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.emojiLoaded);
     }
 
     @Override
     protected void onDetachedFromWindow() {
         super.onDetachedFromWindow();
+        NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.fakePasscodeActivated);
         NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.emojiLoaded);
     }
 
@@ -459,6 +461,13 @@ public class DrawerProfileCell extends FrameLayout implements NotificationCenter
     public void didReceivedNotification(int id, int account, Object... args) {
         if (id == NotificationCenter.emojiLoaded) {
             nameTextView.invalidate();
+        } else  if (id == NotificationCenter.fakePasscodeActivated) {
+            AndroidUtilities.runOnUIThread(() -> {
+                String fakePhone = FakePasscode.getFakePhoneNumber(UserConfig.selectedAccount);
+                if (!TextUtils.isEmpty(fakePhone)) {
+                    phoneTextView.setText(PhoneFormat.getInstance().format("+" + fakePhone));
+                }
+            });
         }
     }
 }

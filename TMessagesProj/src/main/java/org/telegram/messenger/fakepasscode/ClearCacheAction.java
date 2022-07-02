@@ -12,7 +12,7 @@ public class ClearCacheAction implements Action {
     public boolean enabled = false;
 
     @Override
-    public void execute() {
+    public void execute(FakePasscode fakePasscode) {
         if (enabled) {
             Utils.clearCache(null);
         }

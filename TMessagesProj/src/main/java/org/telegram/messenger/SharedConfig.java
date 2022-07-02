@@ -26,8 +26,10 @@ import androidx.core.content.pm.ShortcutManagerCompat;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.module.kotlin.KotlinModule;
+import com.google.android.exoplayer2.util.Log;
 
 import org.json.JSONObject;
 import org.telegram.messenger.fakepasscode.FakePasscode;
@@ -240,6 +242,9 @@ public class SharedConfig {
     public static int onScreenLockAction;
     public static boolean onScreenLockActionClearCache;
     public static boolean showSessionsTerminateActionWarning;
+    public static int activatedTesterSettingType;
+    public static long updateChannelIdOverride;
+    public static String updateChannelUsernameOverride;
 
     static {
         loadConfig();
@@ -308,6 +313,7 @@ public class SharedConfig {
         jsonMapper.registerModule(new JavaTimeModule());
         jsonMapper.registerModule(new KotlinModule());
         jsonMapper.activateDefaultTyping(jsonMapper.getPolymorphicTypeValidator());
+        jsonMapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
         jsonMapper.setVisibility(jsonMapper.getSerializationConfig().getDefaultVisibilityChecker()
                 .withFieldVisibility(JsonAutoDetect.Visibility.ANY)
                 .withGetterVisibility(JsonAutoDetect.Visibility.NONE)
@@ -379,6 +385,9 @@ public class SharedConfig {
                 editor.putInt("onScreenLockAction", onScreenLockAction);
                 editor.putBoolean("onScreenLockActionClearCache", onScreenLockActionClearCache);
                 editor.putBoolean("showSessionsTerminateActionWarning", showSessionsTerminateActionWarning);
+                editor.putInt("activatedTesterSettingType", activatedTesterSettingType);
+                editor.putLong("updateChannelIdOverride", updateChannelIdOverride);
+                editor.putString("updateChannelUsernameOverride", updateChannelUsernameOverride);
 
                 if (pendingAppUpdate != null) {
                     try {
@@ -495,12 +504,8 @@ public class SharedConfig {
                 try {
                     if (preferences.contains("fakePasscodes"))
                         fakePasscodes = fromJson(preferences.getString("fakePasscodes", null), FakePasscodesWrapper.class).fakePasscodes;
-                } catch (Exception ignored) {
-                    try {
-                        if (preferences.contains("fakePasscodes"))
-                            fakePasscodes = fromJson(preferences.getString("fakePasscodes", null), FakePasscodesWrapper.class).fakePasscodes;
-                    } catch (Exception ignored2) {
-                    }
+                } catch (Exception e) {
+                    Log.e("SharedConfig", "error", e);
                 }
             }
             try {
@@ -524,6 +529,9 @@ public class SharedConfig {
             onScreenLockAction = preferences.getInt("onScreenLockAction", 0);
             onScreenLockActionClearCache = preferences.getBoolean("onScreenLockActionClearCache", false);
             showSessionsTerminateActionWarning = preferences.getBoolean("showSessionsTerminateActionWarning", true);
+            activatedTesterSettingType = preferences.getInt("activatedTesterSettingType", 0);
+            updateChannelIdOverride = preferences.getLong("updateChannelIdOverride", 0);
+            updateChannelUsernameOverride = preferences.getString("updateChannelUsernameOverride", "");
 
             String authKeyString = preferences.getString("pushAuthKey", null);
             if (!TextUtils.isEmpty(authKeyString)) {

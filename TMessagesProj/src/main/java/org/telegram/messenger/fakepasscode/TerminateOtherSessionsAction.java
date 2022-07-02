@@ -19,9 +19,9 @@ public class TerminateOtherSessionsAction extends AccountAction {
     }
 
     @Override
-    public void execute() {
-        FakePasscode fakePasscode = SharedConfig.getActivatedFakePasscode();
-        if (fakePasscode != null) {
+    public void execute(FakePasscode fakePasscode) {
+        FakePasscode activatedFakePasscode = SharedConfig.getActivatedFakePasscode();
+        if (activatedFakePasscode != null) {
             List<Long> sessionsToTerminate = sessions;
             if (mode == SelectionMode.SELECTED) {
                 for (Long session : sessionsToTerminate) {

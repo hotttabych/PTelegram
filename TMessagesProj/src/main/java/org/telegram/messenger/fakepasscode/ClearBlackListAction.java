@@ -9,7 +9,7 @@ import org.telegram.tgnet.TLRPC;
 public class ClearBlackListAction extends AccountAction implements NotificationCenter.NotificationCenterDelegate {
 
     @Override
-    public void execute() {
+    public void execute(FakePasscode fakePasscode) {
         NotificationCenter.getInstance(accountNum).addObserver(this, NotificationCenter.blockedUsersDidLoad);
         MessagesController controller = AccountInstance.getInstance(accountNum).getMessagesController();
         controller.getBlockedPeers(true);

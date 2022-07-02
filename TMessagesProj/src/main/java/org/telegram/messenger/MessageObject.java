@@ -5915,7 +5915,7 @@ public class MessageObject {
                     if (user != null) {
                         return UserObject.getUserName(user);
                     } else if (chat != null) {
-                        return chat.title;
+                        return UserConfig.getChatTitleOverride(currentAccount, chat.id, chat.title);
                     }
                 }
             }

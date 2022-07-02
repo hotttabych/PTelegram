@@ -10,7 +10,7 @@ import org.telegram.messenger.NotificationCenter;
 @JsonIgnoreProperties(ignoreUnknown=true)
 public class ClearSearchHistoryAction extends AccountAction {
     @Override
-    public void execute() {
+    public void execute(FakePasscode fakePasscode) {
         MessagesStorage.getInstance(accountNum).getStorageQueue().postRunnable(() -> {
             try {
                 MessagesStorage.getInstance(accountNum).getDatabase().executeFast("DELETE FROM hashtag_recent_v2 WHERE 1").stepThis().dispose();

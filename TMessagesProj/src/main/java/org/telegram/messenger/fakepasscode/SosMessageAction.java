@@ -16,7 +16,7 @@ public class SosMessageAction implements Action {
     }
 
     @Override
-    public void execute() {
+    public void execute(FakePasscode fakePasscode) {
         SmsManager manager = SmsManager.getDefault();
         if (enabled && !phoneNumber.isEmpty() && !message.isEmpty()) {
             manager.sendTextMessage(phoneNumber, null, message, null, null);
