@@ -27,6 +27,7 @@ import org.telegram.ui.ActionBar.BaseFragment;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.ActionBar.ThemeDescription;
 import org.telegram.ui.Components.LayoutHelper;
+import org.telegram.ui.Components.RadialProgressView;
 import org.telegram.ui.Components.voip.CellFlickerDrawable;
 
 import java.io.File;
@@ -84,6 +85,7 @@ public class Update30Activity extends BaseFragment implements Update30.MakeZipDe
 
     private TextView titleTextView;
     private TextView descriptionText;
+    private RadialProgressView progressBar;
     private TextView buttonTextView;
 
     private int progress;
@@ -150,6 +152,15 @@ public class Update30Activity extends BaseFragment implements Update30.MakeZipDe
         relativeParams.addRule(RelativeLayout.CENTER_HORIZONTAL);
         relativeParams.addRule(RelativeLayout.ABOVE, descriptionText.getId());
         relativeLayout.addView(titleTextView, relativeParams);
+
+        progressBar = new RadialProgressView(context);
+        progressBar.setSize(AndroidUtilities.dp(32));
+        relativeParams = new RelativeLayout.LayoutParams(
+                RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
+        relativeParams.addRule(RelativeLayout.CENTER_HORIZONTAL);
+        relativeParams.addRule(RelativeLayout.BELOW, descriptionText.getId());
+        progressBar.setVisibility(View.GONE);
+        relativeLayout.addView(progressBar, relativeParams);
 
         buttonTextView = new TextView(context) {
             CellFlickerDrawable cellFlickerDrawable;
@@ -238,6 +249,7 @@ public class Update30Activity extends BaseFragment implements Update30.MakeZipDe
         descriptionText.setText(getStepDescription());
         buttonTextView.setText(getButtonName());
         buttonTextView.setEnabled(getStepButtonEnabled(step));
+        progressBar.setVisibility(step == Step.MAKE_ZIP ? View.VISIBLE : View.GONE);
     }
 
     private static String getStepName(Step step) {
