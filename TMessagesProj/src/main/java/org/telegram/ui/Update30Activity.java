@@ -217,6 +217,9 @@ public class Update30Activity extends BaseFragment implements Update30.MakeZipDe
     @Override
     public void onResume() {
         super.onResume();
+        if (step.simplify() == Step.INSTALL_UPDATER && Update30.isUpdaterInstalled(getParentActivity())) {
+            downloadTelegramApk();
+        }
     }
 
     @Override
