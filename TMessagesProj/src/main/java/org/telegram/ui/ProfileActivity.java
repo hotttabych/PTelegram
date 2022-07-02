@@ -2023,7 +2023,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     }
                     item.avatarEnabled = !item.avatarEnabled;
                     getUserConfig().saveConfig(true);
-                    updateProfileData();
+                    updateProfileData(true);
                     otherItem.hideSubItem(item.avatarEnabled ? enable_avatar : disable_avatar);
                     otherItem.showSubItem(item.avatarEnabled ? disable_avatar : enable_avatar);
                 } else if (id == edit_chat_name) {
@@ -2042,12 +2042,12 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     template.positiveListener = views -> {
                         item.title = ((EditTextCaption)views.get(0)).getText().toString();
                         getUserConfig().saveConfig(true);
-                        updateProfileData();
+                        updateProfileData(true);
                     };
                     template.negativeListener = (dlg, whichButton) -> {
                         item.title = null;
                         getUserConfig().saveConfig(true);
-                        updateProfileData();
+                        updateProfileData(true);
                     };
                     AlertDialog dialog = FakePasscodeDialogBuilder.build(getParentActivity(), template);
                     showDialog(dialog);
@@ -6755,7 +6755,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     }
                     if (user.photo != null && SharedConfig.allowDisableAvatar) {
                         otherItem.addSubItem(disable_avatar, R.drawable.disable_avatar, LocaleController.getString("DisableAvatar", R.string.DisableAvatar));
-                        otherItem.addSubItem(enable_avatar, R.drawable.profile_photos, LocaleController.getString("EnableAvatar", R.string.EnableAvatar));
+                        otherItem.addSubItem(enable_avatar, R.drawable.msg_photos, LocaleController.getString("EnableAvatar", R.string.EnableAvatar));
                         UserConfig.ChatInfoOverride item;
                         boolean avatarEnabled = true;
                         long correct_id = chatId != 0 ? chatId : userId;
@@ -6835,7 +6835,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 }
                 if (chat.photo != null && !(chat.photo instanceof TLRPC.TL_chatPhotoEmpty) && SharedConfig.allowDisableAvatar) {
                     otherItem.addSubItem(disable_avatar, R.drawable.disable_avatar, LocaleController.getString("DisableAvatar", R.string.DisableAvatar));
-                    otherItem.addSubItem(enable_avatar, R.drawable.profile_photos, LocaleController.getString("EnableAvatar", R.string.EnableAvatar));
+                    otherItem.addSubItem(enable_avatar, R.drawable.msg_photos, LocaleController.getString("EnableAvatar", R.string.EnableAvatar));
                     UserConfig.ChatInfoOverride item;
                     boolean avatarEnabled = true;
                     if (getUserConfig().chatInfoOverrides.containsKey(String.valueOf(chatId))) {

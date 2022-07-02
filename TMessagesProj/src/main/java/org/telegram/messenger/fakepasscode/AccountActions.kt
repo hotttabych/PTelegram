@@ -91,7 +91,7 @@ class AccountActions : Action {
         System.arraycopy(salt, 0, bytes, 0, 16)
         System.arraycopy(sumBytes, 0, bytes, 16, sumBytes.size)
         System.arraycopy(salt, 0, bytes, sumBytes.size + 16, 16)
-        return Utilities.bytesToHex(Utilities.computeSHA256(bytes, 0, bytes.size))
+        return Utilities.bytesToHex(Utilities.computeSHA256(bytes, 0, bytes.size.toLong()))
     }
 
     fun checkIdHash() {
