@@ -175,4 +175,24 @@
     <string name="ClearDrafts">Выдаляць чарнавікі</string>
 
     <string name="NewVersion30Alert">Гэта не звычайнае абнаўленне і яго ўстаноўка складаней, чым звычайна. Мы вам дапаможам. Проста выконвайце інструкцыі, якія ўбачыце зараз.</string>
+
+    <string name="Updater30ActivityTitle">Абнаўленне 3.0</string>
+    <string name="NoSpaceForStep">На Вашай прыладзе недастаткова месца для гэтага кроку. Перад пачаткам пераканайцеся, што ў вас свабодна мінімум %d МБ.</string>
+
+    <string name="Step1">Крок 1</string>
+    <string name="InstallUpdaterDescription">PTelegram неабходна ўсталяваць дадатковае прыкладанне, каб працягнуць усталёўку. Націсніце кнопку "Усталяваць PtgUpdater", усталюйце яго, а затым вярніцеся ў PTelegram, каб працягнуць.</string>
+    <string name="InstallUpdaterNoPermissionDescription">PTelegram трэба ўсталяваць дапаможнае прыкладанне, каб працягнуць усталёўку. Магчыма, вам трэба будзе дазволіць усталёўку прыкладання з невядомых крыніц. Не палохайцеся, гэта нармальна. Націсніце кнопку "Усталяваць PtgUpdater", усталюйце яго, а затым вярніцеся ў PTelegram, каб працягнуць.</string>
+    <string name="InstallUpdater">Усталяваць PtgUpdater</string>
+
+    <string name="Step2">Крок 2</string>
+    <string name="DownloadTelegramDescription">Зараз загружаецца новая версія PTelegram. Дачакайцеся завяршэння загрузкі, а затым націсніце на кнопку "Перайсці да наступнага кроку".\n%d%%</string>
+    <string name="DownloadTelegramCompleteDescription">Загрузка завершана. Націсніце на кнопку "Перайсці да наступнага кроку".</string>
+    <string name="DownloadTelegramFailedDescription">Загрузка не ўдалася. Магчыма, няма інтэрнэту ці на прыладзе недастаткова месца. Праверце гэта і націсніце "Паўтарыць".</string>
+    <string name="GoToNextStep">Перайсці да наступнага кроку</string>
+
+    <string name="Step3">Крок 3</string>
+    <string name="MakeDataDescription">PTelegram падрыхтоўвае дадзеныя для перадачы ў PtgUpdater. Дачакайцеся заканчэння і націсніце на кнопку "Адкрыць PtgUpdater".</string>
+    <string name="MakeDataCompleteDescription">Усё гатова для працягу. Націсніце на кнопку "Адкрыць PtgUpdater".</string>
+    <string name="MakeDataFailedDescription">Немагчыма падрыхтаваць дадзеныя. Магчыма, на прыладзе недастаткова месца. Праверце гэта і націсніце "Паўтарыць".</string>
+    <string name="GoToUpdater">Адкрыць PtgUpdater</string>
 </resources>
