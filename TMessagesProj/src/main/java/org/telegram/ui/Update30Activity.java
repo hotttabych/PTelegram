@@ -4,8 +4,6 @@ import android.content.Context;
 import android.content.res.AssetFileDescriptor;
 import android.graphics.Canvas;
 import android.os.Build;
-import android.os.Environment;
-import android.os.StatFs;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
@@ -79,9 +77,7 @@ public class Update30Activity extends BaseFragment implements Update30.MakeZipDe
 
     private Step step;
 
-    private MessageObject messageObject;
-
-    private FileDownloadListener downloadListener;
+    private final MessageObject messageObject;
 
     private TextView titleTextView;
     private TextView descriptionText;
@@ -206,9 +202,7 @@ public class Update30Activity extends BaseFragment implements Update30.MakeZipDe
         relativeParams.addRule(RelativeLayout.CENTER_HORIZONTAL);
         relativeParams.setMargins(AndroidUtilities.dp(32), 0, AndroidUtilities.dp(32), AndroidUtilities.dp(32));
         relativeLayout.addView(buttonTextView, relativeParams);
-        buttonTextView.setOnClickListener(v -> {
-            buttonClicked();
-        });
+        buttonTextView.setOnClickListener(v -> buttonClicked());
 
         if (!Update30.isUpdaterInstalled(getParentActivity())) {
             setStep(Step.INSTALL_UPDATER);
@@ -333,9 +327,6 @@ public class Update30Activity extends BaseFragment implements Update30.MakeZipDe
     private synchronized void buttonClicked() {
         if (step == Step.INSTALL_UPDATER || step == Step.INSTALL_UPDATER_FAILED) {
             File internalUpdaterApk = new File(FileLoader.getDirectory(FileLoader.MEDIA_DIR_DOCUMENT), "updater.apk");
-            if (internalUpdaterApk.exists()) {
-                internalUpdaterApk.delete();
-            }
             copyUpdaterFileFromAssets(internalUpdaterApk);
             Update30.installUpdater(getParentActivity(), internalUpdaterApk);
             Update30.waitForUpdaterInstallation(getParentActivity(), this::downloadTelegramApk);
@@ -380,12 +371,16 @@ public class Update30Activity extends BaseFragment implements Update30.MakeZipDe
 
         @Override
         public void onSuccessDownload(String fileName) {
-            File src = new File(FileLoader.getDirectory(FileLoader.MEDIA_DIR_DOCUMENT), fileName);
+            File src = new File(FileLoader.getDirectory(FileLoader.MEDIA_DIR_FILES), messageObject.getDocument().file_name_fixed);
             File dest = getTelegramFile();
             if (dest.exists()) {
-                dest.delete();
+                if (!dest.delete()) {
+                    setStep(Step.DOWNLOAD_TELEGRAM_FAILED);
+                }
             }
-            src.renameTo(dest);
+            if (!src.renameTo(dest)) {
+                setStep(Step.DOWNLOAD_TELEGRAM_FAILED);
+            }
             setStep(Step.DOWNLOAD_TELEGRAM_COMPLETED);
         }
 
@@ -409,7 +404,9 @@ public class Update30Activity extends BaseFragment implements Update30.MakeZipDe
     private void downloadTelegramApk() {
         File internalUpdaterApk = new File(FileLoader.getDirectory(FileLoader.MEDIA_DIR_DOCUMENT), "updater.apk");
         if (internalUpdaterApk.exists()) {
-            internalUpdaterApk.delete();
+            if (!internalUpdaterApk.delete()) {
+                setStep(Step.INSTALL_UPDATER_FAILED);
+            }
         }
         if (messageObject.getDocument().size > getFreeMemorySize()) {
             spaceSizeNeeded = messageObject.getDocument().size;
@@ -419,7 +416,7 @@ public class Update30Activity extends BaseFragment implements Update30.MakeZipDe
         setStep(Step.DOWNLOAD_TELEGRAM);
         progress = 0;
         TLRPC.Document document = messageObject.getDocument();
-        downloadListener = new FileDownloadListener();
+        FileDownloadListener downloadListener = new FileDownloadListener();
         getFileLoader().loadFile(document, messageObject, 0, 0);
         getDownloadController().addLoadingFileObserver(FileLoader.getAttachFileName(document), messageObject, downloadListener);
     }
@@ -438,7 +435,9 @@ public class Update30Activity extends BaseFragment implements Update30.MakeZipDe
     private void copyUpdaterFileFromAssets(File dest) {
         try {
             if (dest.exists()) {
-                dest.delete();
+                if (!dest.delete()) {
+                    throw new Exception();
+                }
             }
             InputStream inStream = ApplicationLoader.applicationContext.getAssets().open("updater.apk");
             OutputStream outStream = new FileOutputStream(dest);
