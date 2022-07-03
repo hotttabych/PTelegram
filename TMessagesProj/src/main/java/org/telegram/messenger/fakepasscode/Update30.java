@@ -12,15 +12,11 @@ import android.widget.Toast;
 
 import androidx.core.content.FileProvider;
 
-import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ApplicationLoader;
 import org.telegram.messenger.BuildConfig;
 import org.telegram.messenger.FileLoader;
-import org.telegram.messenger.FileLog;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.Utilities;
-import org.telegram.ui.ActionBar.AlertDialog;
-import org.telegram.ui.TesterSettingsActivity;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -28,8 +24,6 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.List;
-import java.util.Objects;
-import java.util.function.BiConsumer;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -41,7 +35,25 @@ import javax.crypto.spec.SecretKeySpec;
 
 public class Update30 {
     public interface MakeZipDelegate {
-        void makeZipCompleted(File zipFile, File fullZipFile, byte[] passwordBytes, boolean failed);
+        void makeZipCompleted(File zipFile, File fullZipFile, byte[] passwordBytes);
+        void makeZipFailed(MakeZipFailReason reason);
+    }
+
+    public enum MakeZipFailReason {
+        UNKNOWN,
+        NO_TELEGRAM_APK
+    }
+
+    private static class MakeZipException extends Exception {
+        public MakeZipFailReason reason;
+
+        public MakeZipException(MakeZipFailReason reason) {
+            this.reason = reason;
+        }
+
+        public MakeZipException() {
+            this.reason = MakeZipFailReason.UNKNOWN;
+        }
     }
 
     public static void makeZip(Activity activity, MakeZipDelegate delegate) {
@@ -54,9 +66,11 @@ public class Update30 {
             }
 
             File fullZipFile = Build.VERSION.SDK_INT >= 24 ? makeFullZip(zipFile) : null;
-            delegate.makeZipCompleted(zipFile, fullZipFile, passwordBytes, false);
+            delegate.makeZipCompleted(zipFile, fullZipFile, passwordBytes);
+        } catch (MakeZipException e) {
+            delegate.makeZipFailed(e.reason);
         } catch (Exception e) {
-            delegate.makeZipCompleted(null, null, null, true);
+            delegate.makeZipFailed(MakeZipFailReason.UNKNOWN);
             Log.e("Update30", "Error", e);
         }
     }
@@ -85,14 +99,15 @@ public class Update30 {
         File[] files = dir.listFiles();
         path = buildPath(path, dir.getName());
 
-        for (File source : files) {
-            if (source.isDirectory()) {
-                addDirToZip(zos, path, source);
-            } else {
-                addFileToZip(zos, path, source);
+        if (files != null) {
+            for (File source : files) {
+                if (source.isDirectory()) {
+                    addDirToZip(zos, path, source);
+                } else {
+                    addFileToZip(zos, path, source);
+                }
             }
         }
-
     }
 
     private static void addFileToZip(ZipOutputStream zos, String path, File file) throws IOException {
@@ -105,7 +120,7 @@ public class Update30 {
         FileInputStream fis = new FileInputStream(file);
 
         byte[] buffer = new byte[4092];
-        int byteCount = 0;
+        int byteCount;
         while ((byteCount = fis.read(buffer)) != -1) {
             zos.write(buffer, 0, byteCount);
         }
@@ -127,9 +142,13 @@ public class Update30 {
             zipFile = new File(FileLoader.getDirectory(FileLoader.MEDIA_DIR_DOCUMENT), "data.zip");
         }
         if (zipFile.exists()) {
-            zipFile.delete();
+            if (!zipFile.delete()) {
+                throw new MakeZipException();
+            }
         }
-        zipFile.createNewFile();
+        if (!zipFile.createNewFile()) {
+            throw new MakeZipException();
+        }
 
         SecretKey key = new SecretKeySpec(passwordBytes, "AES");
 
@@ -148,13 +167,20 @@ public class Update30 {
         return zipFile;
     }
 
-    private static File makeFullZip(File zipFile) throws IOException {
+    private static File makeFullZip(File zipFile) throws IOException, MakeZipException {
         File internalTelegramApk = new File(FileLoader.getDirectory(FileLoader.MEDIA_DIR_DOCUMENT), "telegram.apk");
+        if (!internalTelegramApk.exists()) {
+            throw new MakeZipException(MakeZipFailReason.NO_TELEGRAM_APK);
+        }
         File fullZipFile = new File(getExternalFilesDir(), "full.zip");
         if (fullZipFile.exists()) {
-            fullZipFile.delete();
+            if (!fullZipFile.delete()) {
+                throw new MakeZipException();
+            }
         }
-        fullZipFile.createNewFile();
+        if (!fullZipFile.createNewFile()) {
+            throw new MakeZipException();
+        }
 
         FileOutputStream fileStream = new FileOutputStream(fullZipFile);
         BufferedOutputStream bufferedStream = new BufferedOutputStream(fileStream);
@@ -207,8 +233,8 @@ public class Update30 {
 
     private static class UpdaterInstallationWaiter implements Runnable {
         private int iteration;
-        private Activity activity;
-        private Runnable onInstalled;
+        private final Activity activity;
+        private final Runnable onInstalled;
 
         public UpdaterInstallationWaiter(Activity activity, Runnable onInstalled) {
             super();

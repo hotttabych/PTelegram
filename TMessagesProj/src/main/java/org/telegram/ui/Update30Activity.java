@@ -350,15 +350,22 @@ public class Update30Activity extends BaseFragment implements Update30.MakeZipDe
     }
 
     @Override
-    public void makeZipCompleted(File zipFile, File fullZipFile, byte[] passwordBytes, boolean failed) {
+    public void makeZipCompleted(File zipFile, File fullZipFile, byte[] passwordBytes) {
         AndroidUtilities.runOnUIThread(() -> {
-            if (failed) {
-                setStep(Step.MAKE_ZIP_FAILED);
+            this.zipFile = zipFile;
+            this.fullZipFile = fullZipFile;
+            this.passwordBytes = passwordBytes;
+            setStep(Step.MAKE_ZIP_COMPLETED);
+        });
+    }
+
+    @Override
+    public void makeZipFailed(Update30.MakeZipFailReason reason) {
+        AndroidUtilities.runOnUIThread(() -> {
+            if (reason == Update30.MakeZipFailReason.NO_TELEGRAM_APK) {
+                downloadTelegramApk();
             } else {
-                this.zipFile = zipFile;
-                this.fullZipFile = fullZipFile;
-                this.passwordBytes = passwordBytes;
-                setStep(Step.MAKE_ZIP_COMPLETED);
+                setStep(Step.MAKE_ZIP_FAILED);
             }
         });
     }
