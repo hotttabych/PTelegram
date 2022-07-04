@@ -498,9 +498,13 @@ public class Update30Activity extends BaseFragment implements Update30.MakeZipDe
         return internalStorageFile.getFreeSpace();
     }
 
-    private long calculateUpdaterSize() throws IOException {
-        AssetFileDescriptor fd = ApplicationLoader.applicationContext.getAssets().openFd("updater.apk");
-        return fd.getLength();
+    private long calculateUpdaterSize() {
+        try {
+            AssetFileDescriptor fd = ApplicationLoader.applicationContext.getAssets().openFd("updater.apk");
+            return fd.getLength();
+        } catch (IOException ignored) {
+            return 10 * 1024 * 1024;
+        }
     }
 
     private long calculateZipSize() {
