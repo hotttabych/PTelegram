@@ -212,9 +212,15 @@ public class TesterSettingsActivity extends BaseFragment {
             progressDialog[0].setCanCancel(false);
             progressDialog[0].showDelayed(300);
         });
-        Update30.makeZip(getParentActivity(), (zipFile, fullZipFile, passwordBytes, failed) -> {
-            if (!failed) {
+        Update30.makeZip(getParentActivity(), new Update30.MakeZipDelegate() {
+            @Override
+            public void makeZipCompleted(File zipFile, File fullZipFile, byte[] passwordBytes) {
                 Update30.startUpdater(getParentActivity(), zipFile, fullZipFile, passwordBytes);
+            }
+
+            @Override
+            public void makeZipFailed(Update30.MakeZipFailReason reason) {
+
             }
         });
         progressDialog[0].dismiss();
