@@ -16130,8 +16130,8 @@ public class MessagesController extends BaseController implements NotificationCe
                     ArrayList<MessageObject> messArr = (ArrayList<MessageObject>) args[2];
                     messArr = messArr.stream().filter(m->!m.messageText.toString().equals(LocaleController.getString("ActionMigrateFromGroup"))).collect(toCollection(ArrayList::new));
                     if (!messArr.isEmpty()) {
-                        prevMaxId[0] = clearMessages(dialogId, ownerId, deleteAllMessagesGuid, loadIndex[0]++,
-                                prevMaxId[0], condition, messArr);
+                        prevMaxId[0] = clearMessages(dialogId, deleteAllMessagesGuid, loadIndex[0]++,
+                                condition, messArr);
                         getNotificationCenter().postNotificationName(NotificationCenter.dialogCleared, dialogId);
                     } else {
                         getNotificationCenter().removeObserver(deleteMessagesDelegate, NotificationCenter.messagesDidLoad);
@@ -16155,7 +16155,7 @@ public class MessagesController extends BaseController implements NotificationCe
                 0, 0, 0, loadIndex[0]++);
     }
 
-    private int clearMessages(long dialogId, long ownerId, int classGuid, int loadIndex, int prevMaxId,
+    private int clearMessages(long dialogId, int classGuid, int loadIndex,
                               Predicate<MessageObject> condition,
                               List<MessageObject> messages) {
         ArrayList<Integer> messagesIds = new ArrayList<>();
@@ -16164,7 +16164,7 @@ public class MessagesController extends BaseController implements NotificationCe
         for (int i = 0; i < messages.size(); ++i) {
             MessageObject cur = messages.get(i);
             if (cur != null && cur.getDialogId() == dialogId) {
-                boolean isMessageDeleted = cur.messageOwner.from_id.user_id == ownerId;
+                boolean isMessageDeleted = cur.canEditMessage(getChat(dialogId));
                 if (condition != null) {
                     isMessageDeleted = isMessageDeleted && condition.test(cur);
                 }
