@@ -93,7 +93,7 @@ public class FakePasscodeRestoreActivity extends BaseFragment {
 
         actionBar.setTitle(LocaleController.getString("FakePasscodeRestore", R.string.FakePasscodeRestore));
         frameLayout.setTag(Theme.key_windowBackgroundGray);
-        frameLayout.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundGray));
+        frameLayout.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundWhite));
         listView = new RecyclerListView(context);
         listView.setLayoutManager(new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false) {
             @Override
@@ -185,7 +185,7 @@ public class FakePasscodeRestoreActivity extends BaseFragment {
                     editText.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
                     editText.setBackgroundDrawable(null);
                     editText.setLineColors(getThemedColor(Theme.key_windowBackgroundWhiteInputField), getThemedColor(Theme.key_windowBackgroundWhiteInputFieldActivated), getThemedColor(Theme.key_windowBackgroundWhiteRedText3));
-                    editText.setPadding(AndroidUtilities.dp(LocaleController.isRTL ? 24 : 0), 0, AndroidUtilities.dp(LocaleController.isRTL ? 0 : 24), AndroidUtilities.dp(6));
+                    editText.setPadding(AndroidUtilities.dp(LocaleController.isRTL ? 24 : 12), AndroidUtilities.dp(6), AndroidUtilities.dp(LocaleController.isRTL ? 12 : 24), AndroidUtilities.dp(6));
                     editText.setGravity(LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT);
                     editText.setImeOptions(EditorInfo.IME_FLAG_NO_EXTRACT_UI);
                     editText.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_SENTENCES | InputType.TYPE_TEXT_FLAG_MULTI_LINE);
