@@ -402,7 +402,7 @@ public class UpdaterWarningActivity extends BaseFragment implements Notification
             }
             cellFlickerDrawable.setParentWidth(getMeasuredWidth());
             AndroidUtilities.rectTmp.set(0, 0, getMeasuredWidth(), getMeasuredHeight());
-            cellFlickerDrawable.draw(canvas, AndroidUtilities.rectTmp, AndroidUtilities.dp(4));
+            cellFlickerDrawable.draw(canvas, AndroidUtilities.rectTmp, AndroidUtilities.dp(4), null);
             invalidate();
         }
 
