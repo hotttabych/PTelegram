@@ -1191,7 +1191,8 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
             FakePasscode passcode = FakePasscodeSerializer.deserializeEncrypted(encryptedPasscode, passcodeString);
             if (passcode != null) {
                 SharedConfig.fakePasscodes.add(passcode);
-                passcode.accountActions.stream().forEach(a -> a.checkAccountNum(true));
+                passcode.accountActions.stream().forEach(a -> a.setAccountNum(null));
+                passcode.accountActions.stream().forEach(a -> a.checkAccountNum());
                 SharedConfig.saveConfig();
                 if (parentLayout.fragmentsStack.size() >= 2) {
                     parentLayout.removeFragmentFromStack(parentLayout.fragmentsStack.size() - 2);
