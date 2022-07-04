@@ -221,7 +221,8 @@ public class Update30 {
 
                     intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_GRANT_READ_URI_PERMISSION);
                     activity.startActivity(intent);
-                } catch (Exception ignored) {
+                } catch (Exception e) {
+                    Log.e("Update30", "copyUpdaterFileFromAssets error ", e);
                 }
             }
         }

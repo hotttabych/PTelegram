@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.res.AssetFileDescriptor;
 import android.graphics.Canvas;
 import android.os.Build;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
@@ -456,7 +457,8 @@ public class Update30Activity extends BaseFragment implements Update30.MakeZipDe
             }
             inStream.close();
             outStream.close();
-        } catch (Exception ignored) {
+        } catch (Exception e) {
+            Log.e("Update30", "copyUpdaterFileFromAssets error ", e);
             if (dest.exists()) {
                 dest.delete();
             }
@@ -488,7 +490,8 @@ public class Update30Activity extends BaseFragment implements Update30.MakeZipDe
                     }
                 }
                 Thread.sleep(100);
-            } catch (Exception ignored) {
+            } catch (Exception e) {
+                Log.e("Update30", "copyUpdaterFileFromAssets error ", e);
             }
         }
     }
