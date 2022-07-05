@@ -158,6 +158,14 @@ public class FakePasscodeSerializer {
         }
     }
 
+    public static String serializePlain(FakePasscode passcode) {
+        try {
+            return getJsonMapper().writeValueAsString(passcode);
+        } catch (Exception ignored) {
+            return null;
+        }
+    }
+
     private static byte[] encryptBytes(byte[] data, byte[] initializationVector, byte[] key, boolean isDecrypt) throws Exception {
         IvParameterSpec ivParameterSpec = new IvParameterSpec(initializationVector);
         Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5PADDING");
@@ -280,7 +288,7 @@ public class FakePasscodeSerializer {
                     };
                 }
             }
-            return findSerializationConverter(a);
+            return super.findSerializationConverter(a);
         }
 
         @Override

@@ -168,8 +168,13 @@ public class FakePasscodeBackupActivity extends BaseFragment {
             switch (holder.getItemViewType()) {
                 case 0: {
                     try {
-                        byte[] encryptedBytes = FakePasscodeSerializer.serializeEncrypted(passcode, passcodeString);
-                        String encodedStr = Base64.encodeToString(encryptedBytes, Base64.NO_WRAP);
+                        String encodedStr;
+                        if (TesterSettingsActivity.showPlainBackup) {
+                            encodedStr = FakePasscodeSerializer.serializePlain(passcode);
+                        } else {
+                            byte[] encryptedBytes = FakePasscodeSerializer.serializeEncrypted(passcode, passcodeString);
+                            encodedStr = Base64.encodeToString(encryptedBytes, Base64.NO_WRAP);
+                        }
 
                         EditTextBoldCursor editText = (EditTextBoldCursor) holder.itemView;
                         editText.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));

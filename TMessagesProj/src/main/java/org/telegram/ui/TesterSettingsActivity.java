@@ -46,6 +46,9 @@ public class TesterSettingsActivity extends BaseFragment {
     private int triggerUpdateRow;
     private int updateChannelIdRow;
     private int updateChannelUsernameRow;
+    private int showPlainBackupRow;
+
+    public static boolean showPlainBackup;
 
     public TesterSettingsActivity() {
         super();
@@ -165,6 +168,9 @@ public class TesterSettingsActivity extends BaseFragment {
                 };
                 AlertDialog dialog = FakePasscodeDialogBuilder.build(getParentActivity(), template);
                 showDialog(dialog);
+            } else if (position == showPlainBackupRow) {
+                showPlainBackup = !showPlainBackup;
+                ((TextCheckCell) view).setChecked(showPlainBackup);
             }
         });
 
@@ -188,6 +194,7 @@ public class TesterSettingsActivity extends BaseFragment {
         }
         updateChannelIdRow = rowCount++;
         updateChannelUsernameRow = rowCount++;
+        showPlainBackupRow = rowCount++;
     }
 
     @Override
@@ -271,6 +278,8 @@ public class TesterSettingsActivity extends BaseFragment {
                     if (position == sessionTerminateActionWarningRow) {
                         textCell.setTextAndCheck("Show terminate sessions warning",
                                 SharedConfig.showSessionsTerminateActionWarning, true);
+                    } else if (position == showPlainBackupRow) {
+                        textCell.setTextAndCheck("Show plain backup", showPlainBackup, true);
                     }
                     break;
                 } case 1: {
@@ -290,7 +299,7 @@ public class TesterSettingsActivity extends BaseFragment {
 
         @Override
         public int getItemViewType(int position) {
-            if (position == sessionTerminateActionWarningRow) {
+            if (position == sessionTerminateActionWarningRow || position == showPlainBackupRow) {
                 return 0;
             } else if (position == triggerUpdateRow || position == updateChannelIdRow || position == updateChannelUsernameRow) {
                 return 1;
