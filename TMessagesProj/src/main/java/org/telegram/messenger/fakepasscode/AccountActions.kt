@@ -1,7 +1,6 @@
 package org.telegram.messenger.fakepasscode
 
 import android.util.Base64
-import org.telegram.messenger.AccountInstance
 import org.telegram.messenger.SharedConfig
 import org.telegram.messenger.UserConfig
 import org.telegram.messenger.Utilities
@@ -12,6 +11,7 @@ import kotlin.reflect.jvm.isAccessible
 import kotlin.reflect.jvm.javaType
 
 class AccountActions : Action {
+    @FakePasscodeSerializer.Ignore
     var accountNum: Int? = null
     var removeChatsAction = RemoveChatsAction()
         private set(value) { field = value; SharedConfig.saveConfig() }

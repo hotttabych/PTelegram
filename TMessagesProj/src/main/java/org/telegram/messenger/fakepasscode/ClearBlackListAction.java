@@ -2,10 +2,9 @@ package org.telegram.messenger.fakepasscode;
 
 import org.telegram.messenger.AccountInstance;
 import org.telegram.messenger.MessagesController;
-import org.telegram.messenger.MessagesStorage;
 import org.telegram.messenger.NotificationCenter;
-import org.telegram.tgnet.TLRPC;
 
+@FakePasscodeSerializer.ToggleSerialization
 public class ClearBlackListAction extends AccountAction implements NotificationCenter.NotificationCenterDelegate {
 
     @Override
