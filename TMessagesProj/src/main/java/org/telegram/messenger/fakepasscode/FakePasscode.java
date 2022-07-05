@@ -23,6 +23,7 @@ import java.util.stream.Collectors;
 public class FakePasscode {
     @JsonIgnore
     private final int CURRENT_PASSCODE_VERSION = 2;
+    private final String PLATFORM = "ANDROID";
     private int passcodeVersion = 0;
 
     public boolean allowLogin = true;
