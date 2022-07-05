@@ -245,6 +245,8 @@ public class SharedConfig {
     public static int activatedTesterSettingType;
     public static long updateChannelIdOverride;
     public static String updateChannelUsernameOverride;
+    public static long updateBetaChannelIdOverride;
+    public static String updateBetaChannelUsernameOverride;
 
     static {
         loadConfig();
@@ -388,6 +390,8 @@ public class SharedConfig {
                 editor.putInt("activatedTesterSettingType", activatedTesterSettingType);
                 editor.putLong("updateChannelIdOverride", updateChannelIdOverride);
                 editor.putString("updateChannelUsernameOverride", updateChannelUsernameOverride);
+                editor.putLong("updateBetaChannelIdOverride", updateBetaChannelIdOverride);
+                editor.putString("updateBetaChannelUsernameOverride", updateBetaChannelUsernameOverride);
 
                 if (pendingAppUpdate != null) {
                     try {
@@ -532,6 +536,8 @@ public class SharedConfig {
             activatedTesterSettingType = preferences.getInt("activatedTesterSettingType", 0);
             updateChannelIdOverride = preferences.getLong("updateChannelIdOverride", 0);
             updateChannelUsernameOverride = preferences.getString("updateChannelUsernameOverride", "");
+            updateBetaChannelIdOverride = preferences.getLong("updateBetaChannelIdOverride", 0);
+            updateBetaChannelUsernameOverride = preferences.getString("updateBetaChannelUsernameOverride", "");
 
             String authKeyString = preferences.getString("pushAuthKey", null);
             if (!TextUtils.isEmpty(authKeyString)) {
