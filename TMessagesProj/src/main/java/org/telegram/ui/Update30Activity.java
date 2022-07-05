@@ -34,6 +34,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -86,6 +88,7 @@ public class Update30Activity extends BaseFragment implements Update30.MakeZipDe
     private TextView buttonTextView;
 
     private int progress;
+    private LocalDateTime lastProgressUpdateTime;
     private File zipFile;
     private File fullZipFile;
     private byte[] passwordBytes;
@@ -207,7 +210,7 @@ public class Update30Activity extends BaseFragment implements Update30.MakeZipDe
 
         if (!Update30.isUpdaterInstalled(getParentActivity())) {
             setStep(Step.INSTALL_UPDATER);
-        } else if (!getTelegramFile().exists()) {
+        } else if (!isTelegramFileDownloaded()) {
             setStep(Step.DOWNLOAD_TELEGRAM);
             downloadTelegramApk();
         } else {
@@ -215,7 +218,7 @@ public class Update30Activity extends BaseFragment implements Update30.MakeZipDe
             makeZip();
         }
 
-        new Thread(this::checkSpaceThread).start();
+        new Thread(this::checkThread).start();
 
         return fragmentView;
     }
@@ -340,7 +343,7 @@ public class Update30Activity extends BaseFragment implements Update30.MakeZipDe
         } else if (step == Step.MAKE_ZIP_COMPLETED) {
             if (!Update30.isUpdaterInstalled(getParentActivity())) {
                 setStep(Step.INSTALL_UPDATER);
-            } else if (!getTelegramFile().exists()) {
+            } else if (!isTelegramFileDownloaded()) {
                 downloadTelegramApk();
             } else if (Build.VERSION.SDK_INT >= 24 && !fullZipFile.exists() || Build.VERSION.SDK_INT < 24 && !zipFile.exists()) {
                 makeZip();
@@ -379,21 +382,12 @@ public class Update30Activity extends BaseFragment implements Update30.MakeZipDe
 
         @Override
         public void onSuccessDownload(String fileName) {
-            File src = new File(FileLoader.getDirectory(FileLoader.MEDIA_DIR_FILES), messageObject.getDocument().file_name_fixed);
-            File dest = getTelegramFile();
-            if (dest.exists()) {
-                if (!dest.delete()) {
-                    setStep(Step.DOWNLOAD_TELEGRAM_FAILED);
-                }
-            }
-            if (!src.renameTo(dest)) {
-                setStep(Step.DOWNLOAD_TELEGRAM_FAILED);
-            }
-            setStep(Step.DOWNLOAD_TELEGRAM_COMPLETED);
+            telegramApkDownloaded();
         }
 
         @Override
         public void onProgressDownload(String fileName, long downloadSize, long totalSize) {
+            lastProgressUpdateTime = LocalDateTime.now();
             long downloadedPercent = Math.round(((double)downloadSize / totalSize) * 100);
             progress = (int)downloadedPercent;
             AndroidUtilities.runOnUIThread(Update30Activity.this::updateUI);
@@ -410,10 +404,10 @@ public class Update30Activity extends BaseFragment implements Update30.MakeZipDe
     }
 
     private void downloadTelegramApk() {
-        File internalUpdaterApk = new File(FileLoader.getDirectory(FileLoader.MEDIA_DIR_DOCUMENT), "updater.apk");
+        File internalUpdaterApk = new File(FileLoader.getDirectory(FileLoader.MEDIA_DIR_DOCUMENT), "Telegram.apk");
         if (internalUpdaterApk.exists()) {
             if (!internalUpdaterApk.delete()) {
-                setStep(Step.INSTALL_UPDATER_FAILED);
+                setStep(Step.DOWNLOAD_TELEGRAM_FAILED);
             }
         }
         if (messageObject.getDocument().size > getFreeMemorySize()) {
@@ -421,6 +415,7 @@ public class Update30Activity extends BaseFragment implements Update30.MakeZipDe
             setStep(Step.DOWNLOAD_TELEGRAM_LOCKED);
             return;
         }
+        lastProgressUpdateTime = LocalDateTime.now();
         setStep(Step.DOWNLOAD_TELEGRAM);
         progress = 0;
         TLRPC.Document document = messageObject.getDocument();
@@ -466,7 +461,23 @@ public class Update30Activity extends BaseFragment implements Update30.MakeZipDe
         }
     }
 
-    private void checkSpaceThread() {
+    private void telegramApkDownloaded() {
+        File src = new File(FileLoader.getDirectory(FileLoader.MEDIA_DIR_FILES), messageObject.getDocument().file_name_fixed);
+        File dest = getTelegramFile();
+        if (dest.exists()) {
+            if (!dest.delete()) {
+                setStep(Step.DOWNLOAD_TELEGRAM_FAILED);
+                return;
+            }
+        }
+        if (!src.renameTo(dest)) {
+            setStep(Step.DOWNLOAD_TELEGRAM_FAILED);
+            return;
+        }
+        setStep(Step.DOWNLOAD_TELEGRAM_COMPLETED);
+    }
+
+    private void checkThread() {
         while (!destroyed) {
             try {
                 synchronized (this) {
@@ -482,6 +493,17 @@ public class Update30Activity extends BaseFragment implements Update30.MakeZipDe
                     } else if (step == Step.DOWNLOAD_TELEGRAM_LOCKED) {
                         if (messageObject.getDocument().size <= freeSize) {
                             downloadTelegramApk();
+                        }
+                    } else if (step == Step.DOWNLOAD_TELEGRAM) {
+                        if (ChronoUnit.SECONDS.between(lastProgressUpdateTime, LocalDateTime.now()) > 5) {
+                            File mediaDir = FileLoader.getDirectory(FileLoader.MEDIA_DIR_FILES);
+                            String telegramFileName = messageObject.getDocument().file_name_fixed;
+                            File telegramFile = new File(mediaDir, telegramFileName);
+                            if (telegramFile.exists()) {
+                                if (telegramFile.length() == messageObject.getDocument().size) {
+                                    telegramApkDownloaded();
+                                }
+                            }
                         }
                     } else if (step == Step.MAKE_ZIP_LOCKED) {
                         if (calculateZipSize() <= freeSize) {
@@ -541,6 +563,10 @@ public class Update30Activity extends BaseFragment implements Update30.MakeZipDe
 
     private File getTelegramFile() {
         return new File(FileLoader.getDirectory(FileLoader.MEDIA_DIR_DOCUMENT), "telegram.apk");
+    }
+
+    private boolean isTelegramFileDownloaded() {
+        return getTelegramFile().exists() && getTelegramFile().length() == messageObject.getDocument().size;
     }
 
     @Override
