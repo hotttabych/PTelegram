@@ -12,7 +12,6 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import org.telegram.messenger.AndroidUtilities;
-import org.telegram.messenger.BuildConfig;
 import org.telegram.messenger.BuildVars;
 import org.telegram.messenger.FileLoader;
 import org.telegram.messenger.LocaleController;
@@ -137,7 +136,9 @@ public class TesterSettingsActivity extends BaseFragment {
                 template.type = DialogType.EDIT;
                 String title = position == updateChannelIdRow ? "Update Channel Id" : "Update Beta Channel Id";
                 template.title = title;
-                long id = SharedConfig.updateChannelIdOverride;
+                long id = position == updateChannelIdRow
+                        ? SharedConfig.updateChannelIdOverride
+                        : SharedConfig.updateBetaChannelIdOverride;
                 template.addNumberEditTemplate(id != 0 ? Long.toString(id) : "", "Channel Id", true);
                 template.positiveListener = views -> {
                     long newId = Long.parseLong(((EditTextCaption)views.get(0)).getText().toString());
@@ -167,7 +168,10 @@ public class TesterSettingsActivity extends BaseFragment {
                 template.type = DialogType.EDIT;
                 String title = position == updateChannelUsernameRow ? "Update Channel Username" : "Update Beta Channel Username";
                 template.title = title;
-                template.addEditTemplate(SharedConfig.updateChannelUsernameOverride, "Channel Username", true);
+                String value = position == updateChannelUsernameRow
+                        ? SharedConfig.updateChannelUsernameOverride
+                        : SharedConfig.updateBetaChannelUsernameOverride;
+                template.addEditTemplate(value, "Channel Username", true);
                 template.positiveListener = views -> {
                     String username = ((EditTextCaption)views.get(0)).getText().toString();
                     if (position == updateChannelUsernameRow) {
