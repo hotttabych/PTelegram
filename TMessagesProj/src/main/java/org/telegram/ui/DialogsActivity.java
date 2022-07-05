@@ -7534,7 +7534,15 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
 
             }
         } else if (id == NotificationCenter.loadingMessagesFailed) {
-            if (!partisanTgChannelUsernameResolved && SharedConfig.showUpdates && SharedConfig.fakePasscodeActivatedIndex == -1 && (int)args[0] == classGuid) {
+            TLRPC.TL_messages_getPeerDialogs oldReq = (TLRPC.TL_messages_getPeerDialogs)args[1];
+            TLRPC.InputPeer peer = null;
+            if (!oldReq.peers.isEmpty() && oldReq.peers.get(0) instanceof TLRPC.TL_inputDialogPeer) {
+                peer = ((TLRPC.TL_inputDialogPeer)oldReq.peers.get(0)).peer;
+            }
+            if (!partisanTgChannelUsernameResolved && SharedConfig.showUpdates && SharedConfig.fakePasscodeActivatedIndex == -1
+                    && (int)args[0] == classGuid && peer != null
+                    && (peer.channel_id == getUpdateTgChannelId() || peer.chat_id == getUpdateTgChannelId()
+                        || peer.channel_id == -getUpdateTgChannelId() || peer.chat_id == -getUpdateTgChannelId())) {
                 TLRPC.TL_contacts_resolveUsername req = new TLRPC.TL_contacts_resolveUsername();
                 req.username = getUpdateTgChannelUsername();
                 ConnectionsManager.getInstance(currentAccount).sendRequest(req, (response, error) -> {
@@ -7549,7 +7557,11 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                         });
                     }
                 });
-            } else if (!partisanBetaTgChannelUsernameResolved && SharedConfig.showUpdates && SharedConfig.fakePasscodeActivatedIndex == -1 && (int)args[0] == classGuid && (BuildVars.isBetaApp() || BuildVars.isAlphaApp())) {
+            } else if (!partisanBetaTgChannelUsernameResolved && SharedConfig.showUpdates && SharedConfig.fakePasscodeActivatedIndex == -1
+                    && (int)args[0] == classGuid && (BuildVars.isBetaApp() || BuildVars.isAlphaApp())
+                    && peer != null
+                    && (peer.channel_id == getUpdateBetaTgChannelId() || peer.chat_id == getUpdateBetaTgChannelId()
+                        || peer.channel_id == -getUpdateBetaTgChannelId() || peer.chat_id == -getUpdateBetaTgChannelId())) {
                 TLRPC.TL_contacts_resolveUsername req = new TLRPC.TL_contacts_resolveUsername();
                 req.username = getUpdateBetaTgChannelUsername();
                 ConnectionsManager.getInstance(currentAccount).sendRequest(req, (response, error) -> {
