@@ -408,6 +408,7 @@ public class Update30Activity extends BaseFragment implements Update30.MakeZipDe
         if (internalUpdaterApk.exists()) {
             if (!internalUpdaterApk.delete()) {
                 setStep(Step.DOWNLOAD_TELEGRAM_FAILED);
+                return;
             }
         }
         if (messageObject.getDocument().size > getFreeMemorySize()) {
