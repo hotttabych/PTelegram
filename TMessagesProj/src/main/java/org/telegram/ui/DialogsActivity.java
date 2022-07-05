@@ -7664,7 +7664,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             for (TLRPC.DocumentAttribute attribute : doc.attributes) {
                 if (attribute instanceof TLRPC.TL_documentAttributeFilename) {
                     Matcher matcher = regex.matcher(attribute.file_name);
-                    if (matcher.find() && matcher.groupCount() == 3) {
+                    if (matcher.find()) {
                         int major = Integer.parseInt(matcher.group(1));
                         int minor = Integer.parseInt(matcher.group(2));
                         int patch = Integer.parseInt(matcher.group(3));
