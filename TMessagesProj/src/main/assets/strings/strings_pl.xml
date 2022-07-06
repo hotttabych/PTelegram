@@ -174,4 +174,24 @@
     <string name="ClearDrafts">Usuwanie szkiców</string>
 
     <string name="NewVersion30Alert">To nie jest normalna aktualizacja, a jej instalacja jest trudniejsza niż zwykle. Pomożemy Ci. Po prostu postępuj zgodnie z instrukcjami, które teraz zobaczysz.</string>
+
+    <string name="Updater30ActivityTitle">Aktualizuj 3.0</string>
+    <string name="NoSpaceForStep">Twoje urządzenie nie ma wystarczającej ilości miejsca na ten krok. Przed rozpoczęciem upewnij się, że masz co najmniej %d MB wolnego miejsca.</string>
+
+    <string name="Krok1">Krok 1</string>
+    <string name="InstallUpdaterDescription">PTelegram musi zainstalować aplikację pomocniczą, aby kontynuować instalację. Kliknij przycisk "Zainstaluj PtgUpdater", zainstaluj go, a następnie wróć do PTelegrama, aby kontynuować.</string>
+    <string name="InstallUpdaterNoPermissionDescription">PTelegram musi zainstalować aplikację pomocniczą, aby kontynuować instalację. Może być konieczne zezwolenie na instalację aplikacji z nieznanych źródeł. Nie bój się, to normalne. Kliknij przycisk "Zainstaluj PtgUpdater", zainstaluj go, a następnie wróć do PTelegrama, aby kontynuować.</string>
+    <string name="InstallUpdater">Zainstaluj PtgUpdater</string>
+
+    <string name="Krok2">Krok 2</string>
+    <string name="DownloadTelegramDescription">W tej chwili pobierana jest nowa wersja PTelegrama. Poczekaj na zakończenie pobierania, a następnie kliknij przycisk „Przejdź do następnego kroku”.\n%d%%</string>
+    <string name="DownloadTelegramCompleteDescription">Pobieranie zakończone. Kliknij przycisk „Przejdź do następnego kroku”.</string>
+    <string name="DownloadTelegramFailedDescription">Pobieranie nie powiodło się. Być może nie ma internetu lub na urządzeniu brakuje miejsca. Sprawdź to i kliknij Ponów.</string>
+    <string name="GoToNextStep">Przejdź do następnego kroku</string>
+
+    <string name="Krok3">Krok 3</string>
+    <string name="MakeDataDescription">PTelegram przygotowuje dane do przekazania do PtgUpdater. Poczekaj do końca i kliknij przycisk "Otwórz PtgUpdater".</string>
+    <string name="MakeDataCompleteDescription">Możesz teraz kontynuować. Kliknij przycisk "Otwórz PtgUpdater".</string>
+    <string name="MakeDataFailedDescription">Nie udało się przygotować danych. Twoje urządzenie może nie mieć wystarczającej ilości miejsca. Sprawdź to i kliknij Ponów.</string>
+    <string name="GoToUpdater">Otwórz PtgUpdater</string>
 </resources>
