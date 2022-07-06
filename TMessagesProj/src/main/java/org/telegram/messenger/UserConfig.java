@@ -603,6 +603,9 @@ public class UserConfig extends BaseController {
         if (currentUser == null) {
             return false;
         }
+        if (SharedConfig.premiumDisabled) {
+            return false;
+        }
         return currentUser.premium;
     }
 }

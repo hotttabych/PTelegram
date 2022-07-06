@@ -50,6 +50,7 @@ public class TesterSettingsActivity extends BaseFragment {
     private int updateBetaChannelIdRow;
     private int updateBetaChannelUsernameRow;
     private int showPlainBackupRow;
+    private int disablePremiumRow;
 
     public static boolean showPlainBackup;
 
@@ -198,6 +199,10 @@ public class TesterSettingsActivity extends BaseFragment {
             } else if (position == showPlainBackupRow) {
                 showPlainBackup = !showPlainBackup;
                 ((TextCheckCell) view).setChecked(showPlainBackup);
+            } else if (position == disablePremiumRow) {
+                SharedConfig.premiumDisabled = !SharedConfig.premiumDisabled;
+                SharedConfig.saveConfig();
+                ((TextCheckCell) view).setChecked(SharedConfig.premiumDisabled);
             }
         });
 
@@ -226,6 +231,7 @@ public class TesterSettingsActivity extends BaseFragment {
             updateBetaChannelUsernameRow = rowCount++;
         }
         showPlainBackupRow = rowCount++;
+        disablePremiumRow = rowCount++;
     }
 
     @Override
@@ -311,6 +317,8 @@ public class TesterSettingsActivity extends BaseFragment {
                                 SharedConfig.showSessionsTerminateActionWarning, true);
                     } else if (position == showPlainBackupRow) {
                         textCell.setTextAndCheck("Show plain backup", showPlainBackup, true);
+                    } else if (position == disablePremiumRow) {
+                        textCell.setTextAndCheck("Disable Premiun", SharedConfig.premiumDisabled, true);
                     }
                     break;
                 } case 1: {
@@ -335,7 +343,8 @@ public class TesterSettingsActivity extends BaseFragment {
 
         @Override
         public int getItemViewType(int position) {
-            if (position == sessionTerminateActionWarningRow || position == showPlainBackupRow) {
+            if (position == sessionTerminateActionWarningRow || position == showPlainBackupRow
+                || position == disablePremiumRow) {
                 return 0;
             } else if (position == triggerUpdateRow
                     || position == updateChannelIdRow || position == updateChannelUsernameRow
