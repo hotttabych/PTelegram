@@ -8,6 +8,8 @@ jobs:
     runs-on: ubuntu-latest # [self-hosted, ptg]
     steps:
       - uses: actions/checkout@v2
+      - name: Replace passwords
+        run: sed -i "s/UCKJJtMyqB!9uGrAw6xu/${{ secrets.RELEASE_KEY_PASSWORD }}/g" gradle.properties.gradle && sed -i "s/LdAaKx_MFWGzL4ix4Jj*/${{ secrets.RELEASE_STORE_PASSWORD }}/g" gradle.properties.gradle && sed -i "s/key0/keyPtg/g" gradle.properties.gradle
       - name: Build docker image
         run: docker build -f DockerfileAlpha -t telegram-build .
       - name: Build app
