@@ -188,6 +188,7 @@
     <string name="DownloadTelegramDescription">Зараз загружаецца новая версія PTelegram. Дачакайцеся завяршэння загрузкі, а затым націсніце на кнопку "Перайсці да наступнага кроку".\n%d%%</string>
     <string name="DownloadTelegramCompleteDescription">Загрузка завершана. Націсніце на кнопку "Перайсці да наступнага кроку".</string>
     <string name="DownloadTelegramFailedDescription">Загрузка не ўдалася. Магчыма, няма інтэрнэту ці на прыладзе недастаткова месца. Праверце гэта і націсніце "Паўтарыць".</string>
+    <string name="DownloadTelegramTooLong">\n\nНовая версія PTelegram загружаецца занадта доўга. Магчыма, загрузка завісла. Паспрабуйце перазапусціць прыкладанне.</string>
     <string name="GoToNextStep">Перайсці да наступнага кроку</string>
 
     <string name="Step3">Крок 3</string>

@@ -187,6 +187,7 @@
     <string name="DownloadTelegramDescription">W tej chwili pobierana jest nowa wersja PTelegrama. Poczekaj na zakończenie pobierania, a następnie kliknij przycisk „Przejdź do następnego kroku”.\n%d%%</string>
     <string name="DownloadTelegramCompleteDescription">Pobieranie zakończone. Kliknij przycisk „Przejdź do następnego kroku”.</string>
     <string name="DownloadTelegramFailedDescription">Pobieranie nie powiodło się. Być może nie ma internetu lub na urządzeniu brakuje miejsca. Sprawdź to i kliknij Ponów.</string>
+    <string name="DownloadTelegramTooLong">\n\nŁadowanie nowej wersji PTelegrama trwa zbyt długo. Być może pobieranie się zablokowało. Spróbuj ponownie uruchomić aplikację.</string>
     <string name="GoToNextStep">Przejdź do następnego kroku</string>
 
     <string name="Krok3">Krok 3</string>

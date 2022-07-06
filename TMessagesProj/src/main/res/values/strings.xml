@@ -5639,6 +5639,7 @@
     <string name="DownloadTelegramDescription">A new version of PTelegram is currently being downloaded. Wait for the download to finish and then tap on the \"Go to Next Step\" button.\n%d%%</string>
     <string name="DownloadTelegramCompleteDescription">Download completed. Tap on \"Go to Next Step\".</string>
     <string name="DownloadTelegramFailedDescription">Download failed. Perhaps there is no internet connection or not enough space on the device. Once fixed tap \"Retry\".</string>
+    <string name="DownloadTelegramTooLong">\n\nThe new version of PTelegram takes too long to load. Perhaps the download is stuck. Try restarting the application.</string>
     <string name="GoToNextStep">Go to Next Step</string>
 
     <string name="Step3">Step 3</string>
