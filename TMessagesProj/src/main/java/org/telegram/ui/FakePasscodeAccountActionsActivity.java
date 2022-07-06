@@ -139,7 +139,7 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
                     if (cell.isChecked()) {
                         title = LocaleController.getString("CannotRemoveHiding", R.string.CannotRemoveHiding);
                         message = String.format(LocaleController.getString("CannotShowManyAccounts", R.string.CannotShowManyAccounts),
-                                UserConfig.FAKE_PASSCODE_MAX_ACCOUNT_COUNT);
+                                UserConfig.getFakePasscodeMaxAccountCount());
                     } else {
                         title = LocaleController.getString("CannotHideAccount", R.string.CannotHideAccount);
                         if (UserConfig.getActivatedAccountsCount() == 1) {
@@ -216,7 +216,7 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
                 actions.toggleLogOutAction();
                 cell.setChecked(actions.isLogOut());
                 if (!actions.isLogOut()) {
-                    int targetHideCount = UserConfig.getActivatedAccountsCount() - UserConfig.FAKE_PASSCODE_MAX_ACCOUNT_COUNT;
+                    int targetHideCount = UserConfig.getActivatedAccountsCount() - UserConfig.getFakePasscodeMaxAccountCount();
                     if (!actions.isHideAccount() && fakePasscode.getHideOrLogOutCount() < targetHideCount) {
                         actions.toggleHideAccountAction();
                     }
@@ -235,7 +235,7 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
                 TextCheckCell cell = (TextCheckCell) view;
                 actions.toggleHideAccountAction();
                 cell.setChecked(actions.isHideAccount());
-                final int maxAccountHidings = UserConfig.MAX_ACCOUNT_COUNT - UserConfig.FAKE_PASSCODE_MAX_ACCOUNT_COUNT;
+                final int maxAccountHidings = UserConfig.MAX_ACCOUNT_COUNT - UserConfig.getFakePasscodeMaxAccountCount();
                 if (actions.isHideAccount() && fakePasscode.getHideAccountCount() > maxAccountHidings) {
                     AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
                     String message = String.format(LocaleController.getString("TooManyAccountsHiddenDescription", R.string.TooManyAccountsHiddenDescription),
@@ -468,7 +468,7 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
                 int hiddenAccountCount = fakePasscode.getHideOrLogOutCount();
                 int accountCount = UserConfig.getActivatedAccountsCount();
                 boolean enabled = actions.isHideAccount() && (accountCount - hiddenAccountCount
-                        < UserConfig.FAKE_PASSCODE_MAX_ACCOUNT_COUNT)
+                        < UserConfig.getFakePasscodeMaxAccountCount())
                         || !actions.isHideAccount() && ((hiddenAccountCount < accountCount - 1) || actions.isLogOut());
 
                 textCell.setEnabled(enabled, null);
