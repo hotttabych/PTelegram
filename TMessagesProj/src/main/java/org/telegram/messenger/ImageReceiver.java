@@ -280,6 +280,8 @@ public class ImageReceiver implements NotificationCenter.NotificationCenterDeleg
     private ArrayList<Runnable> loadingOperations = new ArrayList<>();
     private boolean attachedToWindow;
     private boolean videoThumbIsSame;
+    private boolean allowLoadingOnAttachedOnly;
+    private boolean shouldLoadOnAttach;
 
     public int animatedFileDrawableRepeatMaxCount;
 
@@ -427,6 +429,23 @@ public class ImageReceiver implements NotificationCenter.NotificationCenterDeleg
     }
 
     public void setImage(ImageLocation mediaLocation, String mediaFilter, ImageLocation imageLocation, String imageFilter, ImageLocation thumbLocation, String thumbFilter, Drawable thumb, long size, String ext, Object parentObject, int cacheType) {
+        if (allowLoadingOnAttachedOnly && !attachedToWindow) {
+            if (setImageBackup == null) {
+                setImageBackup = new SetImageBackup();
+            }
+            setImageBackup.mediaLocation = mediaLocation;
+            setImageBackup.mediaFilter = mediaFilter;
+            setImageBackup.imageLocation = imageLocation;
+            setImageBackup.imageFilter = imageFilter;
+            setImageBackup.thumbLocation = thumbLocation;
+            setImageBackup.thumbFilter = thumbFilter;
+            setImageBackup.thumb = thumb;
+            setImageBackup.size = size;
+            setImageBackup.ext = ext;
+            setImageBackup.cacheType = cacheType;
+            setImageBackup.parentObject = parentObject;
+            return;
+        }
         if (ignoreImageSet) {
             return;
         }
@@ -642,7 +661,11 @@ public class ImageReceiver implements NotificationCenter.NotificationCenterDeleg
         if (delegate != null) {
             delegate.didSetImage(this, currentImageDrawable != null || currentThumbDrawable != null || staticThumbDrawable != null || currentMediaDrawable != null, currentImageDrawable == null && currentMediaDrawable == null, false);
         }
+        loadImage();
+        isRoundVideo = parentObject instanceof MessageObject && ((MessageObject) parentObject).isRoundVideo();
+    }
 
+    private void loadImage() {
         ImageLoader.getInstance().loadImageForImageReceiver(this);
         if (parentView != null) {
             if (invalidateAll) {
@@ -651,8 +674,6 @@ public class ImageReceiver implements NotificationCenter.NotificationCenterDeleg
                 parentView.invalidate((int) imageX, (int) imageY, (int) (imageX + imageW), (int) (imageY + imageH));
             }
         }
-
-        isRoundVideo = parentObject instanceof MessageObject && ((MessageObject) parentObject).isRoundVideo();
     }
 
     public boolean canInvertBitmap() {
@@ -2529,6 +2550,10 @@ public class ImageReceiver implements NotificationCenter.NotificationCenterDeleg
 
     public void setVideoThumbIsSame(boolean b) {
         videoThumbIsSame = b;
+    }
+
+    public void setAllowLoadingOnAttachedOnly(boolean b) {
+        allowLoadingOnAttachedOnly = b;
     }
 
 }
