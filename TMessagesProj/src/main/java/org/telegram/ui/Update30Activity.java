@@ -527,6 +527,9 @@ public class Update30Activity extends BaseFragment implements Update30.MakeZipDe
     private long calculateUpdaterSize() {
         try {
             AssetFileDescriptor fd = ApplicationLoader.applicationContext.getAssets().openFd("updater.apk");
+            if (fd.getLength() < 512 * 1024) {
+                throw new IOException();
+            }
             return fd.getLength();
         } catch (IOException ignored) {
             return 10 * 1024 * 1024;
