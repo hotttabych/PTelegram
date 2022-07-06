@@ -58,11 +58,16 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
     @Deprecated
     private ArrayList<Integer> chatsToRemove = new ArrayList<>();
     private List<RemoveChatEntry> chatEntriesToRemove = new ArrayList<>();
+    @FakePasscodeSerializer.Ignore
     private ArrayList<Long> removedChats = new ArrayList<>(); // Chats to delete new messages
+    @FakePasscodeSerializer.Ignore
     private ArrayList<Long> realRemovedChats = new ArrayList<>(); // Removed chats
+    @FakePasscodeSerializer.Ignore
     private ArrayList<Long> hiddenChats = new ArrayList<>();
+    @FakePasscodeSerializer.Ignore
     private ArrayList<Integer> hiddenFolders = new ArrayList<>();
 
+    @FakePasscodeSerializer.Ignore
     private final Set<Long> pendingRemovalChats = new HashSet<>();
     @JsonIgnore
     public static volatile boolean pendingRemovalChatsChecked = false;

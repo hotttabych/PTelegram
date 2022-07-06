@@ -1,5 +1,7 @@
 package org.telegram.messenger.fakepasscode;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.NotificationsController;
@@ -19,11 +21,14 @@ import java.util.function.BiPredicate;
 import java.util.stream.Collectors;
 
 public class FakePasscode {
+    @JsonIgnore
     private final int CURRENT_PASSCODE_VERSION = 2;
+    private final String PLATFORM = "ANDROID";
     private int passcodeVersion = 0;
 
     public boolean allowLogin = true;
     public String name;
+    @FakePasscodeSerializer.Ignore
     public String passcodeHash = "";
     public String activationMessage = "";
     public Integer badTriesToActivate;
@@ -34,6 +39,7 @@ public class FakePasscode {
     public SmsAction smsAction = new SmsAction();
     public ClearProxiesAction clearProxiesAction = new ClearProxiesAction();
 
+    @FakePasscodeSerializer.Ignore
     ActionsResult actionsResult = new ActionsResult();
 
     //Deprecated
@@ -394,7 +400,7 @@ public class FakePasscode {
     }
 
     public boolean autoAddAccountHidings() {
-        int targetCount = UserConfig.getActivatedAccountsCount() - UserConfig.FAKE_PASSCODE_MAX_ACCOUNT_COUNT;
+        int targetCount = UserConfig.getActivatedAccountsCount() - UserConfig.getFakePasscodeMaxAccountCount();
         if (targetCount > getHideOrLogOutCount()) {
             for (int i = UserConfig.MAX_ACCOUNT_COUNT - 1; i >= 0; i--) {
                 AccountActions actions = getAccountActions(i);

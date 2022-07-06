@@ -7,6 +7,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 
+@FakePasscodeSerializer.ToggleSerialization
 public class ClearSavedChannelsAction extends AccountAction {
     @Override
     public void execute(FakePasscode fakePasscode) {

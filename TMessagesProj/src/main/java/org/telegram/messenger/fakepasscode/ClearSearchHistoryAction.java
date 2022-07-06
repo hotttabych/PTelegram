@@ -7,6 +7,7 @@ import org.telegram.messenger.MediaDataController;
 import org.telegram.messenger.MessagesStorage;
 import org.telegram.messenger.NotificationCenter;
 
+@FakePasscodeSerializer.ToggleSerialization
 @JsonIgnoreProperties(ignoreUnknown=true)
 public class ClearSearchHistoryAction extends AccountAction {
     @Override

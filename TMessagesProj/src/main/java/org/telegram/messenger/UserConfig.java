@@ -41,8 +41,8 @@ import java.util.Set;
 public class UserConfig extends BaseController {
 
     public static int selectedAccount;
-    public final static int FAKE_PASSCODE_MAX_ACCOUNT_DEFAULT_COUNT = 3;
-    public final static int FAKE_PASSCODE_MAX_ACCOUNT_COUNT = 4;
+    public final static int FAKE_PASSCODE_MAX_ACCOUNT_COUNT = 3;
+    public final static int FAKE_PASSCODE_MAX_PREMIUM_ACCOUNT_COUNT = 4;
     public final static int MAX_ACCOUNT_DEFAULT_COUNT = 5;
     public final static int MAX_ACCOUNT_COUNT = 5;
 
@@ -216,6 +216,10 @@ public class UserConfig extends BaseController {
 
     public static int getMaxAccountCount() {
         return hasPremiumOnAccounts() ? 5 : 3;
+    }
+
+    public static int getFakePasscodeMaxAccountCount() {
+        return hasPremiumOnAccounts() ? FAKE_PASSCODE_MAX_PREMIUM_ACCOUNT_COUNT : FAKE_PASSCODE_MAX_ACCOUNT_COUNT;
     }
 
     public int getNewMessageId() {
@@ -597,6 +601,9 @@ public class UserConfig extends BaseController {
 
     public boolean isPremium() {
         if (currentUser == null) {
+            return false;
+        }
+        if (SharedConfig.premiumDisabled) {
             return false;
         }
         return currentUser.premium;
