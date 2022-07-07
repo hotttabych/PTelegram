@@ -154,11 +154,11 @@ public class FilterCreateActivity extends BaseFragment {
         }
         newFilterName = filter.name;
         newFilterFlags = filter.flags;
-        newAlwaysShow = new ArrayList<>(FakePasscode.filterDialogIds(filter.alwaysShow, currentAccount));
+        newAlwaysShow = (ArrayList<Long>) FakePasscode.filterDialogIds(filter.alwaysShow, currentAccount);
         if (alwaysShow != null) {
             newAlwaysShow.addAll(alwaysShow);
         }
-        newNeverShow = new ArrayList<>(FakePasscode.filterDialogIds(filter.neverShow, currentAccount));
+        newNeverShow = (ArrayList<Long>) FakePasscode.filterDialogIds(filter.neverShow, currentAccount);
         newPinned = filter.pinnedDialogs.clone();
     }
 

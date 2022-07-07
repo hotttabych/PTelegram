@@ -83,7 +83,7 @@ public class PrivacyUsersActivity extends BaseFragment implements NotificationCe
 
     public PrivacyUsersActivity(int type, ArrayList<Long> users, boolean group, boolean always) {
         super();
-        uidArray = new ArrayList<>(FakePasscode.filterDialogIds(users, currentAccount));
+        uidArray = (ArrayList<Long>) FakePasscode.filterDialogIds(users, currentAccount);
         isAlwaysShare = always;
         isGroup = group;
         blockedUsersActivity = false;

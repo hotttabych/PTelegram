@@ -1001,7 +1001,7 @@ public class NotificationsCustomSettingsActivity extends BaseFragment implements
         private void processSearch(final String query) {
             AndroidUtilities.runOnUIThread(() -> {
                 searchAdapterHelper.queryServerSearch(query, true, currentType != NotificationsController.TYPE_PRIVATE, true, false, false, 0, false, 0, 0);
-                final ArrayList<NotificationsSettingsActivity.NotificationException> contactsCopy = new ArrayList<>(FakePasscode.filterNotificationExceptions(exceptions, currentAccount));
+                final ArrayList<NotificationsSettingsActivity.NotificationException> contactsCopy = (ArrayList<NotificationsSettingsActivity.NotificationException>)FakePasscode.filterNotificationExceptions(exceptions, currentAccount);
                 Utilities.searchQueue.postRunnable(() -> {
                     String search1 = query.trim().toLowerCase();
                     if (search1.length() == 0) {

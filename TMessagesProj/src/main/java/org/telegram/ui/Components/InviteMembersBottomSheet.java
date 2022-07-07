@@ -551,7 +551,7 @@ public class InviteMembersBottomSheet extends UsersAlertBase implements Notifica
     public void didReceivedNotification(int id, int account, Object... args) {
         if (id == NotificationCenter.dialogsNeedReload) {
             if (dialogsDelegate != null && dialogsServerOnly.isEmpty()) {
-                dialogsServerOnly = new ArrayList<>(FakePasscode.filterDialogs(MessagesController.getInstance(currentAccount).dialogsServerOnly, Optional.of(currentAccount)));
+                dialogsServerOnly = (ArrayList<TLRPC.Dialog>) FakePasscode.filterDialogs(MessagesController.getInstance(currentAccount).dialogsServerOnly, Optional.of(currentAccount));
                 listViewAdapter.notifyDataSetChanged();
             }
         }
@@ -1312,7 +1312,7 @@ public class InviteMembersBottomSheet extends UsersAlertBase implements Notifica
     public void setDelegate(InviteMembersBottomSheetDelegate inviteMembersBottomSheetDelegate, ArrayList<Long> selectedDialogs) {
         dialogsDelegate = inviteMembersBottomSheetDelegate;
         NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.dialogsNeedReload);
-        dialogsServerOnly = new ArrayList<>(FakePasscode.filterDialogs(MessagesController.getInstance(currentAccount).dialogsServerOnly, Optional.of(currentAccount)));
+        dialogsServerOnly = (ArrayList<TLRPC.Dialog>) FakePasscode.filterDialogs(MessagesController.getInstance(currentAccount).dialogsServerOnly, Optional.of(currentAccount));
         updateRows();
     }
 
