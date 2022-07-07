@@ -80,6 +80,7 @@ import org.telegram.ui.ActionBar.BaseFragment;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.ActionBar.ThemeDescription;
 import org.telegram.ui.Cells.HeaderCell;
+import org.telegram.ui.Cells.ShadowSectionCell;
 import org.telegram.ui.Cells.TextCheckCell;
 import org.telegram.ui.Cells.TextInfoPrivacyCell;
 import org.telegram.ui.Cells.TextSettingsCell;
@@ -171,6 +172,7 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
     private int firstFakePasscodeRow;
     private int lastFakePasscodeRow;
     private int addFakePasscodeRow;
+    private int restoreFakePasscodeDelimiterRow;
     private int restoreFakePasscodeRow;
     private int fakePasscodeDetailRow;
     private int partisanSettingsRow;
@@ -1014,6 +1016,7 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
         firstFakePasscodeRow = -1;
         lastFakePasscodeRow = -1;
         addFakePasscodeRow = -1;
+        restoreFakePasscodeDelimiterRow = -1;
         restoreFakePasscodeRow = -1;
         fakePasscodeDetailRow = -1;
         bruteForceProtectionRow = -1;
@@ -1072,6 +1075,7 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
                 rowCount = lastFakePasscodeRow + 1;
             }
             addFakePasscodeRow = rowCount++;
+            restoreFakePasscodeDelimiterRow = rowCount++;
             restoreFakePasscodeRow = rowCount++;
             fakePasscodeDetailRow = rowCount++;
             partisanSettingsRow = rowCount++;
@@ -1343,7 +1347,8 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
                 VIEW_TYPE_SETTING = 1,
                 VIEW_TYPE_INFO = 2,
                 VIEW_TYPE_HEADER = 3,
-                VIEW_TYPE_UTYAN = 4;
+                VIEW_TYPE_UTYAN = 4,
+                VIEW_TYPE_SHADOW = 5;
 
         private Context mContext;
 
@@ -1390,9 +1395,13 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
                     view = new RLottieImageHolderView(mContext);
                     break;
                 case VIEW_TYPE_INFO:
-                default:
                     view = new TextInfoPrivacyCell(mContext);
                     break;
+                case VIEW_TYPE_SHADOW:
+                default:
+                    view = new ShadowSectionCell(mContext);
+                    break;
+
             }
             return new RecyclerListView.Holder(view);
         }
@@ -1529,6 +1538,12 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
                     }
                     break;
                 }
+                case VIEW_TYPE_SHADOW: {
+                    View sectionCell = holder.itemView;
+                    sectionCell.setTag(position);
+                    sectionCell.setBackgroundDrawable(Theme.getThemedDrawable(mContext, R.drawable.greydivider, getThemedColor(Theme.key_windowBackgroundGrayShadow)));
+                    break;
+                }
             }
         }
 
@@ -1554,6 +1569,8 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
                 return VIEW_TYPE_HEADER;
             } else if (position == utyanRow) {
                 return VIEW_TYPE_UTYAN;
+            } else if (position == restoreFakePasscodeDelimiterRow) {
+                return VIEW_TYPE_SHADOW;
             }
             return VIEW_TYPE_CHECK;
         }
