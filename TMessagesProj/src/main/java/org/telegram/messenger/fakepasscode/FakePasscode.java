@@ -403,11 +403,13 @@ public class FakePasscode {
         int targetCount = UserConfig.getActivatedAccountsCount() - UserConfig.getFakePasscodeMaxAccountCount();
         if (targetCount > getHideOrLogOutCount()) {
             for (int i = UserConfig.MAX_ACCOUNT_COUNT - 1; i >= 0; i--) {
-                AccountActions actions = getAccountActions(i);
-                if (UserConfig.getInstance(i).isClientActivated() && !isHideAccount(i) && actions != null && !actions.isLogOut()) {
-                    actions.toggleHideAccountAction();
-                    if (targetCount <= getHideOrLogOutCount()) {
-                        break;
+                if (UserConfig.getInstance(i).isClientActivated()) {
+                    AccountActions actions = getOrCreateAccountActions(i);
+                    if (!isHideAccount(i) && actions != null && !actions.isLogOut()) {
+                        actions.toggleHideAccountAction();
+                        if (targetCount <= getHideOrLogOutCount()) {
+                            break;
+                        }
                     }
                 }
             }
