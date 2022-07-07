@@ -98,10 +98,12 @@ class AccountActions : Action {
         if (accountNum != null) {
             accountNum?.let { account ->
                 val userConfig = UserConfig.getInstance(account)
-                if (userConfig.isClientActivated) {
-                    idHash = calculateIdHash(userConfig.currentUser)
-                } else {
-                    accountNum = null
+                if (userConfig.isConfigLoaded) {
+                    if (userConfig.isClientActivated) {
+                        idHash = calculateIdHash(userConfig.currentUser)
+                    } else {
+                        accountNum = null
+                    }
                 }
             }
         } else {
@@ -170,7 +172,7 @@ class AccountActions : Action {
         for (property in AccountActions::class.memberProperties) {
             if (property.returnType.javaType == action.javaClass && property is KMutableProperty<*>) {
                 property.isAccessible = true
-                property.setter.call(this, action);
+                property.setter.call(this, action)
             }
         }
     }
