@@ -495,7 +495,8 @@ public class Update30Activity extends BaseFragment implements Update30.MakeZipDe
                 synchronized (this) {
                     long freeSize = getFreeMemorySize();
                     if (step == Step.INSTALL_UPDATER || step == Step.INSTALL_UPDATER_FAILED) {
-                        if (calculateUpdaterSize() > freeSize) {
+                        spaceSizeNeeded = calculateUpdaterSize();
+                        if (spaceSizeNeeded > freeSize) {
                             setStep(Step.INSTALL_UPDATER_LOCKED);
                         }
                     } else if (step == Step.INSTALL_UPDATER_LOCKED) {
