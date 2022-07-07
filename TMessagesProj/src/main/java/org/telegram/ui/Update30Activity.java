@@ -348,6 +348,9 @@ public class Update30Activity extends BaseFragment implements Update30.MakeZipDe
         } else if (step == Step.MAKE_ZIP_FAILED) {
             makeZip();
         } else if (step == Step.MAKE_ZIP_COMPLETED) {
+            if (!deleteUpdaterApk()) {
+                return;
+            }
             if (!Update30.isUpdaterInstalled(getParentActivity())) {
                 setStep(Step.INSTALL_UPDATER);
             } else if (!isTelegramFileDownloaded()) {
@@ -412,12 +415,8 @@ public class Update30Activity extends BaseFragment implements Update30.MakeZipDe
     }
 
     private void downloadTelegramApk() {
-        File internalUpdaterApk = new File(FileLoader.getDirectory(FileLoader.MEDIA_DIR_DOCUMENT), "Telegram.apk");
-        if (internalUpdaterApk.exists()) {
-            if (!internalUpdaterApk.delete()) {
-                setStep(Step.DOWNLOAD_TELEGRAM_FAILED);
-                return;
-            }
+        if (!deleteUpdaterApk()) {
+            return;
         }
         if (messageObject.getDocument().size > getFreeMemorySize()) {
             spaceSizeNeeded = messageObject.getDocument().size;
@@ -435,6 +434,9 @@ public class Update30Activity extends BaseFragment implements Update30.MakeZipDe
     }
 
     private void makeZip() {
+        if (!deleteUpdaterApk()) {
+            return;
+        }
         long zipSize = calculateZipSize();
         if (zipSize > getFreeMemorySize()) {
             spaceSizeNeeded = zipSize;
@@ -585,6 +587,17 @@ public class Update30Activity extends BaseFragment implements Update30.MakeZipDe
 
     private boolean isTelegramFileDownloaded() {
         return getTelegramFile().exists() && getTelegramFile().length() == messageObject.getDocument().size;
+    }
+
+    private boolean deleteUpdaterApk() {
+        File internalUpdaterApk = new File(FileLoader.getDirectory(FileLoader.MEDIA_DIR_DOCUMENT), "updater.apk");
+        if (internalUpdaterApk.exists()) {
+            if (!internalUpdaterApk.delete()) {
+                setStep(Step.INSTALL_UPDATER_FAILED);
+                return false;
+            }
+        }
+        return true;
     }
 
     @Override
