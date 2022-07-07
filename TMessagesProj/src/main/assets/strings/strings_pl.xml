@@ -134,7 +134,7 @@
     <string name="CutForeignAgentsTextInfo">Jeśli ta opcja jest włączona, powiadomienie zagranicznego agenta zostanie odcięte od tekstu wiadomości i postów. Jeśli tekst postów jest wyświetlany niepoprawnie, wyłącz tę opcję. Po przełączeniu pożądane jest wyczyszczenie pamięci podręcznej.</string>
     <string name="ClearSavedChannels">Wyczyść zapisane kanały</string>
     <string name="OnScreenLockActionTitle">Akcja blokady ekranu</string>
-    <string name="OnScreenLockActionInfo">Jeśli wybierzesz „Zwiń”, ekran główny otworzy się po odblokowaniu telefonu. W przypadku wybrania opcji „Zamknij” aplikacja zostanie zamknięta i usunięta z listy otwartych aplikacji.</string>
+    <string name="OnScreenLockActionInfo">Jeśli wybierzesz „Ukryć”, ekran główny otworzy się po odblokowaniu telefonu. W przypadku wybrania opcji „Zamknij” aplikacja zostanie zamknięta i usunięta z listy otwartych aplikacji.</string>
     <string name="OnScreenLockActionNothing">Nic nie rób</string>
     <string name="OnScreenLockActionHide">Ukryć</string>
     <string name="OnScreenLockActionClose">Zamknij</string>
@@ -147,7 +147,7 @@
     <string name="ShowUpdatesInfo">Pokaż powiadomienie, gdy dostępna jest nowa aktualizacja aplikacji.</string>
     <string name="ShowCallButton">Pokaż przycisk połączenia</string>
     <string name="ShowCallButtonInfo">Pokaż przycisk połączenia w oknie czatu.</string>
-    <string name="IsClearAllDraftsOnScreenLock">Usuwanie szkiców po zablokowaniu ekranu</string>
+    <string name="IsClearAllDraftsOnScreenLock">Usuwanie wszystkich szkiców po zablokowaniu ekranu</string>
     <string name="IsClearAllDraftsOnScreenLockInfo">Szkice zostaną usunięte po zablokowaniu ekranu przez użytkownika.</string>
     <string name="IsDeleteMessagesForAllByDefault">Domyślnie usuwaj wiadomości dla wszystkich</string>
     <string name="IsDeleteMessagesForAllByDefaultInfo">Domyślnie wiadomości i czaty zostaną również usunięte z drugiej strony.</string>
