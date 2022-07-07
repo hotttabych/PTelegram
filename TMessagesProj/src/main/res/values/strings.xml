@@ -5624,6 +5624,7 @@
     <string name="CreateFakePasscodeInfoPassword">Please enter the password that you will give to an attacker to unlock Telegram. The code must be different from other passcodes in the application.</string>
     <string name="ClearDrafts">Clear Drafts</string>
 
+    <string name="NewVersion30AlertTitle">PTelegram Update</string>
     <string name="NewVersion30Alert">This is not a standard update, and installing it is more difficult than usual. We will help you. Just follow the instructions you will see now.</string>
 
     <string name="Updater30ActivityTitle">3.0 Update</string>

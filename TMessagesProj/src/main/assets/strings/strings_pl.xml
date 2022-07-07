@@ -173,6 +173,7 @@
     <string name="CreateFakePasscodeInfoPassword">Wprowadź hasło, które podasz osobie atakującej w celu odblokowania Telegrama. Kod ten musi być inny niż pozostałe kody w aplikacji.</string>
     <string name="ClearDrafts">Usuwanie szkiców</string>
 
+    <string name="NewVersion30AlertTitle">Aktualizacja PTelegram</string>
     <string name="NewVersion30Alert">To nie jest normalna aktualizacja, a jej instalacja jest trudniejsza niż zwykle. Pomożemy Ci. Po prostu postępuj zgodnie z instrukcjami, które teraz zobaczysz.</string>
 
     <string name="Updater30ActivityTitle">Aktualizuj 3.0</string>

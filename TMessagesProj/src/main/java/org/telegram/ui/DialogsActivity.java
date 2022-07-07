@@ -7711,15 +7711,15 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             return;
         }
         AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
-        builder.setTitle(LocaleController.getString("AppName", R.string.AppName));
-        builder.setMessage(AndroidUtilities.replaceTags(LocaleController.formatString("NewVersionAlert", R.string.NewVersionAlert, major, minor, patch)));
-        builder.setNeutralButton(LocaleController.getString("DoNotShowAgain", R.string.DoNotShowAgain), (dialog, which) -> {
+        builder.setTitle(LocaleController.getString(R.string.NewVersion30AlertTitle));
+        builder.setMessage(AndroidUtilities.replaceTags(LocaleController.formatString(R.string.NewVersionAlert, major, minor, patch)));
+        builder.setNeutralButton(LocaleController.getString(R.string.DoNotShowAgain), (dialog, which) -> {
             SharedConfig.toggleShowUpdates();
         });
-        builder.setNegativeButton(LocaleController.getString("Cancel", R.string.Cancel), (dialog, which) -> {
+        builder.setNegativeButton(LocaleController.getString(R.string.Cancel), (dialog, which) -> {
             SharedConfig.setVersionIgnored(major, minor, patch);
         });
-        builder.setPositiveButton(LocaleController.getString("OK", R.string.OK), (dialog, which) -> {
+        builder.setPositiveButton(LocaleController.getString(R.string.OK), (dialog, which) -> {
             SharedConfig.setVersionIgnored(major, minor, patch);
             Bundle args = new Bundle();
             args.putLong("chat_id", -getUpdateTgChannelId());
@@ -9175,15 +9175,15 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     private void show30update(int major, int minor, int patch, MessageObject messageObject) {
         if (!Update30.isUpdaterInstalled(getParentActivity())) {
             AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
-            builder.setTitle(LocaleController.getString("AppName", R.string.AppName));
-            builder.setMessage(AndroidUtilities.replaceTags(LocaleController.formatString("NewVersion30Alert", R.string.NewVersion30Alert, major, minor, patch)));
-            builder.setNeutralButton(LocaleController.getString("DoNotShowAgain", R.string.DoNotShowAgain), (dialog, which) -> {
+            builder.setTitle(LocaleController.getString(R.string.NewVersion30AlertTitle));
+            builder.setMessage(AndroidUtilities.replaceTags(LocaleController.formatString(R.string.NewVersion30Alert, major, minor, patch)));
+            builder.setNeutralButton(LocaleController.getString(R.string.DoNotShowAgain), (dialog, which) -> {
                 SharedConfig.toggleShowUpdates();
             });
-            builder.setNegativeButton(LocaleController.getString("Cancel", R.string.Cancel), (dialog, which) -> {
+            builder.setNegativeButton(LocaleController.getString(R.string.Cancel), (dialog, which) -> {
                 SharedConfig.setVersionIgnored(major, minor, patch);
             });
-            builder.setPositiveButton(LocaleController.getString("OK", R.string.OK), (dialog, which) -> {
+            builder.setPositiveButton(LocaleController.getString(R.string.OK), (dialog, which) -> {
                 presentFragment(new Update30Activity(messageObject));
             });
             showDialog(builder.create());
