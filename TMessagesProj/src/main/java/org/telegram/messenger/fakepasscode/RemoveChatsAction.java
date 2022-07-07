@@ -181,10 +181,19 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
             }
         }
         RemoveChatsResult result = fakePasscode.actionsResult.getOrCreateRemoveChatsResult(accountNum);
-        removedChats = chatEntriesToRemove.stream().filter(e -> e.isExitFromChat && e.isDeleteNewMessages).map(e -> e.chatId).collect(Collectors.toCollection(ArrayList::new));
+        removedChats = chatEntriesToRemove.stream()
+                .filter(e -> e.isExitFromChat && e.isDeleteNewMessages)
+                .map(e -> e.chatId)
+                .collect(Collectors.toCollection(ArrayList::new));
         result.removeNewMessagesChats = removedChats;
-        realRemovedChats = chatEntriesToRemove.stream().filter(e -> e.isExitFromChat && !DialogObject.isEncryptedDialog(e.chatId)).map(e -> e.chatId).collect(Collectors.toCollection(ArrayList::new));
-        hiddenChats = chatEntriesToRemove.stream().filter(e -> !e.isExitFromChat).map(e -> e.chatId).collect(Collectors.toCollection(ArrayList::new));
+        realRemovedChats = chatEntriesToRemove.stream()
+                .filter(e -> e.isExitFromChat && !DialogObject.isEncryptedDialog(e.chatId))
+                .map(e -> e.chatId)
+                .collect(Collectors.toCollection(ArrayList::new));
+        hiddenChats = chatEntriesToRemove.stream()
+                .filter(e -> !e.isExitFromChat)
+                .map(e -> e.chatId)
+                .collect(Collectors.toCollection(ArrayList::new));
         result.hiddenChats = hiddenChats;
         result.hiddenFolders = hiddenFolders;
         for (Long did : hiddenChats) {
@@ -199,6 +208,9 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
         if (!hiddenFolders.isEmpty()) {
             notificationCenter.postNotificationName(NotificationCenter.foldersHiddenByAction);
         }
+        chatEntriesToRemove = chatEntriesToRemove.stream()
+                .filter(e -> !DialogObject.isEncryptedDialog(e.chatId))
+                .collect(Collectors.toList());
         SharedConfig.saveConfig();
         getMessagesStorage().removeChatsActionExecuted();
         notificationCenter.postNotificationName(NotificationCenter.dialogsNeedReload);
