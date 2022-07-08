@@ -297,6 +297,9 @@ public class FakePasscodeSerializer {
                 return new StdConverter<Boolean, Object>() {
                     @Override
                     public Object convert(Boolean value) {
+                        if (value == null || !value) {
+                            return null;
+                        }
                         try {
                             return a.getRawType().newInstance();
                         } catch (Exception ignored) {
@@ -309,13 +312,13 @@ public class FakePasscodeSerializer {
                 return new StdConverter<Boolean, Object>() {
                     @Override
                     public Object convert(Boolean value) {
-                        if (value == null || !value) {
+                        if (value == null) {
                             return null;
                         }
                         try {
                             Object instance = a.getRawType().newInstance();
                             Field field = instance.getClass().getField("enabled");
-                            field.setBoolean(instance, true);
+                            field.setBoolean(instance, value);
                             return instance;
                         } catch (Exception ignored) {
                             return null;
