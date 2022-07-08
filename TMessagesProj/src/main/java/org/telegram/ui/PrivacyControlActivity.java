@@ -401,12 +401,12 @@ public class PrivacyControlActivity extends BaseFragment implements Notification
                     GroupCreateActivity fragment = new GroupCreateActivity(args);
                     fragment.setDelegate(ids -> {
                         if (position == neverShareRow) {
-                            currentMinus = new ArrayList<>(FakePasscode.filterDialogIds(ids, currentAccount));
+                            currentMinus = (ArrayList<Long>) FakePasscode.filterDialogIds(ids, currentAccount);
                             for (int a = 0; a < currentMinus.size(); a++) {
                                 currentPlus.remove(currentMinus.get(a));
                             }
                         } else {
-                            currentPlus = new ArrayList<>(FakePasscode.filterDialogIds(ids, currentAccount));
+                            currentPlus = (ArrayList<Long>) FakePasscode.filterDialogIds(ids, currentAccount);
                             for (int a = 0; a < currentPlus.size(); a++) {
                                 currentMinus.remove(currentPlus.get(a));
                             }
@@ -419,14 +419,14 @@ public class PrivacyControlActivity extends BaseFragment implements Notification
                     PrivacyUsersActivity fragment = new PrivacyUsersActivity(PrivacyUsersActivity.TYPE_PRIVACY, createFromArray, rulesType != PRIVACY_RULES_TYPE_LASTSEEN, position == alwaysShareRow);
                     fragment.setDelegate((ids, added) -> {
                         if (position == neverShareRow) {
-                            currentMinus = new ArrayList<>(FakePasscode.filterDialogIds(ids, currentAccount));
+                            currentMinus = (ArrayList<Long>) FakePasscode.filterDialogIds(ids, currentAccount);
                             if (added) {
                                 for (int a = 0; a < currentMinus.size(); a++) {
                                     currentPlus.remove(currentMinus.get(a));
                                 }
                             }
                         } else {
-                            currentPlus = new ArrayList<>(FakePasscode.filterDialogIds(ids, currentAccount));
+                            currentPlus = (ArrayList<Long>) FakePasscode.filterDialogIds(ids, currentAccount);
                             if (added) {
                                 for (int a = 0; a < currentPlus.size(); a++) {
                                     currentMinus.remove(currentPlus.get(a));

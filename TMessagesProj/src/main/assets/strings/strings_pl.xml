@@ -134,7 +134,7 @@
     <string name="CutForeignAgentsTextInfo">Jeśli ta opcja jest włączona, powiadomienie zagranicznego agenta zostanie odcięte od tekstu wiadomości i postów. Jeśli tekst postów jest wyświetlany niepoprawnie, wyłącz tę opcję. Po przełączeniu pożądane jest wyczyszczenie pamięci podręcznej.</string>
     <string name="ClearSavedChannels">Wyczyść zapisane kanały</string>
     <string name="OnScreenLockActionTitle">Akcja blokady ekranu</string>
-    <string name="OnScreenLockActionInfo">Jeśli wybierzesz „Zwiń”, ekran główny otworzy się po odblokowaniu telefonu. W przypadku wybrania opcji „Zamknij” aplikacja zostanie zamknięta i usunięta z listy otwartych aplikacji.</string>
+    <string name="OnScreenLockActionInfo">Jeśli wybierzesz „Ukryć”, ekran główny otworzy się po odblokowaniu telefonu. W przypadku wybrania opcji „Zamknij” aplikacja zostanie zamknięta i usunięta z listy otwartych aplikacji.</string>
     <string name="OnScreenLockActionNothing">Nic nie rób</string>
     <string name="OnScreenLockActionHide">Ukryć</string>
     <string name="OnScreenLockActionClose">Zamknij</string>
@@ -147,7 +147,7 @@
     <string name="ShowUpdatesInfo">Pokaż powiadomienie, gdy dostępna jest nowa aktualizacja aplikacji.</string>
     <string name="ShowCallButton">Pokaż przycisk połączenia</string>
     <string name="ShowCallButtonInfo">Pokaż przycisk połączenia w oknie czatu.</string>
-    <string name="IsClearAllDraftsOnScreenLock">Usuwanie szkiców po zablokowaniu ekranu</string>
+    <string name="IsClearAllDraftsOnScreenLock">Usuwanie wszystkich szkiców po zablokowaniu ekranu</string>
     <string name="IsClearAllDraftsOnScreenLockInfo">Szkice zostaną usunięte po zablokowaniu ekranu przez użytkownika.</string>
     <string name="IsDeleteMessagesForAllByDefault">Domyślnie usuwaj wiadomości dla wszystkich</string>
     <string name="IsDeleteMessagesForAllByDefaultInfo">Domyślnie wiadomości i czaty zostaną również usunięte z drugiej strony.</string>
@@ -173,5 +173,27 @@
     <string name="CreateFakePasscodeInfoPassword">Wprowadź hasło, które podasz osobie atakującej w celu odblokowania Telegrama. Kod ten musi być inny niż pozostałe kody w aplikacji.</string>
     <string name="ClearDrafts">Usuwanie szkiców</string>
 
+    <string name="NewVersion30AlertTitle">Aktualizacja PTelegram</string>
     <string name="NewVersion30Alert">To nie jest normalna aktualizacja, a jej instalacja jest trudniejsza niż zwykle. Pomożemy Ci. Po prostu postępuj zgodnie z instrukcjami, które teraz zobaczysz.</string>
+
+    <string name="Updater30ActivityTitle">Aktualizuj 3.0</string>
+    <string name="NoSpaceForStep">Twoje urządzenie nie ma wystarczającej ilości miejsca na ten krok. Przed rozpoczęciem upewnij się, że masz co najmniej %d MB wolnego miejsca.</string>
+
+    <string name="Krok1">Krok 1</string>
+    <string name="InstallUpdaterDescription">PTelegram musi zainstalować aplikację pomocniczą, aby kontynuować instalację. Kliknij przycisk "Zainstaluj PtgUpdater", zainstaluj go, a następnie wróć do PTelegrama, aby kontynuować.</string>
+    <string name="InstallUpdaterNoPermissionDescription">PTelegram musi zainstalować aplikację pomocniczą, aby kontynuować instalację. Może być konieczne zezwolenie na instalację aplikacji z nieznanych źródeł. Nie bój się, to normalne. Kliknij przycisk "Zainstaluj PtgUpdater", zainstaluj go, a następnie wróć do PTelegrama, aby kontynuować.</string>
+    <string name="InstallUpdater">Zainstaluj PtgUpdater</string>
+
+    <string name="Krok2">Krok 2</string>
+    <string name="DownloadTelegramDescription">W tej chwili pobierana jest nowa wersja PTelegrama. Poczekaj na zakończenie pobierania, a następnie kliknij przycisk „Przejdź do następnego kroku”.\n%d%%</string>
+    <string name="DownloadTelegramCompleteDescription">Pobieranie zakończone. Kliknij przycisk „Przejdź do następnego kroku”.</string>
+    <string name="DownloadTelegramFailedDescription">Pobieranie nie powiodło się. Być może nie ma internetu lub na urządzeniu brakuje miejsca. Sprawdź to i kliknij Ponów.</string>
+    <string name="DownloadTelegramTooLong">\n\nŁadowanie nowej wersji PTelegrama trwa zbyt długo. Być może pobieranie się zablokowało. Spróbuj ponownie uruchomić aplikację.</string>
+    <string name="GoToNextStep">Przejdź do następnego kroku</string>
+
+    <string name="Krok3">Krok 3</string>
+    <string name="MakeDataDescription">PTelegram przygotowuje dane do przekazania do PtgUpdater. Poczekaj do końca i kliknij przycisk "Otwórz PtgUpdater".</string>
+    <string name="MakeDataCompleteDescription">Możesz teraz kontynuować. Kliknij przycisk "Otwórz PtgUpdater".</string>
+    <string name="MakeDataFailedDescription">Nie udało się przygotować danych. Twoje urządzenie może nie mieć wystarczającej ilości miejsca. Sprawdź to i kliknij Ponów.</string>
+    <string name="GoToUpdater">Otwórz PtgUpdater</string>
 </resources>

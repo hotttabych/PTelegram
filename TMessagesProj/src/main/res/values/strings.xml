@@ -5624,10 +5624,11 @@
     <string name="CreateFakePasscodeInfoPassword">Please enter the password that you will give to an attacker to unlock Telegram. The code must be different from other passcodes in the application.</string>
     <string name="ClearDrafts">Clear Drafts</string>
 
+    <string name="NewVersion30AlertTitle">PTelegram Update</string>
     <string name="NewVersion30Alert">This is not a standard update, and installing it is more difficult than usual. We will help you. Just follow the instructions you will see now.</string>
 
     <string name="Updater30ActivityTitle">3.0 Update</string>
-    <string name="NoSpaceForStep">Your device does not have enough space for this step. Before starting, make sure you have at least %d MB free.</string>
+    <string name="NoSpaceForStep">Your device does not have enough space for this step. Before starting, make sure you have at least %.2f MB free.</string>
 
     <string name="Step1">Step 1</string>
     <string name="InstallUpdaterDescription">PTelegram need to install a helper application to proceed with the installation. Tap \"Install PtgUpdater\" button, install it, and then return to PTelegram to continue.</string>
@@ -5639,6 +5640,7 @@
     <string name="DownloadTelegramDescription">A new version of PTelegram is currently being downloaded. Wait for the download to finish and then tap on the \"Go to Next Step\" button.\n%d%%</string>
     <string name="DownloadTelegramCompleteDescription">Download completed. Tap on \"Go to Next Step\".</string>
     <string name="DownloadTelegramFailedDescription">Download failed. Perhaps there is no internet connection or not enough space on the device. Once fixed tap \"Retry\".</string>
+    <string name="DownloadTelegramTooLong">\n\nThe new version of PTelegram takes too long to load. Perhaps the download is stuck. Try restarting the application.</string>
     <string name="GoToNextStep">Go to Next Step</string>
 
     <string name="Step3">Step 3</string>

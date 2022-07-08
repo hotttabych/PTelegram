@@ -82,7 +82,7 @@ public class ContactsAdapter extends RecyclerListView.SectionsAdapter {
         sortType = value;
         if (sortType == 2) {
             if (onlineContacts == null || force) {
-                onlineContacts = new ArrayList<>(FakePasscode.filterContacts(ContactsController.getInstance(currentAccount).contacts, currentAccount));
+                onlineContacts = (ArrayList<TLRPC.TL_contact>) FakePasscode.filterContacts(ContactsController.getInstance(currentAccount).contacts, currentAccount);
                 long selfId = UserConfig.getInstance(currentAccount).clientUserId;
                 for (int a = 0, N = onlineContacts.size(); a < N; a++) {
                     if (onlineContacts.get(a).user_id == selfId) {
