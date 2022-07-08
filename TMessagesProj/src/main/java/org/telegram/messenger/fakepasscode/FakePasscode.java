@@ -1,5 +1,7 @@
 package org.telegram.messenger.fakepasscode;
 
+import android.util.Pair;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import org.telegram.messenger.AndroidUtilities;
@@ -8,6 +10,7 @@ import org.telegram.messenger.NotificationsController;
 import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.UserConfig;
 import org.telegram.tgnet.TLRPC;
+import org.telegram.ui.FakePasscodeActivity;
 import org.telegram.ui.NotificationsSettingsActivity;
 
 import java.util.ArrayList;
@@ -94,6 +97,10 @@ public class FakePasscode {
 
     public List<AccountActions> getAllAccountActions() {
         return Collections.unmodifiableList(accountActions);
+    }
+
+    public List<AccountActions> getFilteredAccountActions() {
+        return accountActions.stream().filter(a -> a.getAccountNum() != null).collect(Collectors.toList());
     }
 
     public void executeActions() {
@@ -272,7 +279,7 @@ public class FakePasscode {
                 filteredItems = filteredItems.stream().filter(i -> filter.test(i, pair.getValue())).collect(Collectors.toList());
             }
         }
-        for (AccountActions actions : passcode.accountActions) {
+        for (AccountActions actions : passcode.getFilteredAccountActions()) {
             Integer accountNum = actions.getAccountNum();
             if (accountNum != null && (!account.isPresent() ||  accountNum.equals(account.get()))) {
                 filteredItems = filteredItems.stream().filter(i -> filter.test(i, actions.getRemoveChatsAction())).collect(Collectors.toList());
@@ -305,7 +312,7 @@ public class FakePasscode {
         if (result != null && isHidePeer(peer, result)) {
             return true;
         }
-        for (AccountActions actions : passcode.accountActions) {
+        for (AccountActions actions : passcode.getFilteredAccountActions()) {
             Integer accountNum = actions.getAccountNum();
             if (accountNum != null && accountNum.equals(account)) {
                 return isHidePeer(peer, actions.getRemoveChatsAction());
@@ -392,24 +399,38 @@ public class FakePasscode {
     }
 
     public int getHideOrLogOutCount() {
-        return (int)accountActions.stream().filter(AccountActions::isLogOutOrHideAccount).count();
+        return (int)getFilteredAccountActions().stream().filter(AccountActions::isLogOutOrHideAccount).count();
     }
 
     public int getHideAccountCount() {
-        return (int)accountActions.stream().filter(AccountActions::isHideAccount).count();
+        return (int)getFilteredAccountActions().stream().filter(AccountActions::isHideAccount).count();
     }
 
     public boolean autoAddAccountHidings() {
         int targetCount = UserConfig.getActivatedAccountsCount() - UserConfig.getFakePasscodeMaxAccountCount();
         if (targetCount > getHideOrLogOutCount()) {
-            for (int i = UserConfig.MAX_ACCOUNT_COUNT - 1; i >= 0; i--) {
-                if (UserConfig.getInstance(i).isClientActivated()) {
-                    AccountActions actions = getOrCreateAccountActions(i);
-                    if (!isHideAccount(i) && actions != null && !actions.isLogOut()) {
-                        actions.toggleHideAccountAction();
-                        if (targetCount <= getHideOrLogOutCount()) {
-                            break;
-                        }
+            List<Integer> configIds = new ArrayList<>();
+            for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
+                if (UserConfig.getInstance(a).isClientActivated()) {
+                    configIds.add(a);
+                }
+            }
+            Collections.sort(configIds, (o1, o2) -> {
+                long l1 = UserConfig.getInstance(o1).loginTime;
+                long l2 = UserConfig.getInstance(o2).loginTime;
+                if (l1 > l2) {
+                    return 1;
+                } else if (l1 < l2) {
+                    return -1;
+                }
+                return 0;
+            });
+            for (int i = configIds.size() - 1; i >= 0; i--) {
+                AccountActions actions = getOrCreateAccountActions(configIds.get(i));
+                if (!isHideAccount(i) && actions != null && !actions.isLogOut()) {
+                    actions.toggleHideAccountAction();
+                    if (targetCount <= getHideOrLogOutCount()) {
+                        break;
                     }
                 }
             }
@@ -457,7 +478,7 @@ public class FakePasscode {
             result.put(i, UserConfig.getInstance(i).isClientActivated() ? false : null);
         }
         for (FakePasscode fakePasscode: SharedConfig.fakePasscodes) {
-            for (AccountActions actions : fakePasscode.accountActions) {
+            for (AccountActions actions : fakePasscode.getFilteredAccountActions()) {
                 if (actions.isLogOutOrHideAccount()) {
                     result.put(actions.getAccountNum(), true);
                 }
