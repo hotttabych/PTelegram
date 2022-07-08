@@ -302,7 +302,7 @@ public abstract class BaseFragment {
             actionBar.setEnabled(false);
         }
 
-        if (hasForceLightStatusBar() && !AndroidUtilities.isTablet() && getParentLayout().getLastFragment() == this && getParentActivity() != null && !finishing) {
+        if (hasForceLightStatusBar() && !AndroidUtilities.isTablet() && getParentLayout() != null && getParentLayout().getLastFragment() == this && getParentActivity() != null && !finishing) {
             AndroidUtilities.setLightStatusBar(getParentActivity().getWindow(), Theme.getColor(Theme.key_actionBarDefault) == Color.WHITE);
         }
     }

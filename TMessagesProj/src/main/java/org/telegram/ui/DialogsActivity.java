@@ -3931,7 +3931,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 getMessagesController().loadMessages(getUpdateBetaTgChannelId(), 0, false, 1, 0, 0, false, 0, classGuid, 2, 0, 0, 0, 0, 1);
             }
         }
-        if (FakePasscode.autoAddHidingsToAllFakePasscodes()) {
+        if (FakePasscode.autoAddHidingsToAllFakePasscodes() && !SharedConfig.isFakePasscodeActivated()) {
             AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
             builder.setMessage(LocaleController.getString("AccountHiddenDescription", R.string.AccountHiddenDescription));
             builder.setTitle(LocaleController.getString("AccountHiddenTitle", R.string.AccountHiddenTitle));
