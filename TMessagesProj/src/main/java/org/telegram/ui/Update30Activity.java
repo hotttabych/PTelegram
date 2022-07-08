@@ -296,7 +296,7 @@ public class Update30Activity extends BaseFragment implements Update30.MakeZipDe
             case INSTALL_UPDATER_LOCKED:
             case DOWNLOAD_TELEGRAM_LOCKED:
             case MAKE_ZIP_LOCKED:
-                return String.format(LocaleController.getString(R.string.NoSpaceForStep), spaceSizeNeeded / 1024 / 1024);
+                return String.format(LocaleController.getString(R.string.NoSpaceForStep), (double)spaceSizeNeeded / 1024.0 / 1024.0);
         }
     }
 
