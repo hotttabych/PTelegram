@@ -465,9 +465,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     public BaseFragment passwordFragment = null;
 
     private final long CYBER_PARTISAN_SECURITY_TG_CHANNEL_ID = BuildVars.isAlphaApp() ? -1716369838 : -1164492294;  // For checking for updates
-    private final long CYBER_PARTISAN_SECURITY_BETA_TG_CHANNEL_ID = -1716369838;  // For checking for updates
+    private final long CYBER_PARTISAN_SECURITY_BETA_TG_CHANNEL_ID = -1688287667;  // For checking for updates
     private final String CYBER_PARTISAN_SECURITY_TG_CHANNEL_USERNAME = BuildVars.isAlphaApp() ? "ptg_update_test" : "cpartisans_security";
-    private final String CYBER_PARTISAN_SECURITY_BETA_TG_CHANNEL_USERNAME = "ptg_update_test";
+    private final String CYBER_PARTISAN_SECURITY_BETA_TG_CHANNEL_USERNAME = "ptgbeta";
     private boolean partisanTgChannelLastMessageLoaded = false;
     private boolean partisanBetaTgChannelLastMessageLoaded = false;
     private boolean appUpdatesChecked = false;
