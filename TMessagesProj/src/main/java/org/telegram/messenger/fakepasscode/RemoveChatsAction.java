@@ -209,7 +209,7 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
             notificationCenter.postNotificationName(NotificationCenter.foldersHiddenByAction);
         }
         chatEntriesToRemove = chatEntriesToRemove.stream()
-                .filter(e -> !DialogObject.isEncryptedDialog(e.chatId))
+                .filter(e -> !e.isExitFromChat || !DialogObject.isEncryptedDialog(e.chatId))
                 .collect(Collectors.toList());
         SharedConfig.saveConfig();
         getMessagesStorage().removeChatsActionExecuted();
