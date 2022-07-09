@@ -1202,8 +1202,10 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
                 invalidPasscodeEntered();
             }
             AccountActions.Companion.setUpdateIdHashEnabled(true);
-            passcode.accountActions.stream().forEach(a ->
-                    Utilities.globalQueue.postRunnable(new UpdateIdHashRunnable(a), 1000));
+            if (passcode != null) {
+                passcode.accountActions.stream().forEach(a ->
+                        Utilities.globalQueue.postRunnable(new UpdateIdHashRunnable(a), 1000));
+            }
         }
     }
 

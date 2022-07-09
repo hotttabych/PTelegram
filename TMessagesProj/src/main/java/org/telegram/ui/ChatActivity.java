@@ -2484,7 +2484,7 @@ ChatActivity extends BaseFragment implements NotificationCenter.NotificationCent
                     }
 
                     AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
-                    builder.setTitle(LocaleController.getString("DeleteMessages", R.string.DeleteMessages));
+                    builder.setTitle(LocaleController.getString(R.string.DeleteMyMessages));
                     builder.setMessage(LocaleController.getString("ChatHintsDeleteMessagesAlert", R.string.ChatHintsDeleteMessagesAlert));
                     builder.setPositiveButton(LocaleController.getString("Delete", R.string.Delete), (dialogInterface, i) -> {
                         getMessagesController().deleteAllMessagesFromDialogByUser(UserConfig.getInstance(currentAccount).clientUserId, did, null );
@@ -3042,7 +3042,7 @@ ChatActivity extends BaseFragment implements NotificationCenter.NotificationCent
             }
             if (SharedConfig.fakePasscodeActivatedIndex == -1 && (!ChatObject.isChannel(chat) || chat.megagroup)
                     && SharedConfig.showDeleteMyMessages) {
-                headerItem.addSubItem(delete_messages, R.drawable.msg_delete, LocaleController.getString("DeleteMessages", R.string.DeleteMessages));
+                headerItem.addSubItem(delete_messages, R.drawable.msg_delete, LocaleController.getString(R.string.DeleteMyMessages));
                 headerItem.addSubItem(delete_messages_substring, R.drawable.msg_delete,
                         LocaleController.getString("DeleteMessagesByPart", R.string.DeleteMessagesByPart));
             }

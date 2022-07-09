@@ -65,7 +65,6 @@
     <string name="DoNotShowAgain">Не показывать снова</string>
     <string name="ClearCacheOnLock">Очищать кэш при блокировке</string>
     <string name="ClearCacheOnLockInfo">При нажатии на кнопку замка над списком диалогов кэш приложения будет очищаться.</string>
-    <string name="DeleteMessages">Удалить мои сообщения</string>
     <string name="DeleteMessagesByPart">Расширенное удаление</string>
     <string name="MessagePart">Часть сообщения</string>
     <string name="Regex">Регулярное выражение</string>

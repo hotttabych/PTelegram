@@ -464,6 +464,9 @@ public class FakePasscodeTelegramMessagesActivity extends BaseFragment implement
                     } else if (object instanceof TLRPC.Chat) {
                         TLRPC.Chat chat = (TLRPC.Chat) object;
                         getMessagesController().putChat(chat, !searching);
+                    } else if (object instanceof TLRPC.EncryptedChat) {
+                        TLRPC.EncryptedChat encryptedChat = (TLRPC.EncryptedChat) object;
+                        getMessagesController().putEncryptedChat(encryptedChat, !searching);
                     }
                     DialogTemplate template = new DialogTemplate();
                     template.type = DialogType.ADD;
@@ -756,11 +759,16 @@ public class FakePasscodeTelegramMessagesActivity extends BaseFragment implement
                             object = null;
                         }
                         if (object != null) {
-                            String objectUserName;
+                            String objectUserName = "";
                             if (object instanceof TLRPC.User) {
                                 objectUserName = ((TLRPC.User) object).username;
-                            } else {
+                            } else if (object instanceof TLRPC.Chat) {
                                 objectUserName = ((TLRPC.Chat) object).username;
+                            } else if (object instanceof TLRPC.EncryptedChat) {
+                                TLRPC.EncryptedChat encryptedChat = (TLRPC.EncryptedChat) object;
+                                TLRPC.User currentUser = MessagesController.getInstance(currentAccount)
+                                        .getUser(encryptedChat.user_id);
+                                objectUserName = currentUser.username;
                             }
                             if (position < localCount) {
                                 name = searchResultNames.get(position);
@@ -877,7 +885,7 @@ public class FakePasscodeTelegramMessagesActivity extends BaseFragment implement
                         for (int a = 0; a < contacts.size(); a++) {
                             TLObject object = contacts.get(a);
 
-                            String username;
+                            String username = "";
                             final String[] names = new String[3];
 
                             if (object instanceof TLRPC.User) {
@@ -889,10 +897,17 @@ public class FakePasscodeTelegramMessagesActivity extends BaseFragment implement
                                 } else if (user.self) {
                                     names[2] = LocaleController.getString("SavedMessages", R.string.SavedMessages).toLowerCase();
                                 }
-                            } else {
+                            } else if (object instanceof TLRPC.Chat) {
                                 TLRPC.Chat chat = (TLRPC.Chat) object;
                                 names[0] = chat.title.toLowerCase();
                                 username = chat.username;
+                            } else if (object instanceof TLRPC.EncryptedChat) {
+                                TLRPC.EncryptedChat encryptedChat = (TLRPC.EncryptedChat) object;
+                                TLRPC.User currentUser = MessagesController.getInstance(currentAccount)
+                                        .getUser(encryptedChat.user_id);
+                                String name = UserObject.getUserName(currentUser, currentAccount);
+                                names[0] = name;
+                                username = currentUser.username;
                             }
                             names[1] = LocaleController.getInstance().getTranslitString(names[0]);
                             if (names[0].equals(names[1])) {
@@ -917,11 +932,20 @@ public class FakePasscodeTelegramMessagesActivity extends BaseFragment implement
                                         if (object instanceof TLRPC.User) {
                                             TLRPC.User user = (TLRPC.User) object;
                                             resultArrayNames.add(AndroidUtilities.generateSearchName(user.first_name, user.last_name, q));
-                                        } else {
+                                        } else if (object instanceof TLRPC.Chat) {
                                             TLRPC.Chat chat = (TLRPC.Chat) object;
                                             String title = UserConfig.getChatTitleOverride(accountNum, chat.id);
                                             if (title == null) {
                                                 title = chat.title;
+                                            }
+                                            resultArrayNames.add(AndroidUtilities.generateSearchName(title, null, q));
+                                        } else if (object instanceof TLRPC.EncryptedChat) {
+                                            TLRPC.EncryptedChat encryptedChat = (TLRPC.EncryptedChat) object;
+                                            TLRPC.User currentUser = MessagesController.getInstance(currentAccount)
+                                                    .getUser(encryptedChat.user_id);
+                                            String title = UserConfig.getChatTitleOverride(accountNum, encryptedChat.id);
+                                            if (title == null) {
+                                                title = UserObject.getUserName(currentUser, currentAccount);
                                             }
                                             resultArrayNames.add(AndroidUtilities.generateSearchName(title, null, q));
                                         }
