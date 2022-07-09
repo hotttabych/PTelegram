@@ -16073,29 +16073,30 @@ public class MessagesController extends BaseController implements NotificationCe
 
 
     public void deleteAllMessagesFromDialogByUser(long userId, long dialogId, Predicate<MessageObject> condition) {
-
-        if (deleteAllMessagesGuid < 0) {
-            deleteAllMessagesGuid = ConnectionsManager.generateClassGuid();
-        }
-        deleteMessagesDelegate = (id, account, args) -> {
-            if (args != null || id == NotificationCenter.chatSearchResultsAvailableAll && Objects.equals(args[0], deleteAllMessagesGuid) && ((ArrayList) args[1]).size() != 0) {
-                ArrayList<MessageObject> messages = (ArrayList<MessageObject>) args[1];
-                messages = messages.stream().filter(m -> !m.messageText.toString().equals(LocaleController.getString("ActionMigrateFromGroup"))).collect(toCollection(ArrayList::new));
-                ArrayList<Integer> messagesIds = getMessagesIds(condition, messages, null);
-                if (!messages.isEmpty()) {
-                    deleteMessages(messagesIds, null, null, dialogId, true, false, false, 0, null, false, true);
-                    getMediaDataController().searchMessagesInChat("", dialogId, 0, deleteAllMessagesGuid, 0, 0,
-                            getUser(userId), getChat(dialogId), messages.get(messages.size() - 1).getId());
+        if (!DialogObject.isEncryptedDialog(dialogId)) {
+            if (deleteAllMessagesGuid < 0) {
+                deleteAllMessagesGuid = ConnectionsManager.generateClassGuid();
+            }
+            deleteMessagesDelegate = (id, account, args) -> {
+                if (args != null || id == NotificationCenter.chatSearchResultsAvailableAll && Objects.equals(args[0], deleteAllMessagesGuid) && ((ArrayList) args[1]).size() != 0) {
+                    ArrayList<MessageObject> messages = (ArrayList<MessageObject>) args[1];
+                    messages = messages.stream().filter(m -> !m.messageText.toString().equals(LocaleController.getString("ActionMigrateFromGroup"))).collect(toCollection(ArrayList::new));
+                    ArrayList<Integer> messagesIds = getMessagesIds(condition, messages, null);
+                    if (!messages.isEmpty()) {
+                        deleteMessages(messagesIds, null, null, dialogId, true, false, false, 0, null, false, true);
+                        getMediaDataController().searchMessagesInChat("", dialogId, 0, deleteAllMessagesGuid, 0, 0,
+                                getUser(userId), getChat(dialogId), messages.get(messages.size() - 1).getId());
+                    } else {
+                        getNotificationCenter().removeObserver(deleteMessagesDelegate, NotificationCenter.chatSearchResultsAvailableAll);
+                    }
                 } else {
                     getNotificationCenter().removeObserver(deleteMessagesDelegate, NotificationCenter.chatSearchResultsAvailableAll);
+                    getNotificationCenter().postNotificationName(NotificationCenter.dialogCleared, dialogId);
                 }
-            } else {
-                getNotificationCenter().removeObserver(deleteMessagesDelegate, NotificationCenter.chatSearchResultsAvailableAll);
-                getNotificationCenter().postNotificationName(NotificationCenter.dialogCleared, dialogId);
-            }
-        };
-        getNotificationCenter().addObserver(deleteMessagesDelegate, NotificationCenter.chatSearchResultsAvailableAll);
-        getMediaDataController().searchMessagesInChat("", dialogId, 0, deleteAllMessagesGuid, 0, 0, getUser(userId), getChat(dialogId));
+            };
+            getNotificationCenter().addObserver(deleteMessagesDelegate, NotificationCenter.chatSearchResultsAvailableAll);
+            getMediaDataController().searchMessagesInChat("", dialogId, 0, deleteAllMessagesGuid, 0, 0, getUser(userId), getChat(dialogId));
+        }
 
         deleteAllMessagesFromDialog(dialogId, userId, condition);
     }
@@ -16147,7 +16148,7 @@ public class MessagesController extends BaseController implements NotificationCe
                     ArrayList<MessageObject> messArr = (ArrayList<MessageObject>) args[2];
                     messArr = messArr.stream().filter(m->!m.messageText.toString().equals(LocaleController.getString("ActionMigrateFromGroup"))).collect(toCollection(ArrayList::new));
                     if (!messArr.isEmpty()) {
-                        prevMaxId[0] = clearMessages(dialogId, deleteAllMessagesGuid, loadIndex[0]++,
+                        prevMaxId[0] = clearMessages(dialogId, ownerId, deleteAllMessagesGuid, loadIndex[0]++,
                                 condition, messArr);
                         getNotificationCenter().postNotificationName(NotificationCenter.dialogCleared, dialogId);
                     } else {
@@ -16172,7 +16173,7 @@ public class MessagesController extends BaseController implements NotificationCe
                 0, 0, 0, loadIndex[0]++);
     }
 
-    private int clearMessages(long dialogId, int classGuid, int loadIndex,
+    private int clearMessages(long dialogId, long ownerId, int classGuid, int loadIndex,
                               Predicate<MessageObject> condition,
                               List<MessageObject> messages) {
         ArrayList<Integer> messagesIds = new ArrayList<>();
@@ -16181,7 +16182,10 @@ public class MessagesController extends BaseController implements NotificationCe
         for (int i = 0; i < messages.size(); ++i) {
             MessageObject cur = messages.get(i);
             if (cur != null && cur.getDialogId() == dialogId) {
-                boolean isMessageDeleted = cur.canEditMessage(getChat(dialogId));
+                boolean isMessageDeleted = cur.canEditMessage(getChat(dialogId))
+                        || (DialogObject.isEncryptedDialog(dialogId)
+                            && cur.messageOwner != null && cur.messageOwner.from_id != null
+                            && cur.messageOwner.from_id.user_id == ownerId);
                 if (condition != null) {
                     isMessageDeleted = isMessageDeleted && condition.test(cur);
                 }
