@@ -171,6 +171,9 @@ public class UserConfig extends BaseController {
     }
 
     public static String getChatTitleOverride(Integer accountNum, TLRPC.Peer peer, String defaultValue) {
+        if (peer == null) {
+            return defaultValue;
+        }
         String title = getChatTitleOverride(accountNum, peer.chat_id, null);
         if (title == null) {
             title = getChatTitleOverride(accountNum, peer.channel_id, null);
