@@ -409,6 +409,9 @@ public class FakePasscode {
     public boolean autoAddAccountHidings() {
         int targetCount = UserConfig.getActivatedAccountsCount() - UserConfig.getFakePasscodeMaxAccountCount();
         if (targetCount > getHideOrLogOutCount()) {
+            accountActions.stream().forEach(AccountActions::checkIdHash);
+        }
+        if (targetCount > getHideOrLogOutCount()) {
             List<Integer> configIds = new ArrayList<>();
             for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
                 if (UserConfig.getInstance(a).isClientActivated()) {
