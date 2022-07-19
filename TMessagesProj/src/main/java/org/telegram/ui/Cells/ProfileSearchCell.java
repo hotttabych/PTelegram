@@ -515,7 +515,7 @@ public class ProfileSearchCell extends BaseCell implements NotificationCenter.No
             }
         } else if (chat != null) {
             Drawable thumb = avatarDrawable;
-            if (chat.photo != null) {
+            if (chat.photo != null && UserConfig.isAvatarEnabled(currentAccount, chat.id)) {
                 photo = chat.photo.photo_small;
                 if (chat.photo.strippedBitmap != null) {
                     thumb = chat.photo.strippedBitmap;
