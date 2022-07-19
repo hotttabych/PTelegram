@@ -195,6 +195,7 @@ public class Utils {
             }
         } else {
             messagesController.deleteDialog(id, 0, revoke);
+            MediaDataController.getInstance(accountNum).removePeer(id);
         }
     }
 
