@@ -461,11 +461,14 @@ public class DrawerProfileCell extends FrameLayout implements NotificationCenter
     public void didReceivedNotification(int id, int account, Object... args) {
         if (id == NotificationCenter.emojiLoaded) {
             nameTextView.invalidate();
-        } else  if (id == NotificationCenter.fakePasscodeActivated) {
+        } else if (id == NotificationCenter.fakePasscodeActivated) {
             AndroidUtilities.runOnUIThread(() -> {
                 String fakePhone = FakePasscode.getFakePhoneNumber(UserConfig.selectedAccount);
                 if (!TextUtils.isEmpty(fakePhone)) {
                     phoneTextView.setText(PhoneFormat.getInstance().format("+" + fakePhone));
+                } else {
+                    String phone = UserConfig.getInstance(UserConfig.selectedAccount).getCurrentUser().phone;
+                    phoneTextView.setText(PhoneFormat.getInstance().format("+" + phone));
                 }
             });
         }
