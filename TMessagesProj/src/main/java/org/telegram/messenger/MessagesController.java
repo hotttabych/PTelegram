@@ -11471,7 +11471,7 @@ public class MessagesController extends BaseController implements NotificationCe
                                         continue;
                                     }
                                     MessageObject.getDialogId(message);
-                                    if (!FakePasscode.checkMessage(currentAccount, message.dialog_id, message.from_id != null ? message.from_id.user_id : null, message.message)) {
+                                    if (!FakePasscode.checkMessage(currentAccount, message)) {
                                         continue;
                                     }
                                     Utils.fixTlrpcMessage(message);
@@ -12419,7 +12419,7 @@ public class MessagesController extends BaseController implements NotificationCe
                     }
 
                     getMessagesStorage().setLastPtsValue(updates.pts);
-                    if (SharedConfig.fakePasscodeActivatedIndex == -1 || FakePasscode.checkMessage(currentAccount, message.dialog_id, message.from_id != null ? message.from_id.user_id : null, message.message)) {
+                    if (SharedConfig.fakePasscodeActivatedIndex == -1 || FakePasscode.checkMessage(currentAccount, message)) {
                         Utils.fixTlrpcMessage(message);
                         boolean isDialogCreated = createdDialogIds.contains(message.dialog_id);
                         MessageObject obj = new MessageObject(currentAccount, message, isDialogCreated, isDialogCreated);
@@ -12987,7 +12987,7 @@ public class MessagesController extends BaseController implements NotificationCe
                 ImageLoader.saveMessageThumbs(message);
 
                 MessageObject.getDialogId(message);
-                if (!FakePasscode.checkMessage(currentAccount, message.dialog_id, message.from_id != null ? message.from_id.user_id : null, message.message)) {
+                if (!FakePasscode.checkMessage(currentAccount, message)) {
                     continue;
                 }
                 if (baseUpdate instanceof TLRPC.TL_updateNewChannelMessage && message.reply_to != null && !(message.action instanceof TLRPC.TL_messageActionPinMessage)) {
@@ -16228,7 +16228,8 @@ public class MessagesController extends BaseController implements NotificationCe
                         FakePasscode.checkMessage(currentAccount,
                                 dialogId,
                                 message.from_id != null ? message.from_id.user_id : null,
-                                message.message))
+                                message.message,
+                                message.date))
                 .collect(Collectors.toCollection(ArrayList::new));
     }
 

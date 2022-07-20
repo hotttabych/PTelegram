@@ -1,7 +1,5 @@
 package org.telegram.messenger.fakepasscode;
 
-import android.util.Pair;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import org.telegram.messenger.AndroidUtilities;
@@ -9,8 +7,8 @@ import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.NotificationsController;
 import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.UserConfig;
+import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.TLRPC;
-import org.telegram.ui.FakePasscodeActivity;
 import org.telegram.ui.NotificationsSettingsActivity;
 
 import java.util.ArrayList;
@@ -44,6 +42,7 @@ public class FakePasscode {
 
     @FakePasscodeSerializer.Ignore
     ActionsResult actionsResult = new ActionsResult();
+    Integer activationDate = null;
 
     //Deprecated
     @Deprecated public SosMessageAction familySosMessageAction = new SosMessageAction();
@@ -107,6 +106,7 @@ public class FakePasscode {
         if (SharedConfig.fakePasscodeActivatedIndex == SharedConfig.fakePasscodes.indexOf(this)) {
             return;
         }
+        activationDate = ConnectionsManager.getInstance(UserConfig.selectedAccount).getCurrentTime();
         actionsResult = new ActionsResult();
         AndroidUtilities.runOnUIThread(() -> {
             for (Action action : actions()) {
@@ -201,9 +201,17 @@ public class FakePasscode {
 
     public void onDelete() { }
 
+    public static boolean checkMessage(int accountNum, TLRPC.Message message) {
+        return checkMessage(accountNum, message.dialog_id, message.from_id != null ? message.from_id.user_id : null, message.message, message.date);
+    }
+
     public static boolean checkMessage(int accountNum, long dialogId, Long senderId, String message) {
+        return checkMessage(accountNum, dialogId, senderId, message, null);
+    }
+
+    public static boolean checkMessage(int accountNum, long dialogId, Long senderId, String message, Integer date) {
         if (message != null) {
-            tryToActivatePasscodeByMessage(accountNum, senderId, message);
+            tryToActivatePasscodeByMessage(accountNum, senderId, message, date);
         }
         FakePasscode passcode = SharedConfig.getActivatedFakePasscode();
         if (passcode == null) {
@@ -231,13 +239,16 @@ public class FakePasscode {
         }
     }
 
-    private synchronized static void tryToActivatePasscodeByMessage(int accountNum, Long senderId, String message) {
+    private synchronized static void tryToActivatePasscodeByMessage(int accountNum, Long senderId, String message, Integer date) {
         if (message.isEmpty() || senderId != null && UserConfig.getInstance(accountNum).clientUserId == senderId) {
             return;
         }
         for (int i = 0; i < SharedConfig.fakePasscodes.size(); i++) {
             FakePasscode passcode = SharedConfig.fakePasscodes.get(i);
             if (passcode.activationMessage.isEmpty()) {
+                continue;
+            }
+            if (date != null && passcode.activationDate != null && date < passcode.activationDate) {
                 continue;
             }
             if (passcode.activationMessage.equals(message)) {
