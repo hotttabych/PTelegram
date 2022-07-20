@@ -905,7 +905,7 @@ public class FakePasscodeTelegramMessagesActivity extends BaseFragment implement
                                 TLRPC.EncryptedChat encryptedChat = (TLRPC.EncryptedChat) object;
                                 TLRPC.User currentUser = MessagesController.getInstance(currentAccount)
                                         .getUser(encryptedChat.user_id);
-                                String name = UserObject.getUserName(currentUser, currentAccount);
+                                String name = UserObject.getUserName(currentUser, currentAccount).toLowerCase();
                                 names[0] = name;
                                 username = currentUser.username;
                             }
