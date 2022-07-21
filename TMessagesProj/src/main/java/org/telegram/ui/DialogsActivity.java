@@ -7629,6 +7629,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 if (actionBar != null && actionBar.isSearchFieldVisible()) {
                     actionBar.closeSearchField();
                 }
+            } else {
+                getMessagesController().sortDialogs(null); // restore archive
+                getNotificationCenter().postNotificationName(NotificationCenter.dialogsNeedReload);
             }
         } else if (id == NotificationCenter.searchCleared) {
             if (searchViewPager != null && searchViewPager.dialogsSearchAdapter != null) {
