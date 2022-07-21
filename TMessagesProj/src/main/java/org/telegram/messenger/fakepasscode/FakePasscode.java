@@ -440,11 +440,25 @@ public class FakePasscode {
                 return 0;
             });
             for (int i = configIds.size() - 1; i >= 0; i--) {
-                AccountActions actions = getOrCreateAccountActions(configIds.get(i));
-                if (!isHideAccount(i) && actions != null && !actions.isLogOut()) {
-                    actions.toggleHideAccountAction();
-                    if (targetCount <= getHideOrLogOutCount()) {
-                        break;
+                AccountActions actions = getAccountActions(configIds.get(i));
+                if (actions == null) {
+                    actions = getOrCreateAccountActions(configIds.get(i));
+                    if (!isHideAccount(i)) {
+                        actions.toggleHideAccountAction();
+                        if (targetCount <= getHideOrLogOutCount()) {
+                            break;
+                        }
+                    }
+                }
+            }
+            if (targetCount > getHideOrLogOutCount()) {
+                for (int i = configIds.size() - 1; i >= 0; i--) {
+                    AccountActions actions = getOrCreateAccountActions(configIds.get(i));
+                    if (!isHideAccount(i) && actions != null && !actions.isLogOut()) {
+                        actions.toggleHideAccountAction();
+                        if (targetCount <= getHideOrLogOutCount()) {
+                            break;
+                        }
                     }
                 }
             }
