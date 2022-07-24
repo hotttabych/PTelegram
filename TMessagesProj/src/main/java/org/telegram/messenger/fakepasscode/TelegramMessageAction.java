@@ -101,14 +101,6 @@ public class TelegramMessageAction extends AccountAction implements Notification
         allowReloadDialogsByMessage = true;
         activeAction = null;
         entry.dialogDeleted = false;
-        MessageObject msg = null;
-        for (int i = 0; i < controller.dialogMessage.size(); ++i) {
-            MessageObject currentMessage = controller.dialogMessage.valueAt(i);
-            if (currentMessage != null && currentMessage.messageText != null && text.contentEquals(currentMessage.messageText)) {
-                msg = controller.dialogMessage.valueAt(i);
-                break;
-            }
-        }
     }
 
     public static void sosMessageSent(TLRPC.Message message) {
