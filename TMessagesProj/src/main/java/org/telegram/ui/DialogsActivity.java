@@ -7632,6 +7632,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             } else {
                 getMessagesController().sortDialogs(null); // restore archive
                 getNotificationCenter().postNotificationName(NotificationCenter.dialogsNeedReload);
+                updateFilterTabs(true, false);
             }
         } else if (id == NotificationCenter.searchCleared) {
             if (searchViewPager != null && searchViewPager.dialogsSearchAdapter != null) {
