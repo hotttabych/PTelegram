@@ -87,8 +87,6 @@ public class TelegramMessageAction extends AccountAction implements Notification
     }
 
     private void sendMessage(Entry entry) {
-        FakePasscodeMessages.FakePasscodeMessage result = null;
-        MessagesController controller = getMessagesController();
         String geolocation = Utils.getLastLocationString();
         String text = entry.text;
         if (entry.addGeolocation) {
