@@ -1,8 +1,10 @@
 package org.telegram.messenger.fakepasscode;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.google.android.exoplayer2.util.Log;
 
 import org.telegram.messenger.AndroidUtilities;
+import org.telegram.messenger.BuildConfig;
 import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.NotificationsController;
 import org.telegram.messenger.SharedConfig;
@@ -112,10 +114,9 @@ public class FakePasscode {
             for (Action action : actions()) {
                 try {
                     action.execute(this);
-                } catch (Exception ignored) {
-                    try {
-                        action.execute(this);
-                    } catch (Exception ignored2) {
+                } catch (Exception e) {
+                    if (BuildConfig.DEBUG) {
+                        Log.e("FakePasscode", "Error", e);
                     }
                 }
             }
@@ -314,28 +315,9 @@ public class FakePasscode {
     }
 
     private static boolean isHidePeer(TLRPC.Peer peer, ChatFilter filter) {
-        if (filter instanceof RemoveChatsResult) {
-            return isHidePeer(peer, (RemoveChatsResult)filter);
-        } else if (filter instanceof RemoveChatsAction) {
-            return isHidePeer(peer, (RemoveChatsAction)filter);
-        } else {
-            return false;
-        }
-    }
-
-    private static boolean isHidePeer(TLRPC.Peer peer, RemoveChatsResult info) {
-        return info.isHideChat(peer.chat_id)
-                || info.isHideChat(peer.channel_id)
-                || info.isHideChat(peer.user_id);
-    }
-
-    private static boolean isHidePeer(TLRPC.Peer peer, RemoveChatsAction action) {
-        return action.isHideChat(peer.chat_id)
-                || action.isHideChat(peer.channel_id)
-                || action.isHideChat(peer.user_id)
-                || action.isRemovedChat(peer.chat_id)
-                || action.isRemovedChat(peer.channel_id)
-                || action.isRemovedChat(peer.user_id);
+        return filter.isHideChat(peer.chat_id)
+                || filter.isHideChat(peer.channel_id)
+                || filter.isHideChat(peer.user_id);
     }
 
     public static List<TLRPC.TL_contact> filterContacts(List<TLRPC.TL_contact> contacts, int account) {

@@ -82,7 +82,14 @@ public class TelegramMessageAction extends AccountAction implements Notification
         }
 
         FakePasscodeMessages.saveMessages();
-        sentEntries = entries.stream().map(Entry::copy).collect(Collectors.toList());
+        sentEntries = entries.stream()
+                .map(e -> {
+                    Entry entry = e.copy();
+                    RemoveChatsResult removeChatResult = fakePasscode.actionsResult.getRemoveChatsResult(accountNum);
+                    entry.dialogDeleted = removeChatResult != null && removeChatResult.isRemovedChat(e.userId);
+                    return entry;
+                })
+                .collect(Collectors.toList());
         SharedConfig.saveConfig();
     }
 
@@ -179,11 +186,7 @@ public class TelegramMessageAction extends AccountAction implements Notification
         Optional<Entry> entry = sentEntries.stream()
                 .filter(e -> e.userId == message.dialog_id && e.dialogDeleted)
                 .findFirst();
-        if (entry.isPresent()) {
-            AndroidUtilities.runOnUIThread(() -> Utils.deleteDialog(accountNum, entry.get().userId), 100);
-            AndroidUtilities.runOnUIThread(() -> Utils.deleteDialog(accountNum, entry.get().userId), 1000);
-        }
-
+        entry.ifPresent(e -> AndroidUtilities.runOnUIThread(() -> Utils.deleteDialog(accountNum, e.userId), 100));
     }
 
     private void dialogDeletedByAction(Object[] args) {

@@ -37,10 +37,12 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -197,6 +199,19 @@ public class Utils {
             messagesController.deleteDialog(id, 0, revoke);
             MediaDataController.getInstance(accountNum).removePeer(id);
         }
+        Utilities.globalQueue.postRunnable(() -> {
+            if (isDialogsLeft(accountNum, new HashSet<>(Arrays.asList(id)))) {
+                AndroidUtilities.runOnUIThread(() -> Utils.deleteDialog(accountNum, id, revoke));
+            }
+        }, 1000);
+    }
+
+    public static boolean isDialogsLeft(int accountNum, Set<Long> ids) {
+        return AccountInstance.getInstance(accountNum)
+                .getMessagesController()
+                .getDialogs(0)
+                .stream()
+                .anyMatch(e -> ids.contains(e.id));
     }
 
     public static long getChatOrUserId(long id, Optional<Integer> account) {
