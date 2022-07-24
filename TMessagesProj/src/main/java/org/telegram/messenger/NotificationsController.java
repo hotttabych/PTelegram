@@ -832,7 +832,7 @@ public class NotificationsController extends BaseController {
                         messageObject.messageOwner.action instanceof TLRPC.TL_messageActionSetMessagesTTL ||
                         messageObject.messageOwner.silent && (messageObject.messageOwner.action instanceof TLRPC.TL_messageActionContactSignUp || messageObject.messageOwner.action instanceof TLRPC.TL_messageActionUserJoined))
                                 || !FakePasscode.checkMessage(currentAccount, messageObject.messageOwner)
-                                || FakePasscode.needHideMessage(currentAccount, messageObject.getDialogId())
+                                || FakePasscode.isHideMessage(currentAccount, messageObject.getDialogId(), messageObject.getId())
                 ) {
                     continue;
                 }

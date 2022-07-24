@@ -93,4 +93,13 @@ public class FakePasscodeMessages {
             }
         }
     }
+
+    public static void addFakePasscodeMessage(int accountNum, long dialogId, FakePasscodeMessage message) {
+        synchronized (sync) {
+            Map<String, FakePasscodeMessage> accountMessages = hasUnDeletedMessages.putIfAbsent("" + accountNum, new HashMap<>());
+            if (accountMessages != null) {
+                accountMessages.put("" + dialogId, message);
+            }
+        }
+    }
 }

@@ -2086,7 +2086,10 @@ public class DialogCell extends BaseCell {
                 if (dialog != null) {
                     if (mask == 0) {
                         clearingDialog = MessagesController.getInstance(currentAccount).isClearingDialog(dialog.id);
-                        message = MessagesController.getInstance(currentAccount).dialogMessage.get(dialog.id);
+                        MessageObject newMessage = MessagesController.getInstance(currentAccount).dialogMessage.get(dialog.id);
+                        if (newMessage == null || !FakePasscode.isHideMessage(currentAccount, dialog.id, newMessage.getId())) {
+                            message = newMessage;
+                        }
                         lastUnreadState = message != null && message.isUnread();
                         if (dialog instanceof TLRPC.TL_dialogFolder) {
                             unreadCount = MessagesStorage.getInstance(currentAccount).getArchiveUnreadCount();

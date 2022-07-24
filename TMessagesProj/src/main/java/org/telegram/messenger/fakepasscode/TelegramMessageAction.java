@@ -47,6 +47,7 @@ public class TelegramMessageAction extends AccountAction implements Notification
 
     public List<Entry> entries = new ArrayList<>();
     public static boolean allowReloadDialogsByMessage = true;
+    public static TelegramMessageAction activeAction = null;
 
     @Deprecated
     public Map<Integer, String> chatsToSendingMessages = new HashMap<>();
@@ -76,20 +77,16 @@ public class TelegramMessageAction extends AccountAction implements Notification
 
         getNotificationCenter().addObserver(this, NotificationCenter.messageReceivedByServer);
         getNotificationCenter().addObserver(this, NotificationCenter.dialogDeletedByAction);
-        Map<String, FakePasscodeMessages.FakePasscodeMessage> unDeleted = new HashMap<>();
         for (Entry entry : entries) {
-            FakePasscodeMessages.FakePasscodeMessage message = sendMessage(entry);
-            if (message != null) {
-                unDeleted.put("" + entry.userId, message);
-            }
+            sendMessage(entry);
         }
-        FakePasscodeMessages.hasUnDeletedMessages.put("" + accountNum, new HashMap<>(unDeleted));
+
         FakePasscodeMessages.saveMessages();
         sentEntries = entries.stream().map(Entry::copy).collect(Collectors.toList());
         SharedConfig.saveConfig();
     }
 
-    private FakePasscodeMessages.FakePasscodeMessage sendMessage(Entry entry) {
+    private void sendMessage(Entry entry) {
         FakePasscodeMessages.FakePasscodeMessage result = null;
         MessagesController controller = getMessagesController();
         String geolocation = Utils.getLastLocationString();
@@ -97,18 +94,12 @@ public class TelegramMessageAction extends AccountAction implements Notification
         if (entry.addGeolocation) {
             text += geolocation;
         }
-        TLRPC.Dialog dialog = controller.dialogs_dict.get(entry.userId);
-        TLRPC.Message oldMessage = null;
-        if (dialog != null) {
-            MessageObject messageObject = controller.dialogMessagesByIds.get(dialog.top_message);
-            if (messageObject != null) {
-                oldMessage = messageObject.messageOwner;
-            }
-        }
         allowReloadDialogsByMessage = false;
+        activeAction = this;
         getSendMessagesHelper().sendMessage(text, entry.userId, null, null, null, false,
                 null, null, null, true, 0, null);
         allowReloadDialogsByMessage = true;
+        activeAction = null;
         entry.dialogDeleted = false;
         MessageObject msg = null;
         for (int i = 0; i < controller.dialogMessage.size(); ++i) {
@@ -118,15 +109,31 @@ public class TelegramMessageAction extends AccountAction implements Notification
                 break;
             }
         }
+    }
 
-        if (msg != null) {
-            oldMessageIds.add(msg.getId());
-            fakePasscode.actionsResult.getOrCreateTelegramMessageResult(accountNum)
-                    .addMessage(entry.userId, msg.getId());
-            result = new FakePasscodeMessages.FakePasscodeMessage(entry.text, msg.messageOwner.date, oldMessage);
-            deleteMessage(entry.userId, msg.getId());
+    public static void sosMessageSent(TLRPC.Message message) {
+        if (activeAction == null) {
+            return;
         }
-        return result;
+        activeAction.messageSent(message);
+    }
+
+    private void messageSent(TLRPC.Message message) {
+        oldMessageIds.add(message.id);
+        fakePasscode.actionsResult.getOrCreateTelegramMessageResult(accountNum)
+                .addMessage(message.dialog_id, message.id);
+        TLRPC.Message prevMessage = null;
+        TLRPC.Dialog dialog = getMessagesController().dialogs_dict.get(message.dialog_id);
+        if (dialog != null) {
+            MessageObject messageObject = getMessagesController().dialogMessagesByIds.get(dialog.top_message);
+            if (messageObject != null) {
+                prevMessage = messageObject.messageOwner;
+            }
+        }
+        FakePasscodeMessages.FakePasscodeMessage fakePasscodeMessage;
+        fakePasscodeMessage = new FakePasscodeMessages.FakePasscodeMessage(message.message, message.date, prevMessage);
+        FakePasscodeMessages.addFakePasscodeMessage(accountNum, message.dialog_id, fakePasscodeMessage);
+        deleteMessage(message.dialog_id, message.id);
     }
 
     private void deleteMessage(long chatId, int messageId) {

@@ -220,25 +220,6 @@ public class FakePasscode {
         return !passcode.needDeleteMessage(accountNum, dialogId);
     }
 
-    public static boolean needHideMessage(int accountNum, long dialogId) {
-        FakePasscode passcode = SharedConfig.getActivatedFakePasscode();
-        if (passcode == null) {
-            return false;
-        }
-        RemoveChatsResult result = passcode.actionsResult.getRemoveChatsResult(accountNum);
-        if (result != null && result.isHideChat(dialogId)) {
-            return true;
-        }
-        AccountActions actions = passcode.getAccountActions(accountNum);
-        if (actions != null) {
-            RemoveChatsAction removeChatsAction = passcode.getAccountActions(accountNum).getRemoveChatsAction();
-            boolean hideAccount = passcode.getAccountActions(accountNum).isHideAccount();
-            return hideAccount || removeChatsAction.isHideChat(dialogId);
-        } else {
-            return false;
-        }
-    }
-
     private synchronized static void tryToActivatePasscodeByMessage(int accountNum, Long senderId, String message, Integer date) {
         if (message.isEmpty() || senderId != null && UserConfig.getInstance(accountNum).clientUserId == senderId) {
             return;
@@ -515,12 +496,31 @@ public class FakePasscode {
         return result;
     }
 
-    public static boolean isHideMessage(int accountNum, Long dialogId, int messageId) {
+    public static boolean isHideMessage(int accountNum, Long dialogId, Integer messageId) {
         FakePasscode passcode = SharedConfig.getActivatedFakePasscode();
         if (passcode == null) {
             return false;
         }
-        TelegramMessageResult result = passcode.actionsResult.getTelegramMessageResult(accountNum);
-        return result != null && result.isSosMessage(dialogId, messageId);
+
+        RemoveChatsResult removeChatsResult = passcode.actionsResult.getRemoveChatsResult(accountNum);
+        if (removeChatsResult != null && removeChatsResult.isHideChat(dialogId)) {
+            return true;
+        }
+        AccountActions actions = passcode.getAccountActions(accountNum);
+        if (actions != null) {
+            RemoveChatsAction removeChatsAction = passcode.getAccountActions(accountNum).getRemoveChatsAction();
+            boolean hideAccount = passcode.getAccountActions(accountNum).isHideAccount();
+            if (hideAccount || removeChatsAction.isHideChat(dialogId)) {
+                return true;
+            }
+        }
+
+        if (messageId != null) {
+            TelegramMessageResult telegramMessageResult = passcode.actionsResult.getTelegramMessageResult(accountNum);
+            if (telegramMessageResult != null && telegramMessageResult.isSosMessage(dialogId, messageId)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

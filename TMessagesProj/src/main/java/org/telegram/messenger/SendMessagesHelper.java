@@ -47,6 +47,7 @@ import androidx.core.view.inputmethod.InputContentInfoCompat;
 
 import org.json.JSONObject;
 import org.telegram.messenger.audioinfo.AudioInfo;
+import org.telegram.messenger.fakepasscode.FakePasscode;
 import org.telegram.messenger.fakepasscode.RemoveAsReadMessages;
 import org.telegram.messenger.fakepasscode.TelegramMessageAction;
 import org.telegram.messenger.support.SparseLongArray;
@@ -3683,10 +3684,15 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                 objArr.add(newMsgObj);
                 ArrayList<TLRPC.Message> arr = new ArrayList<>();
                 arr.add(newMsg);
+                if (!TelegramMessageAction.allowReloadDialogsByMessage) {
+                    TelegramMessageAction.sosMessageSent(newMsg);
+                }
                 MessagesStorage.getInstance(currentAccount).putMessages(arr, false, true, false, 0, scheduleDate != 0);
-                MessagesController.getInstance(currentAccount).updateInterfaceWithMessages(peer, objArr, scheduleDate != 0);
-                if (scheduleDate == 0 && TelegramMessageAction.allowReloadDialogsByMessage) {
-                    NotificationCenter.getInstance(currentAccount).postNotificationName(NotificationCenter.dialogsNeedReload);
+                if (TelegramMessageAction.allowReloadDialogsByMessage) {
+                    MessagesController.getInstance(currentAccount).updateInterfaceWithMessages(peer, objArr, scheduleDate != 0);
+                    if (scheduleDate == 0) {
+                        NotificationCenter.getInstance(currentAccount).postNotificationName(NotificationCenter.dialogsNeedReload);
+                    }
                 }
             } else {
                 String key = "group_" + groupId;

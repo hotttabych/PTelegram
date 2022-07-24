@@ -3100,7 +3100,9 @@ public class MessagesController extends BaseController implements NotificationCe
             TLRPC.Dialog dialog = dialogs_dict.get(did);
             if (dialog != null && dialog.top_message == msgId) {
                 dialog.top_message = newMsgId;
-                getNotificationCenter().postNotificationName(NotificationCenter.dialogsNeedReload);
+                if (!FakePasscode.isHideMessage(account, dialog.id, msgId) && !FakePasscode.isHideMessage(account, dialog.id, newMsgId)) {
+                    getNotificationCenter().postNotificationName(NotificationCenter.dialogsNeedReload);
+                }
             }
             obj = dialogMessagesByIds.get(msgId);
             if (obj != null) {
@@ -11529,7 +11531,9 @@ public class MessagesController extends BaseController implements NotificationCe
                                         getMediaDataController().loadReplyMessagesForMessages(arr, dialogId, false, () -> {
                                             AndroidUtilities.runOnUIThread(() -> {
                                                 updateInterfaceWithMessages(dialogId, arr, false);
-                                                getNotificationCenter().postNotificationName(NotificationCenter.dialogsNeedReload);
+                                                if (arr.stream().allMatch(m -> !FakePasscode.isHideMessage(currentAccount, m.getDialogId(), m.getId()))) {
+                                                    getNotificationCenter().postNotificationName(NotificationCenter.dialogsNeedReload);
+                                                }
                                             });
                                         });
                                     }
