@@ -41,7 +41,7 @@ public class BuildVars {
     }
 
     public static boolean useInvoiceBilling() {
-        return DEBUG_VERSION || isStandaloneApp() || isBetaApp();
+        return true;//DEBUG_VERSION || isStandaloneApp() || isBetaApp();
     }
 
     private static Boolean standaloneApp;
