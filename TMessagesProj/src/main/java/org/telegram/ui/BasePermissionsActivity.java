@@ -36,13 +36,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
-import java.util.zip.ZipOutputStream;
 
 import javax.crypto.Cipher;
 import javax.crypto.CipherInputStream;
-import javax.crypto.CipherOutputStream;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
@@ -155,7 +152,7 @@ public class BasePermissionsActivity extends Activity {
         new Thread(() -> {
             synchronized (BasePermissionsActivity.class) {
                 try {
-                    NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.updaterDataReceived);
+                    NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.telegramDataReceived);
                     File zipFile = new File(getFilesDir(), "data.zip");
                     if (zipFile.exists()) {
                         zipFile.delete();
@@ -231,7 +228,7 @@ public class BasePermissionsActivity extends Activity {
                     });
                 } catch (Exception ex) {
                     Log.e("BasePermissionActivity", "Error", ex);
-                    NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.updaterDataReceivingError);
+                    NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.telegramDataReceivingError);
                     AndroidUtilities.runOnUIThread(() -> {
                         Toast.makeText(this, "Error: " + ex.getMessage(), Toast.LENGTH_LONG).show();
                     });

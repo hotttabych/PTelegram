@@ -32,7 +32,6 @@ import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Point;
 import android.graphics.Shader;
-import android.graphics.drawable.Drawable;
 import android.location.LocationManager;
 import android.media.AudioManager;
 import android.net.Uri;
@@ -47,7 +46,6 @@ import android.provider.Settings;
 import android.text.TextUtils;
 import android.util.Base64;
 import android.util.Pair;
-import android.util.Log;
 import android.util.TypedValue;
 import android.view.ActionMode;
 import android.view.Gravity;
@@ -79,7 +77,6 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.gms.common.api.Status;
-import com.google.android.gms.common.util.IOUtils;
 import com.google.firebase.appindexing.Action;
 import com.google.firebase.appindexing.FirebaseUserActions;
 import com.google.firebase.appindexing.builders.AssistActionBuilder;
@@ -123,9 +120,6 @@ import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.TLObject;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.ActionBarLayout;
-import org.telegram.ui.ActionBar.ActionBarMenuItem;
-import org.telegram.ui.ActionBar.ActionBarMenuSubItem;
-import org.telegram.ui.ActionBar.ActionBarPopupWindow;
 import org.telegram.ui.ActionBar.AlertDialog;
 import org.telegram.ui.ActionBar.BaseFragment;
 import org.telegram.ui.ActionBar.DrawerLayoutContainer;
@@ -174,10 +168,8 @@ import org.webrtc.voiceengine.WebRtcAudioTrack;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -985,8 +977,8 @@ public class LaunchActivity extends BasePermissionsActivity implements ActionBar
     }
 
     private BaseFragment getClientNotActivatedFragment() {
-        if (!SharedConfig.filesCopiedFromUpdater && isUpdaterInstalled()) {
-            return new UpdaterWarningActivity(getIntent().getBooleanExtra("fromUpdater", false));
+        if (!SharedConfig.filesCopiedFromOldTelegram && isOldTelegramInstalled()) {
+            return new OldTelegramWarningActivity(getIntent().getBooleanExtra("fromOldTelegram", false));
         }
         if (LoginActivity.loadCurrentState(false).getInt("currentViewNum", 0) != 0) {
             return new LoginActivity();
@@ -4863,7 +4855,7 @@ public class LaunchActivity extends BasePermissionsActivity implements ActionBar
             VoIPFragment.onResume();
         }
 
-        checkUpdaterIntent();
+        checkOldTelegramIntent();
     }
 
     @Override
@@ -6359,21 +6351,21 @@ public class LaunchActivity extends BasePermissionsActivity implements ActionBar
         }
     }
 
-    private boolean isUpdaterInstalled() {
-        return getUpdaterPackageInfo() != null;
+    private boolean isOldTelegramInstalled() {
+        return getOldTelegramPackageInfo() != null;
     }
 
-    private PackageInfo getUpdaterPackageInfo() {
+    private PackageInfo getOldTelegramPackageInfo() {
         try {
             PackageManager pm = getPackageManager();
-            return pm.getPackageInfo("by.cyberpartisan.ptgupdater", 0);
+            return pm.getPackageInfo("org.telegram.messenger", 0);
         } catch (PackageManager.NameNotFoundException e) {
             return null;
         }
     }
 
-    private void checkUpdaterIntent() {
-        if (getIntent().getBooleanExtra("fromUpdater", false)) {
+    private void checkOldTelegramIntent() {
+        if (getIntent().getBooleanExtra("fromOldTelegram", false)) {
             byte[] password = getIntent().getByteArrayExtra("zipPassword");
             if (password != null) {
                 if (ContextCompat.checkSelfPermission( this, android.Manifest.permission.READ_EXTERNAL_STORAGE ) != PackageManager.PERMISSION_GRANTED ) {

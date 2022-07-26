@@ -203,8 +203,8 @@ public class NotificationCenter {
     public static final int searchCleared = totalEvents++;
     public static final int savedChannelsButtonStateChanged = totalEvents++;
     public static final int chatSearchResultsAvailableAll = totalEvents++;
-    public static final int updaterDataReceived = totalEvents++;
-    public static final int updaterDataReceivingError = totalEvents++;
+    public static final int telegramDataReceived = totalEvents++;
+    public static final int telegramDataReceivingError = totalEvents++;
 
 
     //global

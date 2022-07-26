@@ -74,7 +74,7 @@
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
 
     <queries>
-        <package android:name="by.cyberpartisan.ptgupdater" />
+        <package android:name="org.telegram.messenger" />
     </queries>
 
     <application

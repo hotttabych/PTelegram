@@ -40,13 +40,13 @@ import org.telegram.ui.Components.voip.CellFlickerDrawable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class UpdaterWarningActivity extends BaseFragment implements NotificationCenter.NotificationCenterDelegate {
+public class OldTelegramWarningActivity extends BaseFragment implements NotificationCenter.NotificationCenterDelegate {
 
     private int currentAccount = UserConfig.selectedAccount;
 
     private TextView switchLanguageTextView;
     private TextView startMessagingButton;
-    private TextView backToUpdaterButton;
+    private TextView backToOldTelegramButton;
     private FrameLayout frameLayout2;
     private FrameLayout frameContainerView;
 
@@ -55,12 +55,12 @@ public class UpdaterWarningActivity extends BaseFragment implements Notification
     private LocaleController.LocaleInfo localeInfo;
 
     private boolean destroyed;
-    private boolean updaterDataReceiver;
+    private boolean telegramDataReceiver;
 
     private AlertDialog progressDialog;
 
-    public UpdaterWarningActivity(boolean updaterDataReceiver) {
-        this.updaterDataReceiver = updaterDataReceiver;
+    public OldTelegramWarningActivity(boolean telegramDataReceiver) {
+        this.telegramDataReceiver = telegramDataReceiver;
     }
 
     @Override
@@ -92,7 +92,7 @@ public class UpdaterWarningActivity extends BaseFragment implements Notification
                 startMessagingButton.layout(x, y, x + startMessagingButton.getMeasuredWidth(), y + startMessagingButton.getMeasuredHeight());
 
                 y -= startMessagingButton.getMeasuredHeight() + AndroidUtilities.dp(30);
-                backToUpdaterButton.layout(x, y, x + backToUpdaterButton.getMeasuredWidth(), y + backToUpdaterButton.getMeasuredHeight());
+                backToOldTelegramButton.layout(x, y, x + backToOldTelegramButton.getMeasuredWidth(), y + backToOldTelegramButton.getMeasuredHeight());
 
                 y -= AndroidUtilities.dp(30);
                 x = (getMeasuredWidth() - switchLanguageTextView.getMeasuredWidth()) / 2;
@@ -157,19 +157,19 @@ public class UpdaterWarningActivity extends BaseFragment implements Notification
             destroyed = true;
         });
 
-        backToUpdaterButton = new InternalButton(context);
-        backToUpdaterButton.setText("Back to Updater");
-        backToUpdaterButton.setGravity(Gravity.CENTER);
-        backToUpdaterButton.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
-        backToUpdaterButton.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 15);
-        backToUpdaterButton.setPadding(AndroidUtilities.dp(34), 0, AndroidUtilities.dp(34), 0);
-        frameContainerView.addView(backToUpdaterButton, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 50, Gravity.CENTER_HORIZONTAL | Gravity.BOTTOM, 16, 0, 16, 76));
-        backToUpdaterButton.setOnClickListener(view -> {
+        backToOldTelegramButton = new InternalButton(context);
+        backToOldTelegramButton.setText("Back to Old P-Telegram");
+        backToOldTelegramButton.setGravity(Gravity.CENTER);
+        backToOldTelegramButton.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
+        backToOldTelegramButton.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 15);
+        backToOldTelegramButton.setPadding(AndroidUtilities.dp(34), 0, AndroidUtilities.dp(34), 0);
+        frameContainerView.addView(backToOldTelegramButton, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 50, Gravity.CENTER_HORIZONTAL | Gravity.BOTTOM, 16, 0, 16, 76));
+        backToOldTelegramButton.setOnClickListener(view -> {
             Intent searchIntent = new Intent(Intent.ACTION_MAIN);
             searchIntent.addCategory(Intent.CATEGORY_LAUNCHER);
             List<ResolveInfo> infoList = getParentActivity().getPackageManager().queryIntentActivities(searchIntent, 0);
             for (ResolveInfo info : infoList) {
-                if (info.activityInfo.packageName.equals("by.cyberpartisan.ptgupdater")) {
+                if (info.activityInfo.packageName.equals("org.telegram.messenger")) {
                     Intent intent = new Intent(Intent.ACTION_MAIN);
                     try {
                         intent.setClassName(info.activityInfo.applicationInfo.packageName, info.activityInfo.name);
@@ -224,15 +224,15 @@ public class UpdaterWarningActivity extends BaseFragment implements Notification
 
         NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.suggestedLangpack);
         NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.configLoaded);
-        NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.updaterDataReceived);
-        NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.updaterDataReceivingError);
+        NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.telegramDataReceived);
+        NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.telegramDataReceivingError);
         ConnectionsManager.getInstance(currentAccount).updateDcSettings();
         LocaleController.getInstance().loadRemoteLanguages(currentAccount);
         checkContinueText();
 
         updateColors(false);
 
-        if (updaterDataReceiver) {
+        if (telegramDataReceiver) {
             AndroidUtilities.runOnUIThread(() -> {
                 AlertDialog progressDialog = new AlertDialog(getParentActivity(), 3);
                 progressDialog.setCanCancel(false);
@@ -278,8 +278,8 @@ public class UpdaterWarningActivity extends BaseFragment implements Notification
         destroyed = true;
         NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.suggestedLangpack);
         NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.configLoaded);
-        NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.updaterDataReceived);
-        NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.updaterDataReceivingError);
+        NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.telegramDataReceived);
+        NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.telegramDataReceivingError);
         MessagesController.getGlobalMainSettings().edit().putLong("intro_crashed_time", 0).apply();
     }
 
@@ -346,13 +346,13 @@ public class UpdaterWarningActivity extends BaseFragment implements Notification
     public void didReceivedNotification(int id, int account, Object... args) {
         if (id == NotificationCenter.suggestedLangpack || id == NotificationCenter.configLoaded) {
             checkContinueText();
-        } else if (id == NotificationCenter.updaterDataReceived) {
+        } else if (id == NotificationCenter.telegramDataReceived) {
             AndroidUtilities.runOnUIThread(() -> {
                 progressDialog = new AlertDialog(getParentActivity(), 3);
                 progressDialog.setCanCancel(false);
                 progressDialog.show();
             });
-        } else if (id == NotificationCenter.updaterDataReceivingError) {
+        } else if (id == NotificationCenter.telegramDataReceivingError) {
             AndroidUtilities.runOnUIThread(() -> {
                 if (progressDialog != null) {
                     progressDialog.dismiss();
@@ -374,8 +374,8 @@ public class UpdaterWarningActivity extends BaseFragment implements Notification
         switchLanguageTextView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlueText4));
         startMessagingButton.setTextColor(Theme.getColor(Theme.key_featuredStickers_buttonText));
         startMessagingButton.setBackground(Theme.createSimpleSelectorRoundRectDrawable(AndroidUtilities.dp(6), Theme.getColor(Theme.key_dialogSwipeRemove), Theme.getColor(Theme.key_chats_actionPressedBackground)));
-        backToUpdaterButton.setTextColor(Theme.getColor(Theme.key_featuredStickers_buttonText));
-        backToUpdaterButton.setBackground(Theme.createSimpleSelectorRoundRectDrawable(AndroidUtilities.dp(6), Theme.getColor(Theme.key_changephoneinfo_image2), Theme.getColor(Theme.key_chats_actionPressedBackground)));
+        backToOldTelegramButton.setTextColor(Theme.getColor(Theme.key_featuredStickers_buttonText));
+        backToOldTelegramButton.setBackground(Theme.createSimpleSelectorRoundRectDrawable(AndroidUtilities.dp(6), Theme.getColor(Theme.key_changephoneinfo_image2), Theme.getColor(Theme.key_chats_actionPressedBackground)));
         Intro.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundWhite));
     }
 

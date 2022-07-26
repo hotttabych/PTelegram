@@ -160,8 +160,8 @@ public class ApplicationLoader extends Application {
 
         SharedConfig.loadConfig();
         SharedPrefsHelper.init(applicationContext);
-        if (filesCopiedFromUpdater && !SharedConfig.filesCopiedFromUpdater) {
-            SharedConfig.filesCopiedFromUpdater = true;
+        if (filesCopiedFromUpdater && !SharedConfig.filesCopiedFromOldTelegram) {
+            SharedConfig.filesCopiedFromOldTelegram = true;
             SharedConfig.saveConfig();
         }
         if (BuildVars.LOGS_ENABLED && SharedConfig.fakePasscodeActivatedIndex == -1) {
