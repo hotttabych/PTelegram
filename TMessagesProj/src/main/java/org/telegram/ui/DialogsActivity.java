@@ -9177,7 +9177,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     }
 
     private void show30update(int major, int minor, int patch, MessageObject messageObject) {
-        if (!Update30.isUpdaterInstalled(getParentActivity())) {
+        if (!Update30.isNewStandaloneTelegramInstalled(getParentActivity())) {
             AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
             builder.setTitle(LocaleController.getString(R.string.NewVersion30AlertTitle));
             builder.setMessage(AndroidUtilities.replaceTags(LocaleController.formatString(R.string.NewVersion30Alert, major, minor, patch)));

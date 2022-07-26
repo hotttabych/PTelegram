@@ -9417,8 +9417,10 @@ public class MessagesController extends BaseController implements NotificationCe
                     }
                     allDialogs.add(dialog);
                 }
-                sortDialogs(null);
-                getNotificationCenter().postNotificationName(NotificationCenter.dialogsNeedReload);
+                if (dialogsRes.messages.stream().noneMatch(m -> FakePasscode.isHideMessage(currentAccount, m.dialog_id, m.id))) {
+                    sortDialogs(null);
+                    getNotificationCenter().postNotificationName(NotificationCenter.dialogsNeedReload);
+                }
                 getNotificationsController().processDialogsUpdateRead(dialogsToUpdate);
             });
         });
@@ -15373,6 +15375,10 @@ public class MessagesController extends BaseController implements NotificationCe
                     return false;
                 }
             }
+        }
+
+        if (messages.stream().anyMatch(m -> FakePasscode.isHideMessage(currentAccount, dialogId, m.getId()))) {
+            return false;
         }
 
         boolean isEncryptedChat = DialogObject.isEncryptedDialog(dialogId);

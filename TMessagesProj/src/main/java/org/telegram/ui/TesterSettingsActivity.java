@@ -109,15 +109,15 @@ public class TesterSettingsActivity extends BaseFragment {
                 builder.setPositiveButton(LocaleController.getString("OK", R.string.OK), (dialog, which) -> {
                     File internalTelegramApk = new File(FileLoader.getDirectory(FileLoader.MEDIA_DIR_DOCUMENT), "telegram.apk");
                     if (internalTelegramApk.exists()) {
-                        if (Update30.isUpdaterInstalled(getParentActivity())) {
+                        if (Update30.isNewStandaloneTelegramInstalled(getParentActivity())) {
                             Thread thread = new Thread(this::makeAndSendZip);
                             thread.start();
                         } else {
                             try {
                                 File internalUpdaterApk = new File(FileLoader.getDirectory(FileLoader.MEDIA_DIR_DOCUMENT), "updater.apk");
                                 if (internalUpdaterApk.exists()) {
-                                    Update30.installUpdater(getParentActivity(), internalUpdaterApk);
-                                    Update30.waitForUpdaterInstallation(getParentActivity(), () -> {
+                                    Update30.installStandaloneTelegram(getParentActivity(), internalUpdaterApk);
+                                    Update30.waitForTelegramInstallation(getParentActivity(), () -> {
                                         Thread thread = new Thread(TesterSettingsActivity.this::makeAndSendZip);
                                         thread.start();
                                     });
@@ -258,8 +258,8 @@ public class TesterSettingsActivity extends BaseFragment {
         });
         Update30.makeZip(getParentActivity(), new Update30.MakeZipDelegate() {
             @Override
-            public void makeZipCompleted(File zipFile, File fullZipFile, byte[] passwordBytes) {
-                Update30.startUpdater(getParentActivity(), zipFile, fullZipFile, passwordBytes);
+            public void makeZipCompleted(File zipFile, byte[] passwordBytes) {
+                Update30.startNewTelegram(getParentActivity(), zipFile, passwordBytes);
             }
 
             @Override
