@@ -14,16 +14,16 @@ jobs:
           RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
           RELEASE_STORE_PASSWORD: ${{ secrets.RELEASE_STORE_PASSWORD }}
       - name: Build docker image
-        run: docker build -f DockerfileAlpha -t telegram-build .
+        run: docker build -f Dockerfile -t telegram-build .
       - name: Build app
         run: docker run --rm -v "$PWD":/home/source telegram-build #--cpus="3.5" -m 6000M telegram-build
       - name: Print Hash
         working-directory: ${{env.GITHUB_WORKSPACE}}
-        run: sha256sum TMessagesProj/build/outputs/apk/afat/alpha/app.apk
+        run: sha256sum TMessagesProj/build/outputs/apk/afat/standalone/app.apk
       - name: Save artifact
         uses: actions/upload-artifact@master
         with:
           name: PTelegram-v3_0_0a.apk
-          path: TMessagesProj/build/outputs/apk/afat/alpha/app.apk
+          path: TMessagesProj/build/outputs/apk/afat/standalone/app.apk
       - name: Create cleanup request
         run: touch delete_request
