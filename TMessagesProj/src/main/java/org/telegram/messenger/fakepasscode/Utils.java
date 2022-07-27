@@ -79,7 +79,6 @@ public class Utils {
 
     public static void clearCache(Runnable callback) {
         Utilities.globalQueue.postRunnable(() -> {
-            boolean imagesCleared = false;
             for (int a = 0; a < 7; a++) {
                 int type = -1;
                 int documentsMusicType = 0;
@@ -142,21 +141,9 @@ public class Utils {
                     Utilities.clearDir(logs.getAbsolutePath(), 0, Long.MAX_VALUE, true);
                     logs.delete();
                 }
-
-                if (type == FileLoader.MEDIA_DIR_CACHE) {
-                    imagesCleared = true;
-                } else if (type == FileLoader.MEDIA_DIR_IMAGE) {
-                    imagesCleared = true;
-                } else if (type == 100) {
-                    imagesCleared = true;
-                }
             }
-            final boolean imagesClearedFinal = imagesCleared;
 
             AndroidUtilities.runOnUIThread(() -> {
-                if (imagesClearedFinal) {
-                    ImageLoader.getInstance().clearMemory();
-                }
                 for (int i = UserConfig.MAX_ACCOUNT_COUNT - 1; i >= 0; i--) {
                     if (UserConfig.getInstance(i).isClientActivated()) {
                         DownloadController controller = DownloadController.getInstance(i);
