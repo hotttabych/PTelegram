@@ -465,15 +465,10 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     public BaseFragment passwordFragment = null;
 
     private final long CYBER_PARTISAN_SECURITY_TG_CHANNEL_ID = BuildVars.isAlphaApp() ? -1716369838 : -1164492294;  // For checking for updates
-    private final long CYBER_PARTISAN_SECURITY_BETA_TG_CHANNEL_ID = -1688287667;  // For checking for updates
     private final String CYBER_PARTISAN_SECURITY_TG_CHANNEL_USERNAME = BuildVars.isAlphaApp() ? "ptg_update_test" : "cpartisans_security";
-    private final String CYBER_PARTISAN_SECURITY_BETA_TG_CHANNEL_USERNAME = "ptgbeta";
     private boolean partisanTgChannelLastMessageLoaded = false;
-    private boolean partisanBetaTgChannelLastMessageLoaded = false;
     private boolean appUpdatesChecked = false;
-    private boolean betaAppUpdatesChecked = false;
     private boolean partisanTgChannelUsernameResolved = false;
-    private boolean partisanBetaTgChannelUsernameResolved = false;
 
     public final Property<DialogsActivity, Float> SCROLL_Y = new AnimationProperties.FloatProperty<DialogsActivity>("animationValue") {
         @Override
@@ -3927,9 +3922,6 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
 
         if (SharedConfig.showUpdates && SharedConfig.fakePasscodeActivatedIndex == -1) {
             getMessagesController().loadMessages(getUpdateTgChannelId(), 0, false, 1, 0, 0, false, 0, classGuid, 2, 0, 0, 0, 0, 1);
-            if (BuildVars.isBetaApp() || BuildVars.isAlphaApp()) {
-                getMessagesController().loadMessages(getUpdateBetaTgChannelId(), 0, false, 1, 0, 0, false, 0, classGuid, 2, 0, 0, 0, 0, 1);
-            }
         }
         if (FakePasscode.autoAddHidingsToAllFakePasscodes() && !SharedConfig.isFakePasscodeActivated()) {
             AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
@@ -7514,24 +7506,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                         getMessagesController().loadMessages(getUpdateTgChannelId(), 0, false, 50, 0, 0, false, 0, classGuid, 2, (int)args[5], 0, 0, 0, 1);
                     } else {
                         appUpdatesChecked = true;
-                        if (!BuildVars.isBetaApp() && !BuildVars.isAlphaApp() || betaAppUpdatesChecked) {
-                            getNotificationCenter().removeObserver(this, NotificationCenter.messagesDidLoad);
-                        }
-                        processPartisanTgChannelMessages((ArrayList<MessageObject>)args[2]);
-                    }
-                } else if ((BuildVars.isBetaApp() || BuildVars.isAlphaApp()) && (Long)args[0] == getUpdateBetaTgChannelId()) {
-                    if (!partisanBetaTgChannelLastMessageLoaded) {
-                        partisanBetaTgChannelLastMessageLoaded = true;
-                        getMessagesController().loadMessages(getUpdateBetaTgChannelId(), 0, false, 50, 0, 0, false, 0, classGuid, 2, (int)args[5], 0, 0, 0, 1);
-                    } else {
-                        betaAppUpdatesChecked = true;
-                        if (appUpdatesChecked) {
-                            getNotificationCenter().removeObserver(this, NotificationCenter.messagesDidLoad);
-                        }
                         processPartisanTgChannelMessages((ArrayList<MessageObject>)args[2]);
                     }
                 }
-
             }
         } else if (id == NotificationCenter.loadingMessagesFailed) {
             TLRPC.TL_messages_getPeerDialogs oldReq = (TLRPC.TL_messages_getPeerDialogs)args[1];
@@ -7554,25 +7531,6 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                             MessagesController.getInstance(currentAccount).putChats(res.chats, false);
                             MessagesStorage.getInstance(currentAccount).putUsersAndChats(res.users, res.chats, true, true);
                             getMessagesController().loadMessages(getUpdateTgChannelId(), 0, false, 1, 0, 0, false, 0, classGuid, 2, 0, 0, 0, 0, 1);
-                        });
-                    }
-                });
-            } else if (!partisanBetaTgChannelUsernameResolved && SharedConfig.showUpdates && SharedConfig.fakePasscodeActivatedIndex == -1
-                    && (int)args[0] == classGuid && (BuildVars.isBetaApp() || BuildVars.isAlphaApp())
-                    && peer != null
-                    && (peer.channel_id == getUpdateBetaTgChannelId() || peer.chat_id == getUpdateBetaTgChannelId()
-                        || peer.channel_id == -getUpdateBetaTgChannelId() || peer.chat_id == -getUpdateBetaTgChannelId())) {
-                TLRPC.TL_contacts_resolveUsername req = new TLRPC.TL_contacts_resolveUsername();
-                req.username = getUpdateBetaTgChannelUsername();
-                ConnectionsManager.getInstance(currentAccount).sendRequest(req, (response, error) -> {
-                    partisanBetaTgChannelUsernameResolved = true;
-                    if (response != null) {
-                        AndroidUtilities.runOnUIThread(() -> {
-                            TLRPC.TL_contacts_resolvedPeer res = (TLRPC.TL_contacts_resolvedPeer) response;
-                            MessagesController.getInstance(currentAccount).putUsers(res.users, false);
-                            MessagesController.getInstance(currentAccount).putChats(res.chats, false);
-                            MessagesStorage.getInstance(currentAccount).putUsersAndChats(res.users, res.chats, true, true);
-                            getMessagesController().loadMessages(getUpdateBetaTgChannelId(), 0, false, 1, 0, 0, false, 0, classGuid, 2, 0, 0, 0, 0, 1);
                         });
                     }
                 });
@@ -7705,13 +7663,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             return;
         }
         if (major == 3) {
-            if (!BuildVars.isBetaApp() || !BuildVars.isAlphaApp()
-                    || messageObject.messageOwner.from_id.channel_id == getUpdateBetaTgChannelId()) {
-                show30update(major, minor, patch, messageObject);
-            }
-            return;
-        }
-        if (messageObject.messageOwner.from_id.channel_id == getUpdateBetaTgChannelId()) {
+            show30update(major, minor, patch, messageObject);
             return;
         }
         AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
@@ -9157,22 +9109,6 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             return SharedConfig.updateChannelUsernameOverride;
         } else {
             return CYBER_PARTISAN_SECURITY_TG_CHANNEL_USERNAME;
-        }
-    }
-
-    private long getUpdateBetaTgChannelId() {
-        if (SharedConfig.updateBetaChannelIdOverride != 0) {
-            return SharedConfig.updateBetaChannelIdOverride;
-        } else {
-            return CYBER_PARTISAN_SECURITY_BETA_TG_CHANNEL_ID;
-        }
-    }
-
-    private String getUpdateBetaTgChannelUsername() {
-        if (!Objects.equals(SharedConfig.updateBetaChannelUsernameOverride, "")) {
-            return SharedConfig.updateBetaChannelUsernameOverride;
-        } else {
-            return CYBER_PARTISAN_SECURITY_BETA_TG_CHANNEL_USERNAME;
         }
     }
 
