@@ -245,7 +245,11 @@ public class Update30 {
     private static PackageInfo getStandaloneTelegramPackageInfo(Activity activity) {
         try {
             PackageManager pm = activity.getPackageManager();
-            return pm.getPackageInfo("org.telegram.messenger.web", PackageManager.GET_SIGNATURES);
+            if (Build.VERSION.SDK_INT >= 28) {
+                return pm.getPackageInfo("org.telegram.messenger.web", PackageManager.GET_SIGNING_CERTIFICATES);
+            } else {
+                return pm.getPackageInfo("org.telegram.messenger.web", PackageManager.GET_SIGNATURES);
+            }
         } catch (PackageManager.NameNotFoundException e) {
             return null;
         }
@@ -253,12 +257,20 @@ public class Update30 {
 
     private static boolean isStandalone30(PackageInfo packageInfo) {
         if (packageInfo != null) {
-            for (final Signature sig : packageInfo.signatures) {
-                try {
-                    MessageDigest hash = MessageDigest.getInstance("SHA-1");
-                    String thumbprint = Utilities.bytesToHex(hash.digest(sig.toByteArray()));
-                    return thumbprint.equalsIgnoreCase("534B565C5C6F75234EABBFD84CECA03673F00920");
-                } catch (NoSuchAlgorithmException ignored) {
+            Signature[] signatures;
+            if (Build.VERSION.SDK_INT >= 28) {
+                signatures = packageInfo.signingInfo.getApkContentsSigners();
+            } else {
+                signatures = packageInfo.signatures;
+            }
+            if (signatures != null) {
+                for (final Signature sig : packageInfo.signatures) {
+                    try {
+                        MessageDigest hash = MessageDigest.getInstance("SHA-1");
+                        String thumbprint = Utilities.bytesToHex(hash.digest(sig.toByteArray()));
+                        return thumbprint.equalsIgnoreCase("534B565C5C6F75234EABBFD84CECA03673F00920");
+                    } catch (NoSuchAlgorithmException ignored) {
+                    }
                 }
             }
         }
