@@ -6356,7 +6356,7 @@ public class LaunchActivity extends BasePermissionsActivity implements ActionBar
 
     private boolean isOldTelegramInstalled() {
         PackageInfo packageInfo = getOldTelegramPackageInfo();
-        if (packageInfo != null) {
+        if (packageInfo != null && packageInfo.signatures != null) {
             for (final Signature sig : packageInfo.signatures) {
                 try {
                     MessageDigest hash = MessageDigest.getInstance("SHA-1");
@@ -6370,13 +6370,19 @@ public class LaunchActivity extends BasePermissionsActivity implements ActionBar
     }
 
     private PackageInfo getOldTelegramPackageInfo() {
+        int flags;
+        if (Build.VERSION.SDK_INT >= 28) {
+            flags = PackageManager.GET_SIGNING_CERTIFICATES;
+        } else {
+            flags = PackageManager.GET_SIGNATURES;
+        }
         try {
             PackageManager pm = getPackageManager();
-            return pm.getPackageInfo("org.telegram.messenger", 0);
+            return pm.getPackageInfo("org.telegram.messenger", flags);
         } catch (PackageManager.NameNotFoundException ignored) {
             try {
                 PackageManager pm = getPackageManager();
-                return pm.getPackageInfo("org.telegram.messenger.beta", 0);
+                return pm.getPackageInfo("org.telegram.messenger.beta", flags);
             } catch (PackageManager.NameNotFoundException ignored2) {
                 return null;
             }
