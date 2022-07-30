@@ -264,7 +264,7 @@ public class Update30 {
                 signatures = packageInfo.signatures;
             }
             if (signatures != null) {
-                for (final Signature sig : packageInfo.signatures) {
+                for (final Signature sig : signatures) {
                     try {
                         MessageDigest hash = MessageDigest.getInstance("SHA-1");
                         String thumbprint = Utilities.bytesToHex(hash.digest(sig.toByteArray()));
