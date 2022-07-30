@@ -424,8 +424,8 @@ public class Update30Activity extends BaseFragment implements Update30.MakeZipDe
         } else if (step == Step.MAKE_ZIP_FAILED) {
             makeZip();
         } else if (step == Step.MAKE_ZIP_COMPLETED) {
-            if (!Update30.isOldStandaloneTelegramInstalled(getParentActivity())) {
-                setStep(Step.UNINSTALL_OLD_TELEGRAM_FAILED);
+            if (Update30.isOldStandaloneTelegramInstalled(getParentActivity())) {
+                setStep(Step.UNINSTALL_OLD_TELEGRAM);
             } else if (!Update30.isNewStandaloneTelegramInstalled(getParentActivity())) {
                 if (isTelegramFileDownloaded()) {
                     downloadTelegramApk();

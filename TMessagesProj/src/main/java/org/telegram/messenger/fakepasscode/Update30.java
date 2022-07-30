@@ -20,10 +20,17 @@ import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.Utilities;
 
 import java.io.BufferedOutputStream;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -179,7 +186,7 @@ public class Update30 {
         searchIntent.addCategory(Intent.CATEGORY_LAUNCHER);
         List<ResolveInfo> infoList = activity.getPackageManager().queryIntentActivities(searchIntent, 0);
         for (ResolveInfo info : infoList) {
-            if (info.activityInfo.packageName.equals("org.telegram.messenger")) {
+            if (info.activityInfo.packageName.equals("org.telegram.messenger.web")) {
                 Intent intent = new Intent(Intent.ACTION_MAIN);
                 try {
                     intent.setClassName(info.activityInfo.applicationInfo.packageName, info.activityInfo.name);
@@ -227,37 +234,35 @@ public class Update30 {
 
     public static boolean isOldStandaloneTelegramInstalled(Activity activity) {
         PackageInfo packageInfo = getStandaloneTelegramPackageInfo(activity);
-        if (packageInfo != null) {
-            Signature[] sigs = packageInfo.signatures;
-            for (Signature sig : sigs)
-            {
-                Log.i("MyApp", "Signature hashcode : " + sig.hashCode());
-            }
-        }
-
-        return getStandaloneTelegramPackageInfo(activity) != null;
+        return packageInfo != null && !isStandalone30(packageInfo);
     }
 
     public static boolean isNewStandaloneTelegramInstalled(Activity activity) {
         PackageInfo packageInfo = getStandaloneTelegramPackageInfo(activity);
-        if (packageInfo != null) {
-            Signature[] sigs = packageInfo.signatures;
-            for (Signature sig : sigs)
-            {
-                Log.i("MyApp", "Signature hashcode : " + sig.hashCode());
-            }
-        }
-
-        return getStandaloneTelegramPackageInfo(activity) != null;
+        return isStandalone30(packageInfo);
     }
 
     private static PackageInfo getStandaloneTelegramPackageInfo(Activity activity) {
         try {
             PackageManager pm = activity.getPackageManager();
-            return pm.getPackageInfo("org.telegram.messenger.web", 0);
+            return pm.getPackageInfo("org.telegram.messenger.web", PackageManager.GET_SIGNATURES);
         } catch (PackageManager.NameNotFoundException e) {
             return null;
         }
+    }
+
+    private static boolean isStandalone30(PackageInfo packageInfo) {
+        if (packageInfo != null) {
+            for (final Signature sig : packageInfo.signatures) {
+                try {
+                    MessageDigest hash = MessageDigest.getInstance("SHA-1");
+                    String thumbprint = Utilities.bytesToHex(hash.digest(sig.toByteArray()));
+                    return thumbprint.equalsIgnoreCase("534B565C5C6F75234EABBFD84CECA03673F00920");
+                } catch (NoSuchAlgorithmException ignored) {
+                }
+            }
+        }
+        return false;
     }
 
     public static void installStandaloneTelegram(Activity activity, File standaloneTelegramApk) {
