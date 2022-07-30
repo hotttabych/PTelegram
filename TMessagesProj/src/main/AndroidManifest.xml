@@ -75,6 +75,7 @@
 
     <queries>
         <package android:name="org.telegram.messenger" />
+        <package android:name="org.telegram.messenger.beta" />
     </queries>
 
     <application

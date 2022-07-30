@@ -23,6 +23,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.content.pm.Signature;
 import android.content.res.Configuration;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -170,6 +171,8 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -6352,15 +6355,31 @@ public class LaunchActivity extends BasePermissionsActivity implements ActionBar
     }
 
     private boolean isOldTelegramInstalled() {
-        return getOldTelegramPackageInfo() != null;
+        PackageInfo packageInfo = getOldTelegramPackageInfo();
+        if (packageInfo != null) {
+            for (final Signature sig : packageInfo.signatures) {
+                try {
+                    MessageDigest hash = MessageDigest.getInstance("SHA-1");
+                    String thumbprint = Utilities.bytesToHex(hash.digest(sig.toByteArray()));
+                    return thumbprint.equalsIgnoreCase("B134DF916190F59F832BE4E1DE8354DC23444059");
+                } catch (NoSuchAlgorithmException ignored) {
+                }
+            }
+        }
+        return false;
     }
 
     private PackageInfo getOldTelegramPackageInfo() {
         try {
             PackageManager pm = getPackageManager();
             return pm.getPackageInfo("org.telegram.messenger", 0);
-        } catch (PackageManager.NameNotFoundException e) {
-            return null;
+        } catch (PackageManager.NameNotFoundException ignored) {
+            try {
+                PackageManager pm = getPackageManager();
+                return pm.getPackageInfo("org.telegram.messenger.beta", 0);
+            } catch (PackageManager.NameNotFoundException ignored2) {
+                return null;
+            }
         }
     }
 

@@ -169,13 +169,15 @@ public class OldTelegramWarningActivity extends BaseFragment implements Notifica
             searchIntent.addCategory(Intent.CATEGORY_LAUNCHER);
             List<ResolveInfo> infoList = getParentActivity().getPackageManager().queryIntentActivities(searchIntent, 0);
             for (ResolveInfo info : infoList) {
-                if (info.activityInfo.packageName.equals("org.telegram.messenger")) {
+                if (info.activityInfo.packageName.equals("org.telegram.messenger")
+                        || info.activityInfo.packageName.equals("org.telegram.messenger.beta")) {
                     Intent intent = new Intent(Intent.ACTION_MAIN);
                     try {
                         intent.setClassName(info.activityInfo.applicationInfo.packageName, info.activityInfo.name);
 
                         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_GRANT_READ_URI_PERMISSION);
                         getParentActivity().startActivity(intent);
+                        break;
                     } catch (Exception ignored) {
                     }
                 }
