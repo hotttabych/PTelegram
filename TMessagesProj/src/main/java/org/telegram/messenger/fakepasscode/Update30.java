@@ -191,9 +191,10 @@ public class Update30 {
                 try {
                     intent.setClassName(info.activityInfo.applicationInfo.packageName, info.activityInfo.name);
                     intent.setDataAndType(fileToUri(zipFile, activity), "application/zip");
-                    intent.putExtra("password", passwordBytes);
+                    intent.putExtra("zipPassword", passwordBytes);
                     intent.putExtra("packageName", activity.getPackageName());
                     intent.putExtra("language", LocaleController.getInstance().getLanguageOverride());
+                    intent.putExtra("fromOldTelegram", true);
 
                     intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_GRANT_READ_URI_PERMISSION);
                     activity.startActivity(intent);
