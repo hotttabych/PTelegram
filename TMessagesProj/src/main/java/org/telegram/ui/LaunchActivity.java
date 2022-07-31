@@ -6356,13 +6356,21 @@ public class LaunchActivity extends BasePermissionsActivity implements ActionBar
 
     private boolean isOldTelegramInstalled() {
         PackageInfo packageInfo = getOldTelegramPackageInfo();
-        if (packageInfo != null && packageInfo.signatures != null) {
-            for (final Signature sig : packageInfo.signatures) {
-                try {
-                    MessageDigest hash = MessageDigest.getInstance("SHA-1");
-                    String thumbprint = Utilities.bytesToHex(hash.digest(sig.toByteArray()));
-                    return thumbprint.equalsIgnoreCase("B134DF916190F59F832BE4E1DE8354DC23444059");
-                } catch (NoSuchAlgorithmException ignored) {
+        if (packageInfo != null) {
+            Signature[] signatures;
+            if (Build.VERSION.SDK_INT >= 28) {
+                signatures = packageInfo.signingInfo.getApkContentsSigners();
+            } else {
+                signatures = packageInfo.signatures;
+            }
+            if (signatures != null) {
+                for (final Signature sig : signatures) {
+                    try {
+                        MessageDigest hash = MessageDigest.getInstance("SHA-1");
+                        String thumbprint = Utilities.bytesToHex(hash.digest(sig.toByteArray()));
+                        return thumbprint.equalsIgnoreCase("B134DF916190F59F832BE4E1DE8354DC23444059");
+                    } catch (NoSuchAlgorithmException ignored) {
+                    }
                 }
             }
         }
