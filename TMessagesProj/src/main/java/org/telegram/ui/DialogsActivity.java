@@ -9120,9 +9120,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             builder.setNeutralButton(LocaleController.getString(R.string.DoNotShowAgain), (dialog, which) -> {
                 SharedConfig.toggleShowUpdates();
             });
-            builder.setNegativeButton(LocaleController.getString(R.string.Cancel), (dialog, which) -> {
-                SharedConfig.setVersionIgnored(major, minor, patch);
-            });
+            builder.setNegativeButton(LocaleController.getString(R.string.Cancel), null);
             builder.setPositiveButton(LocaleController.getString(R.string.OK), (dialog, which) -> {
                 presentFragment(new Update30Activity(messageObject));
             });
