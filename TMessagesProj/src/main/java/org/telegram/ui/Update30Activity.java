@@ -109,6 +109,8 @@ public class Update30Activity extends BaseFragment implements Update30.MakeZipDe
     private boolean destroyed;
     private long spaceSizeNeeded;
 
+    FileDownloadListener downloadListener;
+
     public Update30Activity(MessageObject messageObject) {
         super();
         this.messageObject = messageObject;
@@ -464,11 +466,13 @@ public class Update30Activity extends BaseFragment implements Update30.MakeZipDe
         @Override
         public void onFailedDownload(String fileName, boolean canceled) {
             setStep(Step.DOWNLOAD_TELEGRAM_FAILED);
+            getDownloadController().removeLoadingFileObserver(this);
         }
 
         @Override
         public void onSuccessDownload(String fileName) {
             telegramApkDownloaded();
+            getDownloadController().removeLoadingFileObserver(this);
         }
 
         @Override
@@ -501,7 +505,10 @@ public class Update30Activity extends BaseFragment implements Update30.MakeZipDe
         telegramDownloadProgress = 0;
         telegramLoadingStuck = false;
         TLRPC.Document document = messageObject.getDocument();
-        FileDownloadListener downloadListener = new FileDownloadListener();
+        if (downloadListener != null) {
+            getDownloadController().removeLoadingFileObserver(downloadListener);
+        }
+        downloadListener = new FileDownloadListener();
         getFileLoader().loadFile(document, messageObject, 0, 0);
         getDownloadController().addLoadingFileObserver(FileLoader.getAttachFileName(document), messageObject, downloadListener);
     }
