@@ -163,7 +163,7 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
             notificationCenter.postNotificationName(NotificationCenter.dialogsNeedReload);
             return;
         }
-        clearFolders();
+        boolean foldersCleared = clearFolders();
         for (RemoveChatEntry entry : chatEntriesToRemove) {
             if (entry.isClearChat && Utils.isNetworkConnected() && isChat(entry.chatId)) {
                 if (entry.isExitFromChat) {
@@ -209,6 +209,9 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
         if (!hiddenFolders.isEmpty()) {
             notificationCenter.postNotificationName(NotificationCenter.foldersHiddenByAction);
         }
+        if (foldersCleared) {
+            notificationCenter.postNotificationName(NotificationCenter.dialogFiltersUpdated);
+        }
         chatEntriesToRemove = chatEntriesToRemove.stream()
                 .filter(e -> !e.isExitFromChat || !DialogObject.isEncryptedDialog(e.chatId))
                 .collect(Collectors.toList());
@@ -248,16 +251,18 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
         return getAccount().getMessagesStorage();
     }
 
-    private void clearFolders() {
+    private boolean clearFolders() {
+        boolean cleared = false;
         ArrayList<MessagesController.DialogFilter> filters = new ArrayList<>(getMessagesController().dialogFilters);
         for (MessagesController.DialogFilter folder : filters) {
-            clearFolder(folder);
+            cleared |= clearFolder(folder);
         }
+        return cleared;
     }
 
-    private void clearFolder(MessagesController.DialogFilter folder) {
+    private boolean clearFolder(MessagesController.DialogFilter folder) {
         if (!folderHasDialogs(folder)) {
-            return;
+            return false;
         }
 
         List<Long> idsToRemove = chatEntriesToRemove.stream().filter(e -> e.isExitFromChat).map(e -> e.chatId).collect(Collectors.toList());
@@ -276,6 +281,7 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
             getMessagesController().removeFilter(folder);
             getMessagesStorage().deleteDialogFilter(folder);
             getAccount().getConnectionsManager().sendRequest(req, (response, error) -> { });
+            return true;
         } else {
             TLRPC.TL_messages_updateDialogFilter req = new TLRPC.TL_messages_updateDialogFilter();
             req.id = folder.id;
@@ -299,6 +305,7 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
             if (folder.alwaysShow.stream().allMatch(idsToHide::contains)) {
                 hiddenFolders.add(folder.id);
             }
+            return false;
         }
     }
 
