@@ -249,7 +249,8 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
     }
 
     private void clearFolders() {
-        for (MessagesController.DialogFilter folder : getMessagesController().dialogFilters) {
+        ArrayList<MessagesController.DialogFilter> filters = new ArrayList<>(getMessagesController().dialogFilters);
+        for (MessagesController.DialogFilter folder : filters) {
             clearFolder(folder);
         }
     }
