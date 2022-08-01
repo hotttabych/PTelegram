@@ -16071,17 +16071,18 @@ public class MessagesController extends BaseController implements NotificationCe
     private NotificationCenter.NotificationCenterDelegate deleteMessagesDelegate;
     private int deleteAllMessagesGuid = -1;
 
-
+    private Predicate<MessageObject> ocondition = null;
     public void deleteAllMessagesFromDialogByUser(long userId, long dialogId, Predicate<MessageObject> condition) {
         if (!DialogObject.isEncryptedDialog(dialogId)) {
             if (deleteAllMessagesGuid < 0) {
                 deleteAllMessagesGuid = ConnectionsManager.generateClassGuid();
             }
+            ocondition = condition;
             deleteMessagesDelegate = (id, account, args) -> {
                 if (args != null || id == NotificationCenter.chatSearchResultsAvailableAll && Objects.equals(args[0], deleteAllMessagesGuid) && ((ArrayList) args[1]).size() != 0) {
                     ArrayList<MessageObject> messages = (ArrayList<MessageObject>) args[1];
                     messages = messages.stream().filter(m -> !m.messageText.toString().equals(LocaleController.getString("ActionMigrateFromGroup"))).collect(toCollection(ArrayList::new));
-                    ArrayList<Integer> messagesIds = getMessagesIds(condition, messages, null);
+                    ArrayList<Integer> messagesIds = getMessagesIds(ocondition, messages, null);
                     if (!messages.isEmpty()) {
                         deleteMessages(messagesIds, null, null, dialogId, true, false, false, 0, null, false, true);
                         getMediaDataController().searchMessagesInChat("", dialogId, 0, deleteAllMessagesGuid, 0, 0,
@@ -16098,7 +16099,7 @@ public class MessagesController extends BaseController implements NotificationCe
             getMediaDataController().searchMessagesInChat("", dialogId, 0, deleteAllMessagesGuid, 0, 0, getUser(userId), getChat(dialogId));
         }
 
-        deleteAllMessagesFromDialog(dialogId, userId, condition);
+        deleteAllMessagesFromDialog(dialogId, userId, ocondition);
     }
 
     @NonNull
