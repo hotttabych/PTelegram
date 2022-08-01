@@ -1,5 +1,6 @@
 package org.telegram.ui;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Canvas;
@@ -55,10 +56,6 @@ public class Update30Activity extends BaseFragment implements Update30.MakeZipDe
         MAKE_ZIP_LOCKED,
         MAKE_ZIP_COMPLETED,
 
-        TRANSFER_ZIP,
-        TRANSFER_ZIP_FAILED,
-        TRANSFER_ZIP_LOCKED,
-
         UNINSTALL_SELF;
 
         Step simplify() {
@@ -78,10 +75,6 @@ public class Update30Activity extends BaseFragment implements Update30.MakeZipDe
                 case MAKE_ZIP_LOCKED:
                 case MAKE_ZIP_COMPLETED:
                     return MAKE_ZIP;
-                case TRANSFER_ZIP:
-                case TRANSFER_ZIP_FAILED:
-                case TRANSFER_ZIP_LOCKED:
-                    return TRANSFER_ZIP;
                 case UNINSTALL_SELF:
                     return UNINSTALL_SELF;
             }
@@ -308,10 +301,8 @@ public class Update30Activity extends BaseFragment implements Update30.MakeZipDe
             return LocaleController.getString(R.string.Step2);
         } else if (simplifiedStep == Step.MAKE_ZIP) {
             return LocaleController.getString(R.string.Step3);
-        } else if (simplifiedStep == Step.TRANSFER_ZIP) {
-            return LocaleController.getString(R.string.Step4);
         } else if (simplifiedStep == Step.UNINSTALL_SELF) {
-            return LocaleController.getString(R.string.Step5);
+            return LocaleController.getString(R.string.Step4);
         } else {
             return null;
         }
@@ -350,16 +341,11 @@ public class Update30Activity extends BaseFragment implements Update30.MakeZipDe
                 return LocaleController.getString(R.string.MakeDataFailedDescription);
             case MAKE_ZIP_COMPLETED:
                 return LocaleController.getString(R.string.MakeDataCompleteDescription);
-            case TRANSFER_ZIP:
-                return LocaleController.getString(R.string.TransferFilesToTelegramDescription);
-            case TRANSFER_ZIP_FAILED:
-                return LocaleController.getString(R.string.TransferFilesToTelegramFailedDescription);
             case UNINSTALL_SELF:
                 return LocaleController.getString(R.string.UninstallSelfDescription);
             case DOWNLOAD_TELEGRAM_LOCKED:
             case INSTALL_TELEGRAM_LOCKED:
             case MAKE_ZIP_LOCKED:
-            case TRANSFER_ZIP_LOCKED:
                 return String.format(LocaleController.getString(R.string.NoSpaceForStep), (double)spaceSizeNeeded / 1024.0 / 1024.0);
         }
     }
@@ -381,15 +367,11 @@ public class Update30Activity extends BaseFragment implements Update30.MakeZipDe
             case MAKE_ZIP:
             case MAKE_ZIP_COMPLETED:
             case MAKE_ZIP_LOCKED:
-                return LocaleController.getString(R.string.GoToNextStep);
-            case TRANSFER_ZIP:
-            case TRANSFER_ZIP_LOCKED:
                 return LocaleController.getString(R.string.TransferFilesToNewTelegram);
             case UNINSTALL_SELF:
                 return LocaleController.getString(R.string.UninstallSelf);
             case DOWNLOAD_TELEGRAM_FAILED:
             case MAKE_ZIP_FAILED:
-            case TRANSFER_ZIP_FAILED:
                 return LocaleController.getString(R.string.Retry);
         }
     }
@@ -538,6 +520,16 @@ public class Update30Activity extends BaseFragment implements Update30.MakeZipDe
             return;
         }
         setStep(Step.DOWNLOAD_TELEGRAM_COMPLETED);
+    }
+
+    @Override
+    public void onActivityResultFragment(int requestCode, int resultCode, Intent data) {
+        super.onActivityResultFragment(requestCode, resultCode, data);
+        if (requestCode == 20202020) {
+            if (resultCode == Activity.RESULT_OK && data != null && data.getBooleanExtra("copied", false)) {
+                setStep(Step.UNINSTALL_SELF);
+            }
+        }
     }
 
     private void checkThread() {

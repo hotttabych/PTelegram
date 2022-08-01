@@ -5648,16 +5648,12 @@
     <string name="InstallNewTelegram">Install New PTelegram</string>
 
     <string name="Step3">Step 3</string>
-    <string name="MakeDataDescription">PTelegram prepares data for transfer to PtgUpdater. Wait for the end and then tap on the button \"Open PtgUpdater\".</string>
-    <string name="MakeDataCompleteDescription">Everything is ready to continue. Tap on the \"Open PtgUpdater\" button.</string>
+    <string name="MakeDataDescription">PTelegram prepares data for transfer to the new version of the app. Wait for the end and then tap on the button \"Copy Files to New PTelegram\".</string>
+    <string name="MakeDataCompleteDescription">Everything is ready to continue. Tap on the \"Copy Files to New PTelegram\" button.</string>
     <string name="MakeDataFailedDescription">Failed to prepare data. Perhaps there is not enough space on the device. Fix it and tap \"Retry\".</string>
-
-    <string name="Step4">Step 4</string>
-    <string name="TransferFilesToTelegramDescription">The new version of PTelegram is installed, but it is still empty. Let\'s fill it with data from the old version.</string>
-    <string name="TransferFilesToTelegramFailedDescription">Failed to transfer data. Perhaps there is not enough space on the device. Fix it and tap \"Retry\".</string>
     <string name="TransferFilesToNewTelegram">Copy Files to New PTelegram</string>
 
-    <string name="Step5">Step 5</string>
+    <string name="Step4">Step 4</string>
     <string name="UninstallSelfDescription">Telegram updated to version 3.0. Make sure that all data has been transferred to the new application. Then uninstall the old app.</string>
     <string name="UninstallSelf">Uninstall Old PTelegram</string>
 
