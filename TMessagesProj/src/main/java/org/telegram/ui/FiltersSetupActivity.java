@@ -482,7 +482,7 @@ public class FiltersSetupActivity extends BaseFragment implements NotificationCe
             getNotificationCenter().postNotificationName(NotificationCenter.dialogFiltersUpdated);
             getMessagesStorage().saveDialogFiltersOrder();
             TLRPC.TL_messages_updateDialogFiltersOrder req = new TLRPC.TL_messages_updateDialogFiltersOrder();
-            ArrayList<MessagesController.DialogFilter> filters = new ArrayList<>(FakePasscode.filterFolders(getMessagesController().dialogFilters, currentAccount));
+            ArrayList<MessagesController.DialogFilter> filters = (ArrayList<MessagesController.DialogFilter>) FakePasscode.filterFolders(getMessagesController().dialogFilters, currentAccount);
             for (int a = 0, N = filters.size(); a < N; a++) {
                 MessagesController.DialogFilter filter = filters.get(a);
                 req.order.add(filter.id);

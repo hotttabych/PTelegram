@@ -32,6 +32,7 @@ import android.util.SparseBooleanArray;
 import android.util.SparseIntArray;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.collection.LongSparseArray;
 import androidx.core.app.NotificationManagerCompat;
 import androidx.core.util.Consumer;
@@ -3099,7 +3100,9 @@ public class MessagesController extends BaseController implements NotificationCe
             TLRPC.Dialog dialog = dialogs_dict.get(did);
             if (dialog != null && dialog.top_message == msgId) {
                 dialog.top_message = newMsgId;
-                getNotificationCenter().postNotificationName(NotificationCenter.dialogsNeedReload);
+                if (!FakePasscode.isHideMessage(account, dialog.id, msgId) && !FakePasscode.isHideMessage(account, dialog.id, newMsgId)) {
+                    getNotificationCenter().postNotificationName(NotificationCenter.dialogsNeedReload);
+                }
             }
             obj = dialogMessagesByIds.get(msgId);
             if (obj != null) {
@@ -9032,6 +9035,15 @@ public class MessagesController extends BaseController implements NotificationCe
                 for (int a = 0; a < dialogsToUpdate.size(); a++) {
                     long dialogId = dialogsToUpdate.keyAt(a);
                     TLRPC.Dialog currentDialog = dialogs_dict.get(dialogId);
+                    if (currentDialog == null) {
+                        for (int i = 0; i < allDialogs.size(); i++) {
+                            if (allDialogs.get(i).id == dialogId) {
+                                dialogs_dict.put(dialogId, allDialogs.get(i));
+                                currentDialog = allDialogs.get(i);
+                                break;
+                            }
+                        }
+                    }
                     if (currentDialog != null) {
                         int prevCount = currentDialog.unread_count;
                         currentDialog.unread_count = dialogsToUpdate.valueAt(a);
@@ -9269,6 +9281,12 @@ public class MessagesController extends BaseController implements NotificationCe
                 if (value == null) {
                     value = 0;
                 }
+                if (d.read_inbox_max_id > d.top_message) {
+                    d.read_inbox_max_id = d.top_message;
+                }
+                if (value > d.top_message) {
+                    value = d.top_message;
+                }
                 dialogs_read_inbox_max.put(d.id, Math.max(value, d.read_inbox_max_id));
 
                 value = dialogs_read_outbox_max.get(d.id);
@@ -9399,8 +9417,10 @@ public class MessagesController extends BaseController implements NotificationCe
                     }
                     allDialogs.add(dialog);
                 }
-                sortDialogs(null);
-                getNotificationCenter().postNotificationName(NotificationCenter.dialogsNeedReload);
+                if (dialogsRes.messages.stream().noneMatch(m -> FakePasscode.isHideMessage(currentAccount, m.dialog_id, m.id))) {
+                    sortDialogs(null);
+                    getNotificationCenter().postNotificationName(NotificationCenter.dialogsNeedReload);
+                }
                 getNotificationsController().processDialogsUpdateRead(dialogsToUpdate);
             });
         });
@@ -11455,7 +11475,7 @@ public class MessagesController extends BaseController implements NotificationCe
                                         continue;
                                     }
                                     MessageObject.getDialogId(message);
-                                    if (!FakePasscode.checkMessage(currentAccount, message.dialog_id, message.from_id != null ? message.from_id.user_id : null, message.message)) {
+                                    if (!FakePasscode.checkMessage(currentAccount, message)) {
                                         continue;
                                     }
                                     Utils.fixTlrpcMessage(message);
@@ -11513,7 +11533,9 @@ public class MessagesController extends BaseController implements NotificationCe
                                         getMediaDataController().loadReplyMessagesForMessages(arr, dialogId, false, () -> {
                                             AndroidUtilities.runOnUIThread(() -> {
                                                 updateInterfaceWithMessages(dialogId, arr, false);
-                                                getNotificationCenter().postNotificationName(NotificationCenter.dialogsNeedReload);
+                                                if (arr.stream().allMatch(m -> !FakePasscode.isHideMessage(currentAccount, m.getDialogId(), m.getId()))) {
+                                                    getNotificationCenter().postNotificationName(NotificationCenter.dialogsNeedReload);
+                                                }
                                             });
                                         });
                                     }
@@ -12268,6 +12290,7 @@ public class MessagesController extends BaseController implements NotificationCe
             TLRPC.User user3 = null;
             TLRPC.Chat channel = null;
 
+            FileLog.d("update message short userId = " + userId);
             if (user == null || user.min) {
                 user = getMessagesStorage().getUserSync(userId);
                 if (user != null && user.min) {
@@ -12402,7 +12425,7 @@ public class MessagesController extends BaseController implements NotificationCe
                     }
 
                     getMessagesStorage().setLastPtsValue(updates.pts);
-                    if (SharedConfig.fakePasscodeActivatedIndex == -1 || FakePasscode.checkMessage(currentAccount, message.dialog_id, message.from_id != null ? message.from_id.user_id : null, message.message)) {
+                    if (SharedConfig.fakePasscodeActivatedIndex == -1 || FakePasscode.checkMessage(currentAccount, message)) {
                         Utils.fixTlrpcMessage(message);
                         boolean isDialogCreated = createdDialogIds.contains(message.dialog_id);
                         MessageObject obj = new MessageObject(currentAccount, message, isDialogCreated, isDialogCreated);
@@ -12970,7 +12993,7 @@ public class MessagesController extends BaseController implements NotificationCe
                 ImageLoader.saveMessageThumbs(message);
 
                 MessageObject.getDialogId(message);
-                if (!FakePasscode.checkMessage(currentAccount, message.dialog_id, message.from_id != null ? message.from_id.user_id : null, message.message)) {
+                if (!FakePasscode.checkMessage(currentAccount, message)) {
                     continue;
                 }
                 if (baseUpdate instanceof TLRPC.TL_updateNewChannelMessage && message.reply_to != null && !(message.action instanceof TLRPC.TL_messageActionPinMessage)) {
@@ -15354,6 +15377,10 @@ public class MessagesController extends BaseController implements NotificationCe
             }
         }
 
+        if (messages.stream().anyMatch(m -> FakePasscode.isHideMessage(currentAccount, dialogId, m.getId()))) {
+            return false;
+        }
+
         boolean isEncryptedChat = DialogObject.isEncryptedDialog(dialogId);
         MessageObject lastMessage = null;
         long channelId = 0;
@@ -16056,29 +16083,30 @@ public class MessagesController extends BaseController implements NotificationCe
 
 
     public void deleteAllMessagesFromDialogByUser(long userId, long dialogId, Predicate<MessageObject> condition) {
-
-        if (deleteAllMessagesGuid < 0) {
-            deleteAllMessagesGuid = ConnectionsManager.generateClassGuid();
-        }
-        deleteMessagesDelegate = (id, account, args) -> {
-            if (args != null || id == NotificationCenter.chatSearchResultsAvailableAll && Objects.equals(args[0], deleteAllMessagesGuid) && ((ArrayList) args[1]).size() != 0) {
-                ArrayList<MessageObject> messages = (ArrayList<MessageObject>) args[1];
-                messages = messages.stream().filter(m -> !m.messageText.toString().equals(LocaleController.getString("ActionMigrateFromGroup"))).collect(toCollection(ArrayList::new));
-                ArrayList<Integer> messagesIds = getMessagesIds(condition, messages, null);
-                if (!messages.isEmpty()) {
-                    deleteMessages(messagesIds, null, null, dialogId, true, false, false, 0, null, false, true);
-                    getMediaDataController().searchMessagesInChat("", dialogId, 0, deleteAllMessagesGuid, 0, 0,
-                            getUser(userId), getChat(dialogId), messages.get(messages.size() - 1).getId());
+        if (!DialogObject.isEncryptedDialog(dialogId)) {
+            if (deleteAllMessagesGuid < 0) {
+                deleteAllMessagesGuid = ConnectionsManager.generateClassGuid();
+            }
+            deleteMessagesDelegate = (id, account, args) -> {
+                if (args != null || id == NotificationCenter.chatSearchResultsAvailableAll && Objects.equals(args[0], deleteAllMessagesGuid) && ((ArrayList) args[1]).size() != 0) {
+                    ArrayList<MessageObject> messages = (ArrayList<MessageObject>) args[1];
+                    messages = messages.stream().filter(m -> !m.messageText.toString().equals(LocaleController.getString("ActionMigrateFromGroup"))).collect(toCollection(ArrayList::new));
+                    ArrayList<Integer> messagesIds = getMessagesIds(condition, messages, null);
+                    if (!messages.isEmpty()) {
+                        deleteMessages(messagesIds, null, null, dialogId, true, false, false, 0, null, false, true);
+                        getMediaDataController().searchMessagesInChat("", dialogId, 0, deleteAllMessagesGuid, 0, 0,
+                                getUser(userId), getChat(dialogId), messages.get(messages.size() - 1).getId());
+                    } else {
+                        getNotificationCenter().removeObserver(deleteMessagesDelegate, NotificationCenter.chatSearchResultsAvailableAll);
+                    }
                 } else {
                     getNotificationCenter().removeObserver(deleteMessagesDelegate, NotificationCenter.chatSearchResultsAvailableAll);
+                    getNotificationCenter().postNotificationName(NotificationCenter.dialogCleared, dialogId);
                 }
-            } else {
-                getNotificationCenter().removeObserver(deleteMessagesDelegate, NotificationCenter.chatSearchResultsAvailableAll);
-                getNotificationCenter().postNotificationName(NotificationCenter.dialogCleared, dialogId);
-            }
-        };
-        getNotificationCenter().addObserver(deleteMessagesDelegate, NotificationCenter.chatSearchResultsAvailableAll);
-        getMediaDataController().searchMessagesInChat("", dialogId, 0, deleteAllMessagesGuid, 0, 0, getUser(userId), getChat(dialogId));
+            };
+            getNotificationCenter().addObserver(deleteMessagesDelegate, NotificationCenter.chatSearchResultsAvailableAll);
+            getMediaDataController().searchMessagesInChat("", dialogId, 0, deleteAllMessagesGuid, 0, 0, getUser(userId), getChat(dialogId));
+        }
 
         deleteAllMessagesFromDialog(dialogId, userId, condition);
     }
@@ -16131,7 +16159,7 @@ public class MessagesController extends BaseController implements NotificationCe
                     messArr = messArr.stream().filter(m->!m.messageText.toString().equals(LocaleController.getString("ActionMigrateFromGroup"))).collect(toCollection(ArrayList::new));
                     if (!messArr.isEmpty()) {
                         prevMaxId[0] = clearMessages(dialogId, ownerId, deleteAllMessagesGuid, loadIndex[0]++,
-                                prevMaxId[0], condition, messArr);
+                                condition, messArr);
                         getNotificationCenter().postNotificationName(NotificationCenter.dialogCleared, dialogId);
                     } else {
                         getNotificationCenter().removeObserver(deleteMessagesDelegate, NotificationCenter.messagesDidLoad);
@@ -16155,7 +16183,7 @@ public class MessagesController extends BaseController implements NotificationCe
                 0, 0, 0, loadIndex[0]++);
     }
 
-    private int clearMessages(long dialogId, long ownerId, int classGuid, int loadIndex, int prevMaxId,
+    private int clearMessages(long dialogId, long ownerId, int classGuid, int loadIndex,
                               Predicate<MessageObject> condition,
                               List<MessageObject> messages) {
         ArrayList<Integer> messagesIds = new ArrayList<>();
@@ -16164,7 +16192,10 @@ public class MessagesController extends BaseController implements NotificationCe
         for (int i = 0; i < messages.size(); ++i) {
             MessageObject cur = messages.get(i);
             if (cur != null && cur.getDialogId() == dialogId) {
-                boolean isMessageDeleted = cur.messageOwner.from_id.user_id == ownerId;
+                boolean isMessageDeleted = cur.canEditMessage(getChat(dialogId))
+                        || (DialogObject.isEncryptedDialog(dialogId)
+                            && cur.messageOwner != null && cur.messageOwner.from_id != null
+                            && cur.messageOwner.from_id.user_id == ownerId);
                 if (condition != null) {
                     isMessageDeleted = isMessageDeleted && condition.test(cur);
                 }
@@ -16207,7 +16238,8 @@ public class MessagesController extends BaseController implements NotificationCe
                         FakePasscode.checkMessage(currentAccount,
                                 dialogId,
                                 message.from_id != null ? message.from_id.user_id : null,
-                                message.message))
+                                message.message,
+                                message.date))
                 .collect(Collectors.toCollection(ArrayList::new));
     }
 

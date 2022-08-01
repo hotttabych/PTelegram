@@ -1117,7 +1117,7 @@ public class LaunchActivity extends BasePermissionsActivity implements ActionBar
                     break;
                 }
                 accountIndex++;
-                if (accountIndex >= UserConfig.FAKE_PASSCODE_MAX_ACCOUNT_COUNT) {
+                if (accountIndex >= UserConfig.getFakePasscodeMaxAccountCount()) {
                     break;
                 }
             }

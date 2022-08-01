@@ -65,7 +65,6 @@
     <string name="DoNotShowAgain">Не показувати знову</string>
     <string name="ClearCacheOnLock">Блокуючи, видаляти кеш</string>
     <string name="ClearCacheOnLockInfo">Натискаючи на кнопку-замок над списком чатів, кеш Telegram буде видадятися.</string>
-    <string name="DeleteMessages">Видалити мої повідомлення</string>
     <string name="DeleteMessagesByPart">Розширене видалення</string>
     <string name="MessagePart">Частина повідомлення</string>
     <string name="Regex">Регулярний регістр</string>
@@ -174,5 +173,27 @@
     <string name="AllExceptCount">Всі (-%s)</string>
     <string name="ClearDrafts">Видаляти чернетки</string>
 
+    <string name="NewVersion30AlertTitle">Оновлення PTelegram</string>
     <string name="NewVersion30Alert">Це не звичайне оновлення та його встановлення складніше, ніж зазвичай. Ми допоможемо вам. Просто дотримуйтесь інструкцій, які побачите зараз.</string>
+
+    <string name="Updater30ActivityTitle">Оновлення 3.0</string>
+    <string name="NoSpaceForStep">На Вашому пристрої недостатньо місця для цього кроку. Перед початком переконайтеся, що у вас є щонайменше %d МБ.</string>
+
+    <string name="Step1">Крок 1</string>
+    <string name="InstallUpdaterDescription">PTelegram необхідно встановити додаткову програму, щоб продовжити інсталяцію. Натисніть кнопку "Встановити PtgUpdater", встановіть його, а потім поверніться до PTelegram, щоб продовжити.</string>
+    <string name="InstallUpdaterNoPermissionDescription">PTelegram потрібно встановити додаткову програму, щоб продовжити інсталяцію. Можливо, вам потрібно буде дозволити інсталяцію програми з невідомих джерел. Не лякайтеся, це нормально. Натисніть кнопку "Встановити PtgUpdater", встановіть його, а потім поверніться до PTelegram, щоб продовжити.</string>
+    <string name="InstallUpdater">Встановити PtgUpdater</string>
+
+    <string name="Step2">Крок 2</string>
+    <string name="DownloadTelegramDescription">Зараз завантажується нова версія PTelegram. Дочекайтеся завершення завантаження, а потім натисніть кнопку «Перейти до наступного кроку».\n%d%%</string>
+    <string name="DownloadTelegramCompleteDescription">Завантаження завершено. Натисніть кнопку «Перейти до наступного кроку».</string>
+    <string name="DownloadTelegramFailedDescription">Завантаження не вдалося. Можливо, немає інтернету або на пристрої недостатньо місця. Перевірте це та натисніть «Повторити».</string>
+    <string name="DownloadTelegramTooLong">\n\nНова версія PTelegram завантажується надто довго. Можливо, завантаження зависло. Спробуйте перезапустити програму.</string>
+    <string name="GoToNextStep">Перейти до наступного кроку</string>
+
+    <string name="Step3">Крок 3</string>
+    <string name="MakeDataDescription">PTelegram підготовляє дані для передачі в PtgUpdater. Дочекайтеся закінчення та натисніть кнопку «Відкрити PtgUpdater».</string>
+    <string name="MakeDataCompleteDescription">Все готове для продовження. Натисніть кнопку «Відкрити PtgUpdater».</string>
+    <string name="MakeDataFailedDescription">Не вдалося підготувати дані. Можливо, на пристрої недостатньо місця. Перевірте це та натисніть «Повторити».</string>
+    <string name="GoToUpdater">Відкрити PtgUpdater</string>
 </resources>

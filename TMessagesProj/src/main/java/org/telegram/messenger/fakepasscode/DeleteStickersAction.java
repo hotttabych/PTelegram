@@ -19,6 +19,7 @@ import java.util.stream.Collectors;
 import static org.telegram.messenger.MediaDataController.TYPE_EMOJI;
 import static org.telegram.messenger.MediaDataController.TYPE_IMAGE;
 
+@FakePasscodeSerializer.ToggleSerialization
 public class DeleteStickersAction extends AccountAction implements NotificationCenter.NotificationCenterDelegate {
     @JsonIgnore
     private Set<Integer> loadedStickerTypes = new HashSet<>();

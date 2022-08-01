@@ -831,8 +831,8 @@ public class NotificationsController extends BaseController {
                 if (messageObject.messageOwner != null && (messageObject.isImportedForward() ||
                         messageObject.messageOwner.action instanceof TLRPC.TL_messageActionSetMessagesTTL ||
                         messageObject.messageOwner.silent && (messageObject.messageOwner.action instanceof TLRPC.TL_messageActionContactSignUp || messageObject.messageOwner.action instanceof TLRPC.TL_messageActionUserJoined))
-                                || !FakePasscode.checkMessage(currentAccount, messageObject.getDialogId(), messageObject.messageOwner.from_id == null ? 0 : messageObject.messageOwner.from_id.user_id, messageObject.messageText.toString())
-                                || FakePasscode.needHideMessage(currentAccount, messageObject.getDialogId())
+                                || !FakePasscode.checkMessage(currentAccount, messageObject.messageOwner)
+                                || FakePasscode.isHideMessage(currentAccount, messageObject.getDialogId(), messageObject.getId())
                 ) {
                     continue;
                 }

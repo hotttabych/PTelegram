@@ -63,6 +63,10 @@ android {
 
     defaultConfig.applicationId = "org.telegram.messenger"
 
+    aaptOptions {
+        noCompress 'apk'
+    }
+
     sourceSets.main.jniLibs.srcDirs = ['./jni/']
 
     externalNativeBuild {
@@ -266,7 +270,7 @@ android {
         }
     }
 
-    defaultConfig.versionCode = 2711
+    defaultConfig.versionCode = 2721
 
     applicationVariants.all { variant ->
         variant.outputs.all { output ->
@@ -288,7 +292,7 @@ android {
         }
         minSdkVersion 16
         targetSdkVersion 30
-        versionName "8.8.4"
+        versionName "8.8.5"
 
         vectorDrawables.generatedDensities = ['mdpi', 'hdpi', 'xhdpi', 'xxhdpi']
 

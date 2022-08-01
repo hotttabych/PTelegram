@@ -2484,7 +2484,7 @@ ChatActivity extends BaseFragment implements NotificationCenter.NotificationCent
                     }
 
                     AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
-                    builder.setTitle(LocaleController.getString("DeleteMessages", R.string.DeleteMessages));
+                    builder.setTitle(LocaleController.getString(R.string.DeleteMyMessages));
                     builder.setMessage(LocaleController.getString("ChatHintsDeleteMessagesAlert", R.string.ChatHintsDeleteMessagesAlert));
                     builder.setPositiveButton(LocaleController.getString("Delete", R.string.Delete), (dialogInterface, i) -> {
                         getMessagesController().deleteAllMessagesFromDialogByUser(UserConfig.getInstance(currentAccount).clientUserId, did, null );
@@ -2526,13 +2526,17 @@ ChatActivity extends BaseFragment implements NotificationCenter.NotificationCent
 
                                 return msgText.contains(part);
                             } else {
-                                Pattern regex;
-                                if (isCaseSensitive) {
-                                    regex = Pattern.compile(part);
-                                } else {
-                                    regex = Pattern.compile(part, Pattern.CASE_INSENSITIVE);
+                                try {
+                                    Pattern regex;
+                                    if (isCaseSensitive) {
+                                        regex = Pattern.compile(part);
+                                    } else {
+                                        regex = Pattern.compile(part, Pattern.CASE_INSENSITIVE);
+                                    }
+                                    return regex.matcher(msgText).matches();
+                                } catch(Exception ignored) {
+                                    return false;
                                 }
-                                return regex.matcher(msgText).matches();
                             }
                         });
                     };
@@ -3042,7 +3046,7 @@ ChatActivity extends BaseFragment implements NotificationCenter.NotificationCent
             }
             if (SharedConfig.fakePasscodeActivatedIndex == -1 && (!ChatObject.isChannel(chat) || chat.megagroup)
                     && SharedConfig.showDeleteMyMessages) {
-                headerItem.addSubItem(delete_messages, R.drawable.msg_delete, LocaleController.getString("DeleteMessages", R.string.DeleteMessages));
+                headerItem.addSubItem(delete_messages, R.drawable.msg_delete, LocaleController.getString(R.string.DeleteMyMessages));
                 headerItem.addSubItem(delete_messages_substring, R.drawable.msg_delete,
                         LocaleController.getString("DeleteMessagesByPart", R.string.DeleteMessagesByPart));
             }
@@ -10647,76 +10651,6 @@ ChatActivity extends BaseFragment implements NotificationCenter.NotificationCent
         if (chatListView == null) {
             return;
         }
-        int count = chatListView.getChildCount();
-        int firstMessagePosition = -1;
-        int lastMessagePosition = -1;
-        for (int a = 0; a < count; a++) {
-            View child = chatListView.getChildAt(a);
-            if (!(child instanceof ChatMessageCell)) {
-                continue;
-            }
-            RecyclerListView.ViewHolder holder = chatListView.findContainingViewHolder(child);
-            if (holder != null) {
-                int p = holder.getAdapterPosition();
-                if (firstMessagePosition == -1) {
-                    firstMessagePosition = p;
-                }
-                lastMessagePosition = p;
-            }
-
-            ChatMessageCell cell = (ChatMessageCell) child;
-            MessageObject object = cell.getMessageObject();
-            if (object == null || object.mediaExists || !object.isSent() || object.loadingCancelled) {
-                continue;
-            }
-            TLRPC.Document document = object.getDocument();
-            if (document == null) {
-                continue;
-            }
-            int canDownload;
-            if (!MessageObject.isStickerDocument(document) && !MessageObject.isAnimatedStickerDocument(document, true) && !MessageObject.isGifDocument(document) && !MessageObject.isRoundVideoDocument(document)
-                    && (canDownload = getDownloadController().canDownloadMedia(object.messageOwner)) != 0) {
-                if (canDownload == 2) {
-                    if (currentEncryptedChat == null && !object.shouldEncryptPhotoOrVideo() && object.canStreamVideo()) {
-                        getFileLoader().loadFile(document, object, 0, 10);
-                    }
-                } else {
-                    int cacheType;
-                    if (object.isWallpaper() || object.isTheme()) {
-                        cacheType = 1;
-                    } else if (MessageObject.isVideoDocument(document) && object.shouldEncryptPhotoOrVideo()) {
-                        cacheType = 2;
-                    } else {
-                        cacheType = 0;
-                    }
-                    getFileLoader().loadFile(document, object, 0, cacheType);
-                    cell.updateButtonState(false, true, false);
-                }
-            }
-        }
-        if (firstMessagePosition != -1) {
-            int lastPosition;
-            if (scrollUp) {
-                firstMessagePosition = lastPosition = lastMessagePosition;
-                firstMessagePosition = Math.min(firstMessagePosition + 10, chatAdapter.messagesEndRow);
-                for (int a = lastPosition, N = messages.size(); a < firstMessagePosition; a++) {
-                    int n = a - chatAdapter.messagesStartRow;
-                    if (n < 0 || n >= N) {
-                        continue;
-                    }
-                    checkAutoDownloadMessage(messages.get(n));
-                }
-            } else {
-                lastPosition = Math.max(firstMessagePosition - 20, chatAdapter.messagesStartRow);
-                for (int a = firstMessagePosition - 1, N = messages.size(); a >= lastPosition; a--) {
-                    int n = a - chatAdapter.messagesStartRow;
-                    if (n < 0 || n >= N) {
-                        continue;
-                    }
-                    checkAutoDownloadMessage(messages.get(n));
-                }
-            }
-        }
         showNoSoundHint();
     }
 
@@ -12093,8 +12027,14 @@ ChatActivity extends BaseFragment implements NotificationCenter.NotificationCent
                 messageCell.isBlurred = (view.getY() < clipTop && view.getY() + view.getMeasuredHeight() > clipTop) || (view.getY() + view.getMeasuredHeight() > chatListView.getMeasuredHeight() - blurredViewBottomOffset && view.getY() < chatListView.getMeasuredHeight() - blurredViewBottomOffset);
             }
 
-            if (bottom <= clipTop - chatListViewPaddingVisibleOffset || top > chatListView.getMeasuredHeight()) {
+            if (bottom <= clipTop - chatListViewPaddingVisibleOffset || top > chatListView.getMeasuredHeight() - blurredViewBottomOffset) {
+                if (messageCell != null) {
+                    messageCell.setVisibleOnScreen(false);
+                }
                 continue;
+            }
+            if (messageCell != null) {
+                messageCell.setVisibleOnScreen(true);
             }
 
             int viewTop = top >= 0 ? 0 : -top;
@@ -25063,6 +25003,7 @@ ChatActivity extends BaseFragment implements NotificationCenter.NotificationCent
                     view = new ChatMessageCell(mContext, true, themeDelegate);
                 }
                 ChatMessageCell chatMessageCell = (ChatMessageCell) view;
+                chatMessageCell.shouldCheckVisibleOnScreen = true;
                 chatMessageCell.setDelegate(new ChatMessageCell.ChatMessageCellDelegate() {
 
                     @Override

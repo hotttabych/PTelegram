@@ -21,6 +21,7 @@ import android.widget.TextView;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.R;
 import org.telegram.messenger.fakepasscode.FakePasscode;
@@ -82,7 +83,7 @@ public class FakePasscodeBackupActivity extends BaseFragment {
 
         actionBar.setTitle(LocaleController.getString("BackupFakePasscode", R.string.BackupFakePasscode));
         frameLayout.setTag(Theme.key_windowBackgroundGray);
-        frameLayout.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundGray));
+        frameLayout.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundWhite));
         listView = new RecyclerListView(context);
         listView.setLayoutManager(new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false) {
             @Override
@@ -167,14 +168,20 @@ public class FakePasscodeBackupActivity extends BaseFragment {
             switch (holder.getItemViewType()) {
                 case 0: {
                     try {
-                        byte[] encryptedBytes = FakePasscodeSerializer.serializeEncrypted(passcode, passcodeString);
-                        String encodedStr = Base64.encodeToString(encryptedBytes, Base64.NO_WRAP);
+                        String encodedStr;
+                        if (TesterSettingsActivity.showPlainBackup) {
+                            encodedStr = FakePasscodeSerializer.serializePlain(passcode);
+                        } else {
+                            byte[] encryptedBytes = FakePasscodeSerializer.serializeEncrypted(passcode, passcodeString);
+                            encodedStr = Base64.encodeToString(encryptedBytes, Base64.NO_WRAP);
+                        }
 
                         EditTextBoldCursor editText = (EditTextBoldCursor) holder.itemView;
                         editText.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
                         editText.setBackgroundDrawable(null);
                         editText.setLineColors(getThemedColor(Theme.key_windowBackgroundWhiteInputField), getThemedColor(Theme.key_windowBackgroundWhiteInputFieldActivated), getThemedColor(Theme.key_windowBackgroundWhiteRedText3));
                         editText.setMaxLines(7);
+                        editText.setPadding(AndroidUtilities.dp(LocaleController.isRTL ? 24 : 12), AndroidUtilities.dp(6), AndroidUtilities.dp(LocaleController.isRTL ? 12 : 24), AndroidUtilities.dp(6));
                         editText.setText(encodedStr, TextView.BufferType.NORMAL);
                         editText.addTextChangedListener(new TextWatcher() {
                             @Override

@@ -11,6 +11,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
+@FakePasscodeSerializer.ToggleSerialization
 public class LogOutAction extends AccountAction {
     private static final int WAIT_TIME = 0;
 

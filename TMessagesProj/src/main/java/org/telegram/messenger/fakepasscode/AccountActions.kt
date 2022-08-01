@@ -1,7 +1,6 @@
 package org.telegram.messenger.fakepasscode
 
 import android.util.Base64
-import org.telegram.messenger.AccountInstance
 import org.telegram.messenger.SharedConfig
 import org.telegram.messenger.UserConfig
 import org.telegram.messenger.Utilities
@@ -12,6 +11,7 @@ import kotlin.reflect.jvm.isAccessible
 import kotlin.reflect.jvm.javaType
 
 class AccountActions : Action {
+    @FakePasscodeSerializer.Ignore
     var accountNum: Int? = null
     var removeChatsAction = RemoveChatsAction()
         private set(value) { field = value; SharedConfig.saveConfig() }
@@ -98,18 +98,20 @@ class AccountActions : Action {
         if (accountNum != null) {
             accountNum?.let { account ->
                 val userConfig = UserConfig.getInstance(account)
-                if (userConfig.isClientActivated) {
-                    idHash = calculateIdHash(userConfig.currentUser)
-                } else {
-                    accountNum = null
+                if (userConfig.isConfigLoaded) {
+                    if (userConfig.isClientActivated) {
+                        idHash = calculateIdHash(userConfig.currentUser)
+                    } else {
+                        accountNum = null
+                    }
                 }
             }
         } else {
-            checkAccountNum(false)
+            checkAccountNum()
         }
     }
 
-    fun checkAccountNum(allowSwapAccountNum: Boolean) {
+    fun checkAccountNum() {
         if (idHash != null) {
             for (a in 0 until UserConfig.MAX_ACCOUNT_COUNT) {
                 val userConfig = UserConfig.getInstance(a)
@@ -117,8 +119,7 @@ class AccountActions : Action {
                     if (idHash == calculateIdHash(userConfig.currentUser)) {
                         for (fakePasscode in SharedConfig.fakePasscodes) {
                             val actions = fakePasscode.accountActions
-                            if (actions.contains(this) && (allowSwapAccountNum
-                                        || actions.stream().noneMatch { it.accountNum == a })) {
+                            if (actions.contains(this) && actions.stream().noneMatch { it.accountNum == a }) {
                                 accountNum = a
                                 break
                             }
@@ -171,7 +172,7 @@ class AccountActions : Action {
         for (property in AccountActions::class.memberProperties) {
             if (property.returnType.javaType == action.javaClass && property is KMutableProperty<*>) {
                 property.isAccessible = true
-                property.setter.call(this, action);
+                property.setter.call(this, action)
             }
         }
     }

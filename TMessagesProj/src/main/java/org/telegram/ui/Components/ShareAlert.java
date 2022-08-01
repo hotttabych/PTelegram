@@ -2248,6 +2248,9 @@ public class ShareAlert extends BottomSheet implements NotificationCenter.Notifi
                     }
                     cursor.dispose();
 
+                    searchResults = (ArrayList<Object>) FakePasscode.filterItems(searchResults,
+                            Optional.of(currentAccount),
+                            (o, filter) -> !filter.isHideChat(((DialogSearchResult)o).dialog.id));
                     Collections.sort(searchResults, (lhs, rhs) -> {
                         DialogSearchResult res1 = (DialogSearchResult) lhs;
                         DialogSearchResult res2 = (DialogSearchResult) rhs;

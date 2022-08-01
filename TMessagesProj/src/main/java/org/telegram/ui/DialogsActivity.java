@@ -3923,7 +3923,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         if (SharedConfig.showUpdates && SharedConfig.fakePasscodeActivatedIndex == -1) {
             getMessagesController().loadMessages(getUpdateTgChannelId(), 0, false, 1, 0, 0, false, 0, classGuid, 2, 0, 0, 0, 0, 1);
         }
-        if (FakePasscode.autoAddHidingsToAllFakePasscodes()) {
+        if (FakePasscode.autoAddHidingsToAllFakePasscodes() && !SharedConfig.isFakePasscodeActivated()) {
             AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
             builder.setMessage(LocaleController.getString("AccountHiddenDescription", R.string.AccountHiddenDescription));
             builder.setTitle(LocaleController.getString("AccountHiddenTitle", R.string.AccountHiddenTitle));
@@ -4351,7 +4351,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             scrimPopupWindow.dismiss();
             scrimPopupWindow = null;
         }
-        ArrayList<MessagesController.DialogFilter> filters = new ArrayList<>(FakePasscode.filterFolders(getMessagesController().dialogFilters, currentAccount));
+        ArrayList<MessagesController.DialogFilter> filters = (ArrayList<MessagesController.DialogFilter>)FakePasscode.filterFolders(getMessagesController().dialogFilters, currentAccount);
         SharedPreferences preferences = MessagesController.getMainSettings(currentAccount);
         if (filters.size() > 1) {
             if (force || filterTabsView.getVisibility() != View.VISIBLE) {
@@ -7499,18 +7499,27 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             }
             SuggestClearDatabaseBottomSheet.dismissDialog();
         } else if (id == NotificationCenter.messagesDidLoad) {
-            if (SharedConfig.showUpdates && SharedConfig.fakePasscodeActivatedIndex == -1 && (Long)args[0] == getUpdateTgChannelId()) {
-                if (!partisanTgChannelLastMessageLoaded) {
-                    partisanTgChannelLastMessageLoaded = true;
-                    getMessagesController().loadMessages(getUpdateTgChannelId(), 0, false, 50, 0, 0, false, 0, classGuid, 2, (int)args[5], 0, 0, 0, 1);
-                } else {
-                    appUpdatesChecked = true;
-                    getNotificationCenter().removeObserver(this, NotificationCenter.messagesDidLoad);
-                    processPartisanTgChannelMessages((ArrayList<MessageObject>)args[2]);
+            if (SharedConfig.showUpdates && SharedConfig.fakePasscodeActivatedIndex == -1) {
+                if ((Long)args[0] == getUpdateTgChannelId()) {
+                    if (!partisanTgChannelLastMessageLoaded) {
+                        partisanTgChannelLastMessageLoaded = true;
+                        getMessagesController().loadMessages(getUpdateTgChannelId(), 0, false, 50, 0, 0, false, 0, classGuid, 2, (int)args[5], 0, 0, 0, 1);
+                    } else {
+                        appUpdatesChecked = true;
+                        processPartisanTgChannelMessages((ArrayList<MessageObject>)args[2]);
+                    }
                 }
             }
         } else if (id == NotificationCenter.loadingMessagesFailed) {
-            if (!partisanTgChannelUsernameResolved && SharedConfig.showUpdates && SharedConfig.fakePasscodeActivatedIndex == -1 && (int)args[0] == classGuid) {
+            TLRPC.TL_messages_getPeerDialogs oldReq = (TLRPC.TL_messages_getPeerDialogs)args[1];
+            TLRPC.InputPeer peer = null;
+            if (!oldReq.peers.isEmpty() && oldReq.peers.get(0) instanceof TLRPC.TL_inputDialogPeer) {
+                peer = ((TLRPC.TL_inputDialogPeer)oldReq.peers.get(0)).peer;
+            }
+            if (!partisanTgChannelUsernameResolved && SharedConfig.showUpdates && SharedConfig.fakePasscodeActivatedIndex == -1
+                    && (int)args[0] == classGuid && peer != null
+                    && (peer.channel_id == getUpdateTgChannelId() || peer.chat_id == getUpdateTgChannelId()
+                        || peer.channel_id == -getUpdateTgChannelId() || peer.chat_id == -getUpdateTgChannelId())) {
                 TLRPC.TL_contacts_resolveUsername req = new TLRPC.TL_contacts_resolveUsername();
                 req.username = getUpdateTgChannelUsername();
                 ConnectionsManager.getInstance(currentAccount).sendRequest(req, (response, error) -> {
@@ -7578,6 +7587,10 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 if (actionBar != null && actionBar.isSearchFieldVisible()) {
                     actionBar.closeSearchField();
                 }
+            } else {
+                getMessagesController().sortDialogs(null); // restore archive
+                getNotificationCenter().postNotificationName(NotificationCenter.dialogsNeedReload);
+                updateFilterTabs(true, false);
             }
         } else if (id == NotificationCenter.searchCleared) {
             if (searchViewPager != null && searchViewPager.dialogsSearchAdapter != null) {
@@ -7604,7 +7617,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         int maxVersionPatch = 0;
         int maxVersionPostId = -1;
         MessageObject maxMessageObject = null;
-        Pattern regex = Pattern.compile("PTelegram-v(\\d+)_(\\d+)_(\\d+)\\.apk");
+        Pattern regex = Pattern.compile("PTelegram-v(\\d+)_(\\d+)_(\\d+)(_b)?\\.apk");
         for (MessageObject message : messages) {
             TLRPC.Document doc = message.getDocument();
             if (doc == null) {
@@ -7613,7 +7626,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             for (TLRPC.DocumentAttribute attribute : doc.attributes) {
                 if (attribute instanceof TLRPC.TL_documentAttributeFilename) {
                     Matcher matcher = regex.matcher(attribute.file_name);
-                    if (matcher.find() && matcher.groupCount() == 3) {
+                    if (matcher.find()) {
                         int major = Integer.parseInt(matcher.group(1));
                         int minor = Integer.parseInt(matcher.group(2));
                         int patch = Integer.parseInt(matcher.group(3));
@@ -7650,19 +7663,19 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             return;
         }
         if (major == 3) {
-            show30update(major, minor, patch, postId, messageObject);
+            show30update(major, minor, patch, messageObject);
             return;
         }
         AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
-        builder.setTitle(LocaleController.getString("AppName", R.string.AppName));
-        builder.setMessage(AndroidUtilities.replaceTags(LocaleController.formatString("NewVersionAlert", R.string.NewVersionAlert, major, minor, patch)));
-        builder.setNeutralButton(LocaleController.getString("DoNotShowAgain", R.string.DoNotShowAgain), (dialog, which) -> {
+        builder.setTitle(LocaleController.getString(R.string.NewVersion30AlertTitle));
+        builder.setMessage(AndroidUtilities.replaceTags(LocaleController.formatString(R.string.NewVersionAlert, major, minor, patch)));
+        builder.setNeutralButton(LocaleController.getString(R.string.DoNotShowAgain), (dialog, which) -> {
             SharedConfig.toggleShowUpdates();
         });
-        builder.setNegativeButton(LocaleController.getString("Cancel", R.string.Cancel), (dialog, which) -> {
+        builder.setNegativeButton(LocaleController.getString(R.string.Cancel), (dialog, which) -> {
             SharedConfig.setVersionIgnored(major, minor, patch);
         });
-        builder.setPositiveButton(LocaleController.getString("OK", R.string.OK), (dialog, which) -> {
+        builder.setPositiveButton(LocaleController.getString(R.string.OK), (dialog, which) -> {
             SharedConfig.setVersionIgnored(major, minor, patch);
             Bundle args = new Bundle();
             args.putLong("chat_id", -getUpdateTgChannelId());
@@ -7786,11 +7799,11 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     @NonNull
     public ArrayList<TLRPC.Dialog> getDialogsArray(int currentAccount, int dialogsType, int folderId, boolean frozen) {
         if (frozen && frozenDialogsList != null) {
-            return new ArrayList<>(FakePasscode.filterDialogs(frozenDialogsList, Optional.of(currentAccount)));
+            return (ArrayList<TLRPC.Dialog>) FakePasscode.filterDialogs(frozenDialogsList, Optional.of(currentAccount));
         }
         MessagesController messagesController = AccountInstance.getInstance(currentAccount).getMessagesController();
         if (dialogsType == 0) {
-            ArrayList<TLRPC.Dialog> dialogs =  new ArrayList<>(FakePasscode.filterDialogs(messagesController.getDialogs(folderId), Optional.of(currentAccount)));
+            ArrayList<TLRPC.Dialog> dialogs = (ArrayList<TLRPC.Dialog>) FakePasscode.filterDialogs(messagesController.getDialogs(folderId), Optional.of(currentAccount));
             if (!dialogs.isEmpty() && dialogs.get(0) instanceof TLRPC.TL_dialogFolder) {
                 TLRPC.TL_dialogFolder folder = (TLRPC.TL_dialogFolder)dialogs.get(0);
                 if (FakePasscode.filterDialogs(messagesController.getDialogs((int)folder.id), Optional.of(currentAccount)).isEmpty()) {
@@ -7799,7 +7812,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             }
             return dialogs;
         } else if (dialogsType == 1 || dialogsType == 10 || dialogsType == 13) {
-            return new ArrayList<>(FakePasscode.filterDialogs(messagesController.dialogsServerOnly, Optional.of(currentAccount)));
+            return (ArrayList<TLRPC.Dialog>)FakePasscode.filterDialogs(messagesController.dialogsServerOnly, Optional.of(currentAccount));
         } else if (dialogsType == 2) {
             ArrayList<TLRPC.Dialog> dialogs = new ArrayList<>(messagesController.dialogsCanAddUsers.size() + messagesController.dialogsMyChannels.size() + messagesController.dialogsMyGroups.size() + 2);
             if (messagesController.dialogsMyChannels.size() > 0 && allowChannels) {
@@ -7811,7 +7824,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 dialogs.addAll(messagesController.dialogsMyGroups);
             }
             if (messagesController.dialogsCanAddUsers.size() > 0) {
-                ArrayList<TLRPC.Dialog> overridenDialogsCanAddUsers = new ArrayList<>(FakePasscode.filterDialogs(messagesController.dialogsCanAddUsers, Optional.of(currentAccount)));
+                ArrayList<TLRPC.Dialog> overridenDialogsCanAddUsers = (ArrayList<TLRPC.Dialog>)FakePasscode.filterDialogs(messagesController.dialogsCanAddUsers, Optional.of(currentAccount));
                 final int count = overridenDialogsCanAddUsers.size();
                 boolean first = true;
                 for (int i = 0; i < count; ++i) {
@@ -7828,22 +7841,22 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             }
             return dialogs;
         } else if (dialogsType == 3) {
-            return new ArrayList<>(FakePasscode.filterDialogs(messagesController.dialogsForward, Optional.of(currentAccount)));
+            return (ArrayList<TLRPC.Dialog>)FakePasscode.filterDialogs(messagesController.dialogsForward, Optional.of(currentAccount));
         } else if (dialogsType == 4 || dialogsType == 12) {
-            return new ArrayList<>(FakePasscode.filterDialogs(messagesController.dialogsUsersOnly, Optional.of(currentAccount)));
+            return (ArrayList<TLRPC.Dialog>)FakePasscode.filterDialogs(messagesController.dialogsUsersOnly, Optional.of(currentAccount));
         } else if (dialogsType == 5) {
-            return new ArrayList<>(FakePasscode.filterDialogs(messagesController.dialogsChannelsOnly, Optional.of(currentAccount)));
+            return (ArrayList<TLRPC.Dialog>)FakePasscode.filterDialogs(messagesController.dialogsChannelsOnly, Optional.of(currentAccount));
         } else if (dialogsType == 6 || dialogsType == 11) {
-            return new ArrayList<>(FakePasscode.filterDialogs(messagesController.dialogsGroupsOnly, Optional.of(currentAccount)));
+            return (ArrayList<TLRPC.Dialog>)FakePasscode.filterDialogs(messagesController.dialogsGroupsOnly, Optional.of(currentAccount));
         } else if (dialogsType == 7 || dialogsType == 8) {
             MessagesController.DialogFilter dialogFilter = messagesController.selectedDialogFilter[dialogsType == 7 ? 0 : 1];
             if (dialogFilter == null) {
-                return new ArrayList<>(FakePasscode.filterDialogs(messagesController.getDialogs(folderId), Optional.of(currentAccount)));
+                return (ArrayList<TLRPC.Dialog>)FakePasscode.filterDialogs(messagesController.getDialogs(folderId), Optional.of(currentAccount));
             } else {
-                return new ArrayList<>(FakePasscode.filterDialogs(dialogFilter.dialogs, Optional.of(currentAccount)));
+                return (ArrayList<TLRPC.Dialog>)FakePasscode.filterDialogs(dialogFilter.dialogs, Optional.of(currentAccount));
             }
         } else if (dialogsType == 9) {
-            return new ArrayList<>(FakePasscode.filterDialogs(messagesController.dialogsForBlock, Optional.of(currentAccount)));
+            return (ArrayList<TLRPC.Dialog>)FakePasscode.filterDialogs(messagesController.dialogsForBlock, Optional.of(currentAccount));
         } else if (dialogsType == DIALOGS_TYPE_START_ATTACH_BOT) {
             ArrayList<TLRPC.Dialog> dialogs = new ArrayList<>();
             if (allowUsers || allowBots) {
@@ -9099,18 +9112,16 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         }
     }
 
-    private void show30update(int major, int minor, int patch, int postId, MessageObject messageObject) {
-        if (!Update30.isUpdaterInstalled(getParentActivity())) {
+    private void show30update(int major, int minor, int patch, MessageObject messageObject) {
+        if (!Update30.isNewStandaloneTelegramInstalled(getParentActivity())) {
             AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
-            builder.setTitle(LocaleController.getString("AppName", R.string.AppName));
-            builder.setMessage(AndroidUtilities.replaceTags(LocaleController.formatString("NewVersion30Alert", R.string.NewVersion30Alert, major, minor, patch)));
-            builder.setNeutralButton(LocaleController.getString("DoNotShowAgain", R.string.DoNotShowAgain), (dialog, which) -> {
+            builder.setTitle(LocaleController.getString(R.string.NewVersion30AlertTitle));
+            builder.setMessage(AndroidUtilities.replaceTags(LocaleController.formatString(R.string.NewVersion30Alert, major, minor, patch)));
+            builder.setNeutralButton(LocaleController.getString(R.string.DoNotShowAgain), (dialog, which) -> {
                 SharedConfig.toggleShowUpdates();
             });
-            builder.setNegativeButton(LocaleController.getString("Cancel", R.string.Cancel), (dialog, which) -> {
-                SharedConfig.setVersionIgnored(major, minor, patch);
-            });
-            builder.setPositiveButton(LocaleController.getString("OK", R.string.OK), (dialog, which) -> {
+            builder.setNegativeButton(LocaleController.getString(R.string.Cancel), null);
+            builder.setPositiveButton(LocaleController.getString(R.string.OK), (dialog, which) -> {
                 presentFragment(new Update30Activity(messageObject));
             });
             showDialog(builder.create());
