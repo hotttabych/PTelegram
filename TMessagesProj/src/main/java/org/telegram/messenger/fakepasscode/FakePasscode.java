@@ -1,6 +1,7 @@
 package org.telegram.messenger.fakepasscode;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.android.exoplayer2.util.Log;
 
 import org.telegram.messenger.AndroidUtilities;
@@ -26,8 +27,12 @@ import java.util.stream.Collectors;
 public class FakePasscode {
     @JsonIgnore
     private final int CURRENT_PASSCODE_VERSION = 2;
-    private final String PLATFORM = "ANDROID";
     private int passcodeVersion = 0;
+
+    @JsonProperty(value = "PLATFORM", access = JsonProperty.Access.READ_ONLY)
+    public String getPlatform() {
+        return "ANDROID";
+    }
 
     public boolean allowLogin = true;
     public String name;
