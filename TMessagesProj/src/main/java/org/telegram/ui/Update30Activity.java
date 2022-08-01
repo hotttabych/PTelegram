@@ -421,6 +421,8 @@ public class Update30Activity extends BaseFragment implements Update30.MakeZipDe
             } else {
                 Update30.startNewTelegram(getParentActivity(), zipFile, passwordBytes);
             }
+        } else if (step == Step.UNINSTALL_SELF) {
+            uninstallSelf();
         }
     }
 
@@ -530,6 +532,19 @@ public class Update30Activity extends BaseFragment implements Update30.MakeZipDe
                 setStep(Step.UNINSTALL_SELF);
             }
         }
+    }
+
+    private void uninstallSelf() {
+        if (getTelegramFile().exists()) {
+            getTelegramFile().delete();
+        }
+        if (zipFile != null && zipFile.exists()) {
+            zipFile.delete();
+        }
+
+        Intent intent = new Intent(Intent.ACTION_DELETE);
+        intent.setData(Uri.parse("package:" + getParentActivity().getPackageName()));
+        getParentActivity().startActivity(intent);
     }
 
     private void checkThread() {
