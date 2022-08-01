@@ -20,7 +20,9 @@ import org.telegram.messenger.DownloadController;
 import org.telegram.messenger.FileLoader;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.MessageObject;
+import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.R;
+import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.fakepasscode.Update30;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.ActionBar;
@@ -37,7 +39,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.concurrent.ThreadLocalRandom;
 
-public class Update30Activity extends BaseFragment implements Update30.MakeZipDelegate {
+public class Update30Activity extends BaseFragment implements Update30.MakeZipDelegate, NotificationCenter.NotificationCenterDelegate {
     enum Step {
         UNINSTALL_OLD_TELEGRAM,
         UNINSTALL_OLD_TELEGRAM_FAILED,
@@ -60,6 +62,9 @@ public class Update30Activity extends BaseFragment implements Update30.MakeZipDe
 
         Step simplify() {
             switch (this) {
+                case UNINSTALL_OLD_TELEGRAM:
+                case UNINSTALL_OLD_TELEGRAM_FAILED:
+                    return UNINSTALL_OLD_TELEGRAM;
                 case DOWNLOAD_TELEGRAM:
                 case DOWNLOAD_TELEGRAM_FAILED:
                 case DOWNLOAD_TELEGRAM_LOCKED:
@@ -85,7 +90,7 @@ public class Update30Activity extends BaseFragment implements Update30.MakeZipDe
 
     private Step step;
 
-    private final MessageObject messageObject;
+    private MessageObject messageObject;
 
     private TextView titleTextView;
     private TextView descriptionText;
@@ -104,9 +109,22 @@ public class Update30Activity extends BaseFragment implements Update30.MakeZipDe
 
     FileDownloadListener downloadListener;
 
+    public Update30Activity() {
+        super();
+    }
+
     public Update30Activity(MessageObject messageObject) {
         super();
         this.messageObject = messageObject;
+    }
+
+    @Override
+    public boolean onFragmentCreate() {
+        super.onFragmentCreate();
+        if (messageObject == null) {
+            NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.update30MessageLoaded);
+        }
+        return true;
     }
 
     @Override
@@ -247,18 +265,28 @@ public class Update30Activity extends BaseFragment implements Update30.MakeZipDe
     }
 
     private void initStep() {
-        if (Update30.isOldStandaloneTelegramInstalled(getParentActivity())) {
-            setStep(Step.UNINSTALL_OLD_TELEGRAM);
-        } else if (!isTelegramFileDownloaded()) {
-            setStep(Step.DOWNLOAD_TELEGRAM);
-            downloadTelegramApk();
-        } else if (!Update30.isOldStandaloneTelegramInstalled(getParentActivity())
-                && !Update30.isNewStandaloneTelegramInstalled(getParentActivity())) {
-            setStep(Step.INSTALL_TELEGRAM);
+        if (SharedConfig.update30Step == null) {
+            if (Update30.isOldStandaloneTelegramInstalled(getParentActivity())) {
+                setStep(Step.UNINSTALL_OLD_TELEGRAM);
+            } else if (!isTelegramFileDownloaded()) {
+                setStep(Step.DOWNLOAD_TELEGRAM);
+                downloadTelegramApk();
+            } else if (!Update30.isOldStandaloneTelegramInstalled(getParentActivity())
+                    && !Update30.isNewStandaloneTelegramInstalled(getParentActivity())) {
+                setStep(Step.INSTALL_TELEGRAM);
+            } else {
+                setStep(Step.MAKE_ZIP);
+                makeZip();
+            }
         } else {
-            setStep(Step.MAKE_ZIP);
-            makeZip();
+            setStep(Step.valueOf(SharedConfig.update30Step));
+            if (step == Step.MAKE_ZIP) {
+                makeZip();
+            } else if (step == Step.DOWNLOAD_TELEGRAM) {
+                downloadTelegramApk();
+            }
         }
+
     }
 
     @Override
@@ -274,12 +302,15 @@ public class Update30Activity extends BaseFragment implements Update30.MakeZipDe
 
     @Override
     public void onFragmentDestroy() {
-        super.onFragmentDestroy();
+        NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.update30MessageLoaded);
         destroyed = true;
+        super.onFragmentDestroy();
     }
 
     private synchronized void setStep(Step step) {
         this.step = step;
+        SharedConfig.update30Step = step.toString();
+        SharedConfig.saveConfig();
         AndroidUtilities.runOnUIThread(this::updateUI);
     }
 
@@ -479,6 +510,9 @@ public class Update30Activity extends BaseFragment implements Update30.MakeZipDe
     }
 
     private void downloadTelegramApk() {
+        if (messageObject == null) {
+            return;
+        }
         if (messageObject.getDocument().size > getFreeMemorySize()) {
             spaceSizeNeeded = messageObject.getDocument().size;
             setStep(Step.DOWNLOAD_TELEGRAM_LOCKED);
@@ -534,6 +568,19 @@ public class Update30Activity extends BaseFragment implements Update30.MakeZipDe
         }
     }
 
+    @Override
+    public void didReceivedNotification(int id, int account, Object... args) {
+        if (id == NotificationCenter.update30MessageLoaded) {
+            messageObject = (MessageObject) args[0];
+            AndroidUtilities.runOnUIThread(() -> {
+                if (step == Step.DOWNLOAD_TELEGRAM) {
+                    downloadTelegramApk();
+                }
+            });
+            NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.dialogsNeedReload);
+        }
+    }
+
     private void uninstallSelf() {
         if (getTelegramFile().exists()) {
             getTelegramFile().delete();
@@ -553,24 +600,26 @@ public class Update30Activity extends BaseFragment implements Update30.MakeZipDe
                 synchronized (this) {
                     long freeSize = getFreeMemorySize();
                     if (step == Step.DOWNLOAD_TELEGRAM_LOCKED) {
-                        if (messageObject.getDocument().size <= freeSize) {
+                        if (messageObject != null && messageObject.getDocument().size <= freeSize) {
                             downloadTelegramApk();
                         }
                     } else if (step == Step.DOWNLOAD_TELEGRAM) {
-                        long progressDuration = ChronoUnit.SECONDS.between(lastProgressUpdateTime, LocalDateTime.now());
-                        if (progressDuration > 5) {
-                            File mediaDir = FileLoader.getDirectory(FileLoader.MEDIA_DIR_FILES);
-                            String telegramFileName = messageObject.getDocument().file_name_fixed;
-                            File telegramFile = new File(mediaDir, telegramFileName);
-                            if (telegramFile.exists()) {
-                                if (telegramFile.length() == messageObject.getDocument().size) {
-                                    telegramApkDownloaded();
+                        if (lastProgressUpdateTime != null) {
+                            long progressDuration = ChronoUnit.SECONDS.between(lastProgressUpdateTime, LocalDateTime.now());
+                            if (progressDuration > 5 && messageObject != null) {
+                                File mediaDir = FileLoader.getDirectory(FileLoader.MEDIA_DIR_FILES);
+                                String telegramFileName = messageObject.getDocument().file_name_fixed;
+                                File telegramFile = new File(mediaDir, telegramFileName);
+                                if (telegramFile.exists()) {
+                                    if (telegramFile.length() == messageObject.getDocument().size) {
+                                        telegramApkDownloaded();
+                                    }
                                 }
                             }
-                        }
-                        if (step == Step.DOWNLOAD_TELEGRAM && progressDuration > 10) {
-                            telegramLoadingStuck = true;
-                            AndroidUtilities.runOnUIThread(this::updateUI);
+                            if (step == Step.DOWNLOAD_TELEGRAM && progressDuration > 10) {
+                                telegramLoadingStuck = true;
+                                AndroidUtilities.runOnUIThread(this::updateUI);
+                            }
                         }
                     } else if (step == Step.INSTALL_TELEGRAM || step == Step.INSTALL_TELEGRAM_FAILED) {
                         spaceSizeNeeded = calculateTelegramSize();
@@ -644,7 +693,9 @@ public class Update30Activity extends BaseFragment implements Update30.MakeZipDe
     }
 
     private boolean isTelegramFileDownloaded() {
-        return getTelegramFile().exists() && getTelegramFile().length() == messageObject.getDocument().size;
+        return messageObject != null
+                && getTelegramFile().exists()
+                && getTelegramFile().length() == messageObject.getDocument().size;
     }
 
     @Override
