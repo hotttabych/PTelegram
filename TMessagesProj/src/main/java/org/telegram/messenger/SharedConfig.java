@@ -246,6 +246,7 @@ public class SharedConfig {
     public static long updateChannelIdOverride;
     public static String updateChannelUsernameOverride;
     public static boolean premiumDisabled;
+    public static String update30Step;
 
     static {
         loadConfig();
@@ -390,6 +391,7 @@ public class SharedConfig {
                 editor.putLong("updateChannelIdOverride", updateChannelIdOverride);
                 editor.putString("updateChannelUsernameOverride", updateChannelUsernameOverride);
                 editor.putBoolean("premiumDisabled", premiumDisabled);
+                editor.putString("update30Step", update30Step);
 
                 if (pendingAppUpdate != null) {
                     try {
@@ -535,6 +537,7 @@ public class SharedConfig {
             updateChannelIdOverride = preferences.getLong("updateChannelIdOverride", 0);
             updateChannelUsernameOverride = preferences.getString("updateChannelUsernameOverride", "");
             premiumDisabled = preferences.getBoolean("premiumDisabled", false);
+            update30Step = preferences.getString("update30Step", null);
 
             String authKeyString = preferences.getString("pushAuthKey", null);
             if (!TextUtils.isEmpty(authKeyString)) {

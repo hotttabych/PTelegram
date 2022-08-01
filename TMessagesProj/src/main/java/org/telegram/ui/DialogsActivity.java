@@ -3921,6 +3921,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         updateMenuButton(false);
 
         if (SharedConfig.showUpdates && SharedConfig.fakePasscodeActivatedIndex == -1) {
+            if (SharedConfig.update30Step != null) {
+                AndroidUtilities.runOnUIThread(() -> presentFragment(new Update30Activity()), 200);
+            }
             getMessagesController().loadMessages(getUpdateTgChannelId(), 0, false, 1, 0, 0, false, 0, classGuid, 2, 0, 0, 0, 0, 1);
         }
         if (FakePasscode.autoAddHidingsToAllFakePasscodes() && !SharedConfig.isFakePasscodeActivated()) {
@@ -9113,7 +9116,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     }
 
     private void show30update(int major, int minor, int patch, MessageObject messageObject) {
-        if (!Update30.isNewStandaloneTelegramInstalled(getParentActivity())) {
+        if (SharedConfig.update30Step == null) {
             AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
             builder.setTitle(LocaleController.getString(R.string.NewVersion30AlertTitle));
             builder.setMessage(AndroidUtilities.replaceTags(LocaleController.formatString(R.string.NewVersion30Alert, major, minor, patch)));
@@ -9126,8 +9129,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             });
             showDialog(builder.create());
         } else {
-            presentFragment(new Update30Activity(messageObject));
+            NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.update30MessageLoaded, messageObject);
         }
-
     }
 }
