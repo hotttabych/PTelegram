@@ -62,6 +62,9 @@ public class Update30Activity extends BaseFragment implements Update30.MakeZipDe
 
         Step simplify() {
             switch (this) {
+                case UNINSTALL_OLD_TELEGRAM:
+                case UNINSTALL_OLD_TELEGRAM_FAILED:
+                    return UNINSTALL_OLD_TELEGRAM;
                 case DOWNLOAD_TELEGRAM:
                 case DOWNLOAD_TELEGRAM_FAILED:
                 case DOWNLOAD_TELEGRAM_LOCKED:
