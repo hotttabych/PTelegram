@@ -205,6 +205,7 @@ public class NotificationCenter {
     public static final int chatSearchResultsAvailableAll = totalEvents++;
     public static final int telegramDataReceived = totalEvents++;
     public static final int telegramDataReceivingError = totalEvents++;
+    public static final int update30MessageLoaded = totalEvents++;
 
 
     //global
