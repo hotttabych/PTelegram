@@ -447,7 +447,7 @@ public class Update30Activity extends BaseFragment implements Update30.MakeZipDe
                 } else {
                     setStep(Step.INSTALL_TELEGRAM);
                 }
-            } else if (!zipFile.exists()) {
+            } else if (zipFile == null || !zipFile.exists()) {
                 makeZip();
             } else {
                 Update30.startNewTelegram(getParentActivity(), zipFile, passwordBytes);
