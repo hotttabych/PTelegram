@@ -196,7 +196,11 @@ public class Update30 {
                     intent.putExtra("language", LocaleController.getInstance().getLanguageOverride());
                     intent.putExtra("fromOldTelegram", true);
 
-                    intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                        intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                    } else {
+                        intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_ACTIVITY_NEW_TASK);
+                    }
                     activity.startActivityForResult(intent, 20202020);
                 } catch (Exception e) {
                     Log.e("Update30", "copyUpdaterFileFromAssets error ", e);
