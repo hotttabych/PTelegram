@@ -634,6 +634,16 @@ public class Update30Activity extends BaseFragment implements Update30.MakeZipDe
                         if (calculateZipSize() <= freeSize) {
                             makeZip();
                         }
+                    } else if (step == Step.MAKE_ZIP_COMPLETED) {
+                        if (Build.VERSION.SDK_INT < 24) {
+                            if (checkCopiedFile()) {
+                                setStep(Step.UNINSTALL_SELF);
+                            }
+                        }
+                    } else if (step == Step.UNINSTALL_SELF) {
+                        if (Build.VERSION.SDK_INT < 24) {
+                            checkCopiedFile();
+                        }
                     }
                 }
                 Thread.sleep(100);
@@ -696,6 +706,15 @@ public class Update30Activity extends BaseFragment implements Update30.MakeZipDe
         return messageObject != null
                 && getTelegramFile().exists()
                 && getTelegramFile().length() == messageObject.getDocument().size;
+    }
+
+    private boolean checkCopiedFile() {
+        File copiedFile = new File(FileLoader.getDirectory(FileLoader.MEDIA_DIR_DOCUMENT), "copied");
+        if (copiedFile.exists()) {
+            copiedFile.delete();
+            return true;
+        }
+        return false;
     }
 
     @Override
