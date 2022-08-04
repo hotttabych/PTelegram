@@ -563,7 +563,7 @@ public class Update30Activity extends BaseFragment implements Update30.MakeZipDe
         super.onActivityResultFragment(requestCode, resultCode, data);
         if (requestCode == 20202020) {
             if (resultCode == Activity.RESULT_OK && data != null && data.getBooleanExtra("copied", false)) {
-                setStep(Step.UNINSTALL_SELF);
+                installationFinished();
             }
         }
     }
@@ -637,7 +637,7 @@ public class Update30Activity extends BaseFragment implements Update30.MakeZipDe
                     } else if (step == Step.MAKE_ZIP_COMPLETED) {
                         if (Build.VERSION.SDK_INT < 24) {
                             if (checkCopiedFile()) {
-                                setStep(Step.UNINSTALL_SELF);
+                                installationFinished();
                             }
                         }
                     } else if (step == Step.UNINSTALL_SELF) {
@@ -678,6 +678,16 @@ public class Update30Activity extends BaseFragment implements Update30.MakeZipDe
             size += getTelegramFile().length();
         }
         return size;
+    }
+
+    private void installationFinished() {
+        checkCopiedFile();
+        Update30.deleteDataZip();
+        File telegramFile = getTelegramFile();
+        if (telegramFile.exists()) {
+            telegramFile.delete();
+        }
+        setStep(Step.UNINSTALL_SELF);
     }
 
     private static long calculateDirSize(File dir) {

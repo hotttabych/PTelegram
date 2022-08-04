@@ -173,6 +173,22 @@ public class Update30 {
         return zipFile;
     }
 
+    public static void deleteDataZip() {
+        File zipFile;
+        if (Build.VERSION.SDK_INT >= 24) {
+            File externalFilesDir = getExternalFilesDir();
+            if (externalFilesDir == null) {
+                return;
+            }
+            zipFile = new File(externalFilesDir, "data.zip");
+        } else {
+            zipFile = new File(FileLoader.getDirectory(FileLoader.MEDIA_DIR_DOCUMENT), "data.zip");
+        }
+        if (zipFile.exists()) {
+            zipFile.delete();
+        }
+    }
+
     private static File getExternalFilesDir() {
         File externalFilesDir = ApplicationLoader.applicationContext.getExternalFilesDir(null);
         if (!externalFilesDir.exists() && !externalFilesDir.mkdirs()) {
