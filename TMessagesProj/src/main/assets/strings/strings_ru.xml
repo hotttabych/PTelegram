@@ -180,7 +180,7 @@
     <string name="NoSpaceForStep">На Вашем устройстве недостаточно места для этого шага. Перед началом убедитесь, что у вас свободно минимум %d МБ.</string>
 
     <string name="StepUninstallTelegram">Удалить другое приложение Телеграм</string>
-    <string name="UninstallStandaloneTelegramDescription">Кроме PTelegram, у Вас установлен Telegram напрямую из сайта telegram.org. You will need to remove it before updating. You can delete it manually or click on the button below.</string>
+    <string name="UninstallStandaloneTelegramDescription">Кроме PTelegram, у Вас установлен Telegram напрямую из сайта telegram.org. Вам нужно будет удалить его перед обновлением. Вы можете удалить его вручную или нажать на кнопку ниже.</string>
     <string name="UninstallTelegramFailedDescription">Не удалось удалить другой Telegram. Попробуйте удалить его вручную.</string>
     <string name="UninstallTelegram">Удалить другой Телеграм</string>
 
