@@ -187,7 +187,7 @@ public class Update30Activity extends BaseFragment implements Update30.MakeZipDe
     private void createTitleTextView(Context context) {
         titleTextView = new TextView(context);
         titleTextView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
-        titleTextView.setGravity(Gravity.BOTTOM);
+        titleTextView.setGravity(Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL);
         titleTextView.setPadding(AndroidUtilities.dp(32), 0, AndroidUtilities.dp(32), 0);
         titleTextView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 24);
         RelativeLayout.LayoutParams relativeParams = new RelativeLayout.LayoutParams(
