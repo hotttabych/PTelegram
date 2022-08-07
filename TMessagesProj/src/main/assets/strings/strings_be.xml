@@ -201,7 +201,7 @@
     <string name="MakeDataDescription">PTelegram падрыхтоўвае дадзеныя для перадачы ў новае прыкладанне. Дачакайцеся заканчэння і націсніце на кнопку "Скапіяваць дадзеныя ў новы PTelegram".</string>
     <string name="MakeDataCompleteDescription">Усё гатова для працягу. Націсніце на кнопку "Скапіяваць дадзеныя ў новы PTelegram".</string>
     <string name="MakeDataFailedDescription">Немагчыма падрыхтаваць дадзеныя. Магчыма, на прыладзе недастаткова месца. Праверце гэта і націсніце "Паўтарыць".</string>
-    <string name="GoToUpdater">Скапіяваць дадзеныя ў новы PTelegram</string>
+    <string name="TransferFilesToNewTelegram">Скапіяваць дадзеныя ў новы PTelegram</string>
 
     <string name="Step4">Крок 4</string>
     <string name="UninstallSelfDescription">Тэлеграм абноўлены да версіі 3.0. Пераканайцеся, што ўсе дадзеныя перададзены ў новые прыкладанне і выдаліце старое.</string>

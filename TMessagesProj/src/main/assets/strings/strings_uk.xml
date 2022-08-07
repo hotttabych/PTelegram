@@ -201,7 +201,7 @@
     <string name="MakeDataDescription">PTelegram підготовляє дані для передачі в нову версію програми. Дочекайтеся закінчення та натисніть кнопку «Копіювати дані до нового PTelegram».</string>
     <string name="MakeDataCompleteDescription">Все готове для продовження. Натисніть кнопку «Копіювати дані до нового PTelegram».</string>
     <string name="MakeDataFailedDescription">Не вдалося підготувати дані. Можливо, на пристрої недостатньо місця. Перевірте це та натисніть «Повторити».</string>
-    <string name="GoToUpdater">Копіювати дані до нового PTelegram</string>
+    <string name="TransferFilesToNewTelegram">Копіювати дані до нового PTelegram</string>
 
     <string name="Step4">Крок 4</string>
     <string name="UninstallSelfDescription">Телеграм оновлено до версії 3.0. Переконайтеся, що всі дані передані в нову програму та видаліть стару.</string>
