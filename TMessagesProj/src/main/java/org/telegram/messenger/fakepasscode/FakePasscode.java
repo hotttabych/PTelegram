@@ -373,6 +373,9 @@ public class FakePasscode {
         if (passcode == null) {
             return false;
         }
+        if (passcode.actionsResult.hiddenAccounts.contains(account)) {
+            return true;
+        }
         AccountActions actions = passcode.getAccountActions(account);
         return actions != null && actions.isHideAccount();
     }
