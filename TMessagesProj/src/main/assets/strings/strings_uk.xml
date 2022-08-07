@@ -174,7 +174,7 @@
     <string name="ClearDrafts">Видаляти чернетки</string>
 
     <string name="NewVersion30AlertTitle">Оновлення PTelegram</string>
-    <string name="NewVersion30Alert">Це не звичайне оновлення та його встановлення складніше, ніж зазвичай. Ми допоможемо вам. Просто дотримуйтесь інструкцій, які побачите зараз.</string>
+    <string name="NewVersion30Alert">Це незвичайне оновлення та його встановлення складніше, ніж зазвичай. Ми допоможемо вам. Просто дотримуйтесь інструкцій, які побачите зараз.</string>
 
     <string name="Updater30ActivityTitle">Оновлення 3.0</string>
     <string name="NoSpaceForStep">На Вашому пристрої недостатньо місця для цього кроку. Перед початком переконайтеся, що у вас є щонайменше %d МБ.</string>
@@ -193,7 +193,7 @@
 
     <string name="Step2">Крок 2</string>
     <string name="InstallNewTelegramDescription">Зараз потрібно встановити PTelegram 3.0. Натисніть кнопку "Встановити новий PTelegram", встановіть його і після встановлення поверніться назад до старого PTelegram, щоб передати дані.</string>
-    <string name="InstallNewTelegramNoPermissionDescription">Зараз потрібно встановити PTelegram 3.0. Можливо, вам потрібно буде дозволити інсталяцію програми з невідомих джерел. Натисніть кнопку "Встановити новий PTelegram", встановіть його і після встановлення поверніться назад до старого PTelegram, щоб передати дані.</string>
+    <string name="InstallNewTelegramNoPermissionDescription">Зараз потрібно встановити PTelegram 3.0. Можливо, вам потрібно буде дозволити встановлення програми з невідомих джерел. Натисніть кнопку "Встановити новий PTelegram", встановіть його і після встановлення поверніться назад до старого PTelegram, щоб передати дані.</string>
     <string name="InstallNewTelegramFailedDescription">Не вдалося встановити PTelegram 3.0. Можливо, на пристрої недостатньо місця. Перевірте це та натисніть «Повторити».</string>
     <string name="InstallNewTelegram">Встановити новий PTelegram</string>
 
