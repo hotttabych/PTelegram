@@ -467,8 +467,11 @@ public class DrawerProfileCell extends FrameLayout implements NotificationCenter
                 if (!TextUtils.isEmpty(fakePhone)) {
                     phoneTextView.setText(PhoneFormat.getInstance().format("+" + fakePhone));
                 } else {
-                    String phone = UserConfig.getInstance(UserConfig.selectedAccount).getCurrentUser().phone;
-                    phoneTextView.setText(PhoneFormat.getInstance().format("+" + phone));
+                    UserConfig config = UserConfig.getInstance(UserConfig.selectedAccount);
+                    if (config.isClientActivated() && config.getCurrentUser() != null) {
+                        String phone = config.getCurrentUser().phone;
+                        phoneTextView.setText(PhoneFormat.getInstance().format("+" + phone));
+                    }
                 }
             });
         }
