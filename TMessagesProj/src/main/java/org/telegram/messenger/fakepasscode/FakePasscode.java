@@ -1,6 +1,7 @@
 package org.telegram.messenger.fakepasscode;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.android.exoplayer2.util.Log;
 
@@ -24,6 +25,7 @@ import java.util.Optional;
 import java.util.function.BiPredicate;
 import java.util.stream.Collectors;
 
+@JsonIgnoreProperties(ignoreUnknown=true)
 public class FakePasscode {
     @JsonIgnore
     private final int CURRENT_PASSCODE_VERSION = 2;
