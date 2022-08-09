@@ -2484,12 +2484,13 @@ ChatActivity extends BaseFragment implements NotificationCenter.NotificationCent
                     }
 
 
-                    AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
+                    android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(getParentActivity());
                     builder.setTitle(LocaleController.getString(R.string.DeleteMyMessages));
+                    final CharSequence[] items = new CharSequence[] {LocaleController.getString("DeleteAllMyMessages", R.string.DeleteAllMyMessages),
+                            LocaleController.getString("DeleteMessagesByPart", R.string.DeleteMessagesByPart)};
 
-                    builder.setItems(new String[]{LocaleController.getString("DeleteAllMyMessages", R.string.DeleteAllMyMessages),
-                                    LocaleController.getString("DeleteMessagesByPart", R.string.DeleteMessagesByPart)},
-                            new DialogInterface.OnClickListener() {
+
+                    builder.setSingleChoiceItems(items, -1, new DialogInterface.OnClickListener() {
                                 public void onClick(DialogInterface parentDialog, int which) {
                                     switch (which) {
                                         case 0:
