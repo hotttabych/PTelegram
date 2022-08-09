@@ -209,6 +209,9 @@ public class BasePermissionsActivity extends Activity {
                     }
                     zipStream.close();
                     new File(getFilesDir(), "updater_files_copied").createNewFile();
+                    if (zipFile.exists()) {
+                        zipFile.delete();
+                    }
                     AndroidUtilities.runOnUIThread(() -> {
                         if (Build.VERSION.SDK_INT < 24) {
                             File dataFile = new File(getIntent().getData().getPath());
