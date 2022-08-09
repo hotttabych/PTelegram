@@ -187,7 +187,7 @@ public class Update30Activity extends BaseFragment implements Update30.MakeZipDe
     private void createTitleTextView(Context context) {
         titleTextView = new TextView(context);
         titleTextView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
-        titleTextView.setGravity(Gravity.BOTTOM);
+        titleTextView.setGravity(Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL);
         titleTextView.setPadding(AndroidUtilities.dp(32), 0, AndroidUtilities.dp(32), 0);
         titleTextView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 24);
         RelativeLayout.LayoutParams relativeParams = new RelativeLayout.LayoutParams(
@@ -447,7 +447,7 @@ public class Update30Activity extends BaseFragment implements Update30.MakeZipDe
                 } else {
                     setStep(Step.INSTALL_TELEGRAM);
                 }
-            } else if (!zipFile.exists()) {
+            } else if (zipFile == null || !zipFile.exists()) {
                 makeZip();
             } else {
                 Update30.startNewTelegram(getParentActivity(), zipFile, passwordBytes);
@@ -563,7 +563,7 @@ public class Update30Activity extends BaseFragment implements Update30.MakeZipDe
         super.onActivityResultFragment(requestCode, resultCode, data);
         if (requestCode == 20202020) {
             if (resultCode == Activity.RESULT_OK && data != null && data.getBooleanExtra("copied", false)) {
-                setStep(Step.UNINSTALL_SELF);
+                installationFinished();
             }
         }
     }
@@ -634,6 +634,16 @@ public class Update30Activity extends BaseFragment implements Update30.MakeZipDe
                         if (calculateZipSize() <= freeSize) {
                             makeZip();
                         }
+                    } else if (step == Step.MAKE_ZIP_COMPLETED) {
+                        if (Build.VERSION.SDK_INT < 24) {
+                            if (checkCopiedFile()) {
+                                installationFinished();
+                            }
+                        }
+                    } else if (step == Step.UNINSTALL_SELF) {
+                        if (Build.VERSION.SDK_INT < 24) {
+                            checkCopiedFile();
+                        }
                     }
                 }
                 Thread.sleep(100);
@@ -670,6 +680,19 @@ public class Update30Activity extends BaseFragment implements Update30.MakeZipDe
         return size;
     }
 
+    private void installationFinished() {
+        checkCopiedFile();
+        Update30.deleteDataZip();
+        File telegramFile = getTelegramFile();
+        if (telegramFile.exists()) {
+            telegramFile.delete();
+        }
+        if (zipFile != null && zipFile.exists()) {
+            zipFile.delete();
+        }
+        setStep(Step.UNINSTALL_SELF);
+    }
+
     private static long calculateDirSize(File dir) {
         if (!dir.exists()) {
             return 0;
@@ -696,6 +719,15 @@ public class Update30Activity extends BaseFragment implements Update30.MakeZipDe
         return messageObject != null
                 && getTelegramFile().exists()
                 && getTelegramFile().length() == messageObject.getDocument().size;
+    }
+
+    private boolean checkCopiedFile() {
+        File copiedFile = new File(FileLoader.getDirectory(FileLoader.MEDIA_DIR_DOCUMENT), "copied");
+        if (copiedFile.exists()) {
+            copiedFile.delete();
+            return true;
+        }
+        return false;
     }
 
     @Override

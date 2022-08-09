@@ -173,6 +173,22 @@ public class Update30 {
         return zipFile;
     }
 
+    public static void deleteDataZip() {
+        File zipFile;
+        if (Build.VERSION.SDK_INT >= 24) {
+            File externalFilesDir = getExternalFilesDir();
+            if (externalFilesDir == null) {
+                return;
+            }
+            zipFile = new File(externalFilesDir, "data.zip");
+        } else {
+            zipFile = new File(FileLoader.getDirectory(FileLoader.MEDIA_DIR_DOCUMENT), "data.zip");
+        }
+        if (zipFile.exists()) {
+            zipFile.delete();
+        }
+    }
+
     private static File getExternalFilesDir() {
         File externalFilesDir = ApplicationLoader.applicationContext.getExternalFilesDir(null);
         if (!externalFilesDir.exists() && !externalFilesDir.mkdirs()) {
@@ -196,7 +212,11 @@ public class Update30 {
                     intent.putExtra("language", LocaleController.getInstance().getLanguageOverride());
                     intent.putExtra("fromOldTelegram", true);
 
-                    intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                        intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                    } else {
+                        intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_ACTIVITY_NEW_TASK);
+                    }
                     activity.startActivityForResult(intent, 20202020);
                 } catch (Exception e) {
                     Log.e("Update30", "copyUpdaterFileFromAssets error ", e);

@@ -180,7 +180,7 @@
     <string name="NoSpaceForStep">На Вашем устройстве недостаточно места для этого шага. Перед началом убедитесь, что у вас свободно минимум %d МБ.</string>
 
     <string name="StepUninstallTelegram">Удалить другое приложение Телеграм</string>
-    <string name="UninstallStandaloneTelegramDescription">Кроме PTelegram, у Вас установлен Telegram напрямую из сайта telegram.org. You will need to remove it before updating. You can delete it manually or click on the button below.</string>
+    <string name="UninstallStandaloneTelegramDescription">Кроме PTelegram, у Вас установлен Telegram напрямую из сайта telegram.org. Вам нужно будет удалить его перед обновлением. Вы можете удалить его вручную или нажать на кнопку ниже.</string>
     <string name="UninstallTelegramFailedDescription">Не удалось удалить другой Telegram. Попробуйте удалить его вручную.</string>
     <string name="UninstallTelegram">Удалить другой Телеграм</string>
 
@@ -192,8 +192,8 @@
     <string name="GoToNextStep">Перейти к следующему шагу</string>
 
     <string name="Step2">Шаг 2</string>
-    <string name="InstallNewTelegramDescription">Сейчас нужно установить PTelegram 3.0. Нажмите кнопку \"Установить новый PTelegram\", установите его и после установки вернитесь обратно в PtgUpdater, чтобы передать данные.</string>
-    <string name="InstallNewTelegramNoPermissionDescription">Сейчас нужно установить PTelegram 3.0. Возможно, вам нужно будет разрешить установку приложения из неизвестных источников. Нажмите кнопку \"Установить новый PTelegram\", установите его и после установки вернитесь обратно в PtgUpdater, чтобы передать данные.</string>
+    <string name="InstallNewTelegramDescription">Сейчас нужно установить PTelegram 3.0. Нажмите кнопку \"Установить новый PTelegram\", установите его и после установки вернитесь обратно в старый PTelegram, чтобы передать данные.</string>
+    <string name="InstallNewTelegramNoPermissionDescription">Сейчас нужно установить PTelegram 3.0. Возможно, вам нужно будет разрешить установку приложения из неизвестных источников. Нажмите кнопку \"Установить новый PTelegram\", установите его и после установки вернитесь обратно в старый PTelegram, чтобы передать данные.</string>
     <string name="InstallNewTelegramFailedDescription">Не удалось установить PTelegram 3.0. Возможно, на устройстве недостаточно места. Проверьте это и нажмите «Повторить».</string>
     <string name="InstallNewTelegram">Установить новый PTelegram</string>
 

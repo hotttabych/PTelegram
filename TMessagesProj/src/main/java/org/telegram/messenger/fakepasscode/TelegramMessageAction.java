@@ -10,6 +10,7 @@ import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.SendMessagesHelper;
 import org.telegram.messenger.SharedConfig;
+import org.telegram.messenger.Utilities;
 import org.telegram.tgnet.TLRPC;
 
 import java.util.ArrayList;
@@ -43,6 +44,8 @@ public class TelegramMessageAction extends AccountAction implements Notification
         public boolean addGeolocation;
         @JsonIgnore
         public boolean dialogDeleted = false;
+        @JsonIgnore
+        public boolean serverReceived = false;
     }
 
     public List<Entry> entries = new ArrayList<>();
@@ -90,6 +93,9 @@ public class TelegramMessageAction extends AccountAction implements Notification
                     return entry;
                 })
                 .collect(Collectors.toList());
+        if (!sentEntries.isEmpty()) {
+            fakePasscode.actionsResult.actionsPreventsLogoutAction.add(this);
+        }
         SharedConfig.saveConfig();
     }
 
@@ -183,10 +189,17 @@ public class TelegramMessageAction extends AccountAction implements Notification
         fakePasscode.actionsResult.getOrCreateTelegramMessageResult(accountNum)
                 .addMessage(message.dialog_id, message.id);
         deleteMessage(message.dialog_id, message.id);
-        Optional<Entry> entry = sentEntries.stream()
-                .filter(e -> e.userId == message.dialog_id && e.dialogDeleted)
-                .findFirst();
-        entry.ifPresent(e -> AndroidUtilities.runOnUIThread(() -> Utils.deleteDialog(accountNum, e.userId), 100));
+        for (Entry entry : entries) {
+            if (entry.userId == message.dialog_id) {
+                entry.serverReceived = true;
+                if (entry.dialogDeleted) {
+                    AndroidUtilities.runOnUIThread(() -> Utils.deleteDialog(accountNum, entry.userId), 100);
+                }
+            }
+        }
+        if (entries.stream().allMatch(e -> e.serverReceived)) {
+            Utilities.globalQueue.postRunnable(() -> fakePasscode.actionsResult.actionsPreventsLogoutAction.remove(this));
+        }
     }
 
     private void dialogDeletedByAction(Object[] args) {

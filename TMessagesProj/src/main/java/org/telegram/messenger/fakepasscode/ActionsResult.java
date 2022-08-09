@@ -1,12 +1,21 @@
 package org.telegram.messenger.fakepasscode;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 public class ActionsResult {
     public Map<Integer, RemoveChatsResult> removeChatsResults = new HashMap<>();
     public Map<Integer, TelegramMessageResult> telegramMessageResults = new HashMap<>();
     public Map<Integer, String> fakePhoneNumbers = new HashMap<>();
+    public Set<Integer> hiddenAccounts = Collections.synchronizedSet(new HashSet<>());
+
+    @JsonIgnore
+    public Set<Action> actionsPreventsLogoutAction = Collections.synchronizedSet(new HashSet<>());
 
     public RemoveChatsResult getRemoveChatsResult(int accountNum) {
         return removeChatsResults.get(accountNum);
