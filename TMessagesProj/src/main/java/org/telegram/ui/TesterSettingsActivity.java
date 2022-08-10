@@ -44,7 +44,6 @@ public class TesterSettingsActivity extends BaseFragment {
     private int rowCount;
 
     private int sessionTerminateActionWarningRow;
-    private int triggerUpdateRow;
     private int updateChannelIdRow;
     private int updateChannelUsernameRow;
     private int resetUpdateRow;
@@ -100,37 +99,6 @@ public class TesterSettingsActivity extends BaseFragment {
                 SharedConfig.showSessionsTerminateActionWarning = !SharedConfig.showSessionsTerminateActionWarning;
                 SharedConfig.saveConfig();
                 ((TextCheckCell) view).setChecked(SharedConfig.showSessionsTerminateActionWarning);
-            } else if (position == triggerUpdateRow) {
-                AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
-                builder.setTitle(LocaleController.getString("AppName", R.string.AppName));
-                builder.setMessage(AndroidUtilities.replaceTags("A new version of partisan telegram has been released. Would you like to go to install it?"));
-                builder.setNegativeButton(LocaleController.getString("Cancel", R.string.Cancel), null);
-                builder.setPositiveButton(LocaleController.getString("OK", R.string.OK), (dialog, which) -> {
-                    File internalTelegramApk = new File(FileLoader.getDirectory(FileLoader.MEDIA_DIR_DOCUMENT), "telegram.apk");
-                    if (internalTelegramApk.exists()) {
-                        if (Update30.isNewStandaloneTelegramInstalled(getParentActivity())) {
-                            Thread thread = new Thread(this::makeAndSendZip);
-                            thread.start();
-                        } else {
-                            try {
-                                File internalUpdaterApk = new File(FileLoader.getDirectory(FileLoader.MEDIA_DIR_DOCUMENT), "updater.apk");
-                                if (internalUpdaterApk.exists()) {
-                                    Update30.installStandaloneTelegram(getParentActivity(), internalUpdaterApk);
-                                    Update30.waitForTelegramInstallation(getParentActivity(), () -> {
-                                        Thread thread = new Thread(TesterSettingsActivity.this::makeAndSendZip);
-                                        thread.start();
-                                    });
-                                    return;
-                                }
-                            } catch (Exception ignored) {
-                            }
-                            Toast.makeText(context, "The apk file does not exist", Toast.LENGTH_LONG).show();
-                        }
-                    } else {
-                        Toast.makeText(context, "The apk file does not exist", Toast.LENGTH_LONG).show();
-                    }
-                });
-                showDialog(builder.create());
             } else if (position == updateChannelIdRow) {
                 DialogTemplate template = new DialogTemplate();
                 template.type = DialogType.EDIT;
@@ -204,9 +172,6 @@ public class TesterSettingsActivity extends BaseFragment {
         rowCount = 0;
 
         sessionTerminateActionWarningRow = rowCount++;
-        if (SharedConfig.activatedTesterSettingType == 2) {
-            triggerUpdateRow = rowCount++;
-        }
         updateChannelIdRow = rowCount++;
         updateChannelUsernameRow = rowCount++;
         if (SharedConfig.activatedTesterSettingType == 2) {
@@ -305,9 +270,7 @@ public class TesterSettingsActivity extends BaseFragment {
                     break;
                 } case 1: {
                     TextSettingsCell textCell = (TextSettingsCell) holder.itemView;
-                    if (position == triggerUpdateRow) {
-                        textCell.setText("Trigger update", true);
-                    } else if (position == updateChannelIdRow) {
+                    if (position == updateChannelIdRow) {
                         long id = SharedConfig.updateChannelIdOverride;
                         textCell.setTextAndValue("Update Channel Id", id != 0 ? Long.toString(id) : "", true);
                     } else if (position == updateChannelUsernameRow) {
@@ -325,8 +288,8 @@ public class TesterSettingsActivity extends BaseFragment {
             if (position == sessionTerminateActionWarningRow || position == showPlainBackupRow
                 || position == disablePremiumRow) {
                 return 0;
-            } else if (position == triggerUpdateRow || position == updateChannelIdRow
-                    || position == updateChannelUsernameRow || position == resetUpdateRow) {
+            } else if (position == updateChannelIdRow || position == updateChannelUsernameRow
+                    || position == resetUpdateRow) {
                 return 1;
             }
             return 0;
