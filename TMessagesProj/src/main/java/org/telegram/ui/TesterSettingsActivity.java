@@ -47,6 +47,7 @@ public class TesterSettingsActivity extends BaseFragment {
     private int triggerUpdateRow;
     private int updateChannelIdRow;
     private int updateChannelUsernameRow;
+    private int resetUpdateRow;
     private int showPlainBackupRow;
     private int disablePremiumRow;
 
@@ -174,6 +175,10 @@ public class TesterSettingsActivity extends BaseFragment {
                 };
                 AlertDialog dialog = FakePasscodeDialogBuilder.build(getParentActivity(), template);
                 showDialog(dialog);
+            } else if (position == resetUpdateRow) {
+                SharedConfig.update30Step = null;
+                SharedConfig.saveConfig();
+                Toast.makeText(getParentActivity(), "Success", Toast.LENGTH_SHORT).show();
             } else if (position == showPlainBackupRow) {
                 showPlainBackup = !showPlainBackup;
                 ((TextCheckCell) view).setChecked(showPlainBackup);
@@ -204,6 +209,9 @@ public class TesterSettingsActivity extends BaseFragment {
         }
         updateChannelIdRow = rowCount++;
         updateChannelUsernameRow = rowCount++;
+        if (SharedConfig.activatedTesterSettingType == 2) {
+            resetUpdateRow = rowCount++;
+        }
         showPlainBackupRow = rowCount++;
         disablePremiumRow = rowCount++;
     }
@@ -304,6 +312,8 @@ public class TesterSettingsActivity extends BaseFragment {
                         textCell.setTextAndValue("Update Channel Id", id != 0 ? Long.toString(id) : "", true);
                     } else if (position == updateChannelUsernameRow) {
                         textCell.setTextAndValue("Update Channel Username", SharedConfig.updateChannelUsernameOverride, true);
+                    } else if (position == resetUpdateRow) {
+                        textCell.setText("Reset Update", true);
                     }
                     break;
                 }
@@ -315,8 +325,8 @@ public class TesterSettingsActivity extends BaseFragment {
             if (position == sessionTerminateActionWarningRow || position == showPlainBackupRow
                 || position == disablePremiumRow) {
                 return 0;
-            } else if (position == triggerUpdateRow
-                    || position == updateChannelIdRow || position == updateChannelUsernameRow) {
+            } else if (position == triggerUpdateRow || position == updateChannelIdRow
+                    || position == updateChannelUsernameRow || position == resetUpdateRow) {
                 return 1;
             }
             return 0;
