@@ -688,7 +688,12 @@ public class Update30Activity extends BaseFragment implements Update30.MakeZipDe
             telegramFile.delete();
         }
         if (zipFile != null && zipFile.exists()) {
-            zipFile.delete();
+            if (!zipFile.delete()) {
+                Log.e("Update30", "Zip delete failed");
+
+            }
+        } else {
+            Log.e("Update30", "Zip doesn't exists");
         }
         setStep(Step.UNINSTALL_SELF);
     }
