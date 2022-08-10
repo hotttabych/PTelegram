@@ -769,7 +769,9 @@ public class SharedConfig {
         int oldIndex = fakePasscodeActivatedIndex;
         fakePasscodeActivatedIndex = fakePasscodeIndex;
         if (oldIndex != fakePasscodeIndex) {
-            NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.fakePasscodeActivated);
+            AndroidUtilities.runOnUIThread(() ->
+                    NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.fakePasscodeActivated)
+            );
         }
         for (int i = 0; i < UserConfig.MAX_ACCOUNT_COUNT; i++) {
             if (UserConfig.getInstance(i).isClientActivated()) {
