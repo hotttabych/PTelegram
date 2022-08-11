@@ -5,19 +5,14 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.widget.FrameLayout;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import org.telegram.messenger.AndroidUtilities;
-import org.telegram.messenger.BuildVars;
-import org.telegram.messenger.FileLoader;
-import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.R;
 import org.telegram.messenger.SharedConfig;
-import org.telegram.messenger.fakepasscode.Update30;
 import org.telegram.ui.ActionBar.ActionBar;
 import org.telegram.ui.ActionBar.AlertDialog;
 import org.telegram.ui.ActionBar.BaseFragment;
@@ -44,7 +39,6 @@ public class TesterSettingsActivity extends BaseFragment {
     private int rowCount;
 
     private int sessionTerminateActionWarningRow;
-    private int triggerUpdateRow;
     private int updateChannelIdRow;
     private int updateChannelUsernameRow;
     private int showPlainBackupRow;
@@ -99,37 +93,6 @@ public class TesterSettingsActivity extends BaseFragment {
                 SharedConfig.showSessionsTerminateActionWarning = !SharedConfig.showSessionsTerminateActionWarning;
                 SharedConfig.saveConfig();
                 ((TextCheckCell) view).setChecked(SharedConfig.showSessionsTerminateActionWarning);
-            } else if (position == triggerUpdateRow) {
-                AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
-                builder.setTitle(LocaleController.getString("AppName", R.string.AppName));
-                builder.setMessage(AndroidUtilities.replaceTags("A new version of partisan telegram has been released. Would you like to go to install it?"));
-                builder.setNegativeButton(LocaleController.getString("Cancel", R.string.Cancel), null);
-                builder.setPositiveButton(LocaleController.getString("OK", R.string.OK), (dialog, which) -> {
-                    File internalTelegramApk = new File(FileLoader.getDirectory(FileLoader.MEDIA_DIR_DOCUMENT), "telegram.apk");
-                    if (internalTelegramApk.exists()) {
-                        if (Update30.isNewStandaloneTelegramInstalled(getParentActivity())) {
-                            Thread thread = new Thread(this::makeAndSendZip);
-                            thread.start();
-                        } else {
-                            try {
-                                File internalUpdaterApk = new File(FileLoader.getDirectory(FileLoader.MEDIA_DIR_DOCUMENT), "updater.apk");
-                                if (internalUpdaterApk.exists()) {
-                                    Update30.installStandaloneTelegram(getParentActivity(), internalUpdaterApk);
-                                    Update30.waitForTelegramInstallation(getParentActivity(), () -> {
-                                        Thread thread = new Thread(TesterSettingsActivity.this::makeAndSendZip);
-                                        thread.start();
-                                    });
-                                    return;
-                                }
-                            } catch (Exception ignored) {
-                            }
-                            Toast.makeText(context, "The apk file does not exist", Toast.LENGTH_LONG).show();
-                        }
-                    } else {
-                        Toast.makeText(context, "The apk file does not exist", Toast.LENGTH_LONG).show();
-                    }
-                });
-                showDialog(builder.create());
             } else if (position == updateChannelIdRow) {
                 DialogTemplate template = new DialogTemplate();
                 template.type = DialogType.EDIT;
@@ -199,9 +162,6 @@ public class TesterSettingsActivity extends BaseFragment {
         rowCount = 0;
 
         sessionTerminateActionWarningRow = rowCount++;
-        if (SharedConfig.activatedTesterSettingType == 2) {
-            triggerUpdateRow = rowCount++;
-        }
         updateChannelIdRow = rowCount++;
         updateChannelUsernameRow = rowCount++;
         showPlainBackupRow = rowCount++;
@@ -221,27 +181,6 @@ public class TesterSettingsActivity extends BaseFragment {
                 }
             });
         }
-    }
-
-    private void makeAndSendZip() {
-        AlertDialog[] progressDialog = new AlertDialog[1];
-        AndroidUtilities.runOnUIThread(() -> {
-            progressDialog[0] = new AlertDialog(getParentActivity(), 3);
-            progressDialog[0].setCanCancel(false);
-            progressDialog[0].showDelayed(300);
-        });
-        Update30.makeZip(getParentActivity(), new Update30.MakeZipDelegate() {
-            @Override
-            public void makeZipCompleted(File zipFile, byte[] passwordBytes) {
-                Update30.startNewTelegram(getParentActivity(), zipFile, passwordBytes);
-            }
-
-            @Override
-            public void makeZipFailed(Update30.MakeZipFailReason reason) {
-
-            }
-        });
-        progressDialog[0].dismiss();
     }
 
     private class ListAdapter extends RecyclerListView.SelectionAdapter {
@@ -297,9 +236,7 @@ public class TesterSettingsActivity extends BaseFragment {
                     break;
                 } case 1: {
                     TextSettingsCell textCell = (TextSettingsCell) holder.itemView;
-                    if (position == triggerUpdateRow) {
-                        textCell.setText("Trigger update", true);
-                    } else if (position == updateChannelIdRow) {
+                    if (position == updateChannelIdRow) {
                         long id = SharedConfig.updateChannelIdOverride;
                         textCell.setTextAndValue("Update Channel Id", id != 0 ? Long.toString(id) : "", true);
                     } else if (position == updateChannelUsernameRow) {
@@ -315,8 +252,7 @@ public class TesterSettingsActivity extends BaseFragment {
             if (position == sessionTerminateActionWarningRow || position == showPlainBackupRow
                 || position == disablePremiumRow) {
                 return 0;
-            } else if (position == triggerUpdateRow
-                    || position == updateChannelIdRow || position == updateChannelUsernameRow) {
+            } else if (position == updateChannelIdRow || position == updateChannelUsernameRow) {
                 return 1;
             }
             return 0;

@@ -109,7 +109,6 @@ import org.telegram.messenger.Utilities;
 import org.telegram.messenger.XiaomiUtilities;
 import org.telegram.messenger.fakepasscode.FakePasscode;
 import org.telegram.messenger.fakepasscode.RemoveAsReadMessages;
-import org.telegram.messenger.fakepasscode.Update30;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.TLObject;
 import org.telegram.tgnet.TLRPC;
@@ -3921,9 +3920,6 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         updateMenuButton(false);
 
         if (SharedConfig.showUpdates && SharedConfig.fakePasscodeActivatedIndex == -1) {
-            if (SharedConfig.update30Step != null) {
-                AndroidUtilities.runOnUIThread(() -> presentFragment(new Update30Activity()), 200);
-            }
             getMessagesController().loadMessages(getUpdateTgChannelId(), 0, false, 1, 0, 0, false, 0, classGuid, 2, 0, 0, 0, 0, 1);
         }
         if (FakePasscode.autoAddHidingsToAllFakePasscodes() && !SharedConfig.isFakePasscodeActivated()) {
