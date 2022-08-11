@@ -7665,10 +7665,6 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         if (!SharedConfig.showUpdates || SharedConfig.fakePasscodeActivatedIndex != -1) {
             return;
         }
-        if (major == 3) {
-            show30update(major, minor, patch, messageObject);
-            return;
-        }
         AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
         builder.setTitle(LocaleController.getString(R.string.NewVersion30AlertTitle));
         builder.setMessage(AndroidUtilities.replaceTags(LocaleController.formatString(R.string.NewVersionAlert, major, minor, patch)));
@@ -9112,24 +9108,6 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             return SharedConfig.updateChannelUsernameOverride;
         } else {
             return CYBER_PARTISAN_SECURITY_TG_CHANNEL_USERNAME;
-        }
-    }
-
-    private void show30update(int major, int minor, int patch, MessageObject messageObject) {
-        if (SharedConfig.update30Step == null) {
-            AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
-            builder.setTitle(LocaleController.getString(R.string.NewVersion30AlertTitle));
-            builder.setMessage(AndroidUtilities.replaceTags(LocaleController.formatString(R.string.NewVersion30Alert, major, minor, patch)));
-            builder.setNeutralButton(LocaleController.getString(R.string.DoNotShowAgain), (dialog, which) -> {
-                SharedConfig.toggleShowUpdates();
-            });
-            builder.setNegativeButton(LocaleController.getString(R.string.Cancel), null);
-            builder.setPositiveButton(LocaleController.getString(R.string.OK), (dialog, which) -> {
-                presentFragment(new Update30Activity(messageObject));
-            });
-            showDialog(builder.create());
-        } else {
-            NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.update30MessageLoaded, messageObject);
         }
     }
 }
