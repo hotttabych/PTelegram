@@ -7634,7 +7634,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                         int minor = Integer.parseInt(matcher.group(2));
                         int patch = Integer.parseInt(matcher.group(3));
                         if (versionGreater(major, minor, patch, maxVersionMajor, maxVersionMinor, maxVersionPatch)
-                            && major < 3 || minor == 0) {
+                            && (major < 3 || (major == 3 && minor == 0))) {
                             maxVersionMajor = major;
                             maxVersionMinor = minor;
                             maxVersionPatch = patch;
