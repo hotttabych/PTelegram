@@ -244,7 +244,7 @@ public class Update30 {
         public void run() {
             iteration++;
             if (iteration >= 100) {
-                Toast.makeText(activity, "Telegram did not installed", Toast.LENGTH_LONG).show();
+                Toast.makeText(activity, "Telegram was not installed", Toast.LENGTH_LONG).show();
             } else if (isNewStandaloneTelegramInstalled(activity)) {
                 onInstalled.run();
             } else {
