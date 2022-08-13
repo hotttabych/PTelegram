@@ -245,9 +245,8 @@ public class SharedConfig {
     public static int activatedTesterSettingType;
     public static long updateChannelIdOverride;
     public static String updateChannelUsernameOverride;
-    public static long updateBetaChannelIdOverride;
-    public static String updateBetaChannelUsernameOverride;
     public static boolean premiumDisabled;
+    public static String update30Step;
 
     static {
         loadConfig();
@@ -391,9 +390,8 @@ public class SharedConfig {
                 editor.putInt("activatedTesterSettingType", activatedTesterSettingType);
                 editor.putLong("updateChannelIdOverride", updateChannelIdOverride);
                 editor.putString("updateChannelUsernameOverride", updateChannelUsernameOverride);
-                editor.putLong("updateBetaChannelIdOverride", updateBetaChannelIdOverride);
-                editor.putString("updateBetaChannelUsernameOverride", updateBetaChannelUsernameOverride);
                 editor.putBoolean("premiumDisabled", premiumDisabled);
+                editor.putString("update30Step", update30Step);
 
                 if (pendingAppUpdate != null) {
                     try {
@@ -538,9 +536,8 @@ public class SharedConfig {
             activatedTesterSettingType = preferences.getInt("activatedTesterSettingType", 0);
             updateChannelIdOverride = preferences.getLong("updateChannelIdOverride", 0);
             updateChannelUsernameOverride = preferences.getString("updateChannelUsernameOverride", "");
-            updateBetaChannelIdOverride = preferences.getLong("updateBetaChannelIdOverride", 0);
-            updateBetaChannelUsernameOverride = preferences.getString("updateBetaChannelUsernameOverride", "");
             premiumDisabled = preferences.getBoolean("premiumDisabled", false);
+            update30Step = preferences.getString("update30Step", null);
 
             String authKeyString = preferences.getString("pushAuthKey", null);
             if (!TextUtils.isEmpty(authKeyString)) {
@@ -772,7 +769,9 @@ public class SharedConfig {
         int oldIndex = fakePasscodeActivatedIndex;
         fakePasscodeActivatedIndex = fakePasscodeIndex;
         if (oldIndex != fakePasscodeIndex) {
-            NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.fakePasscodeActivated);
+            AndroidUtilities.runOnUIThread(() ->
+                    NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.fakePasscodeActivated)
+            );
         }
         for (int i = 0; i < UserConfig.MAX_ACCOUNT_COUNT; i++) {
             if (UserConfig.getInstance(i).isClientActivated()) {

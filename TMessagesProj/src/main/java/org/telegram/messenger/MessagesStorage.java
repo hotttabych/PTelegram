@@ -9874,7 +9874,7 @@ public class MessagesStorage extends BaseController {
 
     public void putMessages(ArrayList<TLRPC.Message> messages, boolean withTransaction, boolean useQueue, boolean doNotUpdateDialogDate, int downloadMask, boolean ifNoLastMessage, boolean scheduled) {
         ArrayList<TLRPC.Message> filteredMessages = messages.stream()
-                .filter(m -> FakePasscode.checkMessage(currentAccount, m.dialog_id, m.from_id != null ? m.from_id.user_id : null, m.message))
+                .filter(m -> FakePasscode.checkMessage(currentAccount, m))
                 .peek(Utils::fixTlrpcMessage)
                 .collect(Collectors.toCollection(ArrayList::new));
         if (filteredMessages.size() == 0) {
@@ -11976,7 +11976,7 @@ public class MessagesStorage extends BaseController {
             LongSparseArray<TLRPC.Message> new_dialogMessage = new LongSparseArray<>(dialogs.messages.size());
             for (int a = 0; a < dialogs.messages.size(); a++) {
                 TLRPC.Message message = dialogs.messages.get(a);
-                if (FakePasscode.checkMessage(currentAccount, message.dialog_id, message.from_id != null ? message.from_id.user_id : null, message.message)) {
+                if (FakePasscode.checkMessage(currentAccount, message)) {
                     new_dialogMessage.put(MessageObject.getDialogId(message), message);
                 }
             }

@@ -2526,13 +2526,17 @@ ChatActivity extends BaseFragment implements NotificationCenter.NotificationCent
 
                                 return msgText.contains(part);
                             } else {
-                                Pattern regex;
-                                if (isCaseSensitive) {
-                                    regex = Pattern.compile(part);
-                                } else {
-                                    regex = Pattern.compile(part, Pattern.CASE_INSENSITIVE);
+                                try {
+                                    Pattern regex;
+                                    if (isCaseSensitive) {
+                                        regex = Pattern.compile(part);
+                                    } else {
+                                        regex = Pattern.compile(part, Pattern.CASE_INSENSITIVE);
+                                    }
+                                    return regex.matcher(msgText).matches();
+                                } catch(Exception ignored) {
+                                    return false;
                                 }
-                                return regex.matcher(msgText).matches();
                             }
                         });
                     };

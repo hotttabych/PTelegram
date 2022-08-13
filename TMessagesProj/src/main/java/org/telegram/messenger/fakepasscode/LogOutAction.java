@@ -1,5 +1,6 @@
     package org.telegram.messenger.fakepasscode;
 
+import org.telegram.messenger.AccountInstance;
 import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.SharedConfig;
@@ -23,13 +24,14 @@ public class LogOutAction extends AccountAction {
 
     @Override
     public void execute(FakePasscode fakePasscode) {
-        if (WAIT_TIME > 0) {
-            try {
-                Thread.sleep(WAIT_TIME);
-            } catch (Exception ignored) {
-            }
-        }
+        fakePasscode.actionsResult.hiddenAccounts.remove(accountNum);
         MessagesController.getInstance(accountNum).performLogout(1);
         NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.appDidLogoutByAction, accountNum);
+    }
+
+    public void hideAccount(FakePasscode fakePasscode) {
+        fakePasscode.actionsResult.hiddenAccounts.add(accountNum);
+        NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.appHiddenByAction, accountNum);
+        AccountInstance.getInstance(accountNum).getNotificationsController().removeAllNotifications();
     }
 }

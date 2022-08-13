@@ -1193,6 +1193,7 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
                 SharedConfig.fakePasscodes.add(passcode);
                 passcode.accountActions.stream().forEach(a -> a.setAccountNum(null));
                 passcode.accountActions.stream().forEach(a -> a.checkAccountNum());
+                passcode.autoAddAccountHidings();
                 SharedConfig.saveConfig();
                 if (parentLayout.fragmentsStack.size() >= 2) {
                     parentLayout.removeFragmentFromStack(parentLayout.fragmentsStack.size() - 2);

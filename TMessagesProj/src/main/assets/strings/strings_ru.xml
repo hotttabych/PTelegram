@@ -179,21 +179,31 @@
     <string name="Updater30ActivityTitle">Обновление 3.0</string>
     <string name="NoSpaceForStep">На Вашем устройстве недостаточно места для этого шага. Перед началом убедитесь, что у вас свободно минимум %d МБ.</string>
 
-    <string name="Step1">Шаг 1</string>
-    <string name="InstallUpdaterDescription">PTelegram необходимо установить вспомогательное приложение, чтобы продолжить установку. Нажмите кнопку «Установить PtgUpdater», установите его, а затем вернитесь в PTelegram, чтобы продолжить.</string>
-    <string name="InstallUpdaterNoPermissionDescription">PTelegram нужно установить вспомогательное приложение, чтобы продолжить установку. Возможно, вам нужно будет разрешить установку приложения из неизвестных источников. Не пугайтесь, это нормально. Нажмите кнопку «Установить PtgUpdater», установите его, а затем вернитесь в PTelegram, чтобы продолжить.</string>
-    <string name="InstallUpdater">Установить PtgUpdater</string>
+    <string name="StepUninstallTelegram">Удалить другое приложение Телеграм</string>
+    <string name="UninstallStandaloneTelegramDescription">Кроме PTelegram, у Вас установлен Telegram напрямую из сайта telegram.org. Вам нужно будет удалить его перед обновлением. Вы можете удалить его вручную или нажать на кнопку ниже.</string>
+    <string name="UninstallTelegramFailedDescription">Не удалось удалить другой Telegram. Попробуйте удалить его вручную.</string>
+    <string name="UninstallTelegram">Удалить другой Телеграм</string>
 
-    <string name="Step2">Шаг 2</string>
+    <string name="Step1">Шаг 1</string>
     <string name="DownloadTelegramDescription">Сейчас загружается новая версия PTelegram. Дождитесь завершения загрузки, а затем нажмите на кнопку «Перейти к следующему шагу».\n%d%%</string>
     <string name="DownloadTelegramCompleteDescription">Загрузка завершена. Нажмите на кнопку «Перейти к следующему шагу».</string>
     <string name="DownloadTelegramFailedDescription">Загрузка не удалась. Возможно, нет интернета или на устройстве недостаточно места. Проверьте это и нажмите «Повторить».</string>
     <string name="DownloadTelegramTooLong">\n\nНовая версия PTelegram загружается слишком долго. Возможно, загрузка зависла. Попробуйте перезапустить приложение.</string>
     <string name="GoToNextStep">Перейти к следующему шагу</string>
 
+    <string name="Step2">Шаг 2</string>
+    <string name="InstallNewTelegramDescription">Сейчас нужно установить PTelegram 3.0. Нажмите кнопку \"Установить новый PTelegram\", установите его и после установки вернитесь обратно в старый PTelegram, чтобы передать данные.</string>
+    <string name="InstallNewTelegramNoPermissionDescription">Сейчас нужно установить PTelegram 3.0. Возможно, вам нужно будет разрешить установку приложения из неизвестных источников. Нажмите кнопку \"Установить новый PTelegram\", установите его и после установки вернитесь обратно в старый PTelegram, чтобы передать данные.</string>
+    <string name="InstallNewTelegramFailedDescription">Не удалось установить PTelegram 3.0. Возможно, на устройстве недостаточно места. Проверьте это и нажмите «Повторить».</string>
+    <string name="InstallNewTelegram">Установить новый PTelegram</string>
+
     <string name="Step3">Шаг 3</string>
-    <string name="MakeDataDescription">PTelegram подготавливает данные для передачи в PtgUpdater. Дождитесь окончания и нажмите на кнопку «Открыть PtgUpdater».</string>
-    <string name="MakeDataCompleteDescription">Все готово для продолжения. Нажмите на кнопку «Открыть PtgUpdater».</string>
+    <string name="MakeDataDescription">PTelegram подготавливает данные для передачи в новую версию приложения. Дождитесь окончания и нажмите на кнопку «Скопировать данные в новый PTelegram».</string>
+    <string name="MakeDataCompleteDescription">Все готово для продолжения. Нажмите на кнопку «Скопировать данные в новый PTelegram».</string>
     <string name="MakeDataFailedDescription">Не удалось подготовить данные. Возможно, на устройстве недостаточно места. Проверьте это и нажмите «Повторить».</string>
-    <string name="GoToUpdater">Открыть PtgUpdater</string>
+    <string name="TransferFilesToNewTelegram">Скопировать данные в новый PTelegram</string>
+
+    <string name="Step4">Шаг 4</string>
+    <string name="UninstallSelfDescription">Телеграм обновлён до версии 3.0. Убедитесь, что все данные переданы в новое приложение и удалите старое.</string>
+    <string name="UninstallSelf">Удалить старый PTelegram</string>
 </resources>
