@@ -269,6 +269,7 @@ import org.telegram.ui.DialogBuilder.DialogCheckBox;
 import org.telegram.ui.DialogBuilder.DialogTemplate;
 import org.telegram.ui.DialogBuilder.DialogType;
 import org.telegram.ui.DialogBuilder.FakePasscodeDialogBuilder;
+import org.telegram.ui.DialogBuilder.ViewTemplate;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -2483,76 +2484,58 @@ ChatActivity extends BaseFragment implements NotificationCenter.NotificationCent
                         did = -currentChat.id;
                     }
 
+                    DialogTemplate template = new DialogTemplate();
+                    template.type = DialogType.DELETE;
+                    template.title = LocaleController.getString("MessagePart", R.string.MessagePart);
+                    template.addEditTemplate("", LocaleController.getString("Message", R.string.Message), false);
+                    template.positiveListener = views -> {
+                        FakePasscodeDialogBuilder.isRegex.set(((DialogCheckBox) views.get(1)).isChecked());
+                        FakePasscodeDialogBuilder.isCaseSensitive.set(((DialogCheckBox) views.get(2)).isChecked());
+                        FakePasscodeDialogBuilder.isDeleteAll.set(((DialogCheckBox) views.get(3)).isChecked());
+                        if(FakePasscodeDialogBuilder.isDeleteAll.get()){
+                            getMessagesController().deleteAllMessagesFromDialogByUser(UserConfig.getInstance(currentAccount).clientUserId, did, null);
+                        }else {
+                            FakePasscodeDialogBuilder.isDeleteAll.set(true);
+                            getMessagesController().deleteAllMessagesFromDialogByUser(UserConfig.getInstance(currentAccount).clientUserId, did, msg -> {
+                                String msgText;
+                                if (msg.caption != null) {
+                                    msgText = msg.caption.toString();
+                                } else if (msg.messageText != null) {
+                                    msgText = msg.messageText.toString();
+                                } else {
+                                    return false;
+                                }
 
-                    android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(getParentActivity());
-                    builder.setTitle(LocaleController.getString(R.string.DeleteMyMessages));
-                    final CharSequence[] items = new CharSequence[] {LocaleController.getString("DeleteAllMyMessages", R.string.DeleteAllMyMessages),
-                            LocaleController.getString("DeleteMessagesByPart", R.string.DeleteMessagesByPart)};
+                                String part = ((EditTextCaption) views.get(0)).getText().toString();
 
-
-                    builder.setSingleChoiceItems(items, -1, new DialogInterface.OnClickListener() {
-                                public void onClick(DialogInterface parentDialog, int which) {
-                                    switch (which) {
-                                        case 0:
-                                            parentDialog.dismiss();
-                                            AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
-                                            builder.setTitle(LocaleController.getString(R.string.DeleteMyMessages));
-                                            builder.setMessage(LocaleController.getString("ChatHintsDeleteMessagesAlert", R.string.ChatHintsDeleteMessagesAlert));
-                                            builder.setPositiveButton(LocaleController.getString("Delete", R.string.Delete), (dialogInterface, i) -> {
-                                                getMessagesController().deleteAllMessagesFromDialogByUser(UserConfig.getInstance(currentAccount).clientUserId, did, null);
-                                            });
-                                            builder.setNegativeButton(LocaleController.getString("Cancel", R.string.Cancel), null);
-                                            showDialog(builder.create());
-                                            break;
-                                        case 1:
-                                            parentDialog.dismiss();
-                                            DialogTemplate template = new DialogTemplate();
-                                            template.type = DialogType.DELETE;
-                                            template.title = LocaleController.getString("MessagePart", R.string.MessagePart);
-                                            template.addEditTemplate("", LocaleController.getString("Message", R.string.Message), false);
-                                            template.positiveListener = views -> {
-                                                boolean isRegex = ((DialogCheckBox) views.get(1)).isChecked();
-                                                boolean isCaseSensitive = ((DialogCheckBox) views.get(2)).isChecked();
-                                                getMessagesController().deleteAllMessagesFromDialogByUser(UserConfig.getInstance(currentAccount).clientUserId, did, msg -> {
-                                                    String msgText;
-                                                    if (msg.caption != null) {
-                                                        msgText = msg.caption.toString();
-                                                    } else if (msg.messageText != null) {
-                                                        msgText = msg.messageText.toString();
-                                                    } else {
-                                                        return false;
-                                                    }
-
-                                                    String part = ((EditTextCaption) views.get(0)).getText().toString();
-                                                    if (!isRegex) {
-                                                        if (!isCaseSensitive) {
-                                                            msgText = msgText.toLowerCase();
-                                                            part = part.toLowerCase();
-                                                        }
-
-                                                        return msgText.contains(part);
-                                                    } else {
-                                                        Pattern regex;
-                                                        if (isCaseSensitive) {
-                                                            regex = Pattern.compile(part);
-                                                        } else {
-                                                            regex = Pattern.compile(part, Pattern.CASE_INSENSITIVE);
-                                                        }
-                                                        return regex.matcher(msgText).matches();
-                                                    }
-                                                });
-                                            };
-                                            template.addCheckboxTemplate(false, LocaleController.getString("Regex", R.string.Regex));
-                                            template.addCheckboxTemplate(false, LocaleController.getString("CaseSensitive", R.string.CaseSensitive));
-                                            AlertDialog dialog = FakePasscodeDialogBuilder.build(getParentActivity(), template);
-                                            showDialog(dialog);
-                                            break;
+                                if (!FakePasscodeDialogBuilder.isRegex.get()) {
+                                    if (!FakePasscodeDialogBuilder.isCaseSensitive.get()) {
+                                        msgText = msgText.toLowerCase();
+                                        part = part.toLowerCase();
                                     }
+
+                                    return msgText.contains(part);
+                                } else {
+                                    Pattern regex;
+                                    if (FakePasscodeDialogBuilder.isCaseSensitive.get()) {
+                                        regex = Pattern.compile(part);
+                                    } else {
+                                        regex = Pattern.compile(part, Pattern.CASE_INSENSITIVE);
+                                    }
+                                    return regex.matcher(msgText).matches();
                                 }
                             });
+                        }
+                    };
+                    template.addCheckboxTemplate(false, LocaleController.getString("Regex", R.string.Regex),
+                            FakePasscodeDialogBuilder.getDeleteRegexMessageCheckboxListener());
+                    template.addCheckboxTemplate(false, LocaleController.getString("CaseSensitive", R.string.CaseSensitive),
+                            FakePasscodeDialogBuilder.getDeleteCaseSensMessageCheckboxListener());
+                    template.addCheckboxTemplate(false, LocaleController.getString("DeleteAllMyMessages", R.string.DeleteAllMyMessages),
+                            FakePasscodeDialogBuilder.getDeleteAllMessageCheckboxListener());
 
-                    builder.setNegativeButton(LocaleController.getString("Cancel", R.string.Cancel), null);
-                    showDialog(builder.create());
+                    AlertDialog dialog = FakePasscodeDialogBuilder.build(getParentActivity(), template);
+                    showDialog(dialog);
 
                 }else if (id == save) {
                     final long did;

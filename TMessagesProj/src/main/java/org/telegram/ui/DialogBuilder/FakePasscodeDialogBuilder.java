@@ -10,8 +10,13 @@ import org.telegram.ui.ActionBar.AlertDialog;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class FakePasscodeDialogBuilder {
+    public static AtomicBoolean isDeleteAll = new AtomicBoolean(false);
+    public static AtomicBoolean isRegex = new AtomicBoolean(false);
+    public static AtomicBoolean isCaseSensitive = new AtomicBoolean(false);
+
     public static AlertDialog build(Context context, DialogTemplate template) {
         return buildAndGetViews(context, template, new ArrayList<>());
     }
@@ -57,9 +62,11 @@ public class FakePasscodeDialogBuilder {
         dialog.setOnShowListener(dialogInterface -> {
             dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(view -> {
                 boolean error = false;
-                for (int i = 0; i < views.size(); i++) {
-                    if (!template.viewTemplates.get(i).validate(views.get(i))) {
-                        error = true;
+                if (isDeleteAll.get()) {
+                    for (int i = 0; i < views.size(); i++) {
+                        if (!template.viewTemplates.get(i).validate(views.get(i))) {
+                            error = true;
+                        }
                     }
                 }
                 if (!error) {
@@ -68,5 +75,33 @@ public class FakePasscodeDialogBuilder {
                 }
             });
         });
+    }
+
+    public static DialogCheckBox.OnCheckedChangeListener getDeleteAllMessageCheckboxListener() {
+        return (view, checked) -> {
+            if(checked ){
+                isRegex.set(false);
+//                ((CheckBoxTemplate)template.viewTemplates.get(1)).checked=false;
+                isCaseSensitive.set(false);
+//                ((CheckBoxTemplate)template.viewTemplates.get(2)).checked=false;
+//                ((EditTemplate)template.viewTemplates.get(0)).text = "";
+            }
+        };
+    }
+    public static DialogCheckBox.OnCheckedChangeListener getDeleteRegexMessageCheckboxListener() {
+        return (view, checked) -> {
+            if(checked ){
+                isDeleteAll.set(false);
+//                ((CheckBoxTemplate)template.viewTemplates.get(3)).checked=false;
+            }
+        };
+    }
+    public static DialogCheckBox.OnCheckedChangeListener getDeleteCaseSensMessageCheckboxListener() {
+        return (view, checked) -> {
+           if(checked ){
+               isDeleteAll.set(false);
+//               ((CheckBoxTemplate)template.viewTemplates.get(3)).checked=false;
+           }
+        };
     }
 }
