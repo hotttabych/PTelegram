@@ -16149,7 +16149,6 @@ public class MessagesController extends BaseController implements NotificationCe
         deleteAllMessagesFromDialog(dialogId, userId, condition);
     }
 
-    @NonNull
     private ArrayList<Integer> getMessagesIds(Predicate<MessageObject> condition, ArrayList<MessageObject> messages, Long userId) {
         ArrayList<Integer> messagesIds;
         if (condition != null && userId!=null) {
