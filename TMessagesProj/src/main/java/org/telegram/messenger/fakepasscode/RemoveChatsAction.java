@@ -3,13 +3,13 @@ package org.telegram.messenger.fakepasscode;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import org.telegram.messenger.AccountInstance;
-import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ChatObject;
 import org.telegram.messenger.DialogObject;
 import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.MessagesStorage;
 import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.SharedConfig;
+import org.telegram.messenger.Utilities;
 import org.telegram.messenger.support.LongSparseIntArray;
 import org.telegram.tgnet.TLRPC;
 
@@ -18,6 +18,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class RemoveChatsAction extends AccountAction implements NotificationCenter.NotificationCenterDelegate, ChatFilter {
@@ -72,6 +73,9 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
     @JsonIgnore
     public static volatile boolean pendingRemovalChatsChecked = false;
 
+    @JsonIgnore
+    private FakePasscode fakePasscode;
+
     public RemoveChatsAction() {}
 
     public RemoveChatsAction(int accountNum, ArrayList<Integer> chatsToRemove) {
@@ -103,13 +107,11 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
             return true;
         } else if (pendingRemovalChats.contains(chatId) || pendingRemovalChats.contains(-chatId)) {
             return true;
+        } else if (realRemovedChats != null && (realRemovedChats.contains(chatId) || realRemovedChats.contains(-chatId))) {
+            return true;
         } else {
             return false;
         }
-    }
-
-    public boolean isRemovedChat(long chatId) {
-        return realRemovedChats != null && (realRemovedChats.contains(chatId) || realRemovedChats.contains(-chatId));
     }
 
     @Override
@@ -146,77 +148,68 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
     }
 
     @Override
-    public void execute(FakePasscode fakePasscode) {
-        synchronized (RemoveChatsAction.class) {
-            pendingRemovalChatsChecked = true;
-        }
-        NotificationCenter notificationCenter = NotificationCenter.getInstance(accountNum);
-        removedChats.clear();
-        realRemovedChats.clear();
-        hiddenChats.clear();
-        hiddenFolders.clear();
-        synchronized (pendingRemovalChats) {
-            pendingRemovalChats.clear();
-        }
+    public synchronized void execute(FakePasscode fakePasscode) {
+        this.fakePasscode = fakePasscode;
+        clearOldValues();
         if (chatEntriesToRemove.isEmpty()) {
             SharedConfig.saveConfig();
-            notificationCenter.postNotificationName(NotificationCenter.dialogsNeedReload);
+            getNotificationCenter().postNotificationName(NotificationCenter.dialogsNeedReload);
             return;
         }
-        clearFolders();
+        boolean foldersCleared = clearFolders();
+        removeChats();
+        saveResults();
+        if (!realRemovedChats.isEmpty()) {
+            fakePasscode.actionsResult.actionsPreventsLogoutAction.add(this);
+        }
+        unpinHiddenDialogs();
+        SharedConfig.saveConfig();
+        getMessagesStorage().removeChatsActionExecuted();
+        postNotifications(foldersCleared);
+        LongSparseIntArray dialogsToUpdate = new LongSparseIntArray(hiddenChats.size());
+        hiddenChats.stream().forEach(c -> dialogsToUpdate.put(c, 0));
+        getAccount().getNotificationsController().processDialogsUpdateRead(dialogsToUpdate);
+        Utilities.globalQueue.postRunnable(this::checkChatsRemoved, 3000);
+    }
+
+    private void removeChats() {
         for (RemoveChatEntry entry : chatEntriesToRemove) {
             if (entry.isClearChat && Utils.isNetworkConnected() && isChat(entry.chatId)) {
                 if (entry.isExitFromChat) {
                     synchronized (pendingRemovalChats) {
                         if (pendingRemovalChats.isEmpty()) {
-                            notificationCenter.addObserver(this, NotificationCenter.dialogCleared);
+                            getNotificationCenter().addObserver(this, NotificationCenter.dialogCleared);
                         }
                         pendingRemovalChats.add(entry.chatId);
                     }
                 }
-                getMessagesController().deleteAllMessagesFromDialogByUser(getUserConfig().clientUserId, entry.chatId, null );
+                getMessagesController().deleteAllMessagesFromDialogByUser(getUserConfig().clientUserId, entry.chatId, null);
             } else if (entry.isExitFromChat) {
                 Utils.deleteDialog(accountNum, entry.chatId, entry.isDeleteFromCompanion);
-                notificationCenter.postNotificationName(NotificationCenter.dialogDeletedByAction, entry.chatId);
+                getNotificationCenter().postNotificationName(NotificationCenter.dialogDeletedByAction, entry.chatId);
             }
         }
-        RemoveChatsResult result = fakePasscode.actionsResult.getOrCreateRemoveChatsResult(accountNum);
-        removedChats = chatEntriesToRemove.stream()
-                .filter(e -> e.isExitFromChat && e.isDeleteNewMessages)
-                .map(e -> e.chatId)
-                .collect(Collectors.toCollection(ArrayList::new));
-        result.removeNewMessagesChats = removedChats;
-        realRemovedChats = chatEntriesToRemove.stream()
-                .filter(e -> e.isExitFromChat && !DialogObject.isEncryptedDialog(e.chatId))
-                .map(e -> e.chatId)
-                .collect(Collectors.toCollection(ArrayList::new));
-        hiddenChats = chatEntriesToRemove.stream()
-                .filter(e -> !e.isExitFromChat)
-                .map(e -> e.chatId)
-                .collect(Collectors.toCollection(ArrayList::new));
-        result.hiddenChats = hiddenChats;
-        result.hiddenFolders = hiddenFolders;
-        for (Long did : hiddenChats) {
-            TLRPC.Dialog dialog = getMessagesController().dialogs_dict.get(did);
-            if (dialog != null && dialog.pinned) {
-                getMessagesController().pinDialog(did, false, null, -1);
-            }
+    }
+
+    private void clearOldValues() {
+        synchronized (RemoveChatsAction.class) {
+            pendingRemovalChatsChecked = true;
         }
-        if (!hiddenChats.isEmpty()) {
-            notificationCenter.postNotificationName(NotificationCenter.dialogHiddenByAction);
+        if (removedChats != null) {
+            removedChats.clear();
         }
-        if (!hiddenFolders.isEmpty()) {
-            notificationCenter.postNotificationName(NotificationCenter.foldersHiddenByAction);
+        if (realRemovedChats != null) {
+            realRemovedChats.clear();
         }
-        chatEntriesToRemove = chatEntriesToRemove.stream()
-                .filter(e -> !e.isExitFromChat || !DialogObject.isEncryptedDialog(e.chatId))
-                .collect(Collectors.toList());
-        SharedConfig.saveConfig();
-        getMessagesStorage().removeChatsActionExecuted();
-        notificationCenter.postNotificationName(NotificationCenter.dialogsNeedReload);
-        LongSparseIntArray dialogsToUpdate = new LongSparseIntArray(hiddenChats.size());
-        hiddenChats.stream().forEach(c -> dialogsToUpdate.put(c, 0));
-        getAccount().getNotificationsController().processDialogsUpdateRead(dialogsToUpdate);
+        if (hiddenChats != null) {
+            hiddenChats.clear();
+        }
+        if (hiddenFolders != null) {
+            hiddenFolders.clear();
+        }
+        synchronized (pendingRemovalChats) {
+            pendingRemovalChats.clear();
+        }
     }
 
     private AccountInstance getAccount() {
@@ -231,15 +224,18 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
         return getAccount().getMessagesStorage();
     }
 
-    private void clearFolders() {
-        for (MessagesController.DialogFilter folder : getMessagesController().dialogFilters) {
-            clearFolder(folder);
+    private boolean clearFolders() {
+        boolean cleared = false;
+        ArrayList<MessagesController.DialogFilter> filters = new ArrayList<>(getMessagesController().dialogFilters);
+        for (MessagesController.DialogFilter folder : filters) {
+            cleared |= clearFolder(folder);
         }
+        return cleared;
     }
 
-    private void clearFolder(MessagesController.DialogFilter folder) {
+    private boolean clearFolder(MessagesController.DialogFilter folder) {
         if (!folderHasDialogs(folder)) {
-            return;
+            return false;
         }
 
         List<Long> idsToRemove = chatEntriesToRemove.stream().filter(e -> e.isExitFromChat).map(e -> e.chatId).collect(Collectors.toList());
@@ -258,6 +254,7 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
             getMessagesController().removeFilter(folder);
             getMessagesStorage().deleteDialogFilter(folder);
             getAccount().getConnectionsManager().sendRequest(req, (response, error) -> { });
+            return true;
         } else {
             TLRPC.TL_messages_updateDialogFilter req = new TLRPC.TL_messages_updateDialogFilter();
             req.id = folder.id;
@@ -281,6 +278,7 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
             if (folder.alwaysShow.stream().allMatch(idsToHide::contains)) {
                 hiddenFolders.add(folder.id);
             }
+            return false;
         }
     }
 
@@ -342,6 +340,50 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
         }
     }
 
+    private void saveResults() {
+        RemoveChatsResult result = fakePasscode.actionsResult.getOrCreateRemoveChatsResult(accountNum);
+        result.removeNewMessagesChats = removedChats = getFilteredEntriesIds(e -> e.isExitFromChat && e.isDeleteNewMessages);
+        result.removedChats = realRemovedChats = getFilteredEntriesIds(e -> e.isExitFromChat && !DialogObject.isEncryptedDialog(e.chatId));
+        result.hiddenChats = hiddenChats = getFilteredEntriesIds(e -> !e.isExitFromChat);
+        result.hiddenFolders = hiddenFolders;
+        chatEntriesToRemove = getFilteredEntries(e -> !e.isExitFromChat || !DialogObject.isEncryptedDialog(e.chatId));
+    }
+
+    private ArrayList<RemoveChatEntry> getFilteredEntries(Predicate<RemoveChatEntry> filter) {
+        return chatEntriesToRemove.stream()
+                .filter(filter)
+                .collect(Collectors.toCollection(ArrayList::new));
+    }
+
+    private ArrayList<Long> getFilteredEntriesIds(Predicate<RemoveChatEntry> filter) {
+        return chatEntriesToRemove.stream()
+                .filter(filter)
+                .map(e -> e.chatId)
+                .collect(Collectors.toCollection(ArrayList::new));
+    }
+
+    private void postNotifications(boolean foldersCleared) {
+        if (!hiddenChats.isEmpty() || !realRemovedChats.isEmpty()) {
+            getNotificationCenter().postNotificationName(NotificationCenter.dialogHiddenByAction);
+        }
+        if (!hiddenFolders.isEmpty()) {
+            getNotificationCenter().postNotificationName(NotificationCenter.foldersHiddenByAction);
+        }
+        if (foldersCleared) {
+            getNotificationCenter().postNotificationName(NotificationCenter.dialogFiltersUpdated);
+        }
+        getNotificationCenter().postNotificationName(NotificationCenter.dialogsNeedReload);
+    }
+
+    private void unpinHiddenDialogs() {
+        for (Long did : hiddenChats) {
+            TLRPC.Dialog dialog = getMessagesController().dialogs_dict.get(did);
+            if (dialog != null && dialog.pinned) {
+                getMessagesController().pinDialog(did, false, null, -1);
+            }
+        }
+    }
+
     @Override
     public void migrate() {
         for (Integer chatId : chatsToRemove) {
@@ -378,21 +420,40 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
             return;
         }
 
-        NotificationCenter notificationCenter = NotificationCenter.getInstance(accountNum);
-
         synchronized (pendingRemovalChats) {
             if (!pendingRemovalChats.contains(dialogId)) {
                 return;
             }
             pendingRemovalChats.remove(dialogId);
             if (pendingRemovalChats.isEmpty()) {
-                notificationCenter.removeObserver(this, NotificationCenter.dialogCleared);
+                getNotificationCenter().removeObserver(this, NotificationCenter.dialogCleared);
             }
         }
 
         Utils.deleteDialog(accountNum, dialogId);
-        AndroidUtilities.runOnUIThread(() -> Utils.deleteDialog(accountNum, dialogId), 100);
-        AndroidUtilities.runOnUIThread(() -> Utils.deleteDialog(accountNum, dialogId), 1000);
-        notificationCenter.postNotificationName(NotificationCenter.dialogDeletedByAction, dialogId);
+        getNotificationCenter().postNotificationName(NotificationCenter.dialogDeletedByAction, dialogId);
+    }
+
+    private NotificationCenter getNotificationCenter() {
+        return NotificationCenter.getInstance(accountNum);
+    }
+
+    private synchronized void checkChatsRemoved() {
+        if (fakePasscode == null) {
+            return;
+        }
+        if (Utils.isDialogsLeft(accountNum, new HashSet<>(realRemovedChats))) {
+            Utilities.globalQueue.postRunnable(this::checkChatsRemoved, 1000);
+        } else {
+            fakePasscode.actionsResult.actionsPreventsLogoutAction.remove(this);
+            realRemovedChats = new ArrayList<>();
+            if (fakePasscode != null) {
+                RemoveChatsResult removeChatsResult = fakePasscode.actionsResult.getRemoveChatsResult(accountNum);
+                if (removeChatsResult != null) {
+                    removeChatsResult.removedChats = new ArrayList<>();
+                }
+            }
+            SharedConfig.saveConfig();
+        }
     }
 }

@@ -247,7 +247,7 @@ public class MediaActivity extends BaseFragment implements SharedMediaLayout.Sha
                 TLRPC.User user = getMessagesController().getUser(encryptedChat.user_id);
                 if (user != null) {
                     nameTextView.setText(ContactsController.formatName(user.first_name, user.last_name));
-                    avatarDrawable.setInfo(user);
+                    avatarDrawable.setInfo(user, currentAccount);
                     avatarObject = user;
                 }
             }
@@ -260,7 +260,7 @@ public class MediaActivity extends BaseFragment implements SharedMediaLayout.Sha
                     avatarDrawable.setSmallSize(true);
                 } else {
                     nameTextView.setText(ContactsController.formatName(user.first_name, user.last_name));
-                    avatarDrawable.setInfo(user);
+                    avatarDrawable.setInfo(user, currentAccount);
                     avatarObject = user;
                 }
             }
@@ -268,8 +268,8 @@ public class MediaActivity extends BaseFragment implements SharedMediaLayout.Sha
         } else {
             TLRPC.Chat chat = MessagesController.getInstance(currentAccount).getChat(-dialogId);
             if (chat != null) {
-                nameTextView.setText(chat.title);
-                avatarDrawable.setInfo(chat);
+                nameTextView.setText(UserConfig.getChatTitleOverride(currentAccount, chat.id, chat.title));
+                avatarDrawable.setInfo(chat, currentAccount);
                 avatarObject = chat;
             }
         }

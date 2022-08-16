@@ -78,6 +78,7 @@ public class NotificationCenter {
     public static final int stickersDidLoad = totalEvents++;
     public static final int diceStickersDidLoad = totalEvents++;
     public static final int featuredStickersDidLoad = totalEvents++;
+    public static final int featuredEmojiDidLoad = totalEvents++;
     public static final int groupStickersDidLoad = totalEvents++;
     public static final int messagesReadContent = totalEvents++;
     public static final int botInfoDidLoad = totalEvents++;
@@ -125,6 +126,7 @@ public class NotificationCenter {
     public static final int dialogDeleted = totalEvents++;
     public static final int webViewResultSent = totalEvents++;
     public static final int voiceTranscriptionUpdate = totalEvents++;
+    public static final int animatedEmojiDocumentLoaded = totalEvents++;
 
     public static final int didGenerateFingerprintKeyPair = totalEvents++;
 
@@ -192,6 +194,8 @@ public class NotificationCenter {
 
     public static final int updateBotMenuButton = totalEvents++;
 
+    public static final int didUpdatePremiumGiftStickers = totalEvents++;
+
     //fake passcode
     public static final int dialogDeletedByAction = totalEvents++;
     public static final int dialogCleared = totalEvents++;
@@ -203,6 +207,7 @@ public class NotificationCenter {
     public static final int searchCleared = totalEvents++;
     public static final int savedChannelsButtonStateChanged = totalEvents++;
     public static final int chatSearchResultsAvailableAll = totalEvents++;
+    public static final int update30MessageLoaded = totalEvents++;
 
 
     //global
