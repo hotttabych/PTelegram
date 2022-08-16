@@ -7568,7 +7568,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     if (finished[0]) {
                         Uri uri;
                         if (Build.VERSION.SDK_INT >= 24) {
-                            uri = FileProvider.getUriForFile(getParentActivity(), BuildConfig.APPLICATION_ID + ".provider", logcatFile);
+                            uri = FileProvider.getUriForFile(getParentActivity(), ApplicationLoader.getApplicationId() + ".provider", logcatFile);
                         } else {
                             uri = Uri.fromFile(logcatFile);
                         }

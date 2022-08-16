@@ -83,7 +83,7 @@ public class Update30 {
 
     private static Uri fileToUri(File file, Activity activity) {
         if (Build.VERSION.SDK_INT >= 24) {
-            return FileProvider.getUriForFile(activity, BuildConfig.APPLICATION_ID + ".provider", file);
+            return FileProvider.getUriForFile(activity, ApplicationLoader.getApplicationId() + ".provider", file);
         } else {
             return Uri.fromFile(file);
         }
@@ -301,7 +301,7 @@ public class Update30 {
     public static void installStandaloneTelegram(Activity activity, File standaloneTelegramApk) {
         Uri uri;
         if (Build.VERSION.SDK_INT >= 24) {
-            uri = FileProvider.getUriForFile(activity, BuildConfig.APPLICATION_ID + ".provider", standaloneTelegramApk);
+            uri = FileProvider.getUriForFile(activity, ApplicationLoader.getApplicationId() + ".provider", standaloneTelegramApk);
         } else {
             uri = Uri.fromFile(standaloneTelegramApk);
         }
