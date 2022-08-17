@@ -442,6 +442,10 @@ public class Utilities {
         return null;
     }
 
+    public static int clamp(int value, int maxValue, int minValue) {
+        return Math.max(Math.min(value, maxValue), minValue);
+    }
+
     public static String readLogcat() {
         StringBuilder log = new StringBuilder();
         try {
@@ -477,5 +481,9 @@ public class Utilities {
             sb.append(RANDOM_STRING_CHARS.charAt(fastRandom.nextInt(RANDOM_STRING_CHARS.length())));
         }
         return sb.toString();
+    }
+
+    public static interface Callback<T> {
+        public void run(T arg);
     }
 }

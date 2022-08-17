@@ -2275,6 +2275,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 actionBar.setBackButtonDrawable(backDrawable = new BackDrawable(false));
             } else {
                 actionBar.setBackButtonDrawable(menuDrawable = new MenuDrawable());
+                menuDrawable.setRoundCap();
                 actionBar.setBackButtonContentDescription(LocaleController.getString("AccDescrOpenMenu", R.string.AccDescrOpenMenu));
             }
             if (folderId != 0) {
@@ -3471,7 +3472,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             contentView.setClipToPadding(false);
             commentView.allowBlur = false;
             commentView.forceSmoothKeyboard(true);
-            commentView.setAllowStickersAndGifs(false, false);
+            commentView.setAllowStickersAndGifs(true, false, false);
             commentView.setForceShowSendButton(true, false);
             commentView.setPadding(0, 0, AndroidUtilities.dp(20), 0);
             commentView.setVisibility(View.GONE);
@@ -4363,8 +4364,10 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 updateFilterTabsVisibility(animated);
                 int id = filterTabsView.getCurrentTabId();
                 int stableId = filterTabsView.getCurrentTabStableId();
+                boolean selectWithStableId = false;
                 if (id != filterTabsView.getDefaultTabId() && id >= filters.size()) {
                     filterTabsView.resetTabId();
+                    selectWithStableId = true;
                 }
                 filterTabsView.removeTabs();
                 for (int a = 0, N = filters.size(); a < N; a++) {
@@ -4378,6 +4381,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     if (filterTabsView.getStableId(viewPages[0].selectedType) != stableId) {
                         updateCurrentTab = true;
                         viewPages[0].selectedType = id;
+                    }
+                    if (selectWithStableId) {
+                        filterTabsView.selectTabWithStableId(stableId);
                     }
                 }
                 for (int a = 0; a < viewPages.length; a++) {
@@ -7629,7 +7635,8 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                         int major = Integer.parseInt(matcher.group(1));
                         int minor = Integer.parseInt(matcher.group(2));
                         int patch = Integer.parseInt(matcher.group(3));
-                        if (versionGreater(major, minor, patch, maxVersionMajor, maxVersionMinor, maxVersionPatch)) {
+                        if (versionGreater(major, minor, patch, maxVersionMajor, maxVersionMinor, maxVersionPatch)
+                            && (major < 3 || (major == 3 && minor == 0))) {
                             maxVersionMajor = major;
                             maxVersionMinor = minor;
                             maxVersionPatch = patch;
