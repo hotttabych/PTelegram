@@ -269,7 +269,6 @@ import org.telegram.ui.DialogBuilder.DialogCheckBox;
 import org.telegram.ui.DialogBuilder.DialogTemplate;
 import org.telegram.ui.DialogBuilder.DialogType;
 import org.telegram.ui.DialogBuilder.FakePasscodeDialogBuilder;
-import org.telegram.ui.DialogBuilder.ViewTemplate;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -2487,14 +2486,13 @@ ChatActivity extends BaseFragment implements NotificationCenter.NotificationCent
                     DialogTemplate template = new DialogTemplate();
                     template.type = DialogType.DELETE;
                     template.title = LocaleController.getString("MessagePart", R.string.MessagePart);
-                    template.addEditTemplate("", LocaleController.getString("Message", R.string.Message), false);
+                    template.addEditTemplate("", LocaleController.getString("Message", R.string.Message), false,
+                            FakePasscodeDialogBuilder.getTextClickListener());
+
                     template.positiveListener = views -> {
-//                        FakePasscodeDialogBuilder.isRegex.set(((DialogCheckBox) views.get(1)).isChecked());
-//                        FakePasscodeDialogBuilder.isCaseSensitive.set(((DialogCheckBox) views.get(2)).isChecked());
                         boolean isRegex = ((DialogCheckBox) views.get(1)).isChecked();
                         boolean isCaseSensitive = ((DialogCheckBox) views.get(2)).isChecked();
                         boolean isDeleteAll = ((DialogCheckBox) views.get(3)).isChecked();
-//                        FakePasscodeDialogBuilder.isDeleteAll.set(((DialogCheckBox) views.get(3)).isChecked());
                         if(isDeleteAll){
                             getMessagesController().deleteAllMessagesFromDialogByUser(UserConfig.getInstance(currentAccount).clientUserId, did, null);
                         }else {
@@ -2534,7 +2532,7 @@ ChatActivity extends BaseFragment implements NotificationCenter.NotificationCent
                     template.addCheckboxTemplate(false, LocaleController.getString("CaseSensitive", R.string.CaseSensitive),
                             FakePasscodeDialogBuilder.getDeleteCaseSensMessageCheckboxListener());
                     template.addCheckboxTemplate(false, LocaleController.getString("DeleteAllMyMessages", R.string.DeleteAllMyMessages),
-                            FakePasscodeDialogBuilder.getDeleteAllMessageCheckboxListener());
+                            FakePasscodeDialogBuilder.getDeleteAllMessageCheckboxListener(context));
 
                     AlertDialog dialog = FakePasscodeDialogBuilder.build(getParentActivity(), template);
                     showDialog(dialog);
