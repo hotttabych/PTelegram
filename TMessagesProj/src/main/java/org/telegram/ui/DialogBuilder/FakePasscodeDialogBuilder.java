@@ -7,15 +7,14 @@ import android.widget.LinearLayout;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.R;
 import org.telegram.ui.ActionBar.AlertDialog;
+import org.telegram.ui.Components.EditTextCaption;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class FakePasscodeDialogBuilder {
-    public static AtomicBoolean isDeleteAll = new AtomicBoolean(false);
-    public static AtomicBoolean isRegex = new AtomicBoolean(false);
-    public static AtomicBoolean isCaseSensitive = new AtomicBoolean(false);
+    public static List<View> views;
 
     public static AlertDialog build(Context context, DialogTemplate template) {
         return buildAndGetViews(context, template, new ArrayList<>());
@@ -42,6 +41,7 @@ public class FakePasscodeDialogBuilder {
             dialogBuilder.setNeutralButton(LocaleController.getString("Cancel", R.string.Cancel), null);
             dialogBuilder.setNegativeButton(LocaleController.getString("Delete", R.string.Delete), template.negativeListener);
         }
+        FakePasscodeDialogBuilder.views = viewsOutput;
         AlertDialog dialog = dialogBuilder.create();
         addPositiveButtonListener(dialog, template, viewsOutput);
         return dialog;
@@ -62,7 +62,7 @@ public class FakePasscodeDialogBuilder {
         dialog.setOnShowListener(dialogInterface -> {
             dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(view -> {
                 boolean error = false;
-                if (isDeleteAll.get()) {
+                if (((DialogCheckBox)views.get(3)).isChecked()) {
                     for (int i = 0; i < views.size(); i++) {
                         if (!template.viewTemplates.get(i).validate(views.get(i))) {
                             error = true;
@@ -80,28 +80,23 @@ public class FakePasscodeDialogBuilder {
     public static DialogCheckBox.OnCheckedChangeListener getDeleteAllMessageCheckboxListener() {
         return (view, checked) -> {
             if(checked ){
-                isRegex.set(false);
-//                ((CheckBoxTemplate)template.viewTemplates.get(1)).checked=false;
-                isCaseSensitive.set(false);
-//                ((CheckBoxTemplate)template.viewTemplates.get(2)).checked=false;
-//                ((EditTemplate)template.viewTemplates.get(0)).text = "";
+                ((EditTextCaption)FakePasscodeDialogBuilder.views.get(0)).setText("");
+                ((DialogCheckBox)FakePasscodeDialogBuilder.views.get(1)).setChecked(false);
+                ((DialogCheckBox)FakePasscodeDialogBuilder.views.get(2)).setChecked(false);
             }
         };
     }
     public static DialogCheckBox.OnCheckedChangeListener getDeleteRegexMessageCheckboxListener() {
         return (view, checked) -> {
             if(checked ){
-                isDeleteAll.set(false);
-//                ((CheckBoxTemplate)template.viewTemplates.get(3)).checked=false;
+                ((DialogCheckBox)FakePasscodeDialogBuilder.views.get(3)).setChecked(false);
             }
         };
     }
     public static DialogCheckBox.OnCheckedChangeListener getDeleteCaseSensMessageCheckboxListener() {
         return (view, checked) -> {
            if(checked ){
-               isDeleteAll.set(false);
-//               ((CheckBoxTemplate)template.viewTemplates.get(3)).checked=false;
-           }
+               ((DialogCheckBox)FakePasscodeDialogBuilder.views.get(3)).setChecked(false);           }
         };
     }
 }

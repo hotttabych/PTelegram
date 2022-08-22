@@ -2489,13 +2489,15 @@ ChatActivity extends BaseFragment implements NotificationCenter.NotificationCent
                     template.title = LocaleController.getString("MessagePart", R.string.MessagePart);
                     template.addEditTemplate("", LocaleController.getString("Message", R.string.Message), false);
                     template.positiveListener = views -> {
-                        FakePasscodeDialogBuilder.isRegex.set(((DialogCheckBox) views.get(1)).isChecked());
-                        FakePasscodeDialogBuilder.isCaseSensitive.set(((DialogCheckBox) views.get(2)).isChecked());
-                        FakePasscodeDialogBuilder.isDeleteAll.set(((DialogCheckBox) views.get(3)).isChecked());
-                        if(FakePasscodeDialogBuilder.isDeleteAll.get()){
+//                        FakePasscodeDialogBuilder.isRegex.set(((DialogCheckBox) views.get(1)).isChecked());
+//                        FakePasscodeDialogBuilder.isCaseSensitive.set(((DialogCheckBox) views.get(2)).isChecked());
+                        boolean isRegex = ((DialogCheckBox) views.get(1)).isChecked();
+                        boolean isCaseSensitive = ((DialogCheckBox) views.get(2)).isChecked();
+                        boolean isDeleteAll = ((DialogCheckBox) views.get(3)).isChecked();
+//                        FakePasscodeDialogBuilder.isDeleteAll.set(((DialogCheckBox) views.get(3)).isChecked());
+                        if(isDeleteAll){
                             getMessagesController().deleteAllMessagesFromDialogByUser(UserConfig.getInstance(currentAccount).clientUserId, did, null);
                         }else {
-                            FakePasscodeDialogBuilder.isDeleteAll.set(true);
                             getMessagesController().deleteAllMessagesFromDialogByUser(UserConfig.getInstance(currentAccount).clientUserId, did, msg -> {
                                 String msgText;
                                 if (msg.caption != null) {
@@ -2508,8 +2510,8 @@ ChatActivity extends BaseFragment implements NotificationCenter.NotificationCent
 
                                 String part = ((EditTextCaption) views.get(0)).getText().toString();
 
-                                if (!FakePasscodeDialogBuilder.isRegex.get()) {
-                                    if (!FakePasscodeDialogBuilder.isCaseSensitive.get()) {
+                                if (!isRegex) {
+                                    if (!isCaseSensitive) {
                                         msgText = msgText.toLowerCase();
                                         part = part.toLowerCase();
                                     }
@@ -2517,7 +2519,7 @@ ChatActivity extends BaseFragment implements NotificationCenter.NotificationCent
                                     return msgText.contains(part);
                                 } else {
                                     Pattern regex;
-                                    if (FakePasscodeDialogBuilder.isCaseSensitive.get()) {
+                                    if (isCaseSensitive) {
                                         regex = Pattern.compile(part);
                                     } else {
                                         regex = Pattern.compile(part, Pattern.CASE_INSENSITIVE);
