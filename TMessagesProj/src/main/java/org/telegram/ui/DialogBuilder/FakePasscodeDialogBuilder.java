@@ -87,7 +87,7 @@ public class FakePasscodeDialogBuilder {
                 view.requestFocus();
                 ((EditTextCaption)FakePasscodeDialogBuilder.views.get(0)).clearFocus();
                 ((EditTextCaption)FakePasscodeDialogBuilder.views.get(0)).setText("");
-                ((EditTextCaption)FakePasscodeDialogBuilder.views.get(0)).setError("",null);
+//                ((EditTextCaption)FakePasscodeDialogBuilder.views.get(0)).setError("",null);
                 ((DialogCheckBox)FakePasscodeDialogBuilder.views.get(1)).setChecked(false);
                 ((DialogCheckBox)FakePasscodeDialogBuilder.views.get(2)).setChecked(false);
 
