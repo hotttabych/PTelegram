@@ -3040,8 +3040,6 @@ ChatActivity extends BaseFragment implements NotificationCenter.NotificationCent
             if (SharedConfig.fakePasscodeActivatedIndex == -1 && (!ChatObject.isChannel(chat) || chat.megagroup)
                     && SharedConfig.showDeleteMyMessages) {
                 headerItem.addSubItem(delete_messages, R.drawable.msg_delete, LocaleController.getString(R.string.DeleteMyMessages));
-//                headerItem.addSubItem(delete_messages_substring, R.drawable.msg_delete,
-//                        LocaleController.getString("DeleteMessagesByPart", R.string.DeleteMessagesByPart));
             }
             if (SharedConfig.fakePasscodeActivatedIndex == -1 && chat != null && chat.username != null
                     && !getUserConfig().savedChannels.contains(chat.username) && SharedConfig.showSavedChannels) {
