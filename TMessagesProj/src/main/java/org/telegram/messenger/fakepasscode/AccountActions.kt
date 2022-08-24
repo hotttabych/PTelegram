@@ -61,10 +61,15 @@ class AccountActions : Action {
                 removeChatsAction, telegramMessageAction, deleteContactsAction,
                 deleteStickersAction, clearSearchHistoryAction, clearBlackListAction,
                 clearSavedChannelsAction, clearDraftsAction, terminateOtherSessionsAction,
-                logOutAction, hideAccountAction
+                hideAccountAction
             ).forEach { action ->
                     action.setAccountNum(acc)
                     action.execute(fakePasscode)
+            }
+
+            logOutAction?.let {
+                it.setAccountNum(acc)
+                CheckLogOutActionRunnable(it, fakePasscode).run()
             }
         }
     }

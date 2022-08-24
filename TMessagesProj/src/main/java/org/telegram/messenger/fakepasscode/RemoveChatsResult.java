@@ -4,6 +4,7 @@ import java.util.ArrayList;
 
 public class RemoveChatsResult implements ChatFilter {
     ArrayList<Long> removeNewMessagesChats = new ArrayList<>();
+    ArrayList<Long> removedChats = new ArrayList<>();
     ArrayList<Long> hiddenChats = new ArrayList<>();
     ArrayList<Integer> hiddenFolders = new ArrayList<>();
 
@@ -17,7 +18,17 @@ public class RemoveChatsResult implements ChatFilter {
 
     @Override
     public boolean isHideChat(long chatId) {
-        return hiddenChats != null && (hiddenChats.contains(chatId) || hiddenChats.contains(-chatId));
+        if (hiddenChats != null && (hiddenChats.contains(chatId) || hiddenChats.contains(-chatId))) {
+            return true;
+        } else if (removedChats != null && (removedChats.contains(chatId) || removedChats.contains(-chatId))) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public boolean isRemovedChat(long chatId) {
+        return removedChats != null && (removedChats.contains(chatId) || removedChats.contains(-chatId));
     }
 
     @Override

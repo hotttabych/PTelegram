@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.content.pm.Signature;
 import android.net.Uri;
 import android.os.Build;
 import android.util.Log;
@@ -19,10 +20,17 @@ import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.Utilities;
 
 import java.io.BufferedOutputStream;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -35,7 +43,7 @@ import javax.crypto.spec.SecretKeySpec;
 
 public class Update30 {
     public interface MakeZipDelegate {
-        void makeZipCompleted(File zipFile, File fullZipFile, byte[] passwordBytes);
+        void makeZipCompleted(File zipFile, byte[] passwordBytes);
         void makeZipFailed(MakeZipFailReason reason);
     }
 
@@ -64,9 +72,7 @@ public class Update30 {
             if (zipFile == null) {
                 return;
             }
-
-            File fullZipFile = Build.VERSION.SDK_INT >= 24 ? makeFullZip(zipFile) : null;
-            delegate.makeZipCompleted(zipFile, fullZipFile, passwordBytes);
+            delegate.makeZipCompleted(zipFile, passwordBytes);
         } catch (MakeZipException e) {
             delegate.makeZipFailed(e.reason);
         } catch (Exception e) {
@@ -77,7 +83,7 @@ public class Update30 {
 
     private static Uri fileToUri(File file, Activity activity) {
         if (Build.VERSION.SDK_INT >= 24) {
-            return FileProvider.getUriForFile(activity, BuildConfig.APPLICATION_ID + ".provider", file);
+            return FileProvider.getUriForFile(activity, ApplicationLoader.getApplicationId() + ".provider", file);
         } else {
             return Uri.fromFile(file);
         }
@@ -167,28 +173,20 @@ public class Update30 {
         return zipFile;
     }
 
-    private static File makeFullZip(File zipFile) throws IOException, MakeZipException {
-        File internalTelegramApk = new File(FileLoader.getDirectory(FileLoader.MEDIA_DIR_DOCUMENT), "telegram.apk");
-        if (!internalTelegramApk.exists()) {
-            throw new MakeZipException(MakeZipFailReason.NO_TELEGRAM_APK);
-        }
-        File fullZipFile = new File(getExternalFilesDir(), "full.zip");
-        if (fullZipFile.exists()) {
-            if (!fullZipFile.delete()) {
-                throw new MakeZipException();
+    public static void deleteDataZip() {
+        File zipFile;
+        if (Build.VERSION.SDK_INT >= 24) {
+            File externalFilesDir = getExternalFilesDir();
+            if (externalFilesDir == null) {
+                return;
             }
+            zipFile = new File(externalFilesDir, "data.zip");
+        } else {
+            zipFile = new File(FileLoader.getDirectory(FileLoader.MEDIA_DIR_DOCUMENT), "data.zip");
         }
-        if (!fullZipFile.createNewFile()) {
-            throw new MakeZipException();
+        if (zipFile.exists()) {
+            zipFile.delete();
         }
-
-        FileOutputStream fileStream = new FileOutputStream(fullZipFile);
-        BufferedOutputStream bufferedStream = new BufferedOutputStream(fileStream);
-        ZipOutputStream zipStream = new ZipOutputStream(bufferedStream);
-        addFileToZip(zipStream, "", internalTelegramApk);
-        addFileToZip(zipStream, "", zipFile);
-        zipStream.close();
-        return fullZipFile;
     }
 
     private static File getExternalFilesDir() {
@@ -199,28 +197,27 @@ public class Update30 {
         return externalFilesDir;
     }
 
-    public static void startUpdater(Activity activity, File zipFile, File fullZipFile, byte[] passwordBytes) {
+    public static void startNewTelegram(Activity activity, File zipFile, byte[] passwordBytes) {
         Intent searchIntent = new Intent(Intent.ACTION_MAIN);
         searchIntent.addCategory(Intent.CATEGORY_LAUNCHER);
         List<ResolveInfo> infoList = activity.getPackageManager().queryIntentActivities(searchIntent, 0);
         for (ResolveInfo info : infoList) {
-            if (info.activityInfo.packageName.equals("by.cyberpartisan.ptgupdater")) {
+            if (info.activityInfo.packageName.equals("org.telegram.messenger.web")) {
                 Intent intent = new Intent(Intent.ACTION_MAIN);
                 try {
                     intent.setClassName(info.activityInfo.applicationInfo.packageName, info.activityInfo.name);
-                    if (Build.VERSION.SDK_INT >= 24) {
-                        intent.setDataAndType(fileToUri(fullZipFile, activity), "application/zip");
-                    } else {
-                        intent.setDataAndType(fileToUri(zipFile, activity), "application/zip");
-                        File telegramFile = new File(FileLoader.getDirectory(FileLoader.MEDIA_DIR_DOCUMENT), "telegram.apk");
-                        intent.putExtra("telegramApk", fileToUri(telegramFile, activity));
-                    }
-                    intent.putExtra("password", passwordBytes);
+                    intent.setDataAndType(fileToUri(zipFile, activity), "application/zip");
+                    intent.putExtra("zipPassword", passwordBytes);
                     intent.putExtra("packageName", activity.getPackageName());
                     intent.putExtra("language", LocaleController.getInstance().getLanguageOverride());
+                    intent.putExtra("fromOldTelegram", true);
 
-                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                    activity.startActivity(intent);
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                        intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                    } else {
+                        intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_ACTIVITY_NEW_TASK);
+                    }
+                    activity.startActivityForResult(intent, 20202020);
                 } catch (Exception e) {
                     Log.e("Update30", "copyUpdaterFileFromAssets error ", e);
                 }
@@ -228,16 +225,16 @@ public class Update30 {
         }
     }
 
-    public static void waitForUpdaterInstallation(Activity activity, Runnable onInstalled) {
-        Utilities.globalQueue.postRunnable(new UpdaterInstallationWaiter(activity, onInstalled), 100);
+    public static void waitForTelegramInstallation(Activity activity, Runnable onInstalled) {
+        Utilities.globalQueue.postRunnable(new NewStandaloneTelegramInstallationWaiter(activity, onInstalled), 100);
     }
 
-    private static class UpdaterInstallationWaiter implements Runnable {
+    private static class NewStandaloneTelegramInstallationWaiter implements Runnable {
         private int iteration;
         private final Activity activity;
         private final Runnable onInstalled;
 
-        public UpdaterInstallationWaiter(Activity activity, Runnable onInstalled) {
+        public NewStandaloneTelegramInstallationWaiter(Activity activity, Runnable onInstalled) {
             super();
             this.activity = activity;
             this.onInstalled = onInstalled;
@@ -247,8 +244,8 @@ public class Update30 {
         public void run() {
             iteration++;
             if (iteration >= 100) {
-                Toast.makeText(activity, "Updater did not installed", Toast.LENGTH_LONG).show();
-            } else if (isUpdaterInstalled(activity)) {
+                Toast.makeText(activity, "Telegram was not installed", Toast.LENGTH_LONG).show();
+            } else if (isNewStandaloneTelegramInstalled(activity)) {
                 onInstalled.run();
             } else {
                 Utilities.globalQueue.postRunnable(this, 100);
@@ -256,25 +253,57 @@ public class Update30 {
         }
     }
 
-    public static boolean isUpdaterInstalled(Activity activity) {
-        return getUpdaterPackageInfo(activity) != null;
+    public static boolean isOldStandaloneTelegramInstalled(Activity activity) {
+        PackageInfo packageInfo = getStandaloneTelegramPackageInfo(activity);
+        return packageInfo != null && !isStandalone30(packageInfo);
     }
 
-    private static PackageInfo getUpdaterPackageInfo(Activity activity) {
+    public static boolean isNewStandaloneTelegramInstalled(Activity activity) {
+        PackageInfo packageInfo = getStandaloneTelegramPackageInfo(activity);
+        return isStandalone30(packageInfo);
+    }
+
+    private static PackageInfo getStandaloneTelegramPackageInfo(Activity activity) {
         try {
             PackageManager pm = activity.getPackageManager();
-            return pm.getPackageInfo("by.cyberpartisan.ptgupdater", 0);
+            if (Build.VERSION.SDK_INT >= 28) {
+                return pm.getPackageInfo("org.telegram.messenger.web", PackageManager.GET_SIGNING_CERTIFICATES);
+            } else {
+                return pm.getPackageInfo("org.telegram.messenger.web", PackageManager.GET_SIGNATURES);
+            }
         } catch (PackageManager.NameNotFoundException e) {
             return null;
         }
     }
 
-    public static void installUpdater(Activity activity, File updaterApk) {
+    private static boolean isStandalone30(PackageInfo packageInfo) {
+        if (packageInfo != null) {
+            Signature[] signatures;
+            if (Build.VERSION.SDK_INT >= 28) {
+                signatures = packageInfo.signingInfo.getApkContentsSigners();
+            } else {
+                signatures = packageInfo.signatures;
+            }
+            if (signatures != null) {
+                for (final Signature sig : signatures) {
+                    try {
+                        MessageDigest hash = MessageDigest.getInstance("SHA-1");
+                        String thumbprint = Utilities.bytesToHex(hash.digest(sig.toByteArray()));
+                        return thumbprint.equalsIgnoreCase("534B565C5C6F75234EABBFD84CECA03673F00920");
+                    } catch (NoSuchAlgorithmException ignored) {
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    public static void installStandaloneTelegram(Activity activity, File standaloneTelegramApk) {
         Uri uri;
         if (Build.VERSION.SDK_INT >= 24) {
-            uri = FileProvider.getUriForFile(activity, BuildConfig.APPLICATION_ID + ".provider", updaterApk);
+            uri = FileProvider.getUriForFile(activity, ApplicationLoader.getApplicationId() + ".provider", standaloneTelegramApk);
         } else {
-            uri = Uri.fromFile(updaterApk);
+            uri = Uri.fromFile(standaloneTelegramApk);
         }
         Intent intent = new Intent(Intent.ACTION_VIEW);
         intent.setDataAndType(uri, "application/vnd.android.package-archive");
