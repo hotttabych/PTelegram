@@ -16,20 +16,24 @@ public class DialogTemplate {
     public DialogInterface.OnClickListener negativeListener;
 
     public void addEditTemplate(String text, String name, boolean singleLine) {
-        addEditTemplate(text, name, singleLine, null);
+        addEditTemplate(text, name, singleLine,true, null);
+    }
+    public void addEditTemplate(String text, String name, boolean enabled, boolean singleLine) {
+        addEditTemplate(text, name, singleLine, enabled, null);
     }
 
-    public void addEditTemplate(String text, String name, boolean singleLine, View.OnFocusChangeListener onClickListener) {
+    public void addEditTemplate(String text, String name, boolean singleLine, boolean enabled, View.OnFocusChangeListener onClickListener) {
         EditTemplate editTemplate = new EditTemplate();
         editTemplate.text = text;
         editTemplate.name = name;
         editTemplate.singleLine = singleLine;
         editTemplate.onClickListener = onClickListener;
+        editTemplate.enabled = enabled;
         viewTemplates.add(editTemplate);
     }
 
     public void addPhoneEditTemplate(String text, String name, boolean singleLine ) {
-        addEditTemplate(text, name, singleLine,null);
+        addEditTemplate(text, name, singleLine,true,null);
     }
 
     public void addNumberEditTemplate(String text, String name, boolean singleLine) {

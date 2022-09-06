@@ -16,6 +16,7 @@ EditTemplate implements ViewTemplate {
     String text;
     String name;
     boolean singleLine;
+    boolean enabled;
     View.OnFocusChangeListener onClickListener;
 
     @Override
@@ -35,6 +36,7 @@ EditTemplate implements ViewTemplate {
         editText.setHintTextColor(Theme.getColor(Theme.key_chat_messagePanelHint));
         editText.setCursorColor(Theme.getColor(Theme.key_chat_messagePanelCursor));
         editText.setOnFocusChangeListener(onClickListener);
+        editText.setEnabled(enabled);
         return editText;
     }
 

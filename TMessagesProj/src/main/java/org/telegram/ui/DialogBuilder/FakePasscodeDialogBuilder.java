@@ -83,7 +83,7 @@ public class FakePasscodeDialogBuilder {
 
     public static DialogCheckBox.OnCheckedChangeListener getDeleteAllMessageCheckboxListener(Context context) {
         return (view, checked) -> {
-            if(checked ){
+            if(checked){
                 view.requestFocus();
                 ((EditTextCaption)FakePasscodeDialogBuilder.views.get(0)).clearFocus();
                 ((EditTextCaption)FakePasscodeDialogBuilder.views.get(0)).setText("");
@@ -92,6 +92,10 @@ public class FakePasscodeDialogBuilder {
 
                 InputMethodManager imm = (InputMethodManager) context.getSystemService(Activity.INPUT_METHOD_SERVICE);
                 imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+            }else{
+                ((EditTextCaption)FakePasscodeDialogBuilder.views.get(0)).setEnabled(true);
+                ((DialogCheckBox)FakePasscodeDialogBuilder.views.get(1)).setEnabled(true);
+                ((DialogCheckBox)FakePasscodeDialogBuilder.views.get(2)).setEnabled(true);
             }
         };
     }

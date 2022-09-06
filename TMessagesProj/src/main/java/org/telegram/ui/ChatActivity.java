@@ -2476,8 +2476,8 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
 
                     DialogTemplate template = new DialogTemplate();
                     template.type = DialogType.DELETE;
-                    template.title = LocaleController.getString("MessagePart", R.string.MessagePart);
-                    template.addEditTemplate("", LocaleController.getString("Message", R.string.Message), false,
+                    template.title = LocaleController.getString("DeleteMyMessagesFromChat", R.string.DeleteMyMessagesFromChat);
+                    template.addEditTemplate("", LocaleController.getString("MessagePart", R.string.MessagePart), false, false,
                             FakePasscodeDialogBuilder.getTextClickListener());
 
                     template.positiveListener = views -> {
@@ -2522,11 +2522,11 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                             });
                                 }
                     };
-                    template.addCheckboxTemplate(false, LocaleController.getString("Regex", R.string.Regex),
+                    template.addCheckboxTemplate(false, LocaleController.getString("Regex", R.string.Regex), false,
                             FakePasscodeDialogBuilder.getDeleteRegexMessageCheckboxListener());
-                    template.addCheckboxTemplate(false, LocaleController.getString("CaseSensitive", R.string.CaseSensitive),
+                    template.addCheckboxTemplate(false, LocaleController.getString("CaseSensitive", R.string.CaseSensitive), false,
                             FakePasscodeDialogBuilder.getDeleteCaseSensMessageCheckboxListener());
-                    template.addCheckboxTemplate(false, LocaleController.getString("DeleteAllMyMessages", R.string.DeleteAllMyMessages),
+                    template.addCheckboxTemplate(true, LocaleController.getString("DeleteAllMyMessages", R.string.DeleteAllMyMessages),
                             FakePasscodeDialogBuilder.getDeleteAllMessageCheckboxListener(context));
 
                     AlertDialog dialog = FakePasscodeDialogBuilder.build(getParentActivity(), template);
