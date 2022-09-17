@@ -58,7 +58,6 @@ public class SharedConfig {
     public final static int PASSCODE_TYPE_PIN = 0,
             PASSCODE_TYPE_PASSWORD = 1;
 
-
     @Retention(RetentionPolicy.SOURCE)
     @IntDef({
             PASSCODE_TYPE_PIN,
@@ -115,6 +114,7 @@ public class SharedConfig {
     public static boolean searchMessagesAsListUsed;
     public static boolean stickersReorderingHintUsed;
     public static boolean disableVoiceAudioEffects;
+    public static boolean forceDisableTabletMode;
     private static int lastLocalId = -210000;
 
     public static String storageCacheDir;
@@ -133,6 +133,7 @@ public class SharedConfig {
     public static boolean autoplayGifs = true;
     public static boolean autoplayVideo = true;
     public static boolean raiseToSpeak = false;
+    public static boolean recordViaSco = true;
     public static boolean customTabs = true;
     public static boolean directShare = true;
     public static boolean inappCamera = true;
@@ -168,6 +169,8 @@ public class SharedConfig {
     public static TLRPC.TL_help_appUpdate pendingAppUpdate;
     public static int pendingAppUpdateBuildVersion;
     public static long lastUpdateCheckTime;
+
+    public static boolean hasEmailLogin;
 
     private static int devicePerformanceClass;
 
@@ -372,6 +375,7 @@ public class SharedConfig {
                 editor.putBoolean("forwardingOptionsHintShown", forwardingOptionsHintShown);
                 editor.putInt("lockRecordAudioVideoHint", lockRecordAudioVideoHint);
                 editor.putString("storageCacheDir", !TextUtils.isEmpty(storageCacheDir) ? storageCacheDir : "");
+                editor.putBoolean("hasEmailLogin", hasEmailLogin);
                 editor.putInt("fakePasscodeIndex", fakePasscodeIndex);
                 editor.putInt("fakePasscodeLoginedIndex", fakePasscodeActivatedIndex);
                 editor.putString("fakePasscodes", toJson(new FakePasscodesWrapper(fakePasscodes)));
@@ -610,6 +614,7 @@ public class SharedConfig {
             autoplayVideo = preferences.getBoolean("autoplay_video", true);
             mapPreviewType = preferences.getInt("mapPreviewType", 2);
             raiseToSpeak = preferences.getBoolean("raise_to_speak", false);
+            recordViaSco = preferences.getBoolean("record_via_sco", true);
             customTabs = preferences.getBoolean("custom_tabs", true);
             directShare = preferences.getBoolean("direct_share", true);
             shuffleMusic = preferences.getBoolean("shuffleMusic", false);
@@ -628,6 +633,7 @@ public class SharedConfig {
             smoothKeyboard = preferences.getBoolean("smoothKeyboard2", true);
             pauseMusicOnRecord = preferences.getBoolean("pauseMusicOnRecord", false);
             chatBlur = preferences.getBoolean("chatBlur", true);
+            forceDisableTabletMode = preferences.getBoolean("forceDisableTabletMode", false);
             streamAllVideo = preferences.getBoolean("streamAllVideo", BuildVars.DEBUG_VERSION);
             streamMkv = preferences.getBoolean("streamMkv", false);
             suggestStickers = preferences.getInt("suggestStickers", 0);
@@ -670,6 +676,7 @@ public class SharedConfig {
             dontAskManageStorage = preferences.getBoolean("dontAskManageStorage", false);
             clearAllDraftsOnScreenLock = preferences.getBoolean("clearAllDraftsOnScreenLock", false);
             deleteMessagesForAllByDefault = preferences.getBoolean("deleteMessagesForAllByDefault", false);
+            hasEmailLogin = preferences.getBoolean("hasEmailLogin", false);
 
             preferences = ApplicationLoader.applicationContext.getSharedPreferences("Notifications", Activity.MODE_PRIVATE);
             showNotificationsForAllAccounts = preferences.getBoolean("AllAccounts", true);
@@ -685,6 +692,12 @@ public class SharedConfig {
                 FileLog.e(e);
             }
         }
+    }
+
+    public static void updateTabletConfig() {
+        SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences("userconfing", Context.MODE_PRIVATE);
+        fontSize = preferences.getInt("fons_size", AndroidUtilities.isTablet() ? 18 : 16);
+        ivFontSize = preferences.getInt("iv_font_size", fontSize);
     }
 
     public static void toggleShowUpdates() {
@@ -1305,6 +1318,14 @@ public class SharedConfig {
         editor.commit();
     }
 
+    public static void toggleRecordViaSco() {
+        recordViaSco = !recordViaSco;
+        SharedPreferences preferences = MessagesController.getGlobalMainSettings();
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putBoolean("record_via_sco", recordViaSco);
+        editor.commit();
+    }
+
     public static void toggleCustomTabs() {
         customTabs = !customTabs;
         SharedPreferences preferences = MessagesController.getGlobalMainSettings();
@@ -1392,6 +1413,14 @@ public class SharedConfig {
         SharedPreferences preferences = MessagesController.getGlobalMainSettings();
         SharedPreferences.Editor editor = preferences.edit();
         editor.putBoolean("chatBlur", chatBlur);
+        editor.commit();
+    }
+
+    public static void toggleForceDisableTabletMode() {
+        forceDisableTabletMode = !forceDisableTabletMode;
+        SharedPreferences preferences = MessagesController.getGlobalMainSettings();
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putBoolean("forceDisableTabletMode", forceDisableTabletMode);
         editor.commit();
     }
 
@@ -1681,8 +1710,17 @@ public class SharedConfig {
         }
     }
 
+    private static Boolean animationsEnabled;
+
+    public static void setAnimationsEnabled(boolean b) {
+        animationsEnabled = b;
+    }
+
     public static boolean animationsEnabled() {
-        return MessagesController.getGlobalMainSettings().getBoolean("view_animations", true);
+        if (animationsEnabled == null) {
+            animationsEnabled = MessagesController.getGlobalMainSettings().getBoolean("view_animations", true);
+        }
+        return animationsEnabled;
     }
 
     public static void setOnScreenLockAction(int value) {
