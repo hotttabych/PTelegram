@@ -301,6 +301,10 @@ public class FakePasscode {
         return filterItems(peers, Optional.of(account), (peer, action) -> !isHidePeer(peer, action));
     }
 
+    public static List<TLRPC.TL_sendAsPeer> filterSendAsPeers(List<TLRPC.TL_sendAsPeer> peers, int account) {
+        return filterItems(peers, Optional.of(account), (peer, action) -> !isHidePeer(peer.peer, action));
+    }
+
     public static boolean isHidePeer(TLRPC.Peer peer, int account) {
         FakePasscode passcode = SharedConfig.getActivatedFakePasscode();
         if (passcode == null || peer == null) {
