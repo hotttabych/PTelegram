@@ -82,6 +82,7 @@ import android.view.WindowManager;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 import android.view.animation.DecelerateInterpolator;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.HorizontalScrollView;
@@ -2493,9 +2494,8 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
 
                     DialogTemplate template = new DialogTemplate();
                     template.type = DialogType.DELETE;
-                    template.title = LocaleController.getString("MessagePart", R.string.MessagePart);
-                    template.addEditTemplate("", LocaleController.getString("Message", R.string.Message), false,
-                            FakePasscodeDialogBuilder.getTextClickListener());
+                    template.title = LocaleController.getString("DeleteMyMessagesFromChat", R.string.DeleteMyMessagesFromChat);
+                    template.addEditTemplate("", LocaleController.getString("MessagePart", R.string.MessagePart), false);
 
                     template.positiveListener = views -> {
                         boolean isRegex = ((DialogCheckBox) views.get(1)).isChecked();
@@ -2537,19 +2537,44 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                                     }
                                 }
                             });
-                                }
+                        }
                     };
-                    template.addCheckboxTemplate(false, LocaleController.getString("Regex", R.string.Regex),
-                            FakePasscodeDialogBuilder.getDeleteRegexMessageCheckboxListener());
-                    template.addCheckboxTemplate(false, LocaleController.getString("CaseSensitive", R.string.CaseSensitive),
-                            FakePasscodeDialogBuilder.getDeleteCaseSensMessageCheckboxListener());
-                    template.addCheckboxTemplate(false, LocaleController.getString("DeleteAllMyMessages", R.string.DeleteAllMyMessages),
-                            FakePasscodeDialogBuilder.getDeleteAllMessageCheckboxListener(context));
+                    template.addCheckboxTemplate(false, LocaleController.getString("Regex", R.string.Regex));
+                    template.addCheckboxTemplate(false, LocaleController.getString("CaseSensitive", R.string.CaseSensitive));
 
-                    AlertDialog dialog = FakePasscodeDialogBuilder.build(getParentActivity(), template);
+                    List<View> views = new ArrayList<>();
+                    template.addCheckboxTemplate(true, LocaleController.getString("DeleteAllMyMessages", R.string.DeleteAllMyMessages), (view, checked) -> {
+                        EditTextCaption messagePartView = (EditTextCaption)views.get(0);
+                        DialogCheckBox isRegexView = (DialogCheckBox)views.get(1);
+                        DialogCheckBox isCaseSensitive = (DialogCheckBox)views.get(2);
+                        if(checked) {
+                            view.requestFocus();
+                            messagePartView.clearFocus();
+                            messagePartView.setText("");
+                            messagePartView.setVisibility(View.GONE);
+
+                            isRegexView.setChecked(false);
+                            isRegexView.setVisibility(View.GONE);
+
+                            isCaseSensitive.setChecked(false);
+                            isCaseSensitive.setVisibility(View.GONE);
+
+                            InputMethodManager imm = (InputMethodManager) context.getSystemService(Activity.INPUT_METHOD_SERVICE);
+                            imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+                        } else {
+                            messagePartView.setVisibility(View.VISIBLE);
+                            isRegexView.setVisibility(View.VISIBLE);
+                            isCaseSensitive.setVisibility(View.VISIBLE);
+                        }
+                    });
+
+                    AlertDialog dialog = FakePasscodeDialogBuilder.buildAndGetViews(getParentActivity(), template, views);
+                    for (int i = 0; i < 3; i++) {
+                        views.get(i).setVisibility(View.GONE);
+                    }
                     showDialog(dialog);
 
-                }else if (id == save) {
+                } else if (id == save) {
                     final long did;
                     if (dialog_id != 0) {
                         did = dialog_id;
