@@ -16,8 +16,6 @@ EditTemplate implements ViewTemplate {
     String text;
     String name;
     boolean singleLine;
-    boolean enabled;
-    View.OnFocusChangeListener onClickListener;
 
     @Override
     public View create(Context context) {
@@ -35,14 +33,12 @@ EditTemplate implements ViewTemplate {
         editText.setHintColor(Theme.getColor(Theme.key_chat_messagePanelHint));
         editText.setHintTextColor(Theme.getColor(Theme.key_chat_messagePanelHint));
         editText.setCursorColor(Theme.getColor(Theme.key_chat_messagePanelCursor));
-        editText.setOnFocusChangeListener(onClickListener);
-        editText.setEnabled(enabled);
         return editText;
     }
 
     @Override
     public boolean validate(View view) {
-        if (view instanceof EditTextCaption) {
+        if (view instanceof EditTextCaption && view.getVisibility() == View.VISIBLE) {
             EditTextCaption edit = (EditTextCaption)view;
             if (edit.getText().toString().isEmpty()) {
                 edit.setError(name + " " + LocaleController.getString("CannotBeEmpty", R.string.CannotBeEmpty));
