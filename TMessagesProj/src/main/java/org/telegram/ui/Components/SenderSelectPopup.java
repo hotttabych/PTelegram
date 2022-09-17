@@ -142,7 +142,7 @@ public class SenderSelectPopup extends ActionBarPopupWindow {
 
         FrameLayout recyclerFrameLayout = new FrameLayout(context);
 
-        List<TLRPC.TL_sendAsPeer> peers = FakePasscode.filterPeers(sendAsPeers.peers, currentAccount);
+        List<TLRPC.TL_sendAsPeer> peers = FakePasscode.filterSendAsPeers(sendAsPeers.peers, currentAccount);
 
         recyclerView = new RecyclerListView(context);
         layoutManager = new LinearLayoutManager(context);
@@ -358,7 +358,7 @@ public class SenderSelectPopup extends ActionBarPopupWindow {
         recyclerContainer.setPivotX(0);
         recyclerContainer.setPivotY(0);
 
-        List<TLRPC.TL_sendAsPeer> peers = FakePasscode.filterPeers(sendAsPeers.peers, currentAccount);
+        List<TLRPC.TL_sendAsPeer> peers = FakePasscode.filterSendAsPeers(sendAsPeers.peers, currentAccount);
         TLRPC.Peer defPeer = chatFull.default_send_as != null && !FakePasscode.isHidePeer(chatFull.default_send_as, currentAccount) ? chatFull.default_send_as : null;
         if (defPeer != null) {
             int itemHeight = AndroidUtilities.dp(14 + AVATAR_SIZE_DP);

@@ -4955,7 +4955,7 @@ public class ChatActivityEnterView extends BlurredFrameLayout implements Notific
                 updateStickersOrder = SendMessagesHelper.checkUpdateStickersOrder(text);
 
 
-                SendMessagesHelper.getInstance(currentAccount).sendMessage(message[0].toString(), dialog_id, replyingMessageObject, getThreadMessage(), messageWebPage, messageWebPageSearch, entities, null, null, notify, scheduleDate, sendAnimationData, autoDeletable, delay, updateStickersOrder);
+                SendMessagesHelper.getInstance(currentAccount).sendMessage(message[0].toString(), dialog_id, replyingMessageObject, getThreadMessage(), messageWebPage, messageWebPageSearch, entities, null, null, notify, scheduleDate, sendAnimationData, updateStickersOrder, autoDeletable, delay);
                 start = end + 1;
             } while (end != text.length());
             return true;
@@ -6889,8 +6889,8 @@ public class ChatActivityEnterView extends BlurredFrameLayout implements Notific
         }
         TLRPC.ChatFull full = parentFragment.getMessagesController().getChatFull(-dialog_id);
         TLRPC.Peer defPeer = full != null && !FakePasscode.isHidePeer(full.default_send_as, currentAccount) ? full.default_send_as : null;
-        if (defPeer == null && delegate.getSendAsPeers() != null && !FakePasscode.filterPeers(delegate.getSendAsPeers().peers, currentAccount).isEmpty()) {
-            defPeer = FakePasscode.filterPeers(delegate.getSendAsPeers().peers, currentAccount).get(0).peer;
+        if (defPeer == null && delegate.getSendAsPeers() != null && !FakePasscode.filterSendAsPeers(delegate.getSendAsPeers().peers, currentAccount).isEmpty()) {
+            defPeer = FakePasscode.filterSendAsPeers(delegate.getSendAsPeers().peers, currentAccount).get(0).peer;
         }
         if (defPeer != null) {
             if (defPeer.channel_id != 0) {
@@ -6902,7 +6902,7 @@ public class ChatActivityEnterView extends BlurredFrameLayout implements Notific
             }
         }
         boolean wasVisible = senderSelectView.getVisibility() == View.VISIBLE;
-        boolean isVisible = defPeer != null && (delegate.getSendAsPeers() == null || FakePasscode.filterPeers(delegate.getSendAsPeers().peers, currentAccount).size() > 1) &&
+        boolean isVisible = defPeer != null && (delegate.getSendAsPeers() == null || FakePasscode.filterSendAsPeers(delegate.getSendAsPeers().peers, currentAccount).size() > 1) &&
                 !isEditingMessage() && !isRecordingAudioVideo() && recordedAudioPanel.getVisibility() != View.VISIBLE;
         int pad = AndroidUtilities.dp(2);
         MarginLayoutParams params = (MarginLayoutParams) senderSelectView.getLayoutParams();

@@ -5710,6 +5710,29 @@ public class LaunchActivity extends BasePermissionsActivity implements ActionBar
                     fragment.showDialog(new LimitReachedBottomSheet(fragment, fragment.getParentActivity(), (int) args[0], currentAccount));
                 }
             }
+        }  else if (id == NotificationCenter.currentUserPremiumStatusChanged) {
+            if (drawerLayoutAdapter != null) {
+                drawerLayoutAdapter.notifyDataSetChanged();
+            }
+        } else if (id == NotificationCenter.requestPermissions) {
+            int type = (int) args[0];
+            String[] permissions = null;
+            if (type == BLUETOOTH_CONNECT_TYPE) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    permissions = new String[]{
+                            Manifest.permission.BLUETOOTH_CONNECT
+                    };
+                }
+            }
+            if (permissions != null) {
+                requsetPermissionsPointer++;
+                requestedPermissions.put(requsetPermissionsPointer, type);
+                ActivityCompat.requestPermissions(
+                        this,
+                        permissions,
+                        requsetPermissionsPointer
+                );
+            }
         } else if (id == NotificationCenter.appDidLogoutByAction || id == NotificationCenter.appHiddenByAction) {
             switchToAvailableAccountIfCurrentAccountIsHidden();
             if (drawerLayoutAdapter != null) {
@@ -5745,29 +5768,6 @@ public class LaunchActivity extends BasePermissionsActivity implements ActionBar
         }  else if (id == NotificationCenter.savedChannelsButtonStateChanged) {
             if (sideMenu != null) {
                 sideMenu.getAdapter().notifyDataSetChanged();
-            }
-        } else if (id == NotificationCenter.currentUserPremiumStatusChanged) {
-            if (drawerLayoutAdapter != null) {
-                drawerLayoutAdapter.notifyDataSetChanged();
-            }
-        } else if (id == NotificationCenter.requestPermissions) {
-            int type = (int) args[0];
-            String[] permissions = null;
-            if (type == BLUETOOTH_CONNECT_TYPE) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                    permissions = new String[]{
-                            Manifest.permission.BLUETOOTH_CONNECT
-                    };
-                }
-            }
-            if (permissions != null) {
-                requsetPermissionsPointer++;
-                requestedPermissions.put(requsetPermissionsPointer, type);
-                ActivityCompat.requestPermissions(
-                        this,
-                        permissions,
-                        requsetPermissionsPointer
-                );
             }
         }
     }

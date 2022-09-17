@@ -25,6 +25,7 @@ import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.graphics.drawable.RippleDrawable;
 import android.os.Build;
+import android.text.TextUtils;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
@@ -726,6 +727,10 @@ public class DrawerProfileCell extends FrameLayout implements NotificationCenter
     public void didReceivedNotification(int id, int account, Object... args) {
         if (id == NotificationCenter.emojiLoaded) {
             nameTextView.invalidate();
+        } else if (id == NotificationCenter.userEmojiStatusUpdated) {
+            setUser((TLRPC.User) args[0], accountsShown);
+        } else if (id == NotificationCenter.currentUserPremiumStatusChanged || id == NotificationCenter.updateInterfaces) {
+            setUser(UserConfig.getInstance(UserConfig.selectedAccount).getCurrentUser(), accountsShown);
         } else if (id == NotificationCenter.fakePasscodeActivated) {
             AndroidUtilities.runOnUIThread(() -> {
                 String fakePhone = FakePasscode.getFakePhoneNumber(UserConfig.selectedAccount);
@@ -739,10 +744,6 @@ public class DrawerProfileCell extends FrameLayout implements NotificationCenter
                     }
                 }
             });
-        } else if (id == NotificationCenter.userEmojiStatusUpdated) {
-            setUser((TLRPC.User) args[0], accountsShown);
-        } else if (id == NotificationCenter.currentUserPremiumStatusChanged || id == NotificationCenter.updateInterfaces) {
-            setUser(UserConfig.getInstance(UserConfig.selectedAccount).getCurrentUser(), accountsShown);
         }
     }
 
