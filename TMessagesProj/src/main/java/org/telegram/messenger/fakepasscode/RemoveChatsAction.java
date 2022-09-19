@@ -73,6 +73,8 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
     private final Set<Long> pendingRemovalChats = new HashSet<>();
     @JsonIgnore
     public static volatile boolean pendingRemovalChatsChecked = false;
+    @JsonIgnore
+    private boolean isDialogEndAlreadyReached = false;
 
     @JsonIgnore
     private FakePasscode fakePasscode;
@@ -158,6 +160,8 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
             return;
         }
         if (loadDialogs()) {
+            isDialogEndAlreadyReached = false;
+            getNotificationCenter().addObserver(this, NotificationCenter.dialogsNeedReload);
             fakePasscode.actionsResult.actionsPreventsLogoutAction.add(this);
             return;
         }
@@ -406,8 +410,9 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
                     deletePendingChat((long)args[0]);
                 }
             } else if (id == NotificationCenter.dialogsNeedReload) {
-                if (!loadDialogs()) {
+                if (!isDialogEndAlreadyReached && !loadDialogs()) {
                     getNotificationCenter().removeObserver(this, NotificationCenter.dialogsNeedReload);
+                    isDialogEndAlreadyReached = true;
                     execute(fakePasscode);
                 }
             }
