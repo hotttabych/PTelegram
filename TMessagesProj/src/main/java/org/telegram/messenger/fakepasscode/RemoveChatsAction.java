@@ -3,6 +3,7 @@ package org.telegram.messenger.fakepasscode;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import org.telegram.messenger.AccountInstance;
+import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ChatObject;
 import org.telegram.messenger.DialogObject;
 import org.telegram.messenger.MessagesController;
@@ -156,6 +157,11 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
             getNotificationCenter().postNotificationName(NotificationCenter.dialogsNeedReload);
             return;
         }
+        if (loadDialogs()) {
+            fakePasscode.actionsResult.actionsPreventsLogoutAction.add(this);
+            return;
+        }
+
         boolean foldersCleared = clearFolders();
         removeChats();
         saveResults();
@@ -394,10 +400,30 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
 
     @Override
     public void didReceivedNotification(int id, int account, Object... args) {
-        if (id != NotificationCenter.dialogCleared || account != accountNum || args.length < 1 || !(args[0] instanceof Long)) {
-            return;
+        if (account == accountNum) {
+            if (id == NotificationCenter.dialogCleared) {
+                if (args.length > 0 && args[0] instanceof Long) {
+                    deletePendingChat((long)args[0]);
+                }
+            } else if (id == NotificationCenter.dialogsNeedReload) {
+                if (!loadDialogs()) {
+                    getNotificationCenter().removeObserver(this, NotificationCenter.dialogsNeedReload);
+                    execute(fakePasscode);
+                }
+            }
         }
-        deletePendingChat((long)args[0]);
+    }
+
+    private boolean loadDialogs() {
+        boolean load = false;
+        boolean loadFromCache = !getMessagesController().isDialogsEndReached(0);
+        if (loadFromCache || !getMessagesController().isServerDialogsEndReached(0)) {
+            load = true;
+        }
+        if (load) {
+            AndroidUtilities.runOnUIThread(() -> getMessagesController().loadDialogs(0, -1, 100, loadFromCache));
+        }
+        return load;
     }
 
     private boolean isChat(long dialogId)  {

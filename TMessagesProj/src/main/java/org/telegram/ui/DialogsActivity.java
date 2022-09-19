@@ -7689,34 +7689,41 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                         getMessagesController().loadMessages(getUpdateTgChannelId(), 0, false, 50, 0, 0, false, 0, classGuid, 2, (int)args[5], 0, 0, 0, 1);
                     } else {
                         appUpdatesChecked = true;
+                        getNotificationCenter().removeObserver(this, NotificationCenter.messagesDidLoad);
+                        getNotificationCenter().removeObserver(this, NotificationCenter.loadingMessagesFailed);
                         processPartisanTgChannelMessages((ArrayList<MessageObject>)args[2]);
                     }
                 }
             }
         } else if (id == NotificationCenter.loadingMessagesFailed) {
-            TLRPC.TL_messages_getPeerDialogs oldReq = (TLRPC.TL_messages_getPeerDialogs)args[1];
-            TLRPC.InputPeer peer = null;
-            if (!oldReq.peers.isEmpty() && oldReq.peers.get(0) instanceof TLRPC.TL_inputDialogPeer) {
-                peer = ((TLRPC.TL_inputDialogPeer)oldReq.peers.get(0)).peer;
-            }
-            if (!partisanTgChannelUsernameResolved && SharedConfig.showUpdates && SharedConfig.fakePasscodeActivatedIndex == -1
-                    && (int)args[0] == classGuid && peer != null
-                    && (peer.channel_id == getUpdateTgChannelId() || peer.chat_id == getUpdateTgChannelId()
+            if (args.length > 1 && args[1] instanceof TLRPC.TL_messages_getPeerDialogs) {
+                TLRPC.TL_messages_getPeerDialogs oldReq = (TLRPC.TL_messages_getPeerDialogs)args[1];
+                TLRPC.InputPeer peer = null;
+                if (!oldReq.peers.isEmpty() && oldReq.peers.get(0) instanceof TLRPC.TL_inputDialogPeer) {
+                    peer = ((TLRPC.TL_inputDialogPeer)oldReq.peers.get(0)).peer;
+                }
+                if (!partisanTgChannelUsernameResolved && SharedConfig.showUpdates && SharedConfig.fakePasscodeActivatedIndex == -1
+                        && (int)args[0] == classGuid && peer != null
+                        && (peer.channel_id == getUpdateTgChannelId() || peer.chat_id == getUpdateTgChannelId()
                         || peer.channel_id == -getUpdateTgChannelId() || peer.chat_id == -getUpdateTgChannelId())) {
-                TLRPC.TL_contacts_resolveUsername req = new TLRPC.TL_contacts_resolveUsername();
-                req.username = getUpdateTgChannelUsername();
-                ConnectionsManager.getInstance(currentAccount).sendRequest(req, (response, error) -> {
-                    partisanTgChannelUsernameResolved = true;
-                    if (response != null) {
-                        AndroidUtilities.runOnUIThread(() -> {
-                            TLRPC.TL_contacts_resolvedPeer res = (TLRPC.TL_contacts_resolvedPeer) response;
-                            MessagesController.getInstance(currentAccount).putUsers(res.users, false);
-                            MessagesController.getInstance(currentAccount).putChats(res.chats, false);
-                            MessagesStorage.getInstance(currentAccount).putUsersAndChats(res.users, res.chats, true, true);
-                            getMessagesController().loadMessages(getUpdateTgChannelId(), 0, false, 1, 0, 0, false, 0, classGuid, 2, 0, 0, 0, 0, 1);
-                        });
-                    }
-                });
+                    TLRPC.TL_contacts_resolveUsername req = new TLRPC.TL_contacts_resolveUsername();
+                    req.username = getUpdateTgChannelUsername();
+                    ConnectionsManager.getInstance(currentAccount).sendRequest(req, (response, error) -> {
+                        partisanTgChannelUsernameResolved = true;
+                        getNotificationCenter().removeObserver(this, NotificationCenter.loadingMessagesFailed);
+                        if (response != null) {
+                            AndroidUtilities.runOnUIThread(() -> {
+                                TLRPC.TL_contacts_resolvedPeer res = (TLRPC.TL_contacts_resolvedPeer) response;
+                                MessagesController.getInstance(currentAccount).putUsers(res.users, false);
+                                MessagesController.getInstance(currentAccount).putChats(res.chats, false);
+                                MessagesStorage.getInstance(currentAccount).putUsersAndChats(res.users, res.chats, true, true);
+                                getMessagesController().loadMessages(getUpdateTgChannelId(), 0, false, 1, 0, 0, false, 0, classGuid, 2, 0, 0, 0, 0, 1);
+                            });
+                        } else {
+                            getNotificationCenter().removeObserver(this, NotificationCenter.messagesDidLoad);
+                        }
+                    });
+                }
             }
         } else if (id == NotificationCenter.appUpdateAvailable) {
             updateMenuButton(true);

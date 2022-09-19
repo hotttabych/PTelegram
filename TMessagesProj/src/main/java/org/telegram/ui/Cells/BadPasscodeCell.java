@@ -8,6 +8,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.text.TextUtils;
@@ -205,24 +206,55 @@ public class BadPasscodeCell extends FrameLayout {
         if (sourceFile.exists()) {
             new Thread(() -> {
                 try {
-                    Uri uriToInsert = MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY);
-                    File dirDest = new File(Environment.DIRECTORY_PICTURES, "Telegram");
-                    ContentValues contentValues = new ContentValues();
-                    contentValues.put(MediaStore.MediaColumns.RELATIVE_PATH, dirDest + File.separator);
-                    contentValues.put(MediaStore.Images.Media.DISPLAY_NAME, sourceFile.getName());
-                    String extension = MimeTypeMap.getFileExtensionFromUrl(sourceFile.getAbsolutePath());
-                    String mimeType = null;
-                    if (extension != null) {
-                        mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
-                    }
-                    contentValues.put(MediaStore.Images.Media.MIME_TYPE, mimeType);
-                    Uri dstUri = ApplicationLoader.applicationContext.getContentResolver().insert(uriToInsert, contentValues);
-                    if (dstUri != null) {
-                        FileInputStream fileInputStream = new FileInputStream(sourceFile);
-                        OutputStream outputStream = ApplicationLoader.applicationContext.getContentResolver().openOutputStream(dstUri);
-                        AndroidUtilities.copyFile(fileInputStream, outputStream);
-                        fileInputStream.close();
-                        AndroidUtilities.addMediaToGallery(dstUri.getPath());
+                    if (Build.VERSION.SDK_INT >= 29) {
+                        Uri uriToInsert = MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY);
+                        File dirDest = new File(Environment.DIRECTORY_PICTURES, "Telegram");
+                        ContentValues contentValues = new ContentValues();
+                        contentValues.put(MediaStore.MediaColumns.RELATIVE_PATH, dirDest + File.separator);
+                        contentValues.put(MediaStore.Images.Media.DISPLAY_NAME, sourceFile.getName());
+                        String extension = MimeTypeMap.getFileExtensionFromUrl(sourceFile.getAbsolutePath());
+                        String mimeType = null;
+                        if (extension != null) {
+                            mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
+                        }
+                        contentValues.put(MediaStore.Images.Media.MIME_TYPE, mimeType);
+                        Uri dstUri = ApplicationLoader.applicationContext.getContentResolver().insert(uriToInsert, contentValues);
+                        if (dstUri != null) {
+                            FileInputStream fileInputStream = new FileInputStream(sourceFile);
+                            OutputStream outputStream = ApplicationLoader.applicationContext.getContentResolver().openOutputStream(dstUri);
+                            AndroidUtilities.copyFile(fileInputStream, outputStream);
+                            fileInputStream.close();
+                            AndroidUtilities.addMediaToGallery(dstUri.getPath());
+                        }
+                    } else {
+                        File destFile = AndroidUtilities.generatePicturePath(false, FileLoader.getFileExtension(sourceFile));
+                        if (!destFile.exists()) {
+                            destFile.createNewFile();
+                        }
+                        boolean result = true;
+                        try (FileInputStream inputStream = new FileInputStream(sourceFile);
+                             FileChannel source = inputStream.getChannel();
+                             FileChannel destination = new FileOutputStream(destFile).getChannel()) {
+                            long size = source.size();
+                            try {
+                                @SuppressLint("DiscouragedPrivateApi") Method getInt = FileDescriptor.class.getDeclaredMethod("getInt$");
+                                int fdint = (Integer) getInt.invoke(inputStream.getFD());
+                                if (AndroidUtilities.isInternalUri(fdint)) {
+                                    return;
+                                }
+                            } catch (Throwable e) {
+                                FileLog.e(e);
+                            }
+                            for (long a = 0; a < size; a += 4096) {
+                                destination.transferFrom(source, a, Math.min(4096, size - a));
+                            }
+                        } catch (Exception e) {
+                            FileLog.e(e);
+                            result = false;
+                        }
+                        if (result) {
+                            AndroidUtilities.addMediaToGallery(destFile);
+                        }
                     }
                 } catch (Exception e) {
                     FileLog.e(e);

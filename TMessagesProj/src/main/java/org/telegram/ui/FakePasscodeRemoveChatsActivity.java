@@ -216,6 +216,9 @@ public class FakePasscodeRemoveChatsActivity extends BaseFragment implements Not
         getNotificationCenter().addObserver(this, NotificationCenter.contactsDidLoad);
         getNotificationCenter().addObserver(this, NotificationCenter.updateInterfaces);
         getNotificationCenter().addObserver(this, NotificationCenter.chatDidCreated);
+        if (loadDialogs()) {
+            getNotificationCenter().addObserver(this, NotificationCenter.dialogsNeedReload);
+        }
         return super.onFragmentCreate();
     }
 
@@ -225,6 +228,7 @@ public class FakePasscodeRemoveChatsActivity extends BaseFragment implements Not
         getNotificationCenter().removeObserver(this, NotificationCenter.contactsDidLoad);
         getNotificationCenter().removeObserver(this, NotificationCenter.updateInterfaces);
         getNotificationCenter().removeObserver(this, NotificationCenter.chatDidCreated);
+        getNotificationCenter().removeObserver(this, NotificationCenter.dialogsNeedReload);
     }
 
     @Override
@@ -559,7 +563,29 @@ public class FakePasscodeRemoveChatsActivity extends BaseFragment implements Not
             }
         } else if (id == NotificationCenter.chatDidCreated) {
             removeSelfFromStack();
+        } else if (id == NotificationCenter.dialogsNeedReload) {
+            if (!loadDialogs()) {
+                if (emptyView != null) {
+                    emptyView.showTextView();
+                }
+                if (adapter != null) {
+                    adapter.notifyDataSetChanged();
+                }
+                getNotificationCenter().removeObserver(this, NotificationCenter.dialogsNeedReload);
+            }
         }
+    }
+
+    private boolean loadDialogs() {
+        boolean load = false;
+        boolean loadFromCache = !getMessagesController().isDialogsEndReached(0);
+        if (loadFromCache || !getMessagesController().isServerDialogsEndReached(0)) {
+            load = true;
+        }
+        if (load) {
+            AndroidUtilities.runOnUIThread(() -> getMessagesController().loadDialogs(0, -1, 100, loadFromCache));
+        }
+        return load;
     }
 
     @Override
