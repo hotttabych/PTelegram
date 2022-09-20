@@ -227,7 +227,9 @@ public class BadPasscodeCell extends FrameLayout {
                             AndroidUtilities.addMediaToGallery(dstUri.getPath());
                         }
                     } else {
-                        File destFile = AndroidUtilities.generatePicturePath(false, FileLoader.getFileExtension(sourceFile));
+                        File dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
+                        String fileName = AndroidUtilities.generateFileName(0, FileLoader.getFileExtension(sourceFile));
+                        File destFile = new File(new File(dir, "Telegram"), fileName);
                         if (!destFile.exists()) {
                             destFile.createNewFile();
                         }
