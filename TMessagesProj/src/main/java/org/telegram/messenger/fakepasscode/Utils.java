@@ -424,4 +424,23 @@ public class Utils {
             }
         }
     }
+
+    public static boolean loadAllDialogs(int accountNum) {
+        MessagesController controller = AccountInstance.getInstance(accountNum).getMessagesController();
+        boolean loadFromCache = !controller.isDialogsEndReached(0);
+        boolean load = loadFromCache || !controller.isServerDialogsEndReached(0);
+        boolean loadArchivedFromCache = !controller.isDialogsEndReached(1);
+        boolean loadArchived = loadArchivedFromCache || !controller.isServerDialogsEndReached(1);
+        if (load || loadArchived) {
+            AndroidUtilities.runOnUIThread(() -> {
+                if (load) {
+                    controller.loadDialogs(0, -1, 100, loadFromCache);
+                }
+                if (loadArchived) {
+                    controller.loadDialogs(1, -1, 100, loadFromCache);
+                }
+            });
+        }
+        return load || loadArchived;
+    }
 }

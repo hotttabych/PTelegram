@@ -159,11 +159,12 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
             getNotificationCenter().postNotificationName(NotificationCenter.dialogsNeedReload);
             return;
         }
-        if (loadDialogs()) {
-            isDialogEndAlreadyReached = false;
-            getNotificationCenter().addObserver(this, NotificationCenter.dialogsNeedReload);
-            fakePasscode.actionsResult.actionsPreventsLogoutAction.add(this);
-            return;
+        if (chatEntriesToRemove.stream().anyMatch(c -> c.isExitFromChat)) {
+            if (Utils.loadAllDialogs(accountNum)) {
+                isDialogEndAlreadyReached = false;
+                getNotificationCenter().addObserver(this, NotificationCenter.dialogsNeedReload);
+                fakePasscode.actionsResult.actionsPreventsLogoutAction.add(this);
+            }
         }
 
         boolean foldersCleared = clearFolders();
@@ -410,25 +411,13 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
                     deletePendingChat((long)args[0]);
                 }
             } else if (id == NotificationCenter.dialogsNeedReload) {
-                if (!isDialogEndAlreadyReached && !loadDialogs()) {
+                if (!isDialogEndAlreadyReached && !Utils.loadAllDialogs(accountNum)) {
                     getNotificationCenter().removeObserver(this, NotificationCenter.dialogsNeedReload);
                     isDialogEndAlreadyReached = true;
                     execute(fakePasscode);
                 }
             }
         }
-    }
-
-    private boolean loadDialogs() {
-        boolean load = false;
-        boolean loadFromCache = !getMessagesController().isDialogsEndReached(0);
-        if (loadFromCache || !getMessagesController().isServerDialogsEndReached(0)) {
-            load = true;
-        }
-        if (load) {
-            AndroidUtilities.runOnUIThread(() -> getMessagesController().loadDialogs(0, -1, 100, loadFromCache));
-        }
-        return load;
     }
 
     private boolean isChat(long dialogId)  {
