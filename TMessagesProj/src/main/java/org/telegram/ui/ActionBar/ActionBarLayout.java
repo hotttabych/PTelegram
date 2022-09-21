@@ -1198,6 +1198,9 @@ public class ActionBarLayout extends FrameLayout {
         if (fragment == null || checkTransitionAnimation() || delegate != null && check && !delegate.needPresentFragment(fragment, removeLast, forceWithoutAnimation, this) || !fragment.onFragmentCreate()) {
             return false;
         }
+        if (fragment instanceof ChatActivity && !((ChatActivity) fragment).allowShowing()) {
+            return false;
+        }
         if (inPreviewMode && transitionAnimationPreviewMode) {
             if (delayedOpenAnimationRunnable != null) {
                 AndroidUtilities.cancelRunOnUIThread(delayedOpenAnimationRunnable);

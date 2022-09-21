@@ -7713,18 +7713,18 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     req.username = getUpdateTgChannelUsername();
                     ConnectionsManager.getInstance(currentAccount).sendRequest(req, (response, error) -> {
                         partisanTgChannelUsernameResolved = true;
-                        getNotificationCenter().removeObserver(this, NotificationCenter.loadingMessagesFailed);
-                        if (response != null) {
-                            AndroidUtilities.runOnUIThread(() -> {
+                        AndroidUtilities.runOnUIThread(() -> {
+                            getNotificationCenter().removeObserver(this, NotificationCenter.loadingMessagesFailed);
+                            if (response != null) {
                                 TLRPC.TL_contacts_resolvedPeer res = (TLRPC.TL_contacts_resolvedPeer) response;
                                 MessagesController.getInstance(currentAccount).putUsers(res.users, false);
                                 MessagesController.getInstance(currentAccount).putChats(res.chats, false);
                                 MessagesStorage.getInstance(currentAccount).putUsersAndChats(res.users, res.chats, true, true);
                                 getMessagesController().loadMessages(getUpdateTgChannelId(), 0, false, 1, 0, 0, false, 0, classGuid, 2, 0, 0, 0, 0, 1);
-                            });
-                        } else {
-                            getNotificationCenter().removeObserver(this, NotificationCenter.messagesDidLoad);
-                        }
+                            } else {
+                                getNotificationCenter().removeObserver(this, NotificationCenter.messagesDidLoad);
+                            }
+                        });
                     });
                 }
             }

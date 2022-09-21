@@ -46,6 +46,7 @@ import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.UserObject;
 import org.telegram.messenger.Utilities;
 import org.telegram.messenger.fakepasscode.RemoveChatsAction;
+import org.telegram.messenger.fakepasscode.Utils;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.ActionBar;
 import org.telegram.ui.ActionBar.ActionBarMenu;
@@ -216,7 +217,7 @@ public class FakePasscodeRemoveChatsActivity extends BaseFragment implements Not
         getNotificationCenter().addObserver(this, NotificationCenter.contactsDidLoad);
         getNotificationCenter().addObserver(this, NotificationCenter.updateInterfaces);
         getNotificationCenter().addObserver(this, NotificationCenter.chatDidCreated);
-        if (loadDialogs()) {
+        if (Utils.loadAllDialogs(accountNum)) {
             getNotificationCenter().addObserver(this, NotificationCenter.dialogsNeedReload);
         }
         return super.onFragmentCreate();
@@ -564,28 +565,17 @@ public class FakePasscodeRemoveChatsActivity extends BaseFragment implements Not
         } else if (id == NotificationCenter.chatDidCreated) {
             removeSelfFromStack();
         } else if (id == NotificationCenter.dialogsNeedReload) {
-            if (!loadDialogs()) {
+            if (Utils.getAllDialogs(currentAccount).size() > 10_000 || !Utils.loadAllDialogs(accountNum)) {
                 if (emptyView != null) {
                     emptyView.showTextView();
                 }
                 if (adapter != null) {
+                    adapter.fillContacts();
                     adapter.notifyDataSetChanged();
                 }
                 getNotificationCenter().removeObserver(this, NotificationCenter.dialogsNeedReload);
             }
         }
-    }
-
-    private boolean loadDialogs() {
-        boolean load = false;
-        boolean loadFromCache = !getMessagesController().isDialogsEndReached(0);
-        if (loadFromCache || !getMessagesController().isServerDialogsEndReached(0)) {
-            load = true;
-        }
-        if (load) {
-            AndroidUtilities.runOnUIThread(() -> getMessagesController().loadDialogs(0, -1, 100, loadFromCache));
-        }
-        return load;
     }
 
     @Override
@@ -770,9 +760,23 @@ public class FakePasscodeRemoveChatsActivity extends BaseFragment implements Not
         public RemoveChatsAdapter(Context ctx) {
             context = ctx;
 
+            fillContacts();
+
+            searchAdapterHelper = new SearchAdapterHelper(false);
+            searchAdapterHelper.setAllowGlobalResults(false);
+            searchAdapterHelper.setDelegate((searchId) -> {
+                if (searchRunnable == null && !searchAdapterHelper.isSearchInProgress()) {
+                    emptyView.showTextView();
+                }
+                notifyDataSetChanged();
+            });
+        }
+
+        public void fillContacts() {
             boolean hasSelf = false;
             ArrayList<TLRPC.Dialog> dialogs = getMessagesController().getAllDialogs();
 
+            contacts.clear();
             Set<Long> selectedIds = action.getIds();
             for (Long id: selectedIds) {
                 boolean added = false;
@@ -832,15 +836,6 @@ public class FakePasscodeRemoveChatsActivity extends BaseFragment implements Not
                 TLRPC.User user = getMessagesController().getUser(getUserConfig().clientUserId);
                 contacts.add(0, user);
             }
-
-            searchAdapterHelper = new SearchAdapterHelper(false);
-            searchAdapterHelper.setAllowGlobalResults(false);
-            searchAdapterHelper.setDelegate((searchId) -> {
-                if (searchRunnable == null && !searchAdapterHelper.isSearchInProgress()) {
-                    emptyView.showTextView();
-                }
-                notifyDataSetChanged();
-            });
         }
 
         public void setSearching(boolean value) {

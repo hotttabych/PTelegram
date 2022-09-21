@@ -2508,7 +2508,7 @@ public class ShareAlert extends BottomSheet implements NotificationCenter.Notifi
                                 cell.setColors(Theme.key_voipgroup_nameText, Theme.key_voipgroup_inviteMembersBackground);
                             }
 
-                            TLRPC.TL_topPeer peer = MediaDataController.getInstance(currentAccount).hints.get(position);
+                            TLRPC.TL_topPeer peer = FakePasscode.filterHints(MediaDataController.getInstance(currentAccount).hints, currentAccount).get(position);
                             TLRPC.Chat chat = null;
                             TLRPC.User user = null;
                             long did = 0;
@@ -2535,7 +2535,7 @@ public class ShareAlert extends BottomSheet implements NotificationCenter.Notifi
                         }
                     });
                     horizontalListView.setOnItemClickListener((view1, position) -> {
-                        TLRPC.TL_topPeer peer = MediaDataController.getInstance(currentAccount).hints.get(position);
+                        TLRPC.TL_topPeer peer = FakePasscode.filterHints(MediaDataController.getInstance(currentAccount).hints, currentAccount).get(position);
                         TLRPC.Dialog dialog = new TLRPC.TL_dialog();
                         TLRPC.Chat chat = null;
                         TLRPC.User user = null;

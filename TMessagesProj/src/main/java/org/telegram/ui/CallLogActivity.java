@@ -114,6 +114,8 @@ public class CallLogActivity extends BaseFragment implements NotificationCenter.
 
 	private boolean openTransitionStarted;
 
+	private int max_id_without_filters;
+
 	private static final int TYPE_OUT = 0;
 	private static final int TYPE_IN = 1;
 	private static final int TYPE_MISSED = 2;
@@ -769,7 +771,7 @@ public class CallLogActivity extends BaseFragment implements NotificationCenter.
 		req.peer = new TLRPC.TL_inputPeerEmpty();
 		req.filter = new TLRPC.TL_inputMessagesFilterPhoneCalls();
 		req.q = "";
-		req.offset_id = max_id;
+		req.offset_id = SharedConfig.isFakePasscodeActivated() ? max_id_without_filters : max_id;
 		int reqId = getConnectionsManager().sendRequest(req, (response, error) -> AndroidUtilities.runOnUIThread(() -> {
 			int oldCount = Math.max(listViewAdapter.callsStartRow, 0) + calls.size();
 			if (error == null) {
@@ -806,6 +808,7 @@ public class CallLogActivity extends BaseFragment implements NotificationCenter.
 						currentRow = row;
 					}
 					currentRow.calls.add(msg);
+					max_id_without_filters = msg.id;
 				}
 				if (currentRow != null && currentRow.calls.size() > 0 && !calls.contains(currentRow) && !FakePasscode.isHideChat(currentRow.user.id, currentAccount)) {
 					calls.add(currentRow);
