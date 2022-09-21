@@ -133,7 +133,7 @@ public class SharedConfig {
     public static boolean autoplayGifs = true;
     public static boolean autoplayVideo = true;
     public static boolean raiseToSpeak = false;
-    public static boolean recordViaSco = true;
+    public static boolean recordViaSco = false;
     public static boolean customTabs = true;
     public static boolean directShare = true;
     public static boolean inappCamera = true;
@@ -160,6 +160,7 @@ public class SharedConfig {
     public static boolean allowBigEmoji;
     public static boolean useSystemEmoji;
     public static int fontSize = 16;
+    public static boolean fontSizeIsDefault;
     public static int bubbleRadius = 17;
     public static int ivFontSize = 16;
     public static int messageSeenHintCount;
@@ -614,7 +615,7 @@ public class SharedConfig {
             autoplayVideo = preferences.getBoolean("autoplay_video", true);
             mapPreviewType = preferences.getInt("mapPreviewType", 2);
             raiseToSpeak = preferences.getBoolean("raise_to_speak", false);
-            recordViaSco = preferences.getBoolean("record_via_sco", true);
+            recordViaSco = preferences.getBoolean("record_via_sco", false);
             customTabs = preferences.getBoolean("custom_tabs", true);
             directShare = preferences.getBoolean("direct_share", true);
             shuffleMusic = preferences.getBoolean("shuffleMusic", false);
@@ -624,6 +625,7 @@ public class SharedConfig {
             roundCamera16to9 = true;//preferences.getBoolean("roundCamera16to9", false);
             repeatMode = preferences.getInt("repeatMode", 0);
             fontSize = preferences.getInt("fons_size", AndroidUtilities.isTablet() ? 18 : 16);
+            fontSizeIsDefault = !preferences.contains("fons_size");
             bubbleRadius = preferences.getInt("bubbleRadius", 17);
             ivFontSize = preferences.getInt("iv_font_size", fontSize);
             allowBigEmoji = preferences.getBoolean("allowBigEmoji", true);
@@ -695,9 +697,11 @@ public class SharedConfig {
     }
 
     public static void updateTabletConfig() {
-        SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences("userconfing", Context.MODE_PRIVATE);
-        fontSize = preferences.getInt("fons_size", AndroidUtilities.isTablet() ? 18 : 16);
-        ivFontSize = preferences.getInt("iv_font_size", fontSize);
+        if (fontSizeIsDefault) {
+            SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences("userconfing", Context.MODE_PRIVATE);
+            fontSize = preferences.getInt("fons_size", AndroidUtilities.isTablet() ? 18 : 16);
+            ivFontSize = preferences.getInt("iv_font_size", fontSize);
+        }
     }
 
     public static void toggleShowUpdates() {
@@ -1318,14 +1322,6 @@ public class SharedConfig {
         editor.commit();
     }
 
-    public static void toggleRecordViaSco() {
-        recordViaSco = !recordViaSco;
-        SharedPreferences preferences = MessagesController.getGlobalMainSettings();
-        SharedPreferences.Editor editor = preferences.edit();
-        editor.putBoolean("record_via_sco", recordViaSco);
-        editor.commit();
-    }
-
     public static void toggleCustomTabs() {
         customTabs = !customTabs;
         SharedPreferences preferences = MessagesController.getGlobalMainSettings();
@@ -1652,7 +1648,7 @@ public class SharedConfig {
                 devicePerformanceClass = PERFORMANCE_CLASS_HIGH;
             }
             if (BuildVars.LOGS_ENABLED) {
-                FileLog.d("device performance info selected_class = " + devicePerformanceClass + " (cpu_count = " + cpuCount + ", freq = " + maxCpuFreq + ", memoryClass = " + memoryClass + ", android version " + androidVersion + ")");
+                FileLog.d("device performance info selected_class = " + devicePerformanceClass + " (cpu_count = " + cpuCount + ", freq = " + maxCpuFreq + ", memoryClass = " + memoryClass + ", android version " + androidVersion + ", manufacture " + Build.MANUFACTURER + ")");
             }
         }
 
