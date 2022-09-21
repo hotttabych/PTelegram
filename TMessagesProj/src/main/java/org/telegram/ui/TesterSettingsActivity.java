@@ -20,6 +20,7 @@ import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.R;
 import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.fakepasscode.Update30;
+import org.telegram.messenger.fakepasscode.Utils;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.ActionBar;
 import org.telegram.ui.ActionBar.AlertDialog;
@@ -260,10 +261,7 @@ public class TesterSettingsActivity extends BaseFragment {
     }
 
     private List<TLRPC.Dialog> getAllDialogs() {
-        return Stream.concat(getMessagesController().getDialogs(0).stream(),
-                getMessagesController().getDialogs(1).stream())
-                .filter(d -> !(d instanceof TLRPC.TL_dialogFolder))
-                .collect(Collectors.toList());
+        return Utils.getAllDialogs(currentAccount);
     }
 
     private class ListAdapter extends RecyclerListView.SelectionAdapter {

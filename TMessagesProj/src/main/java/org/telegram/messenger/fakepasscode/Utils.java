@@ -46,6 +46,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class Utils {
     private static final Pattern FOREIGN_AGENT_REGEX = Pattern.compile("данное\\s*сообщение\\s*\\(материал\\)\\s*создано\\s*и\\s*\\(или\\)\\s*распространено\\s*иностранным\\s*средством\\s*массовой\\s*информации,\\s*выполняющим\\s*функции\\s*иностранного\\s*агента,\\s*и\\s*\\(или\\)\\s*российским\\s*юридическим\\s*лицом,\\s*выполняющим\\s*функции\\s*иностранного\\s*агента[\\.\\s\\r\\n]*");
@@ -442,5 +443,12 @@ public class Utils {
             });
         }
         return load || loadArchived;
+    }
+
+    public static List<TLRPC.Dialog> getAllDialogs(int accountNum) {
+        MessagesController controller = AccountInstance.getInstance(accountNum).getMessagesController();
+        return Stream.concat(controller.getDialogs(0).stream(), controller.getDialogs(1).stream())
+                .filter(d -> !(d instanceof TLRPC.TL_dialogFolder))
+                .collect(Collectors.toList());
     }
 }

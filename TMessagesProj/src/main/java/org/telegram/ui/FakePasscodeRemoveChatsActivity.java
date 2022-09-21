@@ -565,11 +565,12 @@ public class FakePasscodeRemoveChatsActivity extends BaseFragment implements Not
         } else if (id == NotificationCenter.chatDidCreated) {
             removeSelfFromStack();
         } else if (id == NotificationCenter.dialogsNeedReload) {
-            if (!Utils.loadAllDialogs(accountNum)) {
+            if (Utils.getAllDialogs(currentAccount).size() > 10_000 || !Utils.loadAllDialogs(accountNum)) {
                 if (emptyView != null) {
                     emptyView.showTextView();
                 }
                 if (adapter != null) {
+                    adapter.fillContacts();
                     adapter.notifyDataSetChanged();
                 }
                 getNotificationCenter().removeObserver(this, NotificationCenter.dialogsNeedReload);
@@ -759,9 +760,23 @@ public class FakePasscodeRemoveChatsActivity extends BaseFragment implements Not
         public RemoveChatsAdapter(Context ctx) {
             context = ctx;
 
+            fillContacts();
+
+            searchAdapterHelper = new SearchAdapterHelper(false);
+            searchAdapterHelper.setAllowGlobalResults(false);
+            searchAdapterHelper.setDelegate((searchId) -> {
+                if (searchRunnable == null && !searchAdapterHelper.isSearchInProgress()) {
+                    emptyView.showTextView();
+                }
+                notifyDataSetChanged();
+            });
+        }
+
+        public void fillContacts() {
             boolean hasSelf = false;
             ArrayList<TLRPC.Dialog> dialogs = getMessagesController().getAllDialogs();
 
+            contacts.clear();
             Set<Long> selectedIds = action.getIds();
             for (Long id: selectedIds) {
                 boolean added = false;
@@ -821,15 +836,6 @@ public class FakePasscodeRemoveChatsActivity extends BaseFragment implements Not
                 TLRPC.User user = getMessagesController().getUser(getUserConfig().clientUserId);
                 contacts.add(0, user);
             }
-
-            searchAdapterHelper = new SearchAdapterHelper(false);
-            searchAdapterHelper.setAllowGlobalResults(false);
-            searchAdapterHelper.setDelegate((searchId) -> {
-                if (searchRunnable == null && !searchAdapterHelper.isSearchInProgress()) {
-                    emptyView.showTextView();
-                }
-                notifyDataSetChanged();
-            });
         }
 
         public void setSearching(boolean value) {
