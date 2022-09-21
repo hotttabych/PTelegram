@@ -125,7 +125,9 @@ public class BadPasscodeAttemptsActivity extends BaseFragment {
         public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
             if (holder.getItemViewType() == 0) {
                 BadPasscodeCell cell = (BadPasscodeCell) holder.itemView;
-                cell.setBadPasscodeAttempt(SharedConfig.badPasscodeAttemptList.get(position));
+                int index = SharedConfig.badPasscodeAttemptList.size() - 1 - position;
+                BadPasscodeAttempt attempt = SharedConfig.badPasscodeAttemptList.get(index);
+                cell.setBadPasscodeAttempt(attempt);
                 cell.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundWhite));
             } else if (holder.getItemViewType() == 1) {
                 TextInfoPrivacyCell cell = (TextInfoPrivacyCell) holder.itemView;

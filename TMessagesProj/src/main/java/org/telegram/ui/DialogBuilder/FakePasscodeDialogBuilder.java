@@ -1,25 +1,17 @@
 package org.telegram.ui.DialogBuilder;
 
-import android.app.Activity;
 import android.content.Context;
-import android.view.KeyEvent;
 import android.view.View;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.LinearLayout;
-import android.widget.TextView;
 
-import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.R;
 import org.telegram.ui.ActionBar.AlertDialog;
-import org.telegram.ui.Components.EditTextCaption;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class FakePasscodeDialogBuilder {
-    public static List<View> views;
-
     public static AlertDialog build(Context context, DialogTemplate template) {
         return buildAndGetViews(context, template, new ArrayList<>());
     }
@@ -45,7 +37,6 @@ public class FakePasscodeDialogBuilder {
             dialogBuilder.setNeutralButton(LocaleController.getString("Cancel", R.string.Cancel), null);
             dialogBuilder.setNegativeButton(LocaleController.getString("Delete", R.string.Delete), template.negativeListener);
         }
-        FakePasscodeDialogBuilder.views = viewsOutput;
         AlertDialog dialog = dialogBuilder.create();
         addPositiveButtonListener(dialog, template, viewsOutput);
         return dialog;
@@ -66,11 +57,9 @@ public class FakePasscodeDialogBuilder {
         dialog.setOnShowListener(dialogInterface -> {
             dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(view -> {
                 boolean error = false;
-                if (((DialogCheckBox)views.get(3)).isChecked() == false) {
-                    for (int i = 0; i < views.size(); i++) {
-                        if (!template.viewTemplates.get(i).validate(views.get(i))) {
-                            error = true;
-                        }
+                for (int i = 0; i < views.size(); i++) {
+                    if (!template.viewTemplates.get(i).validate(views.get(i))) {
+                        error = true;
                     }
                 }
                 if (!error) {
@@ -80,47 +69,4 @@ public class FakePasscodeDialogBuilder {
             });
         });
     }
-
-    public static DialogCheckBox.OnCheckedChangeListener getDeleteAllMessageCheckboxListener(Context context) {
-        return (view, checked) -> {
-            if(checked ){
-                view.requestFocus();
-                ((EditTextCaption)FakePasscodeDialogBuilder.views.get(0)).clearFocus();
-                ((EditTextCaption)FakePasscodeDialogBuilder.views.get(0)).setText("");
-                ((DialogCheckBox)FakePasscodeDialogBuilder.views.get(1)).setChecked(false);
-                ((DialogCheckBox)FakePasscodeDialogBuilder.views.get(2)).setChecked(false);
-
-                InputMethodManager imm = (InputMethodManager) context.getSystemService(Activity.INPUT_METHOD_SERVICE);
-                imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
-            }
-        };
-    }
-    public static DialogCheckBox.OnCheckedChangeListener getDeleteRegexMessageCheckboxListener() {
-        return (view, checked) -> {
-            if(checked ){
-                ((DialogCheckBox)FakePasscodeDialogBuilder.views.get(3)).setChecked(false);
-            }
-        };
-    }
-
-    public static DialogCheckBox.OnCheckedChangeListener getDeleteCaseSensMessageCheckboxListener() {
-        return (view, checked) -> {
-           if(checked ){
-               ((DialogCheckBox)FakePasscodeDialogBuilder.views.get(3)).setChecked(false);           }
-        };
-    }
-
-    public static View.OnFocusChangeListener getTextClickListener() {
-        return (view, checked) -> {
-            if(checked) {
-                ((DialogCheckBox) FakePasscodeDialogBuilder.views.get(3)).setChecked(false);
-            }
-        };
-    }
-
 }
-
-
-
-
-

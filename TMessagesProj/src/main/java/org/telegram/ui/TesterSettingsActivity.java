@@ -13,11 +13,15 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.BuildVars;
+import org.telegram.messenger.ChatObject;
 import org.telegram.messenger.FileLoader;
 import org.telegram.messenger.LocaleController;
+import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.R;
 import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.fakepasscode.Update30;
+import org.telegram.messenger.fakepasscode.Utils;
+import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.ActionBar;
 import org.telegram.ui.ActionBar.AlertDialog;
 import org.telegram.ui.ActionBar.BaseFragment;
@@ -35,8 +39,36 @@ import org.telegram.ui.DialogBuilder.FakePasscodeDialogBuilder;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class TesterSettingsActivity extends BaseFragment {
+
+    private static class SimpleData {
+        public String name;
+        public Supplier<String> getValue;
+
+        public SimpleData(String name, Supplier<String> getValue) {
+            this.name = name;
+            this.getValue = getValue;
+        }
+    }
+
+    SimpleData[] simpleDataArray = {
+            new SimpleData("Dialogs Count (all type)", () ->
+                    getAllDialogs().size() + (!isDialogEndReached() ? " (not all)" : "")),
+            new SimpleData("Channel Count", () ->
+                    getAllDialogs().stream().filter(d -> ChatObject.isChannelAndNotMegaGroup(-d.id, currentAccount)).count()
+                            + (!isDialogEndReached() ? " (not all)" : "")),
+            new SimpleData("Chat (Groups) Count", () ->
+                    getAllDialogs().stream().filter(d -> d.id < 0 && !ChatObject.isChannelAndNotMegaGroup(-d.id, currentAccount)).count()
+                            + (!isDialogEndReached() ? " (not all)" : "")),
+            new SimpleData("User Chat Count", () ->
+                    getAllDialogs().stream().filter(d -> d.id > 0).count()
+                            + (!isDialogEndReached() ? " (not all)" : "")),
+    };
 
     private ListAdapter listAdapter;
     private RecyclerListView listView;
@@ -49,6 +81,8 @@ public class TesterSettingsActivity extends BaseFragment {
     private int resetUpdateRow;
     private int showPlainBackupRow;
     private int disablePremiumRow;
+    private int simpleDataStartRow;
+    private int simpleDataEndRow;
 
     public static boolean showPlainBackup;
 
@@ -179,6 +213,9 @@ public class TesterSettingsActivity extends BaseFragment {
         }
         showPlainBackupRow = rowCount++;
         disablePremiumRow = rowCount++;
+        simpleDataStartRow = rowCount;
+        rowCount += simpleDataArray.length;
+        simpleDataEndRow = rowCount;
     }
 
     @Override
@@ -217,6 +254,16 @@ public class TesterSettingsActivity extends BaseFragment {
         progressDialog[0].dismiss();
     }
 
+    private boolean isDialogEndReached() {
+        MessagesController controller = getMessagesController();
+        return controller.isDialogsEndReached(0) && controller.isServerDialogsEndReached(0)
+                && controller.isDialogsEndReached(1) && controller.isServerDialogsEndReached(1);
+    }
+
+    private List<TLRPC.Dialog> getAllDialogs() {
+        return Utils.getAllDialogs(currentAccount);
+    }
+
     private class ListAdapter extends RecyclerListView.SelectionAdapter {
 
         private Context mContext;
@@ -228,6 +275,9 @@ public class TesterSettingsActivity extends BaseFragment {
         @Override
         public boolean isEnabled(RecyclerView.ViewHolder holder) {
             int position = holder.getAdapterPosition();
+            if (position >= simpleDataStartRow && position < simpleDataEndRow) {
+                return false;
+            }
             return true;
         }
 
@@ -277,6 +327,9 @@ public class TesterSettingsActivity extends BaseFragment {
                         textCell.setTextAndValue("Update Channel Username", SharedConfig.updateChannelUsernameOverride, true);
                     } else if (position == resetUpdateRow) {
                         textCell.setText("Reset Update", true);
+                    } else if (simpleDataStartRow <= position && position < simpleDataEndRow) {
+                        SimpleData simpleData = simpleDataArray[position - simpleDataStartRow];
+                        textCell.setTextAndValue(simpleData.name, simpleData.getValue.get(), true);
                     }
                     break;
                 }
@@ -289,7 +342,7 @@ public class TesterSettingsActivity extends BaseFragment {
                 || position == disablePremiumRow) {
                 return 0;
             } else if (position == updateChannelIdRow || position == updateChannelUsernameRow
-                    || position == resetUpdateRow) {
+                    || position == resetUpdateRow || (simpleDataStartRow <= position && position < simpleDataEndRow)) {
                 return 1;
             }
             return 0;

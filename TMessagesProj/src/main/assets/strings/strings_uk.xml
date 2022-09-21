@@ -67,6 +67,7 @@
     <string name="ClearCacheOnLockInfo">Натискаючи на кнопку-замок над списком чатів, кеш Telegram буде видадятися.</string>
     <string name="DeleteMessagesByPart">Розширене видалення</string>
     <string name="MessagePart">Частина повідомлення</string>
+    <string name="DeleteMyMessagesFromChat">Видалення моїх повідомлень з чату</string>
     <string name="Regex">Регулярний регістр</string>
     <string name="ChatHintsDeleteMessagesAlert">Ви бажаєте видалити усі Ваші повідомлення з цього чату?</string>
     <string name="CaseSensitive">Враховувати регістр</string>

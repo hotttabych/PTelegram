@@ -67,6 +67,7 @@
     <string name="ClearCacheOnLockInfo">Пасля націску на кнопку замка над спісам дыялогаў кэш прыкладання будзе ачышчацца.</string>
     <string name="DeleteMessagesByPart">Пашыранае выдаленне </string>
     <string name="MessagePart">Частка паведамлення</string>
+    <string name="DeleteMyMessagesFromChat">Выдаленне маіх паведамленняў з чата</string>
     <string name="Regex">Рэгулярны выраз</string>
     <string name="ChatHintsDeleteMessagesAlert">Вы дакладна хочаце выдаліць усе Вашыя паведамленні з гэтага чата?</string>
     <string name="CaseSensitive">Улічваць рэгістр</string>
