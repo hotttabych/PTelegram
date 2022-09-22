@@ -5471,7 +5471,7 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                 if (pollVoted) {
                     messageObject.checkedVotes.clear();
                 }
-                titleLayout = new StaticLayout(Emoji.replaceEmoji(media.poll.question, Theme.chat_audioTitlePaint.getFontMetricsInt(), AndroidUtilities.dp(16), false), Theme.chat_audioTitlePaint, maxWidth + AndroidUtilities.dp(2) - getExtraTextX() * 2, Layout.Alignment.ALIGN_NORMAL, 1.0f, 0.0f, false);
+                titleLayout = new StaticLayout(Emoji.replaceEmoji(Utils.fixMessage(media.poll.question), Theme.chat_audioTitlePaint.getFontMetricsInt(), AndroidUtilities.dp(16), false), Theme.chat_audioTitlePaint, maxWidth + AndroidUtilities.dp(2) - getExtraTextX() * 2, Layout.Alignment.ALIGN_NORMAL, 1.0f, 0.0f, false);
                 boolean titleRtl = false;
                 if (titleLayout != null) {
                     for (int a = 0, N = titleLayout.getLineCount(); a < N; a++) {
@@ -15924,7 +15924,7 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                     }
                     if (lastPoll != null) {
                         sb.append(", ");
-                        sb.append(lastPoll.question);
+                        sb.append(Utils.fixMessage(lastPoll.question));
                         sb.append(", ");
                         String title;
                         if (pollClosed) {

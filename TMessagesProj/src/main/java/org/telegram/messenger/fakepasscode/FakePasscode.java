@@ -394,7 +394,7 @@ public class FakePasscode {
     }
 
     public boolean autoAddAccountHidings() {
-        if (UserConfig.getActivatedAccountsCount() == 1 && getHideOrLogOutCount() == 1) {
+        if (UserConfig.getActivatedAccountsCount(true) == 1 && getHideOrLogOutCount() == 1) {
             for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
                 if (AccountInstance.getInstance(a).getUserConfig().isClientActivated()) {
                     getAccountActions(a).toggleHideAccountAction();
@@ -402,7 +402,7 @@ public class FakePasscode {
             }
         }
 
-        int targetCount = UserConfig.getActivatedAccountsCount() - UserConfig.getFakePasscodeMaxAccountCount();
+        int targetCount = UserConfig.getActivatedAccountsCount(true) - UserConfig.getFakePasscodeMaxAccountCount();
         if (targetCount > getHideOrLogOutCount()) {
             accountActions.stream().forEach(AccountActions::checkIdHash);
         }

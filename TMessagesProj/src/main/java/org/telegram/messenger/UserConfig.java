@@ -196,9 +196,14 @@ public class UserConfig extends BaseController {
     }
 
     public static int getActivatedAccountsCount() {
+        return getActivatedAccountsCount(false);
+    }
+
+    public static int getActivatedAccountsCount(boolean includeHidden) {
         int count = 0;
         for (int a = 0; a < MAX_ACCOUNT_COUNT; a++) {
-            if (AccountInstance.getInstance(a).getUserConfig().isClientActivated() && !FakePasscode.isHideAccount(a)) {
+            if (AccountInstance.getInstance(a).getUserConfig().isClientActivated()
+                    && (includeHidden || !FakePasscode.isHideAccount(a))) {
                 count++;
             }
         }
