@@ -1033,9 +1033,12 @@ public class PasscodeView extends FrameLayout implements NotificationCenter.Noti
         long currentTime = SystemClock.elapsedRealtime();
         if (currentTime > SharedConfig.lastUptimeMillis) {
             SharedConfig.passcodeRetryInMs -= (currentTime - SharedConfig.lastUptimeMillis);
-            SharedConfig.bruteForceRetryInMillis -= (currentTime - SharedConfig.lastUptimeMillis);
             if (SharedConfig.passcodeRetryInMs < 0) {
                 SharedConfig.passcodeRetryInMs = 0;
+            }
+            SharedConfig.bruteForceRetryInMillis -= (currentTime - SharedConfig.lastUptimeMillis);
+            if (SharedConfig.bruteForceRetryInMillis < 0) {
+                SharedConfig.bruteForceRetryInMillis = 0;
             }
         }
         SharedConfig.lastUptimeMillis = currentTime;
