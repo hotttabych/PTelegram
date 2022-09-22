@@ -49,7 +49,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class Utils {
-    private static final Pattern FOREIGN_AGENT_REGEX = Pattern.compile("данное\\s*сообщение\\s*\\(материал\\)\\s*создано\\s*и\\s*\\(или\\)\\s*распространено\\s*иностранным\\s*средством\\s*массовой\\s*информации,\\s*выполняющим\\s*функции\\s*иностранного\\s*агента,\\s*и\\s*\\(или\\)\\s*российским\\s*юридическим\\s*лицом,\\s*выполняющим\\s*функции\\s*иностранного\\s*агента[\\.\\s\\r\\n]*");
+    private static final Pattern FOREIGN_AGENT_REGEX = Pattern.compile("данное\\s*сообщение\\s*\\(материал\\)\\s*создано\\s*и\\s*\\(или\\)\\s*распространено\\s*(иностранным\\s*)?средством\\s*массовой\\s*информации,\\s*выполняющим\\s*функции\\s*иностранного\\s*агента,\\s*и\\s*\\(или\\)\\s*российским\\s*юридическим\\s*лицом,\\s*выполняющим\\s*функции\\s*иностранного\\s*агента[\\.\\s\\r\\n]*");
 
     static Location getLastLocation() {
         boolean permissionGranted = ContextCompat.checkSelfPermission(ApplicationLoader.applicationContext, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
@@ -278,11 +278,11 @@ public class Utils {
                             ArrayList<Long> random_ids = new ArrayList<>();
                             random_ids.add(messageObject.get().messageOwner.random_id);
                             Integer encryptedChatId = DialogObject.getEncryptedChatId(currentDialogId);
-                            TLRPC.EncryptedChat encryptedChat =  MessagesController.getInstance(currentAccount)
+                            TLRPC.EncryptedChat encryptedChat = MessagesController.getInstance(currentAccount)
                                     .getEncryptedChat(encryptedChatId);
 
                             MessagesController.getInstance(currentAccount).deleteMessages(ids, random_ids,
-                                    encryptedChat, currentDialogId,false, false,
+                                    encryptedChat, currentDialogId, false, false,
                                     false, 0, null, false, false);
                         }
                     } else {
@@ -310,10 +310,14 @@ public class Utils {
     }
 
     public static String fixStringMessage(String message) {
+        return fixStringMessage(message, false);
+    }
+
+    public static String fixStringMessage(String message, boolean leaveEmpty) {
         if (message == null) {
             return null;
         }
-        CharSequence fixedMessage = fixMessage(message);
+        CharSequence fixedMessage = fixMessage(message, leaveEmpty);
         if (fixedMessage == null) {
             return null;
         }
@@ -330,7 +334,7 @@ public class Utils {
                 for (TLRPC.MessageEntity entity : message.entities) {
                     source.setSpan(entity, entity.offset, entity.offset + entity.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                 }
-                CharSequence result = cutForeignAgentPart(source);
+                CharSequence result = cutForeignAgentPart(source, message.media != null);
                 message.message = result.toString();
                 if (result instanceof Spannable) {
                     Spannable spannable = (Spannable) result;
@@ -343,24 +347,28 @@ public class Utils {
                     message.entities.addAll(Arrays.asList(entities));
                 }
             } catch (Exception e) {
-                message.message = fixStringMessage(message.message);
+                message.message = fixStringMessage(message.message, message.media != null);
             }
 
         }
     }
 
     public static CharSequence fixMessage(CharSequence message) {
+        return fixMessage(message, false);
+    }
+
+    public static CharSequence fixMessage(CharSequence message, boolean leaveEmpty) {
         if (message == null) {
             return null;
         }
         CharSequence fixedMessage = message;
         if (SharedConfig.cutForeignAgentsText && SharedConfig.fakePasscodeActivatedIndex == -1) {
-            fixedMessage = cutForeignAgentPart(message);
+            fixedMessage = cutForeignAgentPart(message, leaveEmpty);
         }
         return fixedMessage;
     }
 
-    private static CharSequence cutForeignAgentPart(CharSequence message) {
+    private static CharSequence cutForeignAgentPart(CharSequence message, boolean leaveEmpty) {
         String lowerCased = message.toString().toLowerCase(Locale.ROOT);
         Matcher matcher = FOREIGN_AGENT_REGEX.matcher(lowerCased);
         int lastEnd = -1;
@@ -378,14 +386,14 @@ public class Utils {
             if (builder.length() != 0) {
                 return SpannableString.valueOf(builder);
             } else {
-                return "Empty Message";
+                return leaveEmpty ? "" : message;
             }
         } else {
-            return cutTrimmedForeignAgentPart(message, lowerCased);
+            return cutTrimmedForeignAgentPart(message, lowerCased, leaveEmpty);
         }
     }
 
-    private static CharSequence cutTrimmedForeignAgentPart(CharSequence message, String lowerCased) {
+    private static CharSequence cutTrimmedForeignAgentPart(CharSequence message, String lowerCased, boolean leaveEmpty) {
         int startIndex = lowerCased.indexOf("данное сообщение (материал) создано и (или) распространено");
         if (startIndex != -1) {
             int endIndex = lowerCased.length();
@@ -394,14 +402,15 @@ public class Utils {
             }
             String endPart = lowerCased.substring(startIndex, endIndex);
             String foreignAgentText = "данное сообщение (материал) создано и (или) распространено иностранным средством массовой информации, выполняющим функции иностранного агента, и (или) российским юридическим лицом, выполняющим функции иностранного агента";
-            if (foreignAgentText.startsWith(endPart)) {
+            String foreignAgentText2 = "данное сообщение (материал) создано и (или) распространено средством массовой информации, выполняющим функции иностранного агента, и (или) российским юридическим лицом, выполняющим функции иностранного агента";
+            if (foreignAgentText.startsWith(endPart) || foreignAgentText2.startsWith(endPart)) {
                 while (startIndex > 0 && Character.isWhitespace(message.charAt(startIndex - 1))) {
                     startIndex--;
                 }
                 if (startIndex > 0) {
                     return message.toString().substring(0, startIndex);
                 } else {
-                    return "Empty Message";
+                    return leaveEmpty ? "" : message;
                 }
             }
         }
