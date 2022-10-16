@@ -90,6 +90,7 @@
     <string name="DeleteAllMyMessages">Usuń wszystkie moje wiadomości</string>
     <string name="DeleteAllMyMessagesDetails">Wszystkie Twoje wiadomości zostaną usunięte przed opuszczeniem czatu. Ta opcja dotyczy tylko czatów.\n\nUwaga! Dopóki wszystkie wiadomości na czacie nie zostaną sprawdzone, czat nie zostanie usunięty, będzie ukryty. Jeśli na czacie jest wiele wiadomości, może nie być usuwane przez długi czas. Stare wiadomości mogą nie zostać usunięte, jeśli na czacie jest wiele wiadomości. Jeśli nie ma sieci, wiadomości nie zostaną usunięte.</string>
     <string name="HideDialogDetails">Jeśli wybrana jest opcja \"ukryj\", dialogi (czaty, kanały) nie zostaną usunięte. Zostaną ukryte na liście okien dialogowych. Ich powiadomienia również zostaną ukryte. Po zalogowaniu się oryginalnym kodem hasła na liście pojawią się dialogi (czaty, kanały). Bezpieczniej jest użyć usuwania.</string>
+    <string name="HideDialogIsNotSafeWarningMessage">Opcja "ukryj" nie jest bezpieczna. Bezpieczniej jest użyć usuwania.</string>
     <string name="RemoveDialogFromListTitle">Usuń okno dialogowe z listy</string>
     <string name="RemoveDialogFromListAlert">Czy na pewno chcesz usunąć to okno dialogowe z listy?</string>
     <string name="DebugSendLogcat">Prześlij Logcat</string>
