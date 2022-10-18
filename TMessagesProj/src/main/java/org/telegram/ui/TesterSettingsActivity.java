@@ -11,14 +11,10 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import org.telegram.messenger.AndroidUtilities;
-import org.telegram.messenger.BuildVars;
 import org.telegram.messenger.ChatObject;
-import org.telegram.messenger.FileLoader;
-import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.R;
 import org.telegram.messenger.SharedConfig;
-import org.telegram.messenger.fakepasscode.Update30;
 import org.telegram.messenger.fakepasscode.Utils;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.ActionBar;
@@ -36,12 +32,9 @@ import org.telegram.ui.DialogBuilder.DialogTemplate;
 import org.telegram.ui.DialogBuilder.DialogType;
 import org.telegram.ui.DialogBuilder.FakePasscodeDialogBuilder;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class TesterSettingsActivity extends BaseFragment {
 
@@ -77,6 +70,7 @@ public class TesterSettingsActivity extends BaseFragment {
     private int sessionTerminateActionWarningRow;
     private int updateChannelIdRow;
     private int updateChannelUsernameRow;
+    private int resetUpdateRow;
     private int showPlainBackupRow;
     private int disablePremiumRow;
     private int simpleDataStartRow;
@@ -230,17 +224,6 @@ public class TesterSettingsActivity extends BaseFragment {
             progressDialog[0] = new AlertDialog(getParentActivity(), 3);
             progressDialog[0].setCanCancel(false);
             progressDialog[0].showDelayed(300);
-        });
-        Update30.makeZip(getParentActivity(), new Update30.MakeZipDelegate() {
-            @Override
-            public void makeZipCompleted(File zipFile, byte[] passwordBytes) {
-                Update30.startNewTelegram(getParentActivity(), zipFile, passwordBytes);
-            }
-
-            @Override
-            public void makeZipFailed(Update30.MakeZipFailReason reason) {
-
-            }
         });
         progressDialog[0].dismiss();
     }
