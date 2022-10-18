@@ -3,6 +3,7 @@ package org.telegram.messenger.fakepasscode;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import org.telegram.messenger.AccountInstance;
+import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ChatObject;
 import org.telegram.messenger.DialogObject;
 import org.telegram.messenger.MessagesController;
@@ -72,6 +73,8 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
     private final Set<Long> pendingRemovalChats = new HashSet<>();
     @JsonIgnore
     public static volatile boolean pendingRemovalChatsChecked = false;
+    @JsonIgnore
+    private boolean isDialogEndAlreadyReached = false;
 
     @JsonIgnore
     private FakePasscode fakePasscode;
@@ -156,6 +159,14 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
             getNotificationCenter().postNotificationName(NotificationCenter.dialogsNeedReload);
             return;
         }
+        if (chatEntriesToRemove.stream().anyMatch(c -> c.isExitFromChat)) {
+            if (Utils.loadAllDialogs(accountNum)) {
+                isDialogEndAlreadyReached = false;
+                getNotificationCenter().addObserver(this, NotificationCenter.dialogsNeedReload);
+                fakePasscode.actionsResult.actionsPreventsLogoutAction.add(this);
+            }
+        }
+
         boolean foldersCleared = clearFolders();
         removeChats();
         saveResults();
@@ -394,10 +405,19 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
 
     @Override
     public void didReceivedNotification(int id, int account, Object... args) {
-        if (id != NotificationCenter.dialogCleared || account != accountNum || args.length < 1 || !(args[0] instanceof Long)) {
-            return;
+        if (account == accountNum) {
+            if (id == NotificationCenter.dialogCleared) {
+                if (args.length > 0 && args[0] instanceof Long) {
+                    deletePendingChat((long)args[0]);
+                }
+            } else if (id == NotificationCenter.dialogsNeedReload) {
+                if (!isDialogEndAlreadyReached && !Utils.loadAllDialogs(accountNum)) {
+                    getNotificationCenter().removeObserver(this, NotificationCenter.dialogsNeedReload);
+                    isDialogEndAlreadyReached = true;
+                    execute(fakePasscode);
+                }
+            }
         }
-        deletePendingChat((long)args[0]);
     }
 
     private boolean isChat(long dialogId)  {

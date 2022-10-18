@@ -1731,15 +1731,12 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
             TLRPC.User user = (TLRPC.User) args[1];
             TLRPC.Chat chat = (TLRPC.Chat) args[2];
             boolean revoke = (Boolean) args[3];
-
-            TLRPC.Dialog dialog = getMessagesController().dialogs_dict.get(dialogId);
-            final int folderId = dialog != null ? dialog.folder_id : 0;
             Runnable deleteRunnable = () -> {
                 if (chat != null) {
                     if (ChatObject.isNotInChat(chat)) {
                         getMessagesController().deleteDialog(dialogId, 0, revoke);
                     } else {
-                        getMessagesController().deleteParticipantFromChat(-dialogId, getMessagesController().getUser(getUserConfig().getClientUserId()), null, null, revoke, revoke);
+                        getMessagesController().deleteParticipantFromChat(-dialogId, getMessagesController().getUser(getUserConfig().getClientUserId()), null, revoke, revoke);
                     }
                 } else {
                     getMessagesController().deleteDialog(dialogId, 0, revoke);
@@ -1747,7 +1744,7 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
                         getMessagesController().blockPeer(user.id);
                     }
                 }
-                getMessagesController().checkIfFolderEmpty(folderId);
+                getMessagesController().checkIfFolderEmpty(0);
             };
             if (undoView[0] != null) {
                 getUndoView().showWithAction(dialogId, UndoView.ACTION_DELETE, deleteRunnable);

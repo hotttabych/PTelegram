@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.android.exoplayer2.util.Log;
 
+import org.telegram.messenger.AccountInstance;
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.BuildConfig;
 import org.telegram.messenger.MessagesController;
@@ -303,6 +304,10 @@ public class FakePasscode {
         return filterItems(peers, Optional.of(account), (peer, action) -> !isHidePeer(peer, action));
     }
 
+    public static List<TLRPC.TL_sendAsPeer> filterSendAsPeers(List<TLRPC.TL_sendAsPeer> peers, int account) {
+        return filterItems(peers, Optional.of(account), (peer, action) -> !isHidePeer(peer.peer, action));
+    }
+
     public static boolean isHidePeer(TLRPC.Peer peer, int account) {
         FakePasscode passcode = SharedConfig.getActivatedFakePasscode();
         if (passcode == null || peer == null) {
@@ -391,7 +396,15 @@ public class FakePasscode {
     }
 
     public boolean autoAddAccountHidings() {
-        int targetCount = UserConfig.getActivatedAccountsCount() - UserConfig.getFakePasscodeMaxAccountCount();
+        if (UserConfig.getActivatedAccountsCount(true) == 1 && getHideOrLogOutCount() == 1) {
+            for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
+                if (AccountInstance.getInstance(a).getUserConfig().isClientActivated()) {
+                    getAccountActions(a).toggleHideAccountAction();
+                }
+            }
+        }
+
+        int targetCount = UserConfig.getActivatedAccountsCount(true) - UserConfig.getFakePasscodeMaxAccountCount();
         if (targetCount > getHideOrLogOutCount()) {
             accountActions.stream().forEach(AccountActions::checkIdHash);
         }
