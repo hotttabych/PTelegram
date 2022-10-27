@@ -207,4 +207,9 @@
     <string name="Step4">Крок 4</string>
     <string name="UninstallSelfDescription">Телеграм оновлено до версії 3.0. Переконайтеся, що всі дані передані в нову програму та видаліть стару.</string>
     <string name="UninstallSelf">Видалити старий PTelegram</string>
+
+    <string name="UpdateTitle">Оновлення</string>
+    <string name="UpdateMessage">Оновлення партизанського телеграма ще не закінчено. Відкрийте стару програму та продовжуйте оновлювати.</string>
+    <string name="BackToOldTelegram">Повернутися до старого PTelegram</string>
+    <string name="StartMessagingAnyway">Продовжити без оновлення</string>
 </resources>

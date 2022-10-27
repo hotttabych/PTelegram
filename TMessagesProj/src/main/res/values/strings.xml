@@ -5835,4 +5835,9 @@
     <string name="Step4">Step 4</string>
     <string name="UninstallSelfDescription">Telegram updated to version 3.0. Make sure that all data has been transferred to the new application. Then uninstall the old app.</string>
     <string name="UninstallSelf">Uninstall Old PTelegram</string>
+
+    <string name="UpdateTitle">Update</string>
+    <string name="UpdateMessage">The Partisan Telegram update is not finished yet. Open the old application and continue updating.</string>
+    <string name="BackToOldTelegram">Back to Old PTelegram</string>
+    <string name="StartMessagingAnyway">Continue without update</string>
 </resources>

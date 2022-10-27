@@ -206,4 +206,9 @@
     <string name="Step4">Krok 4</string>
     <string name="UninstallSelfDescription">Telegram został zaktualizowany do wersji 3.0. Upewnij się, że wszystkie dane zostały przeniesione do nowej aplikacji i usuń starą.</string>
     <string name="UninstallSelf">Odinstaluj stary PTelegram</string>
+
+    <string name="UpdateTitle">Aktualizacja</string>
+    <string name="UpdateMessage">Aktualizacja PTelegram nie została jeszcze zakończona. Otwórz starą aplikację i kontynuuj aktualizację.</string>
+    <string name="BackToOldTelegram">Powrót do starego PTelegrama</string>
+    <string name="StartMessagingAnyway">Kontynuuj bez aktualizacji</string>
 </resources>

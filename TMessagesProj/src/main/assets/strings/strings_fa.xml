@@ -206,4 +206,9 @@
     <string name="Step4">مرحله 4</string>
     <string name="UninstallSelfDescription">تلگرام به نسخه 3.0 آپدیت شد. اطمینان حاصل کنید که تمام داده ها به برنامه جدید منتقل شده است. سپس برنامه قدیمی را حذف نصب کنید.</string>
     <string name="UninstallSelf">حذف نصب پی تلگرام قدیمی</string>
+
+    <string name="UpdateTitle">به روز رسانی</string>
+    <string name="UpdateMessage">آپدیت PTelegram هنوز تمام نشده است. برنامه قدیمی را باز کنید و به روز رسانی ادامه دهید.</string>
+    <string name="BackToOldTelegram">بازگشت به PTelegram قدیمی</string>
+    <string name="StartMessagingAnyway">بدون به روز رسانی ادامه دهید</string>
 </resources>

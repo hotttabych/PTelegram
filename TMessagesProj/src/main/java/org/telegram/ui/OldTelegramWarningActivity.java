@@ -44,6 +44,8 @@ public class OldTelegramWarningActivity extends BaseFragment implements Notifica
 
     private int currentAccount = UserConfig.selectedAccount;
 
+    TextView headerTextView;
+    TextView messageTextView;
     private TextView startMessagingButton;
     private TextView backToOldTelegramButton;
     private FrameLayout frameLayout2;
@@ -84,14 +86,12 @@ public class OldTelegramWarningActivity extends BaseFragment implements Notifica
 
                 int y = (oneFourth * 3 - AndroidUtilities.dp(275)) / 2;
                 frameLayout2.layout(0, y, frameLayout2.getMeasuredWidth(), y + frameLayout2.getMeasuredHeight());
-                y += AndroidUtilities.dp(122);
 
                 y = oneFourth * 3 + (oneFourth - startMessagingButton.getMeasuredHeight()) / 2;
                 int x = (getMeasuredWidth() - startMessagingButton.getMeasuredWidth()) / 2;
                 startMessagingButton.layout(x, y, x + startMessagingButton.getMeasuredWidth(), y + startMessagingButton.getMeasuredHeight());
-
-                y -= startMessagingButton.getMeasuredHeight() + AndroidUtilities.dp(30);
-                backToOldTelegramButton.layout(x, y, x + backToOldTelegramButton.getMeasuredWidth(), y + backToOldTelegramButton.getMeasuredHeight());
+                x = (getMeasuredWidth() - backToOldTelegramButton.getMeasuredWidth()) / 2;
+                backToOldTelegramButton.layout(x, y - backToOldTelegramButton.getMeasuredHeight(), x + backToOldTelegramButton.getMeasuredWidth(), y);
 
                 MarginLayoutParams marginLayoutParams = (MarginLayoutParams) themeFrameLayout.getLayoutParams();
                 int newTopMargin = AndroidUtilities.dp(themeMargin) + (AndroidUtilities.isTablet() ? 0 : AndroidUtilities.statusBarHeight);
@@ -135,12 +135,10 @@ public class OldTelegramWarningActivity extends BaseFragment implements Notifica
         frameLayout2 = new FrameLayout(context);
         frameContainerView.addView(frameLayout2, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.LEFT | Gravity.TOP, 0, 78, 0, 0));
 
-        startMessagingButton = new InternalButton(context);
-        startMessagingButton.setText("Start Messaging Anyway");
+        startMessagingButton = new TextView(context);
+        startMessagingButton.setText(LocaleController.getString(R.string.StartMessagingAnyway));
         startMessagingButton.setGravity(Gravity.CENTER);
-        startMessagingButton.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
-        startMessagingButton.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 15);
-        startMessagingButton.setPadding(AndroidUtilities.dp(34), 0, AndroidUtilities.dp(34), 0);
+        startMessagingButton.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 16);
         frameContainerView.addView(startMessagingButton, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 50, Gravity.CENTER_HORIZONTAL | Gravity.BOTTOM, 16, 0, 16, 76));
         startMessagingButton.setOnClickListener(view -> {
             if (startPressed) {
@@ -153,7 +151,7 @@ public class OldTelegramWarningActivity extends BaseFragment implements Notifica
         });
 
         backToOldTelegramButton = new InternalButton(context);
-        backToOldTelegramButton.setText("Back to Old P-Telegram");
+        backToOldTelegramButton.setText(LocaleController.getString(R.string.BackToOldTelegram));
         backToOldTelegramButton.setGravity(Gravity.CENTER);
         backToOldTelegramButton.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
         backToOldTelegramButton.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 15);
@@ -183,6 +181,52 @@ public class OldTelegramWarningActivity extends BaseFragment implements Notifica
                 getParentActivity().finishAffinity();
             }
         });
+
+
+
+
+
+
+        headerTextView = new TextView(frameContainerView.getContext());
+        messageTextView = new TextView(frameContainerView.getContext());
+
+        FrameLayout frameLayout = new FrameLayout(frameContainerView.getContext()) {
+            @Override
+            protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
+                int oneFourth = (bottom - top) / 4;
+                int y = (oneFourth * 3 - AndroidUtilities.dp(275)) / 2;
+                y += AndroidUtilities.dp(150);
+                y += AndroidUtilities.dp(16);
+                int x = AndroidUtilities.dp(18);
+                headerTextView.layout(x, y, x + headerTextView.getMeasuredWidth(), y + headerTextView.getMeasuredHeight());
+
+                y += headerTextView.getTextSize();
+                y += AndroidUtilities.dp(16);
+                x = AndroidUtilities.dp(16);
+                messageTextView.layout(x, y, x + messageTextView.getMeasuredWidth(), y + messageTextView.getMeasuredHeight());
+            }
+        };
+
+        headerTextView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
+        headerTextView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 26);
+        headerTextView.setGravity(Gravity.CENTER);
+        frameLayout.addView(headerTextView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.TOP | Gravity.LEFT, 18, 244, 18, 0));
+
+        messageTextView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteGrayText3));
+        messageTextView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 15);
+        messageTextView.setGravity(Gravity.CENTER);
+        frameLayout.addView(messageTextView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.TOP | Gravity.LEFT, 16, 286, 16, 0));
+
+        frameContainerView.addView(frameLayout, 0);
+
+        headerTextView.setText(LocaleController.getString(R.string.UpdateTitle));
+        messageTextView.setText(LocaleController.getString(R.string.UpdateMessage));
+
+
+
+
+
+
 
         frameContainerView.addView(themeFrameLayout, LayoutHelper.createFrame(64, 64, Gravity.TOP | Gravity.RIGHT, 0, themeMargin, themeMargin, 0));
 
@@ -336,8 +380,8 @@ public class OldTelegramWarningActivity extends BaseFragment implements Notifica
 
     private void updateColors(boolean fromTheme) {
         fragmentView.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundWhite));
-        startMessagingButton.setTextColor(Theme.getColor(Theme.key_featuredStickers_buttonText));
-        startMessagingButton.setBackground(Theme.createSimpleSelectorRoundRectDrawable(AndroidUtilities.dp(6), Theme.getColor(Theme.key_dialogSwipeRemove), Theme.getColor(Theme.key_chats_actionPressedBackground)));
+        startMessagingButton.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlueText4));
+        startMessagingButton.setBackground(null);
         backToOldTelegramButton.setTextColor(Theme.getColor(Theme.key_featuredStickers_buttonText));
         backToOldTelegramButton.setBackground(Theme.createSimpleSelectorRoundRectDrawable(AndroidUtilities.dp(6), Theme.getColor(Theme.key_changephoneinfo_image2), Theme.getColor(Theme.key_chats_actionPressedBackground)));
         Intro.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundWhite));
