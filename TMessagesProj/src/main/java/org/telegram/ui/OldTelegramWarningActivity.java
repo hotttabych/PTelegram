@@ -44,7 +44,6 @@ public class OldTelegramWarningActivity extends BaseFragment implements Notifica
 
     private int currentAccount = UserConfig.selectedAccount;
 
-    private TextView switchLanguageTextView;
     private TextView startMessagingButton;
     private TextView backToOldTelegramButton;
     private FrameLayout frameLayout2;
@@ -93,10 +92,6 @@ public class OldTelegramWarningActivity extends BaseFragment implements Notifica
 
                 y -= startMessagingButton.getMeasuredHeight() + AndroidUtilities.dp(30);
                 backToOldTelegramButton.layout(x, y, x + backToOldTelegramButton.getMeasuredWidth(), y + backToOldTelegramButton.getMeasuredHeight());
-
-                y -= AndroidUtilities.dp(30);
-                x = (getMeasuredWidth() - switchLanguageTextView.getMeasuredWidth()) / 2;
-                switchLanguageTextView.layout(x, y - switchLanguageTextView.getMeasuredHeight(), x + switchLanguageTextView.getMeasuredWidth(), y);
 
                 MarginLayoutParams marginLayoutParams = (MarginLayoutParams) themeFrameLayout.getLayoutParams();
                 int newTopMargin = AndroidUtilities.dp(themeMargin) + (AndroidUtilities.isTablet() ? 0 : AndroidUtilities.statusBarHeight);
@@ -187,37 +182,6 @@ public class OldTelegramWarningActivity extends BaseFragment implements Notifica
             } else {
                 getParentActivity().finishAffinity();
             }
-        });
-
-        switchLanguageTextView = new TextView(context);
-        switchLanguageTextView.setGravity(Gravity.CENTER);
-        switchLanguageTextView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 16);
-        frameContainerView.addView(switchLanguageTextView, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, 30, Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL, 0, 0, 0, 20));
-        switchLanguageTextView.setOnClickListener(v -> {
-            if (startPressed || localeInfo == null) {
-                return;
-            }
-            startPressed = true;
-
-            AlertDialog loaderDialog = new AlertDialog(v.getContext(), 3);
-            loaderDialog.setCanCancel(false);
-            loaderDialog.showDelayed(1000);
-
-            NotificationCenter.getGlobalInstance().addObserver(new NotificationCenter.NotificationCenterDelegate() {
-                @Override
-                public void didReceivedNotification(int id, int account, Object... args) {
-                    if (id == NotificationCenter.reloadInterface) {
-                        loaderDialog.dismiss();
-
-                        NotificationCenter.getGlobalInstance().removeObserver(this, id);
-                        AndroidUtilities.runOnUIThread(()->{
-                            presentFragment(new LoginActivity().setIntroView(frameContainerView, startMessagingButton), true);
-                            destroyed = true;
-                        }, 100);
-                    }
-                }
-            }, NotificationCenter.reloadInterface);
-            LocaleController.getInstance().applyLanguage(localeInfo, true, false, currentAccount);
         });
 
         frameContainerView.addView(themeFrameLayout, LayoutHelper.createFrame(64, 64, Gravity.TOP | Gravity.RIGHT, 0, themeMargin, themeMargin, 0));
@@ -334,7 +298,6 @@ public class OldTelegramWarningActivity extends BaseFragment implements Notifica
                 if (string instanceof TLRPC.TL_langPackString) {
                     AndroidUtilities.runOnUIThread(() -> {
                         if (!destroyed) {
-                            switchLanguageTextView.setText(string.value);
                             SharedPreferences preferences = MessagesController.getGlobalMainSettings();
                             preferences.edit().putString("language_showed2", finalSystemLang.toLowerCase()).apply();
                         }
@@ -373,7 +336,6 @@ public class OldTelegramWarningActivity extends BaseFragment implements Notifica
 
     private void updateColors(boolean fromTheme) {
         fragmentView.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundWhite));
-        switchLanguageTextView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlueText4));
         startMessagingButton.setTextColor(Theme.getColor(Theme.key_featuredStickers_buttonText));
         startMessagingButton.setBackground(Theme.createSimpleSelectorRoundRectDrawable(AndroidUtilities.dp(6), Theme.getColor(Theme.key_dialogSwipeRemove), Theme.getColor(Theme.key_chats_actionPressedBackground)));
         backToOldTelegramButton.setTextColor(Theme.getColor(Theme.key_featuredStickers_buttonText));
