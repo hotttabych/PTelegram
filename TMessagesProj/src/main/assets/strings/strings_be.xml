@@ -173,6 +173,7 @@
     <string name="NewVersionAlert">Выйшла новая версія партызанскага тэлеграма %1$d.%2$d.%3$d. Жадаеце перайсці да паведамлення?</string>
     <string name="AllExceptCount">Усе (-%s)</string>
     <string name="ClearDrafts">Выдаляць чарнавікі</string>
+    <string name="NewVersionAlertTitle">Абнаўленне PTelegram</string>
 
     <string name="UpdateTitle">Абнаўленне</string>
     <string name="UpdateMessage">Абнаўленне партызанскага тэлеграма яшчэ не скончана. Адчыніце стары дадатак і працягніце абнаўляць.</string>

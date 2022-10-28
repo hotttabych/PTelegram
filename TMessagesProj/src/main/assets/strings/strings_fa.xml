@@ -172,6 +172,7 @@
     <string name="CreateFakePasscodeInfoPIN">لطفا 4 رقم که شما به مهاجم خواهید داد تا تلگرام را باز کند وارد کنید. این رمز باید با باقی رمز های اپلیکشن متفاوت باشد.</string>
     <string name="CreateFakePasscodeInfoPassword">لطفا رمزعبوری که شما به مهاجم خواهید داد تا تلگرام را باز کند وارد کنید. این رمز باید با باقی رمز های اپلیکشن متفاوت باشد</string>
     <string name="ClearDrafts">پاکسازی پیشنویس ها</string>
+    <string name="NewVersionAlertTitle">آپدیت پی تلگرام</string>
 
     <string name="UpdateTitle">به روز رسانی</string>
     <string name="UpdateMessage">آپدیت PTelegram هنوز تمام نشده است. برنامه قدیمی را باز کنید و به روز رسانی ادامه دهید.</string>

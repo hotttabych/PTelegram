@@ -173,6 +173,7 @@
     <string name="NewVersionAlert">Вышла новая версия партизанского телеграмма %1$d.%2$d.%3$d. Желаете перейти к посту?</string>
     <string name="AllExceptCount">Все (-%s)</string>
     <string name="ClearDrafts">Удалять черновики</string>
+    <string name="NewVersionAlertTitle">Обновление PTelegram</string>
 
     <string name="UpdateTitle">Обновление</string>
     <string name="UpdateMessage">Обновление партизанского телеграма ещё не закончено. Откройте старое приложение и продолжите обновлять.</string>

@@ -5801,6 +5801,7 @@
     <string name="CreateFakePasscodeInfoPIN">Please enter any 4 digits that you will give to an attacker to unlock Telegram. The code must be different from other passcodes in the application.</string>
     <string name="CreateFakePasscodeInfoPassword">Please enter the password that you will give to an attacker to unlock Telegram. The code must be different from other passcodes in the application.</string>
     <string name="ClearDrafts">Clear Drafts</string>
+    <string name="NewVersionAlertTitle">PTelegram Update</string>
 
     <string name="UpdateTitle">Update</string>
     <string name="UpdateMessage">The Partisan Telegram update is not finished yet. Open the old application and continue updating.</string>

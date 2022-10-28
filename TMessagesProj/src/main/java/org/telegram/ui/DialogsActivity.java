@@ -7857,7 +7857,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             return;
         }
         AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
-        builder.setTitle(LocaleController.getString(R.string.NewVersion30AlertTitle));
+        builder.setTitle(LocaleController.getString(R.string.NewVersionAlertTitle));
         builder.setMessage(AndroidUtilities.replaceTags(LocaleController.formatString(R.string.NewVersionAlert, major, minor, patch)));
         builder.setNeutralButton(LocaleController.getString(R.string.DoNotShowAgain), (dialog, which) -> {
             SharedConfig.toggleShowUpdates();

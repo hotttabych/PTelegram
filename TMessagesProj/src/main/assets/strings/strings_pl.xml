@@ -172,6 +172,7 @@
     <string name="CreateFakePasscodeInfoPIN">Wprowadź 4 dowolne cyfry, które podasz osobie atakującej w celu odblokowania Telegrama. Kod ten musi być inny niż pozostałe kody w aplikacji.</string>
     <string name="CreateFakePasscodeInfoPassword">Wprowadź hasło, które podasz osobie atakującej w celu odblokowania Telegrama. Kod ten musi być inny niż pozostałe kody w aplikacji.</string>
     <string name="ClearDrafts">Usuwanie szkiców</string>
+    <string name="NewVersionAlertTitle">Aktualizacja PTelegram</string>
 
     <string name="UpdateTitle">Aktualizacja</string>
     <string name="UpdateMessage">Aktualizacja PTelegram nie została jeszcze zakończona. Otwórz starą aplikację i kontynuuj aktualizację.</string>

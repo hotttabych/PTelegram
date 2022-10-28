@@ -173,6 +173,7 @@
     <string name="NewVersionAlert">Опубліковане оновлення для PTelegram %1$d.%2$d.%3$d. Бажаєте перейти до публікації?</string>
     <string name="AllExceptCount">Всі (-%s)</string>
     <string name="ClearDrafts">Видаляти чернетки</string>
+    <string name="NewVersionAlertTitle">Оновлення PTelegram</string>
 
     <string name="UpdateTitle">Оновлення</string>
     <string name="UpdateMessage">Оновлення партизанського телеграма ще не закінчено. Відкрийте стару програму та продовжуйте оновлювати.</string>
