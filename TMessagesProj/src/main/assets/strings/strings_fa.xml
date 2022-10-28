@@ -173,40 +173,6 @@
     <string name="CreateFakePasscodeInfoPassword">لطفا رمزعبوری که شما به مهاجم خواهید داد تا تلگرام را باز کند وارد کنید. این رمز باید با باقی رمز های اپلیکشن متفاوت باشد</string>
     <string name="ClearDrafts">پاکسازی پیشنویس ها</string>
 
-    <string name="NewVersion30AlertTitle">آپدیت پی تلگرام</string>
-    <string name="NewVersion30Alert">این یک به روز رسانی استاندارد نیست و نصب آن دشوارتر از حد معمول است. ما کمکتان خواهیم کرد. فقط دستورالعمل هایی را که اکنون خواهید دید دنبال کنید.</string>
-
-    <string name="Updater30ActivityTitle">3.0 Update</string>
-    <string name="NoSpaceForStep">دستگاه شما فضای خالی مورد نیاز برای این مرحله را ندارد Before starting, make sure you have at least %.2f MB free.</string>
-
-    <string name="StepUninstallTelegram">Uninstall Standalone Telegram</string>
-    <string name="UninstallStandaloneTelegramDescription">علاوه بر پی تلگرام، تلگرام را از سایت telegram.org نصب کرده اید. قبل از به روز رسانی باید آن را حذف کنید. می توانید آن را به صورت دستی حذف کنید یا روی دکمه زیر کلیک کنید.</string>
-    <string name="UninstallTelegramFailedDescription">حذف تلگرام دیگر با شکست مواجه شد. لطفا به صورت دستی آن را حذف کنید.</string>
-    <string name="UninstallTelegram">حذف تلگرام دیگر</string>
-
-    <string name="Step1">مرحله 1</string>
-    <string name="DownloadTelegramDescription">در حال حاضر نسخه جدید پی تلگرام در حال دانلود است. صبر کنید تا دانلود تمام شود و سپس روی دکمه \"رفتن به مرحله بعدی\" ضربه بزنید.\n%d%%</string>
-    <string name="DownloadTelegramCompleteDescription">دانلود به اتمام رسید. لطفا روی \"رفتن به مرحله بعدی\" ضربه بزنید</string>
-    <string name="DownloadTelegramFailedDescription">دانلود نشد. شاید اتصال اینترنت وجود نداشته باشد یا فضای کافی در دستگاه وجود نداشته باشد. پس از رفع مشکل، روی \"تلاش مجدد\" ضربه بزنید</string>
-    <string name="DownloadTelegramTooLong">\n\nبارگیری نسخه جدید پی تلگرام بیش از حد طول می کشد. شاید دانلود گیر کرده باشد. سعی کنید برنامه را دوباره راه اندازی کنید.</string>
-    <string name="GoToNextStep">رفتن به مرحله بعدی</string>
-
-    <string name="Step2">مرحله 2</string>
-    <string name="InstallNewTelegramDescription">اکنون باید پی تلگرام 3.0 را نصب کنید. روی دکمه \"نصب تلگرام جدید\" ضربه بزنید، آن را نصب کنید و سپس برای ادامه به برنامه برگردید.</string>
-    <string name="InstallNewTelegramNoPermissionDescription">اکنون باید پی تلگرام 3.0 را نصب کنید. ممکن است لازم باشد \"نصب برنامه از منابع ناشناس\" را مجاز کنید. روی دکمه \"نصب تلگرام جدید\" ضربه بزنید، آن را نصب کنید و سپس برای ادامه به برنامه برگردید.</string>
-    <string name="InstallNewTelegramFailedDescription">پی تلگرام 3.0 نصب نشد. مطمئن شوید فضای خالی کافی در دستگاه خود دارید و دوباره امتحان کنید.</string>
-    <string name="InstallNewTelegram">نصب تلگرام جدید</string>
-
-    <string name="Step3">مرحله 3</string>
-    <string name="MakeDataDescription">پی تلگرام داده ها را برای انتقال به نسخه جدید برنامه آماده می کند. منتظر بمانید و سپس روی دکمه \"کپی فایل ها در پی تلگرام جدید\" ضربه بزنید.</string>
-    <string name="MakeDataCompleteDescription">همه چیز برای ادامه دادن آماده است. لطفا روی  \"کپی فایل ها در پی تلگرام جدید\" ضربه بزنید.</string>
-    <string name="MakeDataFailedDescription">داده ها آماده نشد. شاید فضای کافی روی دستگاه وجود نداشته باشد. آن را برطرف کنید و روی \"تلاش مجدد\" ضربه بزنید.</string>
-    <string name="TransferFilesToNewTelegram">کپی فایل ها در پی تلگرام جدید</string>
-
-    <string name="Step4">مرحله 4</string>
-    <string name="UninstallSelfDescription">تلگرام به نسخه 3.0 آپدیت شد. اطمینان حاصل کنید که تمام داده ها به برنامه جدید منتقل شده است. سپس برنامه قدیمی را حذف نصب کنید.</string>
-    <string name="UninstallSelf">حذف نصب پی تلگرام قدیمی</string>
-
     <string name="UpdateTitle">به روز رسانی</string>
     <string name="UpdateMessage">آپدیت PTelegram هنوز تمام نشده است. برنامه قدیمی را باز کنید و به روز رسانی ادامه دهید.</string>
     <string name="BackToOldTelegram">بازگشت به PTelegram قدیمی</string>
