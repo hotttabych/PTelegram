@@ -4,7 +4,6 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.content.pm.ResolveInfo;
 import android.graphics.Canvas;
@@ -26,14 +25,11 @@ import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.R;
 import org.telegram.messenger.UserConfig;
 import org.telegram.tgnet.ConnectionsManager;
-import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.AlertDialog;
 import org.telegram.ui.ActionBar.BaseFragment;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.ActionBar.ThemeDescription;
-import org.telegram.ui.Cells.DrawerProfileCell;
 import org.telegram.ui.Components.LayoutHelper;
-import org.telegram.ui.Components.RLottieImageView;
 import org.telegram.ui.Components.SimpleThemeDescription;
 import org.telegram.ui.Components.voip.CellFlickerDrawable;
 
@@ -42,7 +38,7 @@ import java.util.List;
 
 public class OldTelegramWarningActivity extends BaseFragment implements NotificationCenter.NotificationCenterDelegate {
 
-    private int currentAccount = UserConfig.selectedAccount;
+    private final int currentAccount = UserConfig.selectedAccount;
 
     TextView headerTextView;
     TextView messageTextView;
@@ -53,15 +49,12 @@ public class OldTelegramWarningActivity extends BaseFragment implements Notifica
 
     private boolean startPressed = false;
 
-    private LocaleController.LocaleInfo localeInfo;
-
-    private boolean destroyed;
-    private boolean telegramDataReceiver;
+    private final boolean oldTelegramDataReceiver;
 
     private AlertDialog progressDialog;
 
-    public OldTelegramWarningActivity(boolean telegramDataReceiver) {
-        this.telegramDataReceiver = telegramDataReceiver;
+    public OldTelegramWarningActivity(boolean oldTelegramDataReceiver) {
+        this.oldTelegramDataReceiver = oldTelegramDataReceiver;
     }
 
     @Override
@@ -71,11 +64,6 @@ public class OldTelegramWarningActivity extends BaseFragment implements Notifica
         ScrollView scrollView = new ScrollView(context);
         scrollView.setFillViewport(true);
 
-        RLottieImageView themeIconView = new RLottieImageView(context);
-        FrameLayout themeFrameLayout = new FrameLayout(context);
-        themeFrameLayout.addView(themeIconView, LayoutHelper.createFrame(28, 28, Gravity.CENTER));
-
-        int themeMargin = 4;
         frameContainerView = new FrameLayout(context) {
 
             @Override
@@ -92,45 +80,9 @@ public class OldTelegramWarningActivity extends BaseFragment implements Notifica
                 startMessagingButton.layout(x, y, x + startMessagingButton.getMeasuredWidth(), y + startMessagingButton.getMeasuredHeight());
                 x = (getMeasuredWidth() - backToOldTelegramButton.getMeasuredWidth()) / 2;
                 backToOldTelegramButton.layout(x, y - backToOldTelegramButton.getMeasuredHeight(), x + backToOldTelegramButton.getMeasuredWidth(), y);
-
-                MarginLayoutParams marginLayoutParams = (MarginLayoutParams) themeFrameLayout.getLayoutParams();
-                int newTopMargin = AndroidUtilities.dp(themeMargin) + (AndroidUtilities.isTablet() ? 0 : AndroidUtilities.statusBarHeight);
-                if (marginLayoutParams.topMargin != newTopMargin) {
-                    marginLayoutParams.topMargin = newTopMargin;
-                    themeFrameLayout.requestLayout();
-                }
             }
         };
         scrollView.addView(frameContainerView, LayoutHelper.createScroll(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.LEFT | Gravity.TOP));
-
-        themeFrameLayout.setOnClickListener(v -> {
-            if (DrawerProfileCell.switchingTheme) return;
-            DrawerProfileCell.switchingTheme = true;
-
-            String dayThemeName = "Blue";
-            String nightThemeName = "Night";
-
-            Theme.ThemeInfo themeInfo;
-            boolean toDark;
-            if (toDark = !Theme.isCurrentThemeDark()) {
-                themeInfo = Theme.getTheme(nightThemeName);
-            } else {
-                themeInfo = Theme.getTheme(dayThemeName);
-            }
-
-            Theme.selectedAutoNightType = Theme.AUTO_NIGHT_TYPE_NONE;
-            Theme.saveAutoNightThemeConfig();
-            Theme.cancelAutoNightThemeCallbacks();
-
-            themeIconView.playAnimation();
-
-            int[] pos = new int[2];
-            themeIconView.getLocationInWindow(pos);
-            pos[0] += themeIconView.getMeasuredWidth() / 2;
-            pos[1] += themeIconView.getMeasuredHeight() / 2;
-            NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.needSetDayNightTheme, themeInfo, false, pos, -1, toDark, themeIconView);
-            themeIconView.setContentDescription(LocaleController.getString(toDark ? R.string.AccDescrSwitchToDayTheme : R.string.AccDescrSwitchToDayTheme));
-        });
 
         frameLayout2 = new FrameLayout(context);
         frameContainerView.addView(frameLayout2, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.LEFT | Gravity.TOP, 0, 78, 0, 0));
@@ -147,7 +99,6 @@ public class OldTelegramWarningActivity extends BaseFragment implements Notifica
             startPressed = true;
 
             presentFragment(new LoginActivity().setIntroView(frameContainerView, startMessagingButton), true);
-            destroyed = true;
         });
 
         backToOldTelegramButton = new InternalButton(context);
@@ -181,11 +132,6 @@ public class OldTelegramWarningActivity extends BaseFragment implements Notifica
                 getParentActivity().finishAffinity();
             }
         });
-
-
-
-
-
 
         headerTextView = new TextView(frameContainerView.getContext());
         messageTextView = new TextView(frameContainerView.getContext());
@@ -222,27 +168,17 @@ public class OldTelegramWarningActivity extends BaseFragment implements Notifica
         headerTextView.setText(LocaleController.getString(R.string.UpdateTitle));
         messageTextView.setText(LocaleController.getString(R.string.UpdateMessage));
 
-
-
-
-
-
-
-        frameContainerView.addView(themeFrameLayout, LayoutHelper.createFrame(64, 64, Gravity.TOP | Gravity.RIGHT, 0, themeMargin, themeMargin, 0));
-
         fragmentView = scrollView;
 
-        NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.suggestedLangpack);
-        NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.configLoaded);
         NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.telegramDataReceived);
         NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.telegramDataReceivingError);
         ConnectionsManager.getInstance(currentAccount).updateDcSettings();
         LocaleController.getInstance().loadRemoteLanguages(currentAccount);
         checkContinueText();
 
-        updateColors(false);
+        updateColors();
 
-        if (telegramDataReceiver) {
+        if (oldTelegramDataReceiver) {
             AndroidUtilities.runOnUIThread(() -> {
                 AlertDialog progressDialog = new AlertDialog(getParentActivity(), 3);
                 progressDialog.setCanCancel(false);
@@ -285,9 +221,6 @@ public class OldTelegramWarningActivity extends BaseFragment implements Notifica
     @Override
     public void onFragmentDestroy() {
         super.onFragmentDestroy();
-        destroyed = true;
-        NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.suggestedLangpack);
-        NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.configLoaded);
         NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.telegramDataReceived);
         NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.telegramDataReceivingError);
         MessagesController.getGlobalMainSettings().edit().putLong("intro_crashed_time", 0).apply();
@@ -326,9 +259,7 @@ public class OldTelegramWarningActivity extends BaseFragment implements Notifica
 
     @Override
     public void didReceivedNotification(int id, int account, Object... args) {
-        if (id == NotificationCenter.suggestedLangpack || id == NotificationCenter.configLoaded) {
-            checkContinueText();
-        } else if (id == NotificationCenter.telegramDataReceived) {
+        if (id == NotificationCenter.telegramDataReceived) {
             AndroidUtilities.runOnUIThread(() -> {
                 progressDialog = new AlertDialog(getParentActivity(), 3);
                 progressDialog.setCanCancel(false);
@@ -345,13 +276,13 @@ public class OldTelegramWarningActivity extends BaseFragment implements Notifica
 
     @Override
     public ArrayList<ThemeDescription> getThemeDescriptions() {
-        return SimpleThemeDescription.createThemeDescriptions(() -> updateColors(true), Theme.key_windowBackgroundWhite,
+        return SimpleThemeDescription.createThemeDescriptions(this::updateColors, Theme.key_windowBackgroundWhite,
                 Theme.key_windowBackgroundWhiteBlueText4, Theme.key_chats_actionBackground, Theme.key_chats_actionPressedBackground,
                 Theme.key_featuredStickers_buttonText, Theme.key_windowBackgroundWhiteBlackText, Theme.key_windowBackgroundWhiteGrayText3
         );
     }
 
-    private void updateColors(boolean fromTheme) {
+    private void updateColors() {
         fragmentView.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundWhite));
         startMessagingButton.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlueText4));
         startMessagingButton.setBackground(null);
