@@ -179,4 +179,5 @@
     <string name="UpdateMessage">Абнаўленне партызанскага тэлеграма яшчэ не скончана. Адчыніце стары дадатак і працягніце абнаўляць.</string>
     <string name="BackToOldTelegram">Вярнуцца да старога PTelegram</string>
     <string name="StartMessagingAnyway">Працягнуць без абнаўлення</string>
+    <string name="UpdateNotCompletedTitle">Дадзеныя са старога прыкладання яшчэ не перанесены. Калі працягнеце, Вам давядзецца наладжваць прыкладанне зноўку.</string>
 </resources>

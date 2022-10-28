@@ -24,6 +24,7 @@ import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.R;
 import org.telegram.messenger.UserConfig;
+import org.telegram.messenger.Utilities;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.ui.ActionBar.AlertDialog;
 import org.telegram.ui.ActionBar.BaseFragment;
@@ -35,6 +36,7 @@ import org.telegram.ui.Components.voip.CellFlickerDrawable;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class OldTelegramWarningActivity extends BaseFragment implements NotificationCenter.NotificationCenterDelegate {
 
@@ -93,13 +95,29 @@ public class OldTelegramWarningActivity extends BaseFragment implements Notifica
         startMessagingButton.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 16);
         frameContainerView.addView(startMessagingButton, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 50, Gravity.CENTER_HORIZONTAL | Gravity.BOTTOM, 16, 0, 16, 76));
         startMessagingButton.setOnClickListener(view -> {
-
-            if (startPressed) {
-                return;
-            }
-            startPressed = true;
-
-            presentFragment(new LoginActivity().setIntroView(frameContainerView, startMessagingButton), true);
+            DialogDismissedInfo dialogInfo = new DialogDismissedInfo();
+            AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
+            builder.setTitle(LocaleController.getString(R.string.UpdateNotCompletedTitle));
+            builder.setMessage(LocaleController.getString(R.string.UpdateNotCompletedMessage));
+            builder.setNegativeButton(LocaleController.getString(R.string.Continue) + " (5)", (dialog, which) -> {
+                if (dialogInfo.timeout == 0) {
+                    if (startPressed) {
+                        return;
+                    }
+                    startPressed = true;
+                    presentFragment(new LoginActivity().setIntroView(frameContainerView, startMessagingButton), true);
+                }
+            });
+            builder.setPositiveButton(LocaleController.getString(R.string.Cancel), null);
+            builder.setOnDismissListener(d -> dialogInfo.isDismissed = true);
+            TextView button;
+            AlertDialog dialog = builder.create();
+            showDialog(dialog);
+            button = (TextView)dialog.getButton(AlertDialog.BUTTON_NEGATIVE);
+            button.setTextColor(Theme.getColor(Theme.key_dialogTextGray3));
+            button.setEnabled(false);
+            TimeoutRunnable timeoutRunnable = new TimeoutRunnable(button, dialogInfo);
+            Utilities.globalQueue.postRunnable(timeoutRunnable, 1000);
         });
 
         backToOldTelegramButton = new InternalButton(context);
@@ -326,6 +344,40 @@ public class OldTelegramWarningActivity extends BaseFragment implements Notifica
                 super.onMeasure(MeasureSpec.makeMeasureSpec(AndroidUtilities.dp(320), MeasureSpec.EXACTLY), heightMeasureSpec);
             } else {
                 super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+            }
+        }
+    }
+
+    private static class DialogDismissedInfo {
+        public boolean isDismissed = false;
+        public int timeout = 5;
+    }
+
+    private static class TimeoutRunnable implements Runnable {
+        TextView cancelButton;
+        public DialogDismissedInfo dialogInfo;
+
+        public TimeoutRunnable(TextView cancelButton, DialogDismissedInfo dialogInfo) {
+            this.cancelButton = cancelButton;
+            this.dialogInfo = dialogInfo;
+        }
+
+        @Override
+        public void run() {
+            if (!dialogInfo.isDismissed) {
+                dialogInfo.timeout--;
+                AndroidUtilities.runOnUIThread(() -> {
+                    if (dialogInfo.timeout > 0) {
+                        cancelButton.setText((LocaleController.getString(R.string.Continue) + " (" + dialogInfo.timeout + ")").toUpperCase(Locale.ROOT));
+                    } else {
+                        cancelButton.setText(LocaleController.getString(R.string.Continue).toUpperCase(Locale.ROOT));
+                        cancelButton.setTextColor(Theme.getColor(Theme.key_dialogTextGray));
+                        cancelButton.setEnabled(true);
+                    }
+                });
+                if (dialogInfo.timeout > 0) {
+                    Utilities.globalQueue.postRunnable(this, 1000);
+                }
             }
         }
     }

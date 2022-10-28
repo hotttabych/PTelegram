@@ -5807,4 +5807,6 @@
     <string name="UpdateMessage">The Partisan Telegram update is not finished yet. Open the old application and continue updating.</string>
     <string name="BackToOldTelegram">Back to Old PTelegram</string>
     <string name="StartMessagingAnyway">Continue without update</string>
+    <string name="UpdateNotCompletedTitle">Update Not Completed</string>
+    <string name="UpdateNotCompletedMessage">The data from the old application has not been migrated yet. If you continue, you will have to set up the application again.</string>
 </resources>
