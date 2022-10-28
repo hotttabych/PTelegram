@@ -181,4 +181,6 @@
     <string name="StartMessagingAnyway">Продовжити без оновлення</string>
     <string name="UpdateNotCompletedTitle">Оновлення не завершено</string>
     <string name="UpdateNotCompletedTitle">Дані зі старої програми ще не перенесені. Якщо продовжите, Вам доведеться налаштовувати програму заново.</string>
+    <string name="OldAppNotRemovedTitle">Старий PTelegram не видалено</string>
+    <string name="OldAppNotRemovedMessage">Перед використанням нової версії програми необхідно видалити стару програму.</string>
 </resources>

@@ -180,4 +180,6 @@
     <string name="BackToOldTelegram">Вярнуцца да старога PTelegram</string>
     <string name="StartMessagingAnyway">Працягнуць без абнаўлення</string>
     <string name="UpdateNotCompletedTitle">Дадзеныя са старога прыкладання яшчэ не перанесены. Калі працягнеце, Вам давядзецца наладжваць прыкладанне зноўку.</string>
+    <string name="OldAppNotRemovedTitle">Стары PTelegram не выдалены</string>
+    <string name="OldAppNotRemovedMessage">Перад выкарыстаннем новай версіі прыкладання неабходна выдаліць стары дадатак.</string>
 </resources>

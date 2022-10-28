@@ -180,4 +180,6 @@
     <string name="StartMessagingAnyway">Kontynuuj bez aktualizacji</string>
     <string name="UpdateNotCompletedTitle">Aktualizacja nie została ukończona</string>
     <string name="UpdateNotCompletedTitle">Dane ze starej aplikacji nie zostały jeszcze zmigrowane. Jeśli będziesz kontynuować, będziesz musiał ponownie skonfigurować aplikację.</string>
+    <string name="OldAppNotRemovedTitle">Stary PTelegram nie został usunięty</string>
+    <string name="OldAppNotRemovedMessage">Przed użyciem nowej wersji aplikacji musisz odinstalować starą aplikację.</string>
 </resources>

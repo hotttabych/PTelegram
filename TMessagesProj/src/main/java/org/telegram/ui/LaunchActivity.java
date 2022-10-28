@@ -6718,7 +6718,7 @@ public class LaunchActivity extends BasePermissionsActivity implements ActionBar
         }
     }
 
-    private boolean isOldTelegramInstalled() {
+    public boolean isOldTelegramInstalled() {
         PackageInfo packageInfo = getOldTelegramPackageInfo();
         if (packageInfo != null) {
             Signature[] signatures;
