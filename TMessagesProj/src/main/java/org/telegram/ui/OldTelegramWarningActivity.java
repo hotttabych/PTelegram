@@ -93,6 +93,7 @@ public class OldTelegramWarningActivity extends BaseFragment implements Notifica
         startMessagingButton.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 16);
         frameContainerView.addView(startMessagingButton, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 50, Gravity.CENTER_HORIZONTAL | Gravity.BOTTOM, 16, 0, 16, 76));
         startMessagingButton.setOnClickListener(view -> {
+
             if (startPressed) {
                 return;
             }
@@ -180,7 +181,7 @@ public class OldTelegramWarningActivity extends BaseFragment implements Notifica
 
         if (oldTelegramDataReceiver) {
             AndroidUtilities.runOnUIThread(() -> {
-                AlertDialog progressDialog = new AlertDialog(getParentActivity(), 3);
+                progressDialog = new AlertDialog(getParentActivity(), 3);
                 progressDialog.setCanCancel(false);
                 progressDialog.show();
             });
