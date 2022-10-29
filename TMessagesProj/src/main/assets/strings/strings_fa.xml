@@ -177,7 +177,7 @@
     <string name="UpdateTitle">به روز رسانی</string>
     <string name="UpdateMessage">آپدیت PTelegram هنوز تمام نشده است. برنامه قدیمی را باز کنید و به روز رسانی ادامه دهید.</string>
     <string name="BackToOldTelegram">بازگشت به PTelegram قدیمی</string>
-    <string name="StartMessagingAnyway">بدون به روز رسانی ادامه دهید</string>
+    <string name="StartMessagingAnyway">بدون انتقال داده ادامه دهید</string>
     <string name="UpdateNotCompletedTitle">به روز رسانی کامل نشده است</string>
     <string name="UpdateNotCompletedTitle">داده های برنامه قدیمی هنوز منتقل نشده است. اگر ادامه دهید، باید دوباره برنامه را راه اندازی کنید.</string>
     <string name="OldAppNotRemovedTitle">PTelegram قدیمی حذف نشد</string>

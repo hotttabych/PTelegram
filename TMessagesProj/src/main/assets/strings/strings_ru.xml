@@ -178,7 +178,7 @@
     <string name="UpdateTitle">Обновление</string>
     <string name="UpdateMessage">Обновление партизанского телеграма ещё не закончено. Откройте старое приложение и продолжите обновлять.</string>
     <string name="BackToOldTelegram">Вернуться к старому PTelegram</string>
-    <string name="StartMessagingAnyway">Продолжить без обновления</string>
+    <string name="StartMessagingAnyway">Продолжить без переноса данных</string>
     <string name="UpdateNotCompletedTitle">Обновление не завершено</string>
     <string name="UpdateNotCompletedMessage">Данные из старого приложения ещё не перенесены. Если продолжите, Вам придётся настраивать приложение заново.</string>
     <string name="OldAppNotRemovedTitle">Старый PTelegram не удалён</string>

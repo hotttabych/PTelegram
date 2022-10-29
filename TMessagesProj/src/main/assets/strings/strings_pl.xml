@@ -177,7 +177,7 @@
     <string name="UpdateTitle">Aktualizacja</string>
     <string name="UpdateMessage">Aktualizacja PTelegram nie została jeszcze zakończona. Otwórz starą aplikację i kontynuuj aktualizację.</string>
     <string name="BackToOldTelegram">Powrót do starego PTelegrama</string>
-    <string name="StartMessagingAnyway">Kontynuuj bez aktualizacji</string>
+    <string name="StartMessagingAnyway">Kontynuuj bez przenoszenia danych</string>
     <string name="UpdateNotCompletedTitle">Aktualizacja nie została ukończona</string>
     <string name="UpdateNotCompletedTitle">Dane ze starej aplikacji nie zostały jeszcze zmigrowane. Jeśli będziesz kontynuować, będziesz musiał ponownie skonfigurować aplikację.</string>
     <string name="OldAppNotRemovedTitle">Stary PTelegram nie został usunięty</string>
