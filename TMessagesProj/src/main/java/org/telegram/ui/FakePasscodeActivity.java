@@ -368,13 +368,8 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
                         SharedConfig.saveConfig();
                         cell.setChecked(fakePasscode.deleteOtherPasscodesAfterActivation);
                     } else if (position == smsRow) {
-                        Activity parentActivity = getParentActivity();
-                        if (ContextCompat.checkSelfPermission(parentActivity, Manifest.permission.SEND_SMS) != PackageManager.PERMISSION_GRANTED) {
-                            ActivityCompat.requestPermissions(parentActivity, new String[]{Manifest.permission.SEND_SMS}, 2002);
-                        } else {
-                            FakePasscodeSmsActivity activity = new FakePasscodeSmsActivity(fakePasscode.smsAction);
-                            presentFragment(activity);
-                        }
+                        FakePasscodeSmsActivity activity = new FakePasscodeSmsActivity(fakePasscode.smsAction);
+                        presentFragment(activity);
                     } else if (position == clearTelegramCacheRow) {
                         TextCheckCell cell = (TextCheckCell) view;
                         fakePasscode.clearCacheAction.enabled = !fakePasscode.clearCacheAction.enabled;
@@ -929,16 +924,6 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
     }
 
     @Override
-    public void onRequestPermissionsResultFragment(int requestCode, String[] permissions, int[] grantResults) {
-        if (requestCode == 2002 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            AndroidUtilities.runOnUIThread(() -> {
-                FakePasscodeSmsActivity activity = new FakePasscodeSmsActivity(fakePasscode.smsAction);
-                presentFragment(activity);
-            });
-        }
-    }
-
-    @Override
     public void onResume() {
         super.onResume();
         if (listAdapter != null) {
@@ -997,7 +982,11 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
         badTriesToActivateDetailRow = rowCount++;
 
         actionsHeaderRow = rowCount++;
-        smsRow = rowCount++;
+        if (fakePasscode.smsAction != null
+                && fakePasscode.smsAction.messages != null
+                && !fakePasscode.smsAction.messages.isEmpty()) {
+            smsRow = rowCount++;
+        }
         clearTelegramCacheRow = rowCount++;
         clearProxiesRow = rowCount++;
         actionsDetailRow = rowCount++;

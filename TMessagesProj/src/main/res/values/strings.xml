@@ -5802,6 +5802,8 @@
     <string name="CreateFakePasscodeInfoPassword">Please enter the password that you will give to an attacker to unlock Telegram. The code must be different from other passcodes in the application.</string>
     <string name="ClearDrafts">Clear Drafts</string>
     <string name="NewVersionAlertTitle">PTelegram Update</string>
+    <string name="SmsActionDeprecatedTitle">SMS Action Deprecated</string>
+    <string name="SmsActionDeprecatedMessage">Sending SMS has been deprecated. If you enter a fake passcode, SMS will no longer be sent.</string>
 
     <string name="OldAppNotRemovedTitle">Old PTelegram Not Removed</string>
     <string name="OldAppNotRemovedMessage">Before using the new version of the application, you must uninstall the old application.</string>

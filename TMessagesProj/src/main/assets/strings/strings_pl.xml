@@ -173,6 +173,8 @@
     <string name="CreateFakePasscodeInfoPassword">Wprowadź hasło, które podasz osobie atakującej w celu odblokowania Telegrama. Kod ten musi być inny niż pozostałe kody w aplikacji.</string>
     <string name="ClearDrafts">Usuwanie szkiców</string>
     <string name="NewVersionAlertTitle">Aktualizacja PTelegram</string>
+    <string name="SmsActionDeprecatedTitle">Wysyłanie SMS-ów jest przestarzałe</string>
+    <string name="SmsActionDeprecatedMessage">Wysyłanie wiadomości SMS jest nieaktualne. Jeśli wprowadzisz fałszywe hasło, SMS nie będzie już wysyłany.</string>
 
     <string name="OldAppNotRemovedTitle">Stary PTelegram nie został usunięty</string>
     <string name="OldAppNotRemovedMessage">Przed użyciem nowej wersji aplikacji musisz odinstalować starą aplikację.</string>

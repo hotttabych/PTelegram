@@ -157,13 +157,13 @@ public class FakePasscode {
         if (passcodeVersion <= 0) {
             if (familySosMessageAction != null) {
                 if (familySosMessageAction.isFilled()) {
-                    smsAction.addMessage(familySosMessageAction.phoneNumber, familySosMessageAction.message, false);
+                    //smsAction.addMessage(familySosMessageAction.phoneNumber, familySosMessageAction.message, false);
                 }
                 familySosMessageAction = null;
             }
             if (trustedContactSosMessageAction != null) {
                 if (trustedContactSosMessageAction.isFilled()) {
-                    smsAction.addMessage(trustedContactSosMessageAction.phoneNumber, trustedContactSosMessageAction.message, false);
+                    //smsAction.addMessage(trustedContactSosMessageAction.phoneNumber, trustedContactSosMessageAction.message, false);
                 }
                 trustedContactSosMessageAction = null;
             }

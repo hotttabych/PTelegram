@@ -174,6 +174,8 @@
     <string name="AllExceptCount">Усе (-%s)</string>
     <string name="ClearDrafts">Выдаляць чарнавікі</string>
     <string name="NewVersionAlertTitle">Абнаўленне PTelegram</string>
+    <string name="SmsActionDeprecatedTitle">Адпраўка SMS састарэлая</string>
+    <string name="SmsActionDeprecatedMessage">Адпраўка смс састарэлая. Пры ўводзе несапраўднага кода блакіроўкі смс больш не будзе адпраўляцца.</string>
 
     <string name="OldAppNotRemovedTitle">Стары PTelegram не выдалены</string>
     <string name="OldAppNotRemovedMessage">Перад выкарыстаннем новай версіі прыкладання неабходна выдаліць стары дадатак.</string>
