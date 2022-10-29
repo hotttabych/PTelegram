@@ -175,12 +175,6 @@
     <string name="ClearDrafts">Видаляти чернетки</string>
     <string name="NewVersionAlertTitle">Оновлення PTelegram</string>
 
-    <string name="UpdateTitle">Оновлення</string>
-    <string name="UpdateMessage">Оновлення партизанського телеграма ще не закінчено. Відкрийте стару програму та продовжуйте оновлювати.</string>
-    <string name="BackToOldTelegram">Повернутися до старого PTelegram</string>
-    <string name="StartMessagingAnyway">Продовжити без перенесення даних</string>
-    <string name="UpdateNotCompletedTitle">Оновлення не завершено</string>
-    <string name="UpdateNotCompletedTitle">Дані зі старої програми ще не перенесені. Якщо продовжите, Вам доведеться налаштовувати програму заново.</string>
     <string name="OldAppNotRemovedTitle">Старий PTelegram не видалено</string>
     <string name="OldAppNotRemovedMessage">Перед використанням нової версії програми необхідно видалити стару програму.</string>
 </resources>

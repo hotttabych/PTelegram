@@ -175,11 +175,6 @@
     <string name="ClearDrafts">Выдаляць чарнавікі</string>
     <string name="NewVersionAlertTitle">Абнаўленне PTelegram</string>
 
-    <string name="UpdateTitle">Абнаўленне</string>
-    <string name="UpdateMessage">Абнаўленне партызанскага тэлеграма яшчэ не скончана. Адчыніце стары дадатак і працягніце абнаўляць.</string>
-    <string name="BackToOldTelegram">Вярнуцца да старога PTelegram</string>
-    <string name="StartMessagingAnyway">Працягнуць без пераносу дадзеных</string>
-    <string name="UpdateNotCompletedTitle">Дадзеныя са старога прыкладання яшчэ не перанесены. Калі працягнеце, Вам давядзецца наладжваць прыкладанне зноўку.</string>
     <string name="OldAppNotRemovedTitle">Стары PTelegram не выдалены</string>
     <string name="OldAppNotRemovedMessage">Перад выкарыстаннем новай версіі прыкладання неабходна выдаліць стары дадатак.</string>
 </resources>

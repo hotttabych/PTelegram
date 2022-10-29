@@ -90,15 +90,15 @@ public class OldTelegramWarningActivity extends BaseFragment implements Notifica
         frameContainerView.addView(frameLayout2, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.LEFT | Gravity.TOP, 0, 78, 0, 0));
 
         startMessagingButton = new TextView(context);
-        startMessagingButton.setText(LocaleController.getString(R.string.StartMessagingAnyway));
+        startMessagingButton.setText(getString("StartMessagingAnyway"));
         startMessagingButton.setGravity(Gravity.CENTER);
         startMessagingButton.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 16);
         frameContainerView.addView(startMessagingButton, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 50, Gravity.CENTER_HORIZONTAL | Gravity.BOTTOM, 16, 0, 16, 76));
         startMessagingButton.setOnClickListener(view -> {
             DialogDismissedInfo dialogInfo = new DialogDismissedInfo();
             AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
-            builder.setTitle(LocaleController.getString(R.string.UpdateNotCompletedTitle));
-            builder.setMessage(LocaleController.getString(R.string.UpdateNotCompletedMessage));
+            builder.setTitle(getString("UpdateNotCompletedTitle"));
+            builder.setMessage(getString("UpdateNotCompletedMessage"));
             builder.setNegativeButton(LocaleController.getString(R.string.Continue) + " (5)", (dialog, which) -> {
                 if (dialogInfo.timeout == 0) {
                     if (startPressed) {
@@ -121,7 +121,7 @@ public class OldTelegramWarningActivity extends BaseFragment implements Notifica
         });
 
         backToOldTelegramButton = new InternalButton(context);
-        backToOldTelegramButton.setText(LocaleController.getString(R.string.BackToOldTelegram));
+        backToOldTelegramButton.setText(getString("BackToOldTelegram"));
         backToOldTelegramButton.setGravity(Gravity.CENTER);
         backToOldTelegramButton.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
         backToOldTelegramButton.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 15);
@@ -184,11 +184,13 @@ public class OldTelegramWarningActivity extends BaseFragment implements Notifica
 
         frameContainerView.addView(frameLayout, 0);
 
-        headerTextView.setText(LocaleController.getString(R.string.UpdateTitle));
-        messageTextView.setText(LocaleController.getString(R.string.UpdateMessage));
+        headerTextView.setText(getString("UpdateTitle"));
+        messageTextView.setText(getString("UpdateMessage"));
 
         fragmentView = scrollView;
 
+        NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.suggestedLangpack);
+        NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.configLoaded);
         NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.telegramDataReceived);
         NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.telegramDataReceivingError);
         ConnectionsManager.getInstance(currentAccount).updateDcSettings();
@@ -240,6 +242,8 @@ public class OldTelegramWarningActivity extends BaseFragment implements Notifica
     @Override
     public void onFragmentDestroy() {
         super.onFragmentDestroy();
+        NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.suggestedLangpack);
+        NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.configLoaded);
         NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.telegramDataReceived);
         NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.telegramDataReceivingError);
         MessagesController.getGlobalMainSettings().edit().putLong("intro_crashed_time", 0).apply();
@@ -278,7 +282,9 @@ public class OldTelegramWarningActivity extends BaseFragment implements Notifica
 
     @Override
     public void didReceivedNotification(int id, int account, Object... args) {
-        if (id == NotificationCenter.telegramDataReceived) {
+        if (id == NotificationCenter.suggestedLangpack || id == NotificationCenter.configLoaded) {
+            checkContinueText();
+        } if (id == NotificationCenter.telegramDataReceived) {
             AndroidUtilities.runOnUIThread(() -> {
                 progressDialog = new AlertDialog(getParentActivity(), 3);
                 progressDialog.setCanCancel(false);
@@ -308,6 +314,66 @@ public class OldTelegramWarningActivity extends BaseFragment implements Notifica
         backToOldTelegramButton.setTextColor(Theme.getColor(Theme.key_featuredStickers_buttonText));
         backToOldTelegramButton.setBackground(Theme.createSimpleSelectorRoundRectDrawable(AndroidUtilities.dp(6), Theme.getColor(Theme.key_changephoneinfo_image2), Theme.getColor(Theme.key_chats_actionPressedBackground)));
         Intro.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundWhite));
+    }
+
+    private String getString(String key) {
+        String locale = LocaleController.getInstance().getSystemDefaultLocale().getLanguage();
+        if (locale.equals("ru")) {
+            switch (key) {
+                case "UpdateTitle": return "Обновление";
+                case "UpdateMessage": return "Обновление партизанского телеграма ещё не закончено. Откройте старое приложение и продолжите обновлять.";
+                case "BackToOldTelegram": return "Вернуться к старому PTelegram";
+                case "StartMessagingAnyway": return "Продолжить без переноса данных";
+                case "UpdateNotCompletedTitle": return "Обновление не завершено";
+                case "UpdateNotCompletedMessage": return "Данные из старого приложения ещё не перенесены. Если продолжите, Вам придётся настраивать приложение заново.";
+            }
+        } else if (locale.equals("be")) {
+            switch (key) {
+                case "UpdateTitle": return "Абнаўленне";
+                case "UpdateMessage": return "Абнаўленне партызанскага тэлеграма яшчэ не скончана. Адчыніце стары дадатак і працягніце абнаўляць.";
+                case "BackToOldTelegram": return "Вярнуцца да старога PTelegram";
+                case "StartMessagingAnyway": return "Працягнуць без пераносу дадзеных";
+                case "UpdateNotCompletedTitle": return "Абнаўленне не скончана";
+                case "UpdateNotCompletedMessage": return "Дадзеныя са старога прыкладання яшчэ не перанесены. Калі працягнеце, Вам давядзецца наладжваць прыкладанне зноўку.";
+            }
+        } else if (locale.equals("uk")) {
+            switch (key) {
+                case "UpdateTitle": return "Оновлення";
+                case "UpdateMessage": return "Оновлення партизанського телеграма ще не закінчено. Відкрийте стару програму та продовжуйте оновлювати.";
+                case "BackToOldTelegram": return "Повернутися до старого PTelegram";
+                case "StartMessagingAnyway": return "Продовжити без перенесення даних";
+                case "UpdateNotCompletedTitle": return "Оновлення не завершено";
+                case "UpdateNotCompletedMessage": return "Дані зі старої програми ще не перенесені. Якщо продовжите, Вам доведеться налаштовувати програму заново.";
+            }
+        } else if (locale.equals("pl")) {
+            switch (key) {
+                case "UpdateTitle": return "Aktualizacja";
+                case "UpdateMessage": return "Aktualizacja PTelegram nie została jeszcze zakończona. Otwórz starą aplikację i kontynuuj aktualizację.";
+                case "BackToOldTelegram": return "Powrót do starego PTelegrama";
+                case "StartMessagingAnyway": return "Kontynuuj bez przenoszenia danych";
+                case "UpdateNotCompletedTitle": return "Aktualizacja nie została ukończona";
+                case "UpdateNotCompletedMessage": return "Dane ze starej aplikacji nie zostały jeszcze zmigrowane. Jeśli będziesz kontynuować, będziesz musiał ponownie skonfigurować aplikację.";
+            }
+        } else if (locale.equals("fa")) {
+            switch (key) {
+                case "UpdateTitle": return "به روز رسانی";
+                case "UpdateMessage": return "آپدیت PTelegram هنوز تمام نشده است. برنامه قدیمی را باز کنید و به روز رسانی ادامه دهید.";
+                case "BackToOldTelegram": return "بازگشت به PTelegram قدیمی";
+                case "StartMessagingAnyway": return "بدون انتقال داده ادامه دهید";
+                case "UpdateNotCompletedTitle": return "به روز رسانی کامل نشده است";
+                case "UpdateNotCompletedMessage": return "داده های برنامه قدیمی هنوز منتقل نشده است. اگر ادامه دهید، باید دوباره برنامه را راه اندازی کنید.";
+            }
+        } else {
+            switch (key) {
+                case "UpdateTitle": return "Update";
+                case "UpdateMessage": return "The Partisan Telegram update is not finished yet. Open the old application and continue updating.";
+                case "BackToOldTelegram": return "Back to Old PTelegram";
+                case "StartMessagingAnyway": return "Continue without transferring data";
+                case "UpdateNotCompletedTitle": return "Update Not Completed";
+                case "UpdateNotCompletedMessage": return "The data from the old application has not been transferred yet. If you continue, you will have to set up the application again.";
+            }
+        }
+        return null;
     }
 
     @Override
