@@ -476,6 +476,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     private boolean partisanTgChannelLastMessageLoaded = false;
     private boolean appUpdatesChecked = false;
     private boolean partisanTgChannelUsernameResolved = false;
+    AlertDialog oldPtrNotRemovedDialog;
 
     public final Property<DialogsActivity, Float> SCROLL_Y = new AnimationProperties.FloatProperty<DialogsActivity>("animationValue") {
         @Override
@@ -4021,17 +4022,22 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         FakePasscode.cleanupHiddenAccountSystemNotifications();
         actionBar.setDrawBlurBackground(contentView);
 
-        if (SharedConfig.filesCopiedFromOldTelegram
-                && getParentActivity() instanceof LaunchActivity
-                && ((LaunchActivity)getParentActivity()).isOldTelegramInstalled()) {
-            AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
-            builder.setTitle(LocaleController.getString(R.string.OldAppNotRemovedTitle));
-            builder.setMessage(LocaleController.getString(R.string.OldAppNotRemovedMessage));
-            AlertDialog dialog = builder.create();
-            dialog.setCanCancel(false);
-            dialog.setCancelable(false);
-            dialog.show();
+        if (SharedConfig.filesCopiedFromOldTelegram && !SharedConfig.oldTelegramRemoved) {
+            if (getParentActivity() instanceof LaunchActivity
+                    && ((LaunchActivity)getParentActivity()).isOldTelegramInstalled()) {
+                AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
+                builder.setTitle(LocaleController.getString(R.string.OldAppNotRemovedTitle));
+                builder.setMessage(LocaleController.getString(R.string.OldAppNotRemovedMessage));
+                oldPtrNotRemovedDialog = builder.create();
+                oldPtrNotRemovedDialog.setCanCancel(false);
+                oldPtrNotRemovedDialog.setCancelable(false);
+                oldPtrNotRemovedDialog.show();
+            } else {
+                SharedConfig.oldTelegramRemoved = true;
+                SharedConfig.saveConfig();
+            }
         }
+
         return fragmentView;
     }
 
@@ -4787,6 +4793,13 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         updateVisibleRows(0, false);
         updateProxyButton(false, true);
         checkSuggestClearDatabase();
+        if (oldPtrNotRemovedDialog != null
+                && getParentActivity() instanceof LaunchActivity
+                && ((LaunchActivity)getParentActivity()).isOldTelegramInstalled()) {
+            oldPtrNotRemovedDialog.dismiss();
+            SharedConfig.oldTelegramRemoved = true;
+            SharedConfig.saveConfig();
+        }
     }
 
     @Override
