@@ -4021,7 +4021,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         FakePasscode.cleanupHiddenAccountSystemNotifications();
         actionBar.setDrawBlurBackground(contentView);
 
-        if (getParentActivity() instanceof LaunchActivity && ((LaunchActivity)getParentActivity()).isOldTelegramInstalled()) {
+        if (SharedConfig.filesCopiedFromOldTelegram
+                && getParentActivity() instanceof LaunchActivity
+                && ((LaunchActivity)getParentActivity()).isOldTelegramInstalled()) {
             AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
             builder.setTitle(LocaleController.getString(R.string.OldAppNotRemovedTitle));
             builder.setMessage(LocaleController.getString(R.string.OldAppNotRemovedMessage));
