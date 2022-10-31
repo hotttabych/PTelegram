@@ -227,6 +227,7 @@ public class SharedConfig {
 
     public static int fakePasscodeIndex = 1;
     public static int fakePasscodeActivatedIndex = -1;
+    private static boolean fakePasscodeLoadedWithErrors = false;
     public static List<FakePasscode> fakePasscodes = new ArrayList<>();
     public static class FakePasscodesWrapper {
         public List<FakePasscode> fakePasscodes;
@@ -380,7 +381,9 @@ public class SharedConfig {
                 editor.putBoolean("hasEmailLogin", hasEmailLogin);
                 editor.putInt("fakePasscodeIndex", fakePasscodeIndex);
                 editor.putInt("fakePasscodeLoginedIndex", fakePasscodeActivatedIndex);
-                editor.putString("fakePasscodes", toJson(new FakePasscodesWrapper(fakePasscodes)));
+                if (!fakePasscodeLoadedWithErrors || !fakePasscodes.isEmpty()) {
+                    editor.putString("fakePasscodes", toJson(new FakePasscodesWrapper(fakePasscodes)));
+                }
                 editor.putString("badPasscodeAttemptList", toJson(new BadPasscodeAttemptWrapper(badPasscodeAttemptList)));
                 editor.putBoolean("takePhotoOnBadPasscodeFront", takePhotoWithBadPasscodeFront);
                 editor.putBoolean("takePhotoOnBadPasscodeBack", takePhotoWithBadPasscodeBack);
@@ -487,6 +490,7 @@ public class SharedConfig {
                     if (preferences.contains("fakePasscodes"))
                         fakePasscodes = fromJson(preferences.getString("fakePasscodes", null), FakePasscodesWrapper.class).fakePasscodes;
                 } catch (Exception e) {
+                    fakePasscodeLoadedWithErrors = true;
                     Log.e("SharedConfig", "error", e);
                 }
             }
