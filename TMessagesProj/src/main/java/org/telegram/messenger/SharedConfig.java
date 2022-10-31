@@ -438,29 +438,6 @@ public class SharedConfig {
 
     private static void migrateFakePasscode() {
         SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences("userconfing", Context.MODE_PRIVATE);
-        String fakePasscodeHash = preferences.getString("fakePasscodeHash", "");
-        boolean hasNonJsonPasscode = !fakePasscodeHash.isEmpty();
-
-        if (hasNonJsonPasscode)
-        {
-            FakePasscode fakePasscode = new FakePasscode();
-            fakePasscode.name = LocaleController.getString("FakePasscode", R.string.FakePasscode) + " " + SharedConfig.fakePasscodeIndex;
-            SharedConfig.fakePasscodeIndex++;
-            fakePasscode.passcodeHash = fakePasscodeHash;
-            fakePasscode.allowLogin = preferences.getBoolean("allowFakePasscodeLogin", true);
-            fakePasscode.clearCacheAction.enabled = preferences.getBoolean("clearTelegramCacheOnFakeLogin", true);
-            fakePasscode.setRemoveChatsActions(Arrays.stream(preferences.getString("chatsToRemove", "").split(";"))
-                    .filter(s -> !s.isEmpty()).map(AccountChatsToRemove::deserialize).filter(Objects::nonNull)
-                    .map(a -> new RemoveChatsAction(a.accountNum, a.chatsToRemove)).collect(Collectors.toCollection(ArrayList::new)));
-            fakePasscode.trustedContactSosMessageAction.enabled = preferences.getBoolean("sosMessageEnabled", false);
-            fakePasscode.trustedContactSosMessageAction.message = preferences.getString("sosMessage", "");
-            fakePasscode.trustedContactSosMessageAction.phoneNumber = preferences.getString("sosPhoneNumber", "");
-            fakePasscode.setTerminateOtherSessionsActions(Arrays.stream(preferences.getString("accountsForCloseSessionsOnFakeLogin", "").split(","))
-                    .filter(s -> !s.isEmpty()).map(Integer::parseInt).map(TerminateOtherSessionsAction::new).collect(Collectors.toCollection(ArrayList::new)));
-            fakePasscode.setLogOutActions(Arrays.stream(preferences.getString("accountsForLogOutOnFakeLogin", "").split(","))
-                    .filter(s -> !s.isEmpty()).map(Integer::parseInt).map(LogOutAction::new).collect(Collectors.toCollection(ArrayList::new)));
-            fakePasscodes.add(fakePasscode);
-        }
         for (FakePasscode p: fakePasscodes) {
             p.migrate();
         }
@@ -468,18 +445,6 @@ public class SharedConfig {
         try {
             editor.putString("fakePasscodes", toJson(new FakePasscodesWrapper(fakePasscodes)));
         } catch (Exception ignored) {
-        }
-        if (hasNonJsonPasscode) {
-            editor.putInt("fakePasscodeIndex", fakePasscodeIndex);
-            editor.remove("fakePasscodeHash");
-            editor.remove("allowFakePasscodeLogin");
-            editor.remove("clearTelegramCacheOnFakeLogin");
-            editor.remove("chatsToRemove");
-            editor.remove("sosMessageEnabled");
-            editor.remove("sosMessage");
-            editor.remove("sosPhoneNumber");
-            editor.remove("accountsForCloseSessionsOnFakeLogin");
-            editor.remove("accountsForLogOutOnFakeLogin");
         }
         editor.commit();
     }

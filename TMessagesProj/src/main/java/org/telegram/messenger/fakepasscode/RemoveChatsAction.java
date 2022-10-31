@@ -57,8 +57,6 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
         }
     }
 
-    @Deprecated
-    private ArrayList<Integer> chatsToRemove = new ArrayList<>();
     private List<RemoveChatEntry> chatEntriesToRemove = new ArrayList<>();
     @FakePasscodeSerializer.Ignore
     private ArrayList<Long> removedChats = new ArrayList<>(); // Chats to delete new messages
@@ -81,13 +79,7 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
 
     public RemoveChatsAction() {}
 
-    public RemoveChatsAction(int accountNum, ArrayList<Integer> chatsToRemove) {
-        this.accountNum = accountNum;
-        this.chatsToRemove = chatsToRemove;
-    }
-
     void clear() {
-        chatsToRemove = new ArrayList<>();
         chatEntriesToRemove = new ArrayList<>();
         SharedConfig.saveConfig();
     }
@@ -393,14 +385,6 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
                 getMessagesController().pinDialog(did, false, null, -1);
             }
         }
-    }
-
-    @Override
-    public void migrate() {
-        for (Integer chatId : chatsToRemove) {
-            chatEntriesToRemove.add(new RemoveChatEntry((long)chatId, "Unknown"));
-        }
-        chatsToRemove.clear();
     }
 
     @Override
