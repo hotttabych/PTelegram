@@ -316,7 +316,7 @@ public class OldTelegramWarningActivity extends BaseFragment implements Notifica
         Intro.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundWhite));
     }
 
-    private String getString(String key) {
+    private static String getString(String key) {
         String locale = LocaleController.getInstance().getSystemDefaultLocale().getLanguage();
         if (locale.equals("ru")) {
             switch (key) {
@@ -446,9 +446,9 @@ public class OldTelegramWarningActivity extends BaseFragment implements Notifica
                 dialogInfo.timeout--;
                 AndroidUtilities.runOnUIThread(() -> {
                     if (dialogInfo.timeout > 0) {
-                        cancelButton.setText((LocaleController.getString(R.string.Continue) + " (" + dialogInfo.timeout + ")").toUpperCase(Locale.ROOT));
+                        cancelButton.setText((getString("Continue") + " (" + dialogInfo.timeout + ")").toUpperCase(Locale.ROOT));
                     } else {
-                        cancelButton.setText(LocaleController.getString(R.string.Continue).toUpperCase(Locale.ROOT));
+                        cancelButton.setText(getString("Continue").toUpperCase(Locale.ROOT));
                         cancelButton.setTextColor(Theme.getColor(Theme.key_dialogTextGray));
                         cancelButton.setEnabled(true);
                     }
