@@ -476,7 +476,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     private boolean partisanTgChannelLastMessageLoaded = false;
     private boolean appUpdatesChecked = false;
     private boolean partisanTgChannelUsernameResolved = false;
-    AlertDialog oldPtrNotRemovedDialog;
+    AlertDialog oldPtgNotRemovedDialog;
 
     public final Property<DialogsActivity, Float> SCROLL_Y = new AnimationProperties.FloatProperty<DialogsActivity>("animationValue") {
         @Override
@@ -4028,10 +4028,10 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
                 builder.setTitle(LocaleController.getString(R.string.OldAppNotRemovedTitle));
                 builder.setMessage(LocaleController.getString(R.string.OldAppNotRemovedMessage));
-                oldPtrNotRemovedDialog = builder.create();
-                oldPtrNotRemovedDialog.setCanCancel(false);
-                oldPtrNotRemovedDialog.setCancelable(false);
-                oldPtrNotRemovedDialog.show();
+                oldPtgNotRemovedDialog = builder.create();
+                oldPtgNotRemovedDialog.setCanCancel(false);
+                oldPtgNotRemovedDialog.setCancelable(false);
+                oldPtgNotRemovedDialog.show();
             } else {
                 SharedConfig.oldTelegramRemoved = true;
                 SharedConfig.saveConfig();
@@ -4793,10 +4793,10 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         updateVisibleRows(0, false);
         updateProxyButton(false, true);
         checkSuggestClearDatabase();
-        if (oldPtrNotRemovedDialog != null
+        if (oldPtgNotRemovedDialog != null
                 && getParentActivity() instanceof LaunchActivity
-                && ((LaunchActivity)getParentActivity()).isOldTelegramInstalled()) {
-            oldPtrNotRemovedDialog.dismiss();
+                && !((LaunchActivity)getParentActivity()).isOldTelegramInstalled()) {
+            oldPtgNotRemovedDialog.dismiss();
             SharedConfig.oldTelegramRemoved = true;
             SharedConfig.saveConfig();
         }
