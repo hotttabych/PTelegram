@@ -99,7 +99,7 @@ public class OldTelegramWarningActivity extends BaseFragment implements Notifica
             AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
             builder.setTitle(getString("UpdateNotCompletedTitle"));
             builder.setMessage(getString("UpdateNotCompletedMessage"));
-            builder.setNegativeButton(LocaleController.getString(R.string.Continue) + " (5)", (dialog, which) -> {
+            builder.setNegativeButton(getString("Continue") + " (5)", (dialog, which) -> {
                 if (dialogInfo.timeout == 0) {
                     if (startPressed) {
                         return;
@@ -108,7 +108,7 @@ public class OldTelegramWarningActivity extends BaseFragment implements Notifica
                     presentFragment(new LoginActivity().setIntroView(frameContainerView, startMessagingButton), true);
                 }
             });
-            builder.setPositiveButton(LocaleController.getString(R.string.Cancel), null);
+            builder.setPositiveButton(getString("Cancel"), null);
             builder.setOnDismissListener(d -> dialogInfo.isDismissed = true);
             TextView button;
             AlertDialog dialog = builder.create();
@@ -326,6 +326,8 @@ public class OldTelegramWarningActivity extends BaseFragment implements Notifica
                 case "StartMessagingAnyway": return "Продолжить без переноса данных";
                 case "UpdateNotCompletedTitle": return "Обновление не завершено";
                 case "UpdateNotCompletedMessage": return "Данные из старого приложения ещё не перенесены. Если продолжите, Вам придётся настраивать приложение заново.";
+                case "Continue": return "Продолжить";
+                case "Cancel": return "Отмена";
             }
         } else if (locale.equals("be")) {
             switch (key) {
@@ -335,6 +337,8 @@ public class OldTelegramWarningActivity extends BaseFragment implements Notifica
                 case "StartMessagingAnyway": return "Працягнуць без пераносу дадзеных";
                 case "UpdateNotCompletedTitle": return "Абнаўленне не скончана";
                 case "UpdateNotCompletedMessage": return "Дадзеныя са старога прыкладання яшчэ не перанесены. Калі працягнеце, Вам давядзецца наладжваць прыкладанне зноўку.";
+                case "Continue": return "Працягнуць";
+                case "Cancel": return "Скасаваць";
             }
         } else if (locale.equals("uk")) {
             switch (key) {
@@ -344,6 +348,8 @@ public class OldTelegramWarningActivity extends BaseFragment implements Notifica
                 case "StartMessagingAnyway": return "Продовжити без перенесення даних";
                 case "UpdateNotCompletedTitle": return "Оновлення не завершено";
                 case "UpdateNotCompletedMessage": return "Дані зі старої програми ще не перенесені. Якщо продовжите, Вам доведеться налаштовувати програму заново.";
+                case "Continue": return "Продовжити";
+                case "Cancel": return "Скасувати";
             }
         } else if (locale.equals("pl")) {
             switch (key) {
@@ -353,6 +359,8 @@ public class OldTelegramWarningActivity extends BaseFragment implements Notifica
                 case "StartMessagingAnyway": return "Kontynuuj bez przenoszenia danych";
                 case "UpdateNotCompletedTitle": return "Aktualizacja nie została ukończona";
                 case "UpdateNotCompletedMessage": return "Dane ze starej aplikacji nie zostały jeszcze zmigrowane. Jeśli będziesz kontynuować, będziesz musiał ponownie skonfigurować aplikację.";
+                case "Continue": return "Kontynuuj";
+                case "Cancel": return "Anuluj";
             }
         } else if (locale.equals("fa")) {
             switch (key) {
@@ -362,6 +370,8 @@ public class OldTelegramWarningActivity extends BaseFragment implements Notifica
                 case "StartMessagingAnyway": return "بدون انتقال داده ادامه دهید";
                 case "UpdateNotCompletedTitle": return "به روز رسانی کامل نشده است";
                 case "UpdateNotCompletedMessage": return "داده های برنامه قدیمی هنوز منتقل نشده است. اگر ادامه دهید، باید دوباره برنامه را راه اندازی کنید.";
+                case "Continue": return "ادامه";
+                case "Cancel": return "لغو";
             }
         } else {
             switch (key) {
@@ -371,6 +381,8 @@ public class OldTelegramWarningActivity extends BaseFragment implements Notifica
                 case "StartMessagingAnyway": return "Continue without transferring data";
                 case "UpdateNotCompletedTitle": return "Update Not Completed";
                 case "UpdateNotCompletedMessage": return "The data from the old application has not been transferred yet. If you continue, you will have to set up the application again.";
+                case "Continue": return "Continue";
+                case "Cancel": return "Cancel";
             }
         }
         return null;
