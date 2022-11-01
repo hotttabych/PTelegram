@@ -25,6 +25,9 @@ import androidx.annotation.IntDef;
 import androidx.core.content.pm.ShortcutManagerCompat;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -317,7 +320,7 @@ public class SharedConfig {
 
     private static ObjectMapper jsonMapper = null;
 
-    static private ObjectMapper getJsonMapper() {
+    static synchronized private ObjectMapper getJsonMapper() {
         if (jsonMapper != null) {
             return jsonMapper;
         }
@@ -441,15 +444,38 @@ public class SharedConfig {
 
     private static void migrateFakePasscode() {
         SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences("userconfing", Context.MODE_PRIVATE);
+        if (filesCopiedFromOldTelegram && !oldTelegramRemoved && fakePasscodeLoadedWithErrors) {
+            try {
+                jsonMapper = new ObjectMapper();
+                jsonMapper.registerModule(new JavaTimeModule());
+                jsonMapper.registerModule(new KotlinModule());
+                jsonMapper.activateDefaultTyping(jsonMapper.getPolymorphicTypeValidator());
+                jsonMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+                jsonMapper.setVisibility(jsonMapper.getSerializationConfig().getDefaultVisibilityChecker()
+                        .withFieldVisibility(JsonAutoDetect.Visibility.ANY)
+                        .withGetterVisibility(JsonAutoDetect.Visibility.NONE)
+                        .withIsGetterVisibility(JsonAutoDetect.Visibility.NONE)
+                        .withSetterVisibility(JsonAutoDetect.Visibility.NONE)
+                        .withCreatorVisibility(JsonAutoDetect.Visibility.NONE));
+
+                fakePasscodes = jsonMapper.readValue(preferences.getString("fakePasscodes", null), FakePasscodesWrapper.class).fakePasscodes;
+                fakePasscodeLoadedWithErrors = false;
+            } catch (JsonProcessingException ignored) {
+            }
+        }
+
         for (FakePasscode p: fakePasscodes) {
             p.migrate();
         }
-        SharedPreferences.Editor editor = preferences.edit();
-        try {
-            editor.putString("fakePasscodes", toJson(new FakePasscodesWrapper(fakePasscodes)));
-        } catch (Exception ignored) {
+
+        if (!fakePasscodeLoadedWithErrors) {
+            SharedPreferences.Editor editor = preferences.edit();
+            try {
+                editor.putString("fakePasscodes", toJson(new FakePasscodesWrapper(fakePasscodes)));
+            } catch (Exception ignored) {
+            }
+            editor.commit();
         }
-        editor.commit();
     }
 
     public static void loadConfig() {
