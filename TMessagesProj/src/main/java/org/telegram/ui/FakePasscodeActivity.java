@@ -982,7 +982,7 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
         badTriesToActivateDetailRow = rowCount++;
 
         actionsHeaderRow = rowCount++;
-        if (fakePasscode.smsAction != null
+        if (fakePasscode != null && fakePasscode.smsAction != null
                 && fakePasscode.smsAction.messages != null
                 && !fakePasscode.smsAction.messages.isEmpty()) {
             smsRow = rowCount++;
