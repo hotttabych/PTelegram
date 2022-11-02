@@ -254,6 +254,7 @@ public class SharedConfig {
     public static String updateChannelUsernameOverride;
     public static boolean filesCopiedFromOldTelegram;
     public static boolean oldTelegramRemoved;
+    public static int runNumber;
     public static boolean premiumDisabled;
 
     static {
@@ -404,6 +405,7 @@ public class SharedConfig {
                 editor.putString("updateChannelUsernameOverride", updateChannelUsernameOverride);
                 editor.putBoolean("filesCopiedFromOldTelegram", filesCopiedFromOldTelegram);
                 editor.putBoolean("oldTelegramRemoved", oldTelegramRemoved);
+                editor.putInt("runNumber", runNumber);
                 editor.putBoolean("premiumDisabled", premiumDisabled);
 
                 if (pendingAppUpdate != null) {
@@ -541,6 +543,7 @@ public class SharedConfig {
             updateChannelUsernameOverride = preferences.getString("updateChannelUsernameOverride", "");
             filesCopiedFromOldTelegram = preferences.getBoolean("filesCopiedFromOldTelegram", false);
             oldTelegramRemoved = preferences.getBoolean("oldTelegramRemoved", false);
+            runNumber = preferences.getInt("runNumber", 0);
             premiumDisabled = preferences.getBoolean("premiumDisabled", false);
 
             String authKeyString = preferences.getString("pushAuthKey", null);

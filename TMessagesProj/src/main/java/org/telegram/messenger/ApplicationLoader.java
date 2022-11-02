@@ -216,6 +216,10 @@ public class ApplicationLoader extends Application {
             SharedConfig.filesCopiedFromOldTelegram = true;
             SharedConfig.saveConfig();
         }
+        if (SharedConfig.filesCopiedFromOldTelegram && !SharedConfig.oldTelegramRemoved) {
+            SharedConfig.runNumber++;
+            SharedConfig.saveConfig();
+        }
         if (BuildVars.LOGS_ENABLED && SharedConfig.fakePasscodeActivatedIndex == -1) {
             saveLogcatFile();
         }
