@@ -475,6 +475,13 @@ public class SharedConfig {
         }
     }
 
+    public static void reloadConfig() {
+        synchronized (sync) {
+            configLoaded = false;
+        }
+        loadConfig();
+    }
+
     public static void loadConfig() {
         synchronized (sync) {
             if (configLoaded || ApplicationLoader.applicationContext == null) {

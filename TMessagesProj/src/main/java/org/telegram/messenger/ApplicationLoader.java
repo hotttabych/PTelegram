@@ -215,6 +215,7 @@ public class ApplicationLoader extends Application {
         if (filesCopiedFromUpdater && !SharedConfig.filesCopiedFromOldTelegram) {
             SharedConfig.filesCopiedFromOldTelegram = true;
             SharedConfig.saveConfig();
+            SharedConfig.reloadConfig();
         }
         if (SharedConfig.filesCopiedFromOldTelegram && !SharedConfig.oldTelegramRemoved) {
             SharedConfig.runNumber++;
