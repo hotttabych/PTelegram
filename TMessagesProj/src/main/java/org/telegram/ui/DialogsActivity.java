@@ -4029,8 +4029,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 builder.setTitle(LocaleController.getString(R.string.OldAppNotRemovedTitle));
                 builder.setMessage(LocaleController.getString(R.string.OldAppNotRemovedMessage));
                 oldPtgNotRemovedDialog = builder.create();
-                oldPtgNotRemovedDialog.setCanCancel(false);
-                oldPtgNotRemovedDialog.setCancelable(false);
+                oldPtgNotRemovedDialog.setNegativeButton(LocaleController.getString(R.string.Cancel), null);
                 oldPtgNotRemovedDialog.show();
             } else {
                 SharedConfig.oldTelegramRemoved = true;
