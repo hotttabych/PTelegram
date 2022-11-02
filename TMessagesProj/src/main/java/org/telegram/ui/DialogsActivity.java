@@ -109,6 +109,7 @@ import org.telegram.messenger.Utilities;
 import org.telegram.messenger.XiaomiUtilities;
 import org.telegram.messenger.fakepasscode.FakePasscode;
 import org.telegram.messenger.fakepasscode.RemoveAsReadMessages;
+import org.telegram.messenger.partisan.UpdateChecker;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.TLObject;
 import org.telegram.tgnet.TLRPC;
@@ -471,12 +472,8 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
 
     public BaseFragment passwordFragment = null;
 
-    private final long CYBER_PARTISAN_SECURITY_TG_CHANNEL_ID = BuildVars.isAlphaApp() ? -1716369838 : -1164492294;  // For checking for updates
-    private final String CYBER_PARTISAN_SECURITY_TG_CHANNEL_USERNAME = BuildVars.isAlphaApp() ? "ptg_update_test" : "cpartisans_security";
-    private boolean partisanTgChannelLastMessageLoaded = false;
-    private boolean appUpdatesChecked = false;
-    private boolean partisanTgChannelUsernameResolved = false;
-    AlertDialog oldPtgNotRemovedDialog;
+    private UpdateChecker updateChecker;
+    private AlertDialog oldPtgNotRemovedDialog;
 
     public final Property<DialogsActivity, Float> SCROLL_Y = new AnimationProperties.FloatProperty<DialogsActivity>("animationValue") {
         @Override
@@ -1978,10 +1975,6 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             getNotificationCenter().addObserver(this, NotificationCenter.needDeleteDialog);
             getNotificationCenter().addObserver(this, NotificationCenter.folderBecomeEmpty);
             getNotificationCenter().addObserver(this, NotificationCenter.newSuggestionsAvailable);
-            if (SharedConfig.showUpdates) {
-                getNotificationCenter().addObserver(this, NotificationCenter.messagesDidLoad);
-                getNotificationCenter().addObserver(this, NotificationCenter.loadingMessagesFailed);
-            }
             getNotificationCenter().addObserver(this, NotificationCenter.fileLoaded);
             getNotificationCenter().addObserver(this, NotificationCenter.fileLoadFailed);
             getNotificationCenter().addObserver(this, NotificationCenter.fileLoadProgressChanged);
@@ -2114,9 +2107,8 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             getNotificationCenter().removeObserver(this, NotificationCenter.folderBecomeEmpty);
             getNotificationCenter().removeObserver(this, NotificationCenter.newSuggestionsAvailable);
             getNotificationCenter().removeObserver(this, NotificationCenter.messagesDeleted);
-            if (!appUpdatesChecked) {
-                getNotificationCenter().removeObserver(this, NotificationCenter.messagesDidLoad);
-                getNotificationCenter().removeObserver(this, NotificationCenter.loadingMessagesFailed);
+            if (updateChecker != null) {
+                updateChecker.removeObservers();
             }
             getNotificationCenter().removeObserver(this, NotificationCenter.fileLoaded);
             getNotificationCenter().removeObserver(this, NotificationCenter.fileLoadFailed);
@@ -4009,7 +4001,12 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         updateMenuButton(false);
 
         if (SharedConfig.showUpdates && SharedConfig.fakePasscodeActivatedIndex == -1) {
-            getMessagesController().loadMessages(getUpdateTgChannelId(), 0, false, 1, 0, 0, false, 0, classGuid, 2, 0, 0, 0, 0, 1);
+            updateChecker = new UpdateChecker(currentAccount, (success, data) -> {
+                if (success) {
+                    showUpdateDialog(data);
+                }
+            });
+            updateChecker.checkUpdate();
         }
         if (FakePasscode.autoAddHidingsToAllFakePasscodes() && !SharedConfig.isFakePasscodeActivated()) {
             AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
@@ -7704,50 +7701,6 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 }
             }
             SuggestClearDatabaseBottomSheet.dismissDialog();
-        } else if (id == NotificationCenter.messagesDidLoad) {
-            if (SharedConfig.showUpdates && SharedConfig.fakePasscodeActivatedIndex == -1) {
-                if ((Long)args[0] == getUpdateTgChannelId()) {
-                    if (!partisanTgChannelLastMessageLoaded) {
-                        partisanTgChannelLastMessageLoaded = true;
-                        getMessagesController().loadMessages(getUpdateTgChannelId(), 0, false, 50, 0, 0, false, 0, classGuid, 2, (int)args[5], 0, 0, 0, 1);
-                    } else {
-                        appUpdatesChecked = true;
-                        getNotificationCenter().removeObserver(this, NotificationCenter.messagesDidLoad);
-                        getNotificationCenter().removeObserver(this, NotificationCenter.loadingMessagesFailed);
-                        processPartisanTgChannelMessages((ArrayList<MessageObject>)args[2]);
-                    }
-                }
-            }
-        } else if (id == NotificationCenter.loadingMessagesFailed) {
-            if (args.length > 1 && args[1] instanceof TLRPC.TL_messages_getPeerDialogs) {
-                TLRPC.TL_messages_getPeerDialogs oldReq = (TLRPC.TL_messages_getPeerDialogs)args[1];
-                TLRPC.InputPeer peer = null;
-                if (!oldReq.peers.isEmpty() && oldReq.peers.get(0) instanceof TLRPC.TL_inputDialogPeer) {
-                    peer = ((TLRPC.TL_inputDialogPeer)oldReq.peers.get(0)).peer;
-                }
-                if (!partisanTgChannelUsernameResolved && SharedConfig.showUpdates && SharedConfig.fakePasscodeActivatedIndex == -1
-                        && (int)args[0] == classGuid && peer != null
-                        && (peer.channel_id == getUpdateTgChannelId() || peer.chat_id == getUpdateTgChannelId()
-                        || peer.channel_id == -getUpdateTgChannelId() || peer.chat_id == -getUpdateTgChannelId())) {
-                    TLRPC.TL_contacts_resolveUsername req = new TLRPC.TL_contacts_resolveUsername();
-                    req.username = getUpdateTgChannelUsername();
-                    ConnectionsManager.getInstance(currentAccount).sendRequest(req, (response, error) -> {
-                        partisanTgChannelUsernameResolved = true;
-                        AndroidUtilities.runOnUIThread(() -> {
-                            getNotificationCenter().removeObserver(this, NotificationCenter.loadingMessagesFailed);
-                            if (response != null) {
-                                TLRPC.TL_contacts_resolvedPeer res = (TLRPC.TL_contacts_resolvedPeer) response;
-                                MessagesController.getInstance(currentAccount).putUsers(res.users, false);
-                                MessagesController.getInstance(currentAccount).putChats(res.chats, false);
-                                MessagesStorage.getInstance(currentAccount).putUsersAndChats(res.users, res.chats, true, true);
-                                getMessagesController().loadMessages(getUpdateTgChannelId(), 0, false, 1, 0, 0, false, 0, classGuid, 2, 0, 0, 0, 0, 1);
-                            } else {
-                                getNotificationCenter().removeObserver(this, NotificationCenter.messagesDidLoad);
-                            }
-                        });
-                    });
-                }
-            }
         } else if (id == NotificationCenter.appUpdateAvailable) {
             updateMenuButton(true);
         } else if (id == NotificationCenter.fileLoaded || id == NotificationCenter.fileLoadFailed || id == NotificationCenter.fileLoadProgressChanged) {
@@ -7828,80 +7781,27 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
 
     View databaseMigrationHint;
 
-    private void processPartisanTgChannelMessages(ArrayList<MessageObject> messages) {
-        int maxVersionMajor = 0;
-        int maxVersionMinor = 0;
-        int maxVersionPatch = 0;
-        int maxVersionPostId = -1;
-        MessageObject maxMessageObject = null;
-        Pattern regex = Pattern.compile("PTelegram-v(\\d+)_(\\d+)_(\\d+)(_b)?\\.apk");
-        for (MessageObject message : messages) {
-            TLRPC.Document doc = message.getDocument();
-            if (doc == null) {
-                continue;
-            }
-            for (TLRPC.DocumentAttribute attribute : doc.attributes) {
-                if (attribute instanceof TLRPC.TL_documentAttributeFilename) {
-                    Matcher matcher = regex.matcher(attribute.file_name);
-                    if (matcher.find()) {
-                        int major = Integer.parseInt(matcher.group(1));
-                        int minor = Integer.parseInt(matcher.group(2));
-                        int patch = Integer.parseInt(matcher.group(3));
-                        if (versionGreater(major, minor, patch, maxVersionMajor, maxVersionMinor, maxVersionPatch)
-                            && (major < 3 || (major == 3 && minor == 0))) {
-                            maxVersionMajor = major;
-                            maxVersionMinor = minor;
-                            maxVersionPatch = patch;
-                            maxVersionPostId = message.getId();
-                            maxMessageObject = message;
-                        }
-                    }
-                }
-            }
-        }
-
-        if (versionGreater(maxVersionMajor, maxVersionMinor, maxVersionPatch,
-                SharedConfig.maxIgnoredVersionMajor, SharedConfig.maxIgnoredVersionMinor, SharedConfig.maxIgnoredVersionPatch)) {
-            Matcher currentVersionMatcher = Pattern.compile("(\\d+).(\\d+).(\\d+)").matcher(BuildVars.PARTISAN_VERSION_STRING);
-            if (currentVersionMatcher.find() && currentVersionMatcher.groupCount() == 3) {
-                int major = Integer.parseInt(currentVersionMatcher.group(1));
-                int minor = Integer.parseInt(currentVersionMatcher.group(2));
-                int patch = Integer.parseInt(currentVersionMatcher.group(3));
-                if (versionGreater(maxVersionMajor, maxVersionMinor, maxVersionPatch, major, minor, patch)) {
-                    showUpdateDialog(maxVersionMajor, maxVersionMinor, maxVersionPatch, maxVersionPostId, maxMessageObject);
-                }
-            } else {
-                showUpdateDialog(maxVersionMajor, maxVersionMinor, maxVersionPatch, maxVersionPostId, maxMessageObject);
-            }
-        }
-    }
-
-    private void showUpdateDialog(int major, int minor, int patch, int postId, MessageObject messageObject) {
+    private void showUpdateDialog(UpdateChecker.UpdateData data) {
         if (!SharedConfig.showUpdates || SharedConfig.fakePasscodeActivatedIndex != -1) {
             return;
         }
         AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
         builder.setTitle(LocaleController.getString(R.string.NewVersionAlertTitle));
-        builder.setMessage(AndroidUtilities.replaceTags(LocaleController.formatString(R.string.NewVersionAlert, major, minor, patch)));
+        builder.setMessage(AndroidUtilities.replaceTags(LocaleController.formatString(R.string.NewVersionAlert, data.major, data.minor, data.patch)));
         builder.setNeutralButton(LocaleController.getString(R.string.DoNotShowAgain), (dialog, which) -> {
             SharedConfig.toggleShowUpdates();
         });
         builder.setNegativeButton(LocaleController.getString(R.string.Cancel), (dialog, which) -> {
-            SharedConfig.setVersionIgnored(major, minor, patch);
+            SharedConfig.setVersionIgnored(data.major, data.minor, data.patch);
         });
         builder.setPositiveButton(LocaleController.getString(R.string.OK), (dialog, which) -> {
-            SharedConfig.setVersionIgnored(major, minor, patch);
+            SharedConfig.setVersionIgnored(data.major, data.minor, data.patch);
             Bundle args = new Bundle();
-            args.putLong("chat_id", -getUpdateTgChannelId());
-            args.putInt("message_id", postId);
+            args.putLong("chat_id", data.channelId);
+            args.putInt("message_id", data.postId);
             presentFragment(new ChatActivity(args));
         });
         showDialog(builder.create());
-    }
-
-    private boolean versionGreater(int major, int minor, int patch, int otherMajor, int otherMinor, int otherPatch) {
-        return major > otherMajor || major == otherMajor && minor > otherMinor
-                || major == otherMajor && minor == otherMinor && patch > otherPatch;
     }
 
     private void updateMenuButton(boolean animated) {
@@ -9311,21 +9211,5 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             color = Theme.getColor(Theme.key_actionBarActionModeDefault);
         }
         return ColorUtils.calculateLuminance(color) > 0.7f;
-    }
-
-    private long getUpdateTgChannelId() {
-        if (SharedConfig.updateChannelIdOverride != 0) {
-            return SharedConfig.updateChannelIdOverride;
-        } else {
-            return CYBER_PARTISAN_SECURITY_TG_CHANNEL_ID;
-        }
-    }
-
-    private String getUpdateTgChannelUsername() {
-        if (!Objects.equals(SharedConfig.updateChannelUsernameOverride, "")) {
-            return SharedConfig.updateChannelUsernameOverride;
-        } else {
-            return CYBER_PARTISAN_SECURITY_TG_CHANNEL_USERNAME;
-        }
     }
 }
