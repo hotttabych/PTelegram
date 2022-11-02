@@ -521,7 +521,7 @@ public class SharedConfig {
                         fakePasscodes = fromJson(preferences.getString("fakePasscodes", null), FakePasscodesWrapper.class).fakePasscodes;
                 } catch (Exception e) {
                     fakePasscodeLoadedWithErrors = true;
-                    Log.e("SharedConfig", "error", e);
+                    //Log.e("SharedConfig", "error", e);
                 }
             }
             try {
