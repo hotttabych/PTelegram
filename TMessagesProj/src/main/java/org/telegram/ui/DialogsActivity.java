@@ -7803,7 +7803,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         builder.setPositiveButton(LocaleController.getString(R.string.OK), (dialog, which) -> {
             SharedConfig.setVersionIgnored(data.major, data.minor, data.patch);
             Bundle args = new Bundle();
-            args.putLong("chat_id", data.channelId);
+            args.putLong("chat_id", -data.channelId);
             args.putInt("message_id", data.postId);
             presentFragment(new ChatActivity(args));
         });
