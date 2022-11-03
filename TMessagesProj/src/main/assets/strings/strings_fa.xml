@@ -177,7 +177,7 @@
     <string name="SmsActionDeprecatedMessage">ارسال اس ام اس قدیمی است. اگر رمز عبور نادرست وارد کنید، پیامک دیگر ارسال نخواهد شد.</string>
 
     <string name="OldAppNotRemovedTitle">PTelegram قدیمی حذف نشد</string>
-    <string name="OldAppNotRemovedMessage">قبل از استفاده از نسخه جدید برنامه، باید برنامه قدیمی را حذف نصب کنید. **از برنامه قدیمی خارج نشوید زیرا این کار شما را از هر دو برنامه خارج می کند.**</string>
+    <string name="OldAppNotRemovedMessage">برای ادامه استفاده از نسخه جدید برنامه، باید برنامه قدیمی را حذف نصب کنید. **از برنامه قدیمی خارج نشوید زیرا این کار شما را از هر دو برنامه خارج می کند.**</string>
     <string name="UpdateCompletedTitle">PTelegram به روز شد</string>
     <string name="UpdateCompletedMessage">داده های برنامه با موفقیت منتقل شد. آن را بررسی کنید و برنامه قدیمی را حذف نصب کنید. **از برنامه قدیمی خارج نشوید زیرا این کار شما را از هر دو برنامه خارج می کند.**</string>
 </resources>

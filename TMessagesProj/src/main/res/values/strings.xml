@@ -5806,7 +5806,7 @@
     <string name="SmsActionDeprecatedMessage">Sending SMS has been deprecated. If you enter a fake passcode, SMS will no longer be sent.</string>
 
     <string name="OldAppNotRemovedTitle">Old PTelegram Not Removed</string>
-    <string name="OldAppNotRemovedMessage">Before using the new version of the application, you must uninstall the old application. **Do not log out of your old app as this will log you out of both apps**</string>
+    <string name="OldAppNotRemovedMessage">To continue using the new version of the app, you must uninstall the old app. **Do not log out of your old app as this will log you out of both apps**</string>
     <string name="UpdateCompletedTitle">PTelegram updated</string>
     <string name="UpdateCompletedMessage">Application data has been migrated successfully. Check it out and uninstall the old app. **Do not log out on the old app as this will log you out on both apps.**</string>
 </resources>
