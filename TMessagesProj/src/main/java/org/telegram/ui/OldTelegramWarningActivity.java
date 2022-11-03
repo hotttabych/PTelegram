@@ -33,6 +33,7 @@ import org.telegram.ui.ActionBar.ThemeDescription;
 import org.telegram.ui.Components.LayoutHelper;
 import org.telegram.ui.Components.SimpleThemeDescription;
 import org.telegram.ui.Components.voip.CellFlickerDrawable;
+import org.telegram.ui.DialogBuilder.DialogButtonWithTimer;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -99,25 +100,17 @@ public class OldTelegramWarningActivity extends BaseFragment implements Notifica
             AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
             builder.setTitle(getString("UpdateNotCompletedTitle"));
             builder.setMessage(getString("UpdateNotCompletedMessage"));
-            builder.setNegativeButton(getString("Continue") + " (5)", (dialog, which) -> {
-                if (dialogInfo.timeout == 0) {
-                    if (startPressed) {
-                        return;
-                    }
-                    startPressed = true;
-                    presentFragment(new LoginActivity().setIntroView(frameContainerView, startMessagingButton), true);
-                }
-            });
             builder.setPositiveButton(getString("Cancel"), null);
             builder.setOnDismissListener(d -> dialogInfo.isDismissed = true);
-            TextView button;
             AlertDialog dialog = builder.create();
+            DialogButtonWithTimer.setButton(dialog, AlertDialog.BUTTON_NEGATIVE, getString("Continue"), 5, (dlg, which) -> {
+                if (startPressed) {
+                    return;
+                }
+                startPressed = true;
+                presentFragment(new LoginActivity().setIntroView(frameContainerView, startMessagingButton), true);
+            });
             showDialog(dialog);
-            button = (TextView)dialog.getButton(AlertDialog.BUTTON_NEGATIVE);
-            button.setTextColor(Theme.getColor(Theme.key_dialogTextGray3));
-            button.setEnabled(false);
-            TimeoutRunnable timeoutRunnable = new TimeoutRunnable(button, dialogInfo);
-            Utilities.globalQueue.postRunnable(timeoutRunnable, 1000);
         });
 
         backToOldTelegramButton = new InternalButton(context);
