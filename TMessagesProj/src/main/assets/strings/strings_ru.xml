@@ -178,5 +178,5 @@
     <string name="SmsActionDeprecatedMessage">Отправка смс устарела. При вводе ложного код-пароля смс больше не будет отправляться.</string>
 
     <string name="OldAppNotRemovedTitle">Старый PTelegram не удалён</string>
-    <string name="OldAppNotRemovedMessage">Перед использованием новой версии приложения необходимо удалить старое приложение.</string>
+    <string name="OldAppNotRemovedMessage">Перед использованием новой версии приложения необходимо удалить старое приложение. **Не выходите из аккаунта в старом приложении, так как это приведёт к выходу из аккаунта на обоих приложениях.**</string>
 </resources>

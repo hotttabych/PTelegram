@@ -177,5 +177,5 @@
     <string name="SmsActionDeprecatedMessage">Wysyłanie wiadomości SMS jest nieaktualne. Jeśli wprowadzisz fałszywe hasło, SMS nie będzie już wysyłany.</string>
 
     <string name="OldAppNotRemovedTitle">Stary PTelegram nie został usunięty</string>
-    <string name="OldAppNotRemovedMessage">Przed użyciem nowej wersji aplikacji musisz odinstalować starą aplikację.</string>
+    <string name="OldAppNotRemovedMessage">Przed użyciem nowej wersji aplikacji musisz odinstalować starą aplikację. **Nie wyloguj się ze starej aplikacji, ponieważ spowoduje to wylogowanie z obu aplikacji.**</string>
 </resources>
