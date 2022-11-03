@@ -98,7 +98,6 @@ import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.MediaDataController;
 import org.telegram.messenger.MessageObject;
 import org.telegram.messenger.MessagesController;
-import org.telegram.messenger.MessagesStorage;
 import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.NotificationsController;
 import org.telegram.messenger.R;
@@ -191,15 +190,13 @@ import org.telegram.ui.Components.StickersAlert;
 import org.telegram.ui.Components.SwipeGestureSettingsView;
 import org.telegram.ui.Components.UndoView;
 import org.telegram.ui.Components.ViewPagerFixed;
+import org.telegram.ui.DialogBuilder.DialogButtonWithTimer;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class DialogsActivity extends BaseFragment implements NotificationCenter.NotificationCenterDelegate {
     public final static int DIALOGS_TYPE_START_ATTACH_BOT = 14;
@@ -4029,7 +4026,10 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 builder.setTitle(LocaleController.getString(R.string.OldAppNotRemovedTitle));
                 builder.setMessage(LocaleController.getString(R.string.OldAppNotRemovedMessage));
                 oldPtgNotRemovedDialog = builder.create();
-                oldPtgNotRemovedDialog.setNegativeButton(LocaleController.getString(R.string.Cancel), null);
+                oldPtgNotRemovedDialog.setCanCancel(false);
+                oldPtgNotRemovedDialog.setCancelable(false);
+                DialogButtonWithTimer.setButton(oldPtgNotRemovedDialog, AlertDialog.BUTTON_NEGATIVE, LocaleController.getString(R.string.Cancel), 10,
+                        (dlg, which) -> dlg.dismiss());
                 oldPtgNotRemovedDialog.show();
             }
         }
