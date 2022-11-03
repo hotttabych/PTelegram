@@ -4021,6 +4021,12 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     && !((LaunchActivity)getParentActivity()).isOldTelegramInstalled()) {
                 SharedConfig.oldTelegramRemoved = true;
                 SharedConfig.saveConfig();
+            } else if (SharedConfig.runNumber == 1 && !SharedConfig.isFakePasscodeActivated()) {
+                AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
+                builder.setTitle(LocaleController.getString(R.string.UpdateCompletedTitle));
+                builder.setMessage(AndroidUtilities.replaceTags(LocaleController.getString(R.string.UpdateCompletedMessage)));
+                builder.setNegativeButton(LocaleController.getString(R.string.Cancel), null);
+                showDialog(builder.create());
             } else if (SharedConfig.runNumber > 3 && !SharedConfig.isFakePasscodeActivated()) {
                 AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
                 builder.setTitle(LocaleController.getString(R.string.OldAppNotRemovedTitle));
