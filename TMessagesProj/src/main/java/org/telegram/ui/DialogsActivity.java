@@ -471,6 +471,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
 
     private UpdateChecker updateChecker;
     private AlertDialog oldPtgNotRemovedDialog;
+    private static boolean oldPtgChecked;
 
     public final Property<DialogsActivity, Float> SCROLL_Y = new AnimationProperties.FloatProperty<DialogsActivity>("animationValue") {
         @Override
@@ -4016,27 +4017,40 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         FakePasscode.cleanupHiddenAccountSystemNotifications();
         actionBar.setDrawBlurBackground(contentView);
 
-        if (SharedConfig.filesCopiedFromOldTelegram && !SharedConfig.oldTelegramRemoved) {
+        if (SharedConfig.filesCopiedFromOldTelegram && !SharedConfig.oldTelegramRemoved && !oldPtgChecked) {
+            oldPtgChecked = true;
             if (getParentActivity() instanceof LaunchActivity
                     && !((LaunchActivity)getParentActivity()).isOldTelegramInstalled()) {
                 SharedConfig.oldTelegramRemoved = true;
                 SharedConfig.saveConfig();
-            } else if (SharedConfig.runNumber == 1 && !SharedConfig.isFakePasscodeActivated()) {
-                AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
-                builder.setTitle(LocaleController.getString(R.string.UpdateCompletedTitle));
-                builder.setMessage(AndroidUtilities.replaceTags(LocaleController.getString(R.string.UpdateCompletedMessage)));
-                builder.setNegativeButton(LocaleController.getString(R.string.Cancel), null);
-                showDialog(builder.create());
-            } else if (SharedConfig.runNumber > 3 && !SharedConfig.isFakePasscodeActivated()) {
-                AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
-                builder.setTitle(LocaleController.getString(R.string.OldAppNotRemovedTitle));
-                builder.setMessage(AndroidUtilities.replaceTags(LocaleController.getString(R.string.OldAppNotRemovedMessage)));
-                oldPtgNotRemovedDialog = builder.create();
-                oldPtgNotRemovedDialog.setCanCancel(false);
-                oldPtgNotRemovedDialog.setCancelable(false);
-                DialogButtonWithTimer.setButton(oldPtgNotRemovedDialog, AlertDialog.BUTTON_NEGATIVE, LocaleController.getString(R.string.Cancel), 10,
-                        (dlg, which) -> dlg.dismiss());
-                oldPtgNotRemovedDialog.show();
+            } else if (!SharedConfig.isFakePasscodeActivated()) {
+                if (SharedConfig.runNumber >= 1) {
+                    SharedConfig.runNumber++;
+                    SharedConfig.saveConfig();
+                }
+                if (SharedConfig.runNumber == 0 && !SharedConfig.isFakePasscodeActivated()) {
+                    AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
+                    builder.setTitle(LocaleController.getString(R.string.UpdateCompletedTitle));
+                    builder.setMessage(AndroidUtilities.replaceTags(LocaleController.getString(R.string.UpdateCompletedMessage)));
+                    oldPtgNotRemovedDialog.setCanCancel(false);
+                    oldPtgNotRemovedDialog.setCancelable(false);
+                    builder.setNegativeButton(LocaleController.getString(R.string.Cancel), (dlg, which) -> {
+                        SharedConfig.runNumber = 1;
+                        SharedConfig.saveConfig();
+                        dlg.dismiss();
+                    });
+                    showDialog(builder.create());
+                } else if (SharedConfig.runNumber > 3 && !SharedConfig.isFakePasscodeActivated()) {
+                    AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
+                    builder.setTitle(LocaleController.getString(R.string.OldAppNotRemovedTitle));
+                    builder.setMessage(AndroidUtilities.replaceTags(LocaleController.getString(R.string.OldAppNotRemovedMessage)));
+                    oldPtgNotRemovedDialog = builder.create();
+                    oldPtgNotRemovedDialog.setCanCancel(false);
+                    oldPtgNotRemovedDialog.setCancelable(false);
+                    DialogButtonWithTimer.setButton(oldPtgNotRemovedDialog, AlertDialog.BUTTON_NEGATIVE, LocaleController.getString(R.string.Cancel), 10,
+                            (dlg, which) -> dlg.dismiss());
+                    oldPtgNotRemovedDialog.show();
+                }
             }
         }
 
