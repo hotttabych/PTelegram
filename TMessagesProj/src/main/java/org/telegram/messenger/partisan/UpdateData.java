@@ -6,8 +6,6 @@ import java.util.ArrayList;
 
 public class UpdateData {
     public AppVersion version;
-    public long channelId;
-    public int postId;
     public boolean canNotSkip;
     public String text;
     public TLRPC.Document document;

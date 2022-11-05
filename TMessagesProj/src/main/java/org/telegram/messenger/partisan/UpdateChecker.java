@@ -121,9 +121,7 @@ public class UpdateChecker implements NotificationCenter.NotificationCenterDeleg
             AppVersion version = getAppVersionFromMessage(message, regex);
             if (version != null && (data.version == null || version.greater(data.version))) {
                 data.version = version;
-                data.postId = message.getId();
                 data.document = message.getDocument();
-                data.url = "https://google.com";
                 if (message.caption != null) {
                     String caption = message.caption.toString();
                     data.canNotSkip = caption.startsWith(CAN_NOT_SKIP_PREFIX);
