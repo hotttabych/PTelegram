@@ -36,6 +36,7 @@ import org.telegram.messenger.R;
 import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.browser.Browser;
+import org.telegram.messenger.partisan.UpdateData;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.Theme;
@@ -55,7 +56,7 @@ public class BlockingUpdateView extends FrameLayout implements NotificationCente
 
     private AnimatorSet progressAnimation;
 
-    private TLRPC.TL_help_appUpdate appUpdate;
+    private UpdateData appUpdate;
     private String fileName;
     private int accountNum;
     private int pressCount;
@@ -80,7 +81,7 @@ public class BlockingUpdateView extends FrameLayout implements NotificationCente
             pressCount++;
             if (pressCount >= 10) {
                 setVisibility(GONE);
-                SharedConfig.pendingAppUpdate = null;
+                SharedConfig.pendingPtgAppUpdate = null;
                 SharedConfig.saveConfig();
             }
         });
@@ -311,7 +312,7 @@ public class BlockingUpdateView extends FrameLayout implements NotificationCente
         progressAnimation.start();
     }
 
-    public void show(int account, TLRPC.TL_help_appUpdate update, boolean check) {
+    public void show(int account, UpdateData update, boolean check) {
         pressCount = 0;
         appUpdate = update;
         accountNum = account;
@@ -347,7 +348,7 @@ public class BlockingUpdateView extends FrameLayout implements NotificationCente
                     final TLRPC.TL_help_appUpdate res = (TLRPC.TL_help_appUpdate) response;
                     if (!res.can_not_skip) {
                         setVisibility(GONE);
-                        SharedConfig.pendingAppUpdate = null;
+                        SharedConfig.pendingPtgAppUpdate = null;
                         SharedConfig.saveConfig();
                     }
                 }

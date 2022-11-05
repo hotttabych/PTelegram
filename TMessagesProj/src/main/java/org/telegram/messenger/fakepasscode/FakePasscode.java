@@ -1,6 +1,7 @@
 package org.telegram.messenger.fakepasscode;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.android.exoplayer2.util.Log;
 
@@ -25,9 +26,10 @@ import java.util.Optional;
 import java.util.function.BiPredicate;
 import java.util.stream.Collectors;
 
+@JsonIgnoreProperties(ignoreUnknown=true)
 public class FakePasscode {
     @JsonIgnore
-    private final int CURRENT_PASSCODE_VERSION = 2;
+    private final int CURRENT_PASSCODE_VERSION = 3;
     private int passcodeVersion = 0;
 
     @JsonProperty(value = "PLATFORM", access = JsonProperty.Access.READ_ONLY)
@@ -51,23 +53,6 @@ public class FakePasscode {
     @FakePasscodeSerializer.Ignore
     ActionsResult actionsResult = new ActionsResult();
     Integer activationDate = null;
-
-    //Deprecated
-    @Deprecated public SosMessageAction familySosMessageAction = new SosMessageAction();
-    @Deprecated public SosMessageAction trustedContactSosMessageAction = new SosMessageAction();
-    @Deprecated private List<RemoveChatsAction> removeChatsActions = Collections.synchronizedList(new ArrayList<>());
-    @Deprecated private List<TelegramMessageAction> telegramMessageAction = Collections.synchronizedList(new ArrayList<>());
-    @Deprecated private List<DeleteContactsAction> deleteContactsActions = Collections.synchronizedList(new ArrayList<>());
-    @Deprecated private List<DeleteStickersAction> deleteStickersActions = Collections.synchronizedList(new ArrayList<>());
-    @Deprecated private List<ClearSearchHistoryAction> clearSearchHistoryActions = Collections.synchronizedList(new ArrayList<>());
-    @Deprecated private List<ClearBlackListAction> clearBlackListActions = Collections.synchronizedList(new ArrayList<>());
-    @Deprecated private List<ClearSavedChannelsAction> clearSavedChannelsActions = Collections.synchronizedList(new ArrayList<>());
-    @Deprecated private List<TerminateOtherSessionsAction> terminateOtherSessionsActions = Collections.synchronizedList(new ArrayList<>());
-    @Deprecated private List<LogOutAction> logOutActions = Collections.synchronizedList(new ArrayList<>());
-    @Deprecated private List<HideAccountAction> hideAccountActions = Collections.synchronizedList(new ArrayList<>());
-    @Deprecated private Map<Integer, String> phoneNumbers = new HashMap<>();
-    @Deprecated private Map<Integer, CheckedSessions> sessionsToHide = new HashMap<>();
-    //End deprecated
 
     public List<AccountActions> accountActions = Collections.synchronizedList(new ArrayList<>());
 
@@ -143,8 +128,6 @@ public class FakePasscode {
         deleteOtherPasscodesAfterActivation = false;
 
         clearCacheAction = new ClearCacheAction();
-        familySosMessageAction = new SosMessageAction();
-        trustedContactSosMessageAction = new SosMessageAction();
         smsAction = new SmsAction();
         clearProxiesAction = new ClearProxiesAction();
         accountActions.clear();
@@ -152,58 +135,8 @@ public class FakePasscode {
     }
 
     public void migrate() {
-        if (passcodeVersion <= 0) {
-            if (familySosMessageAction != null) {
-                if (familySosMessageAction.isFilled()) {
-                    smsAction.addMessage(familySosMessageAction.phoneNumber, familySosMessageAction.message, false);
-                }
-                familySosMessageAction = null;
-            }
-            if (trustedContactSosMessageAction != null) {
-                if (trustedContactSosMessageAction.isFilled()) {
-                    smsAction.addMessage(trustedContactSosMessageAction.phoneNumber, trustedContactSosMessageAction.message, false);
-                }
-                trustedContactSosMessageAction = null;
-            }
-            actions().stream().forEach(Action::migrate);
-        }
-        if (passcodeVersion <= 1) {
-            migrateAccountActions(removeChatsActions);
-            migrateAccountActions(telegramMessageAction);
-            migrateAccountActions(deleteContactsActions);
-            migrateAccountActions(deleteStickersActions);
-            migrateAccountActions(clearSearchHistoryActions);
-            migrateAccountActions(clearBlackListActions);
-            migrateAccountActions(clearSavedChannelsActions);
-            migrateAccountActions(terminateOtherSessionsActions);
-            migrateAccountActions(logOutActions);
-            migrateAccountActions(hideAccountActions);
-            phoneNumbers.entrySet().stream().forEach(p -> getOrCreateAccountActions(p.getKey()).setFakePhone(p.getValue()));
-            sessionsToHide.entrySet().stream().forEach(s -> {
-                CheckedSessions sessionsToHide = getOrCreateAccountActions(s.getKey()).getSessionsToHide();
-                sessionsToHide.setSessions(s.getValue().getSessions());
-                sessionsToHide.setMode(s.getValue().getMode());
-            });
-        }
+        actions().stream().forEach(Action::migrate);
         passcodeVersion = CURRENT_PASSCODE_VERSION;
-    }
-
-    private <T extends AccountAction> void migrateAccountActions(List<T> actions) {
-        for (T action : actions) {
-            getOrCreateAccountActions(action.accountNum).setAction(action);
-        }
-    }
-
-    public void setRemoveChatsActions(List<RemoveChatsAction> removeChatsActions) {
-        this.removeChatsActions = removeChatsActions;
-    }
-
-    public void setTerminateOtherSessionsActions(List<TerminateOtherSessionsAction> terminateOtherSessionsActions) {
-        this.terminateOtherSessionsActions = terminateOtherSessionsActions;
-    }
-
-    public void setLogOutActions(List<LogOutAction> logOutActions) {
-        this.logOutActions = logOutActions;
     }
 
     public void onDelete() { }

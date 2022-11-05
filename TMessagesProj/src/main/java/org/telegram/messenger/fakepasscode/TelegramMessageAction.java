@@ -52,9 +52,6 @@ public class TelegramMessageAction extends AccountAction implements Notification
     public static boolean allowReloadDialogsByMessage = true;
     public static TelegramMessageAction activeAction = null;
 
-    @Deprecated
-    public Map<Integer, String> chatsToSendingMessages = new HashMap<>();
-
     @JsonIgnore
     private final Set<Integer> oldMessageIds = new HashSet<>();
 
@@ -69,7 +66,7 @@ public class TelegramMessageAction extends AccountAction implements Notification
 
     @Override
     public void execute(FakePasscode fakePasscode) {
-        if ((chatsToSendingMessages.isEmpty() && entries.isEmpty())) {
+        if (entries.isEmpty()) {
             return;
         }
         this.fakePasscode = fakePasscode;
@@ -206,12 +203,5 @@ public class TelegramMessageAction extends AccountAction implements Notification
         sentEntries.stream()
                 .filter(entry -> entry.userId == (long)args[0])
                 .forEach(entry -> entry.dialogDeleted = true);
-    }
-
-    @Override
-    public void migrate() {
-        if (!chatsToSendingMessages.isEmpty()) {
-            entries = chatsToSendingMessages.entrySet().stream().map(entry -> new Entry(entry.getKey(), entry.getValue(), false)).collect(Collectors.toList());
-        }
     }
 }

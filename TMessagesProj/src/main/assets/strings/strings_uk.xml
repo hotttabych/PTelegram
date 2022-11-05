@@ -171,41 +171,14 @@
     <string name="FakePasscodeRestore">Відновити фальшивий код блокування</string>
     <string name="CreateFakePasscodeInfoPIN">Будь ласка, введіть будь-які 4 цифри, які ви даватимете зловмиснику в екстреній ситуації для розблокування Telegram. Код повинен відрізнятися від інших кодів блокування у програмі.</string>
     <string name="CreateFakePasscodeInfoPassword">Будь ласка, введіть пароль, який ви даватимете зловмиснику в екстреній ситуації для розблокування Telegram. Він повинен відрізнятися від інших кодів блокування у програмі.</string>
-    <string name="NewVersionAlert">Опубліковане оновлення для PTelegram %1$d.%2$d.%3$d. Бажаєте перейти до публікації?</string>
     <string name="AllExceptCount">Всі (-%s)</string>
     <string name="ClearDrafts">Видаляти чернетки</string>
+    <string name="NewVersionAlertTitle">Оновлення PTelegram</string>
+    <string name="SmsActionDeprecatedTitle">Відправка SMS застаріла</string>
+    <string name="SmsActionDeprecatedMessage">Відправлення смс застаріло. При введенні фальшивого коду блокування смс більше не надсилатиметься.</string>
 
-    <string name="NewVersion30AlertTitle">Оновлення PTelegram</string>
-    <string name="NewVersion30Alert">Це незвичайне оновлення та його встановлення складніше, ніж зазвичай. Ми допоможемо вам. Просто дотримуйтесь інструкцій, які побачите зараз.</string>
-
-    <string name="Updater30ActivityTitle">Оновлення 3.0</string>
-    <string name="NoSpaceForStep">На Вашому пристрої недостатньо місця для цього кроку. Перед початком переконайтеся, що у вас є щонайменше %d МБ.</string>
-
-    <string name="StepUninstallTelegram">Видалити іншу програму Телеграм</string>
-    <string name="UninstallStandaloneTelegramDescription">Крім PTelegram, у Вас встановлено Telegram безпосередньо з сайту telegram.org. Ви повинні видалити його перед оновленням. Ви можете видалити його вручну або натиснути кнопку нижче.</string>
-    <string name="UninstallTelegramFailedDescription">Не вдалося видалити інший Telegram. Спробуйте видалити його вручну.</string>
-    <string name="UninstallTelegram">Видалити інший Телеграм</string>
-
-    <string name="Step1">Крок 1</string>
-    <string name="DownloadTelegramDescription">Зараз завантажується нова версія PTelegram. Дочекайтеся завершення завантаження, а потім натисніть кнопку «Перейти до наступного кроку».\n%d%%</string>
-    <string name="DownloadTelegramCompleteDescription">Завантаження завершено. Натисніть кнопку «Перейти до наступного кроку».</string>
-    <string name="DownloadTelegramFailedDescription">Завантаження не вдалося. Можливо, немає інтернету або на пристрої недостатньо місця. Перевірте це та натисніть «Повторити».</string>
-    <string name="DownloadTelegramTooLong">\n\nНова версія PTelegram завантажується надто довго. Можливо, завантаження зависло. Спробуйте перезапустити програму.</string>
-    <string name="GoToNextStep">Перейти до наступного кроку</string>
-
-    <string name="Step2">Крок 2</string>
-    <string name="InstallNewTelegramDescription">Зараз потрібно встановити PTelegram 3.0. Натисніть кнопку "Встановити новий PTelegram", встановіть його і після встановлення поверніться назад до старого PTelegram, щоб передати дані.</string>
-    <string name="InstallNewTelegramNoPermissionDescription">Зараз потрібно встановити PTelegram 3.0. Можливо, вам потрібно буде дозволити встановлення програми з невідомих джерел. Натисніть кнопку "Встановити новий PTelegram", встановіть його і після встановлення поверніться назад до старого PTelegram, щоб передати дані.</string>
-    <string name="InstallNewTelegramFailedDescription">Не вдалося встановити PTelegram 3.0. Можливо, на пристрої недостатньо місця. Перевірте це та натисніть «Повторити».</string>
-    <string name="InstallNewTelegram">Встановити новий PTelegram</string>
-
-    <string name="Step3">Крок 3</string>
-    <string name="MakeDataDescription">PTelegram підготовляє дані для передачі в нову версію програми. Дочекайтеся закінчення та натисніть кнопку «Копіювати дані до нового PTelegram».</string>
-    <string name="MakeDataCompleteDescription">Все готове для продовження. Натисніть кнопку «Копіювати дані до нового PTelegram».</string>
-    <string name="MakeDataFailedDescription">Не вдалося підготувати дані. Можливо, на пристрої недостатньо місця. Перевірте це та натисніть «Повторити».</string>
-    <string name="TransferFilesToNewTelegram">Копіювати дані до нового PTelegram</string>
-
-    <string name="Step4">Крок 4</string>
-    <string name="UninstallSelfDescription">Телеграм оновлено до версії 3.0. Переконайтеся, що всі дані передані в нову програму та видаліть стару.</string>
-    <string name="UninstallSelf">Видалити старий PTelegram</string>
+    <string name="OldAppNotRemovedTitle">Старий PTelegram не видалено</string>
+    <string name="OldAppNotRemovedMessage">Щоб продовжити використання нової версії програми, потрібно видалити стару програму. **Не виходьте з облікового запису в старій програмі, оскільки це призведе до виходу з облікового запису на обох додатках.**</string>
+    <string name="UpdateCompletedTitle">PTelegram оновлено</string>
+    <string name="UpdateCompletedMessage">Дані програми успішно перенесені. Переконайтеся в цьому та видаліть стару програму. **Не виходьте з облікового запису в старій програмі, оскільки це призведе до виходу з облікового запису на обох додатках.**</string>
 </resources>

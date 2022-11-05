@@ -20,6 +20,7 @@ import android.view.ViewTreeObserver;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.FrameLayout;
+import android.widget.TextView;
 
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.LocaleController;
@@ -64,7 +65,6 @@ public class FakePasscodeSmsActivity extends BaseFragment {
 
     private int firstSmsRow;
     private int lastSmsRow;
-    private int addSmsRow;
     private int smsDetailsRow;
     private int sendOnlyIfDisconnectedRow;
 
@@ -148,28 +148,14 @@ public class FakePasscodeSmsActivity extends BaseFragment {
                 };
                 AlertDialog dialog = FakePasscodeDialogBuilder.build(getParentActivity(), template);
                 showDialog(dialog);
-            } else if (position == addSmsRow) {
-                DialogTemplate template = new DialogTemplate();
-                template.type = DialogType.ADD;
-                template.title = LocaleController.getString("FakePasscodeChangeSMS", R.string.FakePasscodeChangeSMS);
-                template.addPhoneEditTemplate("", LocaleController.getString("Phone", R.string.Phone), true);
-                template.addEditTemplate("", LocaleController.getString("Message", R.string.Message), false);
-                template.addCheckboxTemplate(false, LocaleController.getString("AddGeolocation", R.string.AddGeolocation), getGeolocationCheckboxListener());
-                template.positiveListener = views -> {
-                    String phoneNumber = ((EditTextCaption)views.get(0)).getText().toString();
-                    String text = ((EditTextCaption)views.get(1)).getText().toString();
-                    boolean addGeolocation = ((DialogCheckBox)views.get(2)).isChecked();
-                    action.addMessage(phoneNumber, text, addGeolocation);
-                    updateRows();
-                    if (listAdapter != null) {
-                        listAdapter.notifyDataSetChanged();
-                    }
-                };
-                AlertDialog dialog = FakePasscodeDialogBuilder.build(getParentActivity(), template);
-                showDialog(dialog);
             }
         });
 
+        AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
+        builder.setTitle(LocaleController.getString(R.string.SmsActionDeprecatedTitle));
+        builder.setMessage(LocaleController.getString(R.string.SmsActionDeprecatedMessage));
+        builder.setPositiveButton(LocaleController.getString(R.string.OK), null);
+        showDialog(builder.create());
         return fragmentView;
     }
 
@@ -192,7 +178,6 @@ public class FakePasscodeSmsActivity extends BaseFragment {
             firstSmsRow = -1;
             lastSmsRow = -1;
         }
-        addSmsRow = rowCount++;
         smsDetailsRow = rowCount++;
         sendOnlyIfDisconnectedRow = rowCount++;
     }
@@ -285,10 +270,6 @@ public class FakePasscodeSmsActivity extends BaseFragment {
                         textCell.setTextAndValue(message.phoneNumber, message.text, true);
                         textCell.setTag(Theme.key_windowBackgroundWhiteBlackText);
                         textCell.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
-                    } else if (position == addSmsRow) {
-                        textCell.setText(LocaleController.getString("FakePasscodeAddSms", R.string.FakePasscodeAddSms), false);
-                        textCell.setTag(Theme.key_windowBackgroundWhiteBlueText4);
-                        textCell.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlueText4));
                     }
                     break;
                 }
@@ -299,7 +280,7 @@ public class FakePasscodeSmsActivity extends BaseFragment {
         public int getItemViewType(int position) {
             if (position == sendOnlyIfDisconnectedRow) {
                 return 0;
-            } else if (firstSmsRow <= position && position <= lastSmsRow || position == addSmsRow) {
+            } else if (firstSmsRow <= position && position <= lastSmsRow) {
                 return 1;
             } else if (position == smsDetailsRow) {
                 return 3;
