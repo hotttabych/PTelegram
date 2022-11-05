@@ -108,7 +108,6 @@ import org.telegram.messenger.Utilities;
 import org.telegram.messenger.XiaomiUtilities;
 import org.telegram.messenger.fakepasscode.FakePasscode;
 import org.telegram.messenger.fakepasscode.RemoveAsReadMessages;
-import org.telegram.messenger.partisan.UpdateChecker;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.TLObject;
 import org.telegram.tgnet.TLRPC;
@@ -469,7 +468,6 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
 
     public BaseFragment passwordFragment = null;
 
-    private UpdateChecker updateChecker;
     private AlertDialog oldPtgNotRemovedDialog;
     private static boolean oldPtgChecked;
 
@@ -2105,9 +2103,6 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             getNotificationCenter().removeObserver(this, NotificationCenter.folderBecomeEmpty);
             getNotificationCenter().removeObserver(this, NotificationCenter.newSuggestionsAvailable);
             getNotificationCenter().removeObserver(this, NotificationCenter.messagesDeleted);
-            if (updateChecker != null) {
-                updateChecker.removeObservers();
-            }
             getNotificationCenter().removeObserver(this, NotificationCenter.fileLoaded);
             getNotificationCenter().removeObserver(this, NotificationCenter.fileLoadFailed);
             getNotificationCenter().removeObserver(this, NotificationCenter.fileLoadProgressChanged);
@@ -3844,7 +3839,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 if (!SharedConfig.isAppUpdateAvailable()) {
                     return;
                 }
-                AndroidUtilities.openForView(SharedConfig.pendingAppUpdate.document, true, getParentActivity());
+                AndroidUtilities.openForView(SharedConfig.pendingPtgAppUpdate.document, true, getParentActivity());
             });
 
             updateLayoutIcon = new RadialProgress2(updateLayout);
@@ -3998,14 +3993,6 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         }
         updateMenuButton(false);
 
-        if (SharedConfig.showUpdates && SharedConfig.fakePasscodeActivatedIndex == -1) {
-            updateChecker = new UpdateChecker(currentAccount, (success, data) -> {
-                if (success) {
-                    showUpdateDialog(data);
-                }
-            });
-            updateChecker.checkUpdate();
-        }
         if (FakePasscode.autoAddHidingsToAllFakePasscodes() && !SharedConfig.isFakePasscodeActivated()) {
             AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
             builder.setMessage(LocaleController.getString("AccountHiddenDescription", R.string.AccountHiddenDescription));
@@ -4164,8 +4151,8 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         }
         boolean show;
         if (SharedConfig.isAppUpdateAvailable()) {
-            String fileName = FileLoader.getAttachFileName(SharedConfig.pendingAppUpdate.document);
-            File path = getFileLoader().getPathToAttach(SharedConfig.pendingAppUpdate.document, true);
+            String fileName = FileLoader.getAttachFileName(SharedConfig.pendingPtgAppUpdate.document);
+            File path = getFileLoader().getPathToAttach(SharedConfig.pendingPtgAppUpdate.document, true);
             show = path.exists();
         } else {
             show = false;
@@ -7727,7 +7714,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         } else if (id == NotificationCenter.fileLoaded || id == NotificationCenter.fileLoadFailed || id == NotificationCenter.fileLoadProgressChanged) {
             String name = (String) args[0];
             if (SharedConfig.isAppUpdateAvailable()) {
-                String fileName = FileLoader.getAttachFileName(SharedConfig.pendingAppUpdate.document);
+                String fileName = FileLoader.getAttachFileName(SharedConfig.pendingPtgAppUpdate.document);
                 if (fileName.equals(name)) {
                     updateMenuButton(true);
                 }
@@ -7802,29 +7789,6 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
 
     View databaseMigrationHint;
 
-    private void showUpdateDialog(UpdateChecker.UpdateData data) {
-        if (!SharedConfig.showUpdates || SharedConfig.fakePasscodeActivatedIndex != -1) {
-            return;
-        }
-        AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
-        builder.setTitle(LocaleController.getString(R.string.NewVersionAlertTitle));
-        builder.setMessage(AndroidUtilities.replaceTags(LocaleController.formatString(R.string.NewVersionAlert, data.major, data.minor, data.patch)));
-        builder.setNeutralButton(LocaleController.getString(R.string.DoNotShowAgain), (dialog, which) -> {
-            SharedConfig.toggleShowUpdates();
-        });
-        builder.setNegativeButton(LocaleController.getString(R.string.Cancel), (dialog, which) -> {
-            SharedConfig.setVersionIgnored(data.major, data.minor, data.patch);
-        });
-        builder.setPositiveButton(LocaleController.getString(R.string.OK), (dialog, which) -> {
-            SharedConfig.setVersionIgnored(data.major, data.minor, data.patch);
-            Bundle args = new Bundle();
-            args.putLong("chat_id", -data.channelId);
-            args.putInt("message_id", data.postId);
-            presentFragment(new ChatActivity(args));
-        });
-        showDialog(builder.create());
-    }
-
     private void updateMenuButton(boolean animated) {
         if (menuDrawable == null || updateLayout == null) {
             return;
@@ -7832,7 +7796,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         int type;
         float downloadProgress;
         if (SharedConfig.isAppUpdateAvailable()) {
-            String fileName = FileLoader.getAttachFileName(SharedConfig.pendingAppUpdate.document);
+            String fileName = FileLoader.getAttachFileName(SharedConfig.pendingPtgAppUpdate.document);
             if (getFileLoader().isLoadingFile(fileName)) {
                 type = MenuDrawable.TYPE_UDPATE_DOWNLOADING;
                 Float p = ImageLoader.getInstance().getFileProgress(fileName);

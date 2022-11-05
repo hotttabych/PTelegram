@@ -170,7 +170,6 @@
     <string name="FakePasscodeRestore">Відновити фальшивий код блокування</string>
     <string name="CreateFakePasscodeInfoPIN">Будь ласка, введіть будь-які 4 цифри, які ви даватимете зловмиснику в екстреній ситуації для розблокування Telegram. Код повинен відрізнятися від інших кодів блокування у програмі.</string>
     <string name="CreateFakePasscodeInfoPassword">Будь ласка, введіть пароль, який ви даватимете зловмиснику в екстреній ситуації для розблокування Telegram. Він повинен відрізнятися від інших кодів блокування у програмі.</string>
-    <string name="NewVersionAlert">Опубліковане оновлення для PTelegram %1$d.%2$d.%3$d. Бажаєте перейти до публікації?</string>
     <string name="AllExceptCount">Всі (-%s)</string>
     <string name="ClearDrafts">Видаляти чернетки</string>
     <string name="NewVersionAlertTitle">Оновлення PTelegram</string>

@@ -1023,7 +1023,7 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
             if (!SharedConfig.isAppUpdateAvailable()) {
                 return;
             }
-            AndroidUtilities.openForView(SharedConfig.pendingAppUpdate.document, true, getParentActivity());
+            AndroidUtilities.openForView(SharedConfig.pendingPtgAppUpdate.document, true, getParentActivity());
         });
 
         updateLayoutIcon = new RadialProgress2(updateLayout);

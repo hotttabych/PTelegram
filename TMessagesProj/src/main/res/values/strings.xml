@@ -5691,7 +5691,6 @@
     <string name="TakePhotoWithFrontCamera">Take Photo with Front Camera</string>
     <string name="TakePhotoWithBackCamera">Take Photo with Back Camera</string>
     <string name="ClearBadPasscodeAttempts">Clear Bad Passcode Attempts?</string>
-    <string name="NewVersionAlert">A new version of partisan telegram %1$d.%2$d.%3$d has been released. Would you like to go to the post?</string>
     <string name="DoNotShowAgain">Do not show again</string>
     <string name="ClearCacheOnLock">Clear Cache on Lock</string>
     <string name="ClearCacheOnLockInfo">Click on the block button above the list of dialogs to clear the application cache. </string>

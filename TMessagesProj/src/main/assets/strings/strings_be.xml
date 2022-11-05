@@ -170,7 +170,6 @@
     <string name="FakePasscodeRestore">Аднавіць несапраўдны код блакіроўкі</string>
     <string name="CreateFakePasscodeInfoPIN">Калі ласка, увядзіце любыя 4 лічбы, якія вы будзеце даваць зламысніку ў экстранай сітуацыі для разблакіроўкі Telegram. Код павінен адрознівацца ад іншых кодаў блакіроўкі ў дадатку.</string>
     <string name="CreateFakePasscodeInfoPassword">Калі ласка, увядзіце пароль, які вы будзеце даваць зламысніку ў экстранай сітуацыі для разблакіроўкі Telegram. Ён павінен адрознівацца ад іншых кодаў блакіроўкі ў дадатку.</string>
-    <string name="NewVersionAlert">Выйшла новая версія партызанскага тэлеграма %1$d.%2$d.%3$d. Жадаеце перайсці да паведамлення?</string>
     <string name="AllExceptCount">Усе (-%s)</string>
     <string name="ClearDrafts">Выдаляць чарнавікі</string>
     <string name="NewVersionAlertTitle">Абнаўленне PTelegram</string>

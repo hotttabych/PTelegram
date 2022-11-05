@@ -62,7 +62,6 @@
     <string name="TakePhotoWithFrontCamera">Rób zdjęcia przednim aparatem</string>
     <string name="TakePhotoWithBackCamera">Rób zdjęcia głównym aparatem</string>
     <string name="ClearBadPasscodeAttempts">Usunąć nieudane próby podania hasła?</string>
-    <string name="NewVersionAlert">Ukazała się nowa wersja telegramu partyzanckiego %1$d.%2$d.%3$d. Chcesz przejść do postu?</string>
     <string name="DoNotShowAgain">Nie pokazuj ponownie</string>
     <string name="ClearCacheOnLock">Wyczyść pamięć podręczną po zablokowaniu</string>
     <string name="ClearCacheOnLockInfo">Kliknięcie przycisku blokady nad listą okien dialogowych spowoduje wyczyszczenie pamięci podręcznej aplikacji.</string>

@@ -62,7 +62,6 @@
     <string name="TakePhotoWithFrontCamera">عکس گرفتن با دوربین جلو</string>
     <string name="TakePhotoWithBackCamera">عکس گرفتن با دوربین عقب</string>
     <string name="ClearBadPasscodeAttempts">پاکسازی تلاش ها با رمزعبور بد؟</string>
-    <string name="NewVersionAlert">A new version of partisan telegram %1$d.%2$d.%3$d has been released. Would you like to go to the post?</string>
     <string name="DoNotShowAgain">دوباره نمایش نده</string>
     <string name="ClearCacheOnLock">پاکسازی حافظه پنهان در حالت قفل</string>
     <string name="ClearCacheOnLockInfo">بر دکمه بلاک بالای لیست دیالوگ ها کلیک کنید تا حافظه پنهان اپلیکیشن پاک شود.</string>

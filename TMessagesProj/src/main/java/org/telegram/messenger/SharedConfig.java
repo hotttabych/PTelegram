@@ -31,13 +31,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.module.kotlin.KotlinModule;
-import com.google.android.exoplayer2.util.Log;
 
 import org.json.JSONObject;
 import org.telegram.messenger.fakepasscode.FakePasscode;
+import org.telegram.messenger.partisan.AppVersion;
+import org.telegram.messenger.partisan.UpdateData;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.SerializedData;
-import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.Components.SwipeGestureSettingsView;
 
 import java.io.File;
@@ -165,17 +165,13 @@ public class SharedConfig {
     public static int emojiInteractionsHintCount;
     public static int dayNightThemeSwitchHintCount;
 
-    public static TLRPC.TL_help_appUpdate pendingAppUpdate;
-    public static int pendingAppUpdateBuildVersion;
+    public static UpdateData pendingPtgAppUpdate;
     public static long lastUpdateCheckTime;
 
     public static boolean hasEmailLogin;
 
     private static int devicePerformanceClass;
 
-    public static int maxIgnoredVersionMajor;
-    public static int maxIgnoredVersionMinor;
-    public static int maxIgnoredVersionPatch;
     public static boolean showUpdates;
     public static boolean showCallButton;
 
@@ -408,19 +404,13 @@ public class SharedConfig {
                 editor.putInt("runNumber", runNumber);
                 editor.putBoolean("premiumDisabled", premiumDisabled);
 
-                if (pendingAppUpdate != null) {
+                if (pendingPtgAppUpdate != null) {
                     try {
-                        SerializedData data = new SerializedData(pendingAppUpdate.getObjectSize());
-                        pendingAppUpdate.serializeToStream(data);
-                        String str = Base64.encodeToString(data.toByteArray(), Base64.DEFAULT);
-                        editor.putString("appUpdate", str);
-                        editor.putInt("appUpdateBuild", pendingAppUpdateBuildVersion);
-                        data.cleanup();
+                        editor.putString("ptgAppUpdate", toJson(pendingPtgAppUpdate));
                     } catch (Exception ignore) {
-
                     }
                 } else {
-                    editor.remove("appUpdate");
+                    editor.remove("ptgAppUpdate");
                 }
                 editor.putLong("appUpdateCheckTime", lastUpdateCheckTime);
 
@@ -570,35 +560,13 @@ public class SharedConfig {
             }
             lastUpdateCheckTime = preferences.getLong("appUpdateCheckTime", System.currentTimeMillis());
             try {
-                String update = preferences.getString("appUpdate", null);
+                String update = preferences.getString("ptgAppUpdate", null);
                 if (update != null) {
-                    pendingAppUpdateBuildVersion = preferences.getInt("appUpdateBuild", BuildVars.BUILD_VERSION);
-                    byte[] arr = Base64.decode(update, Base64.DEFAULT);
-                    if (arr != null) {
-                        SerializedData data = new SerializedData(arr);
-                        pendingAppUpdate = (TLRPC.TL_help_appUpdate) TLRPC.help_AppUpdate.TLdeserialize(data, data.readInt32(false), false);
-                        data.cleanup();
-                    }
+                    pendingPtgAppUpdate = fromJson(update, UpdateData.class);
                 }
-                if (pendingAppUpdate != null) {
-                    long updateTime = 0;
-                    int updateVersion = 0;
-                    String updateVersionString = null;
-                    try {
-                        PackageInfo packageInfo = ApplicationLoader.applicationContext.getPackageManager().getPackageInfo(ApplicationLoader.applicationContext.getPackageName(), 0);
-                        updateVersion = packageInfo.versionCode;
-                        updateVersionString = packageInfo.versionName;
-                    } catch (Exception e) {
-                        FileLog.e(e);
-                    }
-                    if (updateVersion == 0) {
-                        updateVersion = BuildVars.BUILD_VERSION;
-                    }
-                    if (updateVersionString == null) {
-                        updateVersionString = BuildVars.BUILD_VERSION_STRING;
-                    }
-                    if (pendingAppUpdateBuildVersion != updateVersion || pendingAppUpdate.version == null || updateVersionString.compareTo(pendingAppUpdate.version) >= 0) {
-                        pendingAppUpdate = null;
+                if (pendingPtgAppUpdate != null) {
+                    if (AppVersion.getCurrentVersion().greaterOrEquals(pendingPtgAppUpdate.version)) {
+                        pendingPtgAppUpdate = null;
                         AndroidUtilities.runOnUIThread(SharedConfig::saveConfig);
                     }
                 }
@@ -670,9 +638,6 @@ public class SharedConfig {
             chatSwipeAction = preferences.getInt("ChatSwipeAction", -1);
             showUpdates = preferences.getBoolean("showUpdates", true);
             showCallButton = preferences.getBoolean("showCallButton", true);
-            maxIgnoredVersionMajor = preferences.getInt("maxIgnoredVersionMajor", 0);
-            maxIgnoredVersionMinor = preferences.getInt("maxIgnoredVersionMinor", 0);
-            maxIgnoredVersionPatch = preferences.getInt("maxIgnoredVersionPatch", 0);
             messageSeenHintCount = preferences.getInt("messageSeenCount", 3);
             emojiInteractionsHintCount = preferences.getInt("emojiInteractionsHintCount", 3);
             dayNightThemeSwitchHintCount = preferences.getInt("dayNightThemeSwitchHintCount", 3);
@@ -736,18 +701,6 @@ public class SharedConfig {
         SharedPreferences preferences = MessagesController.getGlobalMainSettings();
         SharedPreferences.Editor editor = preferences.edit();
         editor.putBoolean("deleteMessagesForAllByDefault", deleteMessagesForAllByDefault);
-        editor.commit();
-    }
-
-    public static void setVersionIgnored(int major, int minor, int patch) {
-        maxIgnoredVersionMajor = major;
-        maxIgnoredVersionMinor = minor;
-        maxIgnoredVersionPatch = patch;
-        SharedPreferences preferences = MessagesController.getGlobalMainSettings();
-        SharedPreferences.Editor editor = preferences.edit();
-        editor.putInt("maxIgnoredVersionMajor", maxIgnoredVersionMajor);
-        editor.putInt("maxIgnoredVersionMinor", maxIgnoredVersionMinor);
-        editor.putInt("maxIgnoredVersionPatch", maxIgnoredVersionPatch);
         editor.commit();
     }
 
@@ -841,41 +794,17 @@ public class SharedConfig {
     }
 
     public static boolean isAppUpdateAvailable() {
-        if (pendingAppUpdate == null || pendingAppUpdate.document == null || !BuildVars.isStandaloneApp()) {
+        if (pendingPtgAppUpdate == null || pendingPtgAppUpdate.document == null) {
             return false;
         }
-        int currentVersion;
-        try {
-            PackageInfo pInfo = ApplicationLoader.applicationContext.getPackageManager().getPackageInfo(ApplicationLoader.applicationContext.getPackageName(), 0);
-            currentVersion = pInfo.versionCode;
-        } catch (Exception e) {
-            FileLog.e(e);
-            currentVersion = BuildVars.BUILD_VERSION;
-        }
-        return pendingAppUpdateBuildVersion == currentVersion;
+        return pendingPtgAppUpdate.version.greater(AppVersion.getCurrentVersion());
     }
 
-    public static boolean setNewAppVersionAvailable(TLRPC.TL_help_appUpdate update) {
-        String updateVersionString = null;
-        int versionCode = 0;
-        try {
-            PackageInfo packageInfo = ApplicationLoader.applicationContext.getPackageManager().getPackageInfo(ApplicationLoader.applicationContext.getPackageName(), 0);
-            versionCode = packageInfo.versionCode;
-            updateVersionString = packageInfo.versionName;
-        } catch (Exception e) {
-            FileLog.e(e);
-        }
-        if (versionCode == 0) {
-            versionCode = BuildVars.BUILD_VERSION;
-        }
-        if (updateVersionString == null) {
-            updateVersionString = BuildVars.BUILD_VERSION_STRING;
-        }
-        if (update.version == null || updateVersionString.compareTo(update.version) >= 0) {
+    public static boolean setNewAppVersionAvailable(UpdateData data) {
+        if (data == null || AppVersion.getCurrentVersion().greaterOrEquals(data.version)) {
             return false;
         }
-        pendingAppUpdate = update;
-        pendingAppUpdateBuildVersion = versionCode;
+        pendingPtgAppUpdate = data;
         saveConfig();
         return true;
     }

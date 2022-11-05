@@ -13,43 +13,42 @@ import org.telegram.tgnet.TLRPC;
 
 import java.util.ArrayList;
 import java.util.Objects;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class UpdateChecker implements NotificationCenter.NotificationCenterDelegate {
-    public static class UpdateData {
-        public int major;
-        public int minor;
-        public int patch;
-        public long channelId;
-        public int postId;
-
-        public UpdateData(int major, int minor, int patch, long channelId, int postId) {
-            this.major = major;
-            this.minor = minor;
-            this.patch = patch;
-            this.channelId = channelId;
-            this.postId = postId;
-        }
-    }
-
     public interface UpdateCheckedDelegate {
         void onUpdateResult(boolean updateFounded, UpdateData data);
     }
 
     private final long CYBER_PARTISAN_SECURITY_TG_CHANNEL_ID = BuildVars.isAlphaApp() ? -1716369838 : -1164492294;  // For checking for updates
     private final String CYBER_PARTISAN_SECURITY_TG_CHANNEL_USERNAME = BuildVars.isAlphaApp() ? "ptg_update_test" : "cpartisans_security";
+    private final String CAN_NOT_SKIP_PREFIX = "IMPORTANT\n";
+
     private boolean partisanTgChannelLastMessageLoaded = false;
     private boolean appUpdatesChecked = false;
     private boolean partisanTgChannelUsernameResolved = false;
-    private final int currentAccount;
+    private int currentAccount;
+    private UpdateCheckedDelegate delegate;
     private final int classGuid;
-    private final UpdateCheckedDelegate delegate;
 
     public UpdateChecker(int currentAccount, UpdateCheckedDelegate delegate) {
         this.currentAccount = currentAccount;
-        classGuid = ConnectionsManager.generateClassGuid();
         this.delegate = delegate;
+        classGuid = ConnectionsManager.generateClassGuid();
+    }
+
+    private UpdateChecker() {
+        classGuid = ConnectionsManager.generateClassGuid();
+    }
+
+    public static void checkUpdate(int currentAccount, UpdateCheckedDelegate delegate) {
+        UpdateChecker checker = new UpdateChecker();
+        checker.currentAccount = currentAccount;
+        checker.delegate = (updateFounded, data) -> {
+            checker.removeObservers();
+            delegate.onUpdateResult(updateFounded, data);
+        };
+        checker.checkUpdate();
     }
 
     public void checkUpdate() {
@@ -116,61 +115,43 @@ public class UpdateChecker implements NotificationCenter.NotificationCenterDeleg
     }
 
     private void processPartisanTgChannelMessages(ArrayList<MessageObject> messages) {
-        int maxVersionMajor = 0;
-        int maxVersionMinor = 0;
-        int maxVersionPatch = 0;
-        int maxVersionPostId = -1;
-        MessageObject maxMessageObject = null;
+        UpdateData data = new UpdateData();
         Pattern regex = Pattern.compile("PTelegram-v(\\d+)_(\\d+)_(\\d+)(_b)?\\.apk");
         for (MessageObject message : messages) {
-            TLRPC.Document doc = message.getDocument();
-            if (doc == null) {
-                continue;
-            }
-            for (TLRPC.DocumentAttribute attribute : doc.attributes) {
-                if (attribute instanceof TLRPC.TL_documentAttributeFilename) {
-                    Matcher matcher = regex.matcher(attribute.file_name);
-                    if (matcher.find()) {
-                        int major = Integer.parseInt(matcher.group(1));
-                        int minor = Integer.parseInt(matcher.group(2));
-                        int patch = Integer.parseInt(matcher.group(3));
-                        if (versionGreater(major, minor, patch, maxVersionMajor, maxVersionMinor, maxVersionPatch)
-                                && (major < 3 || (major == 3 && minor == 0))) {
-                            maxVersionMajor = major;
-                            maxVersionMinor = minor;
-                            maxVersionPatch = patch;
-                            maxVersionPostId = message.getId();
-                            maxMessageObject = message;
-                        }
-                    }
+            AppVersion version = getAppVersionFromMessage(message, regex);
+            if (version != null && (data.version == null || version.greater(data.version))) {
+                data.version = version;
+                data.postId = message.getId();
+                data.document = message.getDocument();
+                data.url = "https://google.com";
+                if (message.caption != null) {
+                    String caption = message.caption.toString();
+                    data.canNotSkip = caption.startsWith(CAN_NOT_SKIP_PREFIX);
+                    data.text = data.canNotSkip
+                            ? caption.substring(CAN_NOT_SKIP_PREFIX.length())
+                            : caption;
                 }
             }
         }
 
-        if (versionGreater(maxVersionMajor, maxVersionMinor, maxVersionPatch,
-                SharedConfig.maxIgnoredVersionMajor, SharedConfig.maxIgnoredVersionMinor, SharedConfig.maxIgnoredVersionPatch)) {
-            Matcher currentVersionMatcher = Pattern.compile("(\\d+).(\\d+).(\\d+)").matcher(BuildVars.PARTISAN_VERSION_STRING);
-            if (currentVersionMatcher.find() && currentVersionMatcher.groupCount() == 3) {
-                int major = Integer.parseInt(currentVersionMatcher.group(1));
-                int minor = Integer.parseInt(currentVersionMatcher.group(2));
-                int patch = Integer.parseInt(currentVersionMatcher.group(3));
-                if (versionGreater(maxVersionMajor, maxVersionMinor, maxVersionPatch, major, minor, patch)) {
-                    UpdateData data = new UpdateData(maxVersionMajor, maxVersionMinor, maxVersionPatch, getUpdateTgChannelId(), maxVersionPostId);
-                    delegate.onUpdateResult(true, data);
-                    return;
-                }
-            } else {
-                UpdateData data = new UpdateData(maxVersionMajor, maxVersionMinor, maxVersionPatch, getUpdateTgChannelId(), maxVersionPostId);
-                delegate.onUpdateResult(true, data);
-                return;
-            }
+        if (data.version != null && (AppVersion.getCurrentVersion() == null || data.version.greater(AppVersion.getCurrentVersion()))) {
+            delegate.onUpdateResult(true, data);
+        } else {
+            delegate.onUpdateResult(false, null);
         }
-        delegate.onUpdateResult(false, null);
     }
 
-    private boolean versionGreater(int major, int minor, int patch, int otherMajor, int otherMinor, int otherPatch) {
-        return major > otherMajor || major == otherMajor && minor > otherMinor
-                || major == otherMajor && minor == otherMinor && patch > otherPatch;
+    private static AppVersion getAppVersionFromMessage(MessageObject message, Pattern regex) {
+        TLRPC.Document doc = message.getDocument();
+        if (doc == null) {
+            return null;
+        }
+        for (TLRPC.DocumentAttribute attribute : doc.attributes) {
+            if (attribute instanceof TLRPC.TL_documentAttributeFilename) {
+                return AppVersion.parseVersion(attribute.file_name, regex);
+            }
+        }
+        return null;
     }
 
     private long getUpdateTgChannelId() {
