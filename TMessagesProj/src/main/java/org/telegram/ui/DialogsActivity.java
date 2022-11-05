@@ -4032,14 +4032,15 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
                     builder.setTitle(LocaleController.getString(R.string.UpdateCompletedTitle));
                     builder.setMessage(AndroidUtilities.replaceTags(LocaleController.getString(R.string.UpdateCompletedMessage)));
-                    oldPtgNotRemovedDialog.setCanCancel(false);
-                    oldPtgNotRemovedDialog.setCancelable(false);
                     builder.setNegativeButton(LocaleController.getString(R.string.Cancel), (dlg, which) -> {
                         SharedConfig.runNumber = 1;
                         SharedConfig.saveConfig();
                         dlg.dismiss();
                     });
-                    showDialog(builder.create());
+                    AlertDialog dialog = builder.create();
+                    dialog.setCanCancel(false);
+                    dialog.setCancelable(false);
+                    showDialog(dialog);
                 } else if (SharedConfig.runNumber > 3 && !SharedConfig.isFakePasscodeActivated()) {
                     AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
                     builder.setTitle(LocaleController.getString(R.string.OldAppNotRemovedTitle));
