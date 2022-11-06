@@ -81,7 +81,6 @@
     <string name="IdCopied">ID скапіяваны ў буфер абмену.</string>
     <string name="ChatRemoved">выдалены</string>
     <string name="FakePasscodeRemoveDialogSettingsTitle">Налады дыялога для выдалення</string>
-    <string name="Hide">Схаваць</string>
     <string name="DeleteFromCompanion">Выдаліць у суразмоўцы</string>
     <string name="DeleteFromCompanionDetails">Выдаліць дыялогі ў суразмоўцаў. Гэтая опцыя прымяняецца толькі для дыялогаў з карыстальнікамі.</string>
     <string name="DeleteNewMessages">Выдаляць новыя паведамленні</string>
