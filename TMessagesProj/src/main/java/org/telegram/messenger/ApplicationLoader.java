@@ -24,8 +24,8 @@ import android.net.ConnectivityManager;
 import android.net.Network;
 import android.net.NetworkCapabilities;
 import android.net.NetworkInfo;
-import android.os.Environment;
 import android.os.Build;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.PowerManager;
 import android.os.SystemClock;
@@ -78,6 +78,8 @@ public class ApplicationLoader extends Application {
     private static PushListenerController.IPushListenerServiceProvider pushProvider;
     private static IMapsProvider mapsProvider;
     private static ILocationServiceProvider locationServiceProvider;
+
+    private static boolean filesCopiedFromUpdater;
 
     @Override
     protected void attachBaseContext(Context base) {
@@ -210,6 +212,11 @@ public class ApplicationLoader extends Application {
 
         SharedConfig.loadConfig();
         SharedPrefsHelper.init(applicationContext);
+        if (filesCopiedFromUpdater && !SharedConfig.filesCopiedFromOldTelegram) {
+            SharedConfig.filesCopiedFromOldTelegram = true;
+            SharedConfig.saveConfig();
+            SharedConfig.reloadConfig();
+        }
         if (BuildVars.LOGS_ENABLED && SharedConfig.fakePasscodeActivatedIndex == -1) {
             saveLogcatFile();
         }
@@ -250,6 +257,14 @@ public class ApplicationLoader extends Application {
 
     @Override
     public void onCreate() {
+        File updaterFilesCopied = new File(getFilesDir(), "updater_files_copied");
+        if (updaterFilesCopied.exists()) {
+            if (copyUpdaterDirectory("shared_prefs") | copyUpdaterDirectory("files")) {
+                filesCopiedFromUpdater = true;
+            }
+            updaterFilesCopied.delete();
+        }
+
         applicationLoaderInstance = this;
         try {
             applicationContext = getApplicationContext();
@@ -575,4 +590,36 @@ public class ApplicationLoader extends Application {
 
     }
 
+
+    private boolean copyUpdaterDirectory(String name) {
+        File updaterDirectory = new File(getFilesDir(), name);
+        File originalDirectory = new File(getFilesDir().getParentFile(), name);
+        return moveFiles(updaterDirectory, originalDirectory);
+    }
+
+    private boolean moveFiles(File fromDir, File toDir) {
+        File receivedPrefs = fromDir;
+        if (receivedPrefs.exists()) {
+            for (File child : receivedPrefs.listFiles()) {
+                File file = new File(toDir, child.getName());
+                if (file.exists()) {
+                    deleteFileRecursive(file);
+                }
+                child.renameTo(file);
+            }
+            receivedPrefs.delete();
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    private void deleteFileRecursive(File file) {
+        if (file.isDirectory()) {
+            for (File child : file.listFiles()) {
+                deleteFileRecursive(child);
+            }
+        }
+        file.delete();
+    }
 }

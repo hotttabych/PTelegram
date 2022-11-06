@@ -21,7 +21,9 @@ import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.content.pm.Signature;
 import android.content.res.Configuration;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -70,6 +72,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.arch.core.util.Function;
 import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.core.content.pm.ShortcutInfoCompat;
 import androidx.core.content.pm.ShortcutManagerCompat;
 import androidx.core.graphics.ColorUtils;
@@ -112,10 +115,11 @@ import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.UserObject;
 import org.telegram.messenger.Utilities;
 import org.telegram.messenger.browser.Browser;
-import org.telegram.messenger.camera.CameraController;
 import org.telegram.messenger.fakepasscode.FakePasscode;
 import org.telegram.messenger.fakepasscode.RemoveAsReadMessages;
 import org.telegram.messenger.fakepasscode.Utils;
+import org.telegram.messenger.partisan.UpdateChecker;
+import org.telegram.messenger.partisan.UpdateData;
 import org.telegram.messenger.voip.VideoCapturerDevice;
 import org.telegram.messenger.voip.VoIPPendingCall;
 import org.telegram.messenger.voip.VoIPService;
@@ -174,9 +178,10 @@ import org.webrtc.voiceengine.WebRtcAudioTrack;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -296,6 +301,7 @@ public class LaunchActivity extends BasePermissionsActivity implements ActionBar
         clearOldCache();
         AndroidUtilities.checkDisplaySize(this, getResources().getConfiguration());
         currentAccount = UserConfig.selectedAccount;
+
         if (!UserConfig.getInstance(currentAccount).isClientActivated()) {
             Intent intent = getIntent();
             boolean isProxy = false;
@@ -1058,6 +1064,9 @@ public class LaunchActivity extends BasePermissionsActivity implements ActionBar
     }
 
     private BaseFragment getClientNotActivatedFragment() {
+        if (!SharedConfig.filesCopiedFromOldTelegram && isOldTelegramInstalled()) {
+            return new OldTelegramWarningActivity(getIntent().getBooleanExtra("fromOldTelegram", false));
+        }
         if (LoginActivity.loadCurrentState(false).getInt("currentViewNum", 0) != 0) {
             return new LoginActivity();
         }
@@ -1444,7 +1453,7 @@ public class LaunchActivity extends BasePermissionsActivity implements ActionBar
         }
     }
 
-    private void showUpdateActivity(int account, TLRPC.TL_help_appUpdate update, boolean check) {
+    private void showUpdateActivity(int account, UpdateData update, boolean check) {
         if (blockingUpdateView == null) {
             blockingUpdateView = new BlockingUpdateView(LaunchActivity.this) {
                 @Override
@@ -4354,13 +4363,13 @@ public class LaunchActivity extends BasePermissionsActivity implements ActionBar
                 return;
             }
             if (updateLayoutIcon.getIcon() == MediaActionDrawable.ICON_DOWNLOAD) {
-                FileLoader.getInstance(currentAccount).loadFile(SharedConfig.pendingAppUpdate.document, "update", FileLoader.PRIORITY_NORMAL, 1);
+                FileLoader.getInstance(currentAccount).loadFile(SharedConfig.pendingPtgAppUpdate.document, "update", FileLoader.PRIORITY_NORMAL, 1);
                 updateAppUpdateViews(true);
             } else if (updateLayoutIcon.getIcon() == MediaActionDrawable.ICON_CANCEL) {
-                FileLoader.getInstance(currentAccount).cancelLoadFile(SharedConfig.pendingAppUpdate.document);
+                FileLoader.getInstance(currentAccount).cancelLoadFile(SharedConfig.pendingPtgAppUpdate.document);
                 updateAppUpdateViews(true);
             } else {
-                AndroidUtilities.openForView(SharedConfig.pendingAppUpdate.document, true, this);
+                AndroidUtilities.openForView(SharedConfig.pendingPtgAppUpdate.document, true, this);
             }
         });
         updateLayoutIcon = new RadialProgress2(updateLayout);
@@ -4392,9 +4401,9 @@ public class LaunchActivity extends BasePermissionsActivity implements ActionBar
         if (SharedConfig.isAppUpdateAvailable()) {
             View prevUpdateLayout = updateLayout;
             createUpdateUI();
-            updateSizeTextView.setText(AndroidUtilities.formatFileSize(SharedConfig.pendingAppUpdate.document.size));
-            String fileName = FileLoader.getAttachFileName(SharedConfig.pendingAppUpdate.document);
-            File path = FileLoader.getInstance(currentAccount).getPathToAttach(SharedConfig.pendingAppUpdate.document, true);
+            updateSizeTextView.setText(AndroidUtilities.formatFileSize(SharedConfig.pendingPtgAppUpdate.document.size));
+            String fileName = FileLoader.getAttachFileName(SharedConfig.pendingPtgAppUpdate.document);
+            File path = FileLoader.getInstance(currentAccount).getPathToAttach(SharedConfig.pendingPtgAppUpdate.document, true);
             boolean showSize;
             if (path.exists()) {
                 updateLayoutIcon.setIcon(MediaActionDrawable.ICON_UPDATE, true, false);
@@ -4485,32 +4494,22 @@ public class LaunchActivity extends BasePermissionsActivity implements ActionBar
         if (!force && Math.abs(System.currentTimeMillis() - SharedConfig.lastUpdateCheckTime) < MessagesController.getInstance(0).updateCheckDelay * 1000) {
             return;
         }
-        TLRPC.TL_help_getAppUpdate req = new TLRPC.TL_help_getAppUpdate();
-        try {
-            req.source = ApplicationLoader.applicationContext.getPackageManager().getInstallerPackageName(ApplicationLoader.applicationContext.getPackageName());
-        } catch (Exception ignore) {
-
-        }
-        if (req.source == null) {
-            req.source = "";
-        }
         final int accountNum = currentAccount;
-        ConnectionsManager.getInstance(currentAccount).sendRequest(req, (response, error) -> {
+        UpdateChecker.checkUpdate(currentAccount, (updateFounded, data) -> {
             SharedConfig.lastUpdateCheckTime = System.currentTimeMillis();
             SharedConfig.saveConfig();
-            if (response instanceof TLRPC.TL_help_appUpdate) {
-                final TLRPC.TL_help_appUpdate res = (TLRPC.TL_help_appUpdate) response;
+            if (updateFounded) {
                 AndroidUtilities.runOnUIThread(() -> {
-                    if (SharedConfig.pendingAppUpdate != null && SharedConfig.pendingAppUpdate.version.equals(res.version)) {
+                    if (SharedConfig.pendingPtgAppUpdate != null && SharedConfig.pendingPtgAppUpdate.version.equals(data.version)) {
                         return;
                     }
-                    if (SharedConfig.setNewAppVersionAvailable(res)) {
-                        if (res.can_not_skip) {
-                            showUpdateActivity(accountNum, res, false);
+                    if (SharedConfig.setNewAppVersionAvailable(data)) {
+                        if (data.canNotSkip) {
+                            showUpdateActivity(accountNum, data, false);
                         } else {
                             drawerLayoutAdapter.notifyDataSetChanged();
                             try {
-                                (new UpdateAppAlertDialog(LaunchActivity.this, res, accountNum)).show();
+                                (new UpdateAppAlertDialog(LaunchActivity.this, data, accountNum)).show();
                             } catch (Exception e) {
                                 FileLog.e(e);
                             }
@@ -5117,8 +5116,8 @@ public class LaunchActivity extends BasePermissionsActivity implements ActionBar
         }
         if (UserConfig.getInstance(UserConfig.selectedAccount).unacceptedTermsOfService != null) {
             showTosActivity(UserConfig.selectedAccount, UserConfig.getInstance(UserConfig.selectedAccount).unacceptedTermsOfService);
-        } else if (SharedConfig.pendingAppUpdate != null && SharedConfig.pendingAppUpdate.can_not_skip) {
-            showUpdateActivity(UserConfig.selectedAccount, SharedConfig.pendingAppUpdate, true);
+        } else if (SharedConfig.pendingPtgAppUpdate != null && SharedConfig.pendingPtgAppUpdate.canNotSkip) {
+            showUpdateActivity(UserConfig.selectedAccount, SharedConfig.pendingPtgAppUpdate, true);
         }
         checkAppUpdate(false);
 
@@ -5128,7 +5127,9 @@ public class LaunchActivity extends BasePermissionsActivity implements ActionBar
         if (VoIPFragment.getInstance() != null) {
             VoIPFragment.onResume();
         }
+
         invalidateTabletMode();
+        checkOldTelegramIntent();
     }
 
     private void invalidateTabletMode() {
@@ -5531,7 +5532,7 @@ public class LaunchActivity extends BasePermissionsActivity implements ActionBar
         } else if (id == NotificationCenter.fileLoaded) {
             String path = (String) args[0];
             if (SharedConfig.isAppUpdateAvailable()) {
-                String name = FileLoader.getAttachFileName(SharedConfig.pendingAppUpdate.document);
+                String name = FileLoader.getAttachFileName(SharedConfig.pendingPtgAppUpdate.document);
                 if (name.equals(path)) {
                     updateAppUpdateViews(true);
                 }
@@ -5602,7 +5603,7 @@ public class LaunchActivity extends BasePermissionsActivity implements ActionBar
                 onThemeLoadFinish();
             }
             if (SharedConfig.isAppUpdateAvailable()) {
-                String name = FileLoader.getAttachFileName(SharedConfig.pendingAppUpdate.document);
+                String name = FileLoader.getAttachFileName(SharedConfig.pendingPtgAppUpdate.document);
                 if (name.equals(path)) {
                     updateAppUpdateViews(true);
                 }
@@ -5701,7 +5702,7 @@ public class LaunchActivity extends BasePermissionsActivity implements ActionBar
         } else if (id == NotificationCenter.fileLoadProgressChanged) {
             if (updateTextView != null && SharedConfig.isAppUpdateAvailable()) {
                 String location = (String) args[0];
-                String fileName = FileLoader.getAttachFileName(SharedConfig.pendingAppUpdate.document);
+                String fileName = FileLoader.getAttachFileName(SharedConfig.pendingPtgAppUpdate.document);
                 if (fileName != null && fileName.equals(location)) {
                     Long loadedSize = (Long) args[1];
                     Long totalSize = (Long) args[2];
@@ -6705,6 +6706,62 @@ public class LaunchActivity extends BasePermissionsActivity implements ActionBar
             }
         } else {
             fileOrDirectory.delete();
+        }
+    }
+
+    public boolean isOldTelegramInstalled() {
+        PackageInfo packageInfo = getOldTelegramPackageInfo();
+        if (packageInfo != null) {
+            Signature[] signatures;
+            if (Build.VERSION.SDK_INT >= 28) {
+                signatures = packageInfo.signingInfo.getApkContentsSigners();
+            } else {
+                signatures = packageInfo.signatures;
+            }
+            if (signatures != null) {
+                for (final Signature sig : signatures) {
+                    try {
+                        MessageDigest hash = MessageDigest.getInstance("SHA-1");
+                        String thumbprint = Utilities.bytesToHex(hash.digest(sig.toByteArray()));
+                        return thumbprint.equalsIgnoreCase("B134DF916190F59F832BE4E1DE8354DC23444059");
+                    } catch (NoSuchAlgorithmException ignored) {
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    private PackageInfo getOldTelegramPackageInfo() {
+        int flags;
+        if (Build.VERSION.SDK_INT >= 28) {
+            flags = PackageManager.GET_SIGNING_CERTIFICATES;
+        } else {
+            flags = PackageManager.GET_SIGNATURES;
+        }
+        try {
+            PackageManager pm = getPackageManager();
+            return pm.getPackageInfo("org.telegram.messenger", flags);
+        } catch (PackageManager.NameNotFoundException ignored) {
+            try {
+                PackageManager pm = getPackageManager();
+                return pm.getPackageInfo("org.telegram.messenger.beta", flags);
+            } catch (PackageManager.NameNotFoundException ignored2) {
+                return null;
+            }
+        }
+    }
+
+    private void checkOldTelegramIntent() {
+        if (getIntent().getBooleanExtra("fromOldTelegram", false)) {
+            byte[] password = getIntent().getByteArrayExtra("zipPassword");
+            if (password != null) {
+                if (ContextCompat.checkSelfPermission( this, android.Manifest.permission.READ_EXTERNAL_STORAGE ) != PackageManager.PERMISSION_GRANTED ) {
+                    ActivityCompat.requestPermissions( this, new String[] { Manifest.permission.READ_EXTERNAL_STORAGE }, 1001);
+                } else {
+                    receiveZip();
+                }
+            }
         }
     }
 }

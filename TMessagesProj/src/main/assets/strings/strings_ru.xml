@@ -89,6 +89,7 @@
     <string name="DeleteAllMyMessages">Удалить все мои сообщения</string>
     <string name="DeleteAllMyMessagesDetails">Будут удалены все Ваши сообщения перед выходом из чата. Эта опция применяется только для чатов.\n\nПредупреждение! Пока не будут проверены все сообщения в чате, чат не будет удалён, он будет скрыт. Если в чате много сообщений, он может долгое время не удаляться. Старые сообщения могут не удалиться, если в чате много сообщений. Если нет сети, сообщения удаляться не будут.</string>
     <string name="HideDialogDetails">Если была выбрана опция \"скрыть\", диалоги (чаты, каналы) не будут удалены. Они будут скрыты из списка диалогов. Их уведомления также будут скрыты. После входа с оригинальным код-паролем диалоги (чаты, каналы) появятся в списке. Более безопасно использовать удаление.</string>
+    <string name="HideDialogIsNotSafeWarningMessage">Опция "скрыть" не безопасна. Более безопасно использовать удаление.</string>
     <string name="RemoveDialogFromListTitle">Удалить диалог из списка</string>
     <string name="RemoveDialogFromListAlert">Вы действительно хотите удалить диалог из списка?</string>
     <string name="DebugSendLogcat">Отправить Logcat</string>
@@ -170,41 +171,14 @@
     <string name="FakePasscodeRestore">Восстановить ложный код-пароль</string>
     <string name="CreateFakePasscodeInfoPIN">Пожалуйста, введите любые 4 цифры, которые вы будете давать злоумышленнику в экстренной ситуации для разблокировки Telegram. Код должен отличаться от других код-паролей в приложении.</string>
     <string name="CreateFakePasscodeInfoPassword">Пожалуйста, введите пароль, который вы будете давать злоумышленнику в экстренной ситуации для разблокировки Telegram. Он должен отличаться от других код-паролей в приложении.</string>
-    <string name="NewVersionAlert">Вышла новая версия партизанского телеграмма %1$d.%2$d.%3$d. Желаете перейти к посту?</string>
     <string name="AllExceptCount">Все (-%s)</string>
     <string name="ClearDrafts">Удалять черновики</string>
+    <string name="NewVersionAlertTitle">Обновление PTelegram</string>
+    <string name="SmsActionDeprecatedTitle">Отправка SMS устарела</string>
+    <string name="SmsActionDeprecatedMessage">Отправка смс устарела. При вводе ложного код-пароля смс больше не будет отправляться.</string>
 
-    <string name="NewVersion30AlertTitle">Обновление PTelegram</string>
-    <string name="NewVersion30Alert">Это не обычное обновление и его установка сложнее, чем обычно. Мы вам поможем. Просто следуйте инструкциям, которые увидите сейчас.</string>
-
-    <string name="Updater30ActivityTitle">Обновление 3.0</string>
-    <string name="NoSpaceForStep">На Вашем устройстве недостаточно места для этого шага. Перед началом убедитесь, что у вас свободно минимум %d МБ.</string>
-
-    <string name="StepUninstallTelegram">Удалить другое приложение Телеграм</string>
-    <string name="UninstallStandaloneTelegramDescription">Кроме PTelegram, у Вас установлен Telegram напрямую из сайта telegram.org. Вам нужно будет удалить его перед обновлением. Вы можете удалить его вручную или нажать на кнопку ниже.</string>
-    <string name="UninstallTelegramFailedDescription">Не удалось удалить другой Telegram. Попробуйте удалить его вручную.</string>
-    <string name="UninstallTelegram">Удалить другой Телеграм</string>
-
-    <string name="Step1">Шаг 1</string>
-    <string name="DownloadTelegramDescription">Сейчас загружается новая версия PTelegram. Дождитесь завершения загрузки, а затем нажмите на кнопку «Перейти к следующему шагу».\n%d%%</string>
-    <string name="DownloadTelegramCompleteDescription">Загрузка завершена. Нажмите на кнопку «Перейти к следующему шагу».</string>
-    <string name="DownloadTelegramFailedDescription">Загрузка не удалась. Возможно, нет интернета или на устройстве недостаточно места. Проверьте это и нажмите «Повторить».</string>
-    <string name="DownloadTelegramTooLong">\n\nНовая версия PTelegram загружается слишком долго. Возможно, загрузка зависла. Попробуйте перезапустить приложение.</string>
-    <string name="GoToNextStep">Перейти к следующему шагу</string>
-
-    <string name="Step2">Шаг 2</string>
-    <string name="InstallNewTelegramDescription">Сейчас нужно установить PTelegram 3.0. Нажмите кнопку \"Установить новый PTelegram\", установите его и после установки вернитесь обратно в старый PTelegram, чтобы передать данные.</string>
-    <string name="InstallNewTelegramNoPermissionDescription">Сейчас нужно установить PTelegram 3.0. Возможно, вам нужно будет разрешить установку приложения из неизвестных источников. Нажмите кнопку \"Установить новый PTelegram\", установите его и после установки вернитесь обратно в старый PTelegram, чтобы передать данные.</string>
-    <string name="InstallNewTelegramFailedDescription">Не удалось установить PTelegram 3.0. Возможно, на устройстве недостаточно места. Проверьте это и нажмите «Повторить».</string>
-    <string name="InstallNewTelegram">Установить новый PTelegram</string>
-
-    <string name="Step3">Шаг 3</string>
-    <string name="MakeDataDescription">PTelegram подготавливает данные для передачи в новую версию приложения. Дождитесь окончания и нажмите на кнопку «Скопировать данные в новый PTelegram».</string>
-    <string name="MakeDataCompleteDescription">Все готово для продолжения. Нажмите на кнопку «Скопировать данные в новый PTelegram».</string>
-    <string name="MakeDataFailedDescription">Не удалось подготовить данные. Возможно, на устройстве недостаточно места. Проверьте это и нажмите «Повторить».</string>
-    <string name="TransferFilesToNewTelegram">Скопировать данные в новый PTelegram</string>
-
-    <string name="Step4">Шаг 4</string>
-    <string name="UninstallSelfDescription">Телеграм обновлён до версии 3.0. Убедитесь, что все данные переданы в новое приложение и удалите старое.</string>
-    <string name="UninstallSelf">Удалить старый PTelegram</string>
+    <string name="OldAppNotRemovedTitle">Старый PTelegram не удалён</string>
+    <string name="OldAppNotRemovedMessage">Чтобы продолжить использовать новую версию приложения, необходимо удалить старое приложение. **Не выходите из аккаунта в старом приложении, так как это приведёт к выходу из аккаунта на обоих приложениях.**</string>
+    <string name="UpdateCompletedTitle">PTelegram обновлён</string>
+    <string name="UpdateCompletedMessage">Данные приложения успешно перенесены. Убедитесь в этом и удалите старое приложение. **Не выходите из аккаунта в старом приложении, так как это приведёт к выходу из аккаунта на обоих приложениях.**</string>
 </resources>

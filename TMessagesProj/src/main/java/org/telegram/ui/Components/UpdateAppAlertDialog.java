@@ -29,13 +29,14 @@ import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.MessageObject;
 import org.telegram.messenger.R;
 import org.telegram.messenger.SvgHelper;
+import org.telegram.messenger.partisan.UpdateData;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.BottomSheet;
 import org.telegram.ui.ActionBar.Theme;
 
 public class UpdateAppAlertDialog extends BottomSheet {
 
-    private TLRPC.TL_help_appUpdate appUpdate;
+    private UpdateData appUpdate;
     private int accountNum;
     private RadialProgress radialProgress;
     private FrameLayout radialProgressView;
@@ -134,7 +135,7 @@ public class UpdateAppAlertDialog extends BottomSheet {
         }
     }
 
-    public UpdateAppAlertDialog(Context context, TLRPC.TL_help_appUpdate update, int account) {
+    public UpdateAppAlertDialog(Context context, UpdateData update, int account) {
         super(context, false);
         appUpdate = update;
         accountNum = account;

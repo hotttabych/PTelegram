@@ -5,21 +5,16 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.widget.FrameLayout;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import org.telegram.messenger.AndroidUtilities;
-import org.telegram.messenger.BuildVars;
 import org.telegram.messenger.ChatObject;
-import org.telegram.messenger.FileLoader;
-import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.R;
 import org.telegram.messenger.SharedConfig;
-import org.telegram.messenger.fakepasscode.Update30;
 import org.telegram.messenger.fakepasscode.Utils;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.ActionBar;
@@ -37,12 +32,9 @@ import org.telegram.ui.DialogBuilder.DialogTemplate;
 import org.telegram.ui.DialogBuilder.DialogType;
 import org.telegram.ui.DialogBuilder.FakePasscodeDialogBuilder;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class TesterSettingsActivity extends BaseFragment {
 
@@ -83,6 +75,7 @@ public class TesterSettingsActivity extends BaseFragment {
     private int disablePremiumRow;
     private int simpleDataStartRow;
     private int simpleDataEndRow;
+    private int hideDialogIsNotSafeWarningRow;
 
     public static boolean showPlainBackup;
 
@@ -177,10 +170,6 @@ public class TesterSettingsActivity extends BaseFragment {
                 };
                 AlertDialog dialog = FakePasscodeDialogBuilder.build(getParentActivity(), template);
                 showDialog(dialog);
-            } else if (position == resetUpdateRow) {
-                SharedConfig.update30Step = null;
-                SharedConfig.saveConfig();
-                Toast.makeText(getParentActivity(), "Success", Toast.LENGTH_SHORT).show();
             } else if (position == showPlainBackupRow) {
                 showPlainBackup = !showPlainBackup;
                 ((TextCheckCell) view).setChecked(showPlainBackup);
@@ -188,6 +177,10 @@ public class TesterSettingsActivity extends BaseFragment {
                 SharedConfig.premiumDisabled = !SharedConfig.premiumDisabled;
                 SharedConfig.saveConfig();
                 ((TextCheckCell) view).setChecked(SharedConfig.premiumDisabled);
+            } else if (position == hideDialogIsNotSafeWarningRow) {
+                SharedConfig.showHideDialogIsNotSafeWarning = !SharedConfig.showHideDialogIsNotSafeWarning;
+                SharedConfig.saveConfig();
+                ((TextCheckCell) view).setChecked(SharedConfig.showHideDialogIsNotSafeWarning);
             }
         });
 
@@ -208,14 +201,12 @@ public class TesterSettingsActivity extends BaseFragment {
         sessionTerminateActionWarningRow = rowCount++;
         updateChannelIdRow = rowCount++;
         updateChannelUsernameRow = rowCount++;
-        if (SharedConfig.activatedTesterSettingType == 2) {
-            resetUpdateRow = rowCount++;
-        }
         showPlainBackupRow = rowCount++;
         disablePremiumRow = rowCount++;
         simpleDataStartRow = rowCount;
         rowCount += simpleDataArray.length;
         simpleDataEndRow = rowCount;
+        hideDialogIsNotSafeWarningRow = rowCount++;
     }
 
     @Override
@@ -239,17 +230,6 @@ public class TesterSettingsActivity extends BaseFragment {
             progressDialog[0] = new AlertDialog(getParentActivity(), 3);
             progressDialog[0].setCanCancel(false);
             progressDialog[0].showDelayed(300);
-        });
-        Update30.makeZip(getParentActivity(), new Update30.MakeZipDelegate() {
-            @Override
-            public void makeZipCompleted(File zipFile, byte[] passwordBytes) {
-                Update30.startNewTelegram(getParentActivity(), zipFile, passwordBytes);
-            }
-
-            @Override
-            public void makeZipFailed(Update30.MakeZipFailReason reason) {
-
-            }
         });
         progressDialog[0].dismiss();
     }
@@ -316,6 +296,9 @@ public class TesterSettingsActivity extends BaseFragment {
                         textCell.setTextAndCheck("Show plain backup", showPlainBackup, true);
                     } else if (position == disablePremiumRow) {
                         textCell.setTextAndCheck("Disable Premiun", SharedConfig.premiumDisabled, true);
+                    } else if (position == hideDialogIsNotSafeWarningRow) {
+                        textCell.setTextAndCheck("Show hide dialog is not safe warning",
+                                SharedConfig.showHideDialogIsNotSafeWarning, true);
                     }
                     break;
                 } case 1: {
@@ -339,7 +322,7 @@ public class TesterSettingsActivity extends BaseFragment {
         @Override
         public int getItemViewType(int position) {
             if (position == sessionTerminateActionWarningRow || position == showPlainBackupRow
-                || position == disablePremiumRow) {
+                || position == disablePremiumRow || position == hideDialogIsNotSafeWarningRow) {
                 return 0;
             } else if (position == updateChannelIdRow || position == updateChannelUsernameRow
                     || position == resetUpdateRow || (simpleDataStartRow <= position && position < simpleDataEndRow)) {

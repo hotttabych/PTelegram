@@ -3192,7 +3192,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                                     }
                                 }
                             } else if (which == 15) {
-                                SharedConfig.pendingAppUpdate = null;
+                                SharedConfig.pendingPtgAppUpdate = null;
                                 SharedConfig.saveConfig();
                                 NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.appUpdateAvailable);
                             } else if (which == 16) {

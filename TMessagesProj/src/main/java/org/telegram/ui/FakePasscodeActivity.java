@@ -8,17 +8,14 @@
 
 package org.telegram.ui;
 
-import android.Manifest;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.ObjectAnimator;
 import android.animation.StateListAnimator;
 import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.Outline;
 import android.graphics.PorterDuff;
@@ -49,14 +46,11 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.IntDef;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 import androidx.core.util.Consumer;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import org.telegram.messenger.AndroidUtilities;
-import org.telegram.messenger.FileLog;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.R;
@@ -157,6 +151,11 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
     private int allowFakePasscodeLoginRow;
     private int allowFakePasscodeLoginDetailRow;
 
+    private int accountHeaderRow;
+    private int firstAccountRow;
+    private int lastAccountRow;
+    private int accountDetailRow;
+
     private int clearAfterActivationRow;
     private int clearAfterActivationDetailRow;
 
@@ -174,11 +173,6 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
     private int clearTelegramCacheRow;
     private int clearProxiesRow;
     private int actionsDetailRow;
-
-    private int accountHeaderRow;
-    private int firstAccountRow;
-    private int lastAccountRow;
-    private int accountDetailRow;
 
     private int backupPasscodeRow;
     private int backupPasscodeDetailRow;
@@ -368,13 +362,8 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
                         SharedConfig.saveConfig();
                         cell.setChecked(fakePasscode.deleteOtherPasscodesAfterActivation);
                     } else if (position == smsRow) {
-                        Activity parentActivity = getParentActivity();
-                        if (ContextCompat.checkSelfPermission(parentActivity, Manifest.permission.SEND_SMS) != PackageManager.PERMISSION_GRANTED) {
-                            ActivityCompat.requestPermissions(parentActivity, new String[]{Manifest.permission.SEND_SMS}, 2002);
-                        } else {
-                            FakePasscodeSmsActivity activity = new FakePasscodeSmsActivity(fakePasscode.smsAction);
-                            presentFragment(activity);
-                        }
+                        FakePasscodeSmsActivity activity = new FakePasscodeSmsActivity(fakePasscode.smsAction);
+                        presentFragment(activity);
                     } else if (position == clearTelegramCacheRow) {
                         TextCheckCell cell = (TextCheckCell) view;
                         fakePasscode.clearCacheAction.enabled = !fakePasscode.clearCacheAction.enabled;
@@ -929,16 +918,6 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
     }
 
     @Override
-    public void onRequestPermissionsResultFragment(int requestCode, String[] permissions, int[] grantResults) {
-        if (requestCode == 2002 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            AndroidUtilities.runOnUIThread(() -> {
-                FakePasscodeSmsActivity activity = new FakePasscodeSmsActivity(fakePasscode.smsAction);
-                presentFragment(activity);
-            });
-        }
-    }
-
-    @Override
     public void onResume() {
         super.onResume();
         if (listAdapter != null) {
@@ -984,24 +963,6 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
         allowFakePasscodeLoginRow = rowCount++;
         allowFakePasscodeLoginDetailRow = rowCount++;
 
-        clearAfterActivationRow =  rowCount++;
-        clearAfterActivationDetailRow =  rowCount++;
-
-        deleteOtherPasscodesAfterActivationRow =  rowCount++;
-        deleteOtherPasscodesAfterActivationDetailRow =  rowCount++;
-
-        activationMessageRow = rowCount++;
-        activationMessageDetailRow = rowCount++;
-
-        badTriesToActivateRow = rowCount++;
-        badTriesToActivateDetailRow = rowCount++;
-
-        actionsHeaderRow = rowCount++;
-        smsRow = rowCount++;
-        clearTelegramCacheRow = rowCount++;
-        clearProxiesRow = rowCount++;
-        actionsDetailRow = rowCount++;
-
         accountHeaderRow = rowCount++;
         firstAccountRow = rowCount;
         lastAccountRow = firstAccountRow - 1;
@@ -1032,6 +993,28 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
         }
 
         accountDetailRow = rowCount++;
+
+        clearAfterActivationRow =  rowCount++;
+        clearAfterActivationDetailRow =  rowCount++;
+
+        deleteOtherPasscodesAfterActivationRow =  rowCount++;
+        deleteOtherPasscodesAfterActivationDetailRow =  rowCount++;
+
+        activationMessageRow = rowCount++;
+        activationMessageDetailRow = rowCount++;
+
+        badTriesToActivateRow = rowCount++;
+        badTriesToActivateDetailRow = rowCount++;
+
+        actionsHeaderRow = rowCount++;
+        if (fakePasscode != null && fakePasscode.smsAction != null
+                && fakePasscode.smsAction.messages != null
+                && !fakePasscode.smsAction.messages.isEmpty()) {
+            smsRow = rowCount++;
+        }
+        clearTelegramCacheRow = rowCount++;
+        clearProxiesRow = rowCount++;
+        actionsDetailRow = rowCount++;
 
         backupPasscodeRow = rowCount++;
         backupPasscodeDetailRow = rowCount++;

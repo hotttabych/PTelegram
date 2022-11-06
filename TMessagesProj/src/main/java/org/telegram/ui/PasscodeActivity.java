@@ -158,6 +158,18 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
     private int autoLockRow;
     private int autoLockDetailRow;
 
+    private int fakePasscodesHeaderRow;
+    private int firstFakePasscodeRow;
+    private int lastFakePasscodeRow;
+    private int addFakePasscodeRow;
+    private int restoreFakePasscodeDelimiterRow;
+    private int restoreFakePasscodeRow;
+    private int fakePasscodeDetailRow;
+
+    private int captureHeaderRow;
+    private int captureRow;
+    private int captureDetailRow;
+
     private int bruteForceProtectionRow;
     private int bruteForceProtectionDetailRow;
 
@@ -170,18 +182,8 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
     private int badPasscodeMuteAudioRow;
     private int badPasscodeAttemptsDetailRow;
 
-    private int fakePasscodesHeaderRow;
-    private int firstFakePasscodeRow;
-    private int lastFakePasscodeRow;
-    private int addFakePasscodeRow;
-    private int restoreFakePasscodeDelimiterRow;
-    private int restoreFakePasscodeRow;
-    private int fakePasscodeDetailRow;
     private int partisanSettingsRow;
     private int partisanSettingsDetailRow;
-    private int captureHeaderRow;
-    private int captureRow;
-    private int captureDetailRow;
 
     private int disablePasscodeRow;
     private int rowCount;
@@ -1079,11 +1081,25 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
         }
         autoLockRow = rowCount++;
         autoLockDetailRow = rowCount++;
+
+        if (!SharedConfig.isFakePasscodeActivated()) {
+            fakePasscodesHeaderRow = rowCount++;
+            if (!SharedConfig.fakePasscodes.isEmpty()) {
+                firstFakePasscodeRow = rowCount;
+                lastFakePasscodeRow = firstFakePasscodeRow + SharedConfig.fakePasscodes.size() - 1;
+                rowCount = lastFakePasscodeRow + 1;
+            }
+            addFakePasscodeRow = rowCount++;
+            restoreFakePasscodeDelimiterRow = rowCount++;
+            restoreFakePasscodeRow = rowCount++;
+            fakePasscodeDetailRow = rowCount++;
+        }
+
         captureHeaderRow = rowCount++;
         captureRow = rowCount++;
         captureDetailRow = rowCount++;
 
-        if (SharedConfig.getActivatedFakePasscode() == null) {
+        if (!SharedConfig.isFakePasscodeActivated()) {
             bruteForceProtectionRow = rowCount++;
             bruteForceProtectionDetailRow = rowCount++;
 
@@ -1098,16 +1114,6 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
             }
             badPasscodeAttemptsDetailRow = rowCount++;
 
-            fakePasscodesHeaderRow = rowCount++;
-            if (!SharedConfig.fakePasscodes.isEmpty()) {
-                firstFakePasscodeRow = rowCount;
-                lastFakePasscodeRow = firstFakePasscodeRow + SharedConfig.fakePasscodes.size() - 1;
-                rowCount = lastFakePasscodeRow + 1;
-            }
-            addFakePasscodeRow = rowCount++;
-            restoreFakePasscodeDelimiterRow = rowCount++;
-            restoreFakePasscodeRow = rowCount++;
-            fakePasscodeDetailRow = rowCount++;
             partisanSettingsRow = rowCount++;
             partisanSettingsDetailRow = rowCount++;
         }

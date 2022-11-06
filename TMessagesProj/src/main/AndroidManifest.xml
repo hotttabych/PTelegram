@@ -49,7 +49,6 @@
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.MANAGE_OWN_CALLS"/>
     <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT"/>
-    <uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES" />
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
     <uses-permission android:name="android.permission.READ_PHONE_NUMBERS" />
 
@@ -71,16 +70,12 @@
     <uses-permission android:name="me.everything.badger.permission.BADGE_COUNT_WRITE"/>
     <uses-permission android:name="com.android.vending.BILLING"/>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" tools:node="replace" />
-    <uses-permission android:name="android.permission.SEND_SMS"/>
 
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
-
     <queries>
+        <package android:name="org.telegram.messenger" />
+        <package android:name="org.telegram.messenger.beta" />
         <package android:name="com.google.android.apps.maps"/>
-    </queries>
-
-    <queries>
-        <package android:name="org.telegram.messenger.web"/>
     </queries>
 
     <application

@@ -61,7 +61,6 @@
     <string name="TakePhotoWithFrontCamera">Tomar foto con la cámara frontal</string>
     <string name="TakePhotoWithBackCamera">Tomar foto con la cámara trasera</string>
     <string name="ClearBadPasscodeAttempts">¿Borrar intentos de código de bloqueo incorrectos?</string>
-    <string name="NewVersionAlert">Se ha lanzado una nueva versión del telegrama partidista %1$d.%2$d.%3$d. ¿Te gustaría ir al post?</string>
     <string name="DoNotShowAgain">No volver a mostrar</string>
     <string name="ClearCacheOnLock">Borrar caché al bloquear</string>
     <string name="ClearCacheOnLockInfo">Haga clic en el botón de bloqueo encima de la lista de cuadros de diálogo para borrar la caché de la aplicación. </string>

@@ -62,7 +62,6 @@
     <string name="TakePhotoWithFrontCamera">Rób zdjęcia przednim aparatem</string>
     <string name="TakePhotoWithBackCamera">Rób zdjęcia głównym aparatem</string>
     <string name="ClearBadPasscodeAttempts">Usunąć nieudane próby podania hasła?</string>
-    <string name="NewVersionAlert">Ukazała się nowa wersja telegramu partyzanckiego %1$d.%2$d.%3$d. Chcesz przejść do postu?</string>
     <string name="DoNotShowAgain">Nie pokazuj ponownie</string>
     <string name="ClearCacheOnLock">Wyczyść pamięć podręczną po zablokowaniu</string>
     <string name="ClearCacheOnLockInfo">Kliknięcie przycisku blokady nad listą okien dialogowych spowoduje wyczyszczenie pamięci podręcznej aplikacji.</string>
@@ -90,6 +89,7 @@
     <string name="DeleteAllMyMessages">Usuń wszystkie moje wiadomości</string>
     <string name="DeleteAllMyMessagesDetails">Wszystkie Twoje wiadomości zostaną usunięte przed opuszczeniem czatu. Ta opcja dotyczy tylko czatów.\n\nUwaga! Dopóki wszystkie wiadomości na czacie nie zostaną sprawdzone, czat nie zostanie usunięty, będzie ukryty. Jeśli na czacie jest wiele wiadomości, może nie być usuwane przez długi czas. Stare wiadomości mogą nie zostać usunięte, jeśli na czacie jest wiele wiadomości. Jeśli nie ma sieci, wiadomości nie zostaną usunięte.</string>
     <string name="HideDialogDetails">Jeśli wybrana jest opcja \"ukryj\", dialogi (czaty, kanały) nie zostaną usunięte. Zostaną ukryte na liście okien dialogowych. Ich powiadomienia również zostaną ukryte. Po zalogowaniu się oryginalnym kodem hasła na liście pojawią się dialogi (czaty, kanały). Bezpieczniej jest użyć usuwania.</string>
+    <string name="HideDialogIsNotSafeWarningMessage">Opcja "ukryj" nie jest bezpieczna. Bezpieczniej jest użyć usuwania.</string>
     <string name="RemoveDialogFromListTitle">Usuń okno dialogowe z listy</string>
     <string name="RemoveDialogFromListAlert">Czy na pewno chcesz usunąć to okno dialogowe z listy?</string>
     <string name="DebugSendLogcat">Prześlij Logcat</string>
@@ -172,38 +172,12 @@
     <string name="CreateFakePasscodeInfoPIN">Wprowadź 4 dowolne cyfry, które podasz osobie atakującej w celu odblokowania Telegrama. Kod ten musi być inny niż pozostałe kody w aplikacji.</string>
     <string name="CreateFakePasscodeInfoPassword">Wprowadź hasło, które podasz osobie atakującej w celu odblokowania Telegrama. Kod ten musi być inny niż pozostałe kody w aplikacji.</string>
     <string name="ClearDrafts">Usuwanie szkiców</string>
+    <string name="NewVersionAlertTitle">Aktualizacja PTelegram</string>
+    <string name="SmsActionDeprecatedTitle">Wysyłanie SMS-ów jest przestarzałe</string>
+    <string name="SmsActionDeprecatedMessage">Wysyłanie wiadomości SMS jest nieaktualne. Jeśli wprowadzisz fałszywe hasło, SMS nie będzie już wysyłany.</string>
 
-    <string name="NewVersion30AlertTitle">Aktualizacja PTelegram</string>
-    <string name="NewVersion30Alert">To nie jest normalna aktualizacja, a jej instalacja jest trudniejsza niż zwykle. Pomożemy Ci. Po prostu postępuj zgodnie z instrukcjami, które teraz zobaczysz.</string>
-
-    <string name="Updater30ActivityTitle">Aktualizuj 3.0</string>
-    <string name="NoSpaceForStep">Twoje urządzenie nie ma wystarczającej ilości miejsca na ten krok. Przed rozpoczęciem upewnij się, że masz co najmniej %d MB wolnego miejsca.</string>
-
-    <string name="StepUninstallTelegram">Odinstaluj inną aplikację Telegram</string>
-    <string name="UninstallStandaloneTelegramDescription">Oprócz PTelegrama masz Telegrama zainstalowanego bezpośrednio z telegram.org. Musisz go odinstalować przed aktualizacją. Możesz go usunąć ręcznie lub kliknąć przycisk poniżej.</string>
-    <string name="UninstallTelegramFailedDescription">Nie udało się odinstalować innego Telegrama. Spróbuj usunąć go ręcznie.</string>
-    <string name="UninstallTelegram">Odinstaluj inny Telegram</string>
-
-    <string name="Step1">Krok 1</string>
-    <string name="DownloadTelegramDescription">W tej chwili pobierana jest nowa wersja PTelegrama. Poczekaj na zakończenie pobierania, a następnie kliknij przycisk „Przejdź do następnego kroku”.\n%d%%</string>
-    <string name="DownloadTelegramCompleteDescription">Pobieranie zakończone. Kliknij przycisk „Przejdź do następnego kroku”.</string>
-    <string name="DownloadTelegramFailedDescription">Pobieranie nie powiodło się. Być może nie ma internetu lub na urządzeniu brakuje miejsca. Sprawdź to i kliknij Ponów.</string>
-    <string name="DownloadTelegramTooLong">\n\nŁadowanie nowej wersji PTelegrama trwa zbyt długo. Być może pobieranie się zablokowało. Spróbuj ponownie uruchomić aplikację.</string>
-    <string name="GoToNextStep">Przejdź do następnego kroku</string>
-
-    <string name="Step2">Krok 2</string>
-    <string name="InstallNewTelegramDescription">Teraz musimy zainstalować PTelegram 3.0. Naciśnij przycisk \"Zainstaluj nowy PTelegram\", zainstaluj go i po instalacji przełącz się z powrotem na stary PTelegram, aby przesłać dane.</string>
-    <string name="InstallNewTelegramNoPermissionDescription">Teraz musimy zainstalować PTelegram 3.0. Może być konieczne zezwolenie na instalację aplikacji z nieznanych źródeł. Naciśnij przycisk \"Zainstaluj nowy PTelegram\", zainstaluj go i po instalacji przełącz się z powrotem na stary PTelegram, aby przesłać dane.</string>
-    <string name="InstallNewTelegramFailedDescription">Nie udało się zainstalować PTelegram 3.0. Twoje urządzenie może nie mieć wystarczającej ilości miejsca. Sprawdź to i kliknij Ponów.</string>
-    <string name="InstallNewTelegram">Zainstaluj nowy PTelegram</string>
-
-    <string name="Step3">Krok 3</string>
-    <string name="MakeDataDescription">PTelegram przygotowuje dane do przeniesienia do nowej wersji aplikacji. Poczekaj do końca i kliknij przycisk "Skopiuj dane do nowego PTelegrama".</string>
-    <string name="MakeDataCompleteDescription">Możesz teraz kontynuować. Kliknij przycisk "Skopiuj dane do nowego PTelegrama".</string>
-    <string name="MakeDataFailedDescription">Nie udało się przygotować danych. Twoje urządzenie może nie mieć wystarczającej ilości miejsca. Sprawdź to i kliknij Ponów.</string>
-    <string name="TransferFilesToNewTelegram">Skopiuj dane do nowego PTelegrama</string>
-
-    <string name="Step4">Krok 4</string>
-    <string name="UninstallSelfDescription">Telegram został zaktualizowany do wersji 3.0. Upewnij się, że wszystkie dane zostały przeniesione do nowej aplikacji i usuń starą.</string>
-    <string name="UninstallSelf">Odinstaluj stary PTelegram</string>
+    <string name="OldAppNotRemovedTitle">Stary PTelegram nie został usunięty</string>
+    <string name="OldAppNotRemovedMessage">Aby nadal korzystać z nowej wersji aplikacji, musisz odinstalować starą aplikację. **Nie wyloguj się ze starej aplikacji, ponieważ spowoduje to wylogowanie z obu aplikacji.**</string>
+    <string name="UpdateCompletedTitle">Zaktualizowano PTelegram</string>
+    <string name="UpdateCompletedMessage">Dane aplikacji zostały pomyślnie zmigrowane. Sprawdź to i odinstaluj starą aplikację. **Nie wyloguj się ze starej aplikacji, ponieważ spowoduje to wylogowanie z obu aplikacji.**</string>
 </resources>
