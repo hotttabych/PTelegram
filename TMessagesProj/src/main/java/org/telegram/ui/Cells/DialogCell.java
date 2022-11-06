@@ -2438,7 +2438,7 @@ public class DialogCell extends BaseCell {
                     if (mask == 0) {
                         clearingDialog = MessagesController.getInstance(currentAccount).isClearingDialog(dialog.id);
                         ArrayList<MessageObject> newMessage = MessagesController.getInstance(currentAccount).dialogMessage.get(dialog.id);
-                        if (newMessage == null || !FakePasscode.isHideMessage(currentAccount, dialog.id, newMessage.getId())) {
+                        if (newMessage == null || newMessage.isEmpty() || !FakePasscode.isHideMessage(currentAccount, dialog.id, newMessage.get(0).getId())) {
                             groupMessages = newMessage;
                         }
                         message = groupMessages != null && groupMessages.size() > 0 ? groupMessages.get(0) : null;

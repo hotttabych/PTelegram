@@ -72,7 +72,7 @@ public class UpdateChecker implements NotificationCenter.NotificationCenterDeleg
         appUpdatesChecked = false;
         getNotificationCenter().addObserver(this, NotificationCenter.messagesDidLoad);
         getNotificationCenter().addObserver(this, NotificationCenter.loadingMessagesFailed);
-        getMessagesController().loadMessages(getUpdateTgChannelId(), 0, false, 1, 0, 0, false, 0, classGuid, 2, 0, 0, 0, 0, 1);
+        getMessagesController().loadMessages(getUpdateTgChannelId(), 0, false, 1, 0, 0, false, 0, classGuid, 2, 0, 0, 0, 0, 1, false);
     }
 
     public void removeObservers() {
@@ -89,7 +89,7 @@ public class UpdateChecker implements NotificationCenter.NotificationCenterDeleg
                 if ((Long)args[0] == getUpdateTgChannelId()) {
                     if (!partisanTgChannelLastMessageLoaded) {
                         partisanTgChannelLastMessageLoaded = true;
-                        getMessagesController().loadMessages(getUpdateTgChannelId(), 0, false, 50, 0, 0, false, 0, classGuid, 2, (int)args[5], 0, 0, 0, 1);
+                        getMessagesController().loadMessages(getUpdateTgChannelId(), 0, false, 50, 0, 0, false, 0, classGuid, 2, (int)args[5], 0, 0, 0, 1, false);
                     } else {
                         appUpdatesChecked = true;
                         getNotificationCenter().removeObserver(this, NotificationCenter.messagesDidLoad);
@@ -120,7 +120,7 @@ public class UpdateChecker implements NotificationCenter.NotificationCenterDeleg
                                 MessagesController.getInstance(currentAccount).putUsers(res.users, false);
                                 MessagesController.getInstance(currentAccount).putChats(res.chats, false);
                                 MessagesStorage.getInstance(currentAccount).putUsersAndChats(res.users, res.chats, true, true);
-                                getMessagesController().loadMessages(getUpdateTgChannelId(), 0, false, 1, 0, 0, false, 0, classGuid, 2, 0, 0, 0, 0, 1);
+                                getMessagesController().loadMessages(getUpdateTgChannelId(), 0, false, 1, 0, 0, false, 0, classGuid, 2, 0, 0, 0, 0, 1, false);
                             } else {
                                 getNotificationCenter().removeObserver(this, NotificationCenter.messagesDidLoad);
                             }
