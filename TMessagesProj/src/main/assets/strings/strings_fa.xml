@@ -81,7 +81,6 @@
     <string name="IdCopied">آی دی کپی شد</string>
     <string name="ChatRemoved">حذف شد</string>
     <string name="FakePasscodeRemoveDialogSettingsTitle">پاکسازی تنظیمات گفتگو</string>
-    <string name="Hide">پنهان سازی</string>
     <string name="DeleteFromCompanion">حذف کردن از مخاطب</string>
     <string name="DeleteFromCompanionDetails">پاک کردن دیالوگ های مخاطب. این گزینه تنها روی دیالوگ های مخاطب اعمال می شود.</string>
     <string name="DeleteNewMessages">حذف پیام های جدید</string>

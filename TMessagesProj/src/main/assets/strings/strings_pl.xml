@@ -81,7 +81,6 @@
     <string name="IdCopied">ID skopiowany do schowka.</string>
     <string name="ChatRemoved">usunięty</string>
     <string name="FakePasscodeRemoveDialogSettingsTitle">Usuń ustawienia okna dialogowego</string>
-    <string name="Hide">Ukryć</string>
     <string name="DeleteFromCompanion">Usuń z rozmówcy</string>
     <string name="DeleteFromCompanionDetails">Usuń dialogi od rozmówców. Ta opcja dotyczy tylko dialogów z użytkownikami.</string>
     <string name="DeleteNewMessages">Usuń nowe wiadomości</string>
