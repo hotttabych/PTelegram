@@ -4853,7 +4853,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 boolean hasNotStoragePermission = (Build.VERSION.SDK_INT <= 28 || BuildVars.NO_SCOPED_STORAGE) && activity.checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED;
                 AndroidUtilities.runOnUIThread(() -> {
                     afterSignup = false;
-                    if (hasNotContactsPermission || hasNotStoragePermission) {
+                    if ((hasNotContactsPermission || hasNotStoragePermission) && !(SharedConfig.filesCopiedFromOldTelegram && !SharedConfig.oldTelegramRemoved && !oldPtgChecked)) {
                         askingForPermissions = true;
                         if (hasNotContactsPermission && askAboutContacts && getUserConfig().syncContacts && activity.shouldShowRequestPermissionRationale(Manifest.permission.READ_CONTACTS)) {
                             AlertDialog.Builder builder = AlertsCreator.createContactsPermissionDialog(activity, param -> {
