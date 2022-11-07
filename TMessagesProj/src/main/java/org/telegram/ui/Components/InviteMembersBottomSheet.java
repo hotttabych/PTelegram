@@ -44,8 +44,8 @@ import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.R;
-import org.telegram.messenger.UserObject;
 import org.telegram.messenger.UserConfig;
+import org.telegram.messenger.UserObject;
 import org.telegram.messenger.Utilities;
 import org.telegram.messenger.fakepasscode.FakePasscode;
 import org.telegram.tgnet.ConnectionsManager;
@@ -968,10 +968,7 @@ public class InviteMembersBottomSheet extends UsersAlertBase implements Notifica
                                 username = UserObject.getPublicUsername(user);
                             } else {
                                 TLRPC.Chat chat = (TLRPC.Chat) object;
-                                name = UserConfig.getChatTitleOverride(currentAccount, chat.id);
-                                if (name == null) {
-                                    name = chat.title;
-                                }
+                                name = UserConfig.getChatTitleOverride(currentAccount, chat.id, chat.title);
                                 username = ChatObject.getPublicUsername(chat);
                             }
                             String tName = LocaleController.getInstance().getTranslitString(name);

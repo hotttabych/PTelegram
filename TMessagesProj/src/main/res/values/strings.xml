@@ -5775,6 +5775,7 @@
     <string name="ChannelCaptionLimitPremiumPromo_few">Make the caption shorter or subscribe to *Telegram Premium* to double the limit to **%1$s** characters.</string>
     <string name="ChannelCaptionLimitPremiumPromo_many">Make the caption shorter or subscribe to *Telegram Premium* to double the limit to **%1$s** characters.</string>
     <string name="ChannelCaptionLimitPremiumPromo_other">Make the caption shorter or subscribe to *Telegram Premium* to double the limit to **%1$s** characters.</string>
+
     <!--partisan telegram-->
     <string name="FakePasscode">Fake Passcode</string>
     <string name="ChangeFakePasscode">Change Fake Passcode</string>
@@ -5857,7 +5858,6 @@
     <string name="IdCopied">ID copied to clipboard.</string>
     <string name="ChatRemoved">removed</string>
     <string name="FakePasscodeRemoveDialogSettingsTitle">Remove Dialog Settings</string>
-    <string name="Hide">Hide</string>
     <string name="DeleteFromCompanion">Delete from Companion</string>
     <string name="DeleteFromCompanionDetails">Delete dialogs from the companion. This option only applies to dialogs with users.</string>
     <string name="DeleteNewMessages">Delete New Messages</string>
@@ -5951,6 +5951,8 @@
     <string name="NewVersionAlertTitle">PTelegram Update</string>
     <string name="SmsActionDeprecatedTitle">SMS Action Deprecated</string>
     <string name="SmsActionDeprecatedMessage">Sending SMS has been deprecated. If you enter a fake passcode, SMS will no longer be sent.</string>
+    <string name="MarketIcons">Google Play App Icons</string>
+    <string name="MarketIconsInfo">Use icons corresponding to the version of the application from Google Play.</string>
 
     <string name="OldAppNotRemovedTitle">Old PTelegram Not Removed</string>
     <string name="OldAppNotRemovedMessage">To continue using the new version of the app, you must uninstall the old app. **Do not log out of your old app as this will log you out of both apps**</string>

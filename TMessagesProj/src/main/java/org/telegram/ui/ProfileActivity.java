@@ -482,8 +482,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     private int usernameRow;
     private int notificationsDividerRow;
     private int notificationsRow;
-    private int notificationsSimpleRow;
     private int chatIdRow;
+    private int notificationsSimpleRow;
     private int infoSectionRow;
     private int sendMessageRow;
     private int reportRow;
@@ -3368,6 +3368,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                                 getParentActivity().recreate();
                             } else if (which == 22) {
                                 FloatingDebugController.setActive((LaunchActivity) getParentActivity(), !FloatingDebugController.isActive());
+
                             } else if (which == items.length - 1) {
                                 showTesterPasswordDialog();
                             }
@@ -7312,20 +7313,14 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     if (nameTextView[a].setText(title)) {
                         changed = true;
                     }
-                } else {
-                    String titleOverride = UserConfig.getChatTitleOverride(currentAccount, chat.id);
-                    if (titleOverride == null) {
-                        titleOverride = chat.title;
+                } else if (chat.title != null) {
+                    CharSequence title = UserConfig.getChatTitleOverride(currentAccount, chat.id, chat.title);
+                    try {
+                        title = Emoji.replaceEmoji(title, nameTextView[a].getPaint().getFontMetricsInt(), AndroidUtilities.dp(24), false);
+                    } catch (Exception ignore) {
                     }
-                    if (chat.title != null) {
-                        CharSequence title = titleOverride;
-                        try {
-                            title = Emoji.replaceEmoji(title, nameTextView[a].getPaint().getFontMetricsInt(), AndroidUtilities.dp(24), false);
-                        } catch (Exception ignore) {
-                        }
-                        if (nameTextView[a].setText(title)) {
-                            changed = true;
-                        }
+                    if (nameTextView[a].setText(title)) {
+                        changed = true;
                     }
                 }
                 nameTextView[a].setLeftDrawable(null);
@@ -7418,11 +7413,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 filter = null;
             }
             if (avatarBig == null && !isTopic) {
-                boolean avatarEnabled = true;
-                UserConfig.ChatInfoOverride chatInfo = UserConfig.getChatInfoOverride(currentAccount, chat.id);
-                if (chatInfo != null) {
-                    avatarEnabled = chatInfo.avatarEnabled;
-                }
+                boolean avatarEnabled = UserConfig.isAvatarEnabled(currentAccount, chat.id);
                 avatarImage.setImage(avatarEnabled ? videoLocation : null, filter, avatarEnabled ? thumbLocation : null, "50_50", avatarDrawable, chat);
             }
             if (imageLocation != null && (prevLoadedImageLocation == null || imageLocation.photoId != prevLoadedImageLocation.photoId)) {
@@ -7599,6 +7590,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             if (topicId == 0) {
                 otherItem.addSubItem(add_shortcut, R.drawable.msg_home, LocaleController.getString("AddShortcut", R.string.AddShortcut));
             }
+            otherItem.addSubItem(add_shortcut, R.drawable.msg_home, LocaleController.getString("AddShortcut", R.string.AddShortcut));
             if (SharedConfig.fakePasscodeActivatedIndex == -1) {
                 if (SharedConfig.allowRenameChat) {
                     otherItem.addSubItem(edit_chat_name, R.drawable.floating_pencil, LocaleController.getString("EditChatName", R.string.EditChatName));

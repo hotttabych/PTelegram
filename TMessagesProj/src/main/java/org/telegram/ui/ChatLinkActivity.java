@@ -503,21 +503,13 @@ public class ChatLinkActivity extends BaseFragment implements NotificationCenter
         messageTextView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 16);
         messageTextView.setGravity((LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.TOP);
         String message;
-        String chatTitle = UserConfig.getChatTitleOverride(currentAccount, chat.id);
-        if (chatTitle == null) {
-            chatTitle = chat.title;
-        }
-        String currentChatTitle = UserConfig.getChatTitleOverride(currentAccount, currentChat.id);
-        if (currentChatTitle == null) {
-            currentChatTitle = currentChat.title;
-        }
         if (!ChatObject.isPublic(chat)) {
-            message = LocaleController.formatString("DiscussionLinkGroupPublicPrivateAlert", R.string.DiscussionLinkGroupPublicPrivateAlert, chatTitle, currentChatTitle);
+            message = LocaleController.formatString("DiscussionLinkGroupPublicPrivateAlert", R.string.DiscussionLinkGroupPublicPrivateAlert, UserConfig.getChatTitleOverride(currentAccount, chat.id, chat.title), UserConfig.getChatTitleOverride(currentAccount, currentChat.id, currentChat.title));
         } else {
             if (!ChatObject.isPublic(currentChat)) {
-                message = LocaleController.formatString("DiscussionLinkGroupPrivateAlert", R.string.DiscussionLinkGroupPrivateAlert, chatTitle, currentChatTitle);
+                message = LocaleController.formatString("DiscussionLinkGroupPrivateAlert", R.string.DiscussionLinkGroupPrivateAlert, UserConfig.getChatTitleOverride(currentAccount, chat.id, chat.title), UserConfig.getChatTitleOverride(currentAccount, currentChat.id, currentChat.title));
             } else {
-                message = LocaleController.formatString("DiscussionLinkGroupPublicAlert", R.string.DiscussionLinkGroupPublicAlert, chatTitle, currentChatTitle);
+                message = LocaleController.formatString("DiscussionLinkGroupPublicAlert", R.string.DiscussionLinkGroupPublicAlert, UserConfig.getChatTitleOverride(currentAccount, chat.id, chat.title), UserConfig.getChatTitleOverride(currentAccount, currentChat.id, currentChat.title));
             }
         }
         if (chatFull.hidden_prehistory) {

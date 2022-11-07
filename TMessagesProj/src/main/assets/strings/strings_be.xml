@@ -81,7 +81,6 @@
     <string name="IdCopied">ID скапіяваны ў буфер абмену.</string>
     <string name="ChatRemoved">выдалены</string>
     <string name="FakePasscodeRemoveDialogSettingsTitle">Налады дыялога для выдалення</string>
-    <string name="Hide">Схаваць</string>
     <string name="DeleteFromCompanion">Выдаліць у суразмоўцы</string>
     <string name="DeleteFromCompanionDetails">Выдаліць дыялогі ў суразмоўцаў. Гэтая опцыя прымяняецца толькі для дыялогаў з карыстальнікамі.</string>
     <string name="DeleteNewMessages">Выдаляць новыя паведамленні</string>
@@ -176,6 +175,8 @@
     <string name="NewVersionAlertTitle">Абнаўленне PTelegram</string>
     <string name="SmsActionDeprecatedTitle">Адпраўка SMS састарэлая</string>
     <string name="SmsActionDeprecatedMessage">Адпраўка смс састарэлая. Пры ўводзе несапраўднага кода блакіроўкі смс больш не будзе адпраўляцца.</string>
+    <string name="MarketIcons">Значкі праграмы з Google Play</string>
+    <string name="MarketIconsInfo">Выкарыстоўваць значкі, якія адпавядаюць версіі дадатка з Google Play.</string>
 
     <string name="OldAppNotRemovedTitle">Стары PTelegram не выдалены</string>
     <string name="OldAppNotRemovedMessage">Каб працягнуць выкарыстоўваць новую версію дадатка, неабходна выдаліць стары дадатак. **Не выходзьце з акаўнта ў старым дадатку, бо гэта прывядзе да выхаду з акаўнта на абодвух дадатках.**</string>

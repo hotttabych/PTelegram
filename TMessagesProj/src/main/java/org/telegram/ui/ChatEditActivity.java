@@ -1006,11 +1006,7 @@ public class ChatEditActivity extends BaseFragment implements ImageUpdater.Image
         undoView = new UndoView(context);
         sizeNotifierFrameLayout.addView(undoView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.BOTTOM | Gravity.LEFT, 8, 0, 8, 8));
 
-        String title = UserConfig.getChatTitleOverride(currentAccount, currentChat.id);
-        if (title == null) {
-            title = Emoji.replaceEmoji(currentChat.title, nameTextView.getEditText().getPaint().getFontMetricsInt(), AndroidUtilities.dp(16), true);
-        }
-        nameTextView.setText(title);
+        nameTextView.setText(Emoji.replaceEmoji(UserConfig.getChatTitleOverride(currentAccount, currentChat.id, currentChat.title), nameTextView.getEditText().getPaint().getFontMetricsInt(), AndroidUtilities.dp(16), true));
         nameTextView.setSelection(nameTextView.length());
         if (info != null) {
             descriptionTextView.setText(info.about);
@@ -1396,21 +1392,13 @@ public class ChatEditActivity extends BaseFragment implements ImageUpdater.Image
                         String username;
                         if (isChannel) {
                             if (TextUtils.isEmpty(username = ChatObject.getPublicUsername(chat))) {
-                                String title = UserConfig.getChatTitleOverride(currentAccount, chat.id);
-                                if (title == null) {
-                                    title = chat.title;
-                                }
-                                linkedCell.setTextAndValueAndIcon(LocaleController.getString("Discussion", R.string.Discussion), title, R.drawable.msg_discuss,true);
+                                linkedCell.setTextAndValueAndIcon(LocaleController.getString("Discussion", R.string.Discussion), UserConfig.getChatTitleOverride(currentAccount, chat.id, chat.title), R.drawable.msg_discuss,true);
                             } else {
                                 linkedCell.setTextAndValueAndIcon(LocaleController.getString("Discussion", R.string.Discussion), "@" + username, R.drawable.msg_discuss,true);
                             }
                         } else {
                             if (TextUtils.isEmpty(username = ChatObject.getPublicUsername(chat))) {
-                                String title = UserConfig.getChatTitleOverride(currentAccount, chat.id);
-                                if (title == null) {
-                                    title = chat.title;
-                                }
-                                linkedCell.setTextAndValueAndIcon(LocaleController.getString("LinkedChannel", R.string.LinkedChannel), title, R.drawable.msg_channel, forumsCell != null && forumsCell.getVisibility() == View.VISIBLE);
+                                linkedCell.setTextAndValueAndIcon(LocaleController.getString("LinkedChannel", R.string.LinkedChannel), UserConfig.getChatTitleOverride(currentAccount, chat.id, chat.title), R.drawable.msg_channel, forumsCell != null && forumsCell.getVisibility() == View.VISIBLE);
                             } else {
                                 linkedCell.setTextAndValueAndIcon(LocaleController.getString("LinkedChannel", R.string.LinkedChannel), "@" + username,  R.drawable.msg_channel, forumsCell != null && forumsCell.getVisibility() == View.VISIBLE);
                             }

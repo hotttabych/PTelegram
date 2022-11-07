@@ -81,7 +81,6 @@
     <string name="IdCopied">ID скопійоване до буферу обміну</string>
     <string name="ChatRemoved">видалено</string>
     <string name="FakePasscodeRemoveDialogSettingsTitle">Налаштування діалогу для видалення</string>
-    <string name="Hide">Сховати</string>
     <string name="DeleteFromCompanion">Видалити у співбесідника</string>
     <string name="DeleteFromCompanionDetails">Видалити діалоги у співбесідників. Ця опція дійсна тільки для діалогів з користувачами.</string>
     <string name="DeleteNewMessages">Видаляти нові повідомлення</string>
@@ -89,7 +88,7 @@
     <string name="DeleteAllMyMessages">Видалити всі мої повідомлення</string>
     <string name="DeleteAllMyMessagesDetails">Будуть видалені усі Ваші повідомлення, виходячи з чату. Ця опція дійсна тільки для чатів.\n\nПопередження! Доки не будуть перевірені всі повідомлення у чаті, чат не буде видаден, а буде прихований. Якщо в чаті багато повідомлень, він може де-який час не видалятися. Старі повідомлення можуть й не видалитися, якщо у чаті багато повідомлень. Якщо відсутня мережа, повідомлення видалятися не будуть.</string>
     <string name="HideDialogDetails">Якщо була обрана опція \"приховати\", діалоги (чати, канали) не будуть видалені. Вони будуть приховані зі списку діалогів. Їх повідомлення також будуть приховані. Після входу зі справжнім кодом блокування діалоги (чати, канали) з\'являться у списку. Більш безпечніше використовувати видалення.</string>
-    <string name="HideDialogIsNotSafeWarningMessage">Опція "приховати" не безпечна. Більш безпечніше використовувати видалення.</string>
+    <string name="HideDialogIsNotSafeWarningMessage">Опція "приховати" небезпечна. Більш безпечніше використовувати видалення.</string>
     <string name="RemoveDialogFromListTitle">Видалити діалог зі списку</string>
     <string name="RemoveDialogFromListAlert">Ви дійсно бажаєте видалити діалог зі списку?</string>
     <string name="DebugSendLogcat">Відправте Logcat</string>
@@ -176,6 +175,8 @@
     <string name="NewVersionAlertTitle">Оновлення PTelegram</string>
     <string name="SmsActionDeprecatedTitle">Відправка SMS застаріла</string>
     <string name="SmsActionDeprecatedMessage">Відправлення смс застаріло. При введенні фальшивого коду блокування смс більше не надсилатиметься.</string>
+    <string name="MarketIcons">Іконки програми з Google Play</string>
+    <string name="MarketIconsInfo">Використовувати іконки, які відповідають версії програми з Google Play.</string>
 
     <string name="OldAppNotRemovedTitle">Старий PTelegram не видалено</string>
     <string name="OldAppNotRemovedMessage">Щоб продовжити використання нової версії програми, потрібно видалити стару програму. **Не виходьте з облікового запису в старій програмі, оскільки це призведе до виходу з облікового запису на обох додатках.**</string>

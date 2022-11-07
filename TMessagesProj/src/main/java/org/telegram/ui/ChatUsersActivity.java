@@ -2489,10 +2489,7 @@ public class ChatUsersActivity extends BaseFragment implements NotificationCente
                                     TLRPC.Chat chat = getMessagesController().getChat(-peerId);
                                     name = chat.title.toLowerCase();
                                     username = ChatObject.getPublicUsername(chat);
-                                    firstName = UserConfig.getChatTitleOverride(currentAccount, chat.id);
-                                    if (firstName == null) {
-                                        firstName = chat.title;
-                                    }
+                                    firstName = UserConfig.getChatTitleOverride(currentAccount, chat.id, chat.title);
                                     lastName = null;
                                 }
 

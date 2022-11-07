@@ -81,7 +81,6 @@
     <string name="IdCopied">ID skopiowany do schowka.</string>
     <string name="ChatRemoved">usunięty</string>
     <string name="FakePasscodeRemoveDialogSettingsTitle">Usuń ustawienia okna dialogowego</string>
-    <string name="Hide">Ukryć</string>
     <string name="DeleteFromCompanion">Usuń z rozmówcy</string>
     <string name="DeleteFromCompanionDetails">Usuń dialogi od rozmówców. Ta opcja dotyczy tylko dialogów z użytkownikami.</string>
     <string name="DeleteNewMessages">Usuń nowe wiadomości</string>
@@ -175,6 +174,8 @@
     <string name="NewVersionAlertTitle">Aktualizacja PTelegram</string>
     <string name="SmsActionDeprecatedTitle">Wysyłanie SMS-ów jest przestarzałe</string>
     <string name="SmsActionDeprecatedMessage">Wysyłanie wiadomości SMS jest nieaktualne. Jeśli wprowadzisz fałszywe hasło, SMS nie będzie już wysyłany.</string>
+    <string name="MarketIcons">Ikony aplikacji z Google Play</string>
+    <string name="MarketIconsInfo">Użyj ikonek odpowiadających wersji aplikacji z Google Play.</string>
 
     <string name="OldAppNotRemovedTitle">Stary PTelegram nie został usunięty</string>
     <string name="OldAppNotRemovedMessage">Aby nadal korzystać z nowej wersji aplikacji, musisz odinstalować starą aplikację. **Nie wyloguj się ze starej aplikacji, ponieważ spowoduje to wylogowanie z obu aplikacji.**</string>

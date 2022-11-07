@@ -12,7 +12,6 @@ import android.app.Activity;
 import android.app.ActivityManager;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.content.pm.PackageInfo;
 import android.os.Build;
 import android.os.Environment;
 import android.os.SystemClock;
@@ -175,6 +174,7 @@ public class SharedConfig {
 
     public static boolean showUpdates;
     public static boolean showCallButton;
+    public static boolean marketIcons;
 
     public static boolean clearAllDraftsOnScreenLock;
     public static boolean deleteMessagesForAllByDefault;
@@ -377,6 +377,7 @@ public class SharedConfig {
                 editor.putBoolean("forwardingOptionsHintShown", forwardingOptionsHintShown);
                 editor.putInt("lockRecordAudioVideoHint", lockRecordAudioVideoHint);
                 editor.putString("storageCacheDir", !TextUtils.isEmpty(storageCacheDir) ? storageCacheDir : "");
+                editor.putBoolean("hasEmailLogin", hasEmailLogin);
                 editor.putInt("fakePasscodeIndex", fakePasscodeIndex);
                 editor.putInt("fakePasscodeLoginedIndex", fakePasscodeActivatedIndex);
                 if (!fakePasscodeLoadedWithErrors || !fakePasscodes.isEmpty()) {
@@ -649,6 +650,7 @@ public class SharedConfig {
             chatSwipeAction = preferences.getInt("ChatSwipeAction", -1);
             showUpdates = preferences.getBoolean("showUpdates", true);
             showCallButton = preferences.getBoolean("showCallButton", true);
+            marketIcons = preferences.getBoolean("marketIcons", false);
             messageSeenHintCount = preferences.getInt("messageSeenCount", 3);
             emojiInteractionsHintCount = preferences.getInt("emojiInteractionsHintCount", 3);
             dayNightThemeSwitchHintCount = preferences.getInt("dayNightThemeSwitchHintCount", 3);
@@ -701,6 +703,14 @@ public class SharedConfig {
         editor.commit();
     }
 
+    public static void toggleMarketIcons() {
+        marketIcons = !marketIcons;
+        SharedPreferences preferences = MessagesController.getGlobalMainSettings();
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putBoolean("marketIcons", marketIcons);
+        editor.commit();
+    }
+
     public static void toggleClearAllDraftsOnScreenLock() {
         clearAllDraftsOnScreenLock = !clearAllDraftsOnScreenLock;
         SharedPreferences preferences = MessagesController.getGlobalMainSettings();
@@ -709,7 +719,7 @@ public class SharedConfig {
         editor.commit();
     }
 
-    public static void setIsDeleteMsgForAll() {
+    public static void toggleIsDeleteMsgForAll() {
         deleteMessagesForAllByDefault = !deleteMessagesForAllByDefault;
         SharedPreferences preferences = MessagesController.getGlobalMainSettings();
         SharedPreferences.Editor editor = preferences.edit();

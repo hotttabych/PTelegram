@@ -49,9 +49,9 @@ import android.provider.ContactsContract;
 import android.provider.Settings;
 import android.text.TextUtils;
 import android.util.Base64;
-import android.util.SparseArray;
 import android.util.Pair;
 import android.util.Log;
+import android.util.SparseArray;
 import android.util.SparseIntArray;
 import android.util.TypedValue;
 import android.view.ActionMode;
@@ -6007,6 +6007,9 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                         requsetPermissionsPointer
                 );
             }
+        } else if (id == NotificationCenter.chatSwithcedToForum) {
+            long chatId = (long) args[0];
+            ForumUtilities.switchAllFragmentsInStackToForum(chatId, actionBarLayout);
         } else if (id == NotificationCenter.appDidLogoutByAction || id == NotificationCenter.appHiddenByAction) {
             switchToAvailableAccountIfCurrentAccountIsHidden();
             if (drawerLayoutAdapter != null) {
@@ -6016,7 +6019,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
             switchToAvailableAccountIfCurrentAccountIsHidden();
             if (SharedConfig.getActivatedFakePasscode() != null) {
                 Utilities.globalQueue.postRunnable(() -> {
-                    ArrayList<BaseFragment> fragmentsStack = actionBarLayout.fragmentsStack;
+                    List<BaseFragment> fragmentsStack = actionBarLayout.getFragmentStack();
                     if (fragmentsStack.stream().noneMatch(f -> f instanceof DialogsActivity)) {
                         return;
                     }
@@ -6043,9 +6046,6 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
             if (sideMenu != null) {
                 sideMenu.getAdapter().notifyDataSetChanged();
             }
-        } else if (id == NotificationCenter.chatSwithcedToForum) {
-            long chatId = (long) args[0];
-            ForumUtilities.switchAllFragmentsInStackToForum(chatId, actionBarLayout);
         }
     }
 

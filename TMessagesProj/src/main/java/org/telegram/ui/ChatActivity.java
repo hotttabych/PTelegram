@@ -357,9 +357,9 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
     private RadialProgressView progressBar;
     private ActionBarMenuSubItem addContactItem;
     private ActionBarMenuSubItem clearHistoryItem;
+    private ActionBarMenuSubItem saveItem;
     private ActionBarMenuSubItem viewAsTopics;
     private ActionBarMenuSubItem closeTopicItem;
-    private ActionBarMenuSubItem saveItem;
     private ClippingImageView animatingImageView;
     private RecyclerListView chatListView;
     private ChatListItemAnimator chatListItemAnimator;

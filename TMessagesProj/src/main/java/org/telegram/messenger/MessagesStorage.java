@@ -9290,7 +9290,7 @@ public class MessagesStorage extends BaseController {
         for (TLRPC.Message message : res.messages) {
             Utils.fixTlrpcMessage(message);
         }
-        return () -> getMessagesController().processLoadedMessages(res, finalMessagesCount, dialogId, mergeDialogId, countQueryFinal, maxIdOverrideFinal, offset_date, true, classGuid, minUnreadIdFinal, lastMessageIdFinal, countUnreadFinal, maxUnreadDateFinal, load_type, isEndFinal, scheduled ? 1 : 0, replyMessageId, loadIndex, queryFromServerFinal, mentionsUnreadFinal, processMessages, isTopic);
+        return () -> getMessagesController().processLoadedMessages(res, finalMessagesCount, dialogId, mergeDialogId, countQueryFinal, maxIdOverrideFinal, offset_date, true, classGuid, minUnreadIdFinal, lastMessageIdFinal, countUnreadFinal, maxUnreadDateFinal, load_type, isEndFinal, scheduled ? 1 : 0, threadMessageId, loadIndex, queryFromServerFinal, mentionsUnreadFinal, processMessages, isTopic);
         //}
     }
 
@@ -15094,11 +15094,9 @@ public class MessagesStorage extends BaseController {
             LongSparseArray<TLRPC.Message> new_dialogMessage = new LongSparseArray<>(dialogs.messages.size());
             for (int a = 0; a < dialogs.messages.size(); a++) {
                 TLRPC.Message message = dialogs.messages.get(a);
-                if (FakePasscode.checkMessage(currentAccount, message)) {
-                    long did = MessageObject.getDialogId(message);
-                    if (!new_dialogMessage.containsKey(did) || new_dialogMessage.get(did) != null && new_dialogMessage.get(did).date < message.date) {
-                        new_dialogMessage.put(did, message);
-                    }
+                long did = MessageObject.getDialogId(message);
+                if ((!new_dialogMessage.containsKey(did) || new_dialogMessage.get(did) != null && new_dialogMessage.get(did).date < message.date) && FakePasscode.checkMessage(currentAccount, message)) {
+                    new_dialogMessage.put(did, message);
                 }
             }
 

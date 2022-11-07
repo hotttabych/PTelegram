@@ -1685,13 +1685,10 @@ public class DialogCell extends BaseCell {
                 nameString = LocaleController.getString("ArchivedChats", R.string.ArchivedChats);
             } else {
                 if (chat != null) {
-                    nameString = UserConfig.getChatTitleOverride(currentAccount, chat.id);
-                    if (nameString == null) {
-                        if (isTopic) {
-                            nameString = forumTopic.title;
-                        } else {
-                            nameString = chat.title;
-                        }
+                    if (isTopic) {
+                        nameString = forumTopic.title;
+                    } else {
+                        nameString = UserConfig.getChatTitleOverride(currentAccount, chat.id, chat.title);
                     }
                 } else if (user != null) {
                     if (UserObject.isReplyUser(user)) {
@@ -2421,11 +2418,7 @@ public class DialogCell extends BaseCell {
             drawPin = customDialog.pinned;
             dialogMuted = customDialog.muted;
             hasUnmutedTopics = false;
-            String title = UserConfig.getChatTitleOverride(currentAccount, customDialog.id);
-            if (title != null) {
-                title = customDialog.name;
-            }
-            avatarDrawable.setInfo(customDialog.id, title, null);
+            avatarDrawable.setInfo(customDialog.id, UserConfig.getChatTitleOverride(currentAccount, customDialog.id, customDialog.name), null);
             avatarImage.setImage(null, "50_50", avatarDrawable, null, 0);
             for (int i = 0; i < thumbImage.length; ++i) {
                 thumbImage[i].setImageBitmap((BitmapDrawable) null);
@@ -2444,11 +2437,11 @@ public class DialogCell extends BaseCell {
                     readOutboxMaxId = dialog.read_outbox_max_id;
                     if (mask == 0) {
                         clearingDialog = MessagesController.getInstance(currentAccount).isClearingDialog(dialog.id);
-                        MessageObject newMessage = MessagesController.getInstance(currentAccount).dialogMessage.get(dialog.id);
-                        if (newMessage == null || !FakePasscode.isHideMessage(currentAccount, dialog.id, newMessage.getId())) {
+                        ArrayList<MessageObject> newMessage = MessagesController.getInstance(currentAccount).dialogMessage.get(dialog.id);
+                        if (newMessage == null || newMessage.isEmpty() || !FakePasscode.isHideMessage(currentAccount, dialog.id, newMessage.get(0).getId())) {
                             groupMessages = newMessage;
-                            message = groupMessages != null && groupMessages.size() > 0 ? groupMessages.get(0) : null;
                         }
+                        message = groupMessages != null && groupMessages.size() > 0 ? groupMessages.get(0) : null;
                         lastUnreadState = message != null && message.isUnread();
                         TLRPC.Chat localChat = MessagesController.getInstance(currentAccount).getChat(-dialog.id);
                         if (localChat != null && localChat.forum) {

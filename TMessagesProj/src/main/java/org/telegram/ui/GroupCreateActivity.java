@@ -1532,10 +1532,7 @@ public class GroupCreateActivity extends BaseFragment implements NotificationCen
                                 username = UserObject.getPublicUsername(user);
                             } else {
                                 TLRPC.Chat chat = (TLRPC.Chat) object;
-                                name = UserConfig.getChatTitleOverride(currentAccount, chat.id);
-                                if (name == null) {
-                                    name = chat.title;
-                                }
+                                name = UserConfig.getChatTitleOverride(currentAccount, chat.id, chat.title);
                                 username = ChatObject.getPublicUsername(chat);
                             }
                             String tName = LocaleController.getInstance().getTranslitString(name);

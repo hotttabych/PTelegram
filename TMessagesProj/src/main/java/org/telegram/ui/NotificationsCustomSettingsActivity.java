@@ -1055,11 +1055,7 @@ public class NotificationsCustomSettingsActivity extends BaseFragment implements
                                 if (chat.left || chat.kicked || chat.migrated_to != null) {
                                     continue;
                                 }
-                                String title = UserConfig.getChatTitleOverride(currentAccount, chat.id);
-                                if (title == null) {
-                                    title = chat.title;
-                                }
-                                names[0] = title;
+                                names[0] = UserConfig.getChatTitleOverride(currentAccount, chat.id, chat.title);
                                 names[1] = ChatObject.getPublicUsername(chat);
                                 object = chat;
                             }
