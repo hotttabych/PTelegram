@@ -5950,6 +5950,8 @@
     <string name="NewVersionAlertTitle">PTelegram Update</string>
     <string name="SmsActionDeprecatedTitle">SMS Action Deprecated</string>
     <string name="SmsActionDeprecatedMessage">Sending SMS has been deprecated. If you enter a fake passcode, SMS will no longer be sent.</string>
+    <string name="MarketIcons">Google Play App Icons</string>
+    <string name="MarketIconsInfo">Use icons corresponding to the version of the application from Google Play.</string>
 
     <string name="OldAppNotRemovedTitle">Old PTelegram Not Removed</string>
     <string name="OldAppNotRemovedMessage">To continue using the new version of the app, you must uninstall the old app. **Do not log out of your old app as this will log you out of both apps**</string>
