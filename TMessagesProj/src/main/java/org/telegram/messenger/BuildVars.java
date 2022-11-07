@@ -74,7 +74,7 @@ public class BuildVars {
             return true;
         }
         if (standaloneApp == null) {
-            standaloneApp = ApplicationLoader.applicationContext != null && "org.telegram.messenger.web".equals(ApplicationLoader.applicationContext.getPackageName());
+            standaloneApp = ApplicationLoader.applicationContext != null && ("org.telegram.messenger.web".equals(ApplicationLoader.applicationContext.getPackageName()) || "org.telegram.messenger.alpha".equals(ApplicationLoader.applicationContext.getPackageName()));
         }
         return standaloneApp;
     }

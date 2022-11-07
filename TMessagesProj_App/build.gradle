@@ -122,7 +122,7 @@ android {
     }
 
     sourceSets.alpha {
-        manifest.srcFile '../TMessagesProj/config/debug/AndroidManifest.xml'
+        manifest.srcFile '../TMessagesProj/config/release/AndroidManifest.xml'
     }
 
     sourceSets.debug {
@@ -153,7 +153,7 @@ android {
                 abiFilters "armeabi-v7a", "arm64-v8a", "x86", "x86_64"
             }
             sourceSets.alpha {
-                manifest.srcFile '../TMessagesProj/config/debug/AndroidManifest_SDK23.xml'
+                manifest.srcFile '../TMessagesProj/config/release/AndroidManifest_standalone.xml'
             }
             sourceSets.debug {
                 manifest.srcFile '../TMessagesProj/config/debug/AndroidManifest_SDK23.xml'
@@ -174,7 +174,7 @@ android {
                 abiFilters "armeabi-v7a", "arm64-v8a", "x86", "x86_64"
             }
             sourceSets.alpha {
-                manifest.srcFile '../TMessagesProj/config/debug/AndroidManifest_SDK23.xml'
+                manifest.srcFile '../TMessagesProj/config/release/AndroidManifest_standalone.xml'
             }
             sourceSets.debug {
                 manifest.srcFile '../TMessagesProj/config/debug/AndroidManifest_SDK23.xml'
