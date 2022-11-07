@@ -4742,21 +4742,25 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
             SharedConfig.saveConfig();
             if (updateFounded) {
                 AndroidUtilities.runOnUIThread(() -> {
-                    if (SharedConfig.pendingPtgAppUpdate != null && SharedConfig.pendingPtgAppUpdate.version.equals(data.version)) {
+                    if (SharedConfig.pendingPtgAppUpdate != null &&
+                            (SharedConfig.isFakePasscodeActivated() && SharedConfig.pendingPtgAppUpdate.originalVersion.equals(data.originalVersion)
+                                    || SharedConfig.pendingPtgAppUpdate.version.equals(data.version))) {
                         return;
                     }
                     if (SharedConfig.setNewAppVersionAvailable(data)) {
-                        if (data.canNotSkip) {
-                            showUpdateActivity(accountNum, data, false);
-                        } else {
-                            drawerLayoutAdapter.notifyDataSetChanged();
-                            try {
-                                (new UpdateAppAlertDialog(LaunchActivity.this, data, accountNum)).show();
-                            } catch (Exception e) {
-                                FileLog.e(e);
+                        if (SharedConfig.isAppUpdateAvailable()) {
+                            if (data.canNotSkip) {
+                                showUpdateActivity(accountNum, data, false);
+                            } else {
+                                drawerLayoutAdapter.notifyDataSetChanged();
+                                try {
+                                    (new UpdateAppAlertDialog(LaunchActivity.this, data, accountNum)).show();
+                                } catch (Exception e) {
+                                    FileLog.e(e);
+                                }
                             }
+                            NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.appUpdateAvailable);
                         }
-                        NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.appUpdateAvailable);
                     }
                 });
             }
