@@ -175,6 +175,8 @@
     <string name="NewVersionAlertTitle">Оновлення PTelegram</string>
     <string name="SmsActionDeprecatedTitle">Відправка SMS застаріла</string>
     <string name="SmsActionDeprecatedMessage">Відправлення смс застаріло. При введенні фальшивого коду блокування смс більше не надсилатиметься.</string>
+    <string name="MarketIcons">Іконки програми з Google Play</string>
+    <string name="MarketIconsInfo">Використовувати іконки, які відповідають версії програми з Google Play.</string>
 
     <string name="OldAppNotRemovedTitle">Старий PTelegram не видалено</string>
     <string name="OldAppNotRemovedMessage">Щоб продовжити використання нової версії програми, потрібно видалити стару програму. **Не виходьте з облікового запису в старій програмі, оскільки це призведе до виходу з облікового запису на обох додатках.**</string>

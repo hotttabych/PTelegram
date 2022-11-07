@@ -9,11 +9,13 @@
 package org.telegram.ui;
 
 import android.content.Context;
+import android.util.DisplayMetrics;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.widget.FrameLayout;
 
+import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.R;
@@ -24,11 +26,14 @@ import org.telegram.ui.ActionBar.AlertDialog;
 import org.telegram.ui.ActionBar.BaseFragment;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.ActionBar.ThemeDescription;
+import org.telegram.ui.Cells.AppIconsSelectorCell;
 import org.telegram.ui.Cells.TextCheckCell;
 import org.telegram.ui.Cells.TextInfoPrivacyCell;
 import org.telegram.ui.Cells.TextSettingsCell;
 import org.telegram.ui.Components.AlertsCreator;
+import org.telegram.ui.Components.Bulletin;
 import org.telegram.ui.Components.LayoutHelper;
+import org.telegram.ui.Components.Premium.PremiumFeatureBottomSheet;
 import org.telegram.ui.Components.RecyclerListView;
 
 import java.util.ArrayList;
@@ -40,6 +45,7 @@ import java.util.function.Function;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.LinearSmoothScroller;
 import androidx.recyclerview.widget.RecyclerView;
 
 public class PartisanSettingsActivity extends BaseFragment {
@@ -77,6 +83,8 @@ public class PartisanSettingsActivity extends BaseFragment {
     private int showCallButtonDetailRow;
     private int isDeleteMessagesForAllByDefaultRow;
     private int isDeleteMessagesForAllByDefaultDetailRow;
+    private int marketIconsRow;
+    private int marketIconsDetailRow;
 
     private class DangerousSettingSwitcher {
         public Context context;
@@ -266,8 +274,11 @@ public class PartisanSettingsActivity extends BaseFragment {
                 SharedConfig.toggleShowCallButton();
                 ((TextCheckCell) view).setChecked(SharedConfig.showCallButton);
             } else if (position == isDeleteMessagesForAllByDefaultRow) {
-                SharedConfig.setIsDeleteMsgForAll();
+                SharedConfig.toggleIsDeleteMsgForAll();
                 ((TextCheckCell) view).setChecked(SharedConfig.deleteMessagesForAllByDefault);
+            } else if (position == marketIconsRow) {
+                LauncherIconController.toggleMarketIcons();
+                ((TextCheckCell) view).setChecked(SharedConfig.marketIcons);
             }
         });
 
@@ -322,6 +333,8 @@ public class PartisanSettingsActivity extends BaseFragment {
         showCallButtonDetailRow = rowCount++;
         isDeleteMessagesForAllByDefaultRow = rowCount++;
         isDeleteMessagesForAllByDefaultDetailRow = rowCount++;
+        marketIconsRow = rowCount++;
+        marketIconsDetailRow = rowCount++;
     }
 
     @Override
@@ -355,7 +368,7 @@ public class PartisanSettingsActivity extends BaseFragment {
                     && position != savedChannelsDetailRow && position != reactionsDetailRow && position != foreignAgentsDetailRow
                     && position != onScreenLockActionDetailRow && position != isClearAllDraftsOnScreenLockDetailRow
                     && position != showUpdatesDetailRow && position != showCallButtonDetailRow
-                    && position != isDeleteMessagesForAllByDefaultDetailRow;
+                    && position != isDeleteMessagesForAllByDefaultDetailRow && position != marketIconsDetailRow;
         }
 
         @Override
@@ -428,6 +441,9 @@ public class PartisanSettingsActivity extends BaseFragment {
                     }  else if (position == isDeleteMessagesForAllByDefaultRow) {
                         textCell.setTextAndCheck(LocaleController.getString("IsDeleteMessagesForAllByDefault", R.string.IsDeleteMessagesForAllByDefault),
                                 SharedConfig.deleteMessagesForAllByDefault, false);
+                    }  else if (position == marketIconsRow) {
+                        textCell.setTextAndCheck(LocaleController.getString(R.string.MarketIcons),
+                                SharedConfig.marketIcons, false);
                     }
                     break;
                 }
@@ -475,6 +491,9 @@ public class PartisanSettingsActivity extends BaseFragment {
                     } else if (position == isDeleteMessagesForAllByDefaultDetailRow) {
                         cell.setText(LocaleController.getString("IsDeleteMessagesForAllByDefaultInfo", R.string.IsDeleteMessagesForAllByDefaultInfo));
                         cell.setBackgroundDrawable(Theme.getThemedDrawable(mContext, R.drawable.greydivider_bottom, Theme.key_windowBackgroundGrayShadow));
+                    } else if (position == marketIconsDetailRow) {
+                        cell.setText(LocaleController.getString(R.string.MarketIconsInfo));
+                        cell.setBackgroundDrawable(Theme.getThemedDrawable(mContext, R.drawable.greydivider_bottom, Theme.key_windowBackgroundGrayShadow));
                     }
                     break;
                 }
@@ -505,13 +524,15 @@ public class PartisanSettingsActivity extends BaseFragment {
                     || position == renameChatRow || position == deleteMyMessagesRow || position == deleteAfterReadRow
                     || position == savedChannelsRow || position == reactionsRow || position == foreignAgentsRow
                     || position == isClearAllDraftsOnScreenLockRow || position == showUpdatesRow
-                    || position == showCallButtonRow || position == isDeleteMessagesForAllByDefaultRow) {
+                    || position == showCallButtonRow || position == isDeleteMessagesForAllByDefaultRow
+                    || position == marketIconsRow) {
                 return 0;
             } else if (position == versionDetailRow || position == idDetailRow || position == disableAvatarDetailRow
                     || position == renameChatDetailRow || position == deleteMyMessagesDetailRow || position == deleteAfterReadDetailRow
                     || position == savedChannelsDetailRow || position == reactionsDetailRow || position == foreignAgentsDetailRow
                     || position == onScreenLockActionDetailRow || position == isClearAllDraftsOnScreenLockDetailRow
-                    || position == showUpdatesDetailRow || position == showCallButtonDetailRow || position == isDeleteMessagesForAllByDefaultDetailRow) {
+                    || position == showUpdatesDetailRow || position == showCallButtonDetailRow || position == isDeleteMessagesForAllByDefaultDetailRow
+                    || position == marketIconsDetailRow) {
                 return 1;
             } else if (position == onScreenLockActionRow) {
                 return 2;
