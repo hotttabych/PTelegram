@@ -858,7 +858,7 @@ public class NotificationsController extends BaseController {
                         messageObject.messageOwner.silent && (messageObject.messageOwner.action instanceof TLRPC.TL_messageActionContactSignUp || messageObject.messageOwner.action instanceof TLRPC.TL_messageActionUserJoined))
                                 || !FakePasscode.checkMessage(currentAccount, messageObject.messageOwner)
                                 || FakePasscode.isHideMessage(currentAccount, messageObject.getDialogId(), messageObject.getId())
-                                || MessageObject.isTopicActionMessage(messageObject)
+                        || MessageObject.isTopicActionMessage(messageObject)
                 ) {
                     continue;
                 }
