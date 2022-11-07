@@ -19,6 +19,7 @@ class UpdateMessageParser {
     private boolean controlLine = true;
     private int blockStart = 0;
     private String lang = "en";
+    private int langInaccuracy = 0;
 
     private final int currentAccount;
     private final long dialogId;
@@ -39,6 +40,8 @@ class UpdateMessageParser {
             newLine = true;
             controlLine = true;
             blockStart = 0;
+            lang = "en";
+            langInaccuracy = Integer.MAX_VALUE;
             for (int pos = 0; pos <= text.length(); pos++) {
                 if (newLine && pos < text.length() && text.charAt(pos) == '#') {
                     if (blockStart < pos - 1) {
@@ -68,18 +71,22 @@ class UpdateMessageParser {
     }
 
     private void processDescription(CharSequence text, int start, int end) {
-        String description = text.subSequence(start, end).toString();
-        if (lang.equals("ru")) {
-            String userLang = LocaleController.getInstance().getCurrentLocale().getLanguage();
-            if (isRu(userLang)) {
-                currentUpdate.text = description;
-                addMessageEntities(start, end);
-            }
+        int inaccuracy = getLangInaccuracy(lang);
+        if (inaccuracy < langInaccuracy) {
+            currentUpdate.text = text.subSequence(start, end).toString();
+            addMessageEntities(start, end);
+            langInaccuracy = inaccuracy;
+        }
+    }
+
+    private int getLangInaccuracy(String lang) {
+        String userLang = LocaleController.getInstance().getCurrentLocale().getLanguage();
+        if (lang.equals(userLang)) {
+            return 0;
+        } else if (lang.equals("ru") && isRu(userLang)) {
+            return 1;
         } else {
-            if (currentUpdate.text == null) {
-                currentUpdate.text = description;
-                addMessageEntities(start, end);
-            }
+            return 2;
         }
     }
 
@@ -129,6 +136,8 @@ class UpdateMessageParser {
             currentUpdate.canNotSkip = value == null || value.equals("true");
         } else if (name.equals("lang")) {
             lang = value;
+        } else if (name.equals("url")) {
+            currentUpdate.url = value;
         } else if (name.equals("document")) {
             String[] urlParts = value.split("/");
             if (urlParts.length == 5) {
