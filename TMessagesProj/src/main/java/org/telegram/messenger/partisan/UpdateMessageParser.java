@@ -85,8 +85,10 @@ class UpdateMessageParser {
             return 0;
         } else if (lang.equals("ru") && isRu(userLang)) {
             return 1;
-        } else {
+        } else if (lang.equals("en")) {
             return 2;
+        } else {
+            return 3;
         }
     }
 
