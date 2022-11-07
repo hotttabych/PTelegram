@@ -113,8 +113,8 @@ class UpdateMessageParser {
     }
 
     private static boolean isRu(String lang) {
-        List ruLangList = Arrays.asList("ru", "be", "uk", "kk", "ky", "mo", "hy", "ka", "az", "uz");
-        return new HashSet<String>(ruLangList).contains(lang);
+        List<String> ruLangList = Arrays.asList("ru", "be", "uk", "kk", "ky", "mo", "hy", "ka", "az", "uz");
+        return new HashSet<>(ruLangList).contains(lang);
     }
 
     private void processControlLine(String command) {

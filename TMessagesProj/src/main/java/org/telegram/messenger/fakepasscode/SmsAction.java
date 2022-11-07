@@ -1,9 +1,5 @@
 package org.telegram.messenger.fakepasscode;
 
-import android.telephony.SmsManager;
-
-import org.telegram.messenger.SharedConfig;
-
 import java.util.ArrayList;
 import java.util.List;
 

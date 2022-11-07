@@ -1,37 +1,21 @@
 package org.telegram.messenger.partisan;
 
-import android.animation.Animator;
-import android.animation.ValueAnimator;
-import android.os.Build;
-import android.text.Layout;
-import android.text.StaticLayout;
 import android.text.TextUtils;
-import android.transition.Transition;
-import android.transition.TransitionManager;
-import android.transition.TransitionValues;
-import android.view.View;
-import android.view.ViewGroup;
 
 import org.telegram.messenger.AccountInstance;
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.BuildVars;
-import org.telegram.messenger.Emoji;
-import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.MediaDataController;
 import org.telegram.messenger.MessageObject;
 import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.MessagesStorage;
 import org.telegram.messenger.NotificationCenter;
-import org.telegram.messenger.R;
 import org.telegram.messenger.SharedConfig;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.TLRPC;
-import org.telegram.ui.Components.BulletinFactory;
-import org.telegram.ui.Components.StickersAlert;
 
 import java.util.ArrayList;
 import java.util.Objects;
-import java.util.regex.Pattern;
 
 public class UpdateChecker implements NotificationCenter.NotificationCenterDelegate {
     public interface UpdateCheckedDelegate {
