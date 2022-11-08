@@ -142,8 +142,6 @@
     <string name="ResetChangedTitlesTitle">Скінуць зменяныя назвы чатаў?</string>
     <string name="NotClear">Не ачышчаць</string>
     <string name="NotReset">Не скідваць</string>
-    <string name="ShowUpdates">Паказваць абнаўленне</string>
-    <string name="ShowUpdatesInfo">Паказваць апавяшчэнне, калі даступна новае абнаўленне прыкладання.</string>
     <string name="ShowCallButton">Паказваць кнопку званка</string>
     <string name="ShowCallButtonInfo">Паказваць кнопку званка ў экране чата.</string>
     <string name="IsClearAllDraftsOnScreenLock">Выдаляць чарнавікі пры блакаванні экрана</string>

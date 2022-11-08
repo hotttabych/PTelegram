@@ -5919,8 +5919,6 @@
     <string name="ResetChangedTitlesTitle">Reset Changed Chat Titles?</string>
     <string name="NotClear">Not Clear</string>
     <string name="NotReset">Not Reset</string>
-    <string name="ShowUpdates">Show Updates</string>
-    <string name="ShowUpdatesInfo">Show a notification when a new app update is available</string>
     <string name="ShowCallButton">Show Call Button</string>
     <string name="ShowCallButtonInfo">Show call button in chat</string>
     <string name="IsClearAllDraftsOnScreenLock">Delete all drafts on screen lock</string>
