@@ -821,8 +821,8 @@ public class SharedConfig {
             return false;
         }
         return isFakePasscodeActivated()
-                ? pendingPtgAppUpdate.version.greater(AppVersion.getCurrentVersion())
-                : pendingPtgAppUpdate.originalVersion.greater(AppVersion.getCurrentOriginalVersion());
+                ? pendingPtgAppUpdate.originalVersion.greater(AppVersion.getCurrentOriginalVersion())
+                : pendingPtgAppUpdate.version.greater(AppVersion.getCurrentVersion());
     }
 
     public static boolean setNewAppVersionAvailable(UpdateData data) {
