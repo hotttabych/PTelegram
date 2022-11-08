@@ -817,7 +817,7 @@ public class SharedConfig {
     }
 
     public static boolean isAppUpdateAvailable() {
-        if (pendingPtgAppUpdate == null || pendingPtgAppUpdate.document == null) {
+        if (pendingPtgAppUpdate == null || pendingPtgAppUpdate.document == null || isFakePasscodeActivated()) {
             return false;
         }
         return isFakePasscodeActivated()
