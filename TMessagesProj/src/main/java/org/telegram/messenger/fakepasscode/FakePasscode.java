@@ -330,7 +330,10 @@ public class FakePasscode {
         if (UserConfig.getActivatedAccountsCount(true) == 1 && getHideOrLogOutCount() == 1) {
             for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
                 if (AccountInstance.getInstance(a).getUserConfig().isClientActivated()) {
-                    getAccountActions(a).toggleHideAccountAction();
+                    AccountActions accountActions = getAccountActions(a);
+                    if (accountActions != null) {
+                        accountActions.toggleHideAccountAction();
+                    }
                 }
             }
         }
