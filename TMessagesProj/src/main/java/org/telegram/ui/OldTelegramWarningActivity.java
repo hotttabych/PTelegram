@@ -423,33 +423,4 @@ public class OldTelegramWarningActivity extends BaseFragment implements Notifica
         public boolean isDismissed = false;
         public int timeout = 5;
     }
-
-    private static class TimeoutRunnable implements Runnable {
-        TextView cancelButton;
-        public DialogDismissedInfo dialogInfo;
-
-        public TimeoutRunnable(TextView cancelButton, DialogDismissedInfo dialogInfo) {
-            this.cancelButton = cancelButton;
-            this.dialogInfo = dialogInfo;
-        }
-
-        @Override
-        public void run() {
-            if (!dialogInfo.isDismissed) {
-                dialogInfo.timeout--;
-                AndroidUtilities.runOnUIThread(() -> {
-                    if (dialogInfo.timeout > 0) {
-                        cancelButton.setText((getString("Continue") + " (" + dialogInfo.timeout + ")").toUpperCase(Locale.ROOT));
-                    } else {
-                        cancelButton.setText(getString("Continue").toUpperCase(Locale.ROOT));
-                        cancelButton.setTextColor(Theme.getColor(Theme.key_dialogTextGray));
-                        cancelButton.setEnabled(true);
-                    }
-                });
-                if (dialogInfo.timeout > 0) {
-                    Utilities.globalQueue.postRunnable(this, 1000);
-                }
-            }
-        }
-    }
 }

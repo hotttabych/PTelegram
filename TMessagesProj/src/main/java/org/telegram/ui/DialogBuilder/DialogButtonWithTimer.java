@@ -22,13 +22,15 @@ public class DialogButtonWithTimer {
         info.text = text;
         info.timeout = timeout;
 
-        dialog.setButton(buttonType,text + "(" + timeout + ")", (dlg, which) -> {
+        dialog.setButton(buttonType, text, (dlg, which) -> {
             if (info.timeout == 0) {
                 listener.onClick(dlg, which);
             }
         });
         dialog.setOnShowListener(dlg -> {
             TextView button = (TextView)dialog.getButton(buttonType);
+            info.text = button.getText().toString();
+            button.setText(info.text + " (" + timeout + ")");
             button.setTextColor(Theme.getColor(Theme.key_dialogTextGray3));
             button.setEnabled(false);
             TimeoutRunnable timeoutRunnable = new TimeoutRunnable(button, info);
@@ -51,10 +53,10 @@ public class DialogButtonWithTimer {
                 info.timeout--;
                 AndroidUtilities.runOnUIThread(() -> {
                     if (info.timeout > 0) {
-                        cancelButton.setText((info.text + " (" + info.timeout + ")").toUpperCase(Locale.ROOT));
+                        cancelButton.setText(info.text + " (" + info.timeout + ")");
                     } else {
-                        cancelButton.setText(info.text.toUpperCase(Locale.ROOT));
-                        cancelButton.setTextColor(Theme.getColor(Theme.key_dialogTextGray));
+                        cancelButton.setText(info.text);
+                        cancelButton.setTextColor(Theme.getColor(Theme.key_dialogButton));
                         cancelButton.setEnabled(true);
                     }
                 });
