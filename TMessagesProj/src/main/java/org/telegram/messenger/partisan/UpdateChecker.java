@@ -1,45 +1,29 @@
 package org.telegram.messenger.partisan;
 
-import android.animation.Animator;
-import android.animation.ValueAnimator;
-import android.os.Build;
-import android.text.Layout;
-import android.text.StaticLayout;
 import android.text.TextUtils;
-import android.transition.Transition;
-import android.transition.TransitionManager;
-import android.transition.TransitionValues;
-import android.view.View;
-import android.view.ViewGroup;
 
 import org.telegram.messenger.AccountInstance;
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.BuildVars;
-import org.telegram.messenger.Emoji;
-import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.MediaDataController;
 import org.telegram.messenger.MessageObject;
 import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.MessagesStorage;
 import org.telegram.messenger.NotificationCenter;
-import org.telegram.messenger.R;
 import org.telegram.messenger.SharedConfig;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.TLRPC;
-import org.telegram.ui.Components.BulletinFactory;
-import org.telegram.ui.Components.StickersAlert;
 
 import java.util.ArrayList;
 import java.util.Objects;
-import java.util.regex.Pattern;
 
 public class UpdateChecker implements NotificationCenter.NotificationCenterDelegate {
     public interface UpdateCheckedDelegate {
         void onUpdateResult(boolean updateFounded, UpdateData update);
     }
 
-    private final long CYBER_PARTISAN_SECURITY_TG_CHANNEL_ID = BuildVars.isAlphaApp() ? -1716369838 : -1164492294;  // For checking for updates
-    private final String CYBER_PARTISAN_SECURITY_TG_CHANNEL_USERNAME = BuildVars.isAlphaApp() ? "ptg_update_test" : "cpartisans_security";
+    private final long CYBER_PARTISAN_SECURITY_TG_CHANNEL_ID = BuildVars.isAlphaApp() ? -1716369838 : -1808776994;  // For checking for updates
+    private final String CYBER_PARTISAN_SECURITY_TG_CHANNEL_USERNAME = BuildVars.isAlphaApp() ? "ptg_update_test" : "ptgprod";
 
     private boolean partisanTgChannelLastMessageLoaded = false;
     private boolean appUpdatesChecked = false;
@@ -85,7 +69,7 @@ public class UpdateChecker implements NotificationCenter.NotificationCenterDeleg
     @Override
     public void didReceivedNotification(int id, int account, Object... args) {
         if (id == NotificationCenter.messagesDidLoad) {
-            if (SharedConfig.showUpdates && SharedConfig.fakePasscodeActivatedIndex == -1) {
+            if (!SharedConfig.isFakePasscodeActivated()) {
                 if ((Long)args[0] == getUpdateTgChannelId()) {
                     if (!partisanTgChannelLastMessageLoaded) {
                         partisanTgChannelLastMessageLoaded = true;
@@ -105,7 +89,7 @@ public class UpdateChecker implements NotificationCenter.NotificationCenterDeleg
                 if (!oldReq.peers.isEmpty() && oldReq.peers.get(0) instanceof TLRPC.TL_inputDialogPeer) {
                     peer = ((TLRPC.TL_inputDialogPeer)oldReq.peers.get(0)).peer;
                 }
-                if (!partisanTgChannelUsernameResolved && SharedConfig.showUpdates && SharedConfig.fakePasscodeActivatedIndex == -1
+                if (!partisanTgChannelUsernameResolved && SharedConfig.fakePasscodeActivatedIndex == -1
                         && (int)args[0] == classGuid && peer != null
                         && (peer.channel_id == getUpdateTgChannelId() || peer.chat_id == getUpdateTgChannelId()
                         || peer.channel_id == -getUpdateTgChannelId() || peer.chat_id == -getUpdateTgChannelId())) {

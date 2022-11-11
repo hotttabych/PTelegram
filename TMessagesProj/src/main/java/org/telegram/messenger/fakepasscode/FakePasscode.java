@@ -327,13 +327,8 @@ public class FakePasscode {
     }
 
     public boolean autoAddAccountHidings() {
-        if (UserConfig.getActivatedAccountsCount(true) == 1 && getHideOrLogOutCount() == 1) {
-            for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
-                if (AccountInstance.getInstance(a).getUserConfig().isClientActivated()) {
-                    getAccountActions(a).toggleHideAccountAction();
-                }
-            }
-        }
+        disableHidingForDeactivatedAccounts();
+        checkSingleAccountHidden();
 
         int targetCount = UserConfig.getActivatedAccountsCount(true) - UserConfig.getFakePasscodeMaxAccountCount();
         if (targetCount > getHideOrLogOutCount()) {
@@ -383,6 +378,30 @@ public class FakePasscode {
             return true;
         } else {
             return false;
+        }
+    }
+
+    private void disableHidingForDeactivatedAccounts() {
+        for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
+            if (!AccountInstance.getInstance(a).getUserConfig().isClientActivated()) {
+                AccountActions accountActions = getAccountActions(a);
+                if (accountActions != null && accountActions.isHideAccount()) {
+                    accountActions.toggleHideAccountAction();
+                }
+            }
+        }
+    }
+
+    private void checkSingleAccountHidden() {
+        if (UserConfig.getActivatedAccountsCount(true) == 1 && getHideOrLogOutCount() == 1) {
+            for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
+                if (AccountInstance.getInstance(a).getUserConfig().isClientActivated()) {
+                    AccountActions accountActions = getAccountActions(a);
+                    if (accountActions != null) {
+                        accountActions.toggleHideAccountAction();
+                    }
+                }
+            }
         }
     }
 

@@ -142,8 +142,6 @@
     <string name="ResetChangedTitlesTitle">بازنشانی عنوان گفتگوی تغییریافته؟</string>
     <string name="NotClear">پاکسازی نشود</string>
     <string name="NotReset">بازنشانی نشود</string>
-    <string name="ShowUpdates">نمایش آپدیت ها</string>
-    <string name="ShowUpdatesInfo">نمایش یک اعلان وقتی یک آپدیت در دسترس است</string>
     <string name="ShowCallButton">نمایش دکمه تماس</string>
     <string name="ShowCallButtonInfo">نمایش دکمه تماس در گفتگو</string>
     <string name="IsClearAllDraftsOnScreenLock">حذف تمامی پیشنویس ها در صفحه قفل</string>

@@ -119,7 +119,7 @@ public class DrawerLayoutAdapter extends RecyclerListView.SelectionAdapter {
                     correct = false;
                     break;
                 }
-                if (accountCount < getMaxAccountCount()) {
+                if (accountCount < getMaxAccountCount(true)) {
                     accountCount++;
                     accountNumbers.add(a);
                 }
@@ -257,7 +257,7 @@ public class DrawerLayoutAdapter extends RecyclerListView.SelectionAdapter {
         accountNumbers.clear();
         for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
             if (UserConfig.getInstance(a).isClientActivated() && !FakePasscode.isHideAccount(a)
-                    && accountNumbers.size() < getMaxAccountCount()) {
+                    && accountNumbers.size() < getMaxAccountCount(true)) {
                 accountNumbers.add(a);
             }
         }
@@ -386,9 +386,16 @@ public class DrawerLayoutAdapter extends RecyclerListView.SelectionAdapter {
     }
 
     private int getMaxAccountCount() {
-        return (SharedConfig.fakePasscodeActivatedIndex == -1)
-                ? UserConfig.MAX_ACCOUNT_COUNT
-                : UserConfig.getFakePasscodeMaxAccountCount();
+        return getMaxAccountCount(false);
+    }
+
+    private int getMaxAccountCount(boolean checkPremium) {
+        if (!SharedConfig.isFakePasscodeActivated()) {
+            return UserConfig.MAX_ACCOUNT_COUNT;
+        }
+        return checkPremium
+                ? UserConfig.getMaxAccountCount()
+                : UserConfig.FAKE_PASSCODE_MAX_PREMIUM_ACCOUNT_COUNT;
     }
 
     private static class Item {
