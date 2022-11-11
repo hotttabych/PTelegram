@@ -499,8 +499,8 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                         }
                     }
                 }
-                if (!UserConfig.hasPremiumOnAccounts()) {
-                    freeAccounts -= (UserConfig.MAX_ACCOUNT_COUNT - UserConfig.MAX_ACCOUNT_DEFAULT_COUNT);
+                if (!UserConfig.hasPremiumOnAccounts() && SharedConfig.isFakePasscodeActivated()) {
+                    freeAccounts -= (UserConfig.MAX_ACCOUNT_COUNT - UserConfig.FAKE_PASSCODE_MAX_ACCOUNT_COUNT);
                 }
                 if (freeAccounts > 0 && availableAccount != null) {
                     presentFragment(new LoginActivity(availableAccount));
