@@ -489,20 +489,26 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                 switchToAccount(((DrawerUserCell) view).getAccountNumber(), true);
                 drawerLayoutContainer.closeDrawer(false);
             } else if (view instanceof DrawerAddCell) {
-                int freeAccounts = 0;
+                int usedAccounts = 0;
                 Integer availableAccount = null;
                 for (int a = UserConfig.MAX_ACCOUNT_COUNT - 1; a >= 0; a--) {
                     if (!UserConfig.getInstance(a).isClientActivated()) {
-                        freeAccounts++;
                         if (availableAccount == null) {
                             availableAccount = a;
                         }
+                    } else if (!FakePasscode.isHideAccount(a)) {
+                        usedAccounts++;
                     }
                 }
-                if (!UserConfig.hasPremiumOnAccounts() && SharedConfig.isFakePasscodeActivated()) {
-                    freeAccounts -= (UserConfig.MAX_ACCOUNT_COUNT - UserConfig.FAKE_PASSCODE_MAX_ACCOUNT_COUNT);
+                int maxAccountCount;
+                if (!SharedConfig.isFakePasscodeActivated()) {
+                    maxAccountCount = UserConfig.MAX_ACCOUNT_COUNT;
+                } else if (UserConfig.hasPremiumOnAccounts()) {
+                    maxAccountCount = UserConfig.FAKE_PASSCODE_MAX_PREMIUM_ACCOUNT_COUNT;
+                } else {
+                    maxAccountCount = UserConfig.getMaxAccountCount();
                 }
-                if (freeAccounts > 0 && availableAccount != null) {
+                if (usedAccounts < maxAccountCount && availableAccount != null) {
                     presentFragment(new LoginActivity(availableAccount));
                     drawerLayoutContainer.closeDrawer(false);
                 } else if (!UserConfig.hasPremiumOnAccounts()) {
