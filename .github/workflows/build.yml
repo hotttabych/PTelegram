@@ -3,17 +3,17 @@ name: Build
 on:
   workflow_dispatch:
     inputs:
-    build_variant:
-      type: choice
-      default: Standalone
-      options:
-        - Standalone
-        - Debug
-        - Aplha
-        - Release
-    upload_release:
-      type: boolean
-      default: False
+      build_variant:
+        type: choice
+        default: Standalone
+        options:
+          - Standalone
+          - Debug
+          - Aplha
+          - Release
+      upload_release:
+        type: boolean
+        default: False
       
 jobs:
   build:
