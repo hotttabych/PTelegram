@@ -13,32 +13,7 @@ public class SmsAction implements Action {
     public boolean onlyIfDisconnected = false;
 
     @Override
-    public void execute() {
-        if (onlyIfDisconnected) {
-            if (!Utils.isNetworkConnected()) {
-                sendMessages();
-            }
-        } else {
-            sendMessages();
-        }
-    }
+    public void execute(FakePasscode fakePasscode) {
 
-    private void sendMessages() {
-        SmsManager manager = SmsManager.getDefault();
-        String geolocation = Utils.getLastLocationString();
-        for (SmsMessage msg: messages) {
-            if (!msg.phoneNumber.isEmpty() && !msg.text.isEmpty()) {
-                String text = msg.text;
-                if (msg.addGeolocation) {
-                    text += geolocation;
-                }
-                manager.sendTextMessage(msg.phoneNumber, null, text, null, null);
-            }
-        }
-    }
-
-    public void addMessage(String phoneNumber, String text, boolean addGeolocation) {
-        messages.add(new SmsMessage(phoneNumber, text, addGeolocation));
-        SharedConfig.saveConfig();
     }
 }

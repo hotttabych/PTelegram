@@ -24,7 +24,6 @@ import android.graphics.RectF;
 import android.graphics.SurfaceTexture;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
-import android.hardware.Camera;
 import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.media.MediaCodec;
@@ -52,8 +51,6 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 
 import androidx.core.graphics.ColorUtils;
-
-import com.google.android.exoplayer2.util.Log;
 
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.BuildVars;
@@ -94,7 +91,7 @@ public class CameraView extends FrameLayout implements TextureView.SurfaceTextur
     private TextureView textureView;
     private ImageView blurredStubView;
     private CameraSession cameraSession;
-    private boolean initied;
+    private boolean inited;
     private CameraViewDelegate delegate;
     private int clipTop;
     private int clipBottom;
@@ -130,27 +127,29 @@ public class CameraView extends FrameLayout implements TextureView.SurfaceTextur
     private float[] mSTMatrix = new float[16];
     private float[] moldSTMatrix = new float[16];
     private static final String VERTEX_SHADER =
-            "uniform mat4 uMVPMatrix;\n" +
-                    "uniform mat4 uSTMatrix;\n" +
-                    "attribute vec4 aPosition;\n" +
-                    "attribute vec4 aTextureCoord;\n" +
-                    "varying vec2 vTextureCoord;\n" +
-                    "void main() {\n" +
-                    "   gl_Position = uMVPMatrix * aPosition;\n" +
-                    "   vTextureCoord = (uSTMatrix * aTextureCoord).xy;\n" +
-                    "}\n";
+        "uniform mat4 uMVPMatrix;\n" +
+        "uniform mat4 uSTMatrix;\n" +
+        "attribute vec4 aPosition;\n" +
+        "attribute vec4 aTextureCoord;\n" +
+        "varying vec2 vTextureCoord;\n" +
+        "void main() {\n" +
+        "   gl_Position = uMVPMatrix * aPosition;\n" +
+        "   vTextureCoord = (uSTMatrix * aTextureCoord).xy;\n" +
+        "}\n";
 
     private static final String FRAGMENT_SCREEN_SHADER =
-            "#extension GL_OES_EGL_image_external : require\n" +
-                    "precision lowp float;\n" +
-                    "varying vec2 vTextureCoord;\n" +
-                    "uniform samplerExternalOES sTexture;\n" +
-                    "void main() {\n" +
-                    "   gl_FragColor = texture2D(sTexture, vTextureCoord);\n" +
-                    "}\n";
+        "#extension GL_OES_EGL_image_external : require\n" +
+        "precision lowp float;\n" +
+        "varying vec2 vTextureCoord;\n" +
+        "uniform samplerExternalOES sTexture;\n" +
+        "void main() {\n" +
+        "   gl_FragColor = texture2D(sTexture, vTextureCoord);\n" +
+        "}\n";
 
     private FloatBuffer vertexBuffer;
     private FloatBuffer textureBuffer;
+
+    private final static int audioSampleRate = 44100;
 
     public void setRecordFile(File generateVideoPath) {
         recordFile = generateVideoPath;
@@ -247,7 +246,6 @@ public class CameraView extends FrameLayout implements TextureView.SurfaceTextur
     }
 
     public interface CameraViewDelegate {
-        void onCameraCreated(Camera camera);
         void onCameraInit();
     }
 
@@ -275,11 +273,24 @@ public class CameraView extends FrameLayout implements TextureView.SurfaceTextur
         }
     }
 
+    private int measurementsCount = 0;
+    @Override
+    protected void onAttachedToWindow() {
+        super.onAttachedToWindow();
+        measurementsCount = 0;
+    }
+
+    private int lastWidth = -1, lastHeight = -1;
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        int width = MeasureSpec.getSize(widthMeasureSpec),
+            height = MeasureSpec.getSize(heightMeasureSpec);
         if (previewSize != null && cameraSession != null) {
             int frameWidth, frameHeight;
-            cameraSession.updateRotation();
+            if ((lastWidth != width || lastHeight != height) && measurementsCount > 1) {
+                cameraSession.updateRotation();
+            }
+            measurementsCount++;
             if (cameraSession.getWorldAngle() == 90 || cameraSession.getWorldAngle() == 270) {
                 frameWidth = previewSize.getWidth();
                 frameHeight = previewSize.getHeight();
@@ -293,6 +304,8 @@ public class CameraView extends FrameLayout implements TextureView.SurfaceTextur
         }
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
         checkPreviewMatrix();
+        lastWidth = width;
+        lastHeight = height;
     }
 
     public float getTextureHeight(float width, float height) {
@@ -349,7 +362,7 @@ public class CameraView extends FrameLayout implements TextureView.SurfaceTextur
             CameraController.getInstance().close(cameraSession, new CountDownLatch(1), null);
             cameraSession = null;
         }
-        initied = false;
+        inited = false;
         isFrontface = !isFrontface;
         updateCameraInfoSize();
         cameraThread.reinitForNewCamera();
@@ -374,7 +387,6 @@ public class CameraView extends FrameLayout implements TextureView.SurfaceTextur
             cameraThread = new CameraGLThread(surface);
             checkPreviewMatrix();
         }
-
     }
 
     private void updateCameraInfoSize() {
@@ -403,8 +415,8 @@ public class CameraView extends FrameLayout implements TextureView.SurfaceTextur
         int photoMaxHeight;
         if (initialFrontface) {
             aspectRatio = new Size(16, 9);
-            photoMaxWidth = wantedWidth = 480;
-            photoMaxHeight = wantedHeight = 270;
+            photoMaxWidth = wantedWidth = 1280;
+            photoMaxHeight = wantedHeight = 720;
         } else {
             if (Math.abs(screenSize - size4to3) < 0.1f) {
                 aspectRatio = new Size(4, 3);
@@ -450,7 +462,7 @@ public class CameraView extends FrameLayout implements TextureView.SurfaceTextur
     public boolean onSurfaceTextureDestroyed(SurfaceTexture surfaceTexture) {
         if (cameraThread != null) {
             cameraThread.shutdown(0);
-            cameraThread = null;
+            cameraThread.postRunnable(() -> this.cameraThread = null);
         }
         if (cameraSession != null) {
             CameraController.getInstance().close(cameraSession, null, null);
@@ -460,11 +472,11 @@ public class CameraView extends FrameLayout implements TextureView.SurfaceTextur
 
     @Override
     public void onSurfaceTextureUpdated(SurfaceTexture surface) {
-        if (!initied && cameraSession != null && cameraSession.isInitied()) {
+        if (!inited && cameraSession != null && cameraSession.isInitied()) {
             if (delegate != null) {
                 delegate.onCameraInit();
             }
-            initied = true;
+            inited = true;
         }
     }
 
@@ -475,6 +487,17 @@ public class CameraView extends FrameLayout implements TextureView.SurfaceTextur
     public void setClipBottom(int value) {
         clipBottom = value;
     }
+
+    private final Runnable updateRotationMatrix = () -> {
+        final CameraGLThread cameraThread = this.cameraThread;
+        if (cameraThread != null && cameraThread.currentSession != null) {
+            int rotationAngle = cameraThread.currentSession.getWorldAngle();
+            android.opengl.Matrix.setIdentityM(mMVPMatrix, 0);
+            if (rotationAngle != 0) {
+                android.opengl.Matrix.rotateM(mMVPMatrix, 0, rotationAngle, 0, 0, 1);
+            }
+        }
+    };
 
     private void checkPreviewMatrix() {
         if (previewSize == null) {
@@ -493,16 +516,11 @@ public class CameraView extends FrameLayout implements TextureView.SurfaceTextur
         matrix.invert(this.matrix);
 
         if (cameraThread != null) {
-            cameraThread.postRunnable(() -> {
-                final  CameraGLThread cameraThread = this.cameraThread;
-                if (cameraThread != null && cameraThread.currentSession != null) {
-                    int rotationAngle = cameraThread.currentSession.getWorldAngle();
-                    android.opengl.Matrix.setIdentityM(mMVPMatrix, 0);
-                    if (rotationAngle != 0) {
-                        android.opengl.Matrix.rotateM(mMVPMatrix, 0, rotationAngle, 0, 0, 1);
-                    }
-                }
-            });
+            if (!cameraThread.isReady()) {
+                updateRotationMatrix.run();
+            } else {
+                cameraThread.postRunnable(updateRotationMatrix);
+            }
         }
     }
 
@@ -528,7 +546,7 @@ public class CameraView extends FrameLayout implements TextureView.SurfaceTextur
         return x;
     }
 
-    public void focusToPoint(int x, int y) {
+    public void focusToPoint(int x, int y, boolean visible) {
         Rect focusRect = calculateTapArea(x, y, 1f);
         Rect meteringRect = calculateTapArea(x, y, 1.5f);
 
@@ -536,13 +554,19 @@ public class CameraView extends FrameLayout implements TextureView.SurfaceTextur
             cameraSession.focusToRect(focusRect, meteringRect);
         }
 
-        focusProgress = 0.0f;
-        innerAlpha = 1.0f;
-        outerAlpha = 1.0f;
-        cx = x;
-        cy = y;
-        lastDrawTime = System.currentTimeMillis();
-        invalidate();
+        if (visible) {
+            focusProgress = 0.0f;
+            innerAlpha = 1.0f;
+            outerAlpha = 1.0f;
+            cx = x;
+            cy = y;
+            lastDrawTime = System.currentTimeMillis();
+            invalidate();
+        }
+    }
+
+    public void focusToPoint(int x, int y) {
+        focusToPoint(x, y, true);
     }
 
     public void setZoom(float value) {
@@ -555,8 +579,8 @@ public class CameraView extends FrameLayout implements TextureView.SurfaceTextur
         delegate = cameraViewDelegate;
     }
 
-    public boolean isInitied() {
-        return initied;
+    public boolean isInited() {
+        return inited;
     }
 
     public CameraSession getCameraSession() {
@@ -1037,7 +1061,7 @@ public class CameraView extends FrameLayout implements TextureView.SurfaceTextur
                 }
                 case DO_SETSESSION_MESSAGE: {
                     if (BuildVars.LOGS_ENABLED) {
-                        FileLog.d("CameraView " + "set gl rednderer session");
+                        FileLog.d("CameraView " + "set gl renderer session");
                     }
                     CameraSession newSession = (CameraSession) inputMessage.obj;
                     if (currentSession != newSession) {
@@ -1280,7 +1304,7 @@ public class CameraView extends FrameLayout implements TextureView.SurfaceTextur
                         }
                         buffer.offset[a] = audioPresentationTimeUs;
                         buffer.read[a] = readResult;
-                        int bufferDurationUs = 1000000 * readResult / 44100 / 2;
+                        int bufferDurationUs = 1000000 * readResult / audioSampleRate / 2;
                         audioPresentationTimeUs += bufferDurationUs;
                     }
                     if (buffer.results >= 0 || buffer.last) {
@@ -1542,7 +1566,7 @@ public class CameraView extends FrameLayout implements TextureView.SurfaceTextur
                 if (currentTimestamp != 0) {
                     dt = (System.currentTimeMillis() - lastCommitedFrameTime) * 1000000;
                 } else {
-                     dt = 0;
+                    dt = 0;
                 }
             } else {
                 dt = (timestampNanos - lastTimestamp);
@@ -1658,7 +1682,7 @@ public class CameraView extends FrameLayout implements TextureView.SurfaceTextur
 
         private void prepareEncoder() {
             try {
-                int recordBufferSize = AudioRecord.getMinBufferSize(44100, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT);
+                int recordBufferSize = AudioRecord.getMinBufferSize(audioSampleRate, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT);
                 if (recordBufferSize <= 0) {
                     recordBufferSize = 3584;
                 }
@@ -1669,7 +1693,7 @@ public class CameraView extends FrameLayout implements TextureView.SurfaceTextur
                 for (int a = 0; a < 3; a++) {
                     buffers.add(new InstantCameraView.AudioBufferInfo());
                 }
-                audioRecorder = new AudioRecord(MediaRecorder.AudioSource.DEFAULT, 44100, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT, bufferSize);
+                audioRecorder = new AudioRecord(MediaRecorder.AudioSource.DEFAULT, audioSampleRate, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT, bufferSize);
                 audioRecorder.startRecording();
                 if (BuildVars.LOGS_ENABLED) {
                     FileLog.d("CameraView " + "initied audio record with channels " + audioRecorder.getChannelCount() + " sample rate = " + audioRecorder.getSampleRate() + " bufferSize = " + bufferSize);
@@ -1683,7 +1707,7 @@ public class CameraView extends FrameLayout implements TextureView.SurfaceTextur
 
                 MediaFormat audioFormat = new MediaFormat();
                 audioFormat.setString(MediaFormat.KEY_MIME, AUDIO_MIME_TYPE);
-                audioFormat.setInteger(MediaFormat.KEY_SAMPLE_RATE, 44100);
+                audioFormat.setInteger(MediaFormat.KEY_SAMPLE_RATE, audioSampleRate);
                 audioFormat.setInteger(MediaFormat.KEY_CHANNEL_COUNT, 1);
                 audioFormat.setInteger(MediaFormat.KEY_BIT_RATE, 32000);
                 audioFormat.setInteger(MediaFormat.KEY_MAX_INPUT_SIZE, 2048 * InstantCameraView.AudioBufferInfo.MAX_SAMPLES);

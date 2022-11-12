@@ -9,7 +9,7 @@ import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
 import android.graphics.Region;
 import android.text.Layout;
-import android.text.Spannable;
+import android.text.Spanned;
 import android.view.MotionEvent;
 import android.widget.TextView;
 
@@ -28,10 +28,14 @@ public class SpoilersTextView extends TextView {
     private Paint xRefPaint;
 
     public SpoilersTextView(Context context) {
+        this(context, true);
+    }
+
+    public SpoilersTextView(Context context, boolean revealOnClick) {
         super(context);
 
         clickDetector = new SpoilersClickDetector(this, spoilers, (eff, x, y) -> {
-            if (isSpoilersRevealed) return;
+            if (isSpoilersRevealed || !revealOnClick) return;
 
             eff.setOnRippleEndCallback(()->post(()->{
                 isSpoilersRevealed = true;
@@ -131,7 +135,7 @@ public class SpoilersTextView extends TextView {
         }
 
         Layout layout = getLayout();
-        if (layout != null && getText() instanceof Spannable) {
+        if (layout != null && getText() instanceof Spanned) {
             SpoilerEffect.addSpoilers(this, spoilersPool, spoilers);
         }
         invalidate();

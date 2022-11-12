@@ -27,12 +27,6 @@ import android.graphics.Shader;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
-
-import androidx.recyclerview.widget.DefaultItemAnimator;
-import androidx.recyclerview.widget.ItemTouchHelper;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-
 import android.graphics.drawable.GradientDrawable;
 import android.os.Build;
 import android.text.SpannableStringBuilder;
@@ -46,6 +40,11 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import androidx.recyclerview.widget.DefaultItemAnimator;
+import androidx.recyclerview.widget.ItemTouchHelper;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
 import org.telegram.messenger.AccountInstance;
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ChatObject;
@@ -53,10 +52,10 @@ import org.telegram.messenger.ChatsWidgetProvider;
 import org.telegram.messenger.ContactsController;
 import org.telegram.messenger.ContactsWidgetProvider;
 import org.telegram.messenger.DialogObject;
-import org.telegram.messenger.FileLoader;
 import org.telegram.messenger.FileLog;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.MessageObject;
+import org.telegram.messenger.MessagesStorage;
 import org.telegram.messenger.R;
 import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.UserConfig;
@@ -275,8 +274,9 @@ public class EditWidgetActivity extends BaseFragment {
                                 name = LocaleController.getString("HiddenName", R.string.HiddenName);
                             } else {
                                 name = ContactsController.formatName(user.first_name, user.last_name);
+                                name = UserConfig.getChatTitleOverride(currentAccount, user.id, name);
                             }
-                            if (!UserObject.isReplyUser(user) && !UserObject.isUserSelf(user) && user.photo != null && user.photo.photo_small != null && user.photo.photo_small.volume_id != 0 && user.photo.photo_small.local_id != 0) {
+                            if (!UserObject.isReplyUser(user) && !UserObject.isUserSelf(user) && user.photo != null && user.photo.photo_small != null && user.photo.photo_small.volume_id != 0 && user.photo.photo_small.local_id != 0 && UserConfig.isAvatarEnabled(currentAccount, user.id)) {
                                 photoPath = user.photo.photo_small;
                             }
                         }
@@ -285,9 +285,9 @@ public class EditWidgetActivity extends BaseFragment {
                         if (chat != null) {
                             name = UserConfig.getChatTitleOverride(currentAccount, chat.id);
                             if (name == null) {
-                                name = chat.title;
+                                name = UserConfig.getChatTitleOverride(currentAccount, chat.id, chat.title);
                             }
-                            if (chat.photo != null && chat.photo.photo_small != null && chat.photo.photo_small.volume_id != 0 && chat.photo.photo_small.local_id != 0) {
+                            if (chat.photo != null && chat.photo.photo_small != null && chat.photo.photo_small.volume_id != 0 && chat.photo.photo_small.local_id != 0 && UserConfig.isAvatarEnabled(currentAccount, chat.id)) {
                                 photoPath = chat.photo.photo_small;
                             }
                         }
@@ -297,7 +297,7 @@ public class EditWidgetActivity extends BaseFragment {
                     try {
                         Bitmap bitmap = null;
                         if (photoPath != null) {
-                            File path = FileLoader.getPathToAttach(photoPath, true);
+                            File path = getFileLoader().getPathToAttach(photoPath, true);
                             bitmap = BitmapFactory.decodeFile(path.toString());
                         }
 
@@ -339,7 +339,8 @@ public class EditWidgetActivity extends BaseFragment {
                         FileLog.e(e);
                     }
 
-                    MessageObject message = getMessagesController().dialogMessage.get(dialog.id);
+                    ArrayList<MessageObject> messages = getMessagesController().dialogMessage.get(dialog.id);
+                    MessageObject message = messages != null && messages.size() > 0 ? messages.get(0) : null;
                     if (message != null) {
                         TLRPC.User fromUser = null;
                         TLRPC.Chat fromChat = null;
@@ -406,7 +407,7 @@ public class EditWidgetActivity extends BaseFragment {
                                         } else {
                                             innerMessage = String.format("\uD83C\uDFAE %s", message.messageOwner.media.game.title);
                                         }
-                                    } else if (message.type == 14) {
+                                    } else if (message.type == MessageObject.TYPE_MUSIC) {
                                         if (Build.VERSION.SDK_INT >= 18) {
                                             innerMessage = String.format("\uD83C\uDFA7 \u2068%s - %s\u2069", message.getMusicAuthor(), message.getMusicTitle());
                                         } else {
@@ -463,7 +464,7 @@ public class EditWidgetActivity extends BaseFragment {
                                         messageString = "\uD83D\uDCCA " + mediaPoll.poll.question;
                                     } else if (message.messageOwner.media instanceof TLRPC.TL_messageMediaGame) {
                                         messageString = "\uD83C\uDFAE " + message.messageOwner.media.game.title;
-                                    } else if (message.type == 14) {
+                                    } else if (message.type == MessageObject.TYPE_MUSIC) {
                                         messageString = String.format("\uD83C\uDFA7 %s - %s", message.getMusicAuthor(), message.getMusicTitle());
                                     } else {
                                         messageString = message.messageText;
@@ -490,7 +491,7 @@ public class EditWidgetActivity extends BaseFragment {
                     if (dialog.unread_count > 0) {
                         ((TextView) cells[a].findViewById(R.id.shortcut_widget_item_badge)).setText(String.format("%d", dialog.unread_count));
                         cells[a].findViewById(R.id.shortcut_widget_item_badge).setVisibility(VISIBLE);
-                        if (getMessagesController().isDialogMuted(dialog.id)) {
+                        if (getMessagesController().isDialogMuted(dialog.id, 0)) {
                             cells[a].findViewById(R.id.shortcut_widget_item_badge).setBackgroundResource(R.drawable.widget_counter_muted);
                         } else {
                             cells[a].findViewById(R.id.shortcut_widget_item_badge).setBackgroundResource(R.drawable.widget_counter);
@@ -555,18 +556,15 @@ public class EditWidgetActivity extends BaseFragment {
                                 name = LocaleController.getString("HiddenName", R.string.HiddenName);
                             } else {
                                 name = UserObject.getFirstName(user);
+                                name = UserConfig.getChatTitleOverride(currentAccount, user.id, name);
                             }
-                            if (!UserObject.isReplyUser(user) && !UserObject.isUserSelf(user) && user != null && user.photo != null && user.photo.photo_small != null && user.photo.photo_small.volume_id != 0 && user.photo.photo_small.local_id != 0) {
+                            if (!UserObject.isReplyUser(user) && !UserObject.isUserSelf(user) && user != null && user.photo != null && user.photo.photo_small != null && user.photo.photo_small.volume_id != 0 && user.photo.photo_small.local_id != 0 && UserConfig.isAvatarEnabled(currentAccount, user.id)) {
                                 photoPath = user.photo.photo_small;
                             }
                         } else {
                             chat = getMessagesController().getChat(-dialog.id);
-                            name = chat.title;
-                            UserConfig.getChatTitleOverride(currentAccount, chat.id);
-                            if (name == null) {
-                                name = chat.title;
-                            }
-                            if (chat.photo != null && chat.photo.photo_small != null && chat.photo.photo_small.volume_id != 0 && chat.photo.photo_small.local_id != 0) {
+                            name = UserConfig.getChatTitleOverride(currentAccount, chat.id, chat.title);
+                            if (chat.photo != null && chat.photo.photo_small != null && chat.photo.photo_small.volume_id != 0 && chat.photo.photo_small.local_id != 0 && UserConfig.isAvatarEnabled(currentAccount, chat.id)) {
                                 photoPath = chat.photo.photo_small;
                             }
                         }
@@ -574,7 +572,7 @@ public class EditWidgetActivity extends BaseFragment {
                         try {
                             Bitmap bitmap = null;
                             if (photoPath != null) {
-                                File path = FileLoader.getPathToAttach(photoPath, true);
+                                File path = getFileLoader().getPathToAttach(photoPath, true);
                                 bitmap = BitmapFactory.decodeFile(path.toString());
                             }
 
@@ -812,7 +810,12 @@ public class EditWidgetActivity extends BaseFragment {
                     if (getParentActivity() == null) {
                         return;
                     }
-                    getMessagesStorage().putWidgetDialogs(currentWidgetId, selectedDialogs);
+
+                    ArrayList<MessagesStorage.TopicKey> topicKeys = new ArrayList<>();
+                    for (int i = 0; i < selectedDialogs.size(); i++) {
+                        topicKeys.add(MessagesStorage.TopicKey.of(selectedDialogs.get(i), 0));
+                    }
+                    getMessagesStorage().putWidgetDialogs(currentWidgetId, topicKeys);
 
                     SharedPreferences preferences = getParentActivity().getSharedPreferences("shortcut_widget", Activity.MODE_PRIVATE);
                     SharedPreferences.Editor editor = preferences.edit();

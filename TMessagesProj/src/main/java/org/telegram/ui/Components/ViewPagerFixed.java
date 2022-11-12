@@ -54,7 +54,7 @@ public class ViewPagerFixed extends FrameLayout {
 
     int currentPosition;
     int nextPosition;
-    private View[] viewPages;
+    protected View[] viewPages;
     private int[] viewTypes;
 
     protected SparseArray<View> viewsByType = new SparseArray<>();
@@ -116,14 +116,26 @@ public class ViewPagerFixed extends FrameLayout {
         fillTabs();
     }
 
+    protected void onTabPageSelected(int position) {
+
+    }
+
     public TabsView createTabsView() {
-        tabsView = new TabsView(getContext());
+        tabsView = new TabsView(getContext()) {
+            @Override
+            public void selectTab(int currentPosition, int nextPosition, float progress) {
+                super.selectTab(currentPosition, nextPosition, progress);
+                onTabPageSelected(progress <= 0.5f ? currentPosition : nextPosition);
+            }
+        };
         tabsView.setDelegate(new TabsView.TabsViewDelegate() {
             @Override
             public void onPageSelected(int page, boolean forward) {
                 animatingForward = forward;
                 nextPosition = page;
                 updateViewForIndex(1);
+
+                onTabPageSelected(page);
 
                 if (forward) {
                     viewPages[1].setTranslationX(viewPages[0].getMeasuredWidth());
@@ -165,9 +177,18 @@ public class ViewPagerFixed extends FrameLayout {
             public boolean canPerformActions() {
                 return !tabsAnimationInProgress && !startedTracking;
             }
+
+            @Override
+            public void invalidateBlur() {
+                ViewPagerFixed.this.invalidateBlur();
+            }
         });
         fillTabs();
         return tabsView;
+    }
+
+    protected void invalidateBlur() {
+
     }
 
     private void updateViewForIndex(int index) {
@@ -584,6 +605,7 @@ public class ViewPagerFixed extends FrameLayout {
             void onPageSelected(int page, boolean forward);
             void onPageScrolled(float progress);
             void onSamePageSelected();
+            void invalidateBlur();
             boolean canPerformActions();
         }
 
@@ -920,7 +942,8 @@ public class ViewPagerFixed extends FrameLayout {
                 }
             };
             ((DefaultItemAnimator) listView.getItemAnimator()).setDelayAnimations(false);
-            listView.setSelectorType(7);
+            listView.setSelectorType(8);
+            listView.setSelectorRadius(6);
             listView.setSelectorDrawableColor(Theme.getColor(selectorColorKey));
             listView.setLayoutManager(layoutManager = new LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false) {
                 @Override
@@ -985,6 +1008,18 @@ public class ViewPagerFixed extends FrameLayout {
 
         public boolean isAnimatingIndicator() {
             return animatingIndicator;
+        }
+
+        public int getCurrentPosition() {
+            return currentPosition;
+        }
+
+        public int getPreviousPosition() {
+            return previousPosition;
+        }
+
+        public float getAnimatingIndicatorProgress() {
+            return animatingIndicatorProgress;
         }
 
         public void scrollToTab(int id, int position) {
@@ -1263,6 +1298,9 @@ public class ViewPagerFixed extends FrameLayout {
                 this.currentPosition = nextPosition;
                 selectedTabId = positionToId.get(nextPosition);
             }
+            if (delegate != null) {
+                delegate.invalidateBlur();
+            }
         }
 
         public void selectTabWithId(int id, float progress) {
@@ -1432,5 +1470,38 @@ public class ViewPagerFixed extends FrameLayout {
         return null;
     }
 
+    public void drawForBlur(Canvas blurCanvas) {
+        for (int i = 0 ; i < viewPages.length; i++) {
+            if (viewPages[i] != null && viewPages[i].getVisibility() == View.VISIBLE) {
+                RecyclerListView recyclerListView = findRecyclerView(viewPages[i]);
+                if (recyclerListView != null) {
+                    for (int j = 0; j < recyclerListView.getChildCount(); j++) {
+                        View child = recyclerListView.getChildAt(j);
+                        if (child.getY() < AndroidUtilities.dp(203) + AndroidUtilities.dp(100)) {
+                            int restore = blurCanvas.save();
+                            blurCanvas.translate(viewPages[i].getX(), getY() + viewPages[i].getY() + recyclerListView.getY() + child.getY());
+                            child.draw(blurCanvas);
+                            blurCanvas.restoreToCount(restore);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private RecyclerListView findRecyclerView(View view) {
+        if (view instanceof ViewGroup) {
+            ViewGroup viewGroup = (ViewGroup) view;
+            for (int i = 0; i < viewGroup.getChildCount(); i++) {
+                View child = viewGroup.getChildAt(i);
+                if (child instanceof RecyclerListView) {
+                    return (RecyclerListView) child;
+                } else if (child instanceof ViewGroup) {
+                    findRecyclerView(child);
+                }
+            }
+        }
+        return null;
+    }
 
 }

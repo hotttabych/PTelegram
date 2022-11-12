@@ -2,7 +2,9 @@ package org.telegram.ui.Components;
 
 import android.content.Context;
 import android.content.res.Configuration;
-import android.graphics.PorterDuff;
+import android.graphics.Canvas;
+import android.graphics.Paint;
+import android.graphics.Rect;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -14,17 +16,18 @@ import android.view.accessibility.AccessibilityNodeInfo;
 import android.widget.FrameLayout;
 import android.widget.TextView;
 
+import androidx.core.graphics.ColorUtils;
+
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ContactsController;
 import org.telegram.messenger.DialogObject;
-import org.telegram.messenger.FileLoader;
-import org.telegram.messenger.ImageLoader;
 import org.telegram.messenger.ImageLocation;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.MediaDataController;
 import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.R;
 import org.telegram.messenger.SharedConfig;
+import org.telegram.messenger.UserConfig;
 import org.telegram.tgnet.TLObject;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.ActionBar;
@@ -33,7 +36,6 @@ import org.telegram.ui.ActionBar.BaseFragment;
 import org.telegram.ui.ActionBar.SimpleTextView;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.ActionBar.ThemeDescription;
-import org.telegram.ui.Cells.UserCell;
 import org.telegram.ui.ProfileActivity;
 
 import java.util.ArrayList;
@@ -78,7 +80,7 @@ public class MediaActivity extends BaseFragment implements SharedMediaLayout.Sha
             }
         });
         FrameLayout avatarContainer = new FrameLayout(context);
-        FrameLayout fragmentView = new FrameLayout(context) {
+        SizeNotifierFrameLayout fragmentView = new SizeNotifierFrameLayout(context) {
 
             @Override
             protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
@@ -112,7 +114,13 @@ public class MediaActivity extends BaseFragment implements SharedMediaLayout.Sha
                 }
                 return super.dispatchTouchEvent(ev);
             }
+
+            @Override
+            protected void drawList(Canvas blurCanvas, boolean top) {
+                sharedMediaLayout.drawListForBlur(blurCanvas);
+            }
         };
+        fragmentView.needBlur = true;
         this.fragmentView = fragmentView;
 
         nameTextView = new SimpleTextView(context);
@@ -198,7 +206,8 @@ public class MediaActivity extends BaseFragment implements SharedMediaLayout.Sha
             public void updateSelectedMediaTabText() {
                 updateMediaCount();
             }
-        }, SharedMediaLayout.VIEW_TYPE_MEDIA_ACTIVITY) {
+
+        }, SharedMediaLayout.VIEW_TYPE_MEDIA_ACTIVITY, getResourceProvider()) {
             @Override
             protected void onSelectedTabChanged() {
                 updateMediaCount();
@@ -212,6 +221,15 @@ public class MediaActivity extends BaseFragment implements SharedMediaLayout.Sha
                 AndroidUtilities.updateViewVisibilityAnimated(avatarContainer, !expanded, 0.95f, true);
             }
 
+            @Override
+            protected void drawBackgroundWithBlur(Canvas canvas, float y, Rect rectTmp2, Paint backgroundPaint) {
+                fragmentView.drawBlurRect(canvas, getY() + y, rectTmp2, backgroundPaint, true);
+            }
+
+            @Override
+            protected void invalidateBlur() {
+                fragmentView.invalidateBlur();
+            }
         };
         sharedMediaLayout.setPinnedToTop(true);
         sharedMediaLayout.getSearchItem().setTranslationY(0);
@@ -220,6 +238,7 @@ public class MediaActivity extends BaseFragment implements SharedMediaLayout.Sha
         fragmentView.addView(sharedMediaLayout);
         fragmentView.addView(actionBar);
         fragmentView.addView(avatarContainer);
+        fragmentView.blurBehindViews.add(sharedMediaLayout);
 
         TLObject avatarObject = null;
         if (DialogObject.isEncryptedDialog(dialogId)) {
@@ -228,7 +247,7 @@ public class MediaActivity extends BaseFragment implements SharedMediaLayout.Sha
                 TLRPC.User user = getMessagesController().getUser(encryptedChat.user_id);
                 if (user != null) {
                     nameTextView.setText(ContactsController.formatName(user.first_name, user.last_name));
-                    avatarDrawable.setInfo(user);
+                    avatarDrawable.setInfo(user, currentAccount);
                     avatarObject = user;
                 }
             }
@@ -241,7 +260,7 @@ public class MediaActivity extends BaseFragment implements SharedMediaLayout.Sha
                     avatarDrawable.setSmallSize(true);
                 } else {
                     nameTextView.setText(ContactsController.formatName(user.first_name, user.last_name));
-                    avatarDrawable.setInfo(user);
+                    avatarDrawable.setInfo(user, currentAccount);
                     avatarObject = user;
                 }
             }
@@ -249,15 +268,22 @@ public class MediaActivity extends BaseFragment implements SharedMediaLayout.Sha
         } else {
             TLRPC.Chat chat = MessagesController.getInstance(currentAccount).getChat(-dialogId);
             if (chat != null) {
-                nameTextView.setText(chat.title);
-                avatarDrawable.setInfo(chat);
+                nameTextView.setText(UserConfig.getChatTitleOverride(currentAccount, chat.id, chat.title));
+                avatarDrawable.setInfo(chat, currentAccount);
                 avatarObject = chat;
             }
         }
 
-        final ImageLocation thumbLocation = ImageLocation.getForUserOrChat(avatarObject, ImageLocation.TYPE_SMALL);
-        avatarImageView.setImage(thumbLocation, "50_50", avatarDrawable, avatarObject);
-
+        long id = 0;
+        if (avatarObject instanceof TLRPC.Chat) {
+            id = ((TLRPC.Chat) avatarObject).id;
+        } else if (avatarObject instanceof TLRPC.User) {
+            id = ((TLRPC.User) avatarObject).id;
+        }
+        if (UserConfig.isAvatarEnabled(currentAccount, id)) {
+            final ImageLocation thumbLocation = ImageLocation.getForUserOrChat(avatarObject, ImageLocation.TYPE_SMALL);
+            avatarImageView.setImage(thumbLocation, "50_50", avatarDrawable, avatarObject);
+        }
 
         if (TextUtils.isEmpty(nameTextView.getText())) {
             nameTextView.setText(LocaleController.getString("SharedContentTitle", R.string.SharedContentTitle));
@@ -272,10 +298,27 @@ public class MediaActivity extends BaseFragment implements SharedMediaLayout.Sha
             sharedMediaLayout.photoVideoOptionsItem.setVisibility(View.INVISIBLE);
         }
 
+        actionBar.setDrawBlurBackground(fragmentView);
         AndroidUtilities.updateViewVisibilityAnimated(avatarContainer, true, 1, false);
         updateMediaCount();
         updateColors();
         return fragmentView;
+    }
+
+    @Override
+    public boolean isSwipeBackEnabled(MotionEvent event) {
+        if (!sharedMediaLayout.isSwipeBackEnabled()) {
+            return false;
+        }
+        return sharedMediaLayout.isCurrentTabFirst();
+    }
+
+    @Override
+    public boolean canBeginSlide() {
+        if (!sharedMediaLayout.isSwipeBackEnabled()) {
+            return false;
+        }
+        return super.canBeginSlide();
     }
 
     private void updateMediaCount() {
@@ -324,7 +367,7 @@ public class MediaActivity extends BaseFragment implements SharedMediaLayout.Sha
 
     private void updateColors() {
         actionBar.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundWhite));
-        actionBar.setItemsColor(Theme.getColor(Theme.key_windowBackgroundWhiteGrayText2), false);
+        actionBar.setItemsColor(Theme.getColor(Theme.key_actionBarActionModeDefaultIcon), false);
         actionBar.setItemsBackgroundColor(Theme.getColor(Theme.key_actionBarActionModeDefaultSelector), false);
         actionBar.setTitleColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
         nameTextView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
@@ -341,5 +384,14 @@ public class MediaActivity extends BaseFragment implements SharedMediaLayout.Sha
         arrayList.add(new ThemeDescription(null, 0, null, null, null, themeDelegate, Theme.key_windowBackgroundWhiteBlackText));
         arrayList.addAll(sharedMediaLayout.getThemeDescriptions());
         return arrayList;
+    }
+
+    @Override
+    public boolean isLightStatusBar() {
+        int color = Theme.getColor(Theme.key_windowBackgroundWhite);
+        if (actionBar.isActionModeShowed()) {
+            color = Theme.getColor(Theme.key_actionBarActionModeDefault);
+        }
+        return ColorUtils.calculateLuminance(color) > 0.7f;
     }
 }

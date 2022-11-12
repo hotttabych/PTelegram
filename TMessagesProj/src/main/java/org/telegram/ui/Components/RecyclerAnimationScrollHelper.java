@@ -11,7 +11,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import org.telegram.messenger.BuildVars;
 import org.telegram.messenger.MessagesController;
-import org.telegram.messenger.SharedConfig;
 import org.telegram.ui.Cells.ChatMessageCell;
 
 import java.util.ArrayList;
@@ -165,6 +164,9 @@ public class RecyclerAnimationScrollHelper {
                     if (view.getParent() == null) {
                         recyclerView.addView(view);
                         layoutManager.ignoreView(view);
+                        if (animationCallback != null) {
+                            animationCallback.ignoreView(view, true);
+                        }
                     }
                     if (view instanceof ChatMessageCell) {
                         ((ChatMessageCell) view).setAnimationRunning(true, true);
@@ -173,6 +175,10 @@ public class RecyclerAnimationScrollHelper {
 
                 if (oldT == Integer.MAX_VALUE) {
                     oldT = 0;
+                }
+
+                if (animationCallback != null) {
+                    animationCallback.onPreAnimation();
                 }
 
                 final int scrollLength ;
@@ -234,6 +240,7 @@ public class RecyclerAnimationScrollHelper {
                             layoutManager.stopIgnoringView(view);
                             recyclerView.removeView(view);
                             if (animationCallback != null) {
+                                animationCallback.ignoreView(view, false);
                                 animationCallback.recycleView(view);
                             }
                         }
@@ -241,7 +248,7 @@ public class RecyclerAnimationScrollHelper {
                         recyclerView.setScrollEnabled(true);
                         recyclerView.setVerticalScrollBarEnabled(true);
 
-                        if (BuildVars.DEBUG_VERSION) {
+                        if (BuildVars.DEBUG_PRIVATE_VERSION) {
                             if (recyclerView.mChildHelper.getChildCount() != recyclerView.getChildCount()) {
                                 throw new RuntimeException("views count in child helper must be quals views count in recycler view");
                             }
@@ -287,7 +294,7 @@ public class RecyclerAnimationScrollHelper {
                 if (hasSameViews) {
                    duration = 600;
                 } else {
-                 duration = (long) (((scrollLength / (float) recyclerView.getMeasuredHeight()) + 1f) * 200L);
+                    duration = (long) (((scrollLength / (float) recyclerView.getMeasuredHeight()) + 1f) * 200L);
                     if (duration < 300) {
                         duration = 300;
                     }
@@ -352,6 +359,14 @@ public class RecyclerAnimationScrollHelper {
         }
 
         public void recycleView(View view) {
+
+        }
+
+        public void onPreAnimation() {
+
+        }
+
+        public void ignoreView(View view, boolean ignore) {
 
         }
     }

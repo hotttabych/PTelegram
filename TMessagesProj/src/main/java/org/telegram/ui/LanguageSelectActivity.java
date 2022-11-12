@@ -8,14 +8,16 @@
 
 package org.telegram.ui;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
 import android.animation.ValueAnimator;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
-import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.accessibility.AccessibilityNodeInfo;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
@@ -32,11 +34,6 @@ import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.R;
 import org.telegram.messenger.Utilities;
-import org.telegram.ui.ActionBar.AlertDialog;
-import org.telegram.ui.ActionBar.Theme;
-import org.telegram.ui.ActionBar.ThemeDescription;
-import org.telegram.ui.Cells.HeaderCell;
-import org.telegram.ui.Cells.LanguageCell;
 import org.telegram.ui.ActionBar.ActionBar;
 import org.telegram.ui.ActionBar.ActionBarMenu;
 import org.telegram.ui.ActionBar.ActionBarMenuItem;
@@ -60,7 +57,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
-import java.util.Set;
 import java.util.Timer;
 
 public class LanguageSelectActivity extends BaseFragment implements NotificationCenter.NotificationCenterDelegate {
@@ -81,7 +77,7 @@ public class LanguageSelectActivity extends BaseFragment implements Notification
     @Override
     public boolean onFragmentCreate() {
         fillLanguages();
-        LocaleController.getInstance().loadRemoteLanguages(currentAccount);
+        LocaleController.getInstance().loadRemoteLanguages(currentAccount, false);
         NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.suggestedLangpack);
         return super.onFragmentCreate();
     }
@@ -175,8 +171,9 @@ public class LanguageSelectActivity extends BaseFragment implements Notification
                     return;
                 }
                 boolean search = listView.getAdapter() == searchListViewAdapter;
-                if (!search)
+                if (!search) {
                     position -= 2;
+                }
                 LocaleController.LocaleInfo localeInfo;
                 if (search) {
                     localeInfo = searchResult.get(position);
@@ -219,8 +216,9 @@ public class LanguageSelectActivity extends BaseFragment implements Notification
                     return false;
                 }
                 boolean search = listView.getAdapter() == searchListViewAdapter;
-                if (!search)
-                    position--;
+                if (!search) {
+                    position -= 2;
+                }
                 LocaleController.LocaleInfo localeInfo;
                 if (search) {
                     localeInfo = searchResult.get(position);
@@ -416,19 +414,22 @@ public class LanguageSelectActivity extends BaseFragment implements Notification
 
         public TranslateSettings(Context context) {
             super(context);
+            setFocusable(false);
 
             setOrientation(VERTICAL);
 
             preferences = MessagesController.getGlobalMainSettings();
 
             header = new HeaderCell(context);
+            header.setFocusable(true);
             header.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundWhite));
             header.setText(LocaleController.getString("TranslateMessages", R.string.TranslateMessages));
+            header.setContentDescription(LocaleController.getString("TranslateMessages", R.string.TranslateMessages));
             addView(header, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
 
             boolean value = getValue();
             showButtonCheck = new TextCheckCell(context);
-            showButtonCheck.setBackground(Theme.createSelectorWithBackgroundDrawable(Theme.getColor(Theme.key_windowBackgroundWhite), Theme.getColor(Theme.key_listSelector)));
+            showButtonCheck.setBackground(Theme.AdaptiveRipple.filledRect(Theme.getColor(Theme.key_windowBackgroundWhite)));
             showButtonCheck.setTextAndCheck(
                 LocaleController.getString("ShowTranslateButton", R.string.ShowTranslateButton),
                 value,
@@ -440,7 +441,7 @@ public class LanguageSelectActivity extends BaseFragment implements Notification
             addView(showButtonCheck, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
 
             doNotTranslateCell = new TextSettingsCell(context);
-            doNotTranslateCell.setBackground(Theme.createSelectorWithBackgroundDrawable(Theme.getColor(Theme.key_windowBackgroundWhite), Theme.getColor(Theme.key_listSelector)));
+            doNotTranslateCell.setBackground(Theme.AdaptiveRipple.filledRect(Theme.getColor(Theme.key_windowBackgroundWhite)));
             doNotTranslateCell.setOnClickListener(e -> {
                 presentFragment(new RestrictedLanguagesSelectActivity());
                 update();
@@ -452,13 +453,17 @@ public class LanguageSelectActivity extends BaseFragment implements Notification
             info = new TextInfoPrivacyCell(context);
             info.setTopPadding(11);
             info.setBottomPadding(16);
+            info.setFocusable(true);
             info.setText(LocaleController.getString("TranslateMessagesInfo1", R.string.TranslateMessagesInfo1));
+            info.setContentDescription(LocaleController.getString("TranslateMessagesInfo1", R.string.TranslateMessagesInfo1));
             addView(info, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
 
             info2 = new TextInfoPrivacyCell(context);
             info2.setTopPadding(0);
             info2.setBottomPadding(16);
+            info2.setFocusable(true);
             info2.setText(LocaleController.getString("TranslateMessagesInfo2", R.string.TranslateMessagesInfo2));
+            info2.setContentDescription(LocaleController.getString("TranslateMessagesInfo2", R.string.TranslateMessagesInfo2));
             info2.setAlpha(value ? 0f : 1f);
             addView(info2, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
 
@@ -506,6 +511,7 @@ public class LanguageSelectActivity extends BaseFragment implements Notification
             doNotTranslateCell.setTextAndValue(LocaleController.getString("DoNotTranslate", R.string.DoNotTranslate), doNotTranslateCellValue, false);
             doNotTranslateCell.setClickable(value);
 
+            info2.setVisibility(View.VISIBLE);
             doNotTranslateCellAnimation = ValueAnimator.ofFloat(doNotTranslateCell.getAlpha(), value ? 1f : 0f);
             doNotTranslateCellAnimation.setInterpolator(CubicBezierInterpolator.DEFAULT);
             doNotTranslateCellAnimation.addUpdateListener(a -> {
@@ -524,6 +530,17 @@ public class LanguageSelectActivity extends BaseFragment implements Notification
 //                ViewGroup.LayoutParams layoutParams = getLayoutParams();
 //                layoutParams.height = AndroidUtilities.dp(HEIGHT_CLOSED + (HEIGHT_OPEN - HEIGHT_CLOSED) * t);
 //                setLayoutParams(layoutParams);
+            });
+            doNotTranslateCellAnimation.addListener(new AnimatorListenerAdapter() {
+                @Override
+                public void onAnimationEnd(Animator animation) {
+                    super.onAnimationEnd(animation);
+                    if (doNotTranslateCell.getAlpha() > .5) {
+                        info2.setVisibility(View.GONE);
+                    } else {
+                        info2.setVisibility(View.VISIBLE);
+                    }
+                }
             });
             doNotTranslateCellAnimation.setDuration((long) (Math.abs(doNotTranslateCell.getAlpha() - (value ? 1f : 0f)) * 200));
             doNotTranslateCellAnimation.start();

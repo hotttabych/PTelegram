@@ -14,9 +14,6 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Paint.Style;
 import android.graphics.drawable.Drawable;
-import androidx.viewpager.widget.ViewPager;
-import androidx.viewpager.widget.ViewPager.OnPageChangeListener;
-
 import android.graphics.drawable.RippleDrawable;
 import android.os.Build;
 import android.view.View;
@@ -26,6 +23,9 @@ import android.widget.FrameLayout;
 import android.widget.HorizontalScrollView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+
+import androidx.viewpager.widget.ViewPager;
+import androidx.viewpager.widget.ViewPager.OnPageChangeListener;
 
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.ui.ActionBar.Theme;
@@ -64,10 +64,12 @@ public class PagerSlidingTabStrip extends HorizontalScrollView {
     private int dividerPadding = AndroidUtilities.dp(12);
     private int tabPadding = AndroidUtilities.dp(24);
 
+    private Theme.ResourcesProvider resourcesProvider;
     private int lastScrollX = 0;
 
-    public PagerSlidingTabStrip(Context context) {
+    public PagerSlidingTabStrip(Context context, Theme.ResourcesProvider resourcesProvider) {
         super(context);
+        this.resourcesProvider = resourcesProvider;
 
         setFillViewport(true);
         setWillNotDraw(false);
@@ -138,14 +140,14 @@ public class PagerSlidingTabStrip extends HorizontalScrollView {
                 super.setSelected(selected);
                 Drawable background = getBackground();
                 if (Build.VERSION.SDK_INT >= 21 && background != null) {
-                    int color = Theme.getColor(selected ? Theme.key_chat_emojiPanelIconSelected : Theme.key_chat_emojiBottomPanelIcon);
+                    int color = getThemedColor(selected ? Theme.key_chat_emojiPanelIconSelected : Theme.key_chat_emojiBottomPanelIcon);
                     Theme.setSelectorDrawableColor(background, Color.argb(30, Color.red(color), Color.green(color), Color.blue(color)), true);
                 }
             }
         };
         tab.setFocusable(true);
         if (Build.VERSION.SDK_INT >= 21) {
-            RippleDrawable rippleDrawable = (RippleDrawable) Theme.createSelectorDrawable(Theme.getColor(Theme.key_chat_emojiBottomPanelIcon));
+            RippleDrawable rippleDrawable = (RippleDrawable) Theme.createSelectorDrawable(getThemedColor(Theme.key_chat_emojiBottomPanelIcon), Theme.RIPPLE_MASK_CIRCLE_20DP, AndroidUtilities.dp(18));
             Theme.setRippleDrawableForceSoftware(rippleDrawable);
             tab.setBackground(rippleDrawable);
         }
@@ -191,7 +193,11 @@ public class PagerSlidingTabStrip extends HorizontalScrollView {
         if (tabCount == 0) {
             return;
         }
-        int newScrollX = tabsContainer.getChildAt(position).getLeft() + offset;
+        View child = tabsContainer.getChildAt(position);
+        if (child == null) {
+            return;
+        }
+        int newScrollX = child.getLeft() + offset;
         if (position > 0 || offset > 0) {
             newScrollX -= scrollOffset;
         }
@@ -217,21 +223,23 @@ public class PagerSlidingTabStrip extends HorizontalScrollView {
         }
 
         View currentTab = tabsContainer.getChildAt(currentPosition);
-        float lineLeft = currentTab.getLeft();
-        float lineRight = currentTab.getRight();
+        if (currentTab != null) {
+            float lineLeft = currentTab.getLeft();
+            float lineRight = currentTab.getRight();
 
-        if (currentPositionOffset > 0f && currentPosition < tabCount - 1) {
-            View nextTab = tabsContainer.getChildAt(currentPosition + 1);
-            final float nextTabLeft = nextTab.getLeft();
-            final float nextTabRight = nextTab.getRight();
+            if (currentPositionOffset > 0f && currentPosition < tabCount - 1) {
+                View nextTab = tabsContainer.getChildAt(currentPosition + 1);
+                final float nextTabLeft = nextTab.getLeft();
+                final float nextTabRight = nextTab.getRight();
 
-            lineLeft = (currentPositionOffset * nextTabLeft + (1f - currentPositionOffset) * lineLeft);
-            lineRight = (currentPositionOffset * nextTabRight + (1f - currentPositionOffset) * lineRight);
-        }
+                lineLeft = (currentPositionOffset * nextTabLeft + (1f - currentPositionOffset) * lineLeft);
+                lineRight = (currentPositionOffset * nextTabRight + (1f - currentPositionOffset) * lineRight);
+            }
 
-        if (indicatorHeight != 0) {
-            rectPaint.setColor(indicatorColor);
-            canvas.drawRect(lineLeft, height - indicatorHeight, lineRight, height, rectPaint);
+            if (indicatorHeight != 0) {
+                rectPaint.setColor(indicatorColor);
+                canvas.drawRect(lineLeft, height - indicatorHeight, lineRight, height, rectPaint);
+            }
         }
     }
 
@@ -241,10 +249,13 @@ public class PagerSlidingTabStrip extends HorizontalScrollView {
         public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
             currentPosition = position;
             currentPositionOffset = positionOffset;
-            scrollToChild(position, (int) (positionOffset * tabsContainer.getChildAt(position).getWidth()));
-            invalidate();
-            if (delegatePageListener != null) {
-                delegatePageListener.onPageScrolled(position, positionOffset, positionOffsetPixels);
+            View child = tabsContainer.getChildAt(position);
+            if (child != null) {
+                scrollToChild(position, (int) (positionOffset * tabsContainer.getChildAt(position).getWidth()));
+                invalidate();
+                if (delegatePageListener != null) {
+                    delegatePageListener.onPageScrolled(position, positionOffset, positionOffsetPixels);
+                }
             }
         }
 
@@ -267,6 +278,11 @@ public class PagerSlidingTabStrip extends HorizontalScrollView {
                 tabsContainer.getChildAt(a).setSelected(a == position);
             }
         }
+    }
+
+    private int getThemedColor(String key) {
+        Integer color = resourcesProvider != null ? resourcesProvider.getColor(key) : null;
+        return color != null ? color : Theme.getColor(key);
     }
 
     public void onSizeChanged(int paramInt1, int paramInt2, int paramInt3, int paramInt4) {

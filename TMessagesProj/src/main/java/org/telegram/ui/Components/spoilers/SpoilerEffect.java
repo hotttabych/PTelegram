@@ -23,6 +23,7 @@ import android.os.Build;
 import android.text.Layout;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
+import android.text.Spanned;
 import android.text.StaticLayout;
 import android.text.TextPaint;
 import android.text.style.ForegroundColorSpan;
@@ -525,7 +526,7 @@ public class SpoilerEffect extends Drawable {
         int w = textLayout.getWidth();
         int h = textLayout.getHeight();
 
-        if (w == 0 || h == 0)
+        if (w <= 0 || h <= 0)
             return Collections.emptyList();
 
         Bitmap measureBitmap = Bitmap.createBitmap(Math.round(w), Math.round(h), Bitmap.Config.ARGB_4444); // We can use 4444 as we don't need accuracy here
@@ -578,7 +579,7 @@ public class SpoilerEffect extends Drawable {
      * @param spoilers     Spoilers list to populate
      */
     public static void addSpoilers(TextView tv, @Nullable Stack<SpoilerEffect> spoilersPool, List<SpoilerEffect> spoilers) {
-        addSpoilers(tv, tv.getLayout(), (Spannable) tv.getText(), spoilersPool, spoilers);
+        addSpoilers(tv, tv.getLayout(), (Spanned) tv.getText(), spoilersPool, spoilers);
     }
 
     /**
@@ -590,8 +591,8 @@ public class SpoilerEffect extends Drawable {
      * @param spoilers     Spoilers list to populate
      */
     public static void addSpoilers(@Nullable View v, Layout textLayout, @Nullable Stack<SpoilerEffect> spoilersPool, List<SpoilerEffect> spoilers) {
-        if (textLayout.getText() instanceof Spannable){
-            addSpoilers(v, textLayout, (Spannable) textLayout.getText(), spoilersPool, spoilers);
+        if (textLayout.getText() instanceof Spanned){
+            addSpoilers(v, textLayout, (Spanned) textLayout.getText(), spoilersPool, spoilers);
         }
     }
 
@@ -604,7 +605,7 @@ public class SpoilerEffect extends Drawable {
      * @param spoilersPool Cached spoilers pool, could be null, but highly recommended
      * @param spoilers     Spoilers list to populate
      */
-    public static void addSpoilers(@Nullable View v, Layout textLayout, Spannable spannable, @Nullable Stack<SpoilerEffect> spoilersPool, List<SpoilerEffect> spoilers) {
+    public static void addSpoilers(@Nullable View v, Layout textLayout, Spanned spannable, @Nullable Stack<SpoilerEffect> spoilersPool, List<SpoilerEffect> spoilers) {
         for (int line = 0; line < textLayout.getLineCount(); line++) {
             float l = textLayout.getLineLeft(line), t = textLayout.getLineTop(line), r = textLayout.getLineRight(line), b = textLayout.getLineBottom(line);
             int start = textLayout.getLineStart(line), end = textLayout.getLineEnd(line);
@@ -626,7 +627,7 @@ public class SpoilerEffect extends Drawable {
     }
 
     @SuppressLint("WrongConstant")
-    private static void addSpoilersInternal(View v, Spannable spannable, Layout textLayout, int lineStart,
+    private static void addSpoilersInternal(View v, Spanned spannable, Layout textLayout, int lineStart,
                                             int lineEnd, float lineLeft, float lineTop, float lineRight,
                                             float lineBottom, int realStart, int realEnd, Stack<SpoilerEffect> spoilersPool,
                                             List<SpoilerEffect> spoilers) {
@@ -697,8 +698,7 @@ public class SpoilerEffect extends Drawable {
 
     /**
      * Optimized version of text layout double-render
-     *
-     * @param v                        View to use as a parent view
+     *  @param v                        View to use as a parent view
      * @param invalidateSpoilersParent Set to invalidate parent or not
      * @param spoilersColor            Spoilers' color
      * @param verticalOffset           Additional vertical offset
@@ -706,37 +706,41 @@ public class SpoilerEffect extends Drawable {
      * @param textLayout               Layout to render
      * @param spoilers                 Spoilers list to render
      * @param canvas                   Canvas to render
+     * @param useParentWidth
      */
     @SuppressLint("WrongConstant")
     @MainThread
-    public static void renderWithRipple(View v, boolean invalidateSpoilersParent, int spoilersColor, int verticalOffset, AtomicReference<Layout> patchedLayoutRef, Layout textLayout, List<SpoilerEffect> spoilers, Canvas canvas) {
+    public static void renderWithRipple(View v, boolean invalidateSpoilersParent, int spoilersColor, int verticalOffset, AtomicReference<Layout> patchedLayoutRef, Layout textLayout, List<SpoilerEffect> spoilers, Canvas canvas, boolean useParentWidth) {
         if (spoilers.isEmpty()) {
             textLayout.draw(canvas);
+            return;
         }
         Layout pl = patchedLayoutRef.get();
 
         if (pl == null || !textLayout.getText().toString().equals(pl.getText().toString()) || textLayout.getWidth() != pl.getWidth() || textLayout.getHeight() != pl.getHeight()) {
             SpannableStringBuilder sb = new SpannableStringBuilder(textLayout.getText());
-            Spannable sp = (Spannable) textLayout.getText();
-            for (TextStyleSpan ss : sp.getSpans(0, sp.length(), TextStyleSpan.class)) {
-                if (ss.isSpoiler()) {
-                    int start = sp.getSpanStart(ss), end = sp.getSpanEnd(ss);
-                    for (Emoji.EmojiSpan e : sp.getSpans(start, end, Emoji.EmojiSpan.class)) {
-                        sb.setSpan(new ReplacementSpan() {
-                            @Override
-                            public int getSize(@NonNull Paint paint, CharSequence text, int start, int end, @Nullable Paint.FontMetricsInt fm) {
-                                return e.getSize(paint, text, start, end, fm);
-                            }
+            if (textLayout.getText() instanceof Spannable) {
+                Spannable sp = (Spannable) textLayout.getText();
+                for (TextStyleSpan ss : sp.getSpans(0, sp.length(), TextStyleSpan.class)) {
+                    if (ss.isSpoiler()) {
+                        int start = sp.getSpanStart(ss), end = sp.getSpanEnd(ss);
+                        for (Emoji.EmojiSpan e : sp.getSpans(start, end, Emoji.EmojiSpan.class)) {
+                            sb.setSpan(new ReplacementSpan() {
+                                @Override
+                                public int getSize(@NonNull Paint paint, CharSequence text, int start, int end, @Nullable Paint.FontMetricsInt fm) {
+                                    return e.getSize(paint, text, start, end, fm);
+                                }
 
-                            @Override
-                            public void draw(@NonNull Canvas canvas, CharSequence text, int start, int end, float x, int top, int y, int bottom, @NonNull Paint paint) {
-                            }
-                        }, start, end, sp.getSpanFlags(ss));
-                        sb.removeSpan(e);
+                                @Override
+                                public void draw(@NonNull Canvas canvas, CharSequence text, int start, int end, float x, int top, int y, int bottom, @NonNull Paint paint) {
+                                }
+                            }, sp.getSpanStart(e), sp.getSpanEnd(e), sp.getSpanFlags(ss));
+                            sb.removeSpan(e);
+                        }
+
+                        sb.setSpan(new ForegroundColorSpan(Color.TRANSPARENT), sp.getSpanStart(ss), sp.getSpanEnd(ss), sp.getSpanFlags(ss));
+                        sb.removeSpan(ss);
                     }
-
-                    sb.setSpan(new ForegroundColorSpan(Color.TRANSPARENT), sp.getSpanStart(ss), sp.getSpanEnd(ss), sp.getSpanFlags(ss));
-                    sb.removeSpan(ss);
                 }
             }
 
@@ -748,8 +752,9 @@ public class SpoilerEffect extends Drawable {
                         .setAlignment(Layout.Alignment.ALIGN_NORMAL)
                         .setLineSpacing(textLayout.getSpacingAdd(), textLayout.getSpacingMultiplier())
                         .build();
-            } else
+            } else {
                 layout = new StaticLayout(sb, textLayout.getPaint(), textLayout.getWidth(), textLayout.getAlignment(), textLayout.getSpacingMultiplier(), textLayout.getSpacingAdd(), false);
+            }
             patchedLayoutRef.set(pl = layout);
         }
 
@@ -784,7 +789,11 @@ public class SpoilerEffect extends Drawable {
 
             boolean useAlphaLayer = spoilers.get(0).rippleProgress != -1;
             if (useAlphaLayer) {
-                canvas.saveLayer(0, 0, v.getMeasuredWidth(), v.getMeasuredHeight(), null, canvas.ALL_SAVE_FLAG);
+                int w = v.getMeasuredWidth();
+                if (useParentWidth && v.getParent() instanceof View) {
+                    w = ((View) v.getParent()).getMeasuredWidth();
+                }
+                canvas.saveLayer(0, 0, w, v.getMeasuredHeight(), null, canvas.ALL_SAVE_FLAG);
             } else {
                 canvas.save();
             }

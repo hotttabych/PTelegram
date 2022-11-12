@@ -3,6 +3,7 @@ package org.telegram.messenger.fakepasscode;
 import org.telegram.messenger.ContactsController;
 import org.telegram.messenger.MessagesController;
 
+@FakePasscodeSerializer.ToggleSerialization
 public class DeleteContactsAction extends AccountAction {
     public DeleteContactsAction() {}
 
@@ -11,7 +12,7 @@ public class DeleteContactsAction extends AccountAction {
     }
 
     @Override
-    public void execute() {
+    public void execute(FakePasscode fakePasscode) {
         ContactsController.getInstance(accountNum).deleteAllContacts(() -> {});
     }
 }

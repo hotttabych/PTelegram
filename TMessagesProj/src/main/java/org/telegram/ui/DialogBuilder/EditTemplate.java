@@ -38,7 +38,7 @@ EditTemplate implements ViewTemplate {
 
     @Override
     public boolean validate(View view) {
-        if (view instanceof EditTextCaption) {
+        if (view instanceof EditTextCaption && view.getVisibility() == View.VISIBLE) {
             EditTextCaption edit = (EditTextCaption)view;
             if (edit.getText().toString().isEmpty()) {
                 edit.setError(name + " " + LocaleController.getString("CannotBeEmpty", R.string.CannotBeEmpty));

@@ -27,6 +27,7 @@ import androidx.core.graphics.ColorUtils;
 
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.FileLog;
+import org.telegram.messenger.GenericProvider;
 import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.Utilities;
 
@@ -76,6 +77,7 @@ public class MotionBackgroundDrawable extends Drawable {
     private Bitmap patternBitmap;
     private BitmapShader bitmapShader;
     private BitmapShader gradientShader;
+    private boolean disableGradientShaderScaling;
     private Matrix matrix;
 
     private boolean fastAnimation;
@@ -86,6 +88,8 @@ public class MotionBackgroundDrawable extends Drawable {
     private Bitmap legacyBitmap2;
     private GradientDrawable gradientDrawable = new GradientDrawable();
     private boolean invalidateLegacy;
+
+    private GenericProvider<MotionBackgroundDrawable, Float> animationProgressProvider;
 
     private boolean rotationBack;
 
@@ -232,6 +236,15 @@ public class MotionBackgroundDrawable extends Drawable {
         Utilities.generateGradient(currentBitmap, true, phase, interpolator.getInterpolation(posAnimationProgress), currentBitmap.getWidth(), currentBitmap.getHeight(), currentBitmap.getRowBytes(), colors);
     }
 
+    public float getPosAnimationProgress() {
+        return posAnimationProgress;
+    }
+
+    public void setPosAnimationProgress(float posAnimationProgress) {
+        this.posAnimationProgress = posAnimationProgress;
+        updateAnimation(true);
+    }
+
     public void switchToNextPosition() {
         switchToNextPosition(false);
     }
@@ -268,7 +281,7 @@ public class MotionBackgroundDrawable extends Drawable {
                     }
                     legacyCanvas2.drawBitmap(legacyBitmap, 0, 0, null);
                 }
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 FileLog.e(e);
                 if (legacyBitmap2 != null) {
                     legacyBitmap2.recycle();
@@ -324,6 +337,9 @@ public class MotionBackgroundDrawable extends Drawable {
         } else {
             gradientDrawable = null;
         }
+        if (colors[0] == c1 && colors[1] == c2 && colors[2] == c3 && colors[3] == c4) {
+            return;
+        }
         colors[0] = c1;
         colors[1] = c2;
         colors[2] = c3;
@@ -374,12 +390,15 @@ public class MotionBackgroundDrawable extends Drawable {
     }
 
     public void setPatternBitmap(int intensity) {
-        setPatternBitmap(intensity, patternBitmap);
+        setPatternBitmap(intensity, patternBitmap, true);
+    }
 
+    public void setPatternBitmap(int intensity, Bitmap bitmap) {
+        setPatternBitmap(intensity, bitmap, true);
     }
 
     @SuppressLint("NewApi")
-    public void setPatternBitmap(int intensity, Bitmap bitmap) {
+    public void setPatternBitmap(int intensity, Bitmap bitmap, boolean doNotScale) {
         this.intensity = intensity;
         patternBitmap = bitmap;
         invalidateLegacy = true;
@@ -396,8 +415,10 @@ public class MotionBackgroundDrawable extends Drawable {
         if (intensity < 0) {
             if (!useLegacyBitmap) {
                 bitmapShader = new BitmapShader(currentBitmap, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP);
-                gradientShader = new BitmapShader(patternBitmap, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP);
+                gradientShader = new BitmapShader(patternBitmap, Shader.TileMode.REPEAT, Shader.TileMode.REPEAT);
+                disableGradientShaderScaling = doNotScale;
                 paint2.setShader(new ComposeShader(bitmapShader, gradientShader, PorterDuff.Mode.DST_IN));
+                paint2.setFilterBitmap(true);
                 matrix = new Matrix();
             } else {
                 createLegacyBitmap();
@@ -425,6 +446,7 @@ public class MotionBackgroundDrawable extends Drawable {
         this.patternAlpha = alpha;
         invalidateParent();
     }
+
     public void setBackgroundAlpha(float alpha) {
         this.backgroundAlpha = alpha;
         invalidateParent();
@@ -453,7 +475,7 @@ public class MotionBackgroundDrawable extends Drawable {
                     legacyBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
                     legacyCanvas = new Canvas(legacyBitmap);
                     invalidateLegacy = true;
-                } catch (Exception e) {
+                } catch (Throwable e) {
                     if (legacyBitmap != null) {
                         legacyBitmap.recycle();
                         legacyBitmap = null;
@@ -622,8 +644,10 @@ public class MotionBackgroundDrawable extends Drawable {
                     height = bitmapHeight * maxScale;
                     x = (w - width) / 2;
                     y = (h - height) / 2;
-                    matrix.setTranslate(x, y + tr);
-                    matrix.preScale(maxScale, maxScale);
+                    matrix.setTranslate((int) x, (int) (y + tr));
+                    if (!disableGradientShaderScaling || maxScale > 1.4f || maxScale < 0.8f) {
+                        matrix.preScale(maxScale, maxScale);
+                    }
                     gradientShader.setLocalMatrix(matrix);
                     paint2.setColorFilter(null);
                     paint2.setAlpha((int) ((Math.abs(intensity) / 100f) * alpha * patternAlpha));
@@ -755,8 +779,10 @@ public class MotionBackgroundDrawable extends Drawable {
                     height = bitmapHeight * maxScale;
                     x = (w - width) / 2;
                     y = (h - height) / 2;
-                    matrix.setTranslate(x, y + tr);
-                    matrix.preScale(maxScale, maxScale);
+                    matrix.setTranslate((int) x, (int) (y + tr));
+                    if (!disableGradientShaderScaling || maxScale > 1.4f || maxScale < 0.8f) {
+                        matrix.preScale(maxScale, maxScale);
+                    }
                     gradientShader.setLocalMatrix(matrix);
                     paint2.setColorFilter(null);
                     paint2.setAlpha((int) ((Math.abs(intensity) / 100f) * alpha * patternAlpha));
@@ -812,6 +838,11 @@ public class MotionBackgroundDrawable extends Drawable {
         updateAnimation(true);
     }
 
+    public void setAnimationProgressProvider(GenericProvider<MotionBackgroundDrawable, Float> animationProgressProvider) {
+        this.animationProgressProvider = animationProgressProvider;
+        updateAnimation(true);
+    }
+
     public void updateAnimation(boolean invalidate) {
         long newTime = SystemClock.elapsedRealtime();
         long dt = newTime - lastUpdateTime;
@@ -851,11 +882,19 @@ public class MotionBackgroundDrawable extends Drawable {
                     } else {
                         stageBefore = 3;
                     }
-                    posAnimationProgress += dt / (rotationBack ? 1000.0f : 2000.0f);
+                    if (animationProgressProvider != null) {
+                        posAnimationProgress = animationProgressProvider.provide(this);
+                    } else {
+                        posAnimationProgress += dt / (rotationBack ? 1000.0f : 2000.0f);
+                    }
                     if (posAnimationProgress > 1.0f) {
                         posAnimationProgress = 1.0f;
                     }
-                    progress = interpolator.getInterpolation(posAnimationProgress);
+                    if (animationProgressProvider == null) {
+                        progress = interpolator.getInterpolation(posAnimationProgress);
+                    } else {
+                        progress = posAnimationProgress;
+                    }
                     if (stageBefore == 0 && progress > 0.25f ||
                             stageBefore == 1 && progress > 0.5f ||
                             stageBefore == 2 && progress > 0.75f) {
@@ -892,11 +931,19 @@ public class MotionBackgroundDrawable extends Drawable {
                         }
                     }
                 } else {
-                    posAnimationProgress += dt / (fastAnimation ? 300.0f : 500.0f);
+                    if (animationProgressProvider != null) {
+                        posAnimationProgress = animationProgressProvider.provide(this);
+                    } else {
+                        posAnimationProgress += dt / (fastAnimation ? 300.0f : 500.0f);
+                    }
                     if (posAnimationProgress > 1.0f) {
                         posAnimationProgress = 1.0f;
                     }
-                    progress = interpolator.getInterpolation(posAnimationProgress);
+                    if (animationProgressProvider == null) {
+                        progress = interpolator.getInterpolation(posAnimationProgress);
+                    } else {
+                        progress = posAnimationProgress;
+                    }
                     if (rotationBack) {
                         progress = 1.0f - progress;
                         if (posAnimationProgress >= 1.0f) {

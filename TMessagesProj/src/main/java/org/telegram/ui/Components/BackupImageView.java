@@ -8,9 +8,11 @@
 
 package org.telegram.ui.Components;
 
+import android.animation.ValueAnimator;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.graphics.ColorFilter;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffColorFilter;
 import android.graphics.drawable.BitmapDrawable;
@@ -27,6 +29,8 @@ public class BackupImageView extends View {
     protected ImageReceiver imageReceiver;
     protected int width = -1;
     protected int height = -1;
+    public AnimatedEmojiDrawable animatedEmojiDrawable;
+    boolean attached;
 
     public BackupImageView(Context context) {
         super(context);
@@ -104,7 +108,7 @@ public class BackupImageView extends View {
         imageReceiver.setImage(imageLocation, imageFilter, thumbLocation, thumbFilter, thumb, size, ext, parentObject, 0);
     }
 
-    public void setImage(ImageLocation imageLocation, String imageFilter, ImageLocation thumbLocation, String thumbFilter, String ext, int size, int cacheType, Object parentObject) {
+    public void setImage(ImageLocation imageLocation, String imageFilter, ImageLocation thumbLocation, String thumbFilter, String ext, long size, int cacheType, Object parentObject) {
         imageReceiver.setImage(imageLocation, imageFilter, thumbLocation, thumbFilter, null, size, ext, parentObject, cacheType);
     }
 
@@ -164,27 +168,76 @@ public class BackupImageView extends View {
     public void setSize(int w, int h) {
         width = w;
         height = h;
+        invalidate();
     }
 
     @Override
     protected void onDetachedFromWindow() {
         super.onDetachedFromWindow();
+        attached = false;
         imageReceiver.onDetachedFromWindow();
+        if (animatedEmojiDrawable != null) {
+            animatedEmojiDrawable.removeView(this);
+        }
     }
 
     @Override
     protected void onAttachedToWindow() {
         super.onAttachedToWindow();
+        attached = true;
         imageReceiver.onAttachedToWindow();
+        if (animatedEmojiDrawable != null) {
+            animatedEmojiDrawable.addView(this);
+        }
     }
 
     @Override
     protected void onDraw(Canvas canvas) {
+        ImageReceiver imageReceiver = animatedEmojiDrawable != null ? animatedEmojiDrawable.getImageReceiver() : this.imageReceiver;
+        if (imageReceiver == null) {
+            return;
+        }
         if (width != -1 && height != -1) {
             imageReceiver.setImageCoords((getWidth() - width) / 2, (getHeight() - height) / 2, width, height);
         } else {
             imageReceiver.setImageCoords(0, 0, getWidth(), getHeight());
         }
         imageReceiver.draw(canvas);
+    }
+
+    public void setColorFilter(ColorFilter colorFilter) {
+        imageReceiver.setColorFilter(colorFilter);
+    }
+
+    public void setAnimatedEmojiDrawable(AnimatedEmojiDrawable animatedEmojiDrawable) {
+        if (this.animatedEmojiDrawable == animatedEmojiDrawable) {
+            return;
+        }
+        if (attached && this.animatedEmojiDrawable != null) {
+            this.animatedEmojiDrawable.removeView(this);
+        }
+        this.animatedEmojiDrawable = animatedEmojiDrawable;
+        if (attached && animatedEmojiDrawable != null) {
+            animatedEmojiDrawable.addView(this);
+        }
+    }
+
+    ValueAnimator roundRadiusAnimator;
+    
+    public void animateToRoundRadius(int animateToRad) {
+        if (getRoundRadius()[0] != animateToRad) {
+            if (roundRadiusAnimator != null) {
+                roundRadiusAnimator.cancel();
+            }
+            roundRadiusAnimator = ValueAnimator.ofInt(getRoundRadius()[0], animateToRad);
+            roundRadiusAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+                @Override
+                public void onAnimationUpdate(ValueAnimator animation) {
+                    setRoundRadius((Integer) animation.getAnimatedValue());
+                }
+            });
+            roundRadiusAnimator.setDuration(200);
+            roundRadiusAnimator.start();
+        }
     }
 }

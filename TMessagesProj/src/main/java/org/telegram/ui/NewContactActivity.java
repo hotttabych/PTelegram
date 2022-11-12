@@ -8,6 +8,8 @@
 
 package org.telegram.ui;
 
+import static android.widget.LinearLayout.HORIZONTAL;
+
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.AnimatorSet;
@@ -63,8 +65,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 
-import static android.widget.LinearLayout.HORIZONTAL;
-
 public class NewContactActivity extends BaseFragment implements AdapterView.OnItemSelectedListener {
 
     private LinearLayout contentLayout;
@@ -117,7 +117,7 @@ public class NewContactActivity extends BaseFragment implements AdapterView.OnIt
                         if (v != null) {
                             v.vibrate(200);
                         }
-                        AndroidUtilities.shakeView(firstNameField, 2, 0);
+                        AndroidUtilities.shakeView(firstNameField);
                         return;
                     }
                     if (codeField.length() == 0) {
@@ -125,7 +125,7 @@ public class NewContactActivity extends BaseFragment implements AdapterView.OnIt
                         if (v != null) {
                             v.vibrate(200);
                         }
-                        AndroidUtilities.shakeView(codeField, 2, 0);
+                        AndroidUtilities.shakeView(codeField);
                         return;
                     }
                     if (phoneField.length() == 0) {
@@ -133,7 +133,7 @@ public class NewContactActivity extends BaseFragment implements AdapterView.OnIt
                         if (v != null) {
                             v.vibrate(200);
                         }
-                        AndroidUtilities.shakeView(phoneField, 2, 0);
+                        AndroidUtilities.shakeView(phoneField);
                         return;
                     }
                     donePressed = true;
@@ -187,7 +187,7 @@ public class NewContactActivity extends BaseFragment implements AdapterView.OnIt
         avatarDrawable.setInfo(5, "", "");
 
         ActionBarMenu menu = actionBar.createMenu();
-        editDoneItem = menu.addItemWithWidth(done_button, R.drawable.ic_done, AndroidUtilities.dp(56));
+        editDoneItem = menu.addItemWithWidth(done_button, R.drawable.ic_ab_done, AndroidUtilities.dp(56));
         editDoneItem.setContentDescription(LocaleController.getString("Done", R.string.Done));
 
         editDoneItemProgress = new ContextProgressView(context, 1);
@@ -217,7 +217,8 @@ public class NewContactActivity extends BaseFragment implements AdapterView.OnIt
         firstNameField.setMaxLines(1);
         firstNameField.setLines(1);
         firstNameField.setSingleLine(true);
-        firstNameField.setBackgroundDrawable(Theme.createEditTextDrawable(context, false));
+        firstNameField.setBackground(null);
+        firstNameField.setLineColors(getThemedColor(Theme.key_windowBackgroundWhiteInputField), getThemedColor(Theme.key_windowBackgroundWhiteInputFieldActivated), getThemedColor(Theme.key_windowBackgroundWhiteRedText3));
         firstNameField.setGravity(Gravity.LEFT);
         firstNameField.setInputType(InputType.TYPE_TEXT_FLAG_CAP_SENTENCES | InputType.TYPE_TEXT_FLAG_AUTO_CORRECT);
         firstNameField.setImeOptions(EditorInfo.IME_ACTION_NEXT);
@@ -260,7 +261,8 @@ public class NewContactActivity extends BaseFragment implements AdapterView.OnIt
         lastNameField.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 18);
         lastNameField.setHintTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteHintText));
         lastNameField.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
-        lastNameField.setBackgroundDrawable(Theme.createEditTextDrawable(context, false));
+        lastNameField.setBackground(null);
+        lastNameField.setLineColors(getThemedColor(Theme.key_windowBackgroundWhiteInputField), getThemedColor(Theme.key_windowBackgroundWhiteInputFieldActivated), getThemedColor(Theme.key_windowBackgroundWhiteRedText3));
         lastNameField.setMaxLines(1);
         lastNameField.setLines(1);
         lastNameField.setSingleLine(true);
@@ -345,7 +347,8 @@ public class NewContactActivity extends BaseFragment implements AdapterView.OnIt
         codeField = new EditTextBoldCursor(context);
         codeField.setInputType(InputType.TYPE_CLASS_PHONE);
         codeField.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
-        codeField.setBackgroundDrawable(Theme.createEditTextDrawable(context, false));
+        codeField.setBackgroundDrawable(null);
+        codeField.setLineColors(getThemedColor(Theme.key_windowBackgroundWhiteInputField), getThemedColor(Theme.key_windowBackgroundWhiteInputFieldActivated), getThemedColor(Theme.key_windowBackgroundWhiteRedText3));
         codeField.setCursorColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
         codeField.setCursorSize(AndroidUtilities.dp(20));
         codeField.setCursorWidth(1.5f);
@@ -446,7 +449,8 @@ public class NewContactActivity extends BaseFragment implements AdapterView.OnIt
         phoneField.setInputType(InputType.TYPE_CLASS_PHONE);
         phoneField.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
         phoneField.setHintTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteHintText));
-        phoneField.setBackgroundDrawable(Theme.createEditTextDrawable(context, false));
+        phoneField.setBackgroundDrawable(null);
+        phoneField.setLineColors(getThemedColor(Theme.key_windowBackgroundWhiteInputField), getThemedColor(Theme.key_windowBackgroundWhiteInputFieldActivated), getThemedColor(Theme.key_windowBackgroundWhiteRedText3));
         phoneField.setPadding(0, 0, 0, 0);
         phoneField.setCursorColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
         phoneField.setCursorSize(AndroidUtilities.dp(20));

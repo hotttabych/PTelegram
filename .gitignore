@@ -1,6 +1,15 @@
 .idea/
 .gradle/
+./cxx
 build/
 obj/
 *.iml
 local.properties
+
+TMessagesProj/.cxx
+*.apk
+*.log
+TMessagesProj/afat
+TMessagesProj_App/afat
+TMessagesProj/bundle*
+TMessagesProj/x64

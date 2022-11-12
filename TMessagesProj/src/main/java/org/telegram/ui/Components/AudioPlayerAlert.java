@@ -57,7 +57,6 @@ import com.google.android.exoplayer2.C;
 
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ApplicationLoader;
-import org.telegram.messenger.BuildConfig;
 import org.telegram.messenger.BuildVars;
 import org.telegram.messenger.ContactsController;
 import org.telegram.messenger.DialogObject;
@@ -90,6 +89,7 @@ import org.telegram.ui.ActionBar.BottomSheet;
 import org.telegram.ui.ActionBar.SimpleTextView;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.ActionBar.ThemeDescription;
+import org.telegram.ui.Adapters.FiltersView;
 import org.telegram.ui.Cells.AudioPlayerCell;
 import org.telegram.ui.ChatActivity;
 import org.telegram.ui.DialogsActivity;
@@ -229,6 +229,7 @@ public class AudioPlayerAlert extends BottomSheet implements NotificationCenter.
 
     public AudioPlayerAlert(final Context context, Theme.ResourcesProvider resourcesProvider) {
         super(context, true, resourcesProvider);
+        fixNavigationBar();
 
         MessageObject messageObject = MediaController.getInstance().getPlayingMessageObject();
         if (messageObject != null) {
@@ -600,14 +601,14 @@ public class AudioPlayerAlert extends BottomSheet implements NotificationCenter.
                     if (parentActivity.getActionBarLayout().getLastFragment() instanceof DialogsActivity) {
                         DialogsActivity dialogsActivity = (DialogsActivity) parentActivity.getActionBarLayout().getLastFragment();
                         if (!dialogsActivity.onlyDialogsAdapter()) {
-                            dialogsActivity.setShowSearch(query, 4);
+                            dialogsActivity.setShowSearch(query, FiltersView.FILTER_INDEX_MUSIC);
                             dismiss();
                             return;
                         }
                     }
                     DialogsActivity fragment = new DialogsActivity(null);
                     fragment.setSearchString(query);
-                    fragment.setInitialSearchType(4);
+                    fragment.setInitialSearchType(FiltersView.FILTER_INDEX_MUSIC);
                     parentActivity.presentFragment(fragment, false, false);
                     dismiss();
                 });
@@ -1221,6 +1222,36 @@ public class AudioPlayerAlert extends BottomSheet implements NotificationCenter.
         updateEmptyView();
     }
 
+    @Override
+    public int getContainerViewHeight() {
+        if (playerLayout == null) {
+            return 0;
+        }
+        if (playlist.size() <= 1) {
+            return playerLayout.getMeasuredHeight() + backgroundPaddingTop;
+        } else {
+            int offset = AndroidUtilities.dp(13);
+            int top = scrollOffsetY - backgroundPaddingTop - offset;
+            if (currentSheetAnimationType == 1) {
+                top += listView.getTranslationY();
+            }
+            if (top + backgroundPaddingTop < ActionBar.getCurrentActionBarHeight()) {
+                float toMove = offset + AndroidUtilities.dp(11 - 7);
+                float moveProgress = Math.min(1.0f, (ActionBar.getCurrentActionBarHeight() - top - backgroundPaddingTop) / toMove);
+                float availableToMove = ActionBar.getCurrentActionBarHeight() - toMove;
+
+                int diff = (int) (availableToMove * moveProgress);
+                top -= diff;
+            }
+
+            if (Build.VERSION.SDK_INT >= 21) {
+                top += AndroidUtilities.statusBarHeight;
+            }
+
+            return container.getMeasuredHeight() - top;
+        }
+    }
+
     private void startForwardRewindingSeek() {
         if (rewindingState == 1) {
             lastRewindingTime = System.currentTimeMillis();
@@ -1364,17 +1395,17 @@ public class AudioPlayerAlert extends BottomSheet implements NotificationCenter.
             final ArrayList<MessageObject> fmessages = new ArrayList<>();
             fmessages.add(messageObject);
             fragment.setDelegate((fragment1, dids, message, param) -> {
-                if (dids.size() > 1 || dids.get(0) == UserConfig.getInstance(currentAccount).getClientUserId() || message != null) {
+                if (dids.size() > 1 || dids.get(0) .dialogId== UserConfig.getInstance(currentAccount).getClientUserId() || message != null) {
                     for (int a = 0; a < dids.size(); a++) {
-                        long did = dids.get(a);
+                        long did = dids.get(a).dialogId;
                         if (message != null) {
-                            SendMessagesHelper.getInstance(currentAccount).sendMessage(message.toString(), did, null, null, null, true, null, null, null, true, 0, null);
+                            SendMessagesHelper.getInstance(currentAccount).sendMessage(message.toString(), did, null, null, null, true, null, null, null, true, 0, null, false);
                         }
                         SendMessagesHelper.getInstance(currentAccount).sendMessage(fmessages, did, false, false, true, 0);
                     }
                     fragment1.finishFragment();
                 } else {
-                    long did = dids.get(0);
+                    long did = dids.get(0).dialogId;
                     Bundle args1 = new Bundle();
                     args1.putBoolean("scrollToTopOnResume", true);
                     if (DialogObject.isEncryptedDialog(did)) {
@@ -1407,7 +1438,7 @@ public class AudioPlayerAlert extends BottomSheet implements NotificationCenter.
                     }
                 }
                 if (f == null) {
-                    f = FileLoader.getPathToMessage(messageObject.messageOwner);
+                    f = FileLoader.getInstance(currentAccount).getPathToMessage(messageObject.messageOwner);
                 }
 
                 if (f.exists()) {
@@ -1415,7 +1446,7 @@ public class AudioPlayerAlert extends BottomSheet implements NotificationCenter.
                     intent.setType(messageObject.getMimeType());
                     if (Build.VERSION.SDK_INT >= 24) {
                         try {
-                            intent.putExtra(Intent.EXTRA_STREAM, FileProvider.getUriForFile(ApplicationLoader.applicationContext, BuildConfig.APPLICATION_ID + ".provider", f));
+                            intent.putExtra(Intent.EXTRA_STREAM, FileProvider.getUriForFile(ApplicationLoader.applicationContext, ApplicationLoader.getApplicationId() + ".provider", f));
                             intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                         } catch (Exception ignore) {
                             intent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(f));
@@ -1475,7 +1506,7 @@ public class AudioPlayerAlert extends BottomSheet implements NotificationCenter.
                 }
             }
             if (path == null || path.length() == 0) {
-                path = FileLoader.getPathToMessage(messageObject.messageOwner).toString();
+                path = FileLoader.getInstance(currentAccount).getPathToMessage(messageObject.messageOwner).toString();
             }
             MediaController.saveFile(path, parentActivity, 3, fileName, messageObject.getDocument() != null ? messageObject.getDocument().mime_type : "", () -> BulletinFactory.of((FrameLayout) containerView, resourcesProvider).createDownloadBulletin(BulletinFactory.FileType.AUDIO).show());
         }
@@ -1489,7 +1520,7 @@ public class AudioPlayerAlert extends BottomSheet implements NotificationCenter.
             blurredView.setTag(1);
             bigAlbumConver.setImageBitmap(coverContainer.getImageReceiver().getBitmap());
             blurredAnimationInProgress = true;
-            BaseFragment fragment = parentActivity.getActionBarLayout().fragmentsStack.get(parentActivity.getActionBarLayout().fragmentsStack.size() - 1);
+            BaseFragment fragment = parentActivity.getActionBarLayout().getFragmentStack().get(parentActivity.getActionBarLayout().getFragmentStack().size() - 1);
             View fragmentView = fragment.getFragmentView();
             int w = (int) (fragmentView.getMeasuredWidth() / 6.0f);
             int h = (int) (fragmentView.getMeasuredHeight() / 6.0f);
@@ -1840,7 +1871,7 @@ public class AudioPlayerAlert extends BottomSheet implements NotificationCenter.
             }
         }
         if (cacheFile == null) {
-            cacheFile = FileLoader.getPathToMessage(messageObject.messageOwner);
+            cacheFile = FileLoader.getInstance(currentAccount).getPathToMessage(messageObject.messageOwner);
         }
         boolean canStream = SharedConfig.streamMedia && (int) messageObject.getDialogId() != 0 && messageObject.isMusic();
         if (!cacheFile.exists() && !canStream) {
@@ -1996,7 +2027,7 @@ public class AudioPlayerAlert extends BottomSheet implements NotificationCenter.
                 if (thumbImageLocation.path != null) {
                     ImageLoader.getInstance().preloadArtwork(thumbImageLocation.path);
                 } else {
-                    FileLoader.getInstance(currentAccount).loadFile(thumbImageLocation, messageObject, null, 0, 1);
+                    FileLoader.getInstance(currentAccount).loadFile(thumbImageLocation, messageObject, null, FileLoader.PRIORITY_LOW, 1);
                 }
             }
         }
@@ -2116,7 +2147,7 @@ public class AudioPlayerAlert extends BottomSheet implements NotificationCenter.
                                 break;
                             }
                             TLRPC.Document document;
-                            if (messageObject.type == 0) {
+                            if (messageObject.type == MessageObject.TYPE_TEXT) {
                                 document = messageObject.messageOwner.media.webpage.document;
                             } else {
                                 document = messageObject.messageOwner.media.document;

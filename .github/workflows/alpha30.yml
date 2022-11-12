@@ -1,0 +1,26 @@
+name: Create Alpha
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest # [self-hosted, ptg]
+    steps:
+      - uses: actions/checkout@v2
+      - name: Replace passwords
+        run: sed -i "s/UCKJJtMyqB!9uGrAw6xu/${{ secrets.RELEASE_KEY_PASSWORD }}/g" gradle.properties.gradle && sed -i "s/LdAaKx_MFWGzL4ix4Jj*/${{ secrets.RELEASE_STORE_PASSWORD }}/g" gradle.properties.gradle && sed -i "s/key0/keyPtg/g" gradle.properties.gradle
+      - name: Build docker image
+        run: docker build -f DockerfileAlpha -t telegram-build .
+      - name: Build app
+        run: docker run --rm -v "$PWD":/home/source telegram-build #--cpus="3.5" -m 6000M telegram-build
+      - name: Print Hash
+        working-directory: ${{env.GITHUB_WORKSPACE}}
+        run: sha256sum TMessagesProj/build/outputs/apk/afat/alpha/app.apk
+      - name: Save artifact
+        uses: actions/upload-artifact@master
+        with:
+          name: PTelegram-v3_0_0a.apk
+          path: TMessagesProj/build/outputs/apk/afat/alpha/app.apk
+      - name: Create cleanup request
+        run: touch delete_request

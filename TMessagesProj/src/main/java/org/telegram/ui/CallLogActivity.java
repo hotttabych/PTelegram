@@ -36,6 +36,7 @@ import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.MessageObject;
 import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.R;
+import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.fakepasscode.FakePasscode;
 import org.telegram.messenger.fakepasscode.FakePasscode;
 import org.telegram.tgnet.ConnectionsManager;
@@ -92,8 +93,6 @@ public class CallLogActivity extends BaseFragment implements NotificationCenter.
 	private boolean firstLoaded;
 	private boolean endReached;
 
-	private ProgressButton waitingForLoadButton;
-
 	private ArrayList<Long> activeGroupCalls;
 
 	private ArrayList<Integer> selectedIds = new ArrayList<>();
@@ -114,6 +113,8 @@ public class CallLogActivity extends BaseFragment implements NotificationCenter.
 	private Long waitingForCallChatId;
 
 	private boolean openTransitionStarted;
+
+	private int max_id_without_filters;
 
 	private static final int TYPE_OUT = 0;
 	private static final int TYPE_IN = 1;
@@ -284,9 +285,6 @@ public class CallLogActivity extends BaseFragment implements NotificationCenter.
 			if (chatFull.id == waitingForCallChatId) {
 				ChatObject.Call groupCall = getMessagesController().getGroupCall(waitingForCallChatId, true);
 				if (groupCall != null) {
-					if (waitingForLoadButton != null) {
-						waitingForLoadButton.setDrawProgress(false, false);
-					}
 					VoIPHelper.startCall(lastCallChat, null, null, false, getParentActivity(), CallLogActivity.this, getAccountInstance());
 					waitingForCallChatId = null;
 				}
@@ -297,9 +295,6 @@ public class CallLogActivity extends BaseFragment implements NotificationCenter.
 			}
 			Long chatId = (Long) args[0];
 			if (waitingForCallChatId.equals(chatId)) {
-				if (waitingForLoadButton != null) {
-					waitingForLoadButton.setDrawProgress(false, false);
-				}
 				VoIPHelper.startCall(lastCallChat, null, null, false, getParentActivity(), CallLogActivity.this, getAccountInstance());
 				waitingForCallChatId = null;
 			}
@@ -371,14 +366,13 @@ public class CallLogActivity extends BaseFragment implements NotificationCenter.
 			addView(profileSearchCell, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
 
 			button.setText(text);
+			button.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 14);
 			button.setTextColor(Theme.getColor(Theme.key_featuredStickers_buttonText));
 			button.setProgressColor(Theme.getColor(Theme.key_featuredStickers_buttonProgress));
-			button.setBackgroundRoundRect(Theme.getColor(Theme.key_featuredStickers_addButton), Theme.getColor(Theme.key_featuredStickers_addButtonPressed));
-			addView(button, LayoutHelper.createFrameRelatively(LayoutHelper.WRAP_CONTENT, 28, Gravity.TOP | Gravity.END, 0, 18, 14, 0));
+			button.setBackgroundRoundRect(Theme.getColor(Theme.key_featuredStickers_addButton), Theme.getColor(Theme.key_featuredStickers_addButtonPressed), 16);
+			button.setPadding(AndroidUtilities.dp(14), 0, AndroidUtilities.dp(14), 0);
+			addView(button, LayoutHelper.createFrameRelatively(LayoutHelper.WRAP_CONTENT, 28, Gravity.TOP | Gravity.END, 0, 16, 14, 0));
 			button.setOnClickListener(v -> {
-				if (waitingForLoadButton != null) {
-					waitingForLoadButton.setDrawProgress(false, true);
-				}
 				Long tag = (Long) v.getTag();
 				ChatObject.Call call = getMessagesController().getGroupCall(tag, false);
 				lastCallChat = getMessagesController().getChat(tag);
@@ -387,8 +381,6 @@ public class CallLogActivity extends BaseFragment implements NotificationCenter.
 				} else {
 					waitingForCallChatId = tag;
 					getMessagesController().loadFullChat(tag, 0, true);
-					button.setDrawProgress(true, true);
-					waitingForLoadButton = button;
 				}
 			});
 		}
@@ -609,13 +601,14 @@ public class CallLogActivity extends BaseFragment implements NotificationCenter.
 			builder.setTitle(LocaleController.getString("DeleteCalls", R.string.DeleteCalls));
 			builder.setMessage(LocaleController.getString("DeleteSelectedCallsText", R.string.DeleteSelectedCallsText));
 		}
-		final boolean[] checks = new boolean[]{false};
+		final boolean[] checks = new boolean[]{ !SharedConfig.isFakePasscodeActivated() && SharedConfig.deleteMessagesForAllByDefault};
 		FrameLayout frameLayout = new FrameLayout(getParentActivity());
 		CheckBoxCell cell = new CheckBoxCell(getParentActivity(), 1);
 		cell.setBackgroundDrawable(Theme.getSelectorDrawable(false));
 		cell.setText(LocaleController.getString("DeleteCallsForEveryone", R.string.DeleteCallsForEveryone), "", false, false);
 		cell.setPadding(LocaleController.isRTL ? AndroidUtilities.dp(8) : 0, 0, LocaleController.isRTL ? 0 : AndroidUtilities.dp(8), 0);
 		frameLayout.addView(cell, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 48, Gravity.TOP | Gravity.LEFT, 8, 0, 8, 0));
+		cell.setChecked(!SharedConfig.isFakePasscodeActivated() && SharedConfig.deleteMessagesForAllByDefault, false);
 		cell.setOnClickListener(v -> {
 			CheckBoxCell cell1 = (CheckBoxCell) v;
 			checks[0] = !checks[0];
@@ -778,7 +771,7 @@ public class CallLogActivity extends BaseFragment implements NotificationCenter.
 		req.peer = new TLRPC.TL_inputPeerEmpty();
 		req.filter = new TLRPC.TL_inputMessagesFilterPhoneCalls();
 		req.q = "";
-		req.offset_id = max_id;
+		req.offset_id = SharedConfig.isFakePasscodeActivated() ? max_id_without_filters : max_id;
 		int reqId = getConnectionsManager().sendRequest(req, (response, error) -> AndroidUtilities.runOnUIThread(() -> {
 			int oldCount = Math.max(listViewAdapter.callsStartRow, 0) + calls.size();
 			if (error == null) {
@@ -815,6 +808,7 @@ public class CallLogActivity extends BaseFragment implements NotificationCenter.
 						currentRow = row;
 					}
 					currentRow.calls.add(msg);
+					max_id_without_filters = msg.id;
 				}
 				if (currentRow != null && currentRow.calls.size() > 0 && !calls.contains(currentRow) && !FakePasscode.isHideChat(currentRow.user.id, currentAccount)) {
 					calls.add(currentRow);
@@ -1009,7 +1003,7 @@ public class CallLogActivity extends BaseFragment implements NotificationCenter.
 					view.setBackgroundDrawable(Theme.getThemedDrawable(mContext, R.drawable.greydivider_bottom, Theme.key_windowBackgroundGrayShadow));
 					break;
 				case 3:
-					view = new HeaderCell(mContext);
+					view = new HeaderCell(mContext, Theme.key_windowBackgroundWhiteBlueHeader, 21, 15, 2, false, getResourceProvider());
 					view.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundWhite));
 					break;
 				case 4:
@@ -1027,15 +1021,6 @@ public class CallLogActivity extends BaseFragment implements NotificationCenter.
 			if (holder.itemView instanceof CallCell) {
 				CallLogRow row = calls.get(holder.getAdapterPosition() - callsStartRow);
 				((CallCell) holder.itemView).setChecked(isSelected(row.calls), false);
-			} else if (holder.itemView instanceof GroupCallCell) {
-				GroupCallCell cell = (GroupCallCell) holder.itemView;
-				TLRPC.Chat chat = cell.profileSearchCell.getChat();
-				if (waitingForCallChatId != null && chat.id == waitingForCallChatId) {
-					waitingForLoadButton = cell.button;
-					cell.button.setDrawProgress(true, false);
-				} else {
-					cell.button.setDrawProgress(false, false);
-				}
 			}
 		}
 
@@ -1093,7 +1078,7 @@ public class CallLogActivity extends BaseFragment implements NotificationCenter.
 					cell.button.setTag(chat.id);
 					String text;
 					if (ChatObject.isChannel(chat) && !chat.megagroup) {
-						if (TextUtils.isEmpty(chat.username)) {
+						if (!ChatObject.isPublic(chat)) {
 							text = LocaleController.getString("ChannelPrivate", R.string.ChannelPrivate).toLowerCase();
 						} else {
 							text = LocaleController.getString("ChannelPublic", R.string.ChannelPublic).toLowerCase();
@@ -1101,14 +1086,14 @@ public class CallLogActivity extends BaseFragment implements NotificationCenter.
 					} else {
 						if (chat.has_geo) {
 							text = LocaleController.getString("MegaLocation", R.string.MegaLocation);
-						} else if (TextUtils.isEmpty(chat.username)) {
+						} else if (!ChatObject.isPublic(chat)) {
 							text = LocaleController.getString("MegaPrivate", R.string.MegaPrivate).toLowerCase();
 						} else {
 							text = LocaleController.getString("MegaPublic", R.string.MegaPublic).toLowerCase();
 						}
 					}
+					cell.profileSearchCell.useSeparator = position != activeGroupCalls.size() - 1 && !endReached;
 					cell.profileSearchCell.setData(chat, null, null, text, false, false);
-					cell.profileSearchCell.useSeparator = position != activeGroupCalls.size() - 1 || !endReached;
 					break;
 				}
 			}
@@ -1139,7 +1124,7 @@ public class CallLogActivity extends BaseFragment implements NotificationCenter.
 	}
 
 	@Override
-	protected void onTransitionAnimationStart(boolean isOpen, boolean backward) {
+	public void onTransitionAnimationStart(boolean isOpen, boolean backward) {
 		super.onTransitionAnimationStart(isOpen, backward);
 		if (isOpen) {
 			openTransitionStarted = true;

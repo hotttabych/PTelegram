@@ -1023,7 +1023,7 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
             if (!SharedConfig.isAppUpdateAvailable()) {
                 return;
             }
-            AndroidUtilities.openForView(SharedConfig.pendingAppUpdate.document, true, getParentActivity());
+            AndroidUtilities.openForView(SharedConfig.pendingPtgAppUpdate.document, true, getParentActivity());
         });
 
         updateLayoutIcon = new RadialProgress2(updateLayout);
@@ -1237,7 +1237,7 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
         showNextSupportedSuggestion();
         Bulletin.addDelegate(this, new Bulletin.Delegate() {
             @Override
-            public void onOffsetChange(float offset) {
+            public void onBottomOffsetChange(float offset) {
                 if (undoView[0] != null && undoView[0].getVisibility() == View.VISIBLE) {
                     return;
                 }
@@ -1277,7 +1277,7 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
     }
 
     @Override
-    protected void onBecomeFullyHidden() {
+    public void onBecomeFullyHidden() {
         if (undoView[0] != null) {
             undoView[0].hide(true, 0);
         }
@@ -1467,7 +1467,7 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
     }
 
     @Override
-    protected void onTransitionAnimationProgress(boolean isOpen, float progress) {
+    public void onTransitionAnimationProgress(boolean isOpen, float progress) {
         if (blurredView != null && blurredView.getVisibility() == View.VISIBLE) {
             if (isOpen) {
                 blurredView.setAlpha(1.0f - progress);
@@ -1478,7 +1478,7 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
     }
 
     @Override
-    protected void onTransitionAnimationEnd(boolean isOpen, boolean backward) {
+    public void onTransitionAnimationEnd(boolean isOpen, boolean backward) {
         if (isOpen && blurredView != null && blurredView.getVisibility() == View.VISIBLE) {
             blurredView.setVisibility(View.GONE);
             blurredView.setBackground(null);
@@ -1731,15 +1731,12 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
             TLRPC.User user = (TLRPC.User) args[1];
             TLRPC.Chat chat = (TLRPC.Chat) args[2];
             boolean revoke = (Boolean) args[3];
-
-            TLRPC.Dialog dialog = getMessagesController().dialogs_dict.get(dialogId);
-            final int folderId = dialog != null ? dialog.folder_id : 0;
             Runnable deleteRunnable = () -> {
                 if (chat != null) {
                     if (ChatObject.isNotInChat(chat)) {
                         getMessagesController().deleteDialog(dialogId, 0, revoke);
                     } else {
-                        getMessagesController().deleteParticipantFromChat(-dialogId, getMessagesController().getUser(getUserConfig().getClientUserId()), null, null, revoke, revoke);
+                        getMessagesController().deleteParticipantFromChat(-dialogId, getMessagesController().getUser(getUserConfig().getClientUserId()), null, revoke, revoke);
                     }
                 } else {
                     getMessagesController().deleteDialog(dialogId, 0, revoke);
@@ -1747,7 +1744,7 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
                         getMessagesController().blockPeer(user.id);
                     }
                 }
-                getMessagesController().checkIfFolderEmpty(folderId);
+                getMessagesController().checkIfFolderEmpty(0);
             };
             if (undoView[0] != null) {
                 getUndoView().showWithAction(dialogId, UndoView.ACTION_DELETE, deleteRunnable);
@@ -2000,9 +1997,6 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
             arrayList.add(new ThemeDescription(listView, 0, new Class[]{SavedChannelCell.class}, Theme.dialogs_countGrayPaint, null, null, Theme.key_chats_unreadCounterMuted));
             arrayList.add(new ThemeDescription(listView, 0, new Class[]{SavedChannelCell.class}, Theme.dialogs_countTextPaint, null, null, Theme.key_chats_unreadCounterText));
             arrayList.add(new ThemeDescription(listView, 0, new Class[]{SavedChannelCell.class, ProfileSearchCell.class}, null, new Drawable[]{Theme.dialogs_lockDrawable}, null, Theme.key_chats_secretIcon));
-            arrayList.add(new ThemeDescription(listView, 0, new Class[]{SavedChannelCell.class, ProfileSearchCell.class}, null, new Drawable[]{Theme.dialogs_groupDrawable, Theme.dialogs_broadcastDrawable, Theme.dialogs_botDrawable}, null, Theme.key_chats_nameIcon));
-            arrayList.add(new ThemeDescription(listView, 0, new Class[]{SavedChannelCell.class, ProfileSearchCell.class}, null, new Drawable[]{Theme.dialogs_scamDrawable, Theme.dialogs_fakeDrawable}, null, Theme.key_chats_draft));
-            arrayList.add(new ThemeDescription(listView, 0, new Class[]{SavedChannelCell.class}, null, new Drawable[]{Theme.dialogs_pinnedDrawable, Theme.dialogs_reorderDrawable}, null, Theme.key_chats_pinnedIcon));
             arrayList.add(new ThemeDescription(listView, 0, new Class[]{SavedChannelCell.class, ProfileSearchCell.class}, null, new Paint[]{Theme.dialogs_namePaint[0], Theme.dialogs_namePaint[1], Theme.dialogs_searchNamePaint}, null, null, Theme.key_chats_name));
             arrayList.add(new ThemeDescription(listView, 0, new Class[]{SavedChannelCell.class, ProfileSearchCell.class}, null, new Paint[]{Theme.dialogs_nameEncryptedPaint[0], Theme.dialogs_nameEncryptedPaint[1], Theme.dialogs_searchNameEncryptedPaint}, null, null, Theme.key_chats_secretName));
             arrayList.add(new ThemeDescription(listView, 0, new Class[]{SavedChannelCell.class}, Theme.dialogs_messagePaint[1], null, null, Theme.key_chats_message_threeLines));
@@ -2268,7 +2262,7 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
     }
 
     @Override
-    protected void prepareFragmentToSlide(boolean topFragment, boolean beginSlide) {
+    public void prepareFragmentToSlide(boolean topFragment, boolean beginSlide) {
         if (!topFragment && beginSlide) {
             isSlideBackTransition = true;
             setFragmentIsSliding(true);
@@ -2318,7 +2312,7 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
     }
 
     @Override
-    protected void onSlideProgress(boolean isOpen, float progress) {
+    public void onSlideProgress(boolean isOpen, float progress) {
         if (SharedConfig.getDevicePerformanceClass() == SharedConfig.PERFORMANCE_CLASS_LOW) {
             return;
         }

@@ -1,18 +1,11 @@
 package org.telegram.messenger.fakepasscode;
 
-import org.telegram.messenger.AndroidUtilities;
-import org.telegram.messenger.FileLoader;
-import org.telegram.messenger.ImageLoader;
-import org.telegram.messenger.Utilities;
-
-import java.io.File;
-import java.util.Date;
-
+@FakePasscodeSerializer.EnabledSerialization
 public class ClearCacheAction implements Action {
     public boolean enabled = false;
 
     @Override
-    public void execute() {
+    public void execute(FakePasscode fakePasscode) {
         if (enabled) {
             Utils.clearCache(null);
         }

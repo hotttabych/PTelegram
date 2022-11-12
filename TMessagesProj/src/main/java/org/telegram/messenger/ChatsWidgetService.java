@@ -21,6 +21,8 @@ import android.view.View;
 import android.widget.RemoteViews;
 import android.widget.RemoteViewsService;
 
+import androidx.collection.LongSparseArray;
+
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.Components.AvatarDrawable;
@@ -29,8 +31,6 @@ import org.telegram.ui.EditWidgetActivity;
 
 import java.io.File;
 import java.util.ArrayList;
-
-import androidx.collection.LongSparseArray;
 
 public class ChatsWidgetService extends RemoteViewsService {
     @Override
@@ -112,16 +112,17 @@ class ChatsRemoteViewsFactory implements RemoteViewsService.RemoteViewsFactory {
                     name = LocaleController.getString("HiddenName", R.string.HiddenName);
                 } else {
                     name = ContactsController.formatName(user.first_name, user.last_name);
+                    name = UserConfig.getChatTitleOverride(accountInstance.getCurrentAccount(), user.id, name);
                 }
-                if (!UserObject.isReplyUser(user) && !UserObject.isUserSelf(user) && user.photo != null && user.photo.photo_small != null && user.photo.photo_small.volume_id != 0 && user.photo.photo_small.local_id != 0) {
+                if (!UserObject.isReplyUser(user) && !UserObject.isUserSelf(user) && user.photo != null && user.photo.photo_small != null && user.photo.photo_small.volume_id != 0 && user.photo.photo_small.local_id != 0 && UserConfig.isAvatarEnabled(accountInstance.getCurrentAccount(), user.id)) {
                     photoPath = user.photo.photo_small;
                 }
             }
         } else {
             chat = accountInstance.getMessagesController().getChat(-id);
             if (chat != null) {
-                name = chat.title;
-                if (chat.photo != null && chat.photo.photo_small != null && chat.photo.photo_small.volume_id != 0 && chat.photo.photo_small.local_id != 0) {
+                name = UserConfig.getChatTitleOverride(accountInstance.getCurrentAccount(), chat.id, chat.title);
+                if (chat.photo != null && chat.photo.photo_small != null && chat.photo.photo_small.volume_id != 0 && chat.photo.photo_small.local_id != 0 && UserConfig.isAvatarEnabled(accountInstance.getCurrentAccount(), chat.id)) {
                     photoPath = chat.photo.photo_small;
                 }
             }
@@ -132,7 +133,7 @@ class ChatsRemoteViewsFactory implements RemoteViewsService.RemoteViewsFactory {
         try {
             Bitmap bitmap = null;
             if (photoPath != null) {
-                File path = FileLoader.getPathToAttach(photoPath, true);
+                File path = FileLoader.getInstance(UserConfig.selectedAccount).getPathToAttach(photoPath, true);
                 bitmap = BitmapFactory.decodeFile(path.toString());
             }
 
@@ -242,7 +243,7 @@ class ChatsRemoteViewsFactory implements RemoteViewsService.RemoteViewsFactory {
                             } else {
                                 innerMessage = String.format("\uD83C\uDFAE %s", message.messageOwner.media.game.title);
                             }
-                        } else if (message.type == 14) {
+                        } else if (message.type == MessageObject.TYPE_MUSIC) {
                             if (Build.VERSION.SDK_INT >= 18) {
                                 innerMessage = String.format("\uD83C\uDFA7 \u2068%s - %s\u2069", message.getMusicAuthor(), message.getMusicTitle());
                             } else {
@@ -299,7 +300,7 @@ class ChatsRemoteViewsFactory implements RemoteViewsService.RemoteViewsFactory {
                             messageString = "\uD83D\uDCCA " + mediaPoll.poll.question;
                         } else if (message.messageOwner.media instanceof TLRPC.TL_messageMediaGame) {
                             messageString = "\uD83C\uDFAE " + message.messageOwner.media.game.title;
-                        } else if (message.type == 14) {
+                        } else if (message.type == MessageObject.TYPE_MUSIC) {
                             messageString = String.format("\uD83C\uDFA7 %s - %s", message.getMusicAuthor(), message.getMusicTitle());
                         } else {
                             messageString = message.messageText;
@@ -326,7 +327,7 @@ class ChatsRemoteViewsFactory implements RemoteViewsService.RemoteViewsFactory {
         if (dialog != null && dialog.unread_count > 0) {
             rv.setTextViewText(R.id.shortcut_widget_item_badge, String.format("%d", dialog.unread_count));
             rv.setViewVisibility(R.id.shortcut_widget_item_badge, View.VISIBLE);
-            if (accountInstance.getMessagesController().isDialogMuted(dialog.id)) {
+            if (accountInstance.getMessagesController().isDialogMuted(dialog.id, 0)) {
                 rv.setBoolean(R.id.shortcut_widget_item_badge, "setEnabled", false);
                 rv.setInt(R.id.shortcut_widget_item_badge, "setBackgroundResource", R.drawable.widget_badge_muted_background);
             } else {

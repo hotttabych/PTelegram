@@ -20,6 +20,8 @@ import android.text.TextUtils;
 import android.text.format.DateFormat;
 import android.util.Xml;
 
+import androidx.annotation.StringRes;
+
 import org.telegram.messenger.time.FastDateFormat;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.TLObject;
@@ -30,6 +32,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
+import java.io.InputStream;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -38,7 +41,6 @@ import java.util.Currency;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Locale;
-import java.util.Map;
 import java.util.TimeZone;
 
 public class LocaleController {
@@ -68,6 +70,8 @@ public class LocaleController {
     public FastDateFormat formatterScheduleYear;
     public FastDateFormat formatterMonthYear;
     public FastDateFormat[] formatterScheduleSend = new FastDateFormat[15];
+
+    private static HashMap<Integer, String> resourcesCacheMap = new HashMap<>();
 
     private HashMap<String, PluralRules> allRules = new HashMap<>();
 
@@ -406,6 +410,26 @@ public class LocaleController {
         }
 
         AndroidUtilities.runOnUIThread(() -> currentSystemLocale = getSystemLocaleStringIso639());
+    }
+
+    public static String getLanguageFlag(String countryCode) {
+        if (countryCode.length() != 2 || countryCode.equals("YL")) return null;
+
+        if (countryCode.equals("XG")) {
+            return "\uD83D\uDEF0";
+        } else if (countryCode.equals("XV")){
+            return "\uD83C\uDF0D";
+        }
+
+        int base = 0x1F1A5;
+        char[] chars = countryCode.toCharArray();
+        char[] emoji = {
+                CharacterCompat.highSurrogate(base),
+                CharacterCompat.lowSurrogate(base + chars[0]),
+                CharacterCompat.highSurrogate(base),
+                CharacterCompat.lowSurrogate(base + chars[1])
+        };
+        return new String(emoji);
     }
 
     public LocaleInfo getLanguageFromDict(String key) {
@@ -750,20 +774,24 @@ public class LocaleController {
     }
 
     private HashMap<String, String> getLocaleFileStrings(File file) {
-        return getLocaleFileStrings(file, false);
+        return getLocaleFileStrings(file, false, null);
     }
 
-    private HashMap<String, String> getLocaleFileStrings(File file, boolean preserveEscapes) {
-        FileInputStream stream = null;
+    private HashMap<String, String> getLocaleFileStrings(File file, boolean preserveEscapes, String assetPath) {
+        InputStream stream = null;
         reloadLastFile = false;
         try {
-            if (!file.exists()) {
+            if ((file == null || !file.exists()) && assetPath == null) {
                 return new HashMap<>();
             }
             HashMap<String, String> stringMap = new HashMap<>();
             XmlPullParser parser = Xml.newPullParser();
             //AndroidUtilities.copyFile(file, new File(ApplicationLoader.applicationContext.getExternalFilesDir(null), "locale10.xml"));
-            stream = new FileInputStream(file);
+            if (file != null) {
+                stream = new FileInputStream(file);
+            } else {
+                stream = ApplicationLoader.applicationContext.getAssets().open(assetPath);
+            }
             parser.setInput(stream, "UTF-8");
             int eventType = parser.getEventType();
             String name = null;
@@ -852,10 +880,12 @@ public class LocaleController {
                 saveOtherLanguages();
             }
         }
+        boolean isLoadingRemote = false;
         if ((localeInfo.isRemote() || localeInfo.isUnofficial()) && (force || !pathToFile.exists() || hasBase && !pathToBaseFile.exists())) {
             if (BuildVars.LOGS_ENABLED) {
                 FileLog.d("reload locale because one of file doesn't exist" + pathToFile + " " + pathToBaseFile);
             }
+            isLoadingRemote = true;
             if (init) {
                 AndroidUtilities.runOnUIThread(() -> applyRemoteLanguage(localeInfo, null, true, currentAccount));
             } else {
@@ -892,6 +922,7 @@ public class LocaleController {
                 if (hasBase) {
                     localeValues.putAll(getLocaleFileStrings(localeInfo.getPathToFile()));
                 }
+                localeValues = addAssetStrings(localeValues, localeInfo.shortName);
             }
             currentLocale = newLocale;
             currentLocaleInfo = localeInfo;
@@ -922,11 +953,21 @@ public class LocaleController {
                 }
                 reloadLastFile = false;
             }
+            if (!isLoadingRemote) {
+                if (init) {
+                    AndroidUtilities.runOnUIThread(() -> NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.reloadInterface));
+                } else {
+                    NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.reloadInterface);
+                }
+            }
         } catch (Exception e) {
             FileLog.e(e);
             changingConfiguration = false;
         }
         recreateFormatters();
+        if (force) {
+            MediaDataController.getInstance(currentAccount).loadAttachMenuBots(false, true);
+        }
     }
 
     public LocaleInfo getCurrentLocaleInfo() {
@@ -952,301 +993,6 @@ public class LocaleController {
             if (BuildVars.USE_CLOUD_STRINGS && fallback != null) {
                 value = localeValues.get(fallback);
             }
-            if (value == null && languageOverride != null) {
-                if (languageOverride.equals("ru")) {
-                    switch (key) {
-                        case "FakePasscode": value = "Ложный код-пароль"; break;
-                        case "ChangeFakePasscode": value = "Сменить ложный код-пароль"; break;
-                        case "FakePasscodeActionsInfo": value = "При вводе ложного код-пароля выполняются выбранные действия."; break;
-                        case "AllowFakePasscodeLogin": value = "Разрешить вход c ложным паролем"; break;
-                        case "FakePasscodeChangeSMS": value = "Изменить СМС"; break;
-                        case "ChatsToRemove": value = "Чаты для удаления"; break;
-                        case "ClearTelegramCacheOnFakeLogin": value = "Очищать кэш Telegram"; break;
-                        case "ClearProxiesOnFakeLogin": value = "Очищать список прокси"; break;
-                        case "AddFakePasscode": value = "Добавить ложный код-пароль"; break;
-                        case "TerminateAllOtherSessionsOnFakeLogin": value = "Завершать все другие сеансы"; break;
-                        case "LogOutOnFakeLogin": value = "Выходить из аккаунта"; break;
-                        case "DeleteFakePasscode": value = "Удалить ложный код-пароль"; break;
-                        case "ChangeFakePasscodeName": value = "Изменить название"; break;
-                        case "SendTelegramMessages": value = "Отправлять сообщения в Telegram"; break;
-                        case "ChangeTelegramMessage": value = "Изменить сообщение"; break;
-                        case "ChangeMessage": value = "Изменить сообщение"; break;
-                        case "AreYouSureDeleteFakePasscode": value = "Вы точно хотите удалить этот ложный код-пароль?"; break;
-                        case "PasscodeInUse": value = "Этот код-пароль уже используется"; break;
-                        case "ChangeFakePasscodeInfo": value = "Вы можете изменить ложный код-пароль, не удаляя его."; break;
-                        case "AllowFakePasscodeLoginInfo": value = "Вы можете запретить вход с этим ложным код-паролем. В таком случае злоумышленник не получит доступ к аккаунтам, но указанные действия будут выполнены."; break;
-                        case "DeleteFakePasscodeInfo": value = "Если Вы удалите ложный код-пароль, все действия будут очищены. Вы можете изменить код-пароль, если не хотите удалять его."; break;
-                        case "FakePasscodeActionsHeader": value = "Действия"; break;
-                        case "FakePasscodeAccountsHeader": value = "Действия для аккаунтов"; break;
-                        case "FakePasscodes": value = "Ложные код-пароли"; break;
-                        case "FakePasscodeSmsActionTitle": value = "СМС"; break;
-                        case "FakePasscodeAddSms": value = "Добавить СМС"; break;
-                        case "FakePasscodeSmsSendOnlyIfDisconnected": value = "Отправлять только если нет интернета"; break;
-                        case "FakePasscodeTelegramMessageInfo": value = "Настройте сообщения, которые будут отправляться при вводе ложного код-пароля."; break;
-                        case "TelegramMessages": value = "Сообщения Telegram"; break;
-                        case "CannotBeEmpty": value = "не может быть пустым"; break;
-                        case "ConfirmDeletion": value = "Подтвердите удаление"; break;
-                        case "AllFakePasscodesWillBeDeleted": value = "Все ложные код-пароли будут удалены. Желаете продолжить?"; break;
-                        case "FakePasscodeAccountsInfo": value = "Настройте действия для аккаунтов."; break;
-                        case "BruteForceProtection": value = "Защита от подбора пароля"; break;
-                        case "BruteForceProtectionInfo": value = "Увеличивается время между попытками входа."; break;
-                        case "MaxPrivacyInfo": value = "Хотите установить самые строгие настройки конфиденциальности?"; break;
-                        case "TerminateOtherSessionsWarningTitle": value = "Предупреждение"; break;
-                        case "TerminateOtherSessionsWarningMessage": value = "Эта функция не сработает, если после входа в аккаунт на этом устройстве прошло менее 24 часов."; break;
-                        case "TwoStepVerificationWarningTitle": value = "Внимание!"; break;
-                        case "TwoStepVerificationWarningMessage": value = "В вашем аккаунте не установлена двухэтапная аутентификация. Настоятельно рекомендуется настроить пароль для аккаунта. В противном случае уровень безопасности аккаунта будет низким. Желаете перейти к настройке?"; break;
-                        case "DeleteStickers": value = "Удалять стикеры"; break;
-                        case "TwoStepVerificationPasswordReturn": value = "Вернуться"; break;
-                        case "ActivationMessage": value = "Сообщение-активатор"; break;
-                        case "ActivationMessageInfo": value = "Действия с ложным паролем будут выполнены при получении сообщения активатора в любом чате."; break;
-                        case "Disabled": value = "отключено"; break;
-                        case "AddGeolocation": value = "Добавить геолокацию"; break;
-                        case "Geolocation": value = "Геолокация"; break;
-                        case "BadPasscodeAttempts": value = "Неудачные попытки ввода код-пароля"; break;
-                        case "AppUnlock": value = "Разблокировка приложения"; break;
-                        case "EnterPasswordSettings": value = "Вход в настройки код-пароля"; break;
-                        case "BadPasscodeAttemptsInfo": value = "Посмотрите все неудачные попытки ввода код-пароля."; break;
-                        case "NoBadPasscodeAttemts": value = "Не было ни одной неудачной попытки ввода код-пароля."; break;
-                        case "BadPasscodeTriesToActivate": value = "Лимит попыток входа для активации"; break;
-                        case "BadPasscodeTriesToActivateInfo": value = "Действия с ложным паролем будут выполнены после указанного количества неудачных попыток ввода код-пароля."; break;
-                        case "FakePhoneNumber": value = "Ложный номер телефона"; break;
-                        case "FakePhoneNumberInfo": value = "Этот номер телефона будет отображаться при входе с ложным код-паролем."; break;
-                        case "DisableAvatar": value = "Отключить аватар"; break;
-                        case "EnableAvatar": value = "Включить аватар"; break;
-                        case "EditChatName": value = "Изменить название чата"; break;
-                        case "TakePhotoWithFrontCamera": value = "Делать фото фронтальной камерой"; break;
-                        case "TakePhotoWithBackCamera": value = "Делать фото основной камерой"; break;
-                        case "ClearBadPasscodeAttempts": value = "Очистить неудачные попытки ввода код-пароля?"; break;
-                        case "NewVersionAlert": value = "Вышла новая версия партизанского телеграмма %1$d.%2$d.%3$d. Желаете перейти к посту?"; break;
-                        case "DoNotShowAgain": value = "Не показывать снова"; break;
-                        case "ClearCacheOnLock": value = "Очищать кэш при блокировке"; break;
-                        case "ClearCacheOnLockInfo": value = "При нажатии на кнопку замка над списком диалогов кэш приложения будет очищаться."; break;
-                        case "DeleteMessages": value = "Удалить мои сообщения"; break;
-                        case "DeleteMessagesByPart": value = "Расширенное удаление"; break;
-                        case "MessagePart": value = "Часть сообщения"; break;
-                        case "Regex": value = "Регулярное выражение"; break;
-                        case "ChatHintsDeleteMessagesAlert": value = "Вы точно хотите удалить все Ваши сообщения из этого чата?"; break;
-                        case "CaseSensitive": value = "Учитывать регистр"; break;
-                        case "DeleteAsRead": value = "Удалить после прочтения"; break;
-                        case "RemoveAfter": value = "Удалить через %s %s %s после прочтения"; break;
-                        case "ClearBlackList": value = "Очищать чёрный список"; break;
-                        case "ChatToRemoveSettings": value = "Настройки чата для удаления"; break;
-                        case "DeleteMyMessages": value = "Удалить мои сообщения"; break;
-                        case "UserId": value = "ID пользователя"; break;
-                        case "ChatId": value = "ID чата"; break;
-                        case "IdCopied": value = "ID скопирован в буфер обмена."; break;
-                        case "ChatRemoved": value = "удалён"; break;
-                        case "FakePasscodeRemoveDialogSettingsTitle": value = "Настройки диалога для удаления"; break;
-                        case "Hide": value = "Скрыть"; break;
-                        case "DeleteFromCompanion": value = "Удалить у собеседника"; break;
-                        case "DeleteFromCompanionDetails": value = "Удалить диалоги у собеседников. Эта опция применяется только для диалогов с пользователями."; break;
-                        case "DeleteNewMessages": value = "Удалять новые сообщения"; break;
-                        case "DeleteNewMessagesDetails": value = "Удалять сообщения, которые придут после того, как диалог был удалён. Сообщения будут удалены только на этом устройстве. После входа с оригинальным код-паролем, сообщения удаляться не будут. Эта опция применяется только для диалогов с пользователями и ботами."; break;
-                        case "DeleteAllMyMessages": value = "Удалить все мои сообщения"; break;
-                        case "DeleteAllMyMessagesDetails": value = "Будут удалены все Ваши сообщения перед выходом из чата. Эта опция применяется только для чатов.\n\nПредупреждение! Пока не будут проверены все сообщения в чате, чат не будет удалён, он будет скрыт. Если в чате много сообщений, он может долгое время не удаляться. Старые сообщения могут не удалиться, если в чате много сообщений. Если нет сети, сообщения удаляться не будут."; break;
-                        case "HideDialogDetails": value = "Если была выбрана опция \"скрыть\", диалоги (чаты, каналы) не будут удалены. Они будут скрыты из списка диалогов. Их уведомления также будут скрыты. После входа с оригинальным код-паролем диалоги (чаты, каналы) появятся в списке. Более безопасно использовать удаление."; break;
-                        case "RemoveDialogFromListTitle": value = "Удалить диалог из списка"; break;
-                        case "RemoveDialogFromListAlert": value = "Вы действительно хотите удалить диалог из списка?"; break;
-                        case "DebugSendLogcat": value = "Отправить Logcat"; break;
-                        case "RemoveDialogCantSaveTitle": value = "Невозможно сохранить"; break;
-                        case "RemoveDialogCantSaveDetails": value = "Избавьтесь от неоднозначностей в настройках"; break;
-                        case "ClearAfterActivation": value = "Очищать настройки код-пароля"; break;
-                        case "ClearAfterActivationDetails": value = "Все настройки ложного код-пароля будут очищены после активации и злоумышленник не сможет получить к ним доступ."; break;
-                        case "DeleteOtherPasscodesAfterActivation": value = "Удалять другие код-пароли"; break;
-                        case "DeleteOtherPasscodesAfterActivationDetails": value = "Все остальные ложные код-пароли после активации будут удалены и злоумышленник не сможет получить к ним доступ."; break;
-                        case "MuteAudioWhenTakingPhoto": value = "Отключать звук при фотографировании"; break;
-                        case "HideAccount": value = "Скрывать аккаунт"; break;
-                        case "CannotHideAllAccounts": value = "Вы не можете скрыть все аккаунты. Если хотите скрыть этот аккаунт, снимите скрытие с другого аккаунта."; break;
-                        case "CannotShowManyAccounts": value = "Вы не можете оставить не скрытыми больше чем %d аккаунта. Если хотите убрать скрытие с этого аккаунта, скройте или настройте выход из другого аккаунта."; break;
-                        case "CannotHideSingleAccount": value = "Вы не можете скрыть единственный аккаунт. Скрытие работает только в случае, когда в Телеграм 2 и более аккаунта."; break;
-                        case "CannotHideAccount": value = "Невозможно скрыть аккаунт"; break;
-                        case "CannotRemoveHiding": value = "Невозможно убрать скрытие"; break;
-                        case "AccountHiddenTitle": value = "Аккаунт будет скрываться"; break;
-                        case "AccountHiddenDescription": value = "Аккаунт будет скрываться в некоторых код-паролях. Если хотите, чтобы скрывались другие аккаунты, настройте код-пароли."; break;
-                        case "TooManyAccountsHiddenTitle": value = "Скрыто слишком много аккаунтов"; break;
-                        case "TooManyAccountsHiddenDescription": value = "Скрыто более %d аккаунтов. Это понижает маскировку приложения. Рекомендуется убрать скрытие с некоторых аккаунтов."; break;
-                        case "SavedChannels": value = "Сохранённые каналы"; break;
-                        case "Saved": value = "Сохранено"; break;
-                        case "PartisanSettings": value = "Партизанские настройки"; break;
-                        case "ShowVersion": value = "Показывать версию"; break;
-                        case "ShowVersionInfo": value = "Показывать версию PTelegram в настройках."; break;
-                        case "ShowId": value = "Показывать ID"; break;
-                        case "ShowIdInfo": value = "Показывать ID в профилях пользователей, чатов, каналов, ботов."; break;
-                        case "AvatarDisabling": value = "Отключение аватаров"; break;
-                        case "AvatarDisablingInfo": value = "Показывать кнопку отключения аватара. При отключении этой функции, отключённые аватары сбросятся."; break;
-                        case "ChatRenaming": value = "Переименование чатов"; break;
-                        case "ChatRenamingInfo": value = "Показывать кнопку переименования чатов и каналов. При отключении этой функции, имена чатов сбросятся."; break;
-                        case "DeletingMyMessages": value = "Удаление моих сообщений"; break;
-                        case "DeletingMyMessagesInfo": value = "Показывать кнопки удаления своих сообщений в чате."; break;
-                        case "DeletingAfterRead": value = "Удаление после прочтения"; break;
-                        case "DeletingAfterReadInfo": value = "Показывать кнопку отправки сообщения с удалением после прочтения."; break;
-                        case "SavedChannelsSetting": value = "Сохранённые каналы"; break;
-                        case "SavedChannelsSettingInfo": value = "Показывать кнопки сохранения каналов и кнопку открытия списка сохранённых каналов. При отключении этой опции  все сохранённые каналы удалятся."; break;
-                        case "ReactToMessages": value = "Реагирование на сообщения"; break;
-                        case "ReactToMessagesInfo": value = "Разрешить реагировать на сообщения. Если эта опция отключена, реакции можно будет посмотреть, но нельзя будет кликнуть по ним."; break;
-                        case "CutForeignAgentsText": value = "Вырезать текст об иноагентах"; break;
-                        case "CutForeignAgentsTextInfo": value = "Если данная опция включена, из текста сообщений и постов будет вырезаться уведомление об иноагенте. Если текст постов отображается некорректно, отключите эту опцию. После переключения желательно очистить кэш."; break;
-                        case "PartisanSettingsInfo": value = "Настройте другие опции приложения."; break;
-                        case "ClearSavedChannels": value = "Очищать сохранённые каналы"; break;
-                        case "OnScreenLockActionTitle": value = "Действие при блокировке экрана"; break;
-                        case "OnScreenLockActionInfo": value = "Если выбрано 'Свернуть', при разблокировке телфона откроется домашний экран. Если выбрано 'Закрыть', приложение будет закрыто и удалено из списка открытых приложений."; break;
-                        case "OnScreenLockActionNothing": value = "Ничего"; break;
-                        case "OnScreenLockActionHide": value = "Свернуть"; break;
-                        case "OnScreenLockActionClose": value = "Закрыть"; break;
-                        case "ClearSavedChannelsTitle": value = "Очистить сохранённые каналы?"; break;
-                        case "ResetChangedAvatarsTitle": value = "Сбросить изменённые аватары?"; break;
-                        case "ResetChangedTitlesTitle": value = "Сбросить изменённые названия чатов?"; break;
-                        case "NotClear": value = "Не очищать"; break;
-                        case "NotReset": value = "Не сбрасывать"; break;
-                    }
-                } else if (languageOverride.equals("be")) {
-                    switch (key) {
-                        case "FakePasscode": value = "Несапраўдны код блакіроўкі"; break;
-                        case "ChangeFakePasscode": value = "Змяніць несапраўдны код блакіроўкі"; break;
-                        case "FakePasscodeActionsInfo": value = "Пры ўводзе несапраўднага кода блакіроўкі выконваюцца выбраныя дзеянні."; break;
-                        case "AllowFakePasscodeLogin": value = "Уваходзіць з несапраўдным кодам блакіроўкі"; break;
-                        case "FakePasscodeChangeSMS": value = "Змяніць СМС"; break;
-                        case "ChatsToRemove": value = "Чаты для выдалення"; break;
-                        case "ClearTelegramCacheOnFakeLogin": value = "Ачышчаць кэш Telegram"; break;
-                        case "ClearProxiesOnFakeLogin": value = "Ачышчаць спіс проксі"; break;
-                        case "AddFakePasscode": value = "Дадаць несапраўдны код блакіроўкі"; break;
-                        case "TerminateAllOtherSessionsOnFakeLogin": value = "Завяршаць усе іншыя сеансы"; break;
-                        case "LogOutOnFakeLogin": value = "Выходзіць з акаўнту"; break;
-                        case "DeleteFakePasscode": value = "Выдаліць несапраўдны код блакіроўкі"; break;
-                        case "ChangeFakePasscodeName": value = "Змяніць назву"; break;
-                        case "SendTelegramMessages": value = "Адпраўляць паведамленні ў Telegram"; break;
-                        case "ChangeTelegramMessage": value = "Змяніць паведамленне"; break;
-                        case "ChangeMessage": value = "Змяніць паведамленне"; break;
-                        case "AreYouSureDeleteFakePasscode": value = "Вы дакладна хочаце выдаліць гэты несапраўдны код блакіроўкі?"; break;
-                        case "PasscodeInUse": value = "Гэты код блакіроўкі ужо выкарыстоўваецца"; break;
-                        case "ChangeFakePasscodeInfo": value = "Вы можаце змяніць несапраўдны код блакіроўкі, не выдаляя яго."; break;
-                        case "AllowFakePasscodeLoginInfo": value = "Вы можаце забараніць уваход з гэтым несапраўдным кодам блакіроўкі. У такім выпадку зламыснік не атрымае доступ да акаунтаў, але зазначанныя дзеянні будуць выкананы."; break;
-                        case "DeleteFakePasscodeInfo": value = "Калі Вы выдаліце несапраўдны код блакіроўкі, усе дзеянні будуць ачышчаны. Вы можаце змяніць код блакіроўкі, калі не хочаце выдаляць яго."; break;
-                        case "FakePasscodeActionsHeader": value = "Дзеянні"; break;
-                        case "FakePasscodeAccountsHeader": value = "Дзеянні для акаўнтаў"; break;
-                        case "FakePasscodes": value = "Несапраўдныя кады блакіроўкі"; break;
-                        case "FakePasscodeSmsActionTitle": value = "СМС"; break;
-                        case "FakePasscodeAddSms": value = "Дадаць СМС"; break;
-                        case "FakePasscodeSmsSendOnlyIfDisconnected": value = "Адпраўляць толькі калі няма сеціва"; break;
-                        case "FakePasscodeTelegramMessageInfo": value = "Наладзьце паведамленні, якія будуць адсылацца пры ўводзе несапраўднага кода блакіроўкі."; break;
-                        case "TelegramMessages": value = "Паведамленні Telegram"; break;
-                        case "CannotBeEmpty": value = "не можа быць парожнім"; break;
-                        case "ConfirmDeletion": value = "Пацвердзіце выдаленне"; break;
-                        case "AllFakePasscodesWillBeDeleted": value = "Усе несапраўдныя кады блакіроўкі будуць выдалены. Жадаеце працягнуць?"; break;
-                        case "FakePasscodeAccountsInfo": value = "Наладзьце дзеянні для акаўнтаў."; break;
-                        case "BruteForceProtection": value = "Ахова ад падбору кода блакіроўкі"; break;
-                        case "BruteForceProtectionInfo": value = "Павялічваецца тэрмін паміж спробамі ўваходу."; break;
-                        case "MaxPrivacyInfo": value = "Жадаеце ўсталяваць самыя строгія налады канфідэнцыяльнасці?"; break;
-                        case "TerminateOtherSessionsWarningTitle": value = "Папярэджанне"; break;
-                        case "TerminateOtherSessionsWarningMessage": value = "Гэта функцыя не будзе працавать, калі пасля увахода ў аккаўнт на гэтым дэвайсе прайшло менш за 24 гадзіны. актывізуецца праз 24 гадзіны."; break;
-                        case "TwoStepVerificationWarningTitle": value = "Увага!"; break;
-                        case "TwoStepVerificationWarningMessage": value = "У вашым акаўнце не ўсталявана двухэтапная аутэнтыфікацыя. Настойліва прапануецца наладзіць пароль для акаўнта. У іншым выпадку, узровень бяспекі акаўнта будзе невялікім. Жадаеце перайсці да налады?"; break;
-                        case "DeleteStickers": value = "Выдаляць стыкеры"; break;
-                        case "TwoStepVerificationPasswordReturn": value = "Вяртацца"; break;
-                        case "ActivationMessage": value = "Паведамленне-актыватар"; break;
-                        case "ActivationMessageInfo": value = "Дзеянні з несапраўдным кодам блакіроўкі будуць выкананы пры атрыманні паведамлення-актыватара ў любым чаце."; break;
-                        case "Disabled": value = "адключана"; break;
-                        case "AddGeolocation": value = "Дадаць геалакацыю"; break;
-                        case "Geolocation": value = "Геалакацыя"; break;
-                        case "BadPasscodeAttempts": value = "Няўдалыя спробы ўвода кода блакіроўкі"; break;
-                        case "AppUnlock": value = "Разблакіроўка дадатка"; break;
-                        case "EnterPasswordSettings": value = "Уваход у налады кода блакіроўкі"; break;
-                        case "BadPasscodeAttemptsInfo": value = "Паглядзіце ўсе няўдалыя спробы ўводу кода блакіроўкі."; break;
-                        case "NoBadPasscodeAttemts": value = "Не было ніводнай няўдалай спробы ўводу кода блакіроўкі."; break;
-                        case "BadPasscodeTriesToActivate": value = "Ліміт спроб уваходу для актывацыі"; break;
-                        case "BadPasscodeTriesToActivateInfo": value = "Дзеянні з несапраўдным кодам блакіроўкі будуць выкананы пасля адзначанай колькасці няўдалых спроб уводу кода блакіроўкі."; break;
-                        case "FakePhoneNumber": value = "Несапраўдны нумар тэлефона"; break;
-                        case "FakePhoneNumberInfo": value = "Гэты нумар тэлефона будзе паказвацца пры уваходзе з несапраўдным кодам блакіроўкі."; break;
-                        case "DisableAvatar": value = "Адключыць аватар"; break;
-                        case "EnableAvatar": value = "Уключыць аватар"; break;
-                        case "EditChatName": value = "Змяніць назву чата"; break;
-                        case "TakePhotoWithFrontCamera": value = "Рабіць фота франтальнай камерай"; break;
-                        case "TakePhotoWithBackCamera": value = "Рабіць фота осноўнай камерай"; break;
-                        case "ClearBadPasscodeAttempts": value = "Ачысціць няўдалыя спробы ўводу кода блакіроўкі?"; break;
-                        case "NewVersionAlert": value = "Выйшла новая версія партызанскага тэлеграма %1$d.%2$d.%3$d. Жадаеце перайсці да паведамлення?"; break;
-                        case "DoNotShowAgain": value = "Больш не паказваць"; break;
-                        case "ClearCacheOnLock": value = "Чысціць кэш пры блакаванні"; break;
-                        case "ClearCacheOnLockInfo": value = "Пасля націску на кнопку замка над спісам дыялогаў кэш прыкладання будзе ачышчацца."; break;
-                        case "DeleteMessages": value = "Выдаліць мае паведамленні"; break;
-                        case "DeleteMessagesByPart": value = "Пашыранае выдаленне "; break;
-                        case "MessagePart": value = "Частка паведамлення"; break;
-                        case "Regex": value = "Рэгулярны выраз"; break;
-                        case "ChatHintsDeleteMessagesAlert": value = "Вы дакладна хочаце выдаліць усе Вашыя паведамленні з гэтага чата?"; break;
-                        case "CaseSensitive": value = "Улічваць рэгістр"; break;
-                        case "DeleteAsRead": value = "Выдаліць пасля чытання"; break;
-                        case "RemoveAfter": value = "Выдаліць праз %s %s %s пасля чытання"; break;
-                        case "ClearBlackList": value = "Ачышчаць чорны спіс"; break;
-                        case "ChatToRemoveSettings": value = "Налады чата для выдалення"; break;
-                        case "DeleteMyMessages": value = "Выдаліць мае паведамленні"; break;
-                        case "UserId": value = "Id карыстальніка"; break;
-                        case "ChatId": value = "Id чата"; break;
-                        case "IdCopied": value = "ID скапіяваны ў буфер абмену."; break;
-                        case "ChatRemoved": value = "выдалены"; break;
-                        case "FakePasscodeRemoveDialogSettingsTitle": value = "Налады дыялога для выдалення"; break;
-                        case "Hide": value = "Схаваць"; break;
-                        case "DeleteFromCompanion": value = "Выдаліць у суразмоўцы"; break;
-                        case "DeleteFromCompanionDetails": value = "Выдаліць дыялогі ў суразмоўцаў. Гэтая опцыя прымяняецца толькі для дыялогаў з карыстальнікамі."; break;
-                        case "DeleteNewMessages": value = "Выдаляць новыя паведамленні"; break;
-                        case "DeleteNewMessagesDetails": value = "Выдаляць паведамленні, якія прыйдуць пасля таго, як дыялог быў выдалены. Паведамленні будуць выдаленыя толькі на гэтай прыладзе. Пасля ўваходу з арыгінальным код-паролем, паведамленні выдаляцца не будуць. Гэтая опцыя прымяняецца толькі для дыялогаў з карыстальнікамі і ботамі."; break;
-                        case "DeleteAllMyMessages": value = "Выдаліць усе мае паведамленні"; break;
-                        case "DeleteAllMyMessagesDetails": value = "Будуць выдалены ўсе Вашы паведамленні перад выхадам з чата. Гэтая опцыя прымяняецца толькі для чатаў.\n\nПапярэджанне! Пакуль не будуць правераны ўсе паведамленні ў чаце, чат не будзе выдалены, ён будзе схаваны. Калі ў чаце шмат паведамленняў, ён можа доўгі час не выдаляцца. Старыя паведамленні могуць не выдаліцца, калі ў чаце шмат паведамленняў. Калі няма інтэрнэту, паведамленні выдаляцца не будуць."; break;
-                        case "HideDialogDetails": value = "Калі была абраная опцыя \"схаваць\", дыялогі (чаты, каналы) не будуць выдаленыя. Яны будуць схаваныя са спісу дыялогаў. Іх апавяшчэнні таксама будуць схаваныя. Пасля ўваходу з арыгінальным код-паролем дыялогі (чаты, каналы) з'явяцца ў спісе. Больш бяспечна выкарыстоўваць выдаленне."; break;
-                        case "RemoveDialogFromListTitle": value = "Выдаліць дыялог з спісу "; break;
-                        case "RemoveDialogFromListAlert": value = "Вы сапраўды жадаеце выдаліць дыялог з спісу?"; break;
-                        case "DebugSendLogcat": value = "Адправіць Logcat"; break;
-                        case "RemoveDialogCantSaveTitle": value = "Немагчыма захаваць"; break;
-                        case "RemoveDialogCantSaveDetails": value = "Пазбаўцеся ад неадназначнасцей ў наладах"; break;
-                        case "ClearAfterActivation": value = "Чысціць налады код-пароля"; break;
-                        case "ClearAfterActivationDetails": value = "Усе налады несапраўднага код-пароля пасля актывацыі будуць выдаляцца і зламыснік не зможа атрымаць да іх доступ."; break;
-                        case "DeleteOtherPasscodesAfterActivation": value = "Выдаляць іншыя код-паролі"; break;
-                        case "DeleteOtherPasscodesAfterActivationDetails": value = "Усе астатнія несапраўдныя код-паролі пасля актывацыі будуць выдалены і зламыснік не зможа атрымаць да іх доступ."; break;
-                        case "MuteAudioWhenTakingPhoto": value = "Адключаць гук пры фатаграфаванні"; break;
-                        case "HideAccount": value = "Хаваць акаўнт"; break;
-                        case "CannotHideAllAccounts": value = "Вы не можаце схаваць усе акаўнты. Калі жадаеце схаваць гэты акаўнт, зніміце хаванне з іншага акаўнта."; break;
-                        case "CannotShowManyAccounts": value = "Вы не можаце пакінуць не схаванымі больш чым %d акаўнта. Калі жадаеце прыбраць хаванне з гэтага акаўнта, схавайце ці наладзьце вызад з іншага акаўнта."; break;
-                        case "CannotHideSingleAccount": value = "Вы не можаце схаваць адзіны акаўнт. Хаванне працуе толькі ў выпадку, калі ў Тэлеграм 2 і больш акаўнта."; break;
-                        case "CannotHideAccount": value = "Немагчыма схаваць акаўнт"; break;
-                        case "CannotRemoveHiding": value = "Немагчыма прыбраць хаванне"; break;
-                        case "AccountHiddenTitle": value = "Акаўнт будзе хавацца"; break;
-                        case "AccountHiddenDescription": value = "Акаўнт будзе хавацца ў некаторых код-паролях. Калі жадаеце, каб хаваліся іншыя акаўнты, наладзьце код-паролі."; break;
-                        case "TooManyAccountsHiddenTitle": value = "Схавана занадта шмат акаўнтаў"; break;
-                        case "TooManyAccountsHiddenDescription": value = "Схавана больш за %d акаўнты. Гэта паніжае маскіроўку прыкладання. Рэкамендуецца прыбраць утойванне з некаторых акаўнтаў."; break;
-                        case "SavedChannels": value = "Захаваныя каналы"; break;
-                        case "Saved": value = "Захавана"; break;
-                        case "PartisanSettings": value = "Партызанскія налады"; break;
-                        case "ShowVersion": value = "Паказываць версію"; break;
-                        case "ShowVersionInfo": value = "Паказываць версію PTelegram у наладах."; break;
-                        case "ShowId": value = "Паказываць ID"; break;
-                        case "ShowIdInfo": value = "Паказываць ID у профілях карыстальнікаў, чатаў, каналаў, ботаў."; break;
-                        case "AvatarDisabling": value = "Адключэнне аватараў"; break;
-                        case "AvatarDisablingInfo": value = "Паказываць кнопку адключэння аватара. Пры адключэнні гэтай функцыі, адключаныя аватары скінуцца."; break;
-                        case "ChatRenaming": value = "Змена назваў чатаў"; break;
-                        case "ChatRenamingInfo": value = "Паказваць кнопку перайменавання чатаў і каналаў. Пры адключэнні гэтай функцыі, імёны чатаў скінуцца."; break;
-                        case "DeletingMyMessages": value = "Выдаленне маіх паведамленняў"; break;
-                        case "DeletingMyMessagesInfo": value = "Паказваць кнопкі выдалення сваіх паведамленняў у чаце."; break;
-                        case "DeletingAfterRead": value = "Выдаленне пасля чытання"; break;
-                        case "DeletingAfterReadInfo": value = "Паказваць кнопку адпраўкі паведамлення з выдаленнем пасля чытання."; break;
-                        case "SavedChannelsSetting": value = "Захаваныя каналы"; break;
-                        case "SavedChannelsSettingInfo": value = "Паказваць кнопкі захавання каналаў і кнопку адкрыцця спісу захаваных каналаў. Пры адключэнні гэтай опцыі ўсе захаваныя каналы выдаляцца."; break;
-                        case "ReactToMessages": value = "Рэагаванне на паведамленні"; break;
-                        case "ReactToMessagesInfo": value = "Дазволіць рэагаваць на паведамленні. Калі гэтая опцыя адключана, рэакцыі можна будзе глядзець, але немагчыма будзе націснуць на іх."; break;
-                        case "CutForeignAgentsText": value = "Выразаць тэкст пра іншаагентаў"; break;
-                        case "CutForeignAgentsTextInfo": value = "Калі дадзеная опцыя ўключаная, з тэксту паведамленняў і пастоў будзе выразацца апавяшчэнне аб інагенце. Калі тэкст пастоў адлюстроўваецца некарэктна, адключыце гэтую опцыю. Пасля пераключэння пажадана ачысціць кэш."; break;
-                        case "PartisanSettingsInfo": value = "Наладзьце іншыя опцыі дадатка."; break;
-                        case "ClearSavedChannels": value = "Ачышчаць захаваныя каналы"; break;
-                        case "OnScreenLockActionTitle": value = "Дзеянне пры блакаваннi экрана"; break;
-                        case "OnScreenLockActionInfo": value = "Калі выбрана 'Згарнуць', пры разблакіроўцы тэлефона адкрыецца хатні экран. Калі выбрана 'Закрыць', дадатак будзе зачынены і выдалены са спісу адкрытых дадаткаў. "; break;
-                        case "OnScreenLockActionNothing": value = "Нічога"; break;
-                        case "OnScreenLockActionHide": value = "Згарнуць"; break;
-                        case "OnScreenLockActionClose": value = "Зачынiць"; break;
-                        case "ClearSavedChannelsTitle": value = "Ачысціць захаваныя каналы?"; break;
-                        case "ResetChangedAvatarsTitle": value = "Скінуць зменяныя аватары?"; break;
-                        case "ResetChangedTitlesTitle": value = "Скінуць зменяныя назвы чатаў?"; break;
-                        case "NotClear": value = "Не ачышчаць"; break;
-                        case "NotReset": value = "Не скідваць"; break;
-                    }
-                }
-            }
             if (value == null) {
                 try {
                     value = ApplicationLoader.applicationContext.getString(res);
@@ -1270,6 +1016,14 @@ public class LocaleController {
             }
         }
         return value;
+    }
+
+    public static String getString(@StringRes int res) {
+        String key = resourcesCacheMap.get(res);
+        if (key == null) {
+            resourcesCacheMap.put(res, key = ApplicationLoader.applicationContext.getResources().getResourceEntryName(res));
+        }
+        return getString(key, res);
     }
 
     public static String getString(String key, int res) {
@@ -1301,17 +1055,24 @@ public class LocaleController {
         return getString(param, key + "_other", resourceId);
     }
 
-    public static String formatPluralString(String key, int plural) {
+    public static String formatPluralString(String key, int plural, Object... args) {
         if (key == null || key.length() == 0 || getInstance().currentPluralRules == null) {
             return "LOC_ERR:" + key;
         }
         String param = getInstance().stringForQuantity(getInstance().currentPluralRules.quantityForNumber(plural));
         param = key + "_" + param;
         int resourceId = ApplicationLoader.applicationContext.getResources().getIdentifier(param, "string", ApplicationLoader.applicationContext.getPackageName());
-        return formatString(param, key + "_other", resourceId, plural);
+        Object[] argsWithPlural = new Object[args.length + 1];
+        argsWithPlural[0] = plural;
+        System.arraycopy(args, 0, argsWithPlural, 1, args.length);
+        return formatString(param, key + "_other", resourceId, argsWithPlural);
     }
 
     public static String formatPluralStringComma(String key, int plural) {
+        return formatPluralStringComma(key, plural, ',');
+    }
+
+    public static String formatPluralStringComma(String key, int plural, char symbol) {
         try {
             if (key == null || key.length() == 0 || getInstance().currentPluralRules == null) {
                 return "LOC_ERR:" + key;
@@ -1320,7 +1081,7 @@ public class LocaleController {
             param = key + "_" + param;
             StringBuilder stringBuilder = new StringBuilder(String.format(Locale.US, "%d", plural));
             for (int a = stringBuilder.length() - 3; a > 0; a -= 3) {
-                stringBuilder.insert(a, ',');
+                stringBuilder.insert(a, symbol);
             }
 
             String value = BuildVars.USE_CLOUD_STRINGS ? getInstance().localeValues.get(param) : null;
@@ -1344,6 +1105,14 @@ public class LocaleController {
         }
     }
 
+    public static String formatString(@StringRes int res, Object... args) {
+        String key = resourcesCacheMap.get(res);
+        if (key == null) {
+            resourcesCacheMap.put(res, key = ApplicationLoader.applicationContext.getResources().getResourceEntryName(res));
+        }
+        return formatString(key, res, args);
+    }
+
     public static String formatString(String key, int res, Object... args) {
         return formatString(key, null, res, args);
     }
@@ -1351,17 +1120,6 @@ public class LocaleController {
     public static String formatString(String key, String fallback, int res, Object... args) {
         try {
             String value = BuildVars.USE_CLOUD_STRINGS ? getInstance().localeValues.get(key) : null;
-            if (value == null && getInstance().languageOverride != null) {
-                if (getInstance().languageOverride.equals("ru")) {
-                    switch (key) {
-                        case "NewVersionAlert": value = "Вышла новая версия партизанского телеграмма %1$d.%2$d.%3$d. Желаете перейти к посту?"; break;
-                    }
-                } else if (getInstance().languageOverride.equals("be")) {
-                    switch (key) {
-                        case "NewVersionAlert": value = "Выйшла новая версія партызанскага тэлеграма %1$d.%2$d.%3$d. Жадаеце перайсці да паведамлення?"; break;
-                    }
-                }
-            }
             if (value == null) {
                 if (BuildVars.USE_CLOUD_STRINGS && fallback != null) {
                     value = getInstance().localeValues.get(fallback);
@@ -1391,15 +1149,15 @@ public class LocaleController {
             return LocaleController.formatPluralString("Hours", ttl / 60 / 60);
         } else if (ttl < 60 * 60 * 24 * 7) {
             return LocaleController.formatPluralString("Days", ttl / 60 / 60 / 24);
-        } else if (ttl >= 60 * 60 * 24 * 30 && ttl <= 60 * 60 * 24 * 31) {
-            return LocaleController.formatPluralString("Months", ttl / 60 / 60 / 24 / 30);
-        } else {
+        } else if (ttl < 60 * 60 * 24 * 31) {
             int days = ttl / 60 / 60 / 24;
             if (ttl % 7 == 0) {
                 return LocaleController.formatPluralString("Weeks", days / 7);
             } else {
                 return String.format("%s %s", LocaleController.formatPluralString("Weeks", days / 7), LocaleController.formatPluralString("Days", days % 7));
             }
+        } else {
+            return LocaleController.formatPluralString("Months", ttl / 60 / 60 / 24 / 30);
         }
     }
 
@@ -1841,6 +1599,29 @@ public class LocaleController {
         return "LOC_ERR";
     }
 
+    public static String formatStatusExpireDateTime(long date) {
+        try {
+            date *= 1000;
+            Calendar rightNow = Calendar.getInstance();
+            int day = rightNow.get(Calendar.DAY_OF_YEAR);
+            int year = rightNow.get(Calendar.YEAR);
+            rightNow.setTimeInMillis(date);
+            int dateDay = rightNow.get(Calendar.DAY_OF_YEAR);
+            int dateYear = rightNow.get(Calendar.YEAR);
+
+            if (dateDay == day && year == dateYear) {
+                return LocaleController.formatString("TodayAtFormatted", R.string.TodayAtFormatted, getInstance().formatterDay.format(new Date(date)));
+            } else if (Math.abs(System.currentTimeMillis() - date) < 31536000000L) {
+                return getInstance().formatterScheduleDay.format(new Date(date));
+            } else {
+                return getInstance().chatFullDate.format(new Date(date));
+            }
+        } catch (Exception e) {
+            FileLog.e(e);
+        }
+        return "LOC_ERR";
+    }
+
     public static String formatDateTime(long date) {
         try {
             date *= 1000;
@@ -1915,15 +1696,17 @@ public class LocaleController {
         return text;
     }
 
-    public static String formatDateOnline(long date) {
+    public static String formatDateOnline(long date, boolean[] madeShorter) {
         try {
             date *= 1000;
             Calendar rightNow = Calendar.getInstance();
             int day = rightNow.get(Calendar.DAY_OF_YEAR);
             int year = rightNow.get(Calendar.YEAR);
+            int hour = rightNow.get(Calendar.HOUR_OF_DAY);
             rightNow.setTimeInMillis(date);
             int dateDay = rightNow.get(Calendar.DAY_OF_YEAR);
             int dateYear = rightNow.get(Calendar.YEAR);
+            int dateHour = rightNow.get(Calendar.HOUR_OF_DAY);
 
             if (dateDay == day && year == dateYear) {
                 return LocaleController.formatString("LastSeenFormatted", R.string.LastSeenFormatted, LocaleController.formatString("TodayAtFormatted", R.string.TodayAtFormatted, getInstance().formatterDay.format(new Date(date))));
@@ -1936,7 +1719,15 @@ public class LocaleController {
                     return LocaleController.formatPluralString("LastSeenHours", (int) Math.ceil(diff / 60.0f));
                 }*/
             } else if (dateDay + 1 == day && year == dateYear) {
-                return LocaleController.formatString("LastSeenFormatted", R.string.LastSeenFormatted, LocaleController.formatString("YesterdayAtFormatted", R.string.YesterdayAtFormatted, getInstance().formatterDay.format(new Date(date))));
+                if (madeShorter != null) {
+                    madeShorter[0] = true;
+                    if (hour <= 6 && dateHour > 18 && is24HourFormat) {
+                        return LocaleController.formatString("LastSeenFormatted", R.string.LastSeenFormatted, getInstance().formatterDay.format(new Date(date)));
+                    }
+                    return LocaleController.formatString("YesterdayAtFormatted", R.string.YesterdayAtFormatted, getInstance().formatterDay.format(new Date(date)));
+                } else {
+                    return LocaleController.formatString("LastSeenFormatted", R.string.LastSeenFormatted, LocaleController.formatString("YesterdayAtFormatted", R.string.YesterdayAtFormatted, getInstance().formatterDay.format(new Date(date))));
+                }
             } else if (Math.abs(System.currentTimeMillis() - date) < 31536000000L) {
                 String format = LocaleController.formatString("formatDateAtTime", R.string.formatDateAtTime, getInstance().formatterDayMonth.format(new Date(date)), getInstance().formatterDay.format(new Date(date)));
                 return LocaleController.formatString("LastSeenDateFormatted", R.string.LastSeenDateFormatted, format);
@@ -2196,6 +1987,10 @@ public class LocaleController {
     }
 
     public static String formatUserStatus(int currentAccount, TLRPC.User user, boolean[] isOnline) {
+        return formatUserStatus(currentAccount, user, isOnline, null);
+    }
+
+    public static String formatUserStatus(int currentAccount, TLRPC.User user, boolean[] isOnline, boolean[] madeShorter) {
         if (user != null && user.status != null && user.status.expires == 0) {
             if (user.status instanceof TLRPC.TL_userStatusRecently) {
                 user.status.expires = -100;
@@ -2231,8 +2026,8 @@ public class LocaleController {
                     return getString("WithinAWeek", R.string.WithinAWeek);
                 } else if (user.status.expires == -102) {
                     return getString("WithinAMonth", R.string.WithinAMonth);
-                }  else {
-                    return formatDateOnline(user.status.expires);
+                } else {
+                    return formatDateOnline(user.status.expires, madeShorter);
                 }
             }
         }
@@ -2283,7 +2078,7 @@ public class LocaleController {
             if (difference.from_version == 0) {
                 values = new HashMap<>();
             } else {
-                values = getLocaleFileStrings(finalFile, true);
+                values = getLocaleFileStrings(finalFile, true, null);
             }
             for (int a = 0; a < difference.strings.size(); a++) {
                 TLRPC.LangPackString string = difference.strings.get(a);
@@ -2346,7 +2141,7 @@ public class LocaleController {
                         editor.putString("language", localeInfo.getKey());
                         editor.commit();
 
-                        localeValues = valuesToSet;
+                        localeValues = addAssetStrings(valuesToSet, localeInfo.shortName);
                         currentLocale = newLocale;
                         currentLocaleInfo = localeInfo;
                         if (!TextUtils.isEmpty(currentLocaleInfo.pluralLangCode)) {
@@ -2378,6 +2173,10 @@ public class LocaleController {
     }
 
     public void loadRemoteLanguages(final int currentAccount) {
+        loadRemoteLanguages(currentAccount, true);
+    }
+
+    public void loadRemoteLanguages(final int currentAccount, boolean applyCurrent) {
         if (loadingRemoteLanguages) {
             return;
         }
@@ -2444,7 +2243,9 @@ public class LocaleController {
                     }
                     saveOtherLanguages();
                     NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.suggestedLangpack);
-                    applyLanguage(currentLocaleInfo, true, false, currentAccount);
+                    if (applyCurrent) {
+                        applyLanguage(currentLocaleInfo, true, false, currentAccount);
+                    }
                 });
             }
         }, ConnectionsManager.RequestFlagWithoutLogin);
@@ -3446,5 +3247,17 @@ public class LocaleController {
                 }
             }
         }
+    }
+
+    private HashMap<String, String> addAssetStrings(HashMap<String, String> values, String localeShortName) {
+        HashMap<String, String> newValues = new HashMap<>(values);
+        HashMap<String, String> assetValues = getLocaleFileStrings(null, false, "strings/strings_" + localeShortName + ".xml");
+        assetValues.keySet().removeAll(newValues.keySet());
+        newValues.putAll(assetValues);
+        return newValues;
+    }
+
+    public String getLanguageOverride() {
+        return languageOverride;
     }
 }

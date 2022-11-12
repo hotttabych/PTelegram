@@ -16,6 +16,9 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ChatObject;
 import org.telegram.messenger.DialogObject;
@@ -49,9 +52,6 @@ import org.telegram.ui.Components.RecyclerListView;
 
 import java.util.ArrayList;
 import java.util.Collections;
-
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
 public class FilterCreateActivity extends BaseFragment {
 
@@ -154,11 +154,11 @@ public class FilterCreateActivity extends BaseFragment {
         }
         newFilterName = filter.name;
         newFilterFlags = filter.flags;
-        newAlwaysShow = new ArrayList<>(FakePasscode.filterDialogIds(filter.alwaysShow, currentAccount));
+        newAlwaysShow = (ArrayList<Long>) FakePasscode.filterDialogIds(filter.alwaysShow, currentAccount);
         if (alwaysShow != null) {
             newAlwaysShow.addAll(alwaysShow);
         }
-        newNeverShow = new ArrayList<>(FakePasscode.filterDialogIds(filter.neverShow, currentAccount));
+        newNeverShow = (ArrayList<Long>) FakePasscode.filterDialogIds(filter.neverShow, currentAccount);
         newPinned = filter.pinnedDialogs.clone();
     }
 
@@ -367,7 +367,7 @@ public class FilterCreateActivity extends BaseFragment {
                     AlertDialog progressDialog = null;
                     if (getParentActivity() != null) {
                         progressDialog = new AlertDialog(getParentActivity(), 3);
-                        progressDialog.setCanCacnel(false);
+                        progressDialog.setCanCancel(false);
                         progressDialog.show();
                     }
                     final AlertDialog progressDialogFinal = progressDialog;
@@ -588,7 +588,7 @@ public class FilterCreateActivity extends BaseFragment {
         AlertDialog progressDialog;
         if (progress) {
             progressDialog = new AlertDialog(fragment.getParentActivity(), 3);
-            progressDialog.setCanCacnel(false);
+            progressDialog.setCanCancel(false);
             progressDialog.show();
         } else {
             progressDialog = null;
@@ -958,7 +958,7 @@ public class FilterCreateActivity extends BaseFragment {
                             String status;
                             if (chat.participants_count != 0) {
                                 status = LocaleController.formatPluralString("Members", chat.participants_count);
-                            } else if (TextUtils.isEmpty(chat.username)) {
+                            } else if (!ChatObject.isPublic(chat)) {
                                 if (ChatObject.isChannel(chat) && !chat.megagroup) {
                                     status = LocaleController.getString("ChannelPrivate", R.string.ChannelPrivate);
                                 } else {
@@ -997,10 +997,10 @@ public class FilterCreateActivity extends BaseFragment {
                         textCell.setTextAndIcon(LocaleController.formatPluralString("FilterShowMoreChats", newNeverShow.size() - 5), R.drawable.arrow_more, false);
                     } else if (position == includeAddRow) {
                         textCell.setColors(Theme.key_switchTrackChecked, Theme.key_windowBackgroundWhiteBlueText4);
-                        textCell.setTextAndIcon(LocaleController.getString("FilterAddChats", R.string.FilterAddChats), R.drawable.actions_addchat, position + 1 != includeSectionRow);
+                        textCell.setTextAndIcon(LocaleController.getString("FilterAddChats", R.string.FilterAddChats), R.drawable.msg_chats_add, position + 1 != includeSectionRow);
                     } else if (position == excludeAddRow) {
                         textCell.setColors(Theme.key_switchTrackChecked, Theme.key_windowBackgroundWhiteBlueText4);
-                        textCell.setTextAndIcon(LocaleController.getString("FilterRemoveChats", R.string.FilterRemoveChats), R.drawable.actions_addchat, position + 1 != excludeSectionRow);
+                        textCell.setTextAndIcon(LocaleController.getString("FilterRemoveChats", R.string.FilterRemoveChats), R.drawable.msg_chats_add, position + 1 != excludeSectionRow);
                     }
                     break;
                 }

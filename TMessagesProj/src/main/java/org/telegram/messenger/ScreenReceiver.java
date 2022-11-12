@@ -12,6 +12,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 
+import org.telegram.messenger.fakepasscode.Utils;
 import org.telegram.tgnet.ConnectionsManager;
 
 public class ScreenReceiver extends BroadcastReceiver {
@@ -33,15 +34,22 @@ public class ScreenReceiver extends BroadcastReceiver {
         }
         NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.screenStateChanged);
         if (!SharedConfig.isFakePasscodeActivated() && intent.getAction().equals(Intent.ACTION_SCREEN_OFF)) {
-            if (SharedConfig.onScreenLockAction == 1) {
-                SharedConfig.appLocked = true;
-                SharedConfig.saveConfig();
-                Intent homeIntent = new Intent(Intent.ACTION_MAIN);
-                homeIntent.addCategory(Intent.CATEGORY_HOME);
-                context.startActivity(homeIntent);
-            } else if (SharedConfig.onScreenLockAction == 2) {
-                NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.shouldKillApp);
+            if (SharedConfig.onScreenLockActionClearCache) {
+                Utils.clearCache(this::executeOnScreenLockAction);
+            } else {
+                executeOnScreenLockAction();
             }
+            if (SharedConfig.clearAllDraftsOnScreenLock) {
+                Utils.clearAllDrafts();
+            }
+        }
+    }
+
+    private void executeOnScreenLockAction() {
+        if (SharedConfig.onScreenLockAction == 1) {
+            NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.shouldHideApp);
+        } else if (SharedConfig.onScreenLockAction == 2) {
+            NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.shouldKillApp);
         }
     }
 }

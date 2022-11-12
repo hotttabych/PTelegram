@@ -13,6 +13,9 @@ import android.os.SystemClock;
 import android.text.TextUtils;
 import android.util.SparseArray;
 
+import androidx.annotation.IntDef;
+import androidx.collection.LongSparseArray;
+
 import com.google.android.exoplayer2.util.Log;
 
 import org.telegram.messenger.voip.Instance;
@@ -20,13 +23,14 @@ import org.telegram.messenger.voip.VoIPService;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.GroupCallActivity;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
-
-import androidx.collection.LongSparseArray;
+import java.util.List;
 
 public class ChatObject {
 
@@ -50,6 +54,7 @@ public class ChatObject {
     public static final int ACTION_EDIT_MESSAGES = 12;
     public static final int ACTION_DELETE_MESSAGES = 13;
     public static final int ACTION_MANAGE_CALLS = 14;
+    public static final int ACTION_MANAGE_TOPICS = 15;
 
     public final static int VIDEO_FRAME_NO_FRAME = 0;
     public final static int VIDEO_FRAME_REQUESTING = 1;
@@ -57,7 +62,42 @@ public class ChatObject {
 
     private static final int MAX_PARTICIPANTS_COUNT = 5000;
 
+    public static boolean reactionIsAvailable(TLRPC.ChatFull chatInfo, String reaction) {
+        if (chatInfo.available_reactions instanceof TLRPC.TL_chatReactionsAll) {
+            return true;
+        }
+        if (chatInfo.available_reactions instanceof TLRPC.TL_chatReactionsSome) {
+            TLRPC.TL_chatReactionsSome someReactions = (TLRPC.TL_chatReactionsSome) chatInfo.available_reactions;
+            for (int i = 0; i < someReactions.reactions.size(); i++) {
+                if (someReactions.reactions.get(i) instanceof TLRPC.TL_reactionEmoji && TextUtils.equals(((TLRPC.TL_reactionEmoji) someReactions.reactions.get(i)).emoticon, reaction)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    public static boolean isForum(int currentAccount, long dialogId) {
+        TLRPC.Chat chat = MessagesController.getInstance(currentAccount).getChat(-dialogId);
+        if (chat != null) {
+            return chat.forum;
+        }
+        return false;
+    }
+
     public static class Call {
+        public final static int RECORD_TYPE_AUDIO = 0,
+            RECORD_TYPE_VIDEO_PORTAIT = 1,
+            RECORD_TYPE_VIDEO_LANDSCAPE = 2;
+
+        @Retention(RetentionPolicy.SOURCE)
+        @IntDef({
+                RECORD_TYPE_AUDIO,
+                RECORD_TYPE_VIDEO_PORTAIT,
+                RECORD_TYPE_VIDEO_LANDSCAPE
+        })
+        public @interface RecordType {}
+
         public TLRPC.GroupCall call;
         public long chatId;
         public LongSparseArray<TLRPC.TL_groupCallParticipant> participants = new LongSparseArray<>();
@@ -80,6 +120,8 @@ public class ChatObject {
         public boolean canStreamVideo;
         public int activeVideos;
         public VideoParticipant videoNotAvailableParticipant;
+        public VideoParticipant rtmpStreamParticipant;
+        public boolean loadedRtmpStreamParticipant;
         public AccountInstance currentAccount;
         public int speakingMembersCount;
         private Runnable typingUpdateRunnable = () -> {
@@ -156,6 +198,46 @@ public class ChatObject {
             loadMembers(true);
 
             createNoVideoParticipant();
+            if (call.rtmp_stream) {
+                createRtmpStreamParticipant(Collections.emptyList());
+            }
+        }
+
+//        public void loadRtmpStreamChannels() {
+//            if (call == null || loadedRtmpStreamParticipant) {
+//                return;
+//            }
+//            TLRPC.TL_phone_getGroupCallStreamChannels getGroupCallStreamChannels = new TLRPC.TL_phone_getGroupCallStreamChannels();
+//            getGroupCallStreamChannels.call = getInputGroupCall();
+//            currentAccount.getConnectionsManager().sendRequest(getGroupCallStreamChannels, (response, error, timestamp) -> {
+//                if (response instanceof TLRPC.TL_phone_groupCallStreamChannels) {
+//                    TLRPC.TL_phone_groupCallStreamChannels streamChannels = (TLRPC.TL_phone_groupCallStreamChannels) response;
+//                    createRtmpStreamParticipant(streamChannels.channels);
+//                    loadedRtmpStreamParticipant = true;
+//                }
+//            }, ConnectionsManager.RequestFlagFailOnServerErrors, ConnectionsManager.ConnectionTypeDownload, call.stream_dc_id);
+//        }
+
+        public void createRtmpStreamParticipant(List<TLRPC.TL_groupCallStreamChannel> channels) {
+            if (loadedRtmpStreamParticipant && rtmpStreamParticipant != null) {
+                return;
+            }
+            TLRPC.TL_groupCallParticipant participant = rtmpStreamParticipant != null ? rtmpStreamParticipant.participant : new TLRPC.TL_groupCallParticipant();
+            participant.peer = new TLRPC.TL_peerChat();
+            participant.peer.channel_id = chatId;
+            participant.video = new TLRPC.TL_groupCallParticipantVideo();
+            TLRPC.TL_groupCallParticipantVideoSourceGroup sourceGroup = new TLRPC.TL_groupCallParticipantVideoSourceGroup();
+            sourceGroup.semantics = "SIM";
+            for (TLRPC.TL_groupCallStreamChannel channel : channels) {
+                sourceGroup.sources.add(channel.channel);
+            }
+            participant.video.source_groups.add(sourceGroup);
+            participant.video.endpoint = "unified";
+            participant.videoEndpoint = "unified";
+            rtmpStreamParticipant = new VideoParticipant(participant, false, false);
+
+            sortParticipants();
+            AndroidUtilities.runOnUIThread(()-> currentAccount.getNotificationCenter().postNotificationName(NotificationCenter.groupCallUpdated, chatId, call.id, false));
         }
 
         public void createNoVideoParticipant() {
@@ -217,7 +299,7 @@ public class ChatObject {
         }
 
         public boolean shouldShowPanel() {
-            return call.participants_count > 0 || isScheduled();
+            return call.participants_count > 0 || call.rtmp_stream || isScheduled();
         }
 
         public boolean isScheduled() {
@@ -1057,7 +1139,7 @@ public class ChatObject {
             if (participant.self) {
                 return service.getVideoState(presentation) == Instance.VIDEO_STATE_ACTIVE;
             } else {
-                if (call.videoNotAvailableParticipant != null && call.videoNotAvailableParticipant.participant == participant || call.participants.get(MessageObject.getPeerId(participant.peer)) != null) {
+                if (call.rtmpStreamParticipant != null && call.rtmpStreamParticipant.participant == participant || call.videoNotAvailableParticipant != null && call.videoNotAvailableParticipant.participant == participant || call.participants.get(MessageObject.getPeerId(participant.peer)) != null) {
                     if (presentation) {
                         return participant.presentation != null;// && participant.hasPresentationFrame == 2;
                     } else {
@@ -1074,6 +1156,10 @@ public class ChatObject {
             visibleParticipants.clear();
             TLRPC.Chat chat = currentAccount.getMessagesController().getChat(chatId);
             boolean isAdmin = ChatObject.canManageCalls(chat);
+
+            if (rtmpStreamParticipant != null) {
+                visibleVideoParticipants.add(rtmpStreamParticipant);
+            }
 
             long selfId = getSelfId();
             VoIPService service = VoIPService.getSharedInstance();
@@ -1286,7 +1372,7 @@ public class ChatObject {
             }
         }
 
-        public void toggleRecord(String title, int type) {
+        public void toggleRecord(String title, @RecordType int type) {
             recording = !recording;
             TLRPC.TL_phone_toggleGroupCallRecord req = new TLRPC.TL_phone_toggleGroupCallRecord();
             req.call = getInputGroupCall();
@@ -1295,10 +1381,10 @@ public class ChatObject {
                 req.title = title;
                 req.flags |= 2;
             }
-            if (type == 1 || type == 2) {
+            if (type == RECORD_TYPE_VIDEO_PORTAIT || type == RECORD_TYPE_VIDEO_LANDSCAPE) {
                 req.flags |= 4;
                 req.video = true;
-                req.video_portrait = type == 1;
+                req.video_portrait = type == RECORD_TYPE_VIDEO_PORTAIT;
             }
             currentAccount.getConnectionsManager().sendRequest(req, (response, error) -> {
                 if (response != null) {
@@ -1325,6 +1411,7 @@ public class ChatObject {
             case ACTION_EMBED_LINKS:
             case ACTION_SEND_POLLS:
             case ACTION_VIEW:
+            case ACTION_MANAGE_TOPICS:
                 return true;
         }
         return false;
@@ -1340,6 +1427,7 @@ public class ChatObject {
             case ACTION_EDIT_MESSAGES:
             case ACTION_DELETE_MESSAGES:
             case ACTION_BLOCK_USERS:
+            case ACTION_MANAGE_TOPICS:
                 return true;
         }
         return false;
@@ -1369,6 +1457,8 @@ public class ChatObject {
                 return rights.send_polls;
             case ACTION_VIEW:
                 return rights.view_messages;
+            case ACTION_MANAGE_TOPICS:
+                return rights.manage_topics;
         }
         return false;
     }
@@ -1396,6 +1486,9 @@ public class ChatObject {
             switch (action) {
                 case ACTION_PIN:
                     value = chat.admin_rights.pin_messages;
+                    break;
+                case ACTION_MANAGE_TOPICS:
+                    value = chat.admin_rights.manage_topics;
                     break;
                 case ACTION_CHANGE_INFO:
                     value = chat.admin_rights.change_info;
@@ -1479,7 +1572,7 @@ public class ChatObject {
     }
 
     public static boolean canSendAsPeers(TLRPC.Chat chat) {
-        return ChatObject.isChannel(chat) && chat.megagroup && (!TextUtils.isEmpty(chat.username) || chat.has_geo || chat.has_link);
+        return ChatObject.isChannel(chat) && chat.megagroup && (ChatObject.isPublic(chat) || chat.has_geo || chat.has_link);
     }
 
     public static boolean isChannel(TLRPC.Chat chat) {
@@ -1496,6 +1589,10 @@ public class ChatObject {
 
     public static boolean isChannelAndNotMegaGroup(TLRPC.Chat chat) {
         return isChannel(chat) && !isMegagroup(chat);
+    }
+
+    public static boolean isForum(TLRPC.Chat chat) {
+        return chat != null && chat.forum;
     }
 
     public static boolean isMegagroup(int currentAccount, long chatId) {
@@ -1587,6 +1684,40 @@ public class ChatObject {
         return canUserDoAction(chat, ACTION_PIN) || ChatObject.isChannel(chat) && !chat.megagroup && chat.admin_rights != null && chat.admin_rights.edit_messages;
     }
 
+    public static boolean canCreateTopic(TLRPC.Chat chat) {
+        return canUserDoAction(chat, ACTION_MANAGE_TOPICS);
+    }
+
+    public static boolean canManageTopics(TLRPC.Chat chat) {
+        return canUserDoAdminAction(chat, ACTION_MANAGE_TOPICS);
+    }
+
+    public static boolean canManageTopic(int currentAccount, TLRPC.Chat chat, TLRPC.TL_forumTopic topic) {
+        return canManageTopics(chat) || isMyTopic(currentAccount, topic);
+    }
+    public static boolean canManageTopic(int currentAccount, TLRPC.Chat chat, int topicId) {
+        return canManageTopics(chat) || isMyTopic(currentAccount, chat, topicId);
+    }
+
+    public static boolean canDeleteTopic(int currentAccount, TLRPC.Chat chat, int topicId) {
+        return chat != null && canDeleteTopic(currentAccount, chat, MessagesController.getInstance(currentAccount).getTopicsController().findTopic(chat.id, topicId));
+    }
+    public static boolean canDeleteTopic(int currentAccount, TLRPC.Chat chat, TLRPC.TL_forumTopic topic) {
+        return canUserDoAction(chat, ACTION_DELETE_MESSAGES) || isMyTopic(currentAccount, topic) && topic.topMessage != null && topic.topicStartMessage != null && topic.topMessage.id - topic.topicStartMessage.id <= Math.max(1, topic.groupedMessages == null ? 0 : topic.groupedMessages.size()) && MessageObject.peersEqual(topic.from_id, topic.topMessage.from_id);
+    }
+
+    public static boolean isMyTopic(int currentAccount, TLRPC.TL_forumTopic topic) {
+        return topic != null && (topic.my || topic.from_id instanceof TLRPC.TL_peerUser && topic.from_id.user_id == UserConfig.getInstance(currentAccount).clientUserId);
+    }
+
+    public static boolean isMyTopic(int currentAccount, TLRPC.Chat chat, int topicId) {
+        return chat != null && chat.forum && isMyTopic(currentAccount, chat.id, topicId);
+    }
+
+    public static boolean isMyTopic(int currentAccount, long chatId, int topicId) {
+        return isMyTopic(currentAccount, MessagesController.getInstance(currentAccount).getTopicsController().findTopic(chatId, topicId));
+    }
+
     public static boolean isChannel(long chatId, int currentAccount) {
         TLRPC.Chat chat = MessagesController.getInstance(currentAccount).getChat(chatId);
         return chat instanceof TLRPC.TL_channel || chat instanceof TLRPC.TL_channelForbidden;
@@ -1620,6 +1751,7 @@ public class ChatObject {
         currentBannedRights += bannedRights.invite_users ? 1 : 0;
         currentBannedRights += bannedRights.change_info ? 1 : 0;
         currentBannedRights += bannedRights.pin_messages ? 1 : 0;
+        currentBannedRights += bannedRights.manage_topics ? 1 : 0;
         currentBannedRights += bannedRights.until_date;
         return currentBannedRights;
     }
@@ -1632,12 +1764,61 @@ public class ChatObject {
         return hasPhoto(chat) ? chat.photo : null;
     }
 
+    public static String getPublicUsername(TLRPC.Chat chat) {
+        return getPublicUsername(chat, false);
+    }
+
+    public static String getPublicUsername(TLRPC.Chat chat, boolean editable) {
+        if (chat == null) {
+            return null;
+        }
+        if (!TextUtils.isEmpty(chat.username) && !editable) {
+            return chat.username;
+        }
+        if (chat.usernames != null) {
+            for (int i = 0; i < chat.usernames.size(); ++i) {
+                TLRPC.TL_username u = chat.usernames.get(i);
+                if (u != null && (u.active && !editable || u.editable) && !TextUtils.isEmpty(u.username)) {
+                    return u.username;
+                }
+            }
+        }
+        if (!TextUtils.isEmpty(chat.username) && editable && (chat.usernames == null || chat.usernames.size() <= 0)) {
+            return chat.username;
+        }
+        return null;
+    }
+
+    public static boolean hasPublicLink(TLRPC.Chat chat, String username) {
+        if (chat == null) {
+            return false;
+        }
+        if (!TextUtils.isEmpty(chat.username)) {
+            return chat.username.equalsIgnoreCase(username);
+        }
+        if (chat.usernames != null) {
+            for (int i = 0; i < chat.usernames.size(); ++i) {
+                TLRPC.TL_username u = chat.usernames.get(i);
+                if (u != null && u.active && !TextUtils.isEmpty(u.username) && u.username.equalsIgnoreCase(username)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    public static boolean isPublic(TLRPC.Chat chat) {
+        return !TextUtils.isEmpty(getPublicUsername(chat));
+    }
+
     public static class VideoParticipant {
 
         public TLRPC.TL_groupCallParticipant participant;
         public boolean presentation;
         public boolean hasSame;
         public float aspectRatio;// w / h
+        public int aspectRatioFromWidth;
+        public int aspectRatioFromHeight;
 
         public VideoParticipant(TLRPC.TL_groupCallParticipant participant, boolean presentation, boolean hasSame) {
             this.participant = participant;
@@ -1657,7 +1838,13 @@ public class ChatObject {
             return presentation == that.presentation && MessageObject.getPeerId(participant.peer) == MessageObject.getPeerId(that.participant.peer);
         }
 
-        public void setAspectRatio(float aspectRatio, Call call) {
+        public void setAspectRatio(int width, int height, Call call) {
+            aspectRatioFromWidth = width;
+            aspectRatioFromHeight = height;
+            setAspectRatio(width / (float) height, call);
+        }
+
+        private void setAspectRatio(float aspectRatio, Call call) {
             if (this.aspectRatio != aspectRatio) {
                 this.aspectRatio = aspectRatio;
                 if (!GroupCallActivity.isLandscapeMode && call.visibleVideoParticipants.size() % 2 == 1) {

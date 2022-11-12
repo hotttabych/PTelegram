@@ -44,6 +44,7 @@ public class ReactedHeaderView extends FrameLayout {
     private List<TLRPC.User> users = new ArrayList<>();
     private long dialogId;
     private MessageObject message;
+    private int fixedWidth;
 
     private boolean isLoaded;
 
@@ -100,7 +101,7 @@ public class ReactedHeaderView extends FrameLayout {
             MessagesController ctrl = MessagesController.getInstance(currentAccount);
             TLRPC.Chat chat = ctrl.getChat(message.getChatId());
             TLRPC.ChatFull chatInfo = ctrl.getChatFull(message.getChatId());
-            boolean showSeen = chat != null && message.isOutOwner() && message.isSent() && !message.isEditing() && !message.isSending() && !message.isSendError() && !message.isContentUnread() && !message.isUnread() && (ConnectionsManager.getInstance(currentAccount).getCurrentTime() - message.messageOwner.date < 7 * 86400)  && (ChatObject.isMegagroup(chat) || !ChatObject.isChannel(chat)) && chatInfo != null && chatInfo.participants_count < MessagesController.getInstance(currentAccount).chatReadMarkSizeThreshold && !(message.messageOwner.action instanceof TLRPC.TL_messageActionChatJoinedByRequest);
+            boolean showSeen = chat != null && message.isOutOwner() && message.isSent() && !message.isEditing() && !message.isSending() && !message.isSendError() && !message.isContentUnread() && !message.isUnread() && (ConnectionsManager.getInstance(currentAccount).getCurrentTime() - message.messageOwner.date < 7 * 86400)  && (ChatObject.isMegagroup(chat) || !ChatObject.isChannel(chat)) && chatInfo != null && chatInfo.participants_count <= MessagesController.getInstance(currentAccount).chatReadMarkSizeThreshold && !(message.messageOwner.action instanceof TLRPC.TL_messageActionChatJoinedByRequest);
 
             if (showSeen) {
                 TLRPC.TL_messages_getMessageReadParticipants req = new TLRPC.TL_messages_getMessageReadParticipants();
@@ -182,9 +183,11 @@ public class ReactedHeaderView extends FrameLayout {
     private void loadReactions() {
         MessagesController ctrl = MessagesController.getInstance(currentAccount);
         TLRPC.TL_messages_getMessageReactionsList getList = new TLRPC.TL_messages_getMessageReactionsList();
-        getList.peer = ctrl.getInputPeer(dialogId);
+        getList.peer = ctrl.getInputPeer(message.getDialogId());
         getList.id = message.getId();
         getList.limit = 3;
+        getList.reaction = null;
+        getList.offset = null;
         ConnectionsManager.getInstance(currentAccount).sendRequest(getList, (response, error) -> {
             if (response instanceof TLRPC.TL_messages_messageReactionsList) {
                 TLRPC.TL_messages_messageReactionsList list = (TLRPC.TL_messages_messageReactionsList) response;
@@ -202,12 +205,16 @@ public class ReactedHeaderView extends FrameLayout {
                         }
                         str = String.format(LocaleController.getPluralString("Reacted", c), countStr);
                     }
+
+                    if (getMeasuredWidth() > 0) {
+                        fixedWidth = getMeasuredWidth();
+                    }
                     titleView.setText(str);
                     boolean showIcon = true;
                     if (message.messageOwner.reactions != null && message.messageOwner.reactions.results.size() == 1 && !list.reactions.isEmpty()) {
                         for (TLRPC.TL_availableReaction r : MediaDataController.getInstance(currentAccount).getReactionsList()) {
                             if (r.reaction.equals(list.reactions.get(0).reaction)) {
-                                reactView.setImage(ImageLocation.getForDocument(r.static_icon), "50_50", "webp", null, r);
+                                reactView.setImage(ImageLocation.getForDocument(r.center_icon), "40_40_lastframe", "webp", null, r);
                                 reactView.setVisibility(VISIBLE);
                                 reactView.setAlpha(0);
                                 reactView.animate().alpha(1f).start();
@@ -285,6 +292,9 @@ public class ReactedHeaderView extends FrameLayout {
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        if (fixedWidth > 0) {
+            widthMeasureSpec = MeasureSpec.makeMeasureSpec(fixedWidth, MeasureSpec.EXACTLY);
+        }
         if (flickerLoadingView.getVisibility() == View.VISIBLE) {
             // Idk what is happening here, but this class is a clone of MessageSeenView, so this might help with something?
             ignoreLayout = true;

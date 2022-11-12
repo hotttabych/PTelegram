@@ -22,6 +22,7 @@ import android.text.TextPaint;
 import androidx.core.graphics.ColorUtils;
 
 import org.telegram.messenger.AndroidUtilities;
+import org.telegram.messenger.Emoji;
 import org.telegram.messenger.FileLog;
 import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.UserConfig;
@@ -45,6 +46,7 @@ public class AvatarDrawable extends Drawable {
     private float archivedAvatarProgress;
     private boolean smallSize;
     private StringBuilder stringBuilder = new StringBuilder(5);
+    private int roundRadius = -1;
 
     public static final int AVATAR_TYPE_NORMAL = 0;
     public static final int AVATAR_TYPE_SAVED = 1;
@@ -60,6 +62,7 @@ public class AvatarDrawable extends Drawable {
     public static final int AVATAR_TYPE_FILTER_MUTED = 9;
     public static final int AVATAR_TYPE_FILTER_READ = 10;
     public static final int AVATAR_TYPE_FILTER_ARCHIVED = 11;
+    public static final int AVATAR_TYPE_REGISTER = 13;
 
     private int alpha = 255;
     private Theme.ResourcesProvider resourcesProvider;
@@ -153,24 +156,24 @@ public class AvatarDrawable extends Drawable {
         return Theme.getColor(Theme.keys_avatar_background[getColorIndex(id)]);
     }
 
-    public static int getButtonColorForId(long id) {
-        return Theme.getColor(Theme.key_avatar_actionBarSelectorBlue);
+    public static int getButtonColorForId(long id, Theme.ResourcesProvider resourcesProvider) {
+        return Theme.getColor(Theme.key_avatar_actionBarSelectorBlue, resourcesProvider);
     }
 
-    public static int getIconColorForId(long id) {
-        return Theme.getColor(Theme.key_avatar_actionBarIconBlue);
+    public static int getIconColorForId(long id, Theme.ResourcesProvider resourcesProvider) {
+        return Theme.getColor(Theme.key_avatar_actionBarIconBlue, resourcesProvider);
     }
 
-    public static int getProfileColorForId(long id) {
-        return Theme.getColor(Theme.keys_avatar_background[getColorIndex(id)]);
+    public static int getProfileColorForId(long id, Theme.ResourcesProvider resourcesProvider) {
+        return Theme.getColor(Theme.keys_avatar_background[getColorIndex(id)], resourcesProvider);
     }
 
-    public static int getProfileTextColorForId(long id) {
-        return Theme.getColor(Theme.key_avatar_subtitleInProfileBlue);
+    public static int getProfileTextColorForId(long id, Theme.ResourcesProvider resourcesProvider) {
+        return Theme.getColor(Theme.key_avatar_subtitleInProfileBlue, resourcesProvider);
     }
 
-    public static int getProfileBackColorForId(long id) {
-        return Theme.getColor(Theme.key_avatar_backgroundActionBarBlue);
+    public static int getProfileBackColorForId(long id, Theme.ResourcesProvider resourcesProvider) {
+        return Theme.getColor(Theme.key_avatar_backgroundActionBarBlue, resourcesProvider);
     }
 
     public static String getNameColorNameForId(long id) {
@@ -220,7 +223,9 @@ public class AvatarDrawable extends Drawable {
 
     public void setAvatarType(int value) {
         avatarType = value;
-        if (avatarType == AVATAR_TYPE_ARCHIVED) {
+        if (avatarType == AVATAR_TYPE_REGISTER) {
+            color = Theme.getColor(Theme.key_chats_actionBackground);
+        } else if (avatarType == AVATAR_TYPE_ARCHIVED) {
             color = getThemedColor(Theme.key_avatar_backgroundArchivedHidden);
         } else if (avatarType == AVATAR_TYPE_REPLIES) {
             color = getThemedColor(Theme.key_avatar_backgroundSaved);
@@ -340,7 +345,8 @@ public class AvatarDrawable extends Drawable {
         }
 
         if (stringBuilder.length() > 0) {
-            String text = stringBuilder.toString().toUpperCase();
+            CharSequence text = stringBuilder.toString().toUpperCase();
+            text = Emoji.replaceEmoji(text, namePaint.getFontMetricsInt(), AndroidUtilities.dp(16), true);
             try {
                 textLayout = new StaticLayout(text, namePaint, AndroidUtilities.dp(100), Layout.Alignment.ALIGN_NORMAL, 1.0f, 0.0f, false);
                 if (textLayout.getLineCount() > 0) {
@@ -367,7 +373,12 @@ public class AvatarDrawable extends Drawable {
         Theme.avatar_backgroundPaint.setColor(ColorUtils.setAlphaComponent(getColor(), alpha));
         canvas.save();
         canvas.translate(bounds.left, bounds.top);
-        canvas.drawCircle(size / 2.0f, size / 2.0f, size / 2.0f, Theme.avatar_backgroundPaint);
+        if (roundRadius > 0) {
+            AndroidUtilities.rectTmp.set(0, 0, size, size);
+            canvas.drawRoundRect(AndroidUtilities.rectTmp, roundRadius, roundRadius, Theme.avatar_backgroundPaint);
+        } else {
+            canvas.drawCircle(size / 2.0f, size / 2.0f, size / 2.0f, Theme.avatar_backgroundPaint);
+        }
 
         if (avatarType == AVATAR_TYPE_ARCHIVED) {
             if (archivedAvatarProgress != 0) {
@@ -493,5 +504,9 @@ public class AvatarDrawable extends Drawable {
     private int getThemedColor(String key) {
         Integer color = resourcesProvider != null ? resourcesProvider.getColor(key) : null;
         return color != null ? color : Theme.getColor(key);
+    }
+
+    public void setRoundRadius(int roundRadius) {
+        this.roundRadius = roundRadius;
     }
 }

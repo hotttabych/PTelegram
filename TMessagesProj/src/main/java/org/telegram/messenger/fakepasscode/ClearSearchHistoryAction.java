@@ -7,10 +7,11 @@ import org.telegram.messenger.MediaDataController;
 import org.telegram.messenger.MessagesStorage;
 import org.telegram.messenger.NotificationCenter;
 
+@FakePasscodeSerializer.ToggleSerialization
 @JsonIgnoreProperties(ignoreUnknown=true)
 public class ClearSearchHistoryAction extends AccountAction {
     @Override
-    public void execute() {
+    public void execute(FakePasscode fakePasscode) {
         MessagesStorage.getInstance(accountNum).getStorageQueue().postRunnable(() -> {
             try {
                 MessagesStorage.getInstance(accountNum).getDatabase().executeFast("DELETE FROM hashtag_recent_v2 WHERE 1").stepThis().dispose();
