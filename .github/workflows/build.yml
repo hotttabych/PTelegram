@@ -1,0 +1,59 @@
+name: Create Release
+
+on:
+  workflow_dispatch:
+    inputs:
+    build_variant:
+      type: choice
+      default: Standalone
+      options:
+        - Standalone
+        - Debug
+        - Aplha
+        - Release
+    upload_release:
+      type: boolean
+      default: False
+      
+jobs:
+  build:
+    runs-on: ubuntu-latest # [self-hosted, ptg]
+    steps:
+      - name: Parse Version
+        run: cat TMessagesProj/src/main/java/org/telegram/messenger/BuildVars.java | grep -oP '(?<=PARTISAN_VERSION_STRING = ")[0-9\.]+' | sed 's/.*/GITHUB_APP_VERSION=&/' >> $GITHUB_ENV
+      - name: Create Lowarcase Build Variant
+        run: echo "${{ github.event.inputs.build_variant }}" | sed -e 's/\(.*\)/GITHUB_BUILD_VARIANT_LOWERCASE=\L\1/' >> $GITHUB_ENV
+      - name: Create Release
+        if: env.upload_release == 'True'
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+        with:
+          tag_name: ${{env.GITHUB_APP_VERSION}}
+          release_name: ${{env.GITHUB_APP_VERSION}}
+          body: |
+            Bug fixes.
+          draft: false
+          prerelease: true
+      - uses: actions/checkout@v2
+      - name: Set Build Variant
+        run: sed -i 's/assembleAfatStandalone/assembleAfat${{ github.event.inputs.build_variant }}/g' Dockerfile
+      - name: Build docker image
+        run: docker build -t telegram-build .
+      - name: Build app
+        run: docker run --rm -v "$PWD":/home/source telegram-build
+      - name: Print Hash
+        working-directory: ${{env.GITHUB_WORKSPACE}}
+        run: sha256sum TMessagesProj/build/outputs/apk/afat/${{env.GITHUB_BUILD_VARIANT_LOWERCASE}}/app.apk
+      - name: Upload APK
+        if: env.upload_release == 'True'
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: TMessagesProj/build/outputs/apk/afat/${{env.GITHUB_BUILD_VARIANT_LOWERCASE}}/app.apk
+          asset_name: PTelegram.apk
+          asset_content_type: application/vnd.android.package-archive
