@@ -31,6 +31,7 @@ class UpdateMessageParser {
 
     public UpdateData parseMessage(MessageObject message) {
         currentUpdate = new UpdateData();
+        currentUpdate.accountNum = currentAccount;
         currentMessage = message;
         if (message.messageText == null) {
             return null;

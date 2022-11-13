@@ -4611,6 +4611,19 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                 return;
             }
             if (updateLayoutIcon.getIcon() == MediaActionDrawable.ICON_DOWNLOAD) {
+                if (SharedConfig.pendingPtgAppUpdate.accountNum != currentAccount) {
+                    UpdateChecker.checkUpdate(currentAccount, (updateFounded, data) -> {
+                        if (updateFounded) {
+                            SharedConfig.pendingPtgAppUpdate = data;
+                            SharedConfig.saveConfig();
+                            AndroidUtilities.runOnUIThread(() -> {
+                                FileLoader.getInstance(currentAccount).loadFile(SharedConfig.pendingPtgAppUpdate.document, "update", FileLoader.PRIORITY_NORMAL, 1);
+                                updateAppUpdateViews(true);
+                            });
+                        }
+                    });
+                    return;
+                }
                 FileLoader.getInstance(currentAccount).loadFile(SharedConfig.pendingPtgAppUpdate.document, "update", FileLoader.PRIORITY_NORMAL, 1);
                 updateAppUpdateViews(true);
             } else if (updateLayoutIcon.getIcon() == MediaActionDrawable.ICON_CANCEL) {
