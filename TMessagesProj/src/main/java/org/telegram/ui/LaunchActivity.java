@@ -4755,6 +4755,10 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
         if (!force && Math.abs(System.currentTimeMillis() - SharedConfig.lastUpdateCheckTime) < MessagesController.getInstance(0).updateCheckDelay * 1000) {
             return;
         }
+        if (SharedConfig.appLocked && !force) {
+            Utilities.globalQueue.postRunnable(() -> checkAppUpdate(force), 1000);
+            return;
+        }
         final int accountNum = currentAccount;
         UpdateChecker.checkUpdate(currentAccount, (updateFounded, data) -> {
             SharedConfig.lastUpdateCheckTime = System.currentTimeMillis();
