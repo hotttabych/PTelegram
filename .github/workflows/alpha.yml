@@ -19,11 +19,11 @@ jobs:
         run: docker run --rm -v "$PWD":/home/source telegram-build #--cpus="3.5" -m 6000M telegram-build
       - name: Print Hash
         working-directory: ${{env.GITHUB_WORKSPACE}}
-        run: sha256sum TMessagesProj/build/outputs/apk/afat/standalone/app.apk
+        run: sha256sum TMessagesProj/build/outputs/apk/afat/alpha/app.apk
       - name: Save artifact
         uses: actions/upload-artifact@master
         with:
           name: PTelegram-v3_0_9a.apk
-          path: TMessagesProj/build/outputs/apk/afat/standalone/app.apk
+          path: TMessagesProj/build/outputs/apk/afat/alpha/app.apk
       - name: Create cleanup request
         run: touch delete_request
