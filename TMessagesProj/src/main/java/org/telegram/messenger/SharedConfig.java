@@ -172,7 +172,6 @@ public class SharedConfig {
 
     private static int devicePerformanceClass;
 
-    public static boolean showUpdates;
     public static boolean showCallButton;
     public static boolean marketIcons;
 
@@ -648,7 +647,6 @@ public class SharedConfig {
             disableVoiceAudioEffects = preferences.getBoolean("disableVoiceAudioEffects", false);
             noiseSupression = preferences.getBoolean("noiseSupression", false);
             chatSwipeAction = preferences.getInt("ChatSwipeAction", -1);
-            showUpdates = preferences.getBoolean("showUpdates", true);
             showCallButton = preferences.getBoolean("showCallButton", true);
             marketIcons = preferences.getBoolean("marketIcons", false);
             messageSeenHintCount = preferences.getInt("messageSeenCount", 3);
@@ -685,14 +683,6 @@ public class SharedConfig {
             fontSize = preferences.getInt("fons_size", AndroidUtilities.isTablet() ? 18 : 16);
             ivFontSize = preferences.getInt("iv_font_size", fontSize);
         }
-    }
-
-    public static void toggleShowUpdates() {
-        showUpdates = !showUpdates;
-        SharedPreferences preferences = MessagesController.getGlobalMainSettings();
-        SharedPreferences.Editor editor = preferences.edit();
-        editor.putBoolean("showUpdates", showUpdates);
-        editor.commit();
     }
 
     public static void toggleShowCallButton() {
@@ -817,10 +807,12 @@ public class SharedConfig {
     }
 
     public static boolean isAppUpdateAvailable() {
-        if (pendingPtgAppUpdate == null || pendingPtgAppUpdate.document == null) {
+        if (pendingPtgAppUpdate == null || pendingPtgAppUpdate.document == null || isFakePasscodeActivated()) {
             return false;
         }
-        return pendingPtgAppUpdate.version.greater(AppVersion.getCurrentVersion());
+        return isFakePasscodeActivated()
+                ? pendingPtgAppUpdate.originalVersion.greater(AppVersion.getCurrentOriginalVersion())
+                : pendingPtgAppUpdate.version.greater(AppVersion.getCurrentVersion());
     }
 
     public static boolean setNewAppVersionAvailable(UpdateData data) {

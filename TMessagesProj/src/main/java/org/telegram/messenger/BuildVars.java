@@ -24,8 +24,8 @@ public class BuildVars {
     public static boolean USE_CLOUD_STRINGS = true;
     public static boolean CHECK_UPDATES = true;
     public static boolean NO_SCOPED_STORAGE = Build.VERSION.SDK_INT <= 29;
-    public static int BUILD_VERSION = 2902;
-    public static String BUILD_VERSION_STRING = "9.1.2";
+    public static int BUILD_VERSION = 2917;
+    public static String BUILD_VERSION_STRING = "9.1.3";
     public static int APP_ID = 12652123; // set you own APP_ID
     public static String APP_HASH = "bb81fa5b3c3f80706ac142c9b72ce9ef"; // set you own APP_HASH
 
@@ -35,7 +35,7 @@ public class BuildVars {
 
     public static String HUAWEI_APP_ID = "101184875";
 
-    public static String PARTISAN_VERSION_STRING = "3.0.1";
+    public static String PARTISAN_VERSION_STRING = "3.0.9";
 
     // You can use this flag to disable Google Play Billing (If you're making fork and want it to be in Google Play)
     public static boolean IS_BILLING_UNAVAILABLE = false;

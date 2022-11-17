@@ -142,8 +142,6 @@
     <string name="ResetChangedTitlesTitle">Сбросить изменённые названия чатов?</string>
     <string name="NotClear">Не очищать</string>
     <string name="NotReset">Не сбрасывать</string>
-    <string name="ShowUpdates">Показывать обновления</string>
-    <string name="ShowUpdatesInfo">Показывать уведомление, когда доступно новое обновление приложения.</string>
     <string name="ShowCallButton">Показывать кнопку звонка</string>
     <string name="ShowCallButtonInfo">Показывать кнопку звонка в окне чата.</string>
     <string name="IsClearAllDraftsOnScreenLock">Очищать черновики при блокировке экрана</string>

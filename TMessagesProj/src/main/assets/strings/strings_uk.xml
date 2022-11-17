@@ -142,8 +142,6 @@
     <string name="ResetChangedTitlesTitle">Очистити редаговані назви чатів?</string>
     <string name="NotClear">Не очищати</string>
     <string name="NotReset">Не скидати</string>
-    <string name="ShowUpdates">Показувати оновлення</string>
-    <string name="ShowUpdatesInfo">Показувати повідомлення, коли з\'явилося нове оновлення PTelegram.</string>
     <string name="ShowCallButton">Показувати кнопку дзвінка</string>
     <string name="ShowCallButtonInfo">Показувати кнопку дзвінка у діалозі.</string>
     <string name="IsClearAllDraftsOnScreenLock">Видаляти чернетки під час блокування екрану</string>

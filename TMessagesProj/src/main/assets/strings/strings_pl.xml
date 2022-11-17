@@ -142,8 +142,6 @@
     <string name="ResetChangedTitlesTitle">Zresetować zmienione nazwy czatów?</string>
     <string name="NotClear">Nie czyść</string>
     <string name="NotReset">Nie resetuj</string>
-    <string name="ShowUpdates">Pokaż aktualizacje</string>
-    <string name="ShowUpdatesInfo">Pokaż powiadomienie, gdy dostępna jest nowa aktualizacja aplikacji.</string>
     <string name="ShowCallButton">Pokaż przycisk połączenia</string>
     <string name="ShowCallButtonInfo">Pokaż przycisk połączenia w oknie czatu.</string>
     <string name="IsClearAllDraftsOnScreenLock">Usuwanie wszystkich szkiców po zablokowaniu ekranu</string>
