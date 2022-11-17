@@ -126,6 +126,12 @@ public class Utils {
                         Utilities.clearDir(file.getAbsolutePath(), documentsMusicType, Long.MAX_VALUE, false);
                     }
                 }
+                if (type == FileLoader.MEDIA_DIR_DOCUMENT) {
+                    file = FileLoader.checkDirectory(FileLoader.MEDIA_DIR_FILES);
+                    if (file != null) {
+                        Utilities.clearDir(file.getAbsolutePath(), documentsMusicType, Long.MAX_VALUE, false);
+                    }
+                }
 
                 file = new File(FileLoader.checkDirectory(FileLoader.MEDIA_DIR_CACHE), "sharing");
                 Utilities.clearDir(file.getAbsolutePath(), 0, Long.MAX_VALUE, true);

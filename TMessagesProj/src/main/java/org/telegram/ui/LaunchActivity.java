@@ -489,20 +489,26 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                 switchToAccount(((DrawerUserCell) view).getAccountNumber(), true);
                 drawerLayoutContainer.closeDrawer(false);
             } else if (view instanceof DrawerAddCell) {
-                int freeAccounts = 0;
+                int usedAccounts = 0;
                 Integer availableAccount = null;
                 for (int a = UserConfig.MAX_ACCOUNT_COUNT - 1; a >= 0; a--) {
                     if (!UserConfig.getInstance(a).isClientActivated()) {
-                        freeAccounts++;
                         if (availableAccount == null) {
                             availableAccount = a;
                         }
+                    } else if (!FakePasscode.isHideAccount(a)) {
+                        usedAccounts++;
                     }
                 }
-                if (!UserConfig.hasPremiumOnAccounts()) {
-                    freeAccounts -= (UserConfig.MAX_ACCOUNT_COUNT - UserConfig.MAX_ACCOUNT_DEFAULT_COUNT);
+                int maxAccountCount;
+                if (!SharedConfig.isFakePasscodeActivated()) {
+                    maxAccountCount = UserConfig.MAX_ACCOUNT_COUNT;
+                } else if (UserConfig.hasPremiumOnAccounts()) {
+                    maxAccountCount = UserConfig.FAKE_PASSCODE_MAX_PREMIUM_ACCOUNT_COUNT;
+                } else {
+                    maxAccountCount = UserConfig.getMaxAccountCount();
                 }
-                if (freeAccounts > 0 && availableAccount != null) {
+                if (usedAccounts < maxAccountCount && availableAccount != null) {
                     presentFragment(new LoginActivity(availableAccount));
                     drawerLayoutContainer.closeDrawer(false);
                 } else if (!UserConfig.hasPremiumOnAccounts()) {
@@ -4605,6 +4611,19 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                 return;
             }
             if (updateLayoutIcon.getIcon() == MediaActionDrawable.ICON_DOWNLOAD) {
+                if (SharedConfig.pendingPtgAppUpdate.accountNum != currentAccount) {
+                    UpdateChecker.checkUpdate(currentAccount, (updateFounded, data) -> {
+                        if (updateFounded) {
+                            SharedConfig.pendingPtgAppUpdate = data;
+                            SharedConfig.saveConfig();
+                            AndroidUtilities.runOnUIThread(() -> {
+                                FileLoader.getInstance(currentAccount).loadFile(SharedConfig.pendingPtgAppUpdate.document, "update", FileLoader.PRIORITY_NORMAL, 1);
+                                updateAppUpdateViews(true);
+                            });
+                        }
+                    });
+                    return;
+                }
                 FileLoader.getInstance(currentAccount).loadFile(SharedConfig.pendingPtgAppUpdate.document, "update", FileLoader.PRIORITY_NORMAL, 1);
                 updateAppUpdateViews(true);
             } else if (updateLayoutIcon.getIcon() == MediaActionDrawable.ICON_CANCEL) {
@@ -4734,6 +4753,10 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
             return;
         }
         if (!force && Math.abs(System.currentTimeMillis() - SharedConfig.lastUpdateCheckTime) < MessagesController.getInstance(0).updateCheckDelay * 1000) {
+            return;
+        }
+        if (SharedConfig.appLocked && !force) {
+            Utilities.globalQueue.postRunnable(() -> checkAppUpdate(force), 1000);
             return;
         }
         final int accountNum = currentAccount;

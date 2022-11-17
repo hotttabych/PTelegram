@@ -1,5 +1,7 @@
 ## Partisan-Telegram messenger for Android
 
+![](https://github.com/wrwrabbit/Partisan-Telegram-Android/blob/wiki_images/wiki_images/Readme.jpg)
+
 A special version of Telegram that protects peaceful protesters in Belarus (can be used in other countries with authoritarian regimes as well). 
 P-Telegram has two passcodes instead of one - the real passcode and a false passcode.
 If a user enters the false passcode a series of pre-defined actions is performed such as:

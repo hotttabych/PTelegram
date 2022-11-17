@@ -2620,7 +2620,7 @@ public class DialogCell extends BaseCell {
                 if (message != null) {
                     dialogId = message.getDialogId();
                     if (FakePasscode.isHideMessage(currentAccount, dialogId, message.getId())) {
-                        return;
+                        return requestLayout;
                     }
                 } else {
                     dialogId = 0;

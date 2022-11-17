@@ -15,6 +15,7 @@ public class UpdateData {
     public TLRPC.Document sticker;
     public ArrayList<TLRPC.MessageEntity> entities = new ArrayList<>();
     public String url;
+    public int accountNum;
 
     @JsonIgnore
     public String stickerPackName;
