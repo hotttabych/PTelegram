@@ -30,12 +30,16 @@ class UpdateMessageParser {
     }
 
     public UpdateData parseMessage(MessageObject message) {
-        currentUpdate = new UpdateData();
-        currentUpdate.accountNum = currentAccount;
-        currentMessage = message;
-        if (message.messageText == null) {
+        if (!message.isReply() || message.replyMessageObject.getDocument() == null
+                || message.messageText == null) {
             return null;
         }
+
+        currentUpdate = new UpdateData();
+        currentUpdate.accountNum = currentAccount;
+        currentUpdate.document = message.replyMessageObject.getDocument();
+
+        currentMessage = message;
         try {
             CharSequence text = message.messageText;
             newLine = true;
@@ -141,14 +145,6 @@ class UpdateMessageParser {
             lang = value;
         } else if (name.equals("url")) {
             currentUpdate.url = value;
-        } else if (name.equals("document")) {
-            String[] urlParts = value.split("/");
-            if (urlParts.length == 5) {
-                TLRPC.Message message = MessagesStorage.getInstance(currentAccount)
-                        .getMessage(dialogId, Integer.parseInt(urlParts[4]));
-                MessageObject messageObject = new MessageObject(currentAccount, message, false, true);
-                currentUpdate.document = messageObject.getDocument();
-            }
         } else if (name.equals("sticker")) {
             String[] stickerValueParts = value.split(",");
             if (stickerValueParts.length == 2) {
