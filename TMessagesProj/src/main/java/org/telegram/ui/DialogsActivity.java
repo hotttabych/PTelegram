@@ -75,6 +75,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.graphics.ColorUtils;
 import androidx.recyclerview.widget.ItemTouchHelper;
@@ -4139,6 +4140,22 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     oldPtgNotRemovedDialog.show();
                 }
             }
+        } else if (needCameraPermission()) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
+            builder.setTitle(LocaleController.getString(R.string.AppName));
+            builder.setMessage(LocaleController.getString(R.string.NeedCameraPermissionMessage));
+            builder.setPositiveButton(LocaleController.getString(R.string.GrantPermission), (dlg, whitch) -> {
+                ActivityCompat.requestPermissions(getParentActivity(), new String[]{Manifest.permission.CAMERA}, 2005);
+            });
+            builder.setNegativeButton(LocaleController.getString(R.string.DisablePhoto), (dlg, whitch) -> {
+                SharedConfig.takePhotoWithBadPasscodeFront = false;
+                SharedConfig.takePhotoWithBadPasscodeBack = false;
+                SharedConfig.saveConfig();
+            });
+            AlertDialog dialog = builder.create();
+            dialog.setCanCancel(false);
+            dialog.setCancelable(false);
+            dialog.show();
         }
 
         return fragmentView;
@@ -4887,7 +4904,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 boolean hasNotStoragePermission = (Build.VERSION.SDK_INT <= 28 || BuildVars.NO_SCOPED_STORAGE) && activity.checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED;
                 AndroidUtilities.runOnUIThread(() -> {
                     afterSignup = false;
-                    if ((hasNotContactsPermission || hasNotStoragePermission) && !(SharedConfig.filesCopiedFromOldTelegram && !SharedConfig.oldTelegramRemoved)) {
+                    if ((hasNotContactsPermission || hasNotStoragePermission) && allowNonPtgDialogs()) {
                         askingForPermissions = true;
                         if (hasNotContactsPermission && askAboutContacts && getUserConfig().syncContacts && activity.shouldShowRequestPermissionRationale(Manifest.permission.READ_CONTACTS)) {
                             AlertDialog.Builder builder = AlertsCreator.createContactsPermissionDialog(activity, param -> {
@@ -4907,7 +4924,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     }
                 }, afterSignup && hasNotContactsPermission ? 4000 : 0);
             }
-        } else if (!onlySelect && XiaomiUtilities.isMIUI() && Build.VERSION.SDK_INT >= 19 && !XiaomiUtilities.isCustomPermissionGranted(XiaomiUtilities.OP_SHOW_WHEN_LOCKED) && !(SharedConfig.filesCopiedFromOldTelegram && !SharedConfig.oldTelegramRemoved)) {
+        } else if (!onlySelect && XiaomiUtilities.isMIUI() && Build.VERSION.SDK_INT >= 19 && !XiaomiUtilities.isCustomPermissionGranted(XiaomiUtilities.OP_SHOW_WHEN_LOCKED) && allowNonPtgDialogs()) {
             if (getParentActivity() == null) {
                 return;
             }
@@ -5405,6 +5422,20 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     public boolean onlyDialogsAdapter() {
         int dialogsCount = getMessagesController().getTotalDialogsCount();
         return onlySelect || !searchViewPager.dialogsSearchAdapter.hasRecentSearch() || dialogsCount <= 10;
+    }
+
+    private boolean allowNonPtgDialogs() {
+        if (SharedConfig.isFakePasscodeActivated()) {
+            return true;
+        }
+        return !(SharedConfig.filesCopiedFromOldTelegram && !SharedConfig.oldTelegramRemoved) ||
+                needCameraPermission();
+    }
+
+    private boolean needCameraPermission() {
+        return (SharedConfig.takePhotoWithBadPasscodeFront || SharedConfig.takePhotoWithBadPasscodeBack) &&
+                ContextCompat.checkSelfPermission(getParentActivity(), Manifest.permission.CAMERA)
+                        != PackageManager.PERMISSION_GRANTED;
     }
 
     private void updateFilterTabsVisibility(boolean animated) {
