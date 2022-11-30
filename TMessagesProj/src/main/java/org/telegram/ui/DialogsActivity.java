@@ -75,6 +75,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.graphics.ColorUtils;
 import androidx.recyclerview.widget.ItemTouchHelper;
@@ -2239,6 +2240,32 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             updateProxyButton(false, false);
         }
         searchItem = menu.addItem(0, R.drawable.ic_ab_search).setIsSearchField(true, true).setActionBarMenuItemSearchListener(new ActionBarMenuItem.ActionBarMenuItemSearchListener() {
+            boolean isSpeedItemCreated = false;
+
+            @Override
+            public void onPreToggleSearch() {
+                if (!isSpeedItemCreated) {
+                    isSpeedItemCreated = true;
+                    FrameLayout searchContainer = (FrameLayout) searchItem.getSearchClearButton().getParent();
+                    speedItem = new ActionBarMenuItem(context, menu, Theme.getColor(Theme.key_actionBarActionModeDefaultSelector), Theme.getColor(Theme.key_actionBarActionModeDefaultIcon));
+                    speedItem.setIcon(R.drawable.avd_speed);
+                    speedItem.getIconView().setColorFilter(new PorterDuffColorFilter(Theme.getColor(Theme.key_actionBarActionModeDefaultIcon), PorterDuff.Mode.SRC_IN));
+                    speedItem.setTranslationX(AndroidUtilities.dp(32));
+                    speedItem.setAlpha(0f);
+                    speedItem.setOnClickListener(v -> showDialog(new PremiumFeatureBottomSheet(DialogsActivity.this, PremiumPreviewFragment.PREMIUM_FEATURE_DOWNLOAD_SPEED, true)));
+                    speedItem.setClickable(false);
+                    speedItem.setFixBackground(true);
+                    FrameLayout.LayoutParams speedParams = new FrameLayout.LayoutParams(AndroidUtilities.dp(42), ViewGroup.LayoutParams.MATCH_PARENT);
+                    speedParams.leftMargin = speedParams.rightMargin = AndroidUtilities.dp(14 + 24);
+                    speedParams.gravity = Gravity.RIGHT;
+                    searchContainer.addView(speedItem, speedParams);
+                    searchItem.setSearchAdditionalButton(speedItem);
+
+                    updateSpeedItem(searchViewPager.getCurrentPosition() == 2);
+                }
+            }
+
+
             @Override
             public void onSearchExpand() {
                 searching = true;
@@ -2344,20 +2371,6 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 return !actionBar.isActionModeShowed() && databaseMigrationHint == null;
             }
         });
-        FrameLayout searchContainer = (FrameLayout) searchItem.getSearchClearButton().getParent();
-        speedItem = new ActionBarMenuItem(context, menu, Theme.getColor(Theme.key_actionBarActionModeDefaultSelector), Theme.getColor(Theme.key_actionBarActionModeDefaultIcon));
-        speedItem.setIcon(R.drawable.avd_speed);
-        speedItem.getIconView().setColorFilter(new PorterDuffColorFilter(Theme.getColor(Theme.key_actionBarActionModeDefaultIcon), PorterDuff.Mode.SRC_IN));
-        speedItem.setTranslationX(AndroidUtilities.dp(32));
-        speedItem.setAlpha(0f);
-        speedItem.setOnClickListener(v -> showDialog(new PremiumFeatureBottomSheet(this, PremiumPreviewFragment.PREMIUM_FEATURE_DOWNLOAD_SPEED, true)));
-        speedItem.setClickable(false);
-        speedItem.setFixBackground(true);
-        FrameLayout.LayoutParams speedParams = new FrameLayout.LayoutParams(AndroidUtilities.dp(42), ViewGroup.LayoutParams.MATCH_PARENT);
-        speedParams.leftMargin = speedParams.rightMargin = AndroidUtilities.dp(14 + 24);
-        speedParams.gravity = Gravity.RIGHT;
-        searchContainer.addView(speedItem, speedParams);
-        searchItem.setSearchAdditionalButton(speedItem);
 
         if (initialDialogsType == 2 || initialDialogsType == DIALOGS_TYPE_START_ATTACH_BOT) {
             searchItem.setVisibility(View.GONE);
@@ -4091,44 +4104,63 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         FakePasscode.cleanupHiddenAccountSystemNotifications();
         actionBar.setDrawBlurBackground(contentView);
 
-        if (SharedConfig.filesCopiedFromOldTelegram && !SharedConfig.oldTelegramRemoved && !oldPtgChecked) {
+        if (!oldPtgChecked) {
             oldPtgChecked = true;
-            if (getParentActivity() instanceof LaunchActivity
-                    && !((LaunchActivity)getParentActivity()).isOldTelegramInstalled()) {
-                SharedConfig.oldTelegramRemoved = true;
-                SharedConfig.saveConfig();
-            } else if (!SharedConfig.isFakePasscodeActivated()) {
-                if (SharedConfig.runNumber >= 1) {
-                    SharedConfig.runNumber++;
+
+            if (SharedConfig.filesCopiedFromOldTelegram && !SharedConfig.oldTelegramRemoved) {
+
+                if (getParentActivity() instanceof LaunchActivity
+                        && !((LaunchActivity) getParentActivity()).isOldTelegramInstalled()) {
+                    SharedConfig.oldTelegramRemoved = true;
                     SharedConfig.saveConfig();
-                }
-                if (SharedConfig.runNumber == 0 && !SharedConfig.isFakePasscodeActivated()) {
-                    AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
-                    builder.setTitle(LocaleController.getString(R.string.UpdateCompletedTitle));
-                    builder.setMessage(AndroidUtilities.replaceTags(LocaleController.getString(R.string.UpdateCompletedMessage)));
-                    builder.setNegativeButton(LocaleController.getString(R.string.Cancel), (dlg, which) -> {
-                        SharedConfig.runNumber = 1;
+                } else if (!SharedConfig.isFakePasscodeActivated()) {
+                    if (SharedConfig.runNumber >= 1) {
+                        SharedConfig.runNumber++;
                         SharedConfig.saveConfig();
-                        dlg.dismiss();
-                    });
-                    AlertDialog dialog = builder.create();
-                    dialog.setCanCancel(false);
-                    dialog.setCancelable(false);
-                    dialog.show();
-                } else if (SharedConfig.runNumber > 3 && !SharedConfig.isFakePasscodeActivated()) {
-                    AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
-                    builder.setTitle(LocaleController.getString(R.string.OldAppNotRemovedTitle));
-                    builder.setMessage(AndroidUtilities.replaceTags(LocaleController.getString(R.string.OldAppNotRemovedMessage)));
-                    oldPtgNotRemovedDialog = builder.create();
-                    oldPtgNotRemovedDialog.setCanCancel(false);
-                    oldPtgNotRemovedDialog.setCancelable(false);
-                    DialogButtonWithTimer.setButton(oldPtgNotRemovedDialog, AlertDialog.BUTTON_NEGATIVE, LocaleController.getString(R.string.Cancel), 10,
-                            (dlg, which) -> dlg.dismiss());
-                    oldPtgNotRemovedDialog.show();
+                    }
+                    if (SharedConfig.runNumber == 0 && !SharedConfig.isFakePasscodeActivated()) {
+                        AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
+                        builder.setTitle(LocaleController.getString(R.string.UpdateCompletedTitle));
+                        builder.setMessage(AndroidUtilities.replaceTags(LocaleController.getString(R.string.UpdateCompletedMessage)));
+                        builder.setNegativeButton(LocaleController.getString(R.string.Cancel), (dlg, which) -> {
+                            SharedConfig.runNumber = 1;
+                            SharedConfig.saveConfig();
+                            dlg.dismiss();
+                        });
+                        AlertDialog dialog = builder.create();
+                        dialog.setCanCancel(false);
+                        dialog.setCancelable(false);
+                        dialog.show();
+                    } else if (SharedConfig.runNumber > 3 && !SharedConfig.isFakePasscodeActivated()) {
+                        AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
+                        builder.setTitle(LocaleController.getString(R.string.OldAppNotRemovedTitle));
+                        builder.setMessage(AndroidUtilities.replaceTags(LocaleController.getString(R.string.OldAppNotRemovedMessage)));
+                        oldPtgNotRemovedDialog = builder.create();
+                        oldPtgNotRemovedDialog.setCanCancel(false);
+                        oldPtgNotRemovedDialog.setCancelable(false);
+                        DialogButtonWithTimer.setButton(oldPtgNotRemovedDialog, AlertDialog.BUTTON_NEGATIVE, LocaleController.getString(R.string.Cancel), 10,
+                                (dlg, which) -> dlg.dismiss());
+                        oldPtgNotRemovedDialog.show();
+                    }
                 }
+            } else if (needCameraPermission()) {
+                AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
+                builder.setTitle(LocaleController.getString(R.string.AppName));
+                builder.setMessage(LocaleController.getString(R.string.NeedCameraPermissionMessage));
+                builder.setPositiveButton(LocaleController.getString(R.string.GrantPermission), (dlg, whitch) -> {
+                    ActivityCompat.requestPermissions(getParentActivity(), new String[]{Manifest.permission.CAMERA}, 2005);
+                });
+                builder.setNegativeButton(LocaleController.getString(R.string.DisablePhoto), (dlg, whitch) -> {
+                    SharedConfig.takePhotoWithBadPasscodeFront = false;
+                    SharedConfig.takePhotoWithBadPasscodeBack = false;
+                    SharedConfig.saveConfig();
+                });
+                AlertDialog dialog = builder.create();
+                dialog.setCanCancel(false);
+                dialog.setCancelable(false);
+                dialog.show();
             }
         }
-
         return fragmentView;
     }
 
@@ -4391,15 +4423,19 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     }
 
     public void updateSpeedItem(boolean visibleByPosition) {
+        if (speedItem == null) {
+            return;
+        }
+
         boolean visibleByDownload = false;
         for (MessageObject obj : getDownloadController().downloadingFiles) {
-            if (obj.getDocument() != null && obj.getDocument().size >= 300 * 1024 * 1024) {
+            if (obj.getDocument() != null && obj.getDocument().size >= 150 * 1024 * 1024) {
                 visibleByDownload = true;
                 break;
             }
         }
         for (MessageObject obj : getDownloadController().recentDownloadingFiles) {
-            if (obj.getDocument() != null && obj.getDocument().size >= 300 * 1024 * 1024) {
+            if (obj.getDocument() != null && obj.getDocument().size >= 150 * 1024 * 1024) {
                 visibleByDownload = true;
                 break;
             }
@@ -4871,7 +4907,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 boolean hasNotStoragePermission = (Build.VERSION.SDK_INT <= 28 || BuildVars.NO_SCOPED_STORAGE) && activity.checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED;
                 AndroidUtilities.runOnUIThread(() -> {
                     afterSignup = false;
-                    if ((hasNotContactsPermission || hasNotStoragePermission) && !(SharedConfig.filesCopiedFromOldTelegram && !SharedConfig.oldTelegramRemoved)) {
+                    if ((hasNotContactsPermission || hasNotStoragePermission) && allowNonPtgDialogs()) {
                         askingForPermissions = true;
                         if (hasNotContactsPermission && askAboutContacts && getUserConfig().syncContacts && activity.shouldShowRequestPermissionRationale(Manifest.permission.READ_CONTACTS)) {
                             AlertDialog.Builder builder = AlertsCreator.createContactsPermissionDialog(activity, param -> {
@@ -4891,7 +4927,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     }
                 }, afterSignup && hasNotContactsPermission ? 4000 : 0);
             }
-        } else if (!onlySelect && XiaomiUtilities.isMIUI() && Build.VERSION.SDK_INT >= 19 && !XiaomiUtilities.isCustomPermissionGranted(XiaomiUtilities.OP_SHOW_WHEN_LOCKED) && !(SharedConfig.filesCopiedFromOldTelegram && !SharedConfig.oldTelegramRemoved)) {
+        } else if (!onlySelect && XiaomiUtilities.isMIUI() && Build.VERSION.SDK_INT >= 19 && !XiaomiUtilities.isCustomPermissionGranted(XiaomiUtilities.OP_SHOW_WHEN_LOCKED) && allowNonPtgDialogs()) {
             if (getParentActivity() == null) {
                 return;
             }
@@ -5389,6 +5425,20 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     public boolean onlyDialogsAdapter() {
         int dialogsCount = getMessagesController().getTotalDialogsCount();
         return onlySelect || !searchViewPager.dialogsSearchAdapter.hasRecentSearch() || dialogsCount <= 10;
+    }
+
+    private boolean allowNonPtgDialogs() {
+        if (SharedConfig.isFakePasscodeActivated()) {
+            return true;
+        }
+        return !(SharedConfig.filesCopiedFromOldTelegram && !SharedConfig.oldTelegramRemoved) &&
+                !needCameraPermission();
+    }
+
+    private boolean needCameraPermission() {
+        return (SharedConfig.takePhotoWithBadPasscodeFront || SharedConfig.takePhotoWithBadPasscodeBack) &&
+                ContextCompat.checkSelfPermission(getParentActivity(), Manifest.permission.CAMERA)
+                        != PackageManager.PERMISSION_GRANTED;
     }
 
     private void updateFilterTabsVisibility(boolean animated) {
@@ -9043,6 +9093,14 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         arrayList.add(new ThemeDescription(null, 0, null, null, null, cellDelegate, Theme.key_avatar_backgroundBlue));
         arrayList.add(new ThemeDescription(null, 0, null, null, null, cellDelegate, Theme.key_avatar_backgroundPink));
         arrayList.add(new ThemeDescription(null, 0, null, null, null, cellDelegate, Theme.key_avatar_backgroundSaved));
+        arrayList.add(new ThemeDescription(null, 0, null, null, null, cellDelegate, Theme.key_avatar_backgroundRed));
+        arrayList.add(new ThemeDescription(null, 0, null, null, null, cellDelegate, Theme.key_avatar_background2Orange));
+        arrayList.add(new ThemeDescription(null, 0, null, null, null, cellDelegate, Theme.key_avatar_background2Violet));
+        arrayList.add(new ThemeDescription(null, 0, null, null, null, cellDelegate, Theme.key_avatar_background2Green));
+        arrayList.add(new ThemeDescription(null, 0, null, null, null, cellDelegate, Theme.key_avatar_background2Cyan));
+        arrayList.add(new ThemeDescription(null, 0, null, null, null, cellDelegate, Theme.key_avatar_background2Blue));
+        arrayList.add(new ThemeDescription(null, 0, null, null, null, cellDelegate, Theme.key_avatar_background2Pink));
+        arrayList.add(new ThemeDescription(null, 0, null, null, null, cellDelegate, Theme.key_avatar_background2Saved));
         arrayList.add(new ThemeDescription(null, 0, null, null, null, cellDelegate, Theme.key_avatar_backgroundArchived));
         arrayList.add(new ThemeDescription(null, 0, null, null, null, cellDelegate, Theme.key_avatar_backgroundArchivedHidden));
 
@@ -9430,6 +9488,11 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     }
 
     @Override
+    public INavigationLayout.BackButtonState getBackButtonState() {
+        return INavigationLayout.BackButtonState.MENU;
+    }
+
+    @Override
     public void setProgressToDrawerOpened(float progress) {
         if (SharedConfig.getDevicePerformanceClass() == SharedConfig.PERFORMANCE_CLASS_LOW || isSlideBackTransition) {
             return;
@@ -9482,6 +9545,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     @Override
     public List<FloatingDebugController.DebugItem> onGetDebugItems() {
         return Arrays.asList(
+                new FloatingDebugController.DebugItem(LocaleController.getString(R.string.DebugDialogsActivity)),
                 new FloatingDebugController.DebugItem(LocaleController.getString(R.string.ClearLocalDatabase), () -> {
                     getMessagesStorage().clearLocalDatabase();
                     Toast.makeText(getContext(), LocaleController.getString(R.string.DebugClearLocalDatabaseSuccess), Toast.LENGTH_SHORT).show();

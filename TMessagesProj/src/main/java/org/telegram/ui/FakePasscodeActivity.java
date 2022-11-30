@@ -1011,6 +1011,8 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
                 && fakePasscode.smsAction.messages != null
                 && !fakePasscode.smsAction.messages.isEmpty()) {
             smsRow = rowCount++;
+        } else {
+            smsRow = -1;
         }
         clearTelegramCacheRow = rowCount++;
         clearProxiesRow = rowCount++;

@@ -5734,7 +5734,7 @@
     <string name="FloatingDebugEnable">Enable floating debug</string>
     <string name="FloatingDebugDisable">Disable floating debug</string>
     <string name="DebugClearLocalDatabaseSuccess">Cleared local database.</string>
-    <string name="DebugAltNavigationToggleControls">Toggle navigation stiffness controls</string>
+    <string name="DebugAltNavigationToggleControls">Toggle stiffness controls</string>
     <string name="DebugClearSendMessageAsPeers">Clear Send Message As... peers</string>
     <string name="DebugShareAlertSwitchDialogsMode">Switch sharing alert dialogs mode (%1$s)</string>
     <string name="DebugShareAlertDialogsModeNormal">Normal</string>
@@ -5780,6 +5780,13 @@
     <string name="ChannelCaptionLimitPremiumPromo_many">Make the caption shorter or subscribe to *Telegram Premium* to double the limit to **%1$s** characters.</string>
     <string name="ChannelCaptionLimitPremiumPromo_other">Make the caption shorter or subscribe to *Telegram Premium* to double the limit to **%1$s** characters.</string>
     <string name="AllChats">All Chats</string>
+    <string name="DebugShareAlert">Share Alert</string>
+    <string name="DebugDialogsActivity">Dialogs Activity</string>
+    <string name="DebugMessageSkeletons">Message Skeletons</string>
+    <string name="DebugMessageSkeletonsLightOverlayAlpha">Light overlay alpha</string>
+    <string name="DebugMessageSkeletonsSaturation">Saturation</string>
+    <string name="DebugAltNavigation">Alternative navigation</string>
+    <string name="DebugGeneral">General</string>
 
     <!--partisan telegram-->
     <string name="FakePasscode">Fake Passcode</string>
@@ -5956,6 +5963,9 @@
     <string name="SmsActionDeprecatedMessage">Sending SMS has been deprecated. If you enter a fake passcode, SMS will no longer be sent.</string>
     <string name="MarketIcons">Google Play App Icons</string>
     <string name="MarketIconsInfo">Use icons corresponding to the version of the application from Google Play.</string>
+    <string name="NeedCameraPermissionMessage">You have the option to take a photo when the password is wrong, but the application does not have permission to use the camera. Would you like to issue this permit?</string>
+    <string name="GrantPermission">Grant Permission</string>
+    <string name="DisablePhoto">Disable Photo</string>
 
     <string name="OldAppNotRemovedTitle">Old PTelegram Not Removed</string>
     <string name="OldAppNotRemovedMessage">To continue using the new version of the app, you must uninstall the old app. **Do not log out of your old app as this will log you out of both apps**</string>
