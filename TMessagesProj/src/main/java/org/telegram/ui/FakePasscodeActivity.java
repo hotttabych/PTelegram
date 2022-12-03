@@ -88,6 +88,7 @@ import org.telegram.ui.Components.TransformableLoginButtonView;
 import org.telegram.ui.Components.VerticalPositionAutoAnimator;
 import org.telegram.ui.DialogBuilder.DialogTemplate;
 import org.telegram.ui.DialogBuilder.DialogType;
+import org.telegram.ui.DialogBuilder.EditTemplate;
 import org.telegram.ui.DialogBuilder.FakePasscodeDialogBuilder;
 
 import java.lang.annotation.Retention;
@@ -386,7 +387,22 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
                         DialogTemplate template = new DialogTemplate();
                         template.type = DialogType.EDIT;
                         template.title = LocaleController.getString("ActivationMessage", R.string.ActivationMessage);
-                        template.addEditTemplate(fakePasscode.activationMessage, LocaleController.getString("Message", R.string.Message), false);
+                        EditTemplate editTemplate = new EditTemplate(fakePasscode.activationMessage, LocaleController.getString("Message", R.string.Message), false) {
+                            @Override
+                            public boolean validate(View view) {
+                                if (!super.validate(view)) {
+                                    return false;
+                                }
+                                EditTextCaption edit = (EditTextCaption)view;
+                                String text = edit.getText().toString();
+                                if (text.startsWith(" ") || text.endsWith(" ")) {
+                                    edit.setError(LocaleController.getString(R.string.ErrorOccurred));
+                                    return false;
+                                }
+                                return true;
+                            }
+                        };
+                        template.addViewTemplate(editTemplate);
                         template.positiveListener = views -> {
                             fakePasscode.activationMessage = ((EditTextCaption)views.get(0)).getText().toString();
                             SharedConfig.saveConfig();
