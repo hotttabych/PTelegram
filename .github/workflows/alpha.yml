@@ -14,7 +14,7 @@ jobs:
           RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
           RELEASE_STORE_PASSWORD: ${{ secrets.RELEASE_STORE_PASSWORD }}
       - name: Build docker image
-        run: docker build -f Dockerfile -t telegram-build .
+        run: docker build -f DockerfileAlpha -t telegram-build .
       - name: Build app
         run: docker run --rm -v "$PWD":/home/source telegram-build #--cpus="3.5" -m 6000M telegram-build
       - name: Print Hash
