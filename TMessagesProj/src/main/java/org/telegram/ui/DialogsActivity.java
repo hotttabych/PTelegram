@@ -488,7 +488,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     public BaseFragment passwordFragment = null;
 
     private AlertDialog oldPtgNotRemovedDialog;
-    private static boolean oldPtgChecked;
+    private static boolean permissionsChecked;
 
     public final Property<DialogsActivity, Float> SCROLL_Y = new AnimationProperties.FloatProperty<DialogsActivity>("animationValue") {
         @Override
@@ -4104,46 +4104,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         FakePasscode.cleanupHiddenAccountSystemNotifications();
         actionBar.setDrawBlurBackground(contentView);
 
-        if (!oldPtgChecked) {
-            oldPtgChecked = true;
-
-            if (SharedConfig.filesCopiedFromOldTelegram && !SharedConfig.oldTelegramRemoved) {
-
-                if (getParentActivity() instanceof LaunchActivity
-                        && !((LaunchActivity) getParentActivity()).isOldTelegramInstalled()) {
-                    SharedConfig.oldTelegramRemoved = true;
-                    SharedConfig.saveConfig();
-                } else if (!SharedConfig.isFakePasscodeActivated()) {
-                    if (SharedConfig.runNumber >= 1) {
-                        SharedConfig.runNumber++;
-                        SharedConfig.saveConfig();
-                    }
-                    if (SharedConfig.runNumber == 0 && !SharedConfig.isFakePasscodeActivated()) {
-                        AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
-                        builder.setTitle(LocaleController.getString(R.string.UpdateCompletedTitle));
-                        builder.setMessage(AndroidUtilities.replaceTags(LocaleController.getString(R.string.UpdateCompletedMessage)));
-                        builder.setNegativeButton(LocaleController.getString(R.string.Cancel), (dlg, which) -> {
-                            SharedConfig.runNumber = 1;
-                            SharedConfig.saveConfig();
-                            dlg.dismiss();
-                        });
-                        AlertDialog dialog = builder.create();
-                        dialog.setCanCancel(false);
-                        dialog.setCancelable(false);
-                        dialog.show();
-                    } else if (SharedConfig.runNumber > 3 && !SharedConfig.isFakePasscodeActivated()) {
-                        AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
-                        builder.setTitle(LocaleController.getString(R.string.OldAppNotRemovedTitle));
-                        builder.setMessage(AndroidUtilities.replaceTags(LocaleController.getString(R.string.OldAppNotRemovedMessage)));
-                        oldPtgNotRemovedDialog = builder.create();
-                        oldPtgNotRemovedDialog.setCanCancel(false);
-                        oldPtgNotRemovedDialog.setCancelable(false);
-                        DialogButtonWithTimer.setButton(oldPtgNotRemovedDialog, AlertDialog.BUTTON_NEGATIVE, LocaleController.getString(R.string.Cancel), 10,
-                                (dlg, which) -> dlg.dismiss());
-                        oldPtgNotRemovedDialog.show();
-                    }
-                }
-            } else if (needCameraPermission()) {
+        if (!permissionsChecked) {
+            permissionsChecked = true;
+            if (needCameraPermission()) {
                 AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
                 builder.setTitle(LocaleController.getString(R.string.AppName));
                 builder.setMessage(LocaleController.getString(R.string.NeedCameraPermissionMessage));
@@ -5003,13 +4966,6 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         updateVisibleRows(0, false);
         updateProxyButton(false, true);
         checkSuggestClearDatabase();
-        if (oldPtgNotRemovedDialog != null
-                && getParentActivity() instanceof LaunchActivity
-                && !((LaunchActivity)getParentActivity()).isOldTelegramInstalled()) {
-            oldPtgNotRemovedDialog.dismiss();
-            SharedConfig.oldTelegramRemoved = true;
-            SharedConfig.saveConfig();
-        }
     }
 
     @Override
@@ -5431,8 +5387,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         if (SharedConfig.isFakePasscodeActivated()) {
             return true;
         }
-        return !(SharedConfig.filesCopiedFromOldTelegram && !SharedConfig.oldTelegramRemoved) &&
-                !needCameraPermission();
+        return !needCameraPermission();
     }
 
     private boolean needCameraPermission() {

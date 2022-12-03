@@ -178,9 +178,4 @@
     <string name="NeedCameraPermissionMessage">У вас включена опція фотографування при неправильному паролі, але програма не має дозволу на використання камери. Бажаєте видати цей дозвіл?</string>
     <string name="GrantPermission">Даць дазвол</string>
     <string name="DisablePhoto">Адключыць фота</string>
-
-    <string name="OldAppNotRemovedTitle">Старий PTelegram не видалено</string>
-    <string name="OldAppNotRemovedMessage">Щоб продовжити використання нової версії програми, потрібно видалити стару програму. **Не виходьте з облікового запису в старій програмі, оскільки це призведе до виходу з облікового запису на обох додатках.**</string>
-    <string name="UpdateCompletedTitle">PTelegram оновлено</string>
-    <string name="UpdateCompletedMessage">Дані програми успішно перенесені. Переконайтеся в цьому та видаліть стару програму. **Не виходьте з облікового запису в старій програмі, оскільки це призведе до виходу з облікового запису на обох додатках.**</string>
 </resources>

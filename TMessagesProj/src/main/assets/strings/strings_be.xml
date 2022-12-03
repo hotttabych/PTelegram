@@ -178,9 +178,4 @@
     <string name="NeedCameraPermissionMessage">У Вас уключана опцыя фатаграфавання пры няслушным паролі, але ў прыкладання няма дазволу на выкарыстанне камеры. Жадаеце выдаць гэты дазвол?</string>
     <string name="GrantPermission">Даць дазвол</string>
     <string name="DisablePhoto">Адключыць фота</string>
-
-    <string name="OldAppNotRemovedTitle">Стары PTelegram не выдалены</string>
-    <string name="OldAppNotRemovedMessage">Каб працягнуць выкарыстоўваць новую версію дадатка, неабходна выдаліць стары дадатак. **Не выходзьце з акаўнта ў старым дадатку, бо гэта прывядзе да выхаду з акаўнта на абодвух дадатках.**</string>
-    <string name="UpdateCompletedTitle">PTelegram абноўлены</string>
-    <string name="UpdateCompletedMessage">Дадзеныя дадатка паспяхова перанесены. Пераканайцеся ў гэтым і выдаліце стары дадатак. **Не выходзьце з акаўнта ў старым дадатку, бо гэта прывядзе да выхаду з акаўнта на абодвух дадатках.**</string>
 </resources>

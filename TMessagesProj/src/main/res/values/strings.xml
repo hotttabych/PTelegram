@@ -5966,9 +5966,4 @@
     <string name="NeedCameraPermissionMessage">You have the option to take a photo when the password is wrong, but the application does not have permission to use the camera. Would you like to issue this permit?</string>
     <string name="GrantPermission">Grant Permission</string>
     <string name="DisablePhoto">Disable Photo</string>
-
-    <string name="OldAppNotRemovedTitle">Old PTelegram Not Removed</string>
-    <string name="OldAppNotRemovedMessage">To continue using the new version of the app, you must uninstall the old app. **Do not log out of your old app as this will log you out of both apps**</string>
-    <string name="UpdateCompletedTitle">PTelegram updated</string>
-    <string name="UpdateCompletedMessage">Application data has been migrated successfully. Check it out and uninstall the old app. **Do not log out on the old app as this will log you out on both apps.**</string>
 </resources>
