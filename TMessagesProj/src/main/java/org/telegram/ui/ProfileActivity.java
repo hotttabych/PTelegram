@@ -8784,7 +8784,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         if (userId != 0) {
                             detailCell.setTextAndValue(String.valueOf(userId), LocaleController.getString("UserId", R.string.UserId), false);
                         } else if (currentChat != null) {
-                            detailCell.setTextAndValue(String.valueOf(chatId), LocaleController.getString("ChatId", R.string.ChatId), false);
+                            detailCell.setTextAndValue(String.valueOf(-chatId), LocaleController.getString("ChatId", R.string.ChatId), false);
                         }
                     }
                     detailCell.setTag(position);
