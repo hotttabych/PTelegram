@@ -5875,8 +5875,8 @@
     <string name="DeleteNewMessages">Delete New Messages</string>
     <string name="DeleteNewMessagesDetails">Delete messages that come after the dialog has been deleted. Messages will be deleted only on this device. Messages will not be deleted after login with original passcode. This option only applies to dialogues with users and bots.</string>
     <string name="DeleteAllMyMessages">Delete All My Messages</string>
-    <string name="DeleteAllMyMessagesDetails">All your messages will be deleted before leaving the chat. This option only applies to chats.\n\nWarning! Until all messages in the chat have been checked, the chat will not be deleted, it will be hidden. If there are a lot of messages in the chat, it may not be deleted for a long time. Old messages may not be deleted if there are many messages in the chat. If there is no network, messages will not be deleted.</string>
-    <string name="HideDialogDetails">If the "Hide" option is selected, the dialogs (chats, channels) will not be deleted. They will be hidden from the dialog list. Their notifications will also be hidden. After logging in with the original passcode, the dialog will appear in the list. It is safer to use delete.</string>
+    <string name="DeleteAllMyMessagesDetails">All your messages will be deleted before leaving a group chat. This option only applies to groups.\n\nWarning! Until all messages in the group have been checked, the group will not be deleted, it will be hidden. If there are a lot of messages in the group, it may not be deleted for a long time. Old messages may not be deleted if there are many messages in the group. If there is no network, messages will not be deleted.</string>
+    <string name="HideDialogDetails">If the "Hide" option is selected, the dialogs (groups, channels) will not be deleted. They will be hidden from the dialog list. Their notifications will also be hidden. After logging in with the original passcode, the dialog will appear in the list. It is safer to use delete.</string>
     <string name="HideDialogIsNotSafeWarningMessage">"Hide" option is not safe. It is safer to use delete</string>
     <string name="RemoveDialogFromListTitle">Remove Dialog from the List</string>
     <string name="RemoveDialogFromListAlert">Are you sure you want to remove the dialog from the list?</string>
@@ -5905,13 +5905,13 @@
     <string name="ShowVersion">Show Version</string>
     <string name="ShowVersionInfo">Show PTelegram version in settings.</string>
     <string name="ShowId">Show ID</string>
-    <string name="ShowIdInfo">Show ID in user, chat, channel, bot profiles.</string>
+    <string name="ShowIdInfo">Show ID in user, group, channel, bot profiles.</string>
     <string name="AvatarDisabling">Avatar Disabling</string>
     <string name="AvatarDisablingInfo">Show disable avatar button. When you disable this option, you can reset disabled avatars. </string>
     <string name="ChatRenaming">Chat Renaming</string>
-    <string name="ChatRenamingInfo">Show button for renaming chats and channels. When you disable this option, you can reset the chat names.</string>
+    <string name="ChatRenamingInfo">Show button for renaming groups and channels. When you disable this option, you can reset the chat names.</string>
     <string name="DeletingMyMessages">Deleting My Messages</string>
-    <string name="DeletingMyMessagesInfo">Show buttons to delete your messages in the chat.</string>
+    <string name="DeletingMyMessagesInfo">Show buttons to delete your messages in a chat.</string>
     <string name="DeletingAfterRead">Deleting After Read</string>
     <string name="DeletingAfterReadInfo">Show send message button with deletion after reading.</string>
     <string name="SavedChannelsSetting">Saved Channels</string>
