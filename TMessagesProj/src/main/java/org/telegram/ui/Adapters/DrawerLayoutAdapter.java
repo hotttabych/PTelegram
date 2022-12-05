@@ -45,6 +45,7 @@ public class DrawerLayoutAdapter extends RecyclerListView.SelectionAdapter {
     private ArrayList<Item> items = new ArrayList<>(11);
     private ArrayList<Integer> accountNumbers = new ArrayList<>();
     private boolean accountsShown;
+    private boolean allAccountsShown;
     public DrawerProfileCell profileCell;
     private SideMenultItemAnimator itemAnimator;
     private boolean hasGps;
@@ -65,6 +66,9 @@ public class DrawerLayoutAdapter extends RecyclerListView.SelectionAdapter {
 
     private int getAccountRowsCount() {
         int count = accountNumbers.size() + 1;
+        if (!allAccountsShown && accountNumbers.size() > 3) {
+            count = 3 + 1 + 1; // accounts + "More" + divider
+        }
         if (accountNumbers.size() < getMaxAccountCount()) {
             count++;
         }
@@ -84,6 +88,7 @@ public class DrawerLayoutAdapter extends RecyclerListView.SelectionAdapter {
         if (accountsShown == value || itemAnimator.isRunning()) {
             return;
         }
+        int oldAccountRowsCount = getAccountRowsCount();
         accountsShown = value;
         if (profileCell != null) {
             profileCell.setAccountsShown(accountsShown, animated);
@@ -91,18 +96,31 @@ public class DrawerLayoutAdapter extends RecyclerListView.SelectionAdapter {
         MessagesController.getGlobalMainSettings().edit().putBoolean("accountsShown", accountsShown).commit();
         if (animated) {
             itemAnimator.setShouldClipChildren(false);
-            if (accountsShown) {
-                notifyItemRangeInserted(2, getAccountRowsCount());
+            if (!accountsShown) {
+                notifyItemRangeRemoved(2, oldAccountRowsCount);
             } else {
-                notifyItemRangeRemoved(2, getAccountRowsCount());
+                notifyItemRangeInserted(2, getAccountRowsCount());
             }
         } else {
             notifyDataSetChanged();
         }
     }
 
+    public void setAllAccountsShown(boolean value) {
+        if (allAccountsShown == value || itemAnimator.isRunning()) {
+            return;
+        }
+        int oldAccountRowsCount = getAccountRowsCount();
+        allAccountsShown = value;
+        notifyDataSetChanged();
+    }
+
     public boolean isAccountsShown() {
         return accountsShown;
+    }
+
+    public boolean isAllAccountsShown() {
+        return allAccountsShown;
     }
 
     private View.OnClickListener onPremiumDrawableClick;
@@ -190,6 +208,10 @@ public class DrawerLayoutAdapter extends RecyclerListView.SelectionAdapter {
                 DrawerActionCell drawerActionCell = (DrawerActionCell) holder.itemView;
                 position -= 2;
                 if (accountsShown) {
+                    if (position < getAccountRowsCount()) {
+                        drawerActionCell.setTextAndIcon(101, LocaleController.getString(R.string.PremiumMore), R.drawable.msg_expand, 0);
+                        break;
+                    }
                     position -= getAccountRowsCount();
                 }
                 items.get(position).bind(drawerActionCell);
@@ -213,17 +235,33 @@ public class DrawerLayoutAdapter extends RecyclerListView.SelectionAdapter {
         }
         i -= 2;
         if (accountsShown) {
-            if (i < accountNumbers.size()) {
-                return 4;
-            } else {
-                if (accountNumbers.size() < getMaxAccountCount()) {
-                    if (i == accountNumbers.size()){
-                        return 5;
-                    } else if (i == accountNumbers.size() + 1) {
-                        return 2;
-                    }
+            if (allAccountsShown) {
+                if (i < accountNumbers.size()) {
+                    return 4;
                 } else {
-                    if (i == accountNumbers.size()) {
+                    if (accountNumbers.size() < getMaxAccountCount()) {
+                        if (i == accountNumbers.size()){
+                            return 5;
+                        } else if (i == accountNumbers.size() + 1) {
+                            return 2;
+                        }
+                    } else {
+                        if (i == accountNumbers.size()) {
+                            return 2;
+                        }
+                    }
+                }
+            } else {
+                if (i < accountNumbers.size() && i < 3) {
+                    return 4;
+                } else {
+                    if (i == 3 && accountNumbers.size() > 3) {
+                        return 3;
+                    } else if (accountNumbers.size() <= 3 && i == accountNumbers.size() ||
+                            accountNumbers.size() > 3 && i == 4) {
+                        return 5;
+                    } else if (accountNumbers.size() <= 3 && i == accountNumbers.size() + 1 ||
+                            accountNumbers.size() > 3 && i == 5) {
                         return 2;
                     }
                 }
@@ -362,6 +400,9 @@ public class DrawerLayoutAdapter extends RecyclerListView.SelectionAdapter {
     public int getId(int position) {
         position -= 2;
         if (accountsShown) {
+            if (position < getAccountRowsCount()) {
+                return 101;
+            }
             position -= getAccountRowsCount();
         }
         if (position < 0 || position >= items.size()) {
@@ -381,6 +422,9 @@ public class DrawerLayoutAdapter extends RecyclerListView.SelectionAdapter {
     public int getLastAccountPosition() {
         if (!accountsShown) {
             return RecyclerView.NO_POSITION;
+        }
+        if (!allAccountsShown && accountNumbers.size() > 3) {
+            return 1 + 3;
         }
         return 1 + accountNumbers.size();
     }

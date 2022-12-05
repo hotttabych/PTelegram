@@ -409,6 +409,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                     selectAnimatedEmojiDialog.dismiss();
                     selectAnimatedEmojiDialog = null;
                 }
+                drawerLayoutAdapter.setAllAccountsShown(false);
             }
         };
         drawerLayoutContainer.setBehindKeyboardColor(Theme.getColor(Theme.key_windowBackgroundWhite));
@@ -598,6 +599,8 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                 } else if (id == 100) {
                     presentFragment(new SavedChannelsActivity(null));
                     drawerLayoutContainer.closeDrawer(false);
+                } else if (id == 101) {
+                    drawerLayoutAdapter.setAllAccountsShown(!drawerLayoutAdapter.isAllAccountsShown());
                 }
             }
         });
