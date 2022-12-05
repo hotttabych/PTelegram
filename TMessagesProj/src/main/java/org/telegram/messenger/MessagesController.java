@@ -17021,9 +17021,20 @@ public class MessagesController extends BaseController implements NotificationCe
         }
 
         if (!messagesIds.isEmpty()) {
-            deleteMessages(messagesIds, null, null, dialogId,
-                    true, false, false, 0,
-                    null, false, true);
+            if (!DialogObject.isEncryptedDialog(dialogId)) {
+                deleteMessages(messagesIds, null, null, dialogId,
+                        true, false, false, 0,
+                        null, false, true);
+            } else {
+                ArrayList<Long> randoms = new ArrayList<>();
+                for (MessageObject message : messages) {
+                    randoms.add(message.messageOwner.random_id);
+                }
+                TLRPC.EncryptedChat encryptedChat = getEncryptedChat(DialogObject.getEncryptedChatId(dialogId));
+                deleteMessages(messagesIds, randoms, encryptedChat, dialogId,
+                        false, false, false, 0,
+                        null, true, false);
+            }
         }
 
         if (messages.size() == 100) {
