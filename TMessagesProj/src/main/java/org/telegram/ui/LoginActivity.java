@@ -354,6 +354,10 @@ public class LoginActivity extends BaseFragment {
                 if (isGoodPrivacy()) {
                     checkTwoStepVerification();
                 } else {
+                    Context context = getParentActivity();
+                    if (context == null) {
+                        return;
+                    }
                     AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
                     builder.setTitle(LocaleController.getString("PrivacyTitle", R.string.PrivacyTitle));
                     builder.setMessage(LocaleController.getString("MaxPrivacyInfo", R.string.MaxPrivacyInfo));
