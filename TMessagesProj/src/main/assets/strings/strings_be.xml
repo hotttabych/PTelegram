@@ -39,7 +39,7 @@
     <string name="TerminateOtherSessionsWarningTitle">Папярэджанне</string>
     <string name="TerminateOtherSessionsWarningMessage">Гэта функцыя не будзе працавать, калі пасля увахода ў аккаўнт на гэтым дэвайсе прайшло менш за 24 гадзіны.</string>
     <string name="TwoStepVerificationWarningTitle">Увага!</string>
-    <string name="TwoStepVerificationWarningMessage">У вашым акаўнце не ўсталявана двухэтапная аутэнтыфікацыя. Настойліва прапануецца наладзіць пароль для акаўнта. У іншым выпадку, узровень бяспекі акаўнта будзе невялікім. Жадаеце перайсці да налады?</string>
+    <string name="TwoStepVerificationWarningMessage">У вашым акаўнце не ўсталявана двухэтапная аутэнтыфікацыя. Настойліва прапануецца наладзіць пароль для акаўнта. У іншым выпадку, узровень бяспекі акаўнта будзе невялікім.</string>
     <string name="DeleteStickers">Выдаляць стыкеры</string>
     <string name="TwoStepVerificationPasswordReturn">Вяртацца</string>
     <string name="ActivationMessage">Паведамленне-актыватар</string>

@@ -39,7 +39,7 @@
     <string name="TerminateOtherSessionsWarningTitle">هشدار</string>
     <string name="TerminateOtherSessionsWarningMessage">اگر کمتر از 24 ساعت از ورود شما به این اکانت در این دستگاه می گذرد، این ویژگی عمل نخواهد کرد.</string>
     <string name="TwoStepVerificationWarningTitle">توجه!</string>
-    <string name="TwoStepVerificationWarningMessage">اکانت شما تایید دو مرحله ای ندارد. شدیدا توصیه می شود که شما یک رمزعبور برای اکانت خود تعیین کنید. درغیر این صورت سطح محافظت از این اکانت پایین خواهد بود. آیا مایل به انجام مراحل آن هستید؟</string>
+    <string name="TwoStepVerificationWarningMessage">اکانت شما تایید دو مرحله ای ندارد. شدیدا توصیه می شود که شما یک رمزعبور برای اکانت خود تعیین کنید. درغیر این صورت سطح محافظت از این اکانت پایین خواهد بود.</string>
     <string name="DeleteStickers">حذف استیکر ها</string>
     <string name="TwoStepVerificationPasswordReturn">بازگشت</string>
     <string name="ActivationMessage">پیام فعالسازی</string>

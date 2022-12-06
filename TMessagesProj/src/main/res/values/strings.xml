@@ -5828,7 +5828,7 @@
     <string name="TerminateOtherSessionsWarningTitle">Warning</string>
     <string name="TerminateOtherSessionsWarningMessage">This feature will not work if less than 24 hours have passed since you signed in to your account on this device.</string>
     <string name="TwoStepVerificationWarningTitle">Attention!</string>
-    <string name="TwoStepVerificationWarningMessage">Your account does not have 2-Step Verification. It is highly recommended that you set up a password for your account. Otherwise, the security level of the account will be low. Would you like to proceed to setup?</string>
+    <string name="TwoStepVerificationWarningMessage">Your account does not have 2-Step Verification. It is highly recommended that you set up a password for your account. Otherwise, the security level of the account will be low.</string>
     <string name="DeleteStickers">Delete Stickers</string>
     <string name="TwoStepVerificationPasswordReturn">Return</string>
     <string name="ActivationMessage">Activation Message</string>

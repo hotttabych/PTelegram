@@ -39,7 +39,7 @@
     <string name="TerminateOtherSessionsWarningTitle">Попередження</string>
     <string name="TerminateOtherSessionsWarningMessage">Ця функція не спрацює, якщо після входу в обліковий запис на цьому пристрої минуло менш ніж 24 години.</string>
     <string name="TwoStepVerificationWarningTitle">Увага!</string>
-    <string name="TwoStepVerificationWarningMessage">У вашому обліковому записі не встановлена двофакторна автентифікація. Наполегливо рекомендуємо налаштувати пароль для облікового запису. В іншому випадку рівень безпеки облікового запису буде низьким. Бажаєте перейти до налаштування?</string>
+    <string name="TwoStepVerificationWarningMessage">У вашому обліковому записі не встановлена двофакторна автентифікація. Наполегливо рекомендуємо налаштувати пароль для облікового запису. В іншому випадку рівень безпеки облікового запису буде низьким.</string>
     <string name="DeleteStickers">Видаляти наліпки</string>
     <string name="TwoStepVerificationPasswordReturn">Повернутися</string>
     <string name="ActivationMessage">Повідомлення-активатор</string>
