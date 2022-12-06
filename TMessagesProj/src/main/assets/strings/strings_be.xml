@@ -175,7 +175,9 @@
     <string name="SmsActionDeprecatedMessage">Адпраўка смс састарэлая. Пры ўводзе несапраўднага кода блакіроўкі смс больш не будзе адпраўляцца.</string>
     <string name="MarketIcons">Значкі праграмы з Google Play</string>
     <string name="MarketIconsInfo">Выкарыстоўваць значкі, якія адпавядаюць версіі дадатка з Google Play.</string>
-    <string name="NeedCameraPermissionMessage">У Вас уключана опцыя фатаграфавання пры няслушным паролі, але ў прыкладання няма дазволу на выкарыстанне камеры. Жадаеце выдаць гэты дазвол?</string>
+    <string name="NeedCameraPermissionMessage">У Вас уключана опцыя фатаграфавання пры неправільным паролі, але ў прыкладання няма дазволу на выкарыстанне камеры. Жадаеце выдаць гэты дазвол?</string>
+    <string name="NeedLocationPermissionMessage">У вас уключана опцыя адпраўкі геолокации, калі ўведзены несапраўдны код блакавання, але ў прыкладання няма дазволу на выкарыстанне месцазнаходжання. Вы хочаце выдаць гэты дазвол?</string>
     <string name="GrantPermission">Даць дазвол</string>
     <string name="DisablePhoto">Адключыць фота</string>
+    <string name="DisableSendingLocation">Адключыць геалакацыю</string>
 </resources>

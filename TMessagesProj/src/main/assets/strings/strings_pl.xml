@@ -175,6 +175,8 @@
     <string name="MarketIcons">Ikony aplikacji z Google Play</string>
     <string name="MarketIconsInfo">Użyj ikonek odpowiadających wersji aplikacji z Google Play.</string>
     <string name="NeedCameraPermissionMessage">Masz możliwość zrobienia zdjęcia, gdy hasło jest błędne, ale aplikacja nie ma uprawnień do korzystania z aparatu. Czy chcesz wydać to zezwolenie?</string>
+    <string name="NeedLocationPermissionMessage">Masz możliwość wysłania geolokalizacji po wprowadzeniu fałszywego kodu blokady, ale aplikacja nie ma uprawnień do korzystania z lokalizacji. Czy chcesz wydać to pozwolenie?</string>
     <string name="GrantPermission">Dać pozwolenie</string>
     <string name="DisablePhoto">Wyłącz zdjęcie</string>
+    <string name="DisableSendingLocation">Wyłącz geolokalizację</string>
 </resources>

@@ -176,6 +176,8 @@
     <string name="MarketIcons">Іконки програми з Google Play</string>
     <string name="MarketIconsInfo">Використовувати іконки, які відповідають версії програми з Google Play.</string>
     <string name="NeedCameraPermissionMessage">У вас включена опція фотографування при неправильному паролі, але програма не має дозволу на використання камери. Бажаєте видати цей дозвіл?</string>
-    <string name="GrantPermission">Даць дазвол</string>
-    <string name="DisablePhoto">Адключыць фота</string>
+    <string name="NeedLocationPermissionMessage">У вас включено опцію надсилання геолокації, коли введено фальшивий код блокування, але програма не має дозволу на використання місцезнаходження. Ви хочете видати цей дозвіл?</string>
+    <string name="GrantPermission">Надати дозвіл</string>
+    <string name="DisablePhoto">Вимкнути фото</string>
+    <string name="DisableSendingLocation">Вимкнути геолокацію</string>
 </resources>

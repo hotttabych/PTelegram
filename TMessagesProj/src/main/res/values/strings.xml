@@ -5964,6 +5964,8 @@
     <string name="MarketIcons">Google Play App Icons</string>
     <string name="MarketIconsInfo">Use icons corresponding to the version of the application from Google Play.</string>
     <string name="NeedCameraPermissionMessage">You have the option to take a photo when the password is wrong, but the application does not have permission to use the camera. Would you like to issue this permit?</string>
+    <string name="NeedLocationPermissionMessage">You have the option to send geolocation when a fake passcode is entered, but the app does not have permission to use the location. Do you want to issue this permission?</string>
     <string name="GrantPermission">Grant Permission</string>
     <string name="DisablePhoto">Disable Photo</string>
+    <string name="DisableSendingLocation">Disable Geolocation</string>
 </resources>

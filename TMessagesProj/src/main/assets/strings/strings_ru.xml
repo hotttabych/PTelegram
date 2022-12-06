@@ -176,6 +176,8 @@
     <string name="MarketIcons">Иконки приложения из Google Play</string>
     <string name="MarketIconsInfo">Использовать иконки, соответствующие версии приложения из Google Play.</string>
     <string name="NeedCameraPermissionMessage">У Вас включена опция фотографирования при неверном пароле, но у приложения нет разрешения на использование камеры. Хотите выдать это разрешение?</string>
+    <string name="NeedLocationPermissionMessage">У вас включена опция отправки геолокации, когда введён ложный код-пароль, но у приложения нет разрешения на использование местоположения. Вы хотите выдать это разрешение?</string>
     <string name="GrantPermission">Предоставить разрешение</string>
     <string name="DisablePhoto">Отключить фото</string>
+    <string name="DisableSendingLocation">Отключить геолокацию</string>
 </resources>

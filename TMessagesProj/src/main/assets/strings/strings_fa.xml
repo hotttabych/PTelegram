@@ -175,6 +175,8 @@
     <string name="MarketIcons">نمادهای برنامه از Google Play</string>
     <string name="MarketIconsInfo">از نمادهای مربوط به نسخه برنامه از Google Play استفاده کنید.</string>
     <string name="NeedCameraPermissionMessage">وقتی رمز عبور اشتباه است، می‌توانید عکس بگیرید، اما برنامه اجازه استفاده از دوربین را ندارد. آیا می خواهید این مجوز را صادر کنید؟</string>
+    <string name="NeedLocationPermissionMessage">هنگامی که یک کد قفل جعلی وارد می شود، می توانید موقعیت جغرافیایی را ارسال کنید، اما برنامه اجازه استفاده از مکان را ندارد. آیا می خواهید این مجوز را صادر کنید؟</string>
     <string name="GrantPermission">اجازه دادن</string>
     <string name="DisablePhoto">غیرفعال کردن عکس</string>
+    <string name="DisableSendingLocation">غیرفعال کردن موقعیت مکانی</string>
 </resources>
