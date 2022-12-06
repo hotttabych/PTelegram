@@ -370,6 +370,8 @@ public class GroupCreateActivity extends BaseFragment implements NotificationCen
         getNotificationCenter().addObserver(this, NotificationCenter.contactsDidLoad);
         getNotificationCenter().addObserver(this, NotificationCenter.updateInterfaces);
         getNotificationCenter().addObserver(this, NotificationCenter.chatDidCreated);
+
+        getUserConfig().loadGlobalTTl();
         return super.onFragmentCreate();
     }
 
@@ -972,11 +974,7 @@ public class GroupCreateActivity extends BaseFragment implements NotificationCen
                 return false;
             }
             AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
-            if (selectedContacts.size() == 1) {
-                builder.setTitle(LocaleController.getString("AddOneMemberAlertTitle", R.string.AddOneMemberAlertTitle));
-            } else {
-                builder.setTitle(LocaleController.formatString("AddMembersAlertTitle", R.string.AddMembersAlertTitle, LocaleController.formatPluralString("Members", selectedContacts.size())));
-            }
+            builder.setTitle(LocaleController.formatPluralString("AddManyMembersAlertTitle", selectedContacts.size()));
             StringBuilder stringBuilder = new StringBuilder();
             for (int a = 0; a < selectedContacts.size(); a++) {
                 long uid = selectedContacts.keyAt(a);
@@ -991,11 +989,7 @@ public class GroupCreateActivity extends BaseFragment implements NotificationCen
             }
             TLRPC.Chat chat = getMessagesController().getChat(chatId != 0 ? chatId : channelId);
             if (selectedContacts.size() > 5) {
-                String title = chat == null ? "" : UserConfig.getChatTitleOverride(currentAccount, chat.id);
-                if (title == null) {
-                    title = chat.title;
-                }
-                SpannableStringBuilder spannableStringBuilder = new SpannableStringBuilder(AndroidUtilities.replaceTags(LocaleController.formatString("AddMembersAlertNamesText", R.string.AddMembersAlertNamesText, LocaleController.formatPluralString("Members", selectedContacts.size()),  title)));
+                SpannableStringBuilder spannableStringBuilder = new SpannableStringBuilder(AndroidUtilities.replaceTags(LocaleController.formatPluralString("AddManyMembersAlertNamesText", selectedContacts.size(), UserConfig.getChatTitleOverride(currentAccount, chat.id, chat.title))));
                 String countString = String.format("%d", selectedContacts.size());
                 int index = TextUtils.indexOf(spannableStringBuilder, countString);
                 if (index >= 0) {
@@ -1045,6 +1039,7 @@ public class GroupCreateActivity extends BaseFragment implements NotificationCen
                 getNotificationCenter().postNotificationName(NotificationCenter.closeChats);
                 Bundle args2 = new Bundle();
                 args2.putLong("chat_id", chatId);
+                args2.putBoolean("just_created_chat", true);
                 presentFragment(new ChatActivity(args2), true);
             } else {
                 if (!doneButtonVisible || selectedContacts.size() == 0) {
