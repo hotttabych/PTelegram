@@ -188,10 +188,6 @@ public class SessionCell extends FrameLayout {
 
         if (object instanceof TLRPC.TL_authorization) {
             TLRPC.TL_authorization session = (TLRPC.TL_authorization) object;
-            boolean isSessionOfThisApp = session.api_id == BuildVars.APP_ID;
-            nameTextView.setText(String.format(Locale.US, "%s %s",
-                    isSessionOfThisApp ? "Telegram Android" : session.app_name, session.app_version));
-
             imageView.setImageDrawable(createDrawable(session));
 
             StringBuilder stringBuilder = new StringBuilder();
@@ -233,7 +229,7 @@ public class SessionCell extends FrameLayout {
             detailExTextView.setText(spannableStringBuilder);
 
             stringBuilder = new StringBuilder();
-            stringBuilder.append(isSessionOfThisApp ? "Telegram Android" : session.app_name);
+            stringBuilder.append(session.api_id == BuildVars.APP_ID ? "Telegram Android" : session.app_name);
             stringBuilder.append(" ").append(session.app_version);
 
             detailTextView.setText(stringBuilder);
