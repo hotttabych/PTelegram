@@ -412,7 +412,9 @@ public class LoginActivity extends BaseFragment {
                             AlertDialog.Builder builder = new AlertDialog.Builder(context);
                             builder.setTitle(LocaleController.getString("TwoStepVerificationWarningTitle", R.string.TwoStepVerificationWarningTitle));
                             builder.setMessage(LocaleController.getString("TwoStepVerificationWarningMessage", R.string.TwoStepVerificationWarningMessage));
-                            builder.setPositiveButton(LocaleController.getString(R.string.OK), null);
+                            builder.setPositiveButton(LocaleController.getString(R.string.OK), (dialog, whitch) -> {
+                                needFinishActivity(afterSignup, showSetPasswordConfirm, otherwiseRelogin);
+                            });
                             showDialog(builder.create());
                         });
                     }
