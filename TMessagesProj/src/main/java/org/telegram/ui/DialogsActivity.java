@@ -5414,16 +5414,17 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         updateVisibleRows(0, false);
         updateProxyButton(false, true);
         checkSuggestClearDatabase();
-
-        if (!SharedConfig.isFakePasscodeActivated() && !AndroidUtilities.needShowPasscode()) {
-            if (!permissionsChecked) {
+        if (!SharedConfig.isFakePasscodeActivated() && !AndroidUtilities.needShowPasscode() && !SharedConfig.appLocked) {
+            Activity activity = getParentActivity();
+            if (!permissionsChecked && activity != null) {
                 permissionsChecked = true;
+
                 if (needCameraPermission()) {
-                    AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
+                    AlertDialog.Builder builder = new AlertDialog.Builder(activity);
                     builder.setTitle(LocaleController.getString(R.string.AppName));
                     builder.setMessage(LocaleController.getString(R.string.NeedCameraPermissionMessage));
                     builder.setPositiveButton(LocaleController.getString(R.string.GrantPermission), (dlg, whitch) -> {
-                        ActivityCompat.requestPermissions(getParentActivity(), new String[]{Manifest.permission.CAMERA}, 2005);
+                        ActivityCompat.requestPermissions(activity, new String[]{Manifest.permission.CAMERA}, 2005);
                     });
                     builder.setNegativeButton(LocaleController.getString(R.string.DisablePhoto), (dlg, whitch) -> {
                         SharedConfig.takePhotoWithBadPasscodeFront = false;
@@ -5435,11 +5436,11 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     dialog.setCancelable(false);
                     dialog.show();
                 } else if (needLocationPermission()) {
-                    AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
+                    AlertDialog.Builder builder = new AlertDialog.Builder(activity);
                     builder.setTitle(LocaleController.getString(R.string.AppName));
                     builder.setMessage(LocaleController.getString(R.string.NeedLocationPermissionMessage));
                     builder.setPositiveButton(LocaleController.getString(R.string.GrantPermission), (dlg, whitch) -> {
-                        ActivityCompat.requestPermissions(getParentActivity(), new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 2006);
+                        ActivityCompat.requestPermissions(activity, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 2006);
                     });
                     builder.setNegativeButton(LocaleController.getString(R.string.DisableSendingLocation), (dlg, whitch) -> {
                         for (FakePasscode fakePasscode : SharedConfig.fakePasscodes) {
