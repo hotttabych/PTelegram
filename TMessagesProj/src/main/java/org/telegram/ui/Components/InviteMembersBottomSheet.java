@@ -301,11 +301,7 @@ public class InviteMembersBottomSheet extends UsersAlertBase implements Notifica
                 dismiss();
             } else {
                 AlertDialog.Builder builder = new AlertDialog.Builder(activity);
-                if (selectedContacts.size() == 1) {
-                    builder.setTitle(LocaleController.getString("AddOneMemberAlertTitle", R.string.AddOneMemberAlertTitle));
-                } else {
-                    builder.setTitle(LocaleController.formatString("AddMembersAlertTitle", R.string.AddMembersAlertTitle, LocaleController.formatPluralString("Members", selectedContacts.size())));
-                }
+                builder.setTitle(LocaleController.formatPluralString("AddManyMembersAlertTitle", selectedContacts.size()));
                 StringBuilder stringBuilder = new StringBuilder();
                 for (int a = 0; a < selectedContacts.size(); a++) {
                     long uid = selectedContacts.keyAt(a);
@@ -325,6 +321,8 @@ public class InviteMembersBottomSheet extends UsersAlertBase implements Notifica
                         title = chat.title;
                     }
                     SpannableStringBuilder spannableStringBuilder = new SpannableStringBuilder(AndroidUtilities.replaceTags(LocaleController.formatString("AddMembersAlertNamesText", R.string.AddMembersAlertNamesText, LocaleController.formatPluralString("Members", selectedContacts.size()), title)));
+                    SpannableStringBuilder spannableStringBuilder = new SpannableStringBuilder(AndroidUtilities.replaceTags(LocaleController.formatPluralString("AddManyMembersAlertNamesText", selectedContacts.size(), title)));
+
                     String countString = String.format("%d", selectedContacts.size());
                     int index = TextUtils.indexOf(spannableStringBuilder, countString);
                     if (index >= 0) {
