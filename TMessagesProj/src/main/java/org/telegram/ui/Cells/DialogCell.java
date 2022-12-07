@@ -109,8 +109,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Optional;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Stack;
 import java.util.HashMap;
 import java.util.List;
@@ -2774,8 +2774,8 @@ public class DialogCell extends BaseCell {
                 avatarImage.setImage(null, null, avatarDrawable, null, user, 0);
             } else {
                 if (useFromUserAsAvatar && message != null) {
-                    avatarDrawable.setInfo(message.getFromPeerObject());
-                    avatarImage.setForUserOrChat(message.getFromPeerObject(), avatarDrawable);
+                    avatarDrawable.setInfo(message.getFromPeerObject(), currentAccount);
+                    avatarImage.setForUserOrChat(message.getFromPeerObject(), avatarDrawable, currentAccount);
                 } else if (user != null) {
                     avatarDrawable.setInfo(user, currentAccount);
                     if (UserObject.isReplyUser(user)) {

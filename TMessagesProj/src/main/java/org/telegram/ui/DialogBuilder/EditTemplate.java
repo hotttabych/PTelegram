@@ -11,11 +11,18 @@ import org.telegram.messenger.R;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.Components.EditTextCaption;
 
-public class
-EditTemplate implements ViewTemplate {
+public class EditTemplate implements ViewTemplate {
     String text;
     String name;
     boolean singleLine;
+
+    public EditTemplate() {}
+
+    public EditTemplate(String text, String name, boolean singleLine) {
+        this.text = text;
+        this.name = name;
+        this.singleLine = singleLine;
+    }
 
     @Override
     public View create(Context context) {

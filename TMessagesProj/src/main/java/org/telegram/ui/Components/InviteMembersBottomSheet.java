@@ -316,13 +316,7 @@ public class InviteMembersBottomSheet extends UsersAlertBase implements Notifica
                 }
                 TLRPC.Chat chat = MessagesController.getInstance(currentAccount).getChat(chatId);
                 if (selectedContacts.size() > 5) {
-                    String title = UserConfig.getChatTitleOverride(currentAccount, chat.id);
-                    if (title == null) {
-                        title = chat.title;
-                    }
-                    SpannableStringBuilder spannableStringBuilder = new SpannableStringBuilder(AndroidUtilities.replaceTags(LocaleController.formatString("AddMembersAlertNamesText", R.string.AddMembersAlertNamesText, LocaleController.formatPluralString("Members", selectedContacts.size()), title)));
-                    SpannableStringBuilder spannableStringBuilder = new SpannableStringBuilder(AndroidUtilities.replaceTags(LocaleController.formatPluralString("AddManyMembersAlertNamesText", selectedContacts.size(), title)));
-
+                    SpannableStringBuilder spannableStringBuilder = new SpannableStringBuilder(AndroidUtilities.replaceTags(LocaleController.formatPluralString("AddManyMembersAlertNamesText", selectedContacts.size(), UserConfig.getChatTitleOverride(currentAccount, chat.id, chat.title))));
                     String countString = String.format("%d", selectedContacts.size());
                     int index = TextUtils.indexOf(spannableStringBuilder, countString);
                     if (index >= 0) {

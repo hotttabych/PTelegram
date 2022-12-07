@@ -409,6 +409,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                     selectAnimatedEmojiDialog.dismiss();
                     selectAnimatedEmojiDialog = null;
                 }
+                drawerLayoutAdapter.setAllAccountsShown(false);
             }
         };
         drawerLayoutContainer.setBehindKeyboardColor(Theme.getColor(Theme.key_windowBackgroundWhite));
@@ -598,6 +599,8 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                 } else if (id == 100) {
                     presentFragment(new SavedChannelsActivity(null));
                     drawerLayoutContainer.closeDrawer(false);
+                } else if (id == 101) {
+                    drawerLayoutAdapter.setAllAccountsShown(!drawerLayoutAdapter.isAllAccountsShown());
                 }
             }
         });
@@ -1096,9 +1099,6 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
     }
 
     private BaseFragment getClientNotActivatedFragment() {
-        if (!SharedConfig.filesCopiedFromOldTelegram && isOldTelegramInstalled()) {
-            return new OldTelegramWarningActivity(getIntent().getBooleanExtra("fromOldTelegram", false));
-        }
         if (LoginActivity.loadCurrentState(false).getInt("currentViewNum", 0) != 0) {
             return new LoginActivity();
         }
@@ -5452,7 +5452,6 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
         }
 
         invalidateTabletMode();
-        checkOldTelegramIntent();
     }
 
     private void invalidateTabletMode() {
@@ -7083,62 +7082,6 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
             }
         } else {
             fileOrDirectory.delete();
-        }
-    }
-
-    public boolean isOldTelegramInstalled() {
-        PackageInfo packageInfo = getOldTelegramPackageInfo();
-        if (packageInfo != null) {
-            Signature[] signatures;
-            if (Build.VERSION.SDK_INT >= 28) {
-                signatures = packageInfo.signingInfo.getApkContentsSigners();
-            } else {
-                signatures = packageInfo.signatures;
-            }
-            if (signatures != null) {
-                for (final Signature sig : signatures) {
-                    try {
-                        MessageDigest hash = MessageDigest.getInstance("SHA-1");
-                        String thumbprint = Utilities.bytesToHex(hash.digest(sig.toByteArray()));
-                        return thumbprint.equalsIgnoreCase("B134DF916190F59F832BE4E1DE8354DC23444059");
-                    } catch (NoSuchAlgorithmException ignored) {
-                    }
-                }
-            }
-        }
-        return false;
-    }
-
-    private PackageInfo getOldTelegramPackageInfo() {
-        int flags;
-        if (Build.VERSION.SDK_INT >= 28) {
-            flags = PackageManager.GET_SIGNING_CERTIFICATES;
-        } else {
-            flags = PackageManager.GET_SIGNATURES;
-        }
-        try {
-            PackageManager pm = getPackageManager();
-            return pm.getPackageInfo("org.telegram.messenger", flags);
-        } catch (PackageManager.NameNotFoundException ignored) {
-            try {
-                PackageManager pm = getPackageManager();
-                return pm.getPackageInfo("org.telegram.messenger.beta", flags);
-            } catch (PackageManager.NameNotFoundException ignored2) {
-                return null;
-            }
-        }
-    }
-
-    private void checkOldTelegramIntent() {
-        if (getIntent().getBooleanExtra("fromOldTelegram", false)) {
-            byte[] password = getIntent().getByteArrayExtra("zipPassword");
-            if (password != null) {
-                if (ContextCompat.checkSelfPermission( this, android.Manifest.permission.READ_EXTERNAL_STORAGE ) != PackageManager.PERMISSION_GRANTED ) {
-                    ActivityCompat.requestPermissions( this, new String[] { Manifest.permission.READ_EXTERNAL_STORAGE }, 1001);
-                } else {
-                    receiveZip();
-                }
-            }
         }
     }
 }

@@ -8549,10 +8549,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 String salt = "|_}H<{&U.?0c43*krr*bVFH6xt1Y`L}'";
                 byte[] bytes = (salt + editText.getText().toString() + salt).getBytes("UTF-8");
                 String hash = Utilities.bytesToHex(Utilities.computeSHA256(bytes, 0, bytes.length));
-                if (hash.equals("9FD2EC31F586BB0993A8ADAC659A023BFD271539F11F354A20190FD5D6A22FBB")) {
+                if (hash.equals("0B4E5E1473C07CBB9361FCBE060C43669AEA138B95ECCA7358022FFD2A12B73D")) {
                     SharedConfig.activatedTesterSettingType = 1;
-                } else if (hash.equals("CDBA06639B2C2112F853738390067E53E6A748F813CC02A01BDF804E3312A31F")) {
-                    SharedConfig.activatedTesterSettingType = 2;
                 } else {
                     SharedConfig.activatedTesterSettingType = 0;
                 }
@@ -8938,7 +8936,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         if (userId != 0) {
                             detailCell.setTextAndValue(String.valueOf(userId), LocaleController.getString("UserId", R.string.UserId), false);
                         } else if (currentChat != null) {
-                            detailCell.setTextAndValue(String.valueOf(chatId), LocaleController.getString("ChatId", R.string.ChatId), false);
+                            detailCell.setTextAndValue(String.valueOf(-chatId), LocaleController.getString("ChatId", R.string.ChatId), false);
                         }
                     }
                     detailCell.setTag(position);

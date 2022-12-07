@@ -732,7 +732,7 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
     }
 
     @Override
-    protected ActionBar createActionBar(Context context) {
+    public ActionBar createActionBar(Context context) {
         ActionBar actionBar = new ActionBar(context) {
             @Override
             public void setTranslationY(float translationY) {

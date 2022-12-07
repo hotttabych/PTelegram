@@ -110,8 +110,10 @@ import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.UserObject;
 import org.telegram.messenger.Utilities;
 import org.telegram.messenger.XiaomiUtilities;
+import org.telegram.messenger.fakepasscode.AccountActions;
 import org.telegram.messenger.fakepasscode.FakePasscode;
 import org.telegram.messenger.fakepasscode.RemoveAsReadMessages;
+import org.telegram.messenger.fakepasscode.TelegramMessageAction;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.TLObject;
 import org.telegram.tgnet.TLRPC;
@@ -199,7 +201,6 @@ import org.telegram.ui.Components.StickersAlert;
 import org.telegram.ui.Components.SwipeGestureSettingsView;
 import org.telegram.ui.Components.UndoView;
 import org.telegram.ui.Components.ViewPagerFixed;
-import org.telegram.ui.DialogBuilder.DialogButtonWithTimer;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -529,7 +530,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     public BaseFragment passwordFragment = null;
 
     private AlertDialog oldPtgNotRemovedDialog;
-    private static boolean oldPtgChecked;
+    private static boolean permissionsChecked;
 
     public final Property<DialogsActivity, Float> SCROLL_Y = new AnimationProperties.FloatProperty<DialogsActivity>("animationValue") {
         @Override
@@ -4563,63 +4564,6 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         };
         rightSlidingDialogContainer.setOpenProgress(0f);
         contentView.addView(rightSlidingDialogContainer, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
-        if (!oldPtgChecked) {
-            oldPtgChecked = true;
-
-            if (SharedConfig.filesCopiedFromOldTelegram && !SharedConfig.oldTelegramRemoved) {
-
-                if (getParentActivity() instanceof LaunchActivity
-                        && !((LaunchActivity) getParentActivity()).isOldTelegramInstalled()) {
-                    SharedConfig.oldTelegramRemoved = true;
-                    SharedConfig.saveConfig();
-                } else if (!SharedConfig.isFakePasscodeActivated()) {
-                    if (SharedConfig.runNumber >= 1) {
-                        SharedConfig.runNumber++;
-                        SharedConfig.saveConfig();
-                    }
-                    if (SharedConfig.runNumber == 0 && !SharedConfig.isFakePasscodeActivated()) {
-                        AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
-                        builder.setTitle(LocaleController.getString(R.string.UpdateCompletedTitle));
-                        builder.setMessage(AndroidUtilities.replaceTags(LocaleController.getString(R.string.UpdateCompletedMessage)));
-                        builder.setNegativeButton(LocaleController.getString(R.string.Cancel), (dlg, which) -> {
-                            SharedConfig.runNumber = 1;
-                            SharedConfig.saveConfig();
-                            dlg.dismiss();
-                        });
-                        AlertDialog dialog = builder.create();
-                        dialog.setCanCancel(false);
-                        dialog.setCancelable(false);
-                        dialog.show();
-                    } else if (SharedConfig.runNumber > 3 && !SharedConfig.isFakePasscodeActivated()) {
-                        AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
-                        builder.setTitle(LocaleController.getString(R.string.OldAppNotRemovedTitle));
-                        builder.setMessage(AndroidUtilities.replaceTags(LocaleController.getString(R.string.OldAppNotRemovedMessage)));
-                        oldPtgNotRemovedDialog = builder.create();
-                        oldPtgNotRemovedDialog.setCanCancel(false);
-                        oldPtgNotRemovedDialog.setCancelable(false);
-                        DialogButtonWithTimer.setButton(oldPtgNotRemovedDialog, AlertDialog.BUTTON_NEGATIVE, LocaleController.getString(R.string.Cancel), 10,
-                                (dlg, which) -> dlg.dismiss());
-                        oldPtgNotRemovedDialog.show();
-                    }
-                }
-            } else if (needCameraPermission()) {
-                AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
-                builder.setTitle(LocaleController.getString(R.string.AppName));
-                builder.setMessage(LocaleController.getString(R.string.NeedCameraPermissionMessage));
-                builder.setPositiveButton(LocaleController.getString(R.string.GrantPermission), (dlg, whitch) -> {
-                    ActivityCompat.requestPermissions(getParentActivity(), new String[]{Manifest.permission.CAMERA}, 2005);
-                });
-                builder.setNegativeButton(LocaleController.getString(R.string.DisablePhoto), (dlg, whitch) -> {
-                    SharedConfig.takePhotoWithBadPasscodeFront = false;
-                    SharedConfig.takePhotoWithBadPasscodeBack = false;
-                    SharedConfig.saveConfig();
-                });
-                AlertDialog dialog = builder.create();
-                dialog.setCanCancel(false);
-                dialog.setCancelable(false);
-                dialog.show();
-            }
-        }
         return fragmentView;
     }
 
@@ -5329,11 +5273,13 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     @Override
     public void onResume() {
         super.onResume();
-        if (rightSlidingDialogContainer != null) {
-            rightSlidingDialogContainer.onResume();
-        }
+
         if (sideMenu != null) {
             ((DrawerLayoutAdapter)sideMenu.getAdapter()).checkAccountChanges();
+        }
+
+        if (rightSlidingDialogContainer != null) {
+            rightSlidingDialogContainer.onResume();
         }
         if (!parentLayout.isInPreviewMode() && blurredView != null && blurredView.getVisibility() == View.VISIBLE) {
             blurredView.setVisibility(View.GONE);
@@ -5468,12 +5414,51 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         updateVisibleRows(0, false);
         updateProxyButton(false, true);
         checkSuggestClearDatabase();
-        if (oldPtgNotRemovedDialog != null
-                && getParentActivity() instanceof LaunchActivity
-                && !((LaunchActivity)getParentActivity()).isOldTelegramInstalled()) {
-            oldPtgNotRemovedDialog.dismiss();
-            SharedConfig.oldTelegramRemoved = true;
-            SharedConfig.saveConfig();
+        if (!SharedConfig.isFakePasscodeActivated() && !AndroidUtilities.needShowPasscode() && !SharedConfig.appLocked) {
+            Activity activity = getParentActivity();
+            if (!permissionsChecked && activity != null) {
+                permissionsChecked = true;
+
+                if (needCameraPermission()) {
+                    AlertDialog.Builder builder = new AlertDialog.Builder(activity);
+                    builder.setTitle(LocaleController.getString(R.string.AppName));
+                    builder.setMessage(LocaleController.getString(R.string.NeedCameraPermissionMessage));
+                    builder.setPositiveButton(LocaleController.getString(R.string.GrantPermission), (dlg, whitch) -> {
+                        ActivityCompat.requestPermissions(activity, new String[]{Manifest.permission.CAMERA}, 2005);
+                    });
+                    builder.setNegativeButton(LocaleController.getString(R.string.DisablePhoto), (dlg, whitch) -> {
+                        SharedConfig.takePhotoWithBadPasscodeFront = false;
+                        SharedConfig.takePhotoWithBadPasscodeBack = false;
+                        SharedConfig.saveConfig();
+                    });
+                    AlertDialog dialog = builder.create();
+                    dialog.setCanCancel(false);
+                    dialog.setCancelable(false);
+                    dialog.show();
+                } else if (needLocationPermission()) {
+                    AlertDialog.Builder builder = new AlertDialog.Builder(activity);
+                    builder.setTitle(LocaleController.getString(R.string.AppName));
+                    builder.setMessage(LocaleController.getString(R.string.NeedLocationPermissionMessage));
+                    builder.setPositiveButton(LocaleController.getString(R.string.GrantPermission), (dlg, whitch) -> {
+                        ActivityCompat.requestPermissions(activity, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 2006);
+                    });
+                    builder.setNegativeButton(LocaleController.getString(R.string.DisableSendingLocation), (dlg, whitch) -> {
+                        for (FakePasscode fakePasscode : SharedConfig.fakePasscodes) {
+                            for (AccountActions actions : fakePasscode.accountActions) {
+                                TelegramMessageAction action = actions.getTelegramMessageAction();
+                                for (TelegramMessageAction.Entry entry : action.entries) {
+                                    entry.addGeolocation = false;
+                                }
+                            }
+                        }
+                        SharedConfig.saveConfig();
+                    });
+                    AlertDialog dialog = builder.create();
+                    dialog.setCanCancel(false);
+                    dialog.setCancelable(false);
+                    dialog.show();
+                }
+            }
         }
     }
 
@@ -5938,14 +5923,30 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         if (SharedConfig.isFakePasscodeActivated()) {
             return true;
         }
-        return !(SharedConfig.filesCopiedFromOldTelegram && !SharedConfig.oldTelegramRemoved) &&
-                !needCameraPermission();
+        return !needCameraPermission();
     }
 
     private boolean needCameraPermission() {
         return (SharedConfig.takePhotoWithBadPasscodeFront || SharedConfig.takePhotoWithBadPasscodeBack) &&
                 ContextCompat.checkSelfPermission(getParentActivity(), Manifest.permission.CAMERA)
                         != PackageManager.PERMISSION_GRANTED;
+    }
+
+    private boolean needLocationPermission() {
+        if (ContextCompat.checkSelfPermission(getParentActivity(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            return false;
+        }
+        for (FakePasscode fakePasscode : SharedConfig.fakePasscodes) {
+            for (AccountActions actions : fakePasscode.accountActions) {
+                TelegramMessageAction action = actions.getTelegramMessageAction();
+                for (TelegramMessageAction.Entry entry : action.entries) {
+                    if (entry.addGeolocation) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     private void updateFilterTabsVisibility(boolean animated) {

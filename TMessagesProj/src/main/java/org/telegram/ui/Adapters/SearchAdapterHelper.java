@@ -251,13 +251,13 @@ public class SearchAdapterHelper {
                                         chat = chatsMap.get(peer.channel_id);
                                     }
                                     if (chat != null) {
-                                        if (!allowChats || canAddGroupsOnly && !ChatObject.canAddBotsToChat(chat) || FakePasscode.isHideChat(-chat.id, currentAccount) || -chat.id == exceptDialogId) {
+                                        if (!allowChats || canAddGroupsOnly && !ChatObject.canAddBotsToChat(chat) || -chat.id == exceptDialogId || FakePasscode.isHideChat(-chat.id, currentAccount)) {
                                             continue;
                                         }
                                         localServerSearch.add(chat);
                                         globalSearchMap.put(-chat.id, chat);
                                     } else if (user != null) {
-                                        if (canAddGroupsOnly || !allowBots && user.bot || !allowSelf && user.self || FakePasscode.isHideChat(user.id, currentAccount) || user.id == exceptDialogId) {
+                                        if (canAddGroupsOnly || !allowBots && user.bot || !allowSelf && user.self || user.id == exceptDialogId || FakePasscode.isHideChat(user.id, currentAccount)) {
                                             continue;
                                         }
                                         localServerSearch.add(user);

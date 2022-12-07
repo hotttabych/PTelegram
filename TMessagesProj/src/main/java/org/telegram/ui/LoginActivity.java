@@ -358,6 +358,10 @@ public class LoginActivity extends BaseFragment {
                 if (isGoodPrivacy()) {
                     checkTwoStepVerification();
                 } else {
+                    Context context = getParentActivity();
+                    if (context == null) {
+                        return;
+                    }
                     AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
                     builder.setTitle(LocaleController.getString("PrivacyTitle", R.string.PrivacyTitle));
                     builder.setMessage(LocaleController.getString("MaxPrivacyInfo", R.string.MaxPrivacyInfo));
@@ -401,26 +405,14 @@ public class LoginActivity extends BaseFragment {
                         AndroidUtilities.runOnUIThread(() -> needFinishActivity(afterSignup, showSetPasswordConfirm, otherwiseRelogin));
                     } else {
                         AndroidUtilities.runOnUIThread(() -> {
-                            TwoStepVerificationActivity.initPasswordNewAlgo(password);
-                            if (!getUserConfig().hasSecureData && password.has_secure_values) {
-                                getUserConfig().hasSecureData = true;
-                                getUserConfig().saveConfig(false);
+                            Context context = getParentActivity();
+                            if (context == null) {
+                                return;
                             }
-                            AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
+                            AlertDialog.Builder builder = new AlertDialog.Builder(context);
                             builder.setTitle(LocaleController.getString("TwoStepVerificationWarningTitle", R.string.TwoStepVerificationWarningTitle));
                             builder.setMessage(LocaleController.getString("TwoStepVerificationWarningMessage", R.string.TwoStepVerificationWarningMessage));
-                            builder.setPositiveButton(LocaleController.getString("Agree", R.string.Agree), (dialog, whitch) -> {
-                                int type;
-                                if (TextUtils.isEmpty(password.email_unconfirmed_pattern)) {
-                                    type = TwoStepVerificationSetupActivity.TYPE_INTRO;
-                                } else {
-                                    type = TwoStepVerificationSetupActivity.TYPE_EMAIL_CONFIRM;
-                                }
-                                TwoStepVerificationSetupActivity passwordFragment = new TwoStepVerificationSetupActivity(type, password);
-                                passwordFragment.returnToSettings = false;
-                                needFinishActivity(afterSignup, showSetPasswordConfirm, otherwiseRelogin, passwordFragment);
-                            });
-                            builder.setNegativeButton(LocaleController.getString("Decline", R.string.Decline), (dialog, whitch) -> {
+                            builder.setPositiveButton(LocaleController.getString(R.string.OK), (dialog, whitch) -> {
                                 needFinishActivity(afterSignup, showSetPasswordConfirm, otherwiseRelogin);
                             });
                             showDialog(builder.create());

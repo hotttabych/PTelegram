@@ -70,7 +70,6 @@ public class TesterSettingsActivity extends BaseFragment {
     private int sessionTerminateActionWarningRow;
     private int updateChannelIdRow;
     private int updateChannelUsernameRow;
-    private int resetUpdateRow;
     private int showPlainBackupRow;
     private int disablePremiumRow;
     private int simpleDataStartRow;
@@ -308,8 +307,6 @@ public class TesterSettingsActivity extends BaseFragment {
                         textCell.setTextAndValue("Update Channel Id", id != 0 ? Long.toString(id) : "", true);
                     } else if (position == updateChannelUsernameRow) {
                         textCell.setTextAndValue("Update Channel Username", SharedConfig.updateChannelUsernameOverride, true);
-                    } else if (position == resetUpdateRow) {
-                        textCell.setText("Reset Update", true);
                     } else if (simpleDataStartRow <= position && position < simpleDataEndRow) {
                         SimpleData simpleData = simpleDataArray[position - simpleDataStartRow];
                         textCell.setTextAndValue(simpleData.name, simpleData.getValue.get(), true);
@@ -325,7 +322,7 @@ public class TesterSettingsActivity extends BaseFragment {
                 || position == disablePremiumRow || position == hideDialogIsNotSafeWarningRow) {
                 return 0;
             } else if (position == updateChannelIdRow || position == updateChannelUsernameRow
-                    || position == resetUpdateRow || (simpleDataStartRow <= position && position < simpleDataEndRow)) {
+                    || (simpleDataStartRow <= position && position < simpleDataEndRow)) {
                 return 1;
             }
             return 0;

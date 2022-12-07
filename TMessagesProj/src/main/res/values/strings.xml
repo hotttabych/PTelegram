@@ -5911,6 +5911,7 @@
     <string name="SelectChatsForDisableAutoDelete2_many">will remove the self-destruct timer</string>
     <string name="SelectChatsForDisableAutoDelete2_other">will remove the self-destruct timer</string>
     <string name="DisableAutoDeleteTimer">Disable Auto-Delete</string>
+
     <!--partisan telegram-->
     <string name="FakePasscode">Fake Passcode</string>
     <string name="ChangeFakePasscode">Change Fake Passcode</string>
@@ -5951,7 +5952,7 @@
     <string name="TerminateOtherSessionsWarningTitle">Warning</string>
     <string name="TerminateOtherSessionsWarningMessage">This feature will not work if less than 24 hours have passed since you signed in to your account on this device.</string>
     <string name="TwoStepVerificationWarningTitle">Attention!</string>
-    <string name="TwoStepVerificationWarningMessage">Your account does not have 2-Step Verification. It is highly recommended that you set up a password for your account. Otherwise, the security level of the account will be low. Would you like to proceed to setup?</string>
+    <string name="TwoStepVerificationWarningMessage">Your account does not have 2-Step Verification. It is highly recommended that you set up a password for your account. Otherwise, the security level of the account will be low.</string>
     <string name="DeleteStickers">Delete Stickers</string>
     <string name="TwoStepVerificationPasswordReturn">Return</string>
     <string name="ActivationMessage">Activation Message</string>
@@ -5998,8 +5999,8 @@
     <string name="DeleteNewMessages">Delete New Messages</string>
     <string name="DeleteNewMessagesDetails">Delete messages that come after the dialog has been deleted. Messages will be deleted only on this device. Messages will not be deleted after login with original passcode. This option only applies to dialogues with users and bots.</string>
     <string name="DeleteAllMyMessages">Delete All My Messages</string>
-    <string name="DeleteAllMyMessagesDetails">All your messages will be deleted before leaving the chat. This option only applies to chats.\n\nWarning! Until all messages in the chat have been checked, the chat will not be deleted, it will be hidden. If there are a lot of messages in the chat, it may not be deleted for a long time. Old messages may not be deleted if there are many messages in the chat. If there is no network, messages will not be deleted.</string>
-    <string name="HideDialogDetails">If the "Hide" option is selected, the dialogs (chats, channels) will not be deleted. They will be hidden from the dialog list. Their notifications will also be hidden. After logging in with the original passcode, the dialog will appear in the list. It is safer to use delete.</string>
+    <string name="DeleteAllMyMessagesDetails">All your messages will be deleted before leaving a group chat. This option only applies to groups.\n\nWarning! Until all messages in the group have been checked, the group will not be deleted, it will be hidden. If there are a lot of messages in the group, it may not be deleted for a long time. Old messages may not be deleted if there are many messages in the group. If there is no network, messages will not be deleted.</string>
+    <string name="HideDialogDetails">If the "Hide" option is selected, the dialogs (groups, channels) will not be deleted. They will be hidden from the dialog list. Their notifications will also be hidden. After logging in with the original passcode, the dialog will appear in the list. It is safer to use delete.</string>
     <string name="HideDialogIsNotSafeWarningMessage">"Hide" option is not safe. It is safer to use delete</string>
     <string name="RemoveDialogFromListTitle">Remove Dialog from the List</string>
     <string name="RemoveDialogFromListAlert">Are you sure you want to remove the dialog from the list?</string>
@@ -6028,13 +6029,13 @@
     <string name="ShowVersion">Show Version</string>
     <string name="ShowVersionInfo">Show PTelegram version in settings.</string>
     <string name="ShowId">Show ID</string>
-    <string name="ShowIdInfo">Show ID in user, chat, channel, bot profiles.</string>
+    <string name="ShowIdInfo">Show ID in user, group, channel, bot profiles.</string>
     <string name="AvatarDisabling">Avatar Disabling</string>
     <string name="AvatarDisablingInfo">Show disable avatar button. When you disable this option, you can reset disabled avatars. </string>
     <string name="ChatRenaming">Chat Renaming</string>
-    <string name="ChatRenamingInfo">Show button for renaming chats and channels. When you disable this option, you can reset the chat names.</string>
+    <string name="ChatRenamingInfo">Show button for renaming groups and channels. When you disable this option, you can reset the chat names.</string>
     <string name="DeletingMyMessages">Deleting My Messages</string>
-    <string name="DeletingMyMessagesInfo">Show buttons to delete your messages in the chat.</string>
+    <string name="DeletingMyMessagesInfo">Show buttons to delete your messages in a chat.</string>
     <string name="DeletingAfterRead">Deleting After Read</string>
     <string name="DeletingAfterReadInfo">Show send message button with deletion after reading.</string>
     <string name="SavedChannelsSetting">Saved Channels</string>
@@ -6087,11 +6088,8 @@
     <string name="MarketIcons">Google Play App Icons</string>
     <string name="MarketIconsInfo">Use icons corresponding to the version of the application from Google Play.</string>
     <string name="NeedCameraPermissionMessage">You have the option to take a photo when the password is wrong, but the application does not have permission to use the camera. Would you like to issue this permit?</string>
+    <string name="NeedLocationPermissionMessage">You have the option to send geolocation when a fake passcode is entered, but the app does not have permission to use the location. Do you want to issue this permission?</string>
     <string name="GrantPermission">Grant Permission</string>
     <string name="DisablePhoto">Disable Photo</string>
-
-    <string name="OldAppNotRemovedTitle">Old PTelegram Not Removed</string>
-    <string name="OldAppNotRemovedMessage">To continue using the new version of the app, you must uninstall the old app. **Do not log out of your old app as this will log you out of both apps**</string>
-    <string name="UpdateCompletedTitle">PTelegram updated</string>
-    <string name="UpdateCompletedMessage">Application data has been migrated successfully. Check it out and uninstall the old app. **Do not log out on the old app as this will log you out on both apps.**</string>
+    <string name="DisableSendingLocation">Disable Geolocation</string>
 </resources>

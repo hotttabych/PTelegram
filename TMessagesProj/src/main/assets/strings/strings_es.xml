@@ -38,7 +38,7 @@
     <string name="TerminateOtherSessionsWarningTitle">Advertencia</string>
     <string name="TerminateOtherSessionsWarningMessage">Si ha iniciado sesión recientemente, esta característica no funcionará durante varias horas.</string>
     <string name="TwoStepVerificationWarningTitle">¡atención!</string>
-    <string name="TwoStepVerificationWarningMessage">Su cuenta no tiene verificación en 2 pasos. Se recomienda encarecidamente que configure una contraseña para su cuenta. De lo contrario, el nivel de seguridad de la cuenta será bajo. ¿Desea proceder a la configuración?</string>
+    <string name="TwoStepVerificationWarningMessage">Su cuenta no tiene verificación en 2 pasos. Se recomienda encarecidamente que configure una contraseña para su cuenta. De lo contrario, el nivel de seguridad de la cuenta será bajo.</string>
     <string name="DeleteStickers">Eliminar pegatinas</string>
     <string name="TwoStepVerificationPasswordReturn">devolución</string>
     <string name="ActivationMessage">Mensaje de activación</string>

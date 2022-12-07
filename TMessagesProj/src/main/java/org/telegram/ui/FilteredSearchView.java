@@ -438,7 +438,7 @@ public class FilteredSearchView extends FrameLayout implements NotificationCente
             chatTo = messageObject.messageOwner.peer_id.chat_id != 0 ? MessagesController.getInstance(UserConfig.selectedAccount).getChat(messageObject.messageOwner.peer_id.chat_id) : null;
         }
         if (user != null && chatTo != null) {
-            CharSequence chatTitle = chatTo.title;
+            CharSequence chatTitle = UserConfig.getChatTitleOverride(UserConfig.selectedAccount, user.id, chatTo.title);
             if (ChatObject.isForum(chatTo)) {
                 TLRPC.TL_forumTopic topic = MessagesController.getInstance(UserConfig.selectedAccount).getTopicsController().findTopic(chatTo.id, MessageObject.getTopicId(messageObject.messageOwner, true));
                 if (topic != null) {
@@ -446,19 +446,16 @@ public class FilteredSearchView extends FrameLayout implements NotificationCente
                 }
             }
             chatTitle = Emoji.replaceEmoji(chatTitle, null, AndroidUtilities.dp(12), false);
-            String fromStr = UserConfig.getChatTitleOverride(UserConfig.selectedAccount, user.id, ContactsController.formatName(user.first_name, user.last_name));
-            String toStr = UserConfig.getChatTitleOverride(UserConfig.selectedAccount, user.id, chatTitle);
             SpannableStringBuilder spannableStringBuilder = new SpannableStringBuilder();
             spannableStringBuilder
-                    .append(fromStr)
                     .append(' ').append(arrowSpan).append(' ')
-                    .append(toStr);
+                    .append(chatTitle);
             fromName = spannableStringBuilder;
         } else if (user != null) {
             String name = ContactsController.formatName(user.first_name, user.last_name);
             fromName = UserConfig.getChatTitleOverride(UserConfig.selectedAccount, user.id, name);
         } else if (chatFrom != null) {
-            CharSequence chatTitle = chatFrom.title;
+            CharSequence chatTitle = UserConfig.getChatTitleOverride(UserConfig.selectedAccount, chatFrom.id, chatFrom.title);
             if (ChatObject.isForum(chatFrom)) {
                 TLRPC.TL_forumTopic topic = MessagesController.getInstance(UserConfig.selectedAccount).getTopicsController().findTopic(chatFrom.id, MessageObject.getTopicId(messageObject.messageOwner, true));
                 if (topic != null) {
@@ -466,7 +463,7 @@ public class FilteredSearchView extends FrameLayout implements NotificationCente
                 }
             }
             chatTitle = Emoji.replaceEmoji(chatTitle, null, AndroidUtilities.dp(12), false);
-            fromName = UserConfig.getChatTitleOverride(UserConfig.selectedAccount, chatFrom.id, chatTitle);
+            fromName = chatTitle;
         }
         return fromName == null ? "" : fromName;
     }
