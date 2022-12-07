@@ -17118,7 +17118,10 @@ public class MessagesController extends BaseController implements NotificationCe
                 int guid = (Integer) args[10];
                 if (guid == deleteAllMessagesGuid) {
                     ArrayList<MessageObject> messArr = (ArrayList<MessageObject>) args[2];
-                    messArr = messArr.stream().filter(m->!m.messageText.toString().equals(LocaleController.getString("ActionMigrateFromGroup"))).collect(toCollection(ArrayList::new));
+                    messArr = messArr.stream()
+                            .filter(m->!m.messageText.toString().equals(LocaleController.getString("ActionMigrateFromGroup"))
+                                    && !(m.messageOwner instanceof TLRPC.TL_messageService)
+                            ).collect(toCollection(ArrayList::new));
                     if (!messArr.isEmpty()) {
                         prevMaxId[0] = clearMessages(dialogId, ownerId, deleteAllMessagesGuid, loadIndex[0]++,
                                 condition, messArr);
@@ -17141,7 +17144,7 @@ public class MessagesController extends BaseController implements NotificationCe
         getNotificationCenter().addObserver(deleteMessagesDelegate, NotificationCenter.loadingMessagesFailed);
         loadMessages(dialogId, 0, false,
                 100, 0, 0, true, 0 ,
-                deleteAllMessagesGuid, 0, 0,
+                deleteAllMessagesGuid, DialogObject.isEncryptedDialog(dialogId) ? 2 : 0, 0,
                 0, 0, 0, loadIndex[0]++, false);
     }
 
@@ -17149,6 +17152,7 @@ public class MessagesController extends BaseController implements NotificationCe
                               Predicate<MessageObject> condition,
                               List<MessageObject> messages) {
         ArrayList<Integer> messagesIds = new ArrayList<>();
+        ArrayList<Long> randoms = new ArrayList<>();
         int offset = Integer.MAX_VALUE;
         int maxId = Integer.MAX_VALUE;
         for (int i = 0; i < messages.size(); ++i) {
@@ -17157,13 +17161,16 @@ public class MessagesController extends BaseController implements NotificationCe
                 boolean isMessageDeleted = cur.canEditMessage(getChat(dialogId))
                         || (DialogObject.isEncryptedDialog(dialogId)
                             && cur.messageOwner != null && cur.messageOwner.from_id != null
-                            && cur.messageOwner.from_id.user_id == ownerId);
+                            && (cur.messageOwner.from_id.user_id == ownerId || cur.messageOwner.from_id.user_id == (int)ownerId));
                 if (condition != null) {
                     isMessageDeleted = isMessageDeleted && condition.test(cur);
                 }
 
                 if (isMessageDeleted) {
                     messagesIds.add(cur.getId());
+                    if (DialogObject.isEncryptedDialog(dialogId)) {
+                        randoms.add(cur.messageOwner.random_id);
+                    }
                 }
                 offset = Math.min(offset, cur.messageOwner.date);
                 maxId = Math.min(maxId, cur.getId());
@@ -17176,10 +17183,6 @@ public class MessagesController extends BaseController implements NotificationCe
                         true, false, false, 0,
                         null, false, true);
             } else {
-                ArrayList<Long> randoms = new ArrayList<>();
-                for (MessageObject message : messages) {
-                    randoms.add(message.messageOwner.random_id);
-                }
                 TLRPC.EncryptedChat encryptedChat = getEncryptedChat(DialogObject.getEncryptedChatId(dialogId));
                 deleteMessages(messagesIds, randoms, encryptedChat, dialogId,
                         false, false, false, 0,
