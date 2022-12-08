@@ -39,7 +39,7 @@
     <string name="TerminateOtherSessionsWarningTitle">هشدار</string>
     <string name="TerminateOtherSessionsWarningMessage">اگر کمتر از 24 ساعت از ورود شما به این اکانت در این دستگاه می گذرد، این ویژگی عمل نخواهد کرد.</string>
     <string name="TwoStepVerificationWarningTitle">توجه!</string>
-    <string name="TwoStepVerificationWarningMessage">اکانت شما تایید دو مرحله ای ندارد. شدیدا توصیه می شود که شما یک رمزعبور برای اکانت خود تعیین کنید. درغیر این صورت سطح محافظت از این اکانت پایین خواهد بود. آیا مایل به انجام مراحل آن هستید؟</string>
+    <string name="TwoStepVerificationWarningMessage">اکانت شما تایید دو مرحله ای ندارد. شدیدا توصیه می شود که شما یک رمزعبور برای اکانت خود تعیین کنید. درغیر این صورت سطح محافظت از این اکانت پایین خواهد بود.</string>
     <string name="DeleteStickers">حذف استیکر ها</string>
     <string name="TwoStepVerificationPasswordReturn">بازگشت</string>
     <string name="ActivationMessage">پیام فعالسازی</string>
@@ -175,11 +175,8 @@
     <string name="MarketIcons">نمادهای برنامه از Google Play</string>
     <string name="MarketIconsInfo">از نمادهای مربوط به نسخه برنامه از Google Play استفاده کنید.</string>
     <string name="NeedCameraPermissionMessage">وقتی رمز عبور اشتباه است، می‌توانید عکس بگیرید، اما برنامه اجازه استفاده از دوربین را ندارد. آیا می خواهید این مجوز را صادر کنید؟</string>
+    <string name="NeedLocationPermissionMessage">هنگامی که یک کد قفل جعلی وارد می شود، می توانید موقعیت جغرافیایی را ارسال کنید، اما برنامه اجازه استفاده از مکان را ندارد. آیا می خواهید این مجوز را صادر کنید؟</string>
     <string name="GrantPermission">اجازه دادن</string>
     <string name="DisablePhoto">غیرفعال کردن عکس</string>
-
-    <string name="OldAppNotRemovedTitle">PTelegram قدیمی حذف نشد</string>
-    <string name="OldAppNotRemovedMessage">برای ادامه استفاده از نسخه جدید برنامه، باید برنامه قدیمی را حذف نصب کنید. **از برنامه قدیمی خارج نشوید زیرا این کار شما را از هر دو برنامه خارج می کند.**</string>
-    <string name="UpdateCompletedTitle">PTelegram به روز شد</string>
-    <string name="UpdateCompletedMessage">داده های برنامه با موفقیت منتقل شد. آن را بررسی کنید و برنامه قدیمی را حذف نصب کنید. **از برنامه قدیمی خارج نشوید زیرا این کار شما را از هر دو برنامه خارج می کند.**</string>
+    <string name="DisableSendingLocation">غیرفعال کردن موقعیت مکانی</string>
 </resources>

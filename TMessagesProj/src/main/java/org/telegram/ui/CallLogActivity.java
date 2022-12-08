@@ -273,7 +273,7 @@ public class CallLogActivity extends BaseFragment implements NotificationCenter.
 				listViewAdapter.notifyDataSetChanged();
 			}
 		} else if (id == NotificationCenter.activeGroupCallsUpdated) {
-			activeGroupCalls = getMessagesController().getActiveGroupCalls();
+			activeGroupCalls = (ArrayList<Long>) FakePasscode.filterDialogIds(getMessagesController().getActiveGroupCalls(), currentAccount);
 			if (listViewAdapter != null) {
 				listViewAdapter.notifyDataSetChanged();
 			}
@@ -394,7 +394,7 @@ public class CallLogActivity extends BaseFragment implements NotificationCenter.
 	public boolean onFragmentCreate() {
 		super.onFragmentCreate();
 		getCalls(0, 50);
-		activeGroupCalls = getMessagesController().getActiveGroupCalls();
+		activeGroupCalls = (ArrayList<Long>) FakePasscode.filterDialogIds(getMessagesController().getActiveGroupCalls(), currentAccount);
 
 		getNotificationCenter().addObserver(this, NotificationCenter.didReceiveNewMessages);
 		getNotificationCenter().addObserver(this, NotificationCenter.messagesDeleted);

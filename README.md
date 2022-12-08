@@ -1,5 +1,11 @@
 ## Partisan-Telegram messenger for Android
 
+[![Bitcoin donation](https://img.shields.io/badge/donate-bitcoin-fe9515.svg)](https://telegra.ph/CP-02-17)
+[![Ethereum donation](https://img.shields.io/badge/donate-ethereum-536bc3.svg)](https://telegra.ph/CP-02-17)
+[![USDT donation](https://img.shields.io/badge/donate-USDT-26A17B.svg)](https://telegra.ph/CP-02-17)
+[![Monero donation](https://img.shields.io/badge/donate-monero-f26822.svg)](https://telegra.ph/CP-02-17)
+[![Litecoin donation](https://img.shields.io/badge/donate-Litecoin-345d9d.svg)](https://telegra.ph/CP-02-17)
+
 ![](https://github.com/wrwrabbit/Partisan-Telegram-Android/blob/wiki_images/wiki_images/Readme.jpg)
 
 A special version of Telegram that protects peaceful protesters in Belarus (can be used in other countries with authoritarian regimes as well). 
@@ -14,6 +20,10 @@ If a user enters the false passcode a series of pre-defined actions is performed
 Usage of P-Telegram can be used against the user in Belarus to justify torture and jail, therefore P-Telegram looks and feels like the original Telegram as much as possible.
 
 Stay safe.
+
+## Contact
+
+Partisan-SMS is developed and maintained by [Cyber Partisans](https://t.me/cpartisans_security). If you have questions about the application, you can ask them in our [bot](https://t.me/partisan_telegram_bot).
 
 ### Compilation Guide
 

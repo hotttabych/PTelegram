@@ -441,25 +441,6 @@ public class SharedConfig {
 
     private static void migrateFakePasscode() {
         SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences("userconfing", Context.MODE_PRIVATE);
-        if (filesCopiedFromOldTelegram && !oldTelegramRemoved && fakePasscodeLoadedWithErrors) {
-            try {
-                jsonMapper = new ObjectMapper();
-                jsonMapper.registerModule(new JavaTimeModule());
-                jsonMapper.registerModule(new KotlinModule());
-                jsonMapper.activateDefaultTyping(jsonMapper.getPolymorphicTypeValidator());
-                jsonMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-                jsonMapper.setVisibility(jsonMapper.getSerializationConfig().getDefaultVisibilityChecker()
-                        .withFieldVisibility(JsonAutoDetect.Visibility.ANY)
-                        .withGetterVisibility(JsonAutoDetect.Visibility.NONE)
-                        .withIsGetterVisibility(JsonAutoDetect.Visibility.NONE)
-                        .withSetterVisibility(JsonAutoDetect.Visibility.NONE)
-                        .withCreatorVisibility(JsonAutoDetect.Visibility.NONE));
-
-                fakePasscodes = jsonMapper.readValue(preferences.getString("fakePasscodes", null), FakePasscodesWrapper.class).fakePasscodes;
-                fakePasscodeLoadedWithErrors = false;
-            } catch (JsonProcessingException ignored) {
-            }
-        }
 
         for (FakePasscode p: fakePasscodes) {
             p.migrate();
