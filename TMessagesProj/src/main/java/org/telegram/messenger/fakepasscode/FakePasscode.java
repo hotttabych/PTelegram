@@ -393,11 +393,11 @@ public class FakePasscode {
     }
 
     private void checkSingleAccountHidden() {
-        if (UserConfig.getActivatedAccountsCount(true) == 1 && getHideOrLogOutCount() == 1) {
+        if (UserConfig.getActivatedAccountsCount(true) == 1 && getHideAccountCount() == 1) {
             for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
                 if (AccountInstance.getInstance(a).getUserConfig().isClientActivated()) {
                     AccountActions accountActions = getAccountActions(a);
-                    if (accountActions != null) {
+                    if (accountActions != null && accountActions.isHideAccount()) {
                         accountActions.toggleHideAccountAction();
                     }
                 }
