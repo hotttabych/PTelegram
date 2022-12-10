@@ -9380,7 +9380,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 if (chat == null) {
                     return;
                 }
-                CharSequence chatTitle = chat.title;
+                CharSequence chatTitle = UserConfig.getChatTitleOverride(currentAccount, chat.id, chat.title);
                 if (topicId != 0) {
                     TLRPC.TL_forumTopic topic = getMessagesController().getTopicsController().findTopic(chat.id, topicId);
                     if (topic != null) {
