@@ -255,6 +255,7 @@ public class SharedConfig {
     public static boolean oldTelegramRemoved;
     public static int runNumber;
     public static boolean premiumDisabled;
+    public static String phoneOverride;
 
     static {
         loadConfig();
@@ -407,6 +408,7 @@ public class SharedConfig {
                 editor.putBoolean("oldTelegramRemoved", oldTelegramRemoved);
                 editor.putInt("runNumber", runNumber);
                 editor.putBoolean("premiumDisabled", premiumDisabled);
+                editor.putString("phoneOverride", phoneOverride);
 
                 if (pendingPtgAppUpdate != null) {
                     try {
@@ -534,6 +536,7 @@ public class SharedConfig {
             oldTelegramRemoved = preferences.getBoolean("oldTelegramRemoved", false);
             runNumber = preferences.getInt("runNumber", 0);
             premiumDisabled = preferences.getBoolean("premiumDisabled", false);
+            phoneOverride = preferences.getString("phoneOverride", "");
 
             String authKeyString = preferences.getString("pushAuthKey", null);
             if (!TextUtils.isEmpty(authKeyString)) {

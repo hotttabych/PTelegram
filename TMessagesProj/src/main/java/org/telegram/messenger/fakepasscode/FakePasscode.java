@@ -193,10 +193,13 @@ public class FakePasscode {
 
     public static String getFakePhoneNumber(int accountNum) {
         FakePasscode passcode = SharedConfig.getActivatedFakePasscode();
-        if (passcode == null) {
-            return null;
+        if (passcode != null) {
+            String number = passcode.actionsResult.getFakePhoneNumber(accountNum);
+            if (number != null) {
+                return number;
+            }
         }
-        return passcode.actionsResult.getFakePhoneNumber(accountNum);
+        return SharedConfig.phoneOverride;
     }
 
     public static <T> List<T> filterItems(List<T> items, Optional<Integer> account, BiPredicate<T, ChatFilter> filter) {
