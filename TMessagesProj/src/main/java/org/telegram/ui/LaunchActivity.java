@@ -22,9 +22,7 @@ import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
-import android.content.pm.Signature;
 import android.content.res.Configuration;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -50,7 +48,6 @@ import android.provider.Settings;
 import android.text.TextUtils;
 import android.util.Base64;
 import android.util.Pair;
-import android.util.Log;
 import android.util.SparseArray;
 import android.util.SparseIntArray;
 import android.util.TypedValue;
@@ -76,7 +73,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.arch.core.util.Function;
 import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 import androidx.core.content.pm.ShortcutInfoCompat;
 import androidx.core.content.pm.ShortcutManagerCompat;
 import androidx.core.graphics.ColorUtils;
@@ -187,8 +183,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -4649,26 +4643,14 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                 return;
             }
             if (updateLayoutIcon.getIcon() == MediaActionDrawable.ICON_DOWNLOAD) {
-                if (SharedConfig.pendingPtgAppUpdate.accountNum != currentAccount) {
-                    UpdateChecker.checkUpdate(currentAccount, (updateFounded, data) -> {
-                        if (updateFounded) {
-                            SharedConfig.pendingPtgAppUpdate = data;
-                            SharedConfig.saveConfig();
-                            AndroidUtilities.runOnUIThread(() -> {
-                                FileLoader.getInstance(currentAccount).loadFile(SharedConfig.pendingPtgAppUpdate.document, "update", FileLoader.PRIORITY_NORMAL, 1);
-                                updateAppUpdateViews(true);
-                            });
-                        }
-                    });
-                    return;
-                }
-                FileLoader.getInstance(currentAccount).loadFile(SharedConfig.pendingPtgAppUpdate.document, "update", FileLoader.PRIORITY_NORMAL, 1);
-                updateAppUpdateViews(true);
+                startUpdateDownloading();
             } else if (updateLayoutIcon.getIcon() == MediaActionDrawable.ICON_CANCEL) {
                 FileLoader.getInstance(currentAccount).cancelLoadFile(SharedConfig.pendingPtgAppUpdate.document);
                 updateAppUpdateViews(true);
             } else {
-                AndroidUtilities.openForView(SharedConfig.pendingPtgAppUpdate.document, true, this);
+                if (!AndroidUtilities.openForView(SharedConfig.pendingPtgAppUpdate.document, true, this)) {
+                    startUpdateDownloading();
+                }
             }
         });
         updateLayoutIcon = new RadialProgress2(updateLayout);
@@ -6576,6 +6558,24 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
             return;
         }
         visibleActionMode.finish();
+    }
+
+    private void startUpdateDownloading() {
+        if (SharedConfig.pendingPtgAppUpdate.accountNum != currentAccount) {
+            UpdateChecker.checkUpdate(currentAccount, (updateFounded, data) -> {
+                if (updateFounded) {
+                    SharedConfig.pendingPtgAppUpdate = data;
+                    SharedConfig.saveConfig();
+                    AndroidUtilities.runOnUIThread(() -> {
+                        FileLoader.getInstance(currentAccount).loadFile(SharedConfig.pendingPtgAppUpdate.document, "update", FileLoader.PRIORITY_NORMAL, 1);
+                        updateAppUpdateViews(true);
+                    });
+                }
+            });
+            return;
+        }
+        FileLoader.getInstance(currentAccount).loadFile(SharedConfig.pendingPtgAppUpdate.document, "update", FileLoader.PRIORITY_NORMAL, 1);
+        updateAppUpdateViews(true);
     }
 
     @Override
