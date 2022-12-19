@@ -732,6 +732,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
     private boolean createUnreadMessageAfterIdLoading;
     private boolean loadingFromOldPosition;
     private float alertViewEnterProgress;
+    private boolean startLoadFromMessageRestored;
 
     private boolean first = true;
     private int first_unread_id;
@@ -9954,7 +9955,16 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                 int lastVisPos = chatLayoutManager.findLastVisibleItemPosition();
                 int top = 0;
                 MessageObject scrollToMessageObject = null;
-                if (firstVisPos != RecyclerView.NO_POSITION) {
+                if (startLoadFromMessageRestored) {
+                    for (MessageObject message : messages) {
+                        if (message.getId() == startLoadFromMessageId) {
+                            scrollToMessageObject = message;
+                            top = startLoadFromMessageOffset;
+                        }
+                    }
+                    startLoadFromMessageRestored = false;
+                }
+                if (firstVisPos != RecyclerView.NO_POSITION && scrollToMessageObject == null) {
                     for (int i = firstVisPos; i <= lastVisPos; i++) {
                         View v = chatLayoutManager.findViewByPosition(i);
                         if (v instanceof ChatMessageCell) {
@@ -26382,6 +26392,18 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
         }
         hideHints(false);
         MediaController.getInstance().resetGoingToShowMessageObject();
+    }
+
+    public void restoreStartLoadFromMessage() {
+        SharedPreferences sharedPreferences = MessagesController.getNotificationsSettings(currentAccount);
+        int messageId = sharedPreferences.getInt("diditem" + NotificationsController.getSharedPrefKey(dialog_id, getTopicId()), 0);
+        if (messageId != 0) {
+            wasManualScroll = true;
+            loadingFromOldPosition = true;
+            startLoadFromMessageOffset = sharedPreferences.getInt("diditemo" + NotificationsController.getSharedPrefKey(dialog_id, getTopicId()), 0);
+            startLoadFromMessageId = messageId;
+            startLoadFromMessageRestored = true;
+        }
     }
 
     private void updateMessageListAccessibilityVisibility() {
