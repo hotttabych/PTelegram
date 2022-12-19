@@ -9,7 +9,7 @@ on:
         options:
           - Standalone
           - Debug
-          - Aplha
+          - Alpha
           - Release
       upload_release:
         type: boolean
