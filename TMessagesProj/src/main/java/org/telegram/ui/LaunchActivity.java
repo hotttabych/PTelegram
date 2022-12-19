@@ -744,6 +744,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
         NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.shouldKillApp);
         NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.shouldHideApp);
         NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.savedChannelsButtonStateChanged);
+        NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.cacheClearedByPtg);
         if (actionBarLayout.getFragmentStack().isEmpty()) {
             if (!UserConfig.getInstance(currentAccount).isClientActivated()) {
                 actionBarLayout.addFragmentToStack(getClientNotActivatedFragment());
@@ -5138,6 +5139,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
         NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.shouldKillApp);
         NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.shouldHideApp);
         NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.savedChannelsButtonStateChanged);
+        NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.cacheClearedByPtg);
     }
 
     public void presentFragment(INavigationLayout.NavigationParams params) {
@@ -6118,9 +6120,13 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
             System.exit(0);
         } else if (id == NotificationCenter.shouldHideApp) {
             moveTaskToBack(true);
-        }  else if (id == NotificationCenter.savedChannelsButtonStateChanged) {
+        } else if (id == NotificationCenter.savedChannelsButtonStateChanged) {
             if (sideMenu != null) {
                 sideMenu.getAdapter().notifyDataSetChanged();
+            }
+        } else if (id == NotificationCenter.cacheClearedByPtg) {
+            if (updateLayoutIcon != null && (updateLayoutIcon.getIcon() == MediaActionDrawable.ICON_CANCEL)) {
+                FileLoader.getInstance(currentAccount).cancelLoadFile(SharedConfig.pendingPtgAppUpdate.document);
             }
         }
     }
