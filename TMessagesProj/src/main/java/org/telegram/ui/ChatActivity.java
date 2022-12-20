@@ -3549,6 +3549,9 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                     invalidateMessagesVisiblePart = false;
                     updateMessagesVisiblePart(false);
                 }
+                if (startLoadFromMessageRestored) {
+                    startLoadFromMessageRestored = false;
+                }
                 updateTextureViewPosition(false, false);
                 updatePagedownButtonsPosition();
                 int restoreToCount = -1;
@@ -9131,6 +9134,10 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                 updateReactionsMentionButton(false);
             }
         }
+        if (startLoadFromMessageRestored) {
+            updatePagedownButtonVisibility(false);
+            AndroidUtilities.runOnUIThread(() -> pagedownButtonCounter.setCount(prevSetUnreadCount, false));
+        }
         return fragmentView;
     }
 
@@ -9960,9 +9967,9 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                         if (message.getId() == startLoadFromMessageId) {
                             scrollToMessageObject = message;
                             top = startLoadFromMessageOffset;
+                            break;
                         }
                     }
-                    startLoadFromMessageRestored = false;
                 }
                 if (firstVisPos != RecyclerView.NO_POSITION && scrollToMessageObject == null) {
                     for (int i = firstVisPos; i <= lastVisPos; i++) {
@@ -13203,7 +13210,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
         invalidateChatListViewTopPadding();
         if (!firstLoading && !paused && !inPreviewMode && chatMode == 0 && !getMessagesController().ignoreSetOnline) {
             int scheduledRead = 0;
-            if ((maxPositiveUnreadId != Integer.MIN_VALUE || maxNegativeUnreadId != Integer.MAX_VALUE)) {
+            if ((maxPositiveUnreadId != Integer.MIN_VALUE || maxNegativeUnreadId != Integer.MAX_VALUE) && !startLoadFromMessageRestored) {
                 int counterDecrement = 0;
                 for (int a = 0; a < messages.size(); a++) {
                     MessageObject messageObject = messages.get(a);
@@ -13241,7 +13248,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                 getMessagesController().markDialogAsRead(dialog_id, maxPositiveUnreadId, maxNegativeUnreadId, maxUnreadDate, false, threadId, counterDecrement, maxPositiveUnreadId == minMessageId[0] || maxNegativeUnreadId == minMessageId[0], scheduledRead);
                 firstUnreadSent = true;
             } else if (!firstUnreadSent && currentEncryptedChat == null) {
-                if (chatLayoutManager.findFirstVisibleItemPosition() == 0) {
+                if (chatLayoutManager.findFirstVisibleItemPosition() == 0 && !startLoadFromMessageRestored) {
                     newUnreadMessageCount = 0;
                     if (inLayout) {
                         AndroidUtilities.runOnUIThread(this::inlineUpdate2);
@@ -13549,7 +13556,8 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
         if (pagedownButton == null) {
             return;
         }
-        boolean show = canShowPagedownButton && !textSelectionHelper.isSelectionMode() && !chatActivityEnterView.isRecordingAudioVideo();
+        boolean show = canShowPagedownButton && !textSelectionHelper.isSelectionMode() && !chatActivityEnterView.isRecordingAudioVideo()
+                || startLoadFromMessageRestored && prevSetUnreadCount != 0;
         if (show) {
             if (animated && (openAnimationStartTime == 0 || SystemClock.elapsedRealtime() < openAnimationStartTime + 150)) {
                 animated = false;
