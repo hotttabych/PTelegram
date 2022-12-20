@@ -6126,7 +6126,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
             }
         } else if (id == NotificationCenter.cacheClearedByPtg) {
             if (updateLayoutIcon != null && (updateLayoutIcon.getIcon() == MediaActionDrawable.ICON_CANCEL)) {
-                FileLoader.getInstance(currentAccount).cancelLoadFile(SharedConfig.pendingPtgAppUpdate.document);
+                FileLoader.getInstance(SharedConfig.pendingPtgAppUpdate.accountNum).cancelLoadFile(SharedConfig.pendingPtgAppUpdate.document);
             }
         }
     }
