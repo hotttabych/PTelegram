@@ -732,6 +732,8 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
     private boolean createUnreadMessageAfterIdLoading;
     private boolean loadingFromOldPosition;
     private float alertViewEnterProgress;
+    private int lastViewedMessageId;
+    private int lastViewedMessageOffset;
     private boolean startLoadFromMessageRestored;
 
     private boolean first = true;
@@ -3551,6 +3553,8 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                 }
                 if (startLoadFromMessageRestored) {
                     startLoadFromMessageRestored = false;
+                    lastViewedMessageId = 0;
+                    lastViewedMessageOffset = 0;
                 }
                 updateTextureViewPosition(false, false);
                 updatePagedownButtonsPosition();
@@ -21969,6 +21973,19 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                                 } else {
                                     messageId = 0;
                                 }
+                            } else {
+                                if (holder != null) {
+                                    if (holder.itemView instanceof ChatMessageCell) {
+                                        lastViewedMessageId = ((ChatMessageCell) holder.itemView).getMessageObject().getId();
+                                    } else if (holder.itemView instanceof ChatActionCell) {
+                                        lastViewedMessageId = ((ChatActionCell) holder.itemView).getMessageObject().getId();
+                                    }
+                                    if (lastViewedMessageId > 0 && currentEncryptedChat == null || lastViewedMessageId < 0 && currentEncryptedChat != null) {
+                                        lastViewedMessageOffset = holder.itemView.getBottom() - chatListView.getMeasuredHeight();
+                                    } else {
+                                        lastViewedMessageId = 0;
+                                    }
+                                }
                             }
                         }
                     }
@@ -26410,6 +26427,10 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
             loadingFromOldPosition = true;
             startLoadFromMessageOffset = sharedPreferences.getInt("diditemo" + NotificationsController.getSharedPrefKey(dialog_id, getTopicId()), 0);
             startLoadFromMessageId = messageId;
+            startLoadFromMessageRestored = true;
+        } else if (lastViewedMessageId > 0) {
+            startLoadFromMessageId = lastViewedMessageId;
+            startLoadFromMessageOffset = lastViewedMessageOffset;
             startLoadFromMessageRestored = true;
         }
     }
