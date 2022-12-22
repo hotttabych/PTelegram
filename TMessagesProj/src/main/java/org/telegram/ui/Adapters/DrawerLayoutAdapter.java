@@ -110,7 +110,6 @@ public class DrawerLayoutAdapter extends RecyclerListView.SelectionAdapter {
         if (allAccountsShown == value || itemAnimator.isRunning()) {
             return;
         }
-        int oldAccountRowsCount = getAccountRowsCount();
         allAccountsShown = value;
         notifyDataSetChanged();
     }
@@ -221,6 +220,7 @@ public class DrawerLayoutAdapter extends RecyclerListView.SelectionAdapter {
             case 4: {
                 DrawerUserCell drawerUserCell = (DrawerUserCell) holder.itemView;
                 drawerUserCell.setAccount(accountNumbers.get(position - 2));
+                drawerUserCell.setTranslationY(0.0f);
                 break;
             }
         }
