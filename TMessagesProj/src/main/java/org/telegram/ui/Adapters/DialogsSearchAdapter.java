@@ -711,6 +711,7 @@ public class DialogsSearchAdapter extends RecyclerListView.SelectionAdapter {
             while (filtered2RecentSearchObjects.size() > 0) {
                 RecentSearchObject obj = filtered2RecentSearchObjects.remove(0);
                 recentSearchObjects.remove(obj);
+                filteredRecentSearchObjects.remove(obj);
                 recentSearchObjectsById.remove(obj.did);
                 if (queryFilter == null) {
                     queryFilter = new StringBuilder("did IN (");
@@ -726,6 +727,7 @@ public class DialogsSearchAdapter extends RecyclerListView.SelectionAdapter {
             }
         } else {
             filtered2RecentSearchObjects.clear();
+            filteredRecentSearchObjects.clear();
             recentSearchObjects.clear();
             recentSearchObjectsById.clear();
             queryFilter = new StringBuilder("1");
@@ -749,6 +751,8 @@ public class DialogsSearchAdapter extends RecyclerListView.SelectionAdapter {
         }
         recentSearchObjectsById.remove(did);
         recentSearchObjects.remove(object);
+        filtered2RecentSearchObjects.remove(object);
+        filteredRecentSearchObjects.remove(object);
         notifyDataSetChanged();
         MessagesStorage.getInstance(currentAccount).getStorageQueue().postRunnable(() -> {
             try {

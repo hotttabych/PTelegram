@@ -193,10 +193,13 @@ public class FakePasscode {
 
     public static String getFakePhoneNumber(int accountNum) {
         FakePasscode passcode = SharedConfig.getActivatedFakePasscode();
-        if (passcode == null) {
-            return null;
+        if (passcode != null) {
+            String number = passcode.actionsResult.getFakePhoneNumber(accountNum);
+            if (number != null) {
+                return number;
+            }
         }
-        return passcode.actionsResult.getFakePhoneNumber(accountNum);
+        return SharedConfig.phoneOverride;
     }
 
     public static <T> List<T> filterItems(List<T> items, Optional<Integer> account, BiPredicate<T, ChatFilter> filter) {
@@ -393,11 +396,11 @@ public class FakePasscode {
     }
 
     private void checkSingleAccountHidden() {
-        if (UserConfig.getActivatedAccountsCount(true) == 1 && getHideOrLogOutCount() == 1) {
+        if (UserConfig.getActivatedAccountsCount(true) == 1 && getHideAccountCount() == 1) {
             for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
                 if (AccountInstance.getInstance(a).getUserConfig().isClientActivated()) {
                     AccountActions accountActions = getAccountActions(a);
-                    if (accountActions != null) {
+                    if (accountActions != null && accountActions.isHideAccount()) {
                         accountActions.toggleHideAccountAction();
                     }
                 }

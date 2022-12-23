@@ -66,7 +66,7 @@ public class DrawerLayoutAdapter extends RecyclerListView.SelectionAdapter {
 
     private int getAccountRowsCount() {
         int count = accountNumbers.size() + 1;
-        if (!allAccountsShown && accountNumbers.size() > 3) {
+        if (!allAccountsShown && accountNumbers.size() > 4) {
             count = 3 + 1 + 1; // accounts + "More" + divider
         }
         if (accountNumbers.size() < getMaxAccountCount()) {
@@ -110,7 +110,6 @@ public class DrawerLayoutAdapter extends RecyclerListView.SelectionAdapter {
         if (allAccountsShown == value || itemAnimator.isRunning()) {
             return;
         }
-        int oldAccountRowsCount = getAccountRowsCount();
         allAccountsShown = value;
         notifyDataSetChanged();
     }
@@ -221,6 +220,7 @@ public class DrawerLayoutAdapter extends RecyclerListView.SelectionAdapter {
             case 4: {
                 DrawerUserCell drawerUserCell = (DrawerUserCell) holder.itemView;
                 drawerUserCell.setAccount(accountNumbers.get(position - 2));
+                drawerUserCell.setTranslationY(0.0f);
                 break;
             }
         }
@@ -252,16 +252,16 @@ public class DrawerLayoutAdapter extends RecyclerListView.SelectionAdapter {
                     }
                 }
             } else {
-                if (i < accountNumbers.size() && i < 3) {
+                if (i < accountNumbers.size() && i < 3 || i == 3 && accountNumbers.size() == 4) {
                     return 4;
                 } else {
-                    if (i == 3 && accountNumbers.size() > 3) {
+                    if (i == 3 && accountNumbers.size() > 4) {
                         return 3;
-                    } else if (accountNumbers.size() <= 3 && i == accountNumbers.size() ||
-                            accountNumbers.size() > 3 && i == 4) {
+                    } else if (accountNumbers.size() <= 4 && i == accountNumbers.size() ||
+                            accountNumbers.size() > 4 && i == 4) {
                         return 5;
-                    } else if (accountNumbers.size() <= 3 && i == accountNumbers.size() + 1 ||
-                            accountNumbers.size() > 3 && i == 5) {
+                    } else if (accountNumbers.size() <= 4 && i == accountNumbers.size() + 1 ||
+                            accountNumbers.size() > 4 && i == 5) {
                         return 2;
                     }
                 }
@@ -423,7 +423,7 @@ public class DrawerLayoutAdapter extends RecyclerListView.SelectionAdapter {
         if (!accountsShown) {
             return RecyclerView.NO_POSITION;
         }
-        if (!allAccountsShown && accountNumbers.size() > 3) {
+        if (!allAccountsShown && accountNumbers.size() > 4) {
             return 1 + 3;
         }
         return 1 + accountNumbers.size();

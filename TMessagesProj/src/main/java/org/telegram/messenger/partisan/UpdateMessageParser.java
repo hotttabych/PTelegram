@@ -37,6 +37,7 @@ class UpdateMessageParser {
 
         currentUpdate = new UpdateData();
         currentUpdate.accountNum = currentAccount;
+        currentUpdate.message = message.replyMessageObject.messageOwner;
         currentUpdate.document = message.replyMessageObject.getDocument();
 
         currentMessage = message;
