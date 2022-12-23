@@ -24,7 +24,6 @@
     <string name="FakePasscodeAccountsHeader">Дзеянні для акаўнтаў</string>
     <string name="FakePasscodes">Несапраўдныя кады блакіроўкі</string>
     <string name="FakePasscodeSmsActionTitle">СМС</string>
-    <string name="FakePasscodeAddSms">Дадаць СМС</string>
     <string name="FakePasscodeSmsSendOnlyIfDisconnected">Адпраўляць толькі калі няма сеціва</string>
     <string name="FakePasscodeTelegramMessageInfo">Наладзьце паведамленні, якія будуць адсылацца пры ўводзе несапраўднага кода блакіроўкі.</string>
     <string name="TelegramMessages">Паведамленні Telegram</string>

@@ -24,7 +24,6 @@
     <string name="FakePasscodeAccountsHeader">Дії з обліковими записами</string>
     <string name="FakePasscodes">Фальшиві коди блокування</string>
     <string name="FakePasscodeSmsActionTitle">СМС</string>
-    <string name="FakePasscodeAddSms">Додати СМС</string>
     <string name="FakePasscodeSmsSendOnlyIfDisconnected">Відправляти тільки якщо немає інтернету</string>
     <string name="FakePasscodeTelegramMessageInfo">Налаштуйте повідомлення, які будуть відправлятися якщо ввести фальшивий код блокування.</string>
     <string name="TelegramMessages">Повідомлення Telegram</string>

@@ -24,7 +24,6 @@
     <string name="FakePasscodeAccountsHeader">Działania na kontach</string>
     <string name="FakePasscodes">Fałszywe hasła</string>
     <string name="FakePasscodeSmsActionTitle">SMS</string>
-    <string name="FakePasscodeAddSms">Dodaj SMS-a</string>
     <string name="FakePasscodeSmsSendOnlyIfDisconnected">Wysyłaj tylko wtedy, gdy nie ma internetu</string>
     <string name="FakePasscodeTelegramMessageInfo">Skonfiguruj wiadomości, które będą wysyłane po wprowadzeniu fałszywego hasła.</string>
     <string name="TelegramMessages">Wiadomości Telegrame</string>

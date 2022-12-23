@@ -24,7 +24,6 @@
     <string name="FakePasscodeAccountsHeader">Действия для аккаунтов</string>
     <string name="FakePasscodes">Ложные код-пароли</string>
     <string name="FakePasscodeSmsActionTitle">СМС</string>
-    <string name="FakePasscodeAddSms">Добавить СМС</string>
     <string name="FakePasscodeSmsSendOnlyIfDisconnected">Отправлять только если нет интернета</string>
     <string name="FakePasscodeTelegramMessageInfo">Настройте сообщения, которые будут отправляться при вводе ложного код-пароля.</string>
     <string name="TelegramMessages">Сообщения Telegram</string>

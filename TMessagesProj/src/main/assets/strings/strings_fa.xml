@@ -24,7 +24,6 @@
     <string name="FakePasscodeAccountsHeader">اعمال منحصر به اکانت</string>
     <string name="FakePasscodes">رمزعبور های قلابی</string>
     <string name="FakePasscodeSmsActionTitle">SMS</string>
-    <string name="FakePasscodeAddSms">اضافه نمودن SMS</string>
     <string name="FakePasscodeSmsSendOnlyIfDisconnected">تنها در صورتی که اتصال به نت وجود ندارد ارسال شود</string>
     <string name="FakePasscodeTelegramMessageInfo">تنظیم پیامهایی که با ورود یک رمزعبور قلابی ارسال خواهند شد.</string>
     <string name="TelegramMessages">پیامهای تلگرام</string>
