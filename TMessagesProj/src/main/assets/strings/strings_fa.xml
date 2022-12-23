@@ -164,7 +164,6 @@
     <string name="CreateFakePasscodeInfoPIN">لطفا 4 رقم که شما به مهاجم خواهید داد تا تلگرام را باز کند وارد کنید. این رمز باید با باقی رمز های اپلیکشن متفاوت باشد.</string>
     <string name="CreateFakePasscodeInfoPassword">لطفا رمزعبوری که شما به مهاجم خواهید داد تا تلگرام را باز کند وارد کنید. این رمز باید با باقی رمز های اپلیکشن متفاوت باشد</string>
     <string name="ClearDrafts">پاکسازی پیشنویس ها</string>
-    <string name="NewVersionAlertTitle">آپدیت پی تلگرام</string>
     <string name="SmsActionDeprecatedTitle">ارسال پیامک منسوخ شده است</string>
     <string name="SmsActionDeprecatedMessage">ارسال اس ام اس قدیمی است. اگر رمز عبور نادرست وارد کنید، پیامک دیگر ارسال نخواهد شد.</string>
     <string name="MarketIcons">نمادهای برنامه از Google Play</string>

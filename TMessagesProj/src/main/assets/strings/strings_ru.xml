@@ -165,7 +165,6 @@
     <string name="CreateFakePasscodeInfoPassword">Пожалуйста, введите пароль, который вы будете давать злоумышленнику в экстренной ситуации для разблокировки Telegram. Он должен отличаться от других код-паролей в приложении.</string>
     <string name="AllExceptCount">Все (-%s)</string>
     <string name="ClearDrafts">Удалять черновики</string>
-    <string name="NewVersionAlertTitle">Обновление PTelegram</string>
     <string name="SmsActionDeprecatedTitle">Отправка SMS устарела</string>
     <string name="SmsActionDeprecatedMessage">Отправка смс устарела. При вводе ложного код-пароля смс больше не будет отправляться.</string>
     <string name="MarketIcons">Иконки приложения из Google Play</string>
