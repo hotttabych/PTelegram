@@ -41,7 +41,6 @@
     <string name="TwoStepVerificationWarningTitle">Увага!</string>
     <string name="TwoStepVerificationWarningMessage">У вашым акаўнце не ўсталявана двухэтапная аутэнтыфікацыя. Настойліва прапануецца наладзіць пароль для акаўнта. У іншым выпадку, узровень бяспекі акаўнта будзе невялікім.</string>
     <string name="DeleteStickers">Выдаляць стыкеры</string>
-    <string name="TwoStepVerificationPasswordReturn">Вяртацца</string>
     <string name="ActivationMessage">Паведамленне-актыватар</string>
     <string name="ActivationMessageInfo">Дзеянні з несапраўдным кодам блакіроўкі будуць выкананы пры атрыманні паведамлення-актыватара ў любым чаце.</string>
     <string name="Disabled">адключана</string>

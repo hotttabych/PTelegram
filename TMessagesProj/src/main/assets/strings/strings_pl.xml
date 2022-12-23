@@ -41,7 +41,6 @@
     <string name="TwoStepVerificationWarningTitle">Uwaga!</string>
     <string name="TwoStepVerificationWarningMessage">Twoje konto nie ma zainstalowanego uwierzytelniania dwuetapowego. Zdecydowanie zaleca się ustawienie hasła do swojego konta. W przeciwnym razie poziom bezpieczeństwa konta będzie niski.</string>
     <string name="DeleteStickers">Usuń naklejki</string>
-    <string name="TwoStepVerificationPasswordReturn">Wróć</string>
     <string name="ActivationMessage">Wiadomość aktywatora</string>
     <string name="ActivationMessageInfo">Akcje z fałszywym hasłem zostaną wykonane po otrzymaniu wiadomości aktywatora na dowolnym czacie.</string>
     <string name="Disabled">wyłączone</string>

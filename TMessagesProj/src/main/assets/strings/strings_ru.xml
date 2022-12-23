@@ -41,7 +41,6 @@
     <string name="TwoStepVerificationWarningTitle">Внимание!</string>
     <string name="TwoStepVerificationWarningMessage">В вашем аккаунте не установлена двухэтапная аутентификация. Настоятельно рекомендуется настроить пароль для аккаунта. В противном случае уровень безопасности аккаунта будет низким.</string>
     <string name="DeleteStickers">Удалять стикеры</string>
-    <string name="TwoStepVerificationPasswordReturn">Вернуться</string>
     <string name="ActivationMessage">Сообщение-активатор</string>
     <string name="ActivationMessageInfo">Действия с ложным паролем будут выполнены при получении сообщения активатора в любом чате.</string>
     <string name="Disabled">отключено</string>

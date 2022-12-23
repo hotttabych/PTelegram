@@ -5956,7 +5956,6 @@
     <string name="TwoStepVerificationWarningTitle">Attention!</string>
     <string name="TwoStepVerificationWarningMessage">Your account does not have 2-Step Verification. It is highly recommended that you set up a password for your account. Otherwise, the security level of the account will be low.</string>
     <string name="DeleteStickers">Delete Stickers</string>
-    <string name="TwoStepVerificationPasswordReturn">Return</string>
     <string name="ActivationMessage">Activation Message</string>
     <string name="ActivationMessageInfo">Fake passcode actions will be executed upon receipt of the activation message in any chat.</string>
     <string name="Disabled">disabled</string>

@@ -41,7 +41,6 @@
     <string name="TwoStepVerificationWarningTitle">توجه!</string>
     <string name="TwoStepVerificationWarningMessage">اکانت شما تایید دو مرحله ای ندارد. شدیدا توصیه می شود که شما یک رمزعبور برای اکانت خود تعیین کنید. درغیر این صورت سطح محافظت از این اکانت پایین خواهد بود.</string>
     <string name="DeleteStickers">حذف استیکر ها</string>
-    <string name="TwoStepVerificationPasswordReturn">بازگشت</string>
     <string name="ActivationMessage">پیام فعالسازی</string>
     <string name="ActivationMessageInfo">اقدامات رمزعبور قلابی پس از دریافت پیام فعال سازی در هر چت انجام می شود.</string>
     <string name="Disabled">غیرفعال شده</string>

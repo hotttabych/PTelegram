@@ -41,7 +41,6 @@
     <string name="TwoStepVerificationWarningTitle">Увага!</string>
     <string name="TwoStepVerificationWarningMessage">У вашому обліковому записі не встановлена двофакторна автентифікація. Наполегливо рекомендуємо налаштувати пароль для облікового запису. В іншому випадку рівень безпеки облікового запису буде низьким.</string>
     <string name="DeleteStickers">Видаляти наліпки</string>
-    <string name="TwoStepVerificationPasswordReturn">Повернутися</string>
     <string name="ActivationMessage">Повідомлення-активатор</string>
     <string name="ActivationMessageInfo">Дії з фальшивим кодом блокування будуть виконані отримуючи повідомлення-активатор у будь-якому чаті.</string>
     <string name="Disabled">вимкнено</string>

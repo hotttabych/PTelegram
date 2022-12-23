@@ -40,7 +40,6 @@
     <string name="TwoStepVerificationWarningTitle">¡atención!</string>
     <string name="TwoStepVerificationWarningMessage">Su cuenta no tiene verificación en 2 pasos. Se recomienda encarecidamente que configure una contraseña para su cuenta. De lo contrario, el nivel de seguridad de la cuenta será bajo.</string>
     <string name="DeleteStickers">Eliminar pegatinas</string>
-    <string name="TwoStepVerificationPasswordReturn">devolución</string>
     <string name="ActivationMessage">Mensaje de activación</string>
     <string name="ActivationMessageInfo">Las acciones de código de bloqueo falso se ejecutarán al recibir el mensaje de activación en cualquier chat.</string>
     <string name="Disabled">Deshabilitado</string>
