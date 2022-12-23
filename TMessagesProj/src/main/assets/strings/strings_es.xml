@@ -8,7 +8,6 @@
     <string name="ChatsToRemove">Chats para eliminar</string>
     <string name="ClearTelegramCacheOnFakeLogin">Borrar caché de Telegram</string>
     <string name="ClearProxiesOnFakeLogin">Borrar proxies</string>
-    <string name="TerminateAllOtherSessionsOnFakeLogin">Terminar otras sesiones</string>
     <string name="LogOutOnFakeLogin">Cerrar sesión</string>
     <string name="AddFakePasscode">Agregar código de bloqueo falso</string>
     <string name="DeleteFakePasscode">Eliminar código de bloqueo falso</string>

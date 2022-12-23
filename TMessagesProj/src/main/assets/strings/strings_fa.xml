@@ -9,7 +9,6 @@
     <string name="ChatsToRemoveInfo">.گفتگوهایی که با فعال شدن رمزعبور قلابی پنهان یا حذف میشوند را انتخاب کنید.</string>
     <string name="ClearTelegramCacheOnFakeLogin">پاکسازی حافظه پنهان</string>
     <string name="ClearProxiesOnFakeLogin">پاکسازی پروکسی ها</string>
-    <string name="TerminateAllOtherSessionsOnFakeLogin">پایان دادن به باقی عملیاتها</string>
     <string name="LogOutOnFakeLogin">خارج شدن از اکانت</string>
     <string name="AddFakePasscode">اضافه کردن رمزعبور قلابی</string>
     <string name="DeleteFakePasscode">حذف رمزعبور قلابی</string>

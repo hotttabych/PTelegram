@@ -9,7 +9,6 @@
     <string name="ClearTelegramCacheOnFakeLogin">Ачышчаць кэш Telegram</string>
     <string name="ClearProxiesOnFakeLogin">Ачышчаць спіс проксі</string>
     <string name="AddFakePasscode">Дадаць несапраўдны код блакіроўкі</string>
-    <string name="TerminateAllOtherSessionsOnFakeLogin">Завяршаць усе іншыя сеансы</string>
     <string name="LogOutOnFakeLogin">Выходзіць з акаўнту</string>
     <string name="DeleteFakePasscode">Выдаліць несапраўдны код блакіроўкі</string>
     <string name="ChangeFakePasscodeName">Змяніць назву</string>

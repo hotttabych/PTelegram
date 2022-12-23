@@ -9,7 +9,6 @@
     <string name="ChatsToRemoveInfo">Wybierz czaty, które zostaną usunięte lub ukryte po aktywacji fałszywego kodu hasła</string>
     <string name="ClearTelegramCacheOnFakeLogin">Wyczyść pamięć podręczną Telegram</string>
     <string name="ClearProxiesOnFakeLogin">Wyczyść listę proxy</string>
-    <string name="TerminateAllOtherSessionsOnFakeLogin">Zakończ wszystkie inne sesje</string>
     <string name="LogOutOnFakeLogin">Wyloguj się</string>
     <string name="AddFakePasscode">Dodaj fałszywy kod dostępu</string>
     <string name="DeleteFakePasscode">Usuń fałszywe hasło</string>

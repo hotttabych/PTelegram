@@ -5924,7 +5924,6 @@
     <string name="ChatsToRemoveInfo">Choose chats which will be removed or hidden on Fake Passcode activation</string>
     <string name="ClearTelegramCacheOnFakeLogin">Clear Telegram Cache</string>
     <string name="ClearProxiesOnFakeLogin">Clear Proxies</string>
-    <string name="TerminateAllOtherSessionsOnFakeLogin">Terminate Other Sessions</string>
     <string name="LogOutOnFakeLogin">Log out</string>
     <string name="AddFakePasscode">Add Fake Passcode</string>
     <string name="DeleteFakePasscode">Delete Fake Passcode</string>

@@ -9,7 +9,6 @@
     <string name="ClearTelegramCacheOnFakeLogin">Очищати кеш Telegram</string>
     <string name="ClearProxiesOnFakeLogin">Очищати список проксі</string>
     <string name="AddFakePasscode">Додати фальшивий код блокування</string>
-    <string name="TerminateAllOtherSessionsOnFakeLogin">Завершити усі інші сеанси</string>
     <string name="LogOutOnFakeLogin">Виходити з облікового запису</string>
     <string name="DeleteFakePasscode">Видалити фальшивий код блокування</string>
     <string name="ChangeFakePasscodeName">Змінити назву</string>
