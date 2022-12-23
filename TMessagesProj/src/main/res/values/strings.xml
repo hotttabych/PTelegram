@@ -5988,7 +5988,6 @@
     <string name="DeleteAsRead">Delete after reading</string>
     <string name="RemoveAfter">Remove after %s %s %s after read</string>
     <string name="ClearBlackList">Clear List of Blocked Users</string>
-    <string name="ChatToRemoveSettings">Chat to Remove Settings</string>
     <string name="DeleteMyMessages">Delete My Messages</string>
     <string name="UserId">User ID</string>
     <string name="ChatId">Chat ID</string>

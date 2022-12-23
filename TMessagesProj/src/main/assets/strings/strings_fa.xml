@@ -73,7 +73,6 @@
     <string name="DeleteAsRead">حذف پس از خواندن</string>
     <string name="RemoveAfter">پاک کردن پس از خواندن، بعد از %s %s %s</string>
     <string name="ClearBlackList">پاک کردن لیست مخاطبان بلاک شده</string>
-    <string name="ChatToRemoveSettings">تنظیمات گفتگو های پاک شدنی</string>
     <string name="DeleteMyMessages">پیام های من را حذف کن</string>
     <string name="UserId">آی دی مخاطب</string>
     <string name="ChatId">آی دی گفتگو</string>

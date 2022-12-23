@@ -73,7 +73,6 @@
     <string name="DeleteAsRead">Удалить после прочтения</string>
     <string name="RemoveAfter">Удалить через %s %s %s после прочтения</string>
     <string name="ClearBlackList">Очищать чёрный список</string>
-    <string name="ChatToRemoveSettings">Настройки чата для удаления</string>
     <string name="DeleteMyMessages">Удалить мои сообщения</string>
     <string name="UserId">ID пользователя</string>
     <string name="ChatId">ID чата</string>

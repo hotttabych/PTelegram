@@ -73,7 +73,6 @@
     <string name="DeleteAsRead">Usuń po przeczytaniu</string>
     <string name="RemoveAfter">Usuń po% s% s% s po przeczytaniu</string>
     <string name="ClearBlackList">Wyczyść zablokowanych użytkowników</string>
-    <string name="ChatToRemoveSettings">Ustawienia czatu do usunięcia</string>
     <string name="DeleteMyMessages">Usuń moje wiadomości</string>
     <string name="UserId">ID użytkownik</string>
     <string name="ChatId">ID czat</string>

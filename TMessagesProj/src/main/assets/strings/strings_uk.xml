@@ -73,7 +73,6 @@
     <string name="DeleteAsRead">Видалити після прочитання</string>
     <string name="RemoveAfter">Видалити через %s %s %s після прочитання</string>
     <string name="ClearBlackList">Очищати список заблокованих користувачів</string>
-    <string name="ChatToRemoveSettings">Налаштування чату для видалення</string>
     <string name="DeleteMyMessages">Видалити мої повідомлення</string>
     <string name="UserId">ID користувача</string>
     <string name="ChatId">ID чату</string>
