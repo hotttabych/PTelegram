@@ -63,7 +63,6 @@
     <string name="ClearCacheOnLockInfo">Haga clic en el botón de bloqueo encima de la lista de cuadros de diálogo para borrar la caché de la aplicación. </string>
     <string name="MessagePart">Introducir parte del mensaje</string>
     <string name="DeleteMessages">Eliminar mensajes</string>
-    <string name="DeleteMessagesByPart">Eliminar mensajes por parte</string>
     <string name="Regex">expresión regular</string>
     <string name="CaseSensitive">Distingue entre mayúsculas y minúsculas</string>
     <string name="DeleteAsRead">Eliminar como leído</string>

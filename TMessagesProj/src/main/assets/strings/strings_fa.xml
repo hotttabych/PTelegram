@@ -64,7 +64,6 @@
     <string name="ClearCacheOnLockInfo">بر دکمه بلاک بالای لیست دیالوگ ها کلیک کنید تا حافظه پنهان اپلیکیشن پاک شود.</string>
     <string name="MessagePart">بخش ورود پیام</string>
     <string name="DeleteMyMessagesFromChat">پیام های من را از گفتگو پاک کن</string>
-    <string name="DeleteMessagesByPart">حذف پیشرفته</string>
     <string name="Regex">ابراز معمولی</string>
     <string name="CaseSensitive">حساس به موقعیت</string>
     <string name="DeleteAsRead">حذف پس از خواندن</string>

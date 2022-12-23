@@ -62,7 +62,6 @@
     <string name="DoNotShowAgain">Больш не паказваць</string>
     <string name="ClearCacheOnLock">Чысціць кэш пры блакаванні</string>
     <string name="ClearCacheOnLockInfo">Пасля націску на кнопку замка над спісам дыялогаў кэш прыкладання будзе ачышчацца.</string>
-    <string name="DeleteMessagesByPart">Пашыранае выдаленне </string>
     <string name="MessagePart">Частка паведамлення</string>
     <string name="DeleteMyMessagesFromChat">Выдаленне маіх паведамленняў з чата</string>
     <string name="Regex">Рэгулярны выраз</string>

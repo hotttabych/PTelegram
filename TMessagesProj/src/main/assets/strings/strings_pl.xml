@@ -64,7 +64,6 @@
     <string name="ClearCacheOnLockInfo">Kliknięcie przycisku blokady nad listą okien dialogowych spowoduje wyczyszczenie pamięci podręcznej aplikacji.</string>
     <string name="MessagePart">Część wiadomości</string>
     <string name="DeleteMyMessagesFromChat">Usuwanie moich wiadomości z czatu</string>
-    <string name="DeleteMessagesByPart">Zaawansowane usuwanie</string>
     <string name="Regex">Wyrażenie regularne</string>
     <string name="CaseSensitive">Wielkość liter ma znaczenie</string>
     <string name="DeleteAsRead">Usuń po przeczytaniu</string>
