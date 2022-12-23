@@ -732,6 +732,9 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
     private boolean createUnreadMessageAfterIdLoading;
     private boolean loadingFromOldPosition;
     private float alertViewEnterProgress;
+    private int lastViewedMessageId;
+    private int lastViewedMessageOffset;
+    private boolean startLoadFromMessageRestored;
 
     private boolean first = true;
     private int first_unread_id;
@@ -3547,6 +3550,11 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                 if (invalidateMessagesVisiblePart || (chatListItemAnimator != null && chatListItemAnimator.isRunning())) {
                     invalidateMessagesVisiblePart = false;
                     updateMessagesVisiblePart(false);
+                }
+                if (startLoadFromMessageRestored) {
+                    startLoadFromMessageRestored = false;
+                    lastViewedMessageId = 0;
+                    lastViewedMessageOffset = 0;
                 }
                 updateTextureViewPosition(false, false);
                 updatePagedownButtonsPosition();
@@ -9130,6 +9138,10 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                 updateReactionsMentionButton(false);
             }
         }
+        if (startLoadFromMessageRestored) {
+            updatePagedownButtonVisibility(false);
+            AndroidUtilities.runOnUIThread(() -> pagedownButtonCounter.setCount(prevSetUnreadCount, false));
+        }
         return fragmentView;
     }
 
@@ -9954,7 +9966,16 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                 int lastVisPos = chatLayoutManager.findLastVisibleItemPosition();
                 int top = 0;
                 MessageObject scrollToMessageObject = null;
-                if (firstVisPos != RecyclerView.NO_POSITION) {
+                if (startLoadFromMessageRestored) {
+                    for (MessageObject message : messages) {
+                        if (message.getId() == startLoadFromMessageId) {
+                            scrollToMessageObject = message;
+                            top = startLoadFromMessageOffset;
+                            break;
+                        }
+                    }
+                }
+                if (firstVisPos != RecyclerView.NO_POSITION && scrollToMessageObject == null) {
                     for (int i = firstVisPos; i <= lastVisPos; i++) {
                         View v = chatLayoutManager.findViewByPosition(i);
                         if (v instanceof ChatMessageCell) {
@@ -13193,7 +13214,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
         invalidateChatListViewTopPadding();
         if (!firstLoading && !paused && !inPreviewMode && chatMode == 0 && !getMessagesController().ignoreSetOnline) {
             int scheduledRead = 0;
-            if ((maxPositiveUnreadId != Integer.MIN_VALUE || maxNegativeUnreadId != Integer.MAX_VALUE)) {
+            if ((maxPositiveUnreadId != Integer.MIN_VALUE || maxNegativeUnreadId != Integer.MAX_VALUE) && !startLoadFromMessageRestored) {
                 int counterDecrement = 0;
                 for (int a = 0; a < messages.size(); a++) {
                     MessageObject messageObject = messages.get(a);
@@ -13231,7 +13252,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                 getMessagesController().markDialogAsRead(dialog_id, maxPositiveUnreadId, maxNegativeUnreadId, maxUnreadDate, false, threadId, counterDecrement, maxPositiveUnreadId == minMessageId[0] || maxNegativeUnreadId == minMessageId[0], scheduledRead);
                 firstUnreadSent = true;
             } else if (!firstUnreadSent && currentEncryptedChat == null) {
-                if (chatLayoutManager.findFirstVisibleItemPosition() == 0) {
+                if (chatLayoutManager.findFirstVisibleItemPosition() == 0 && !startLoadFromMessageRestored) {
                     newUnreadMessageCount = 0;
                     if (inLayout) {
                         AndroidUtilities.runOnUIThread(this::inlineUpdate2);
@@ -13539,7 +13560,8 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
         if (pagedownButton == null) {
             return;
         }
-        boolean show = canShowPagedownButton && !textSelectionHelper.isSelectionMode() && !chatActivityEnterView.isRecordingAudioVideo();
+        boolean show = canShowPagedownButton && !textSelectionHelper.isSelectionMode() && !chatActivityEnterView.isRecordingAudioVideo()
+                || startLoadFromMessageRestored && prevSetUnreadCount != 0;
         if (show) {
             if (animated && (openAnimationStartTime == 0 || SystemClock.elapsedRealtime() < openAnimationStartTime + 150)) {
                 animated = false;
@@ -14677,7 +14699,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                 entry.reset();
             }
             fillEditingMediaWithCaption(photos.get(0).caption, photos.get(0).entities);
-            SendMessagesHelper.prepareSendingMedia(getAccountInstance(), photos, dialog_id, null, getThreadMessage(), null, forceDocument, true, null, notify, scheduleDate, photos.get(0).updateStickersOrder);
+            SendMessagesHelper.prepareSendingMedia(getAccountInstance(), photos, dialog_id, replyingMessageObject, getThreadMessage(), null, forceDocument, true, null, notify, scheduleDate, photos.get(0).updateStickersOrder);
             afterMessageSend();
             chatActivityEnterView.setFieldText("");
         }
@@ -21951,6 +21973,19 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                                 } else {
                                     messageId = 0;
                                 }
+                            } else {
+                                if (holder != null) {
+                                    if (holder.itemView instanceof ChatMessageCell) {
+                                        lastViewedMessageId = ((ChatMessageCell) holder.itemView).getMessageObject().getId();
+                                    } else if (holder.itemView instanceof ChatActionCell) {
+                                        lastViewedMessageId = ((ChatActionCell) holder.itemView).getMessageObject().getId();
+                                    }
+                                    if (lastViewedMessageId > 0 && currentEncryptedChat == null || lastViewedMessageId < 0 && currentEncryptedChat != null) {
+                                        lastViewedMessageOffset = holder.itemView.getBottom() - chatListView.getMeasuredHeight();
+                                    } else {
+                                        lastViewedMessageId = 0;
+                                    }
+                                }
                             }
                         }
                     }
@@ -26382,6 +26417,22 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
         }
         hideHints(false);
         MediaController.getInstance().resetGoingToShowMessageObject();
+    }
+
+    public void restoreStartLoadFromMessage() {
+        SharedPreferences sharedPreferences = MessagesController.getNotificationsSettings(currentAccount);
+        int messageId = sharedPreferences.getInt("diditem" + NotificationsController.getSharedPrefKey(dialog_id, getTopicId()), 0);
+        if (messageId != 0) {
+            wasManualScroll = true;
+            loadingFromOldPosition = true;
+            startLoadFromMessageOffset = sharedPreferences.getInt("diditemo" + NotificationsController.getSharedPrefKey(dialog_id, getTopicId()), 0);
+            startLoadFromMessageId = messageId;
+            startLoadFromMessageRestored = true;
+        } else if (lastViewedMessageId > 0) {
+            startLoadFromMessageId = lastViewedMessageId;
+            startLoadFromMessageOffset = lastViewedMessageOffset;
+            startLoadFromMessageRestored = true;
+        }
     }
 
     private void updateMessageListAccessibilityVisibility() {

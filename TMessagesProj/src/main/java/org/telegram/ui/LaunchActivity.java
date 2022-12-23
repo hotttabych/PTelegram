@@ -22,9 +22,7 @@ import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
-import android.content.pm.Signature;
 import android.content.res.Configuration;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -50,7 +48,6 @@ import android.provider.Settings;
 import android.text.TextUtils;
 import android.util.Base64;
 import android.util.Pair;
-import android.util.Log;
 import android.util.SparseArray;
 import android.util.SparseIntArray;
 import android.util.TypedValue;
@@ -75,8 +72,8 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.arch.core.util.Function;
+import androidx.collection.LongSparseArray;
 import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 import androidx.core.content.pm.ShortcutInfoCompat;
 import androidx.core.content.pm.ShortcutManagerCompat;
 import androidx.core.graphics.ColorUtils;
@@ -187,8 +184,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -749,6 +744,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
         NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.shouldKillApp);
         NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.shouldHideApp);
         NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.savedChannelsButtonStateChanged);
+        NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.cacheClearedByPtg);
         if (actionBarLayout.getFragmentStack().isEmpty()) {
             if (!UserConfig.getInstance(currentAccount).isClientActivated()) {
                 actionBarLayout.addFragmentToStack(getClientNotActivatedFragment());
@@ -1421,6 +1417,11 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
             NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.fileLoaded);
             NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.fileLoadProgressChanged);
             NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.fileLoadFailed);
+            if (SharedConfig.pendingPtgAppUpdate != null && getUpdateAccountNum() != currentAccount) {
+                NotificationCenter.getInstance(getUpdateAccountNum()).removeObserver(this, NotificationCenter.fileLoadProgressChanged);
+                NotificationCenter.getInstance(getUpdateAccountNum()).removeObserver(this, NotificationCenter.fileLoaded);
+                NotificationCenter.getInstance(getUpdateAccountNum()).removeObserver(this, NotificationCenter.fileLoadFailed);
+            }
             NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.historyImportProgressChanged);
             NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.groupCallUpdated);
             NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.stickersImportComplete);
@@ -1440,6 +1441,12 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
         NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.fileLoaded);
         NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.fileLoadProgressChanged);
         NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.fileLoadFailed);
+        if (updateLayoutIcon != null && updateLayoutIcon.getIcon() == MediaActionDrawable.ICON_CANCEL
+                && SharedConfig.pendingPtgAppUpdate != null && getUpdateAccountNum() != currentAccount) {
+            NotificationCenter.getInstance(getUpdateAccountNum()).addObserver(this, NotificationCenter.fileLoaded);
+            NotificationCenter.getInstance(getUpdateAccountNum()).addObserver(this, NotificationCenter.fileLoadProgressChanged);
+            NotificationCenter.getInstance(getUpdateAccountNum()).addObserver(this, NotificationCenter.fileLoadFailed);
+        }
         NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.historyImportProgressChanged);
         NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.groupCallUpdated);
         NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.stickersImportComplete);
@@ -4648,27 +4655,20 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
             if (!SharedConfig.isAppUpdateAvailable()) {
                 return;
             }
+            if (getUpdateAccountNum() != currentAccount) {
+                NotificationCenter.getInstance(getUpdateAccountNum()).removeObserver(this, NotificationCenter.fileLoaded);
+                NotificationCenter.getInstance(getUpdateAccountNum()).removeObserver(this, NotificationCenter.fileLoadProgressChanged);
+                NotificationCenter.getInstance(getUpdateAccountNum()).removeObserver(this, NotificationCenter.fileLoadFailed);
+            }
             if (updateLayoutIcon.getIcon() == MediaActionDrawable.ICON_DOWNLOAD) {
-                if (SharedConfig.pendingPtgAppUpdate.accountNum != currentAccount) {
-                    UpdateChecker.checkUpdate(currentAccount, (updateFounded, data) -> {
-                        if (updateFounded) {
-                            SharedConfig.pendingPtgAppUpdate = data;
-                            SharedConfig.saveConfig();
-                            AndroidUtilities.runOnUIThread(() -> {
-                                FileLoader.getInstance(currentAccount).loadFile(SharedConfig.pendingPtgAppUpdate.document, "update", FileLoader.PRIORITY_NORMAL, 1);
-                                updateAppUpdateViews(true);
-                            });
-                        }
-                    });
-                    return;
-                }
-                FileLoader.getInstance(currentAccount).loadFile(SharedConfig.pendingPtgAppUpdate.document, "update", FileLoader.PRIORITY_NORMAL, 1);
-                updateAppUpdateViews(true);
+                startUpdateDownloading();
             } else if (updateLayoutIcon.getIcon() == MediaActionDrawable.ICON_CANCEL) {
                 FileLoader.getInstance(currentAccount).cancelLoadFile(SharedConfig.pendingPtgAppUpdate.document);
                 updateAppUpdateViews(true);
             } else {
-                AndroidUtilities.openForView(SharedConfig.pendingPtgAppUpdate.document, true, this);
+                if (!AndroidUtilities.openForView(SharedConfig.pendingPtgAppUpdate.document, true, this)) {
+                    startUpdateDownloading();
+                }
             }
         });
         updateLayoutIcon = new RadialProgress2(updateLayout);
@@ -4702,14 +4702,14 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
             createUpdateUI();
             updateSizeTextView.setText(AndroidUtilities.formatFileSize(SharedConfig.pendingPtgAppUpdate.document.size));
             String fileName = FileLoader.getAttachFileName(SharedConfig.pendingPtgAppUpdate.document);
-            File path = FileLoader.getInstance(currentAccount).getPathToAttach(SharedConfig.pendingPtgAppUpdate.document, true);
+            File path = FileLoader.getInstance(getUpdateAccountNum()).getPathToAttach(SharedConfig.pendingPtgAppUpdate.document, true);
             boolean showSize;
             if (path.exists()) {
                 updateLayoutIcon.setIcon(MediaActionDrawable.ICON_UPDATE, true, false);
                 updateTextView.setText(LocaleController.getString("AppUpdateNow", R.string.AppUpdateNow));
                 showSize = false;
             } else {
-                if (FileLoader.getInstance(currentAccount).isLoadingFile(fileName)) {
+                if (FileLoader.getInstance(getUpdateAccountNum()).isLoadingFile(fileName)) {
                     updateLayoutIcon.setIcon(MediaActionDrawable.ICON_CANCEL, true, false);
                     updateLayoutIcon.setProgress(0, false);
                     Float p = ImageLoader.getInstance().getFileProgress(fileName);
@@ -4945,6 +4945,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
             final ChatActivity fragment;
             if (dids.size() <= 1) {
                 final long did = dids.get(0).dialogId;
+                final int topicId = dids.get(0).topicId;
 
                 Bundle args = new Bundle();
                 args.putBoolean("scrollToTopOnResume", true);
@@ -4962,6 +4963,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                     return;
                 }
                 fragment = new ChatActivity(args);
+                ForumUtilities.applyTopic(fragment, dids.get(0));
             } else {
                 fragment = null;
             }
@@ -5103,6 +5105,11 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
             NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.needShowPlayServicesAlert);
             NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.fileLoaded);
             NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.fileLoadProgressChanged);
+            if (SharedConfig.pendingPtgAppUpdate != null && getUpdateAccountNum() != currentAccount) {
+                NotificationCenter.getInstance(getUpdateAccountNum()).removeObserver(this, NotificationCenter.fileLoaded);
+                NotificationCenter.getInstance(getUpdateAccountNum()).removeObserver(this, NotificationCenter.fileLoadProgressChanged);
+                NotificationCenter.getInstance(getUpdateAccountNum()).removeObserver(this, NotificationCenter.fileLoadFailed);
+            }
             NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.fileLoadFailed);
             NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.historyImportProgressChanged);
             NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.groupCallUpdated);
@@ -5132,6 +5139,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
         NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.shouldKillApp);
         NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.shouldHideApp);
         NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.savedChannelsButtonStateChanged);
+        NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.cacheClearedByPtg);
     }
 
     public void presentFragment(INavigationLayout.NavigationParams params) {
@@ -6112,9 +6120,13 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
             System.exit(0);
         } else if (id == NotificationCenter.shouldHideApp) {
             moveTaskToBack(true);
-        }  else if (id == NotificationCenter.savedChannelsButtonStateChanged) {
+        } else if (id == NotificationCenter.savedChannelsButtonStateChanged) {
             if (sideMenu != null) {
                 sideMenu.getAdapter().notifyDataSetChanged();
+            }
+        } else if (id == NotificationCenter.cacheClearedByPtg) {
+            if (updateLayoutIcon != null && (updateLayoutIcon.getIcon() == MediaActionDrawable.ICON_CANCEL)) {
+                FileLoader.getInstance(SharedConfig.pendingPtgAppUpdate.accountNum).cancelLoadFile(SharedConfig.pendingPtgAppUpdate.document);
             }
         }
     }
@@ -6574,6 +6586,29 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
             return;
         }
         visibleActionMode.finish();
+    }
+
+    private void startUpdateDownloading() {
+        if (getUpdateAccountNum() != currentAccount) {
+            UpdateChecker.checkUpdate(currentAccount, (updateFounded, data) -> {
+                if (updateFounded) {
+                    SharedConfig.pendingPtgAppUpdate = data;
+                    SharedConfig.saveConfig();
+                    AndroidUtilities.runOnUIThread(this::startUpdateDownloading);
+                }
+            });
+            return;
+        }
+        MessageObject messageObject = new MessageObject(getUpdateAccountNum(), SharedConfig.pendingPtgAppUpdate.message, (LongSparseArray<TLRPC.User>) null, null, false, true);
+        FileLoader.getInstance(currentAccount).loadFile(SharedConfig.pendingPtgAppUpdate.document, messageObject, FileLoader.PRIORITY_NORMAL, 1);
+        updateAppUpdateViews(true);
+    }
+
+    private int getUpdateAccountNum() {
+        if (SharedConfig.pendingPtgAppUpdate == null) {
+            return -1;
+        }
+        return SharedConfig.pendingPtgAppUpdate.accountNum;
     }
 
     @Override
