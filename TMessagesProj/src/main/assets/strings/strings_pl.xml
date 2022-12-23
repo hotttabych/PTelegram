@@ -68,7 +68,6 @@
     <string name="DeleteMyMessagesFromChat">Usuwanie moich wiadomości z czatu</string>
     <string name="DeleteMessagesByPart">Zaawansowane usuwanie</string>
     <string name="Regex">Wyrażenie regularne</string>
-    <string name="ChatHintsDeleteMessagesAlert">Czy na pewno chcesz usunąć wszystkie wiadomości z tego czatu?</string>
     <string name="CaseSensitive">Wielkość liter ma znaczenie</string>
     <string name="DeleteAsRead">Usuń po przeczytaniu</string>
     <string name="RemoveAfter">Usuń po% s% s% s po przeczytaniu</string>

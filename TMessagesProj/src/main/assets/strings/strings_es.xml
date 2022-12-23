@@ -67,7 +67,6 @@
     <string name="DeleteMessages">Eliminar mensajes</string>
     <string name="DeleteMessagesByPart">Eliminar mensajes por parte</string>
     <string name="Regex">expresión regular</string>
-    <string name="ChatHintsDeleteMessagesAlert">¿Está seguro de que desea eliminar TODOS sus mensajes del chat?</string>
     <string name="CaseSensitive">Distingue entre mayúsculas y minúsculas</string>
     <string name="DeleteAsRead">Eliminar como leído</string>
     <string name="RemoveAfter">Quitar después de %s %s %s después de leer</string>

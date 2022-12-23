@@ -68,7 +68,6 @@
     <string name="DeleteMyMessagesFromChat">پیام های من را از گفتگو پاک کن</string>
     <string name="DeleteMessagesByPart">حذف پیشرفته</string>
     <string name="Regex">ابراز معمولی</string>
-    <string name="ChatHintsDeleteMessagesAlert">آیا مطمئنید می خواهید تمام پیام های خود را از گفتگو حذف کنید؟</string>
     <string name="CaseSensitive">حساس به موقعیت</string>
     <string name="DeleteAsRead">حذف پس از خواندن</string>
     <string name="RemoveAfter">پاک کردن پس از خواندن، بعد از %s %s %s</string>

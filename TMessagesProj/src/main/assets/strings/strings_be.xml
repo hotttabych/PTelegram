@@ -68,7 +68,6 @@
     <string name="MessagePart">Частка паведамлення</string>
     <string name="DeleteMyMessagesFromChat">Выдаленне маіх паведамленняў з чата</string>
     <string name="Regex">Рэгулярны выраз</string>
-    <string name="ChatHintsDeleteMessagesAlert">Вы дакладна хочаце выдаліць усе Вашыя паведамленні з гэтага чата?</string>
     <string name="CaseSensitive">Улічваць рэгістр</string>
     <string name="DeleteAsRead">Выдаліць пасля чытання</string>
     <string name="RemoveAfter">Выдаліць праз %s %s %s пасля чытання</string>
