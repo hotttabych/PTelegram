@@ -8927,7 +8927,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         }
                         String versionString = LocaleController.formatString("TelegramVersion", R.string.TelegramVersion, String.format(Locale.US, "v%s (%d) %s", pInfo.versionName, code, abi));
                         if (SharedConfig.fakePasscodeActivatedIndex == -1 && SharedConfig.showVersion) {
-                            versionString += "\nPTelegram version " + BuildVars.PARTISAN_VERSION_STRING;
+                            versionString += "\nPTelegram version " + BuildVars.PARTISAN_VERSION_STRING + " ("  + BuildVars.PARTISAN_BUILD_VERSION + ")";
                         }
                         cell.setText(versionString);
                     } catch (Exception e) {
