@@ -15,7 +15,6 @@ import android.graphics.Paint;
 import android.graphics.Rect;
 
 import com.carrotsearch.randomizedtesting.Xoroshiro128PlusRandom;
-import org.telegram.messenger.fakepasscode.RemoveAsReadMessages;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -28,10 +27,6 @@ import java.security.MessageDigest;
 import java.security.SecureRandom;
 import java.util.HashMap;
 import java.util.Random;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 

@@ -112,7 +112,7 @@ import org.telegram.messenger.Utilities;
 import org.telegram.messenger.XiaomiUtilities;
 import org.telegram.messenger.fakepasscode.AccountActions;
 import org.telegram.messenger.fakepasscode.FakePasscode;
-import org.telegram.messenger.fakepasscode.RemoveAsReadMessages;
+import org.telegram.messenger.fakepasscode.RemoveAfterReadingMessages;
 import org.telegram.messenger.fakepasscode.TelegramMessageAction;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.TLObject;
@@ -8593,17 +8593,17 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 Integer msgId = (Integer) args[0];
                 Integer newMsgId = (Integer) args[1];
                 TLRPC.Message newMsgObj = (TLRPC.Message) args[2];
-                RemoveAsReadMessages.load();
-                RemoveAsReadMessages.messagesToRemoveAsRead.putIfAbsent("" + currentAccount, new HashMap<>());
-                if (newMsgObj != null && RemoveAsReadMessages.messagesToRemoveAsRead.get("" + currentAccount).containsKey("" + newMsgObj.dialog_id)) {
-                    for (RemoveAsReadMessages.RemoveAsReadMessage message : RemoveAsReadMessages.messagesToRemoveAsRead.get("" + currentAccount).get("" + newMsgObj.dialog_id)) {
+                RemoveAfterReadingMessages.load();
+                RemoveAfterReadingMessages.messagesToRemoveAsRead.putIfAbsent("" + currentAccount, new HashMap<>());
+                if (newMsgObj != null && RemoveAfterReadingMessages.messagesToRemoveAsRead.get("" + currentAccount).containsKey("" + newMsgObj.dialog_id)) {
+                    for (RemoveAfterReadingMessages.RemoveAsReadMessage message : RemoveAfterReadingMessages.messagesToRemoveAsRead.get("" + currentAccount).get("" + newMsgObj.dialog_id)) {
                         if (message.getId() == msgId) {
                             message.setId(newMsgId);
                             break;
                         }
                     }
                 }
-                RemoveAsReadMessages.save();
+                RemoveAfterReadingMessages.save();
             }
         } else if (id == NotificationCenter.didSetPasscode) {
             updatePasscodeButton();

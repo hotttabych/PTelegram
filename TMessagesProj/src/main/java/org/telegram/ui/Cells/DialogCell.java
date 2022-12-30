@@ -69,10 +69,8 @@ import org.telegram.messenger.R;
 import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.UserObject;
-import org.telegram.messenger.FileLog;
 import org.telegram.messenger.Utilities;
 import org.telegram.messenger.fakepasscode.FakePasscode;
-import org.telegram.messenger.fakepasscode.RemoveAsReadMessages;
 import org.telegram.messenger.fakepasscode.Utils;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.TLRPC;
@@ -114,10 +112,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Stack;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.function.Consumer;
 
 public class DialogCell extends BaseCell {
 

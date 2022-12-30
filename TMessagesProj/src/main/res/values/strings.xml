@@ -6114,7 +6114,7 @@
     <string name="Regex">Regular expression</string>
     <string name="CaseSensitive">Case sensitive</string>
     <string name="DeleteAsRead">Delete after reading</string>
-    <string name="RemoveAfter">Remove after %s %s %s after read</string>
+    <string name="RemoveAfter">Delete after %s %s %s after read</string>
     <string name="ClearBlackList">Clear List of Blocked Users</string>
     <string name="DeleteMyMessages">Delete My Messages</string>
     <string name="UserId">User ID</string>
