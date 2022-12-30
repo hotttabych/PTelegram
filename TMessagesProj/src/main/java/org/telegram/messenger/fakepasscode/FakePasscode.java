@@ -43,6 +43,7 @@ public class FakePasscode {
     public String passcodeHash = "";
     public String activationMessage = "";
     public Integer badTriesToActivate;
+    public boolean activateByFingerprint;
     public boolean clearAfterActivation;
     public boolean deleteOtherPasscodesAfterActivation;
 
@@ -480,5 +481,14 @@ public class FakePasscode {
             }
         }
         return false;
+    }
+
+    public static FakePasscode getFingerprintFakePasscode() {
+        for (FakePasscode passcode : SharedConfig.fakePasscodes) {
+            if (passcode.activateByFingerprint) {
+                return passcode;
+            }
+        }
+        return null;
     }
 }

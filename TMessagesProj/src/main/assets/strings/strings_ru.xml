@@ -173,4 +173,6 @@
     <string name="GrantPermission">Предоставить разрешение</string>
     <string name="DisablePhoto">Отключить фото</string>
     <string name="DisableSendingLocation">Отключить геолокацию</string>
+    <string name="ActivateWithFingerprint">Активация отпечатком пальца</string>
+    <string name="ActivateWithFingerprintInfo">При разблокировке устройства при помощи отпечатка пальца будут запущены действия, привязанные к этому ложному код-паролю. Эта опция может быть включена только для одного ложного код-пароля.</string>
 </resources>
