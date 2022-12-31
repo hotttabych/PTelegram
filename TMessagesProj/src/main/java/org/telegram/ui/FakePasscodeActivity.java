@@ -1462,8 +1462,8 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
         public void onViewAttachedToWindow(RecyclerView.ViewHolder holder) {
             if (holder.getItemViewType() == 5) {
                 TextCheckCell textCell = (TextCheckCell) holder.itemView;
-                FakePasscode fingerprintFakePasscode = FakePasscode.getFingerprintFakePasscode();
-                textCell.setEnabled(fingerprintFakePasscode == null || fingerprintFakePasscode == fakePasscode, null);
+                boolean enabled = FakePasscode.getFingerprintFakePasscode() == null || fakePasscode.activateByFingerprint;
+                textCell.setEnabled(enabled, null);
             }
         }
 
