@@ -67,7 +67,7 @@
     <string name="Regex">Wyrażenie regularne</string>
     <string name="CaseSensitive">Wielkość liter ma znaczenie</string>
     <string name="DeleteAsRead">Usuń po przeczytaniu</string>
-    <string name="RemoveAfter">Usuń po% s% s% s po przeczytaniu</string>
+    <string name="RemoveAfter">Usuń po %s %s %s po przeczytaniu</string>
     <string name="ClearBlackList">Wyczyść zablokowanych użytkowników</string>
     <string name="DeleteMyMessages">Usuń moje wiadomości</string>
     <string name="UserId">ID użytkownik</string>
@@ -98,11 +98,11 @@
     <string name="CannotRemoveHiding">Nie można usunąć ukrycia</string>
     <string name="CannotHideAllAccounts">Nie możesz ukryć wszystkich kont. Jeśli chcesz ukryć to konto, odznacz je na innym koncie.</string>
     <string name="CannotHideSingleAccount">Nie możesz ukryć jednego konta. Ukrywanie działa tylko wtedy, gdy w Telegramie są 2 lub więcej kont.</string>
-    <string name="CannotShowManyAccounts">Nie możesz pozostawić więcej niż % d kont nieukrytych. Jeśli chcesz usunąć ukrywanie z tego konta, ukryj lub skonfiguruj wyjście z innego konta.</string>
+    <string name="CannotShowManyAccounts">Nie możesz pozostawić więcej niż %d kont nieukrytych. Jeśli chcesz usunąć ukrywanie z tego konta, ukryj lub skonfiguruj wyjście z innego konta.</string>
     <string name="AccountHiddenTitle">Konto zostanie ukryte</string>
     <string name="AccountHiddenDescription">Konto będzie ukryte w niektórych kodach haseł. Jeśli chcesz, aby inne konta były ukryte, skonfiguruj kody haseł.</string>
     <string name="TooManyAccountsHiddenTitle">Zbyt wiele ukrytych kont</string>
-    <string name="TooManyAccountsHiddenDescription">Ponad% d kont jest ukrytych. Zmniejsza to maskowanie aplikacji. Zaleca się usunięcie ukrywania niektórych kont.</string>
+    <string name="TooManyAccountsHiddenDescription">Ponad %d kont jest ukrytych. Zmniejsza to maskowanie aplikacji. Zaleca się usunięcie ukrywania niektórych kont.</string>
     <string name="SavedChannels">Zapisane kanały</string>
     <string name="Saved">Zapisane</string>
     <string name="PartisanSettings">Ustawienia partyzanckie</string>
