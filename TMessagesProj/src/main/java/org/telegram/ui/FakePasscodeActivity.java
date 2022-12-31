@@ -51,6 +51,8 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import org.telegram.messenger.AndroidUtilities;
+import org.telegram.messenger.ApplicationLoader;
+import org.telegram.messenger.FileLog;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.R;
@@ -61,6 +63,7 @@ import org.telegram.messenger.fakepasscode.AccountActions;
 import org.telegram.messenger.fakepasscode.FakePasscode;
 import org.telegram.messenger.fakepasscode.FakePasscodeSerializer;
 import org.telegram.messenger.fakepasscode.UpdateIdHashRunnable;
+import org.telegram.messenger.support.fingerprint.FingerprintManagerCompat;
 import org.telegram.ui.ActionBar.ActionBar;
 import org.telegram.ui.ActionBar.ActionBarMenuItem;
 import org.telegram.ui.ActionBar.AlertDialog;
@@ -1034,10 +1037,22 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
         badTriesToActivateRow = rowCount++;
         badTriesToActivateDetailRow = rowCount++;
 
-        if (SharedConfig.useFingerprint) {
-            fingerprintRow = rowCount++;
-            fingerprintDetailRow = rowCount++;
-        } else {
+        try {
+            if (Build.VERSION.SDK_INT >= 23) {
+                FingerprintManagerCompat fingerprintManager = FingerprintManagerCompat.from(ApplicationLoader.applicationContext);
+                if (fingerprintManager.isHardwareDetected() && AndroidUtilities.isKeyguardSecure() && SharedConfig.useFingerprint) {
+                    fingerprintRow = rowCount++;
+                    fingerprintDetailRow = rowCount++;
+                } else {
+                    fingerprintRow = -1;
+                    fingerprintDetailRow = -1;
+                }
+            } else {
+                fingerprintRow = -1;
+                fingerprintDetailRow = -1;
+            }
+        } catch (Throwable e) {
+            FileLog.e(e);
             fingerprintRow = -1;
             fingerprintDetailRow = -1;
         }
