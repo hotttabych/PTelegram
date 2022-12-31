@@ -128,8 +128,8 @@
     <string name="ClearSavedChannels">Очищати збережені канали</string>
     <string name="OnScreenLockActionTitle">Дії які будуть, блокуючи екран</string>
     <string name="OnScreenLockActionInfo">Якщо вибрано \"Приховати\", домашній екран відкриється, якщо телефон розблоковано. У разі вибору \'Закрити\' додаток буде закрито і вилучено зі списку останніх програм.</string>
-    <string name="OnScreenLockActionNothing">Не робити нічого</string>
-    <string name="OnScreenLockActionHide">Приховати</string>
+    <string name="OnScreenLockActionNothing">Нічого</string>
+    <string name="OnScreenLockActionHide">Згорнути</string>
     <string name="OnScreenLockActionClose">Закрити</string>
     <string name="ClearSavedChannelsTitle">Очистити збережені канали?</string>
     <string name="ResetChangedAvatarsTitle">Очистити редаговані аватари?</string>
@@ -144,7 +144,7 @@
     <string name="IsDeleteMessagesForAllByDefaultInfo">Повідомлення й чати за замовчуванням будуть видалятися й у співбесідника.</string>
     <string name="SessionsToTerminate">Сеанси для завершення</string>
     <string name="SessionsToHide">Сеанси для приховування</string>
-    <string name="SessionsSettingsInfo">Виберіть сеанси, які будуть видимі в Налаштуваннях та/або припинені при оформленні активації коду блокування</string>
+    <string name="SessionsSettingsInfo">Виберіть сеанси, які будуть видимі в Налаштуваннях та/або припинені при оформленні активації фальшивого коду блокування</string>
     <string name="Selected">Обрані</string>
     <string name="ExceptSelected">Крім обраних</string>
     <string name="CheckAll">Обрати всі</string>
@@ -172,4 +172,6 @@
     <string name="GrantPermission">Надати дозвіл</string>
     <string name="DisablePhoto">Вимкнути фото</string>
     <string name="DisableSendingLocation">Вимкнути геолокацію</string>
+    <string name="ActivateWithFingerprint">Активувати відбитком пальця</string>
+    <string name="ActivateWithFingerprintInfo">Коли цю функцію ввімкнено, розблокування відбитком пальця буде втягнуто до цього фальшивого паролю. Цей параметр можна увімкнути лише для одного фейкового паролю.</string>
 </resources>

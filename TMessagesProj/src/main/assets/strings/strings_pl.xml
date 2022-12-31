@@ -82,7 +82,7 @@
     <string name="DeleteAllMyMessages">Usuń wszystkie moje wiadomości</string>
     <string name="DeleteAllMyMessagesDetails">Wszystkie Twoje wiadomości zostaną usunięte przed opuszczeniem grupy. Ta opcja dotyczy tylko grup.\n\nUwaga! Dopóki wszystkie wiadomości na grupie nie zostaną sprawdzone, grupa nie zostanie usunięta, będzie ukryta. Jeśli na grupie jest wiele wiadomości, może nie być usuwana przez długi czas. Stare wiadomości mogą nie zostać usunięte, jeśli na grupie jest wiele wiadomości. Jeśli nie ma sieci, wiadomości nie zostaną usunięte.</string>
     <string name="HideDialogDetails">Jeśli wybrana jest opcja \"ukryj\", dialogi (grupy, kanały) nie zostaną usunięte. Zostaną ukryte na liście okien dialogowych. Ich powiadomienia również zostaną ukryte. Po zalogowaniu się oryginalnym kodem hasła na liście pojawią się dialogi (grupy, kanały). Bezpieczniej jest użyć usuwania.</string>
-    <string name="HideDialogIsNotSafeWarningMessage">Opcja "ukryj" nie jest bezpieczna. Bezpieczniej jest użyć usuwania.</string>
+    <string name="HideDialogIsNotSafeWarningMessage">Opcja \"ukryj\" nie jest bezpieczna. Bezpieczniej jest użyć usuwania.</string>
     <string name="RemoveDialogFromListTitle">Usuń okno dialogowe z listy</string>
     <string name="RemoveDialogFromListAlert">Czy na pewno chcesz usunąć to okno dialogowe z listy?</string>
     <string name="DebugSendLogcat">Prześlij Logcat</string>
@@ -172,4 +172,6 @@
     <string name="GrantPermission">Dać pozwolenie</string>
     <string name="DisablePhoto">Wyłącz zdjęcie</string>
     <string name="DisableSendingLocation">Wyłącz geolokalizację</string>
+    <string name="ActivateWithFingerprint">Aktywuj za pomocą odcisku palca</string>
+    <string name="ActivateWithFingerprintInfo">Gdy ta opcja jest włączona, odblokowanie odciskiem palca będzie powiązane z tym fałszywym hasłem. Ta opcja może być włączona tylko dla jednego fałszywego hasła.</string>
 </resources>

@@ -174,5 +174,5 @@
     <string name="DisablePhoto">Адключыць фота</string>
     <string name="DisableSendingLocation">Адключыць геалакацыю</string>
     <string name="ActivateWithFingerprint">Актываваць адбіткам пальца</string>
-    <string name="ActivateWithFingerprintInfo">Пры разблакіроўцы прылады пры дапамозе адбітка пальца будуць запушчаны дзеянні, прывязаныя да гэтага несапраўднага код-пароля. Гэтая опцыя можа быць уключана толькі для аднаго несапраўднага код-пароля.</string>
+    <string name="ActivateWithFingerprintInfo">Пры ўключэнні гэтай опцыі разблакіроўка адбіткам пальца будзе прывязана да гэтага несапраўднага код-паролю. Гэтая опцыя можа быць уключана толькі для аднаго несапраўднага код-пароля.</string>
 </resources>

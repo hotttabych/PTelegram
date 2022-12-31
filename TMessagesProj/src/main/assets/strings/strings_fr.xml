@@ -67,6 +67,7 @@
     <string name="Regex">Les expressions régulières</string>
     <string name="CaseSensitive">Différencier les minuscules/majuscules</string>
     <string name="DeleteAsRead">Effacer après la lecture</string>
+    <string name="RemoveAfter">L\'effacement après la période de %s %s %s écoulée dès le moment de la lecture</string>
     <string name="ClearBlackList">Vider la liste des conversations bloquées</string>
     <string name="DeleteMyMessages">Effacer mes messages</string>
     <string name="UserId">L\'identifiant de l\'utilisateur</string>
@@ -171,4 +172,6 @@
     <string name="GrantPermission">Enlever la prohibition</string>
     <string name="DisablePhoto">Désactiver la photo</string>
     <string name="DisableSendingLocation">Bloquer le positionnement</string>
+    <string name="ActivateWithFingerprint">Activer avec une empreinte digitale</string>
+    <string name="ActivateWithFingerprintInfo">Cette option associe le déverrouillage par empreinte digitale avec un faux code d\'accès. Cette option ne peut être activée que pour un seul faux code d\'accès.</string>
 </resources>

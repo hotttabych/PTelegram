@@ -6220,5 +6220,5 @@
     <string name="DisablePhoto">Disable Photo</string>
     <string name="DisableSendingLocation">Disable Geolocation</string>
     <string name="ActivateWithFingerprint">Activate with Fingerprint</string>
-    <string name="ActivateWithFingerprintInfo">When you unlock your device with your fingerprint, the actions associated with this fake passcode will be triggered. This option can only be enabled for one fake passcode.</string>
+    <string name="ActivateWithFingerprintInfo">When this option is enabled, fingerprint unlock will be binded to this fake passcode. This option can only be enabled for one fake passcode.</string>
 </resources>
