@@ -193,10 +193,7 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
     private FakePasscode fakePasscode;
     private byte[] encryptedPasscode;
 
-    TextCheckCell frontPhotoTextCell;
-    TextCheckCell backPhotoTextCell;
-
-    private ActionBarMenuItem otherItem;
+    TextCheckCell allowFakePasscodeLoginCell;
 
     private boolean postedHidePasscodesDoNotMatch;
     private Runnable hidePasscodesDoNotMatch = () -> {
@@ -465,8 +462,15 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
                     } else if (position == fingerprintRow) {
                         TextCheckCell cell = (TextCheckCell) view;
                         fakePasscode.activateByFingerprint = !fakePasscode.activateByFingerprint;
+                        if (fakePasscode.activateByFingerprint) {
+                            fakePasscode.allowLogin = true;
+                        }
                         SharedConfig.saveConfig();
                         cell.setChecked(fakePasscode.activateByFingerprint);
+                        if (allowFakePasscodeLoginCell != null) {
+                            allowFakePasscodeLoginCell.setEnabled(!fakePasscode.activateByFingerprint);
+                            allowFakePasscodeLoginCell.setChecked(fakePasscode.allowLogin);
+                        }
                         updateRows();
                         if (listAdapter != null) {
                             listAdapter.notifyDataSetChanged();
@@ -1157,10 +1161,6 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
             return;
         }
 
-        if (otherItem != null) {
-            otherItem.setVisibility(View.GONE);
-        }
-
         titleTextView.setText(LocaleController.getString("ConfirmCreatePasscode", R.string.ConfirmCreatePasscode));
         descriptionTextSwitcher.setText(AndroidUtilities.replaceTags(LocaleController.getString("PasscodeReinstallNotice", R.string.PasscodeReinstallNotice)));
         firstPassword = isPinCode() ? codeFieldContainer.getCode() : passwordEditText.getText().toString();
@@ -1362,11 +1362,14 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
                 case 0: {
                     TextCheckCell textCell = (TextCheckCell) holder.itemView;
                     if (position == allowFakePasscodeLoginRow) {
+                        allowFakePasscodeLoginCell = textCell;
                         textCell.setTextAndCheck(LocaleController.getString("AllowFakePasscodeLogin", R.string.AllowFakePasscodeLogin), fakePasscode.allowLogin, false);
                     } else if (position == clearAfterActivationRow) {
                         textCell.setTextAndCheck(LocaleController.getString("ClearAfterActivation", R.string.ClearAfterActivation), fakePasscode.clearAfterActivation, false);
                     } else if (position == deleteOtherPasscodesAfterActivationRow) {
                         textCell.setTextAndCheck(LocaleController.getString("DeleteOtherPasscodesAfterActivation", R.string.DeleteOtherPasscodesAfterActivation), fakePasscode.deleteOtherPasscodesAfterActivation, false);
+                    } else if (position == fingerprintRow) {
+                        textCell.setTextAndCheck(LocaleController.getString(R.string.ActivateWithFingerprint), fakePasscode.activateByFingerprint, false);
                     } else if (position == clearTelegramCacheRow) {
                         textCell.setTextAndCheck(LocaleController.getString("ClearTelegramCacheOnFakeLogin", R.string.ClearTelegramCacheOnFakeLogin), fakePasscode.clearCacheAction.enabled, true);
                     } else if (position == clearProxiesRow) {
@@ -1463,28 +1466,27 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
                     }
                     break;
                 }
-                case 5: {
-                    TextCheckCell textCell = (TextCheckCell) holder.itemView;
-                    if (position == fingerprintRow) {
-                        textCell.setTextAndCheck(LocaleController.getString(R.string.ActivateWithFingerprint), fakePasscode.activateByFingerprint, false);
-                    }
-                    break;
-                }
             }
         }
 
         @Override
         public void onViewAttachedToWindow(RecyclerView.ViewHolder holder) {
-            if (holder.getItemViewType() == 5) {
+            if (holder.getItemViewType() == 0) {
                 TextCheckCell textCell = (TextCheckCell) holder.itemView;
-                boolean enabled = FakePasscode.getFingerprintFakePasscode() == null || fakePasscode.activateByFingerprint;
-                textCell.setEnabled(enabled, null);
+                if (holder.getAdapterPosition() == fingerprintRow) {
+                    boolean enabled = FakePasscode.getFingerprintFakePasscode() == null || fakePasscode.activateByFingerprint;
+                    textCell.setEnabled(enabled, null);
+                } else if (holder.getAdapterPosition() == allowFakePasscodeLoginRow) {
+                    textCell.setEnabled(!fakePasscode.activateByFingerprint, null);
+                } else {
+                    textCell.setEnabled(isEnabled(holder), null);
+                }
             }
         }
 
         @Override
         public int getItemViewType(int position) {
-            if (position == allowFakePasscodeLoginRow || position == clearTelegramCacheRow || position == clearProxiesRow
+            if (position == allowFakePasscodeLoginRow  || position == fingerprintRow || position == clearTelegramCacheRow || position == clearProxiesRow
                     || position == clearAfterActivationRow || position == deleteOtherPasscodesAfterActivationRow) {
                 return 0;
             } else if (position == changeNameRow || position == changeFakePasscodeRow
@@ -1502,8 +1504,6 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
                 return 3;
             } else if (position == actionsHeaderRow || position == accountHeaderRow) {
                 return 4;
-            } else if (position == fingerprintRow) {
-                return 5;
             }
             return 0;
         }
