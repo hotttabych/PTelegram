@@ -127,7 +127,7 @@ import org.telegram.messenger.VideoEditedInfo;
 import org.telegram.messenger.browser.Browser;
 import org.telegram.messenger.camera.CameraController;
 import org.telegram.messenger.fakepasscode.FakePasscode;
-import org.telegram.messenger.fakepasscode.RemoveAsReadMessages;
+import org.telegram.messenger.fakepasscode.RemoveAfterReadingMessages;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.ActionBar;
@@ -3760,13 +3760,13 @@ public class ChatActivityEnterView extends BlurredFrameLayout implements Notific
                     if (sendPopupWindow != null && sendPopupWindow.isShowing()) {
                         sendPopupWindow.dismiss();
                     }
-                    RemoveAsReadMessages.load();
-                    RemoveAsReadMessages.delays.putIfAbsent("" + currentAccount, 5 * 1000);
-                    AlertsCreator.createScheduleDeleteTimePickerDialog(parentActivity, RemoveAsReadMessages.delays.get("" + currentAccount),
+                    RemoveAfterReadingMessages.load();
+                    RemoveAfterReadingMessages.delays.putIfAbsent("" + currentAccount, 5 * 1000);
+                    AlertsCreator.createScheduleDeleteTimePickerDialog(parentActivity, RemoveAfterReadingMessages.delays.get("" + currentAccount),
                             (notify, delay) -> {
-                                sendMessageInternal(notify, 0, true, delay);
-                                RemoveAsReadMessages.delays.put("" + currentAccount, delay);
-                                RemoveAsReadMessages.save();
+                                sendMessageInternal(notify, 0, delay);
+                                RemoveAfterReadingMessages.delays.put("" + currentAccount, delay);
+                                RemoveAfterReadingMessages.save();
                             });
                 });
                 sendPopupLayout.addView(scheduleDeleteButton, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 48));
@@ -4738,7 +4738,7 @@ public class ChatActivityEnterView extends BlurredFrameLayout implements Notific
     }
 
     private boolean premiumEmojiBulletin = true;
-    private void sendMessageInternal(boolean notify, int scheduleDate, boolean autoDeletable, int delay) {
+    private void sendMessageInternal(boolean notify, int scheduleDate, Integer autoDeleteDelay) {
         if (slowModeTimer == Integer.MAX_VALUE && !isInScheduleMode()) {
             if (delegate != null) {
                 delegate.scrollToSendingMessage();
@@ -4769,7 +4769,7 @@ public class ChatActivityEnterView extends BlurredFrameLayout implements Notific
             if (playing != null && playing == audioToSendMessageObject) {
                 MediaController.getInstance().cleanupPlayer(true, true);
             }
-            SendMessagesHelper.getInstance(currentAccount).sendMessage(audioToSend, null, audioToSendPath, dialog_id, replyingMessageObject, getThreadMessage(), null, null, null, null, notify, scheduleDate, 0, null, autoDeletable, delay);
+            SendMessagesHelper.getInstance(currentAccount).sendMessage(audioToSend, null, audioToSendPath, dialog_id, replyingMessageObject, getThreadMessage(), null, null, null, null, notify, scheduleDate, 0, null, autoDeleteDelay);
             if (delegate != null) {
                 delegate.onMessageSend(null, notify, scheduleDate);
             }
@@ -4793,7 +4793,7 @@ public class ChatActivityEnterView extends BlurredFrameLayout implements Notific
         if (checkPremiumAnimatedEmoji(currentAccount, dialog_id, parentFragment, null, message)) {
             return;
         }
-        if (processSendingText(message, notify, scheduleDate, autoDeletable, delay)) {
+        if (processSendingText(message, notify, scheduleDate, autoDeleteDelay)) {
             if (delegate.hasForwardingMessages() || (scheduleDate != 0 && !isInScheduleMode()) || isInScheduleMode()) {
                 messageEditText.setText("");
                 if (delegate != null) {
@@ -4819,7 +4819,7 @@ public class ChatActivityEnterView extends BlurredFrameLayout implements Notific
     }
 
     private void sendMessageInternal(boolean notify, int scheduleDate) {
-        sendMessageInternal(notify, scheduleDate, false, 0);
+        sendMessageInternal(notify, scheduleDate, null);
     }
 
     public static boolean checkPremiumAnimatedEmoji(int currentAccount, long dialogId, BaseFragment parentFragment, FrameLayout container, CharSequence message) {
@@ -4916,7 +4916,7 @@ public class ChatActivityEnterView extends BlurredFrameLayout implements Notific
         setEditingMessageObject(null, false);
     }
 
-    public boolean processSendingText(CharSequence text, boolean notify, int scheduleDate, boolean autoDeletable, int delay) {
+    public boolean processSendingText(CharSequence text, boolean notify, int scheduleDate, Integer autoDeleteDelay) {
         int[] emojiOnly = new int[1];
         Emoji.parseEmojis(text, emojiOnly);
         boolean hasOnlyEmoji = emojiOnly[0] > 0;
@@ -4987,7 +4987,7 @@ public class ChatActivityEnterView extends BlurredFrameLayout implements Notific
                 updateStickersOrder = SendMessagesHelper.checkUpdateStickersOrder(text);
 
 
-                SendMessagesHelper.getInstance(currentAccount).sendMessage(message[0].toString(), dialog_id, replyingMessageObject, getThreadMessage(), messageWebPage, messageWebPageSearch, entities, null, null, notify, scheduleDate, sendAnimationData, updateStickersOrder, autoDeletable, delay);
+                SendMessagesHelper.getInstance(currentAccount).sendMessage(message[0].toString(), dialog_id, replyingMessageObject, getThreadMessage(), messageWebPage, messageWebPageSearch, entities, null, null, notify, scheduleDate, sendAnimationData, updateStickersOrder, autoDeleteDelay);
                 start = end + 1;
             } while (end != text.length());
             return true;
@@ -4996,7 +4996,7 @@ public class ChatActivityEnterView extends BlurredFrameLayout implements Notific
     }
 
     public boolean processSendingText(CharSequence text, boolean notify, int scheduleDate) {
-        return processSendingText(text, notify, scheduleDate, false, 0);
+        return processSendingText(text, notify, scheduleDate, null);
     }
 
     private boolean supportsSendingNewEntities() {

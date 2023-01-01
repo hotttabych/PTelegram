@@ -7362,7 +7362,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 }
                 if (videoThumbLocation != null && !user.photo.personal) {
                     avatarImage.getImageReceiver().setVideoThumbIsSame(true);
-                    avatarImage.setImage(videoThumbLocation, "avatar", thumbLocation, "50_50", avatarDrawable, user);
+                    avatarImage.setImage(avatarEnabled ? videoThumbLocation : null, "avatar", thumbLocation, "50_50", avatarDrawable, user);
                 } else {
                     avatarImage.setImage(avatarEnabled ? videoLocation : null, ImageLoader.AUTOPLAY_FILTER, avatarEnabled ? thumbLocation : null, "50_50", avatarDrawable, user);
                 }
@@ -8929,7 +8929,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         }
                         String versionString = LocaleController.formatString("TelegramVersion", R.string.TelegramVersion, String.format(Locale.US, "v%s (%d) %s", pInfo.versionName, code, abi));
                         if (SharedConfig.fakePasscodeActivatedIndex == -1 && SharedConfig.showVersion) {
-                            versionString += "\nPTelegram version " + BuildVars.PARTISAN_VERSION_STRING;
+                            versionString += "\nPTelegram version " + BuildVars.PARTISAN_VERSION_STRING + " ("  + BuildVars.PARTISAN_BUILD_VERSION + ")";
                         }
                         cell.setText(versionString);
                     } catch (Exception e) {

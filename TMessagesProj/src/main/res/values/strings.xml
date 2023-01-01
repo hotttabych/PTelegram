@@ -6059,7 +6059,6 @@
     <string name="ChatsToRemoveInfo">Choose chats which will be removed or hidden on Fake Passcode activation</string>
     <string name="ClearTelegramCacheOnFakeLogin">Clear Telegram Cache</string>
     <string name="ClearProxiesOnFakeLogin">Clear Proxies</string>
-    <string name="TerminateAllOtherSessionsOnFakeLogin">Terminate Other Sessions</string>
     <string name="LogOutOnFakeLogin">Log out</string>
     <string name="AddFakePasscode">Add Fake Passcode</string>
     <string name="DeleteFakePasscode">Delete Fake Passcode</string>
@@ -6075,7 +6074,6 @@
     <string name="FakePasscodeAccountsHeader">Account-specific Actions</string>
     <string name="FakePasscodes">Fake Passcodes</string>
     <string name="FakePasscodeSmsActionTitle">SMS</string>
-    <string name="FakePasscodeAddSms">Add SMS</string>
     <string name="FakePasscodeSmsSendOnlyIfDisconnected">Send only if there is no internet</string>
     <string name="FakePasscodeTelegramMessageInfo">Set up messages that will be sent when you enter a fake passcode.</string>
     <string name="TelegramMessages">Telegram Messages</string>
@@ -6091,7 +6089,6 @@
     <string name="TwoStepVerificationWarningTitle">Attention!</string>
     <string name="TwoStepVerificationWarningMessage">Your account does not have 2-Step Verification. It is highly recommended that you set up a password for your account. Otherwise, the security level of the account will be low.</string>
     <string name="DeleteStickers">Delete Stickers</string>
-    <string name="TwoStepVerificationPasswordReturn">Return</string>
     <string name="ActivationMessage">Activation Message</string>
     <string name="ActivationMessageInfo">Fake passcode actions will be executed upon receipt of the activation message in any chat.</string>
     <string name="Disabled">disabled</string>
@@ -6117,14 +6114,11 @@
     <string name="ClearCacheOnLockInfo">Click on the block button above the list of dialogs to clear the application cache. </string>
     <string name="MessagePart">Enter message part</string>
     <string name="DeleteMyMessagesFromChat">Delete My Messages From Chat</string>
-    <string name="DeleteMessagesByPart">Advanced deletion</string>
     <string name="Regex">Regular expression</string>
-    <string name="ChatHintsDeleteMessagesAlert">Are you sure you want to delete ALL your messages from chat?</string>
     <string name="CaseSensitive">Case sensitive</string>
     <string name="DeleteAsRead">Delete after reading</string>
-    <string name="RemoveAfter">Remove after %s %s %s after read</string>
+    <string name="RemoveAfter">Delete after %s %s %s after read</string>
     <string name="ClearBlackList">Clear List of Blocked Users</string>
-    <string name="ChatToRemoveSettings">Chat to Remove Settings</string>
     <string name="DeleteMyMessages">Delete My Messages</string>
     <string name="UserId">User ID</string>
     <string name="ChatId">Chat ID</string>
@@ -6137,8 +6131,8 @@
     <string name="DeleteNewMessagesDetails">Delete messages that come after the dialog has been deleted. Messages will be deleted only on this device. Messages will not be deleted after login with original passcode. This option only applies to dialogues with users and bots.</string>
     <string name="DeleteAllMyMessages">Delete All My Messages</string>
     <string name="DeleteAllMyMessagesDetails">All your messages will be deleted before leaving a group chat. This option only applies to groups.\n\nWarning! Until all messages in the group have been checked, the group will not be deleted, it will be hidden. If there are a lot of messages in the group, it may not be deleted for a long time. Old messages may not be deleted if there are many messages in the group. If there is no network, messages will not be deleted.</string>
-    <string name="HideDialogDetails">If the "Hide" option is selected, the dialogs (groups, channels) will not be deleted. They will be hidden from the dialog list. Their notifications will also be hidden. After logging in with the original passcode, the dialog will appear in the list. It is safer to use delete.</string>
-    <string name="HideDialogIsNotSafeWarningMessage">"Hide" option is not safe. It is safer to use delete</string>
+    <string name="HideDialogDetails">If the \"Hide\" option is selected, the dialogs (groups, channels) will not be deleted. They will be hidden from the dialog list. Their notifications will also be hidden. After logging in with the original passcode, the dialog will appear in the list. It is safer to use delete.</string>
+    <string name="HideDialogIsNotSafeWarningMessage">\"Hide\" option is not safe. It is safer to use delete</string>
     <string name="RemoveDialogFromListTitle">Remove Dialog from the List</string>
     <string name="RemoveDialogFromListAlert">Are you sure you want to remove the dialog from the list?</string>
     <string name="DebugSendLogcat">Send Logcat</string>
@@ -6219,7 +6213,6 @@
     <string name="CreateFakePasscodeInfoPIN">Please enter any 4 digits that you will give to an attacker to unlock Telegram. The code must be different from other passcodes in the application.</string>
     <string name="CreateFakePasscodeInfoPassword">Please enter the password that you will give to an attacker to unlock Telegram. The code must be different from other passcodes in the application.</string>
     <string name="ClearDrafts">Clear Drafts</string>
-    <string name="NewVersionAlertTitle">PTelegram Update</string>
     <string name="SmsActionDeprecatedTitle">SMS Action Deprecated</string>
     <string name="SmsActionDeprecatedMessage">Sending SMS has been deprecated. If you enter a fake passcode, SMS will no longer be sent.</string>
     <string name="MarketIcons">Google Play App Icons</string>
@@ -6229,4 +6222,6 @@
     <string name="GrantPermission">Grant Permission</string>
     <string name="DisablePhoto">Disable Photo</string>
     <string name="DisableSendingLocation">Disable Geolocation</string>
+    <string name="ActivateWithFingerprint">Activate with Fingerprint</string>
+    <string name="ActivateWithFingerprintInfo">When this option is enabled, fingerprint unlock will be binded to this fake passcode. This option can only be enabled for one fake passcode.</string>
 </resources>

@@ -151,7 +151,7 @@ import org.telegram.messenger.Utilities;
 import org.telegram.messenger.VideoEditedInfo;
 import org.telegram.messenger.browser.Browser;
 import org.telegram.messenger.fakepasscode.FakePasscode;
-import org.telegram.messenger.fakepasscode.RemoveAsReadMessages;
+import org.telegram.messenger.fakepasscode.RemoveAfterReadingMessages;
 import org.telegram.messenger.fakepasscode.Utils;
 import org.telegram.messenger.support.LongSparseIntArray;
 import org.telegram.messenger.utils.PhotoUtilities;
@@ -16586,7 +16586,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
             }
             LongSparseIntArray inbox = (LongSparseIntArray) args[0];
             LongSparseIntArray outbox = (LongSparseIntArray) args[1];
-            RemoveAsReadMessages.load();
+            RemoveAfterReadingMessages.load();
             boolean updated = false;
             if (inbox != null) {
                 for (int b = 0, size = inbox.size(); b < size; b++) {
@@ -16751,17 +16751,17 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                 }
                 Integer newMsgId = (Integer) args[1];
 
-                RemoveAsReadMessages.load();
-                RemoveAsReadMessages.messagesToRemoveAsRead.putIfAbsent("" + currentAccount, new HashMap<>());
-                if (RemoveAsReadMessages.messagesToRemoveAsRead.get("" + currentAccount).containsKey("" + dialog_id)) {
-                    for (RemoveAsReadMessages.RemoveAsReadMessage message : RemoveAsReadMessages.messagesToRemoveAsRead.get("" + currentAccount).get("" + dialog_id)) {
+                RemoveAfterReadingMessages.load();
+                RemoveAfterReadingMessages.messagesToRemoveAsRead.putIfAbsent("" + currentAccount, new HashMap<>());
+                if (RemoveAfterReadingMessages.messagesToRemoveAsRead.get("" + currentAccount).containsKey("" + dialog_id)) {
+                    for (RemoveAfterReadingMessages.RemoveAsReadMessage message : RemoveAfterReadingMessages.messagesToRemoveAsRead.get("" + currentAccount).get("" + dialog_id)) {
                         if (message.getId() == msgId) {
                             message.setId(newMsgId);
                             break;
                         }
                     }
                 }
-                RemoveAsReadMessages.save();
+                RemoveAfterReadingMessages.save();
 
                 if (!newMsgId.equals(msgId) && messagesDict[0].indexOfKey(newMsgId) >= 0) {
                     MessageObject removed = messagesDict[0].get(msgId);
