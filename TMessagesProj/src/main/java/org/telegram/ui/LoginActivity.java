@@ -177,6 +177,7 @@ import static org.telegram.ui.PrivacyControlActivity.PRIVACY_RULES_TYPE_ADDED_BY
 
 @SuppressLint("HardwareIds")
 public class LoginActivity extends BaseFragment {
+    public final static boolean ENABLE_PASTED_TEXT_PROCESSING = false;
     private final static int SHOW_DELAY = SharedConfig.getDevicePerformanceClass() <= SharedConfig.PERFORMANCE_CLASS_AVERAGE ? 150 : 100;
 
     public final static int AUTH_TYPE_MESSAGE = 1,
@@ -1063,6 +1064,8 @@ public class LoginActivity extends BaseFragment {
                         bundle.putString(key, (String) value);
                     } else if (value instanceof Integer) {
                         bundle.putInt(key, (Integer) value);
+                    } else if (value instanceof Boolean) {
+                        bundle.putBoolean(key, (Boolean) value);
                     }
                 } else if (args.length == 2) {
                     Bundle inner = bundle.getBundle(args[0]);
@@ -1074,6 +1077,8 @@ public class LoginActivity extends BaseFragment {
                         inner.putString(args[1], (String) value);
                     } else if (value instanceof Integer) {
                         inner.putInt(args[1], (Integer) value);
+                    } else if (value instanceof Boolean) {
+                        inner.putBoolean(args[1], (Boolean) value);
                     }
                 }
             }
@@ -1106,6 +1111,12 @@ public class LoginActivity extends BaseFragment {
                     editor.putInt(prefix + "_|_" + key, (Integer) obj);
                 } else {
                     editor.putInt(key, (Integer) obj);
+                }
+            } else if (obj instanceof Boolean) {
+                if (prefix != null) {
+                    editor.putBoolean(prefix + "_|_" + key, (Boolean) obj);
+                } else {
+                    editor.putBoolean(key, (Boolean) obj);
                 }
             } else if (obj instanceof Bundle) {
                 putBundleToEditor((Bundle) obj, editor, key);
@@ -2198,7 +2209,7 @@ public class LoginActivity extends BaseFragment {
 
                 @Override
                 public void onTextChanged(CharSequence s, int start, int before, int count) {
-                    if (ignoreOnPhoneChange || ignoreOnPhoneChangePaste) {
+                    if (!ENABLE_PASTED_TEXT_PROCESSING || ignoreOnPhoneChange || ignoreOnPhoneChangePaste) {
                         return;
                     }
 
