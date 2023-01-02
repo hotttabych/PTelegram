@@ -1,11 +1,11 @@
 ## Partisan-Telegram messenger for Android
 
 [![Crowdin](https://badges.crowdin.net/p-telegram-android/localized.svg)](https://crowdin.com/project/p-telegram-android)
-[![Bitcoin donation](https://img.shields.io/badge/donate-bitcoin-fe9515.svg)](https://telegra.ph/CP-02-17)
-[![Ethereum donation](https://img.shields.io/badge/donate-ethereum-536bc3.svg)](https://telegra.ph/CP-02-17)
-[![USDT donation](https://img.shields.io/badge/donate-USDT-26A17B.svg)](https://telegra.ph/CP-02-17)
-[![Monero donation](https://img.shields.io/badge/donate-monero-f26822.svg)](https://telegra.ph/CP-02-17)
-[![Litecoin donation](https://img.shields.io/badge/donate-Litecoin-345d9d.svg)](https://telegra.ph/CP-02-17)
+[![Bitcoin donation](https://img.shields.io/badge/donate-bitcoin-fe9515.svg)](https://telegra.ph/Partisan-Telegram--P-SMS-support-01-02)
+[![Ethereum donation](https://img.shields.io/badge/donate-ethereum-536bc3.svg)](https://telegra.ph/Partisan-Telegram--P-SMS-support-01-02)
+[![USDT donation](https://img.shields.io/badge/donate-USDT-26A17B.svg)](https://telegra.ph/Partisan-Telegram--P-SMS-support-01-02)
+[![Monero donation](https://img.shields.io/badge/donate-monero-f26822.svg)](https://telegra.ph/Partisan-Telegram--P-SMS-support-01-02)
+[![Litecoin donation](https://img.shields.io/badge/donate-Litecoin-345d9d.svg)](https://telegra.ph/Partisan-Telegram--P-SMS-support-01-02)
 
 ![](https://github.com/wrwrabbit/Partisan-Telegram-Android/blob/wiki_images/wiki_images/Readme.jpg)
 
