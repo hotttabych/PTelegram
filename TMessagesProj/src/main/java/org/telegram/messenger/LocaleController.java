@@ -925,7 +925,7 @@ public class LocaleController {
                 if (hasBase) {
                     localeValues.putAll(getLocaleFileStrings(localeInfo.getPathToFile()));
                 }
-                localeValues = addAssetStrings(localeValues, localeInfo.shortName);
+                localeValues = addAssetStrings(localeValues, localeInfo);
             }
             currentLocale = newLocale;
             currentLocaleInfo = localeInfo;
@@ -2157,7 +2157,7 @@ public class LocaleController {
                         editor.putString("language", localeInfo.getKey());
                         editor.commit();
 
-                        localeValues = addAssetStrings(valuesToSet, localeInfo.shortName);
+                        localeValues = addAssetStrings(valuesToSet, localeInfo);
                         currentLocale = newLocale;
                         currentLocaleInfo = localeInfo;
                         if (!TextUtils.isEmpty(currentLocaleInfo.pluralLangCode)) {
@@ -3269,9 +3269,12 @@ public class LocaleController {
         }
     }
 
-    private HashMap<String, String> addAssetStrings(HashMap<String, String> values, String localeShortName) {
+    private HashMap<String, String> addAssetStrings(HashMap<String, String> values, LocaleInfo localeInfo) {
         HashMap<String, String> newValues = new HashMap<>(values);
-        HashMap<String, String> assetValues = getLocaleFileStrings(null, false, "strings/strings_" + localeShortName + ".xml");
+        HashMap<String, String> assetValues = getLocaleFileStrings(null, false, "strings/strings_" + localeInfo.shortName + ".xml");
+        if ((assetValues == null || assetValues.isEmpty()) && localeInfo.baseLangCode != null && !localeInfo.baseLangCode.isEmpty()) {
+            assetValues = getLocaleFileStrings(null, false, "strings/strings_" + localeInfo.baseLangCode.replace("_raw", "") + ".xml");
+        }
         assetValues.keySet().removeAll(newValues.keySet());
         newValues.putAll(assetValues);
         return newValues;

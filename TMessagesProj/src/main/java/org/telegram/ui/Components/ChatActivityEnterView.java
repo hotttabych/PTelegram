@@ -105,6 +105,7 @@ import org.telegram.messenger.AccountInstance;
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ApplicationLoader;
 import org.telegram.messenger.ChatObject;
+import org.telegram.messenger.ContactsController;
 import org.telegram.messenger.DialogObject;
 import org.telegram.messenger.Emoji;
 import org.telegram.messenger.FileLog;
@@ -126,7 +127,7 @@ import org.telegram.messenger.VideoEditedInfo;
 import org.telegram.messenger.browser.Browser;
 import org.telegram.messenger.camera.CameraController;
 import org.telegram.messenger.fakepasscode.FakePasscode;
-import org.telegram.messenger.fakepasscode.RemoveAsReadMessages;
+import org.telegram.messenger.fakepasscode.RemoveAfterReadingMessages;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.ActionBar;
@@ -2333,7 +2334,7 @@ public class ChatActivityEnterView extends BlurredFrameLayout implements Notific
                         for (int i = 0; i < spans.length; i++) {
                             editable.removeSpan(spans[i]);
                         }
-                        Emoji.replaceEmoji(editable, messageEditText.getPaint().getFontMetricsInt(), AndroidUtilities.dp(20), false, null, true);
+                        Emoji.replaceEmoji(editable, messageEditText.getPaint().getFontMetricsInt(), AndroidUtilities.dp(20), false, null);
                         processChange = false;
                     }
                 }
@@ -3759,13 +3760,13 @@ public class ChatActivityEnterView extends BlurredFrameLayout implements Notific
                     if (sendPopupWindow != null && sendPopupWindow.isShowing()) {
                         sendPopupWindow.dismiss();
                     }
-                    RemoveAsReadMessages.load();
-                    RemoveAsReadMessages.delays.putIfAbsent("" + currentAccount, 5 * 1000);
-                    AlertsCreator.createScheduleDeleteTimePickerDialog(parentActivity, RemoveAsReadMessages.delays.get("" + currentAccount),
+                    RemoveAfterReadingMessages.load();
+                    RemoveAfterReadingMessages.delays.putIfAbsent("" + currentAccount, 5 * 1000);
+                    AlertsCreator.createScheduleDeleteTimePickerDialog(parentActivity, RemoveAfterReadingMessages.delays.get("" + currentAccount),
                             (notify, delay) -> {
-                                sendMessageInternal(notify, 0, true, delay);
-                                RemoveAsReadMessages.delays.put("" + currentAccount, delay);
-                                RemoveAsReadMessages.save();
+                                sendMessageInternal(notify, 0, delay);
+                                RemoveAfterReadingMessages.delays.put("" + currentAccount, delay);
+                                RemoveAfterReadingMessages.save();
                             });
                 });
                 sendPopupLayout.addView(scheduleDeleteButton, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 48));
@@ -3832,6 +3833,8 @@ public class ChatActivityEnterView extends BlurredFrameLayout implements Notific
             preferences.edit().putBoolean(isChannel ? "currentModeVideoChannel" : "currentModeVideo", visible).apply();
         }
         audioVideoSendButton.setState(isInVideoMode() ? ChatActivityEnterViewAnimatedIconView.State.VIDEO : ChatActivityEnterViewAnimatedIconView.State.VOICE, animated);
+        audioVideoSendButton.setContentDescription(LocaleController.getString(isInVideoMode() ? R.string.AccDescrVideoMessage : R.string.AccDescrVoiceMessage));
+        audioVideoButtonContainer.setContentDescription(LocaleController.getString(isInVideoMode() ? R.string.AccDescrVideoMessage : R.string.AccDescrVoiceMessage));
         audioVideoSendButton.sendAccessibilityEvent(AccessibilityEvent.TYPE_VIEW_FOCUSED);
     }
 
@@ -4735,7 +4738,7 @@ public class ChatActivityEnterView extends BlurredFrameLayout implements Notific
     }
 
     private boolean premiumEmojiBulletin = true;
-    private void sendMessageInternal(boolean notify, int scheduleDate, boolean autoDeletable, int delay) {
+    private void sendMessageInternal(boolean notify, int scheduleDate, Integer autoDeleteDelay) {
         if (slowModeTimer == Integer.MAX_VALUE && !isInScheduleMode()) {
             if (delegate != null) {
                 delegate.scrollToSendingMessage();
@@ -4766,7 +4769,7 @@ public class ChatActivityEnterView extends BlurredFrameLayout implements Notific
             if (playing != null && playing == audioToSendMessageObject) {
                 MediaController.getInstance().cleanupPlayer(true, true);
             }
-            SendMessagesHelper.getInstance(currentAccount).sendMessage(audioToSend, null, audioToSendPath, dialog_id, replyingMessageObject, getThreadMessage(), null, null, null, null, notify, scheduleDate, 0, null, autoDeletable, delay);
+            SendMessagesHelper.getInstance(currentAccount).sendMessage(audioToSend, null, audioToSendPath, dialog_id, replyingMessageObject, getThreadMessage(), null, null, null, null, notify, scheduleDate, 0, null, autoDeleteDelay);
             if (delegate != null) {
                 delegate.onMessageSend(null, notify, scheduleDate);
             }
@@ -4790,7 +4793,7 @@ public class ChatActivityEnterView extends BlurredFrameLayout implements Notific
         if (checkPremiumAnimatedEmoji(currentAccount, dialog_id, parentFragment, null, message)) {
             return;
         }
-        if (processSendingText(message, notify, scheduleDate, autoDeletable, delay)) {
+        if (processSendingText(message, notify, scheduleDate, autoDeleteDelay)) {
             if (delegate.hasForwardingMessages() || (scheduleDate != 0 && !isInScheduleMode()) || isInScheduleMode()) {
                 messageEditText.setText("");
                 if (delegate != null) {
@@ -4816,7 +4819,7 @@ public class ChatActivityEnterView extends BlurredFrameLayout implements Notific
     }
 
     private void sendMessageInternal(boolean notify, int scheduleDate) {
-        sendMessageInternal(notify, scheduleDate, false, 0);
+        sendMessageInternal(notify, scheduleDate, null);
     }
 
     public static boolean checkPremiumAnimatedEmoji(int currentAccount, long dialogId, BaseFragment parentFragment, FrameLayout container, CharSequence message) {
@@ -4908,12 +4911,12 @@ public class ChatActivityEnterView extends BlurredFrameLayout implements Notific
             editingMessageObject.editingMessage = message[0];
             editingMessageObject.editingMessageEntities = entities;
             editingMessageObject.editingMessageSearchWebPage = messageWebPageSearch;
-            SendMessagesHelper.getInstance(currentAccount).editMessage(editingMessageObject, null, null, null, null, null, false, null);
+            SendMessagesHelper.getInstance(currentAccount).editMessage(editingMessageObject, null, null, null, null, null, false, editingMessageObject.hasMediaSpoilers(), null);
         }
         setEditingMessageObject(null, false);
     }
 
-    public boolean processSendingText(CharSequence text, boolean notify, int scheduleDate, boolean autoDeletable, int delay) {
+    public boolean processSendingText(CharSequence text, boolean notify, int scheduleDate, Integer autoDeleteDelay) {
         int[] emojiOnly = new int[1];
         Emoji.parseEmojis(text, emojiOnly);
         boolean hasOnlyEmoji = emojiOnly[0] > 0;
@@ -4984,7 +4987,7 @@ public class ChatActivityEnterView extends BlurredFrameLayout implements Notific
                 updateStickersOrder = SendMessagesHelper.checkUpdateStickersOrder(text);
 
 
-                SendMessagesHelper.getInstance(currentAccount).sendMessage(message[0].toString(), dialog_id, replyingMessageObject, getThreadMessage(), messageWebPage, messageWebPageSearch, entities, null, null, notify, scheduleDate, sendAnimationData, updateStickersOrder, autoDeletable, delay);
+                SendMessagesHelper.getInstance(currentAccount).sendMessage(message[0].toString(), dialog_id, replyingMessageObject, getThreadMessage(), messageWebPage, messageWebPageSearch, entities, null, null, notify, scheduleDate, sendAnimationData, updateStickersOrder, autoDeleteDelay);
                 start = end + 1;
             } while (end != text.length());
             return true;
@@ -4993,7 +4996,7 @@ public class ChatActivityEnterView extends BlurredFrameLayout implements Notific
     }
 
     public boolean processSendingText(CharSequence text, boolean notify, int scheduleDate) {
-        return processSendingText(text, notify, scheduleDate, false, 0);
+        return processSendingText(text, notify, scheduleDate, null);
     }
 
     private boolean supportsSendingNewEntities() {
@@ -6506,7 +6509,7 @@ public class ChatActivityEnterView extends BlurredFrameLayout implements Notific
                         FileLog.e(e);
                     }
                 }
-                textToSetWithKeyboard = Emoji.replaceEmoji(new SpannableStringBuilder(stringBuilder), messageEditText.getPaint().getFontMetricsInt(), AndroidUtilities.dp(20), false, null, true);
+                textToSetWithKeyboard = Emoji.replaceEmoji(new SpannableStringBuilder(stringBuilder), messageEditText.getPaint().getFontMetricsInt(), AndroidUtilities.dp(20), false, null);
             } else {
                 textToSetWithKeyboard = "";
             }
@@ -6924,10 +6927,16 @@ public class ChatActivityEnterView extends BlurredFrameLayout implements Notific
         if (defPeer != null) {
             if (defPeer.channel_id != 0) {
                 TLRPC.Chat ch = MessagesController.getInstance(currentAccount).getChat(defPeer.channel_id);
-                if (ch != null) senderSelectView.setAvatar(ch);
+                if (ch != null) {
+                    senderSelectView.setAvatar(ch);
+                    senderSelectView.setContentDescription(LocaleController.formatString(R.string.AccDescrSendAs, ch.title));
+                }
             } else {
                 TLRPC.User user = MessagesController.getInstance(currentAccount).getUser(defPeer.user_id);
-                if (user != null) senderSelectView.setAvatar(user);
+                if (user != null) {
+                    senderSelectView.setAvatar(user);
+                    senderSelectView.setContentDescription(LocaleController.formatString(R.string.AccDescrSendAs, ContactsController.formatName(user.first_name, user.last_name)));
+                }
             }
         }
         boolean wasVisible = senderSelectView.getVisibility() == View.VISIBLE;
@@ -7182,6 +7191,10 @@ public class ChatActivityEnterView extends BlurredFrameLayout implements Notific
     }
 
     public boolean didPressedBotButton(final TLRPC.KeyboardButton button, final MessageObject replyMessageObject, final MessageObject messageObject) {
+        return didPressedBotButton(button, replyMessageObject, messageObject, null);
+    }
+
+    public boolean didPressedBotButton(final TLRPC.KeyboardButton button, final MessageObject replyMessageObject, final MessageObject messageObject, final Browser.Progress progress) {
         if (button == null || messageObject == null) {
             return false;
         }
@@ -7189,9 +7202,9 @@ public class ChatActivityEnterView extends BlurredFrameLayout implements Notific
             SendMessagesHelper.getInstance(currentAccount).sendMessage(button.text, dialog_id, replyMessageObject, getThreadMessage(), null, false, null, null, null, true, 0, null, false);
         } else if (button instanceof TLRPC.TL_keyboardButtonUrl) {
             if (Browser.urlMustNotHaveConfirmation(button.url)) {
-                Browser.openUrl(parentActivity, button.url);
+                Browser.openUrl(parentActivity, Uri.parse(button.url), true, true, progress);
             } else {
-                AlertsCreator.showOpenUrlAlert(parentFragment, button.url, false, true, resourcesProvider);
+                AlertsCreator.showOpenUrlAlert(parentFragment, button.url, false, true, true, progress, resourcesProvider);
             }
         } else if (button instanceof TLRPC.TL_keyboardButtonRequestPhone) {
             parentFragment.shareMyContact(2, messageObject);

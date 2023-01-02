@@ -9,7 +9,6 @@
     <string name="ClearTelegramCacheOnFakeLogin">Ачышчаць кэш Telegram</string>
     <string name="ClearProxiesOnFakeLogin">Ачышчаць спіс проксі</string>
     <string name="AddFakePasscode">Дадаць несапраўдны код блакіроўкі</string>
-    <string name="TerminateAllOtherSessionsOnFakeLogin">Завяршаць усе іншыя сеансы</string>
     <string name="LogOutOnFakeLogin">Выходзіць з акаўнту</string>
     <string name="DeleteFakePasscode">Выдаліць несапраўдны код блакіроўкі</string>
     <string name="ChangeFakePasscodeName">Змяніць назву</string>
@@ -25,7 +24,6 @@
     <string name="FakePasscodeAccountsHeader">Дзеянні для акаўнтаў</string>
     <string name="FakePasscodes">Несапраўдныя кады блакіроўкі</string>
     <string name="FakePasscodeSmsActionTitle">СМС</string>
-    <string name="FakePasscodeAddSms">Дадаць СМС</string>
     <string name="FakePasscodeSmsSendOnlyIfDisconnected">Адпраўляць толькі калі няма сеціва</string>
     <string name="FakePasscodeTelegramMessageInfo">Наладзьце паведамленні, якія будуць адсылацца пры ўводзе несапраўднага кода блакіроўкі.</string>
     <string name="TelegramMessages">Паведамленні Telegram</string>
@@ -41,7 +39,6 @@
     <string name="TwoStepVerificationWarningTitle">Увага!</string>
     <string name="TwoStepVerificationWarningMessage">У вашым акаўнце не ўсталявана двухэтапная аутэнтыфікацыя. Настойліва прапануецца наладзіць пароль для акаўнта. У іншым выпадку, узровень бяспекі акаўнта будзе невялікім.</string>
     <string name="DeleteStickers">Выдаляць стыкеры</string>
-    <string name="TwoStepVerificationPasswordReturn">Вяртацца</string>
     <string name="ActivationMessage">Паведамленне-актыватар</string>
     <string name="ActivationMessageInfo">Дзеянні з несапраўдным кодам блакіроўкі будуць выкананы пры атрыманні паведамлення-актыватара ў любым чаце.</string>
     <string name="Disabled">адключана</string>
@@ -65,16 +62,13 @@
     <string name="DoNotShowAgain">Больш не паказваць</string>
     <string name="ClearCacheOnLock">Чысціць кэш пры блакаванні</string>
     <string name="ClearCacheOnLockInfo">Пасля націску на кнопку замка над спісам дыялогаў кэш прыкладання будзе ачышчацца.</string>
-    <string name="DeleteMessagesByPart">Пашыранае выдаленне </string>
     <string name="MessagePart">Частка паведамлення</string>
     <string name="DeleteMyMessagesFromChat">Выдаленне маіх паведамленняў з чата</string>
     <string name="Regex">Рэгулярны выраз</string>
-    <string name="ChatHintsDeleteMessagesAlert">Вы дакладна хочаце выдаліць усе Вашыя паведамленні з гэтага чата?</string>
     <string name="CaseSensitive">Улічваць рэгістр</string>
     <string name="DeleteAsRead">Выдаліць пасля чытання</string>
     <string name="RemoveAfter">Выдаліць праз %s %s %s пасля чытання</string>
     <string name="ClearBlackList">Ачышчаць спіс заблакаваных карыстальнікаў</string>
-    <string name="ChatToRemoveSettings">Налады чата для выдалення</string>
     <string name="DeleteMyMessages">Выдаліць мае паведамленні</string>
     <string name="UserId">Id карыстальніка</string>
     <string name="ChatId">Id чата</string>
@@ -170,7 +164,6 @@
     <string name="CreateFakePasscodeInfoPassword">Калі ласка, увядзіце пароль, які вы будзеце даваць зламысніку ў экстранай сітуацыі для разблакіроўкі Telegram. Ён павінен адрознівацца ад іншых кодаў блакіроўкі ў дадатку.</string>
     <string name="AllExceptCount">Усе (-%s)</string>
     <string name="ClearDrafts">Выдаляць чарнавікі</string>
-    <string name="NewVersionAlertTitle">Абнаўленне PTelegram</string>
     <string name="SmsActionDeprecatedTitle">Адпраўка SMS састарэлая</string>
     <string name="SmsActionDeprecatedMessage">Адпраўка смс састарэлая. Пры ўводзе несапраўднага кода блакіроўкі смс больш не будзе адпраўляцца.</string>
     <string name="MarketIcons">Значкі праграмы з Google Play</string>
@@ -180,4 +173,6 @@
     <string name="GrantPermission">Даць дазвол</string>
     <string name="DisablePhoto">Адключыць фота</string>
     <string name="DisableSendingLocation">Адключыць геалакацыю</string>
+    <string name="ActivateWithFingerprint">Актываваць адбіткам пальца</string>
+    <string name="ActivateWithFingerprintInfo">Пры ўключэнні гэтай опцыі разблакіроўка адбіткам пальца будзе прывязана да гэтага несапраўднага код-паролю. Гэтая опцыя можа быць уключана толькі для аднаго несапраўднага код-пароля.</string>
 </resources>
