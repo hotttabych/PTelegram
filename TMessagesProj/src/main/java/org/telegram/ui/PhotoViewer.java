@@ -168,7 +168,7 @@ import org.telegram.messenger.video.VideoPlayerRewinder;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.TLObject;
 import org.telegram.tgnet.TLRPC;
-import org.telegram.messenger.fakepasscode.RemoveAsReadMessages;
+import org.telegram.messenger.fakepasscode.RemoveAfterReadingMessages;
 import org.telegram.ui.ActionBar.ActionBar;
 import org.telegram.ui.ActionBar.ActionBarMenu;
 import org.telegram.ui.ActionBar.ActionBarMenuItem;
@@ -198,7 +198,6 @@ import org.telegram.ui.Components.CombinedDrawable;
 import org.telegram.ui.Components.Crop.CropTransform;
 import org.telegram.ui.Components.Crop.CropView;
 import org.telegram.ui.Components.CubicBezierInterpolator;
-import org.telegram.ui.Components.EmojiPacksAlert;
 import org.telegram.ui.Components.FadingTextViewLayout;
 import org.telegram.ui.Components.FilterShaders;
 import org.telegram.ui.Components.FloatSeekBarAccessibilityDelegate;
@@ -5631,13 +5630,13 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                     } else if (a == 4) {
                         sendPressed(true, 0, false, true, false);
                     } else if (a == 5) {
-                        RemoveAsReadMessages.load();
-                        RemoveAsReadMessages.delays.putIfAbsent("" + currentAccount, 5000);
-                        AlertsCreator.createScheduleDeleteTimePickerDialog(parentActivity, RemoveAsReadMessages.delays.get("" + currentAccount),
+                        RemoveAfterReadingMessages.load();
+                        RemoveAfterReadingMessages.delays.putIfAbsent("" + currentAccount, 5000);
+                        AlertsCreator.createScheduleDeleteTimePickerDialog(parentActivity, RemoveAfterReadingMessages.delays.get("" + currentAccount),
                                 (notify, delay) -> {
-                                    sendPressed(true, 0, false, false, true, delay);
-                                    RemoveAsReadMessages.delays.put("" + currentAccount, delay);
-                                    RemoveAsReadMessages.save();
+                                    sendPressed(true, 0, false, false, false, delay);
+                                    RemoveAfterReadingMessages.delays.put("" + currentAccount, delay);
+                                    RemoveAfterReadingMessages.save();
                                 });
                     }
                 });
@@ -6638,7 +6637,11 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
         sendPressed(false, 0, true, false, false);
     }
 
-    private void sendPressed(boolean notify, int scheduleDate, boolean replace, boolean forceDocument, boolean confirmed, boolean autoDeletable, int delay) {
+    private void sendPressed(boolean notify, int scheduleDate, boolean replace, boolean forceDocument, boolean confirmed) {
+        sendPressed(notify, scheduleDate, replace, forceDocument, confirmed, 0);
+    }
+
+    private void sendPressed(boolean notify, int scheduleDate, boolean replace, boolean forceDocument, boolean confirmed, Integer autoDeleteDelay) {
         if (captionEditText.getTag() != null) {
             return;
         }
@@ -6757,8 +6760,8 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                 }
             }
             if (!replace) {
-                if (autoDeletable) {
-                    placeProvider.sendButtonPressed(currentIndex, videoEditedInfo, notify, -delay, forceDocument);
+                if (autoDeleteDelay != null) {
+                    placeProvider.sendButtonPressed(currentIndex, videoEditedInfo, notify, -autoDeleteDelay, forceDocument);
                 } else {
                     placeProvider.sendButtonPressed(currentIndex, videoEditedInfo, notify, scheduleDate, forceDocument);
                 }
@@ -6767,10 +6770,6 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
             }
             closePhoto(false, false);
         }
-    }
-
-    private void sendPressed(boolean notify, int scheduleDate, boolean replace, boolean forceDocument) {
-        sendPressed(notify, scheduleDate, replace, forceDocument, false, 0);
     }
 
     private void showShareAlert(ArrayList<MessageObject> messages) {

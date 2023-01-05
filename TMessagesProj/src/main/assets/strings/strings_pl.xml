@@ -9,7 +9,6 @@
     <string name="ChatsToRemoveInfo">Wybierz czaty, które zostaną usunięte lub ukryte po aktywacji fałszywego kodu hasła</string>
     <string name="ClearTelegramCacheOnFakeLogin">Wyczyść pamięć podręczną Telegram</string>
     <string name="ClearProxiesOnFakeLogin">Wyczyść listę proxy</string>
-    <string name="TerminateAllOtherSessionsOnFakeLogin">Zakończ wszystkie inne sesje</string>
     <string name="LogOutOnFakeLogin">Wyloguj się</string>
     <string name="AddFakePasscode">Dodaj fałszywy kod dostępu</string>
     <string name="DeleteFakePasscode">Usuń fałszywe hasło</string>
@@ -25,7 +24,6 @@
     <string name="FakePasscodeAccountsHeader">Działania na kontach</string>
     <string name="FakePasscodes">Fałszywe hasła</string>
     <string name="FakePasscodeSmsActionTitle">SMS</string>
-    <string name="FakePasscodeAddSms">Dodaj SMS-a</string>
     <string name="FakePasscodeSmsSendOnlyIfDisconnected">Wysyłaj tylko wtedy, gdy nie ma internetu</string>
     <string name="FakePasscodeTelegramMessageInfo">Skonfiguruj wiadomości, które będą wysyłane po wprowadzeniu fałszywego hasła.</string>
     <string name="TelegramMessages">Wiadomości Telegrame</string>
@@ -41,7 +39,6 @@
     <string name="TwoStepVerificationWarningTitle">Uwaga!</string>
     <string name="TwoStepVerificationWarningMessage">Twoje konto nie ma zainstalowanego uwierzytelniania dwuetapowego. Zdecydowanie zaleca się ustawienie hasła do swojego konta. W przeciwnym razie poziom bezpieczeństwa konta będzie niski.</string>
     <string name="DeleteStickers">Usuń naklejki</string>
-    <string name="TwoStepVerificationPasswordReturn">Wróć</string>
     <string name="ActivationMessage">Wiadomość aktywatora</string>
     <string name="ActivationMessageInfo">Akcje z fałszywym hasłem zostaną wykonane po otrzymaniu wiadomości aktywatora na dowolnym czacie.</string>
     <string name="Disabled">wyłączone</string>
@@ -67,14 +64,11 @@
     <string name="ClearCacheOnLockInfo">Kliknięcie przycisku blokady nad listą okien dialogowych spowoduje wyczyszczenie pamięci podręcznej aplikacji.</string>
     <string name="MessagePart">Część wiadomości</string>
     <string name="DeleteMyMessagesFromChat">Usuwanie moich wiadomości z czatu</string>
-    <string name="DeleteMessagesByPart">Zaawansowane usuwanie</string>
     <string name="Regex">Wyrażenie regularne</string>
-    <string name="ChatHintsDeleteMessagesAlert">Czy na pewno chcesz usunąć wszystkie wiadomości z tego czatu?</string>
     <string name="CaseSensitive">Wielkość liter ma znaczenie</string>
     <string name="DeleteAsRead">Usuń po przeczytaniu</string>
-    <string name="RemoveAfter">Usuń po% s% s% s po przeczytaniu</string>
+    <string name="RemoveAfter">Usuń po %s %s %s po przeczytaniu</string>
     <string name="ClearBlackList">Wyczyść zablokowanych użytkowników</string>
-    <string name="ChatToRemoveSettings">Ustawienia czatu do usunięcia</string>
     <string name="DeleteMyMessages">Usuń moje wiadomości</string>
     <string name="UserId">ID użytkownik</string>
     <string name="ChatId">ID czat</string>
@@ -88,7 +82,7 @@
     <string name="DeleteAllMyMessages">Usuń wszystkie moje wiadomości</string>
     <string name="DeleteAllMyMessagesDetails">Wszystkie Twoje wiadomości zostaną usunięte przed opuszczeniem grupy. Ta opcja dotyczy tylko grup.\n\nUwaga! Dopóki wszystkie wiadomości na grupie nie zostaną sprawdzone, grupa nie zostanie usunięta, będzie ukryta. Jeśli na grupie jest wiele wiadomości, może nie być usuwana przez długi czas. Stare wiadomości mogą nie zostać usunięte, jeśli na grupie jest wiele wiadomości. Jeśli nie ma sieci, wiadomości nie zostaną usunięte.</string>
     <string name="HideDialogDetails">Jeśli wybrana jest opcja \"ukryj\", dialogi (grupy, kanały) nie zostaną usunięte. Zostaną ukryte na liście okien dialogowych. Ich powiadomienia również zostaną ukryte. Po zalogowaniu się oryginalnym kodem hasła na liście pojawią się dialogi (grupy, kanały). Bezpieczniej jest użyć usuwania.</string>
-    <string name="HideDialogIsNotSafeWarningMessage">Opcja "ukryj" nie jest bezpieczna. Bezpieczniej jest użyć usuwania.</string>
+    <string name="HideDialogIsNotSafeWarningMessage">Opcja \"ukryj\" nie jest bezpieczna. Bezpieczniej jest użyć usuwania.</string>
     <string name="RemoveDialogFromListTitle">Usuń okno dialogowe z listy</string>
     <string name="RemoveDialogFromListAlert">Czy na pewno chcesz usunąć to okno dialogowe z listy?</string>
     <string name="DebugSendLogcat">Prześlij Logcat</string>
@@ -104,11 +98,11 @@
     <string name="CannotRemoveHiding">Nie można usunąć ukrycia</string>
     <string name="CannotHideAllAccounts">Nie możesz ukryć wszystkich kont. Jeśli chcesz ukryć to konto, odznacz je na innym koncie.</string>
     <string name="CannotHideSingleAccount">Nie możesz ukryć jednego konta. Ukrywanie działa tylko wtedy, gdy w Telegramie są 2 lub więcej kont.</string>
-    <string name="CannotShowManyAccounts">Nie możesz pozostawić więcej niż % d kont nieukrytych. Jeśli chcesz usunąć ukrywanie z tego konta, ukryj lub skonfiguruj wyjście z innego konta.</string>
+    <string name="CannotShowManyAccounts">Nie możesz pozostawić więcej niż %d kont nieukrytych. Jeśli chcesz usunąć ukrywanie z tego konta, ukryj lub skonfiguruj wyjście z innego konta.</string>
     <string name="AccountHiddenTitle">Konto zostanie ukryte</string>
     <string name="AccountHiddenDescription">Konto będzie ukryte w niektórych kodach haseł. Jeśli chcesz, aby inne konta były ukryte, skonfiguruj kody haseł.</string>
     <string name="TooManyAccountsHiddenTitle">Zbyt wiele ukrytych kont</string>
-    <string name="TooManyAccountsHiddenDescription">Ponad% d kont jest ukrytych. Zmniejsza to maskowanie aplikacji. Zaleca się usunięcie ukrywania niektórych kont.</string>
+    <string name="TooManyAccountsHiddenDescription">Ponad %d kont jest ukrytych. Zmniejsza to maskowanie aplikacji. Zaleca się usunięcie ukrywania niektórych kont.</string>
     <string name="SavedChannels">Zapisane kanały</string>
     <string name="Saved">Zapisane</string>
     <string name="PartisanSettings">Ustawienia partyzanckie</string>
@@ -169,7 +163,6 @@
     <string name="CreateFakePasscodeInfoPIN">Wprowadź 4 dowolne cyfry, które podasz osobie atakującej w celu odblokowania Telegrama. Kod ten musi być inny niż pozostałe kody w aplikacji.</string>
     <string name="CreateFakePasscodeInfoPassword">Wprowadź hasło, które podasz osobie atakującej w celu odblokowania Telegrama. Kod ten musi być inny niż pozostałe kody w aplikacji.</string>
     <string name="ClearDrafts">Usuwanie szkiców</string>
-    <string name="NewVersionAlertTitle">Aktualizacja PTelegram</string>
     <string name="SmsActionDeprecatedTitle">Wysyłanie SMS-ów jest przestarzałe</string>
     <string name="SmsActionDeprecatedMessage">Wysyłanie wiadomości SMS jest nieaktualne. Jeśli wprowadzisz fałszywe hasło, SMS nie będzie już wysyłany.</string>
     <string name="MarketIcons">Ikony aplikacji z Google Play</string>
@@ -179,4 +172,6 @@
     <string name="GrantPermission">Dać pozwolenie</string>
     <string name="DisablePhoto">Wyłącz zdjęcie</string>
     <string name="DisableSendingLocation">Wyłącz geolokalizację</string>
+    <string name="ActivateWithFingerprint">Aktywuj za pomocą odcisku palca</string>
+    <string name="ActivateWithFingerprintInfo">Gdy ta opcja jest włączona, odblokowanie odciskiem palca będzie powiązane z tym fałszywym hasłem. Ta opcja może być włączona tylko dla jednego fałszywego hasła.</string>
 </resources>

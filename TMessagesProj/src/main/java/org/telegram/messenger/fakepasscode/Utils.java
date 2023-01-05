@@ -20,11 +20,9 @@ import org.telegram.messenger.ChatObject;
 import org.telegram.messenger.DialogObject;
 import org.telegram.messenger.DownloadController;
 import org.telegram.messenger.FileLoader;
-import org.telegram.messenger.ImageLoader;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.MediaDataController;
 import org.telegram.messenger.MessagesController;
-import org.telegram.messenger.MessagesStorage;
 import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.R;
 import org.telegram.messenger.SharedConfig;
@@ -220,25 +218,25 @@ public class Utils {
     }
 
     public static void cleanAutoDeletable(int messageId, int currentAccount, long dialogId) {
-        RemoveAsReadMessages.load();
-        Map<String, List<RemoveAsReadMessages.RemoveAsReadMessage>> curAccountMessages =
-                RemoveAsReadMessages.messagesToRemoveAsRead.get("" + currentAccount);
+        RemoveAfterReadingMessages.load();
+        Map<String, List<RemoveAfterReadingMessages.RemoveAsReadMessage>> curAccountMessages =
+                RemoveAfterReadingMessages.messagesToRemoveAsRead.get("" + currentAccount);
 
         if (curAccountMessages == null || curAccountMessages.get("" + dialogId) == null) {
             return;
         }
 
-        for (RemoveAsReadMessages.RemoveAsReadMessage messageToRemove : new ArrayList<>(curAccountMessages.get("" + dialogId))) {
+        for (RemoveAfterReadingMessages.RemoveAsReadMessage messageToRemove : new ArrayList<>(curAccountMessages.get("" + dialogId))) {
             if (messageToRemove.getId() == messageId) {
-                RemoveAsReadMessages.messagesToRemoveAsRead.get("" + currentAccount).get("" + dialogId).remove(messageToRemove);
+                RemoveAfterReadingMessages.messagesToRemoveAsRead.get("" + currentAccount).get("" + dialogId).remove(messageToRemove);
             }
         }
 
         if (curAccountMessages.get("" + dialogId) != null
                 && curAccountMessages.get("" + dialogId).isEmpty()) {
-            RemoveAsReadMessages.messagesToRemoveAsRead.get("" + currentAccount).remove("" + dialogId);
+            RemoveAfterReadingMessages.messagesToRemoveAsRead.get("" + currentAccount).remove("" + dialogId);
         }
-        RemoveAsReadMessages.save();
+        RemoveAfterReadingMessages.save();
     }
 
     public static void startDeleteProcess(int currentAccount, List<MessageObject> messages) {
@@ -257,12 +255,12 @@ public class Utils {
 
     public static void startDeleteProcess(int currentAccount, long currentDialogId,
                                           List<MessageObject> messages) {
-        RemoveAsReadMessages.load();
+        RemoveAfterReadingMessages.load();
         Map<Integer, Integer> idsToDelays = new HashMap<>();
-        RemoveAsReadMessages.messagesToRemoveAsRead.putIfAbsent("" + currentAccount, new HashMap<>());
+        RemoveAfterReadingMessages.messagesToRemoveAsRead.putIfAbsent("" + currentAccount, new HashMap<>());
         for (MessageObject message : messages) {
-            for (RemoveAsReadMessages.RemoveAsReadMessage messageToRemove :
-                    RemoveAsReadMessages.messagesToRemoveAsRead.get("" + currentAccount)
+            for (RemoveAfterReadingMessages.RemoveAsReadMessage messageToRemove :
+                    RemoveAfterReadingMessages.messagesToRemoveAsRead.get("" + currentAccount)
                             .getOrDefault("" + currentDialogId, new ArrayList<>())) {
                 if (messageToRemove.getId() == message.getId()) {
                     idsToDelays.put(message.getId(), messageToRemove.getScheduledTimeMs());
@@ -270,7 +268,7 @@ public class Utils {
                 }
             }
         }
-        RemoveAsReadMessages.save();
+        RemoveAfterReadingMessages.save();
 
         for (Map.Entry<Integer, Integer> idToMs : idsToDelays.entrySet()) {
             ArrayList<Integer> ids = new ArrayList<>();
@@ -302,7 +300,7 @@ public class Utils {
                 });
             }, Math.max(delay, 0));
         }
-        RemoveAsReadMessages.save();
+        RemoveAfterReadingMessages.save();
     }
 
     public static boolean isNetworkConnected() {

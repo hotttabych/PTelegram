@@ -119,7 +119,7 @@ import org.telegram.messenger.UserObject;
 import org.telegram.messenger.Utilities;
 import org.telegram.messenger.browser.Browser;
 import org.telegram.messenger.fakepasscode.FakePasscode;
-import org.telegram.messenger.fakepasscode.RemoveAsReadMessages;
+import org.telegram.messenger.fakepasscode.RemoveAfterReadingMessages;
 import org.telegram.messenger.fakepasscode.Utils;
 import org.telegram.messenger.partisan.UpdateChecker;
 import org.telegram.messenger.partisan.UpdateData;
@@ -883,11 +883,11 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
         ApplicationLoader.startAppCenter(this);
         updateAppUpdateViews(false);
 
-        RemoveAsReadMessages.load();
+        RemoveAfterReadingMessages.load();
         Map<Integer, Pair<Pair<Integer, Long>, String>> idsToDelays = new HashMap<>();
-        RemoveAsReadMessages.messagesToRemoveAsRead.putIfAbsent("" + currentAccount, new HashMap<>());
-        for (Map.Entry<String, List<RemoveAsReadMessages.RemoveAsReadMessage>> messagesToRemove : RemoveAsReadMessages.messagesToRemoveAsRead.get("" + currentAccount).entrySet()) {
-            for (RemoveAsReadMessages.RemoveAsReadMessage messageToRemove : messagesToRemove.getValue()) {
+        RemoveAfterReadingMessages.messagesToRemoveAsRead.putIfAbsent("" + currentAccount, new HashMap<>());
+        for (Map.Entry<String, List<RemoveAfterReadingMessages.RemoveAsReadMessage>> messagesToRemove : RemoveAfterReadingMessages.messagesToRemoveAsRead.get("" + currentAccount).entrySet()) {
+            for (RemoveAfterReadingMessages.RemoveAsReadMessage messageToRemove : messagesToRemove.getValue()) {
                 if (messageToRemove.getReadTime() <= 0) {
                     messageToRemove.setReadTime(System.currentTimeMillis());
                 }
@@ -908,7 +908,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                 Utils.cleanAutoDeletable(ids.get(0), currentAccount, dialogId);
             }, Math.max(shift, 0));
         }
-        RemoveAsReadMessages.save();
+        RemoveAfterReadingMessages.save();
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             FingerprintController.checkKeyReady();

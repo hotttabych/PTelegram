@@ -595,7 +595,7 @@ public class ProfileSearchCell extends BaseCell implements NotificationCenter.No
                 }
             }
             avatarDrawable.setInfo(chat, currentAccount);
-            avatarImage.setImage(ImageLocation.getForUserOrChat(chat, ImageLocation.TYPE_SMALL, currentAccount), "50_50", ImageLocation.getForUserOrChat(chat, ImageLocation.TYPE_STRIPPED), "50_50", thumb, chat, 0);
+            avatarImage.setImage(ImageLocation.getForUserOrChat(chat, ImageLocation.TYPE_SMALL, currentAccount), "50_50", ImageLocation.getForUserOrChat(chat, ImageLocation.TYPE_STRIPPED, currentAccount), "50_50", thumb, chat, 0);
         } else if (contact != null) {
             avatarDrawable.setInfo(0, contact.first_name, contact.last_name);
             avatarImage.setImage(null, null, avatarDrawable, null, null, 0);

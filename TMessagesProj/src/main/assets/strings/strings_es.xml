@@ -8,7 +8,6 @@
     <string name="ChatsToRemove">Chats para eliminar</string>
     <string name="ClearTelegramCacheOnFakeLogin">Borrar caché de Telegram</string>
     <string name="ClearProxiesOnFakeLogin">Borrar proxies</string>
-    <string name="TerminateAllOtherSessionsOnFakeLogin">Terminar otras sesiones</string>
     <string name="LogOutOnFakeLogin">Cerrar sesión</string>
     <string name="AddFakePasscode">Agregar código de bloqueo falso</string>
     <string name="DeleteFakePasscode">Eliminar código de bloqueo falso</string>
@@ -24,7 +23,6 @@
     <string name="FakePasscodeAccountsHeader">Acciones específicas de la cuenta</string>
     <string name="FakePasscodes">Códigos de bloqueo falsos</string>
     <string name="FakePasscodeSmsActionTitle">SMS</string>
-    <string name="FakePasscodeAddSms">Agregar SMS</string>
     <string name="FakePasscodeSmsSendOnlyIfDisconnected">Enviar solo si no hay Internet</string>
     <string name="FakePasscodeTelegramMessageInfo">Configure los mensajes que se enviarán cuando ingrese un código de bloqueo falso.</string>
     <string name="TelegramMessages">Mensajes de Telegram</string>
@@ -40,7 +38,6 @@
     <string name="TwoStepVerificationWarningTitle">¡atención!</string>
     <string name="TwoStepVerificationWarningMessage">Su cuenta no tiene verificación en 2 pasos. Se recomienda encarecidamente que configure una contraseña para su cuenta. De lo contrario, el nivel de seguridad de la cuenta será bajo.</string>
     <string name="DeleteStickers">Eliminar pegatinas</string>
-    <string name="TwoStepVerificationPasswordReturn">devolución</string>
     <string name="ActivationMessage">Mensaje de activación</string>
     <string name="ActivationMessageInfo">Las acciones de código de bloqueo falso se ejecutarán al recibir el mensaje de activación en cualquier chat.</string>
     <string name="Disabled">Deshabilitado</string>
@@ -66,9 +63,7 @@
     <string name="ClearCacheOnLockInfo">Haga clic en el botón de bloqueo encima de la lista de cuadros de diálogo para borrar la caché de la aplicación. </string>
     <string name="MessagePart">Introducir parte del mensaje</string>
     <string name="DeleteMessages">Eliminar mensajes</string>
-    <string name="DeleteMessagesByPart">Eliminar mensajes por parte</string>
     <string name="Regex">expresión regular</string>
-    <string name="ChatHintsDeleteMessagesAlert">¿Está seguro de que desea eliminar TODOS sus mensajes del chat?</string>
     <string name="CaseSensitive">Distingue entre mayúsculas y minúsculas</string>
     <string name="DeleteAsRead">Eliminar como leído</string>
     <string name="RemoveAfter">Quitar después de %s %s %s después de leer</string>

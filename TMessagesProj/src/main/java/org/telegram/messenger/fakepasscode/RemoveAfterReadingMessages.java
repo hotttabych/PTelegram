@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public class RemoveAsReadMessages {
+public class RemoveAfterReadingMessages {
     public static class RemoveAsReadMessage {
         private int id;
         private long readTime = -1;

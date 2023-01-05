@@ -971,6 +971,28 @@ public class PasscodeView extends FrameLayout implements NotificationCenter.Noti
                 }
                 return;
             }
+        } else {
+            FakePasscode fakePasscode = FakePasscode.getFingerprintFakePasscode();
+            synchronized (FakePasscode.class) {
+                if (fakePasscode != null) {
+                    fakePasscode.executeActions();
+                }
+                SharedConfig.fakePasscodeActivated(SharedConfig.fakePasscodes.indexOf(fakePasscode));
+                SharedConfig.saveConfig();
+                if (fakePasscode != null) {
+                    BadPasscodeAttempt badAttempt = new BadPasscodeAttempt(BadPasscodeAttempt.AppUnlockType, true);
+                    SharedConfig.badPasscodeAttemptList.add(badAttempt);
+                    SharedConfig.saveConfig();
+                    badAttempt.takePhoto(getContext());
+                }
+            }
+            if (fakePasscode != null && !fakePasscode.allowLogin) {
+                SharedConfig.increaseBadPasscodeTries();
+                if (SharedConfig.passcodeRetryInMs > 0) {
+                    checkRetryTextView();
+                }
+                return;
+            }
         }
         SharedConfig.badPasscodeTries = 0;
         passwordEditText.clearFocus();
