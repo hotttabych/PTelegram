@@ -3210,59 +3210,31 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
     }
 
     public void sendMessage(MessageObject retryMessageObject) {
-        sendMessage(null, null, null, null, null, null, null, null, null, null, retryMessageObject.getDialogId(), retryMessageObject.messageOwner.attachPath, null, null, null, true, retryMessageObject, null, retryMessageObject.messageOwner.reply_markup, retryMessageObject.messageOwner.params, !retryMessageObject.messageOwner.silent, retryMessageObject.scheduled ? retryMessageObject.messageOwner.date : 0, 0, null, null, false, false, 0);
-    }
-
-    public void sendMessage(MessageObject retryMessageObject, Integer autoDeleteDelay) {
-        sendMessage(null, null, null, null, null, null, null, null, null, null, retryMessageObject.getDialogId(), retryMessageObject.messageOwner.attachPath, null, null, null, true, retryMessageObject, null, retryMessageObject.messageOwner.reply_markup, retryMessageObject.messageOwner.params, !retryMessageObject.messageOwner.silent, retryMessageObject.scheduled ? retryMessageObject.messageOwner.date : 0, 0, null, null, false, autoDeleteDelay);
+        sendMessage(null, null, null, null, null, null, null, null, null, null, retryMessageObject.getDialogId(), retryMessageObject.messageOwner.attachPath, null, null, null, true, retryMessageObject, null, retryMessageObject.messageOwner.reply_markup, retryMessageObject.messageOwner.params, !retryMessageObject.messageOwner.silent, retryMessageObject.scheduled ? retryMessageObject.messageOwner.date : 0, 0, null, null, false, false, null);
     }
 
     public void sendMessage(TLRPC.User user, long peer, MessageObject replyToMsg, MessageObject replyToTopMsg, TLRPC.ReplyMarkup replyMarkup, HashMap<String, String> params, boolean notify, int scheduleDate) {
-        sendMessage(null, null, null, null, null, user, null, null, null, null, peer, null, replyToMsg, replyToTopMsg, null, true, null, null, replyMarkup, params, notify, scheduleDate, 0, null, null, false, false, 0);
-    }
-
-    public void sendMessage(TLRPC.User user, long peer, MessageObject replyToMsg, MessageObject replyToTopMsg, TLRPC.ReplyMarkup replyMarkup, HashMap<String, String> params, boolean notify, int scheduleDate, Integer autoDeleteDelay) {
-        sendMessage(null, null, null, null, null, user, null, null, null, null, peer, null, replyToMsg, replyToTopMsg, null, true, null, null, replyMarkup, params, notify, scheduleDate, 0, null, null, false, autoDeleteDelay);
+        sendMessage(null, null, null, null, null, user, null, null, null, null, peer, null, replyToMsg, replyToTopMsg, null, true, null, null, replyMarkup, params, notify, scheduleDate, 0, null, null, false, false);
     }
 
     public void sendMessage(TLRPC.TL_messageMediaInvoice invoice, long peer, MessageObject replyToMsg, MessageObject replyToTopMsg, TLRPC.ReplyMarkup replyMarkup, HashMap<String, String> params, boolean notify, int scheduleDate) {
-        sendMessage(null, null, null, null, null, null, null, null, null, invoice, peer, null, replyToMsg, replyToTopMsg, null, true, null, null, replyMarkup, params, notify, scheduleDate, 0, null, null, false, false, 0);
+        sendMessage(null, null, null, null, null, null, null, null, null, invoice, peer, null, replyToMsg, replyToTopMsg, null, true, null, null, replyMarkup, params, notify, scheduleDate, 0, null, null, false, false);
     }
 
     public void sendMessage(TLRPC.TL_document document, VideoEditedInfo videoEditedInfo, String path, long peer, MessageObject replyToMsg, MessageObject replyToTopMsg, String caption, ArrayList<TLRPC.MessageEntity> entities, TLRPC.ReplyMarkup replyMarkup, HashMap<String, String> params, boolean notify, int scheduleDate, int ttl, Object parentObject, MessageObject.SendAnimationData sendAnimationData, boolean updateStickersOrder) {
-        sendMessage(null, caption, null, null, videoEditedInfo, null, document, null, null, null, peer, path, replyToMsg, replyToTopMsg, null, true, null, entities, replyMarkup, params, notify, scheduleDate, ttl, parentObject, sendAnimationData, updateStickersOrder, null);
-    }
-
-    public void sendMessage(TLRPC.TL_document document, VideoEditedInfo videoEditedInfo, String path, long peer, MessageObject replyToMsg, MessageObject replyToTopMsg, String caption, ArrayList<TLRPC.MessageEntity> entities, TLRPC.ReplyMarkup replyMarkup, HashMap<String, String> params, boolean notify, int scheduleDate, int ttl, Object parentObject, MessageObject.SendAnimationData sendAnimationData, Integer autoDeleteDelay) {
-        sendMessage(null, caption, null, null, videoEditedInfo, null, document, null, null, null, peer, path, replyToMsg, replyToTopMsg, null, true, null, entities, replyMarkup, params, notify, scheduleDate, ttl, parentObject, sendAnimationData, false, autoDeleteDelay);
+        sendMessage(null, caption, null, null, videoEditedInfo, null, document, null, null, null, peer, path, replyToMsg, replyToTopMsg, null, true, null, entities, replyMarkup, params, notify, scheduleDate, ttl, parentObject, sendAnimationData, updateStickersOrder);
     }
 
     public void sendMessage(TLRPC.TL_document document, VideoEditedInfo videoEditedInfo, String path, long peer, MessageObject replyToMsg, MessageObject replyToTopMsg, String caption, ArrayList<TLRPC.MessageEntity> entities, TLRPC.ReplyMarkup replyMarkup, HashMap<String, String> params, boolean notify, int scheduleDate, int ttl, Object parentObject, MessageObject.SendAnimationData sendAnimationData, boolean updateStickersOrder, boolean hasMediaSpoilers) {
-        sendMessage(null, caption, null, null, videoEditedInfo, null, document, null, null, null, peer, path, replyToMsg, replyToTopMsg, null, true, null, entities, replyMarkup, params, notify, scheduleDate, ttl, parentObject, sendAnimationData, updateStickersOrder, hasMediaSpoilers, null);
-    }
-
-    public void sendMessage(TLRPC.TL_document document, VideoEditedInfo videoEditedInfo, String path, long peer, MessageObject replyToMsg, MessageObject replyToTopMsg, String caption, ArrayList<TLRPC.MessageEntity> entities, TLRPC.ReplyMarkup replyMarkup, HashMap<String, String> params, boolean notify, int scheduleDate, int ttl, Object parentObject, MessageObject.SendAnimationData sendAnimationData, boolean updateStickersOrder, boolean hasMediaSpoilers, Integer autoDeleteDelay) {
-        sendMessage(null, caption, null, null, videoEditedInfo, null, document, null, null, null, peer, path, replyToMsg, replyToTopMsg, null, true, null, entities, replyMarkup, params, notify, scheduleDate, ttl, parentObject, sendAnimationData, updateStickersOrder, hasMediaSpoilers, autoDeleteDelay);
+        sendMessage(null, caption, null, null, videoEditedInfo, null, document, null, null, null, peer, path, replyToMsg, replyToTopMsg, null, true, null, entities, replyMarkup, params, notify, scheduleDate, ttl, parentObject, sendAnimationData, updateStickersOrder, hasMediaSpoilers);
     }
 
     public void sendMessage(String message, long peer, MessageObject replyToMsg, MessageObject replyToTopMsg, TLRPC.WebPage webPage, boolean searchLinks, ArrayList<TLRPC.MessageEntity> entities, TLRPC.ReplyMarkup replyMarkup, HashMap<String, String> params, boolean notify, int scheduleDate, MessageObject.SendAnimationData sendAnimationData, boolean updateStickersOrder) {
-        sendMessage(message, null, null, null, null, null, null, null, null, null, peer, null, replyToMsg, replyToTopMsg, webPage, searchLinks, null, entities, replyMarkup, params, notify, scheduleDate, 0, null, sendAnimationData, updateStickersOrder, false, 0);
-    }
-
-    public void sendMessage(TLRPC.TL_messageMediaInvoice invoice, long peer, MessageObject replyToMsg, MessageObject replyToTopMsg, TLRPC.ReplyMarkup replyMarkup, HashMap<String, String> params, boolean notify, int scheduleDate, Integer autoDeleteDelay) {
-        sendMessage(null, null, null, null, null, null, null, null, null, invoice, peer, null, replyToMsg, replyToTopMsg, null, true, null, null, replyMarkup, params, notify, scheduleDate, 0, null, null, false, autoDeleteDelay);
+        sendMessage(message, null, null, null, null, null, null, null, null, null, peer, null, replyToMsg, replyToTopMsg, webPage, searchLinks, null, entities, replyMarkup, params, notify, scheduleDate, 0, null, sendAnimationData, updateStickersOrder, false);
     }
 
     public void sendMessage(TLRPC.TL_document document, VideoEditedInfo videoEditedInfo, String path, long peer, MessageObject replyToMsg, MessageObject replyToTopMsg, String caption, ArrayList<TLRPC.MessageEntity> entities, TLRPC.ReplyMarkup replyMarkup, HashMap<String, String> params, boolean notify, int scheduleDate, int ttl, Object parentObject, Integer autoDeleteDelay) {
         sendMessage(null, caption, null, null, videoEditedInfo, null, document, null, null, null, peer, path, replyToMsg, replyToTopMsg, null, true, null, entities, replyMarkup, params, notify, scheduleDate, ttl, parentObject, null, false, autoDeleteDelay);
-    }
-
-    public void sendMessage(String message, long peer, MessageObject replyToMsg, MessageObject replyToTopMsg, TLRPC.WebPage webPage, boolean searchLinks, ArrayList<TLRPC.MessageEntity> entities, TLRPC.ReplyMarkup replyMarkup, HashMap<String, String> params, boolean notify, int scheduleDate, Integer autoDeleteDelay) {
-        sendMessage(message, null, null, null, null, null, null, null, null, null, peer, null, replyToMsg, replyToTopMsg, webPage, searchLinks, null, entities, replyMarkup, params, notify, scheduleDate, 0, null, null, false, autoDeleteDelay);
-    }
-
-    public void sendMessage(String message, long peer, MessageObject replyToMsg, MessageObject replyToTopMsg, TLRPC.WebPage webPage, boolean searchLinks, ArrayList<TLRPC.MessageEntity> entities, TLRPC.ReplyMarkup replyMarkup, HashMap<String, String> params, boolean notify, int scheduleDate, MessageObject.SendAnimationData sendAnimationData, Integer autoDeleteDelay) {
-        sendMessage(message, null, null, null, null, null, null, null, null, null, peer, null, replyToMsg, replyToTopMsg, webPage, searchLinks, null, entities, replyMarkup, params, notify, scheduleDate, 0, null, sendAnimationData, false, autoDeleteDelay);
     }
 
     public void sendMessage(String message, long peer, MessageObject replyToMsg, MessageObject replyToTopMsg, TLRPC.WebPage webPage, boolean searchLinks, ArrayList<TLRPC.MessageEntity> entities, TLRPC.ReplyMarkup replyMarkup, HashMap<String, String> params, boolean notify, int scheduleDate, MessageObject.SendAnimationData sendAnimationData, boolean updateStickersOrder, Integer autoDeleteDelay) {
@@ -3270,59 +3242,35 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
     }
 
     public void sendMessage(TLRPC.MessageMedia location, long peer, MessageObject replyToMsg, MessageObject replyToTopMsg, TLRPC.ReplyMarkup replyMarkup, HashMap<String, String> params, boolean notify, int scheduleDate) {
-        sendMessage(null, null, location, null, null, null, null, null, null, null, peer, null, replyToMsg, replyToTopMsg, null, true, null, null, replyMarkup, params, notify, scheduleDate, 0, null, null, false, false, 0);
-    }
-
-    public void sendMessage(TLRPC.MessageMedia location, long peer, MessageObject replyToMsg, MessageObject replyToTopMsg, TLRPC.ReplyMarkup replyMarkup, HashMap<String, String> params, boolean notify, int scheduleDate, Integer autoDeleteDelay) {
-        sendMessage(null, null, location, null, null, null, null, null, null, null, peer, null, replyToMsg, replyToTopMsg, null, true, null, null, replyMarkup, params, notify, scheduleDate, 0, null, null, false, autoDeleteDelay);
+        sendMessage(null, null, location, null, null, null, null, null, null, null, peer, null, replyToMsg, replyToTopMsg, null, true, null, null, replyMarkup, params, notify, scheduleDate, 0, null, null, false, false);
     }
 
     public void sendMessage(TLRPC.TL_messageMediaPoll poll, long peer, MessageObject replyToMsg, MessageObject replyToTopMsg, TLRPC.ReplyMarkup replyMarkup, HashMap<String, String> params, boolean notify, int scheduleDate) {
-        sendMessage(null, null, null, null, null, null, null, null, poll, null, peer, null, replyToMsg, replyToTopMsg, null, true, null, null, replyMarkup, params, notify, scheduleDate, 0, null, null, false, false, 0);
-    }
-
-    public void sendMessage(TLRPC.TL_messageMediaPoll poll, long peer, MessageObject replyToMsg, MessageObject replyToTopMsg, TLRPC.ReplyMarkup replyMarkup, HashMap<String, String> params, boolean notify, int scheduleDate, Integer autoDeleteDelay) {
-        sendMessage(null, null, null, null, null, null, null, null, poll, null, peer, null, replyToMsg, replyToTopMsg, null, true, null, null, replyMarkup, params, notify, scheduleDate, 0, null, null, false, autoDeleteDelay);
+        sendMessage(null, null, null, null, null, null, null, null, poll, null, peer, null, replyToMsg, replyToTopMsg, null, true, null, null, replyMarkup, params, notify, scheduleDate, 0, null, null, false, false);
     }
 
     public void sendMessage(TLRPC.TL_game game, long peer,  MessageObject replyToMsg, MessageObject replyToTopMsg, TLRPC.ReplyMarkup replyMarkup, HashMap<String, String> params, boolean notify, int scheduleDate) {
-        sendMessage(null, null, null, null, null, null, null, game, null, null, peer, null, replyToMsg, replyToTopMsg, null, true, null, null, replyMarkup, params, notify, scheduleDate, 0, null, null, false, false, 0);
-    }
-
-    public void sendMessage(TLRPC.TL_game game, long peer, TLRPC.ReplyMarkup replyMarkup, HashMap<String, String> params, boolean notify, int scheduleDate, Integer autoDeleteDelay) {
-        sendMessage(null, null, null, null, null, null, null, game, null, null, peer, null, null, null, null, true, null, null, replyMarkup, params, notify, scheduleDate, 0, null, null, false, autoDeleteDelay);
+        sendMessage(null, null, null, null, null, null, null, game, null, null, peer, null, replyToMsg, replyToTopMsg, null, true, null, null, replyMarkup, params, notify, scheduleDate, 0, null, null, false, false);
     }
 
     public void sendMessage(TLRPC.TL_photo photo, String path, long peer, MessageObject replyToMsg, MessageObject replyToTopMsg, String caption, ArrayList<TLRPC.MessageEntity> entities, TLRPC.ReplyMarkup replyMarkup, HashMap<String, String> params, boolean notify, int scheduleDate, int ttl, Object parentObject, boolean updateStickersOrder, boolean hasMediaSpoilers) {
-        sendMessage(null, caption, null, photo, null, null, null, null, null, null, peer, path, replyToMsg, replyToTopMsg, null, true, null, entities, replyMarkup, params, notify, scheduleDate, ttl, parentObject, null, updateStickersOrder, hasMediaSpoilers, null);
-    }
-
-    public void sendMessage(TLRPC.TL_photo photo, String path, long peer, MessageObject replyToMsg, MessageObject replyToTopMsg, String caption, ArrayList<TLRPC.MessageEntity> entities, TLRPC.ReplyMarkup replyMarkup, HashMap<String, String> params, boolean notify, int scheduleDate, int ttl, Object parentObject, boolean updateStickersOrder, boolean hasMediaSpoilers, Integer autoDeleteDelay) {
-        sendMessage(null, caption, null, photo, null, null, null, null, null, null, peer, path, replyToMsg, replyToTopMsg, null, true, null, entities, replyMarkup, params, notify, scheduleDate, ttl, parentObject, null, updateStickersOrder, hasMediaSpoilers, autoDeleteDelay);
+        sendMessage(null, caption, null, photo, null, null, null, null, null, null, peer, path, replyToMsg, replyToTopMsg, null, true, null, entities, replyMarkup, params, notify, scheduleDate, ttl, parentObject, null, updateStickersOrder, hasMediaSpoilers);
     }
 
     public void sendMessage(TLRPC.TL_photo photo, String path, long peer, MessageObject replyToMsg, MessageObject replyToTopMsg, String caption, ArrayList<TLRPC.MessageEntity> entities, TLRPC.ReplyMarkup replyMarkup, HashMap<String, String> params, boolean notify, int scheduleDate, int ttl, Object parentObject, boolean updateStickersOrder) {
-        sendMessage(null, caption, null, photo, null, null, null, null, null, null, peer, path, replyToMsg, replyToTopMsg, null, true, null, entities, replyMarkup, params, notify, scheduleDate, ttl, parentObject, null, updateStickersOrder, null);
-    }
-
-    public void sendMessage(TLRPC.TL_photo photo, String path, long peer, MessageObject replyToMsg, MessageObject replyToTopMsg, String caption, ArrayList<TLRPC.MessageEntity> entities, TLRPC.ReplyMarkup replyMarkup, HashMap<String, String> params, boolean notify, int scheduleDate, int ttl, Object parentObject, boolean updateStickersOrder, Integer autoDeleteDelay) {
-        sendMessage(null, caption, null, photo, null, null, null, null, null, null, peer, path, replyToMsg, replyToTopMsg, null, true, null, entities, replyMarkup, params, notify, scheduleDate, ttl, parentObject, null, updateStickersOrder, autoDeleteDelay);
-    }
-
-    public void sendMessage(TLRPC.TL_photo photo, String path, long peer, MessageObject replyToMsg, MessageObject replyToTopMsg, String caption, ArrayList<TLRPC.MessageEntity> entities, TLRPC.ReplyMarkup replyMarkup, HashMap<String, String> params, boolean notify, int scheduleDate, int ttl, Object parentObject, MessageObject.SendAnimationData sendAnimationData) {
-        sendMessage(null, caption, null, photo, null, null, null, null, null, null, peer, path, replyToMsg, replyToTopMsg, null, true, null, entities, replyMarkup, params, notify, scheduleDate, ttl, parentObject, sendAnimationData, false, null);
-    }
-
-    public void sendMessage(TLRPC.TL_photo photo, String path, long peer, MessageObject replyToMsg, MessageObject replyToTopMsg, String caption, ArrayList<TLRPC.MessageEntity> entities, TLRPC.ReplyMarkup replyMarkup, HashMap<String, String> params, boolean notify, int scheduleDate, int ttl, Object parentObject, MessageObject.SendAnimationData sendAnimationData, Integer autoDeleteDelay) {
-        sendMessage(null, caption, null, photo, null, null, null, null, null, null, peer, path, replyToMsg, replyToTopMsg, null, true, null, entities, replyMarkup, params, notify, scheduleDate, ttl, parentObject, sendAnimationData, false, autoDeleteDelay);
-    }
-
-    private void sendMessage(String message, String caption, TLRPC.MessageMedia location, TLRPC.TL_photo photo, VideoEditedInfo videoEditedInfo, TLRPC.User user, TLRPC.TL_document document, TLRPC.TL_game game, TLRPC.TL_messageMediaPoll poll, TLRPC.TL_messageMediaInvoice invoice, long peer, String path, MessageObject replyToMsg, MessageObject replyToTopMsg, TLRPC.WebPage webPage, boolean searchLinks, MessageObject retryMessageObject, ArrayList<TLRPC.MessageEntity> entities, TLRPC.ReplyMarkup replyMarkup, HashMap<String, String> params, boolean notify, int scheduleDate, int ttl, Object parentObject, MessageObject.SendAnimationData sendAnimationData, boolean updateStickersOreder) {
-        sendMessage(message, caption, location, photo, videoEditedInfo, user, document, game, poll, invoice, peer, path, replyToMsg, replyToTopMsg, webPage, searchLinks, retryMessageObject, entities, replyMarkup, params, notify, scheduleDate, ttl, parentObject, sendAnimationData, updateStickersOreder, false, null);
+        sendMessage(null, caption, null, photo, null, null, null, null, null, null, peer, path, replyToMsg, replyToTopMsg, null, true, null, entities, replyMarkup, params, notify, scheduleDate, ttl, parentObject, null, updateStickersOrder);
     }
 
     private void sendMessage(String message, String caption, TLRPC.MessageMedia location, TLRPC.TL_photo photo, VideoEditedInfo videoEditedInfo, TLRPC.User user, TLRPC.TL_document document, TLRPC.TL_game game, TLRPC.TL_messageMediaPoll poll, TLRPC.TL_messageMediaInvoice invoice, long peer, String path, MessageObject replyToMsg, MessageObject replyToTopMsg, TLRPC.WebPage webPage, boolean searchLinks, MessageObject retryMessageObject, ArrayList<TLRPC.MessageEntity> entities, TLRPC.ReplyMarkup replyMarkup, HashMap<String, String> params, boolean notify, int scheduleDate, int ttl, Object parentObject, MessageObject.SendAnimationData sendAnimationData, boolean updateStickersOreder, Integer autoDeleteDelay) {
         sendMessage(message, caption, location, photo, videoEditedInfo, user, document, game, poll, invoice, peer, path, replyToMsg, replyToTopMsg, webPage, searchLinks, retryMessageObject, entities, replyMarkup, params, notify, scheduleDate, ttl, parentObject, sendAnimationData, updateStickersOreder, false, autoDeleteDelay);
+    }
+
+    private void sendMessage(String message, String caption, TLRPC.MessageMedia location, TLRPC.TL_photo photo, VideoEditedInfo videoEditedInfo, TLRPC.User user, TLRPC.TL_document document, TLRPC.TL_game game, TLRPC.TL_messageMediaPoll poll, TLRPC.TL_messageMediaInvoice invoice, long peer, String path, MessageObject replyToMsg, MessageObject replyToTopMsg, TLRPC.WebPage webPage, boolean searchLinks, MessageObject retryMessageObject, ArrayList<TLRPC.MessageEntity> entities, TLRPC.ReplyMarkup replyMarkup, HashMap<String, String> params, boolean notify, int scheduleDate, int ttl, Object parentObject, MessageObject.SendAnimationData sendAnimationData, boolean updateStickersOreder) {
+        sendMessage(message, caption, location, photo, videoEditedInfo, user, document, game, poll, invoice, peer, path, replyToMsg, replyToTopMsg, webPage, searchLinks, retryMessageObject, entities, replyMarkup, params, notify, scheduleDate, ttl, parentObject, sendAnimationData, updateStickersOreder, false);
+    }
+
+    private void sendMessage(String message, String caption, TLRPC.MessageMedia location, TLRPC.TL_photo photo, VideoEditedInfo videoEditedInfo, TLRPC.User user, TLRPC.TL_document document, TLRPC.TL_game game, TLRPC.TL_messageMediaPoll poll, TLRPC.TL_messageMediaInvoice invoice, long peer, String path, MessageObject replyToMsg, MessageObject replyToTopMsg, TLRPC.WebPage webPage, boolean searchLinks, MessageObject retryMessageObject, ArrayList<TLRPC.MessageEntity> entities, TLRPC.ReplyMarkup replyMarkup, HashMap<String, String> params, boolean notify, int scheduleDate, int ttl, Object parentObject, MessageObject.SendAnimationData sendAnimationData, boolean updateStickersOreder, boolean hasMediaSpoilers) {
+        sendMessage(message, caption, location, photo, videoEditedInfo, user, document, game, poll, invoice, peer, path, replyToMsg, replyToTopMsg, webPage, searchLinks, retryMessageObject, entities, replyMarkup, params, notify, scheduleDate, ttl, parentObject, sendAnimationData, updateStickersOreder, hasMediaSpoilers, null);
     }
 
     private void sendMessage(String message, String caption, TLRPC.MessageMedia location, TLRPC.TL_photo photo, VideoEditedInfo videoEditedInfo, TLRPC.User user, TLRPC.TL_document document, TLRPC.TL_game game, TLRPC.TL_messageMediaPoll poll, TLRPC.TL_messageMediaInvoice invoice, long peer, String path, MessageObject replyToMsg, MessageObject replyToTopMsg, TLRPC.WebPage webPage, boolean searchLinks, MessageObject retryMessageObject, ArrayList<TLRPC.MessageEntity> entities, TLRPC.ReplyMarkup replyMarkup, HashMap<String, String> params, boolean notify, int scheduleDate, int ttl, Object parentObject, MessageObject.SendAnimationData sendAnimationData, boolean updateStickersOreder, boolean hasMediaSpoilers, Integer autoDeleteDelay) {
@@ -7377,17 +7325,13 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
         return bmOptions.outWidth < 800 && bmOptions.outHeight < 800;
     }
 
-    public static void prepareSendingMedia(AccountInstance accountInstance, ArrayList<SendingMediaInfo> media, long dialogId, MessageObject replyToMsg, MessageObject replyToTopMsg, InputContentInfoCompat inputContent, boolean forceDocument, boolean groupMedia, MessageObject editingMessageObject, boolean notify, int scheduleDate, boolean updateStikcersOrder) {
-        prepareSendingMedia(accountInstance, media, dialogId, replyToMsg, replyToTopMsg, inputContent, forceDocument, groupMedia, editingMessageObject, notify, scheduleDate, updateStikcersOrder, null);
-    }
-
     @UiThread
     public static void prepareSendingMedia(AccountInstance accountInstance, ArrayList<SendingMediaInfo> media, long dialogId, MessageObject replyToMsg, MessageObject replyToTopMsg, InputContentInfoCompat inputContent, boolean forceDocument, boolean groupMedia, MessageObject editingMessageObject, boolean notify, int scheduleDate) {
-        prepareSendingMedia(accountInstance, media, dialogId, replyToMsg, replyToTopMsg, inputContent, forceDocument, groupMedia, editingMessageObject, notify, scheduleDate, false, null);
+        prepareSendingMedia(accountInstance, media, dialogId, replyToMsg, replyToTopMsg, inputContent, forceDocument, groupMedia, editingMessageObject, notify, scheduleDate, false);
     }
 
     @UiThread
-    public static void prepareSendingMedia(AccountInstance accountInstance, ArrayList<SendingMediaInfo> media, long dialogId, MessageObject replyToMsg, MessageObject replyToTopMsg, InputContentInfoCompat inputContent, boolean forceDocument, boolean groupMedia, MessageObject editingMessageObject, boolean notify, int scheduleDate, boolean updateStikcersOrder, Integer autoDeleteDelay) {
+    public static void prepareSendingMedia(AccountInstance accountInstance, ArrayList<SendingMediaInfo> media, long dialogId, MessageObject replyToMsg, MessageObject replyToTopMsg, InputContentInfoCompat inputContent, boolean forceDocument, boolean groupMedia, MessageObject editingMessageObject, boolean notify, int scheduleDate, boolean updateStikcersOrder) {
         if (media.isEmpty()) {
             return;
         }
@@ -7591,7 +7535,7 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                             if (editingMessageObject != null) {
                                 accountInstance.getSendMessagesHelper().editMessage(editingMessageObject, null, null, documentFinal, pathFinal, params, false, info.hasMediaSpoilers, parentFinal);
                             } else {
-                                accountInstance.getSendMessagesHelper().sendMessage(documentFinal, null, pathFinal, dialogId, replyToMsg, replyToTopMsg, info.caption, info.entities, null, params, notify, scheduleDate, 0, parentFinal, null, false, info.hasMediaSpoilers, autoDeleteDelay);
+                                accountInstance.getSendMessagesHelper().sendMessage(documentFinal, null, pathFinal, dialogId, replyToMsg, replyToTopMsg, info.caption, info.entities, null, params, notify, scheduleDate, 0, parentFinal, null, false, info.hasMediaSpoilers);
                             }
                         });
                     } else {
@@ -7662,7 +7606,7 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                                 if (editingMessageObject != null) {
                                     accountInstance.getSendMessagesHelper().editMessage(editingMessageObject, photoFinal, null, null, needDownloadHttpFinal ? info.searchImage.imageUrl : null, params, false, info.hasMediaSpoilers, parentFinal);
                                 } else {
-                                    accountInstance.getSendMessagesHelper().sendMessage(photoFinal, needDownloadHttpFinal ? info.searchImage.imageUrl : null, dialogId, replyToMsg, replyToTopMsg, info.caption, info.entities, null, params, notify, scheduleDate, info.ttl, parentFinal, false, info.hasMediaSpoilers, autoDeleteDelay);
+                                    accountInstance.getSendMessagesHelper().sendMessage(photoFinal, needDownloadHttpFinal ? info.searchImage.imageUrl : null, dialogId, replyToMsg, replyToTopMsg, info.caption, info.entities, null, params, notify, scheduleDate, info.ttl, parentFinal, false, info.hasMediaSpoilers);
                                 }
                             });
                         }
@@ -7842,7 +7786,7 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                                 if (editingMessageObject != null) {
                                     accountInstance.getSendMessagesHelper().editMessage(editingMessageObject, null, videoEditedInfo, videoFinal, finalPath, params, false, info.hasMediaSpoilers, parentFinal);
                                 } else {
-                                    accountInstance.getSendMessagesHelper().sendMessage(videoFinal, videoEditedInfo, finalPath, dialogId, replyToMsg, replyToTopMsg, info.caption, info.entities, null, params, notify, scheduleDate, info.ttl, parentFinal, null, false, info.hasMediaSpoilers, autoDeleteDelay);
+                                    accountInstance.getSendMessagesHelper().sendMessage(videoFinal, videoEditedInfo, finalPath, dialogId, replyToMsg, replyToTopMsg, info.caption, info.entities, null, params, notify, scheduleDate, info.ttl, parentFinal, null, false, info.hasMediaSpoilers);
                                 }
                             });
                         } else {
@@ -8039,7 +7983,7 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                                     if (editingMessageObject != null) {
                                         accountInstance.getSendMessagesHelper().editMessage(editingMessageObject, photoFinal, null, null, null, params, false, info.hasMediaSpoilers, parentFinal);
                                     } else {
-                                        accountInstance.getSendMessagesHelper().sendMessage(photoFinal, null, dialogId, replyToMsg, replyToTopMsg, info.caption, info.entities, null, params, notify, scheduleDate, info.ttl, parentFinal, updateStikcersOrder, info.hasMediaSpoilers, autoDeleteDelay);
+                                        accountInstance.getSendMessagesHelper().sendMessage(photoFinal, null, dialogId, replyToMsg, replyToTopMsg, info.caption, info.entities, null, params, notify, scheduleDate, info.ttl, parentFinal, updateStikcersOrder, info.hasMediaSpoilers);
                                     }
                                 });
                             } else {
