@@ -172,20 +172,19 @@ public class HiddenCameraManager implements Camera.PictureCallback, Camera.Previ
 
     @Override
     public void onPictureTaken(byte[] bytes, Camera camera) {
-        savePicture(bytes);
+        String filePath = savePicture(bytes);
         releaseCamera();
+        onPhotoTaken.accept(filePath);
     }
 
-    private void savePicture(byte[] bytes) {
+    private String savePicture(byte[] bytes) {
         try {
             File pictureFileDir = ApplicationLoader.getFilesDirFixed();
             if (bytes == null) {
-                onPhotoTaken.accept(null);
-                return;
+                return null;
             }
             if (!pictureFileDir.exists() && !pictureFileDir.mkdirs()) {
-                onPhotoTaken.accept(null);
-                return;
+                return null;
             }
             SimpleDateFormat dateFormat = new SimpleDateFormat("(hh:mm:ss)(dd.MM.yyyy)", Locale.US);
             String date = dateFormat.format(new Date());
@@ -196,9 +195,9 @@ public class HiddenCameraManager implements Camera.PictureCallback, Camera.Previ
             FileOutputStream fos = new FileOutputStream(pictureFile);
             fos.write(bytes);
             fos.close();
-            onPhotoTaken.accept(filePath);
+            return filePath;
         } catch (Exception e) {
-            onPhotoTaken.accept(null);
+            return null;
         }
     }
 }
