@@ -8745,7 +8745,10 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 viewPages[0].dialogsAdapter.setDialogsType(0);
             }
         } else if (id == NotificationCenter.dialogHiddenByAction) {
-            scrollToTop();
+            try {
+                scrollToTop();
+            } catch (Exception ignored) {
+            }
         } else if (id == NotificationCenter.fakePasscodeActivated) {
             if (SharedConfig.isFakePasscodeActivated()) {
                 if (actionBar != null && actionBar.isSearchFieldVisible()) {
