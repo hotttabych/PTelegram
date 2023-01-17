@@ -6689,7 +6689,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
     }
 
     private void startUpdateDownloading() {
-        if (getUpdateAccountNum() != currentAccount) {
+        if (getUpdateAccountNum() != currentAccount || SharedConfig.pendingPtgAppUpdate.message == null) {
             UpdateChecker.checkUpdate(currentAccount, (updateFounded, data) -> {
                 if (updateFounded) {
                     SharedConfig.pendingPtgAppUpdate = data;
