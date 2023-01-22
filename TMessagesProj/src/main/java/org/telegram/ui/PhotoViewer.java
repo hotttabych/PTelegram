@@ -6638,7 +6638,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
     }
 
     private void sendPressed(boolean notify, int scheduleDate, boolean replace, boolean forceDocument, boolean confirmed) {
-        sendPressed(notify, scheduleDate, replace, forceDocument, confirmed, 0);
+        sendPressed(notify, scheduleDate, replace, forceDocument, confirmed, null);
     }
 
     private void sendPressed(boolean notify, int scheduleDate, boolean replace, boolean forceDocument, boolean confirmed, Integer autoDeleteDelay) {
