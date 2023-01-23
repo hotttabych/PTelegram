@@ -395,6 +395,13 @@ public class Utils {
         if (lastEnd != -1) {
             builder.append(message.subSequence(lastEnd, message.length()));
             if (builder.length() != 0) {
+                int end = builder.length() - 1;
+                while (end > 0 && Character.isWhitespace(builder.charAt(end))) {
+                    end--;
+                }
+                if (end != builder.length() - 1) {
+                    builder.replace(end, builder.length(), "");
+                }
                 return SpannableString.valueOf(builder);
             } else {
                 return leaveEmpty ? "" : message;
