@@ -5074,14 +5074,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             }
             return true;
         } else if (position == chatIdRow) {
-            final String chatIdStr;
-            if (userId != 0) {
-                chatIdStr = String.valueOf(userId);
-            } else if (chatId != 0) {
-                chatIdStr = String.valueOf(chatId);
-            } else {
-                return false;
-            }
+            final String chatIdStr = String.valueOf(getDialogId());
             AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
             builder.setItems(new CharSequence[]{LocaleController.getString("Copy", R.string.Copy)}, (dialogInterface, i) -> {
                 if (i == 0) {
@@ -9138,9 +9131,9 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         detailCell.setContentDescriptionValueFirst(true);
                     } else if (position == chatIdRow) {
                         if (userId != 0) {
-                            detailCell.setTextAndValue(String.valueOf(userId), LocaleController.getString("UserId", R.string.UserId), false);
+                            detailCell.setTextAndValue(String.valueOf(getDialogId()), LocaleController.getString("UserId", R.string.UserId), false);
                         } else if (currentChat != null) {
-                            detailCell.setTextAndValue(String.valueOf(-chatId), LocaleController.getString("ChatId", R.string.ChatId), false);
+                            detailCell.setTextAndValue(String.valueOf(getDialogId()), LocaleController.getString("ChatId", R.string.ChatId), false);
                         }
                     }
                     detailCell.setTag(position);
