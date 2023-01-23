@@ -68,6 +68,7 @@ import org.telegram.messenger.NotificationsController;
 import org.telegram.messenger.R;
 import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.TopicsController;
+import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.Utilities;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.TLObject;
@@ -2322,7 +2323,7 @@ public class TopicsFragment extends BaseFragment implements NotificationCenter.N
 
         if (!opnendForSelect) {
             if (chatLocal != null) {
-                avatarContainer.setTitle(chatLocal.title);
+                avatarContainer.setTitle(UserConfig.getChatTitleOverride(currentAccount, chatId, chatLocal.title));
                 Drawable rightIcon = null;
                 if (getMessagesController().isDialogMuted(-chatId, 0)) {
                     rightIcon = getThemedDrawable(Theme.key_drawable_muteIconDrawable);
