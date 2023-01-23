@@ -26,6 +26,7 @@ import androidx.collection.LongSparseArray;
 
 import org.telegram.SQLite.SQLiteCursor;
 import org.telegram.SQLite.SQLitePreparedStatement;
+import org.telegram.messenger.fakepasscode.FakePasscode;
 import org.telegram.tgnet.NativeByteBuffer;
 import org.telegram.tgnet.TLObject;
 import org.telegram.tgnet.TLRPC;
@@ -991,7 +992,13 @@ public class LocationController extends BaseController implements NotificationCe
     public static int getLocationsCount() {
         int count = 0;
         for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
-            count += LocationController.getInstance(a).sharingLocationsUI.size();
+            if (FakePasscode.isHideAccount(a)) {
+                continue;
+            }
+            count += LocationController.getInstance(a).sharingLocationsUI
+                    .stream()
+                    .filter(location -> !FakePasscode.isHideChat(location.did, location.account))
+                    .count();
         }
         return count;
     }
