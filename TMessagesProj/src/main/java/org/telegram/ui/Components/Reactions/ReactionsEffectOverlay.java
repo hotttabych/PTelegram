@@ -125,7 +125,7 @@ public class ReactionsEffectOverlay {
                             if (chat == null) {
                                 continue;
                             }
-                            avatarDrawable.setInfo(chat);
+                            avatarDrawable.setInfo(chat, currentAccount);
                             imageReceiver.setForUserOrChat(chat, avatarDrawable);
                         } else {
                             user = MessagesController.getInstance(currentAccount).getUser(peerId);

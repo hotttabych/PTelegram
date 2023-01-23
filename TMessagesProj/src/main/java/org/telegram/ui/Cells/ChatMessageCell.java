@@ -254,7 +254,7 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                 avatarImage.setForUserOrChat(currentChat, avatarDrawable);
             } else if (messageObject != null && messageObject.isSponsored()) {
                 if (messageObject.sponsoredChatInvite != null && messageObject.sponsoredChatInvite.chat != null) {
-                    avatarDrawable.setInfo(messageObject.sponsoredChatInvite.chat);
+                    avatarDrawable.setInfo(messageObject.sponsoredChatInvite.chat, currentAccount);
                     avatarImage.setForUserOrChat(messageObject.sponsoredChatInvite.chat, avatarDrawable);
                 } else {
                     avatarDrawable.setInfo(messageObject.sponsoredChatInvite);

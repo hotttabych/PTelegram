@@ -299,7 +299,7 @@ public class AvatarsDrawable {
                 animatingStates[index].avatarDrawable.setInfo(currentUser);
             } else {
                 currentChat = MessagesController.getInstance(account).getChat(-id);
-                animatingStates[index].avatarDrawable.setInfo(currentChat);
+                animatingStates[index].avatarDrawable.setInfo(currentChat, account);
             }
             if (currentStyle == 4) {
                 if (id == AccountInstance.getInstance(account).getUserConfig().getClientUserId()) {
@@ -330,7 +330,7 @@ public class AvatarsDrawable {
             currentChat = (TLRPC.Chat) object;
             animatingStates[index].avatarDrawable.setAvatarType(AvatarDrawable.AVATAR_TYPE_NORMAL);
             animatingStates[index].avatarDrawable.setScaleSize(1f);
-            animatingStates[index].avatarDrawable.setInfo(currentChat);
+            animatingStates[index].avatarDrawable.setInfo(currentChat, account);
             animatingStates[index].id = -currentChat.id;
         }
         if (currentUser != null) {

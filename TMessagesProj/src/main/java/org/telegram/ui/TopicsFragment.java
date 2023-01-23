@@ -1366,7 +1366,7 @@ public class TopicsFragment extends BaseFragment implements NotificationCenter.N
                 parentAvatarImageView = new BackupImageView(getContext());
                 parentAvatarDrawable = new AvatarDrawable();
                 parentAvatarImageView.setRoundRadius(AndroidUtilities.dp(16));
-                parentAvatarDrawable.setInfo(getCurrentChat());
+                parentAvatarDrawable.setInfo(getCurrentChat(), currentAccount);
                 parentAvatarImageView.setForUserOrChat(getCurrentChat(), parentAvatarDrawable);
             }
             parentDialogsActivity.getSearchItem().setSearchPaddingStart(52);
