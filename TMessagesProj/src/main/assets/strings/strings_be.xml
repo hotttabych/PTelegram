@@ -94,11 +94,13 @@
     <string name="DeleteOtherPasscodesAfterActivationDetails">Усе астатнія несапраўдныя код-паролі пасля актывацыі будуць выдалены і зламыснік не зможа атрымаць да іх доступ.</string>
     <string name="MuteAudioWhenTakingPhoto">Адключаць гук пры фатаграфаванні</string>
     <string name="HideAccount">Хаваць акаўнт</string>
-    <string name="CannotHideAllAccounts">Вы не можаце схаваць усе акаўнты. Калі жадаеце схаваць гэты акаўнт, зніміце хаванне з іншага акаўнта.</string>
+    <string name="CannotHideAccount">Немагчыма схаваць акаўнт</string>
+    <string name="CannotLogOutAccount">Немагчыма наладзіць выхад з акаўнта</string>
+    <string name="CannotRemoveHiding">Немагчыма прыбраць хаванне</string>
+    <string name="CannotHideAllAccounts">Вы не можаце схаваць усе акаўнты. Калі жадаеце схаваць гэты акаўнт, зніміце хаванне ці выхад з іншага акаўнта.</string>
+    <string name="CannotHideAllAccountsLogout">Вы не можаце схаваць і наладзіць выхад з усіх акаўнтаў. Калі Вы жадаеце наладзіць выхад з гэтага акаўнта, зніміце хаванне ці выхад з іншага акаўнта.</string>
     <string name="CannotShowManyAccounts">Вы не можаце пакінуць не схаванымі больш чым %d акаўнта. Калі жадаеце прыбраць хаванне з гэтага акаўнта, схавайце ці наладзьце вызад з іншага акаўнта.</string>
     <string name="CannotHideSingleAccount">Вы не можаце схаваць адзіны акаўнт. Хаванне працуе толькі ў выпадку, калі ў Тэлеграм 2 і больш акаўнта.</string>
-    <string name="CannotHideAccount">Немагчыма схаваць акаўнт</string>
-    <string name="CannotRemoveHiding">Немагчыма прыбраць хаванне</string>
     <string name="AccountHiddenTitle">Акаўнт будзе хавацца</string>
     <string name="AccountHiddenDescription">Акаўнт будзе хавацца ў некаторых код-паролях. Калі жадаеце, каб хаваліся іншыя акаўнты, наладзьце код-паролі.</string>
     <string name="TooManyAccountsHiddenTitle">Схавана занадта шмат акаўнтаў</string>
