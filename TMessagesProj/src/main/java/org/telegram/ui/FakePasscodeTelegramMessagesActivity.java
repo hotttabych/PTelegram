@@ -90,6 +90,8 @@ public class FakePasscodeTelegramMessagesActivity extends BaseFragment implement
 
     private int fieldY;
 
+    private TelegramMessageAction.Entry tempGeolocationEntry;
+
     private static class ItemDecoration extends RecyclerView.ItemDecoration {
 
         private boolean single;
@@ -516,6 +518,15 @@ public class FakePasscodeTelegramMessagesActivity extends BaseFragment implement
     }
 
     @Override
+    public void onRequestPermissionsResultFragment(int requestCode, String[] permissions, int[] grantResults) {
+        if ((requestCode == 2004) && grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED
+                && tempGeolocationEntry != null) {
+            tempGeolocationEntry.addGeolocation = true;
+            SharedConfig.saveConfig();
+        }
+    }
+
+    @Override
     public void onResume() {
         super.onResume();
         if (editText != null) {
@@ -617,22 +628,27 @@ public class FakePasscodeTelegramMessagesActivity extends BaseFragment implement
             Activity parentActivity = getParentActivity();
             boolean permissionGranted = ContextCompat.checkSelfPermission(parentActivity, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
             if (!permissionGranted) {
-                TelegramMessageAction.Entry entry;
-                if (obj instanceof TelegramMessageAction.Entry) {
-                    entry = (TelegramMessageAction.Entry)obj;
+                String message = ((EditTextCaption)views.get(0)).getText().toString();
+                if (!message.isEmpty()) {
+                    TelegramMessageAction.Entry entry;
+                    if (obj instanceof TelegramMessageAction.Entry) {
+                        entry = (TelegramMessageAction.Entry)obj;
+                    } else {
+                        entry = new TelegramMessageAction.Entry((Long)obj, "", false);
+                        action.entries.add(entry);
+                    }
+                    entry.text = ((EditTextCaption)views.get(0)).getText().toString();
+                    entry.addGeolocation = false;
+                    SharedConfig.saveConfig();
+                    cell.setChecked(true, true);
+                    updateHint();
+                    if (editText.length() > 0) {
+                        editText.setText(null);
+                    }
+                    tempGeolocationEntry = entry;
                 } else {
-                    entry = new TelegramMessageAction.Entry((Long)obj, "", false);
-                    action.entries.add(entry);
+                    tempGeolocationEntry = null;
                 }
-                entry.text = ((EditTextCaption)views.get(0)).getText().toString();
-                entry.addGeolocation = false;
-                SharedConfig.saveConfig();
-                cell.setChecked(true, true);
-                updateHint();
-                if (editText.length() > 0) {
-                    editText.setText(null);
-                }
-
                 ActivityCompat.requestPermissions(parentActivity, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 2004);
             }
         };
