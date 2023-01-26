@@ -1939,7 +1939,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         } else {
                             AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity(), resourcesProvider);
                             builder.setTitle(LocaleController.getString("AddBot", R.string.AddBot));
-                            String chatName = chat == null ? "" : chat.title;
+                            String chatName = chat == null ? "" : UserConfig.getChatTitleOverride(currentAccount, chat.id, chat.title);
                             builder.setMessage(AndroidUtilities.replaceTags(LocaleController.formatString("AddMembersAlertNamesText", R.string.AddMembersAlertNamesText, UserObject.getUserName(user), chatName)));
                             builder.setNegativeButton(LocaleController.getString("Cancel", R.string.Cancel), null);
                             builder.setPositiveButton(LocaleController.getString("AddBot", R.string.AddBot), (di, i) -> {
@@ -6832,7 +6832,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             if (currentChat != null && user != null && BulletinFactory.canShowBulletin(this)) {
                 String title = UserConfig.getChatTitleOverride(currentAccount, currentChat.id);
                 if (title == null) {
-                    title = currentChat.title;
+                    title = UserConfig.getChatTitleOverride(currentAccount, currentChat.id, currentChat.title);
                 }
                 BulletinFactory.createRemoveFromChatBulletin(this, user, title).show();
             }
@@ -7597,11 +7597,11 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         if (count > 0) {
                             statusString = LocaleController.formatPluralString("messages", count, count);
                         } else {
-                            statusString = LocaleController.formatString("TopicProfileStatus", R.string.TopicProfileStatus, chat.title);
+                            statusString = LocaleController.formatString("TopicProfileStatus", R.string.TopicProfileStatus, UserConfig.getChatTitleOverride(currentAccount, chat.id, chat.title));
                         }
                         SpannableString arrowString = new SpannableString(">");
                         arrowString.setSpan(new ColoredImageSpan(R.drawable.arrow_newchat), 0, 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-                        profileStatusString = new SpannableStringBuilder(chat.title).append(' ').append(arrowString);
+                        profileStatusString = new SpannableStringBuilder(UserConfig.getChatTitleOverride(currentAccount, chat.id, chat.title)).append(' ').append(arrowString);
                         profileStatusIsButton = true;
                     } else if (currentChat.megagroup) {
                         if (onlineCount > 1 && chatInfo.participants_count != 0) {
