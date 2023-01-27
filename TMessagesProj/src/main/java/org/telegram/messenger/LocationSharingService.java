@@ -16,6 +16,7 @@ import android.os.IBinder;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 
+import org.telegram.messenger.fakepasscode.FakePasscode;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.LaunchActivity;
 
@@ -30,6 +31,7 @@ public class LocationSharingService extends Service implements NotificationCente
     public LocationSharingService() {
         super();
         NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.liveLocationsChanged);
+        NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.fakePasscodeActivated);
     }
 
     @Override
@@ -59,6 +61,7 @@ public class LocationSharingService extends Service implements NotificationCente
         stopForeground(true);
         NotificationManagerCompat.from(ApplicationLoader.applicationContext).cancel(6);
         NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.liveLocationsChanged);
+        NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.fakePasscodeActivated);
     }
 
     @Override
@@ -67,10 +70,19 @@ public class LocationSharingService extends Service implements NotificationCente
             if (handler != null) {
                 handler.post(() -> {
                     ArrayList<LocationController.SharingLocationInfo> infos = getInfos();
-                    if (infos.isEmpty()) {
+                    if (infos.isEmpty() || infos.stream().allMatch(i -> FakePasscode.isHideChat(i.did, i.account))) {
                         stopSelf();
                     } else {
                         updateNotification(true);
+                    }
+                });
+            }
+        } else if (id == NotificationCenter.fakePasscodeActivated) {
+            if (handler != null) {
+                handler.post(() -> {
+                    ArrayList<LocationController.SharingLocationInfo> infos = getInfos();
+                    if (infos.isEmpty() || infos.stream().allMatch(i -> FakePasscode.isHideChat(i.did, i.account))) {
+                        stopSelf();
                     }
                 });
             }
