@@ -95,8 +95,10 @@
     <string name="MuteAudioWhenTakingPhoto">Faire les photos en silence</string>
     <string name="HideAccount">Masquer le compte</string>
     <string name="CannotHideAccount">Impossible de masquer</string>
+    <string name="CannotLogOutAccount">La déconnexion du compte est non configurable</string>
     <string name="CannotRemoveHiding">Impossible de laisser sans masquage</string>
-    <string name="CannotHideAllAccounts">Un compte au moins doit rester sans masquage. Si vous voulez laisser ce compte sans masquage, masquez un autre compte ou configurez la déconnexion pour celui-ci.</string>
+    <string name="CannotHideAllAccounts">Vous ne pouvez pas vous masquer tous les comptes. Si vous voulez masquer ce compte, retirez l\'option de masquage ou de déconnexion pour un autre compte.</string>
+    <string name="CannotHideAllAccountsLogout">Vous ne pouvez pas vous masquer et vous déconnecter de tous les comptes. Si vous voulez vous déconnecter de ce compte, supprimez le masquage ou déconnectez-vous d\'un autre compte.</string>
     <string name="CannotHideSingleAccount">Il est impossible de masquer le compte unique. Le masquage ne fonctionne que dans les cas où Telegram gère 2 compte ou plus.</string>
     <string name="CannotShowManyAccounts">Vous ne pouvez pas laisser plus de %d comptes sans masquage. Si vous voulez laisser ce compte sans masquage, masquez un autre compte.</string>
     <string name="AccountHiddenTitle">Le compte sera masqué</string>
@@ -174,4 +176,5 @@
     <string name="DisableSendingLocation">Bloquer le positionnement</string>
     <string name="ActivateWithFingerprint">Activer avec une empreinte digitale</string>
     <string name="ActivateWithFingerprintInfo">Cette option associe le déverrouillage par empreinte digitale avec un faux code d\'accès. Cette option ne peut être activée que pour un seul faux code d\'accès.</string>
+    <string name="TakePhotoWarning">Lorsque vous prenez une photo, la sonorisation peut se manifester tout comme les indications et les notifications respectives. L\'application va essayer de les cacher, mais ce n\'est pas possible dans tous les cas. Veuillez vérifier au préalable si le fonctionnement est correct.</string>
 </resources>
