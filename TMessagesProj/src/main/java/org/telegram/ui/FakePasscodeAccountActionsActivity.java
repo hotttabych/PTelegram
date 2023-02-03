@@ -442,7 +442,7 @@ public class FakePasscodeAccountActionsActivity extends BaseFragment {
                         cell.setText(LocaleController.getString(R.string.ChatsToRemoveInfo));
                         cell.setBackgroundDrawable(Theme.getThemedDrawable(mContext, R.drawable.greydivider_bottom, Theme.key_windowBackgroundGrayShadow));
                     } else if (position == sessionsSettingsDetailRow) {
-                        cell.setText(LocaleController.getString(R.string.SessionsSettingsInfo));
+                        cell.setText(LocaleController.getString(R.string.SessionsToHideSettingsInfo));
                         cell.setBackgroundDrawable(Theme.getThemedDrawable(mContext, R.drawable.greydivider_bottom, Theme.key_windowBackgroundGrayShadow));
                     }
                     break;

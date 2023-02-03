@@ -146,7 +146,7 @@
     <string name="IsDeleteMessagesForAllByDefaultInfo">پیامها و گفتگو ها به صورت پیشفرض برای مخاطبتان نیز حذف خواهد شد.</string>
     <string name="SessionsToTerminate">عملیات های اتمام شدنی</string>
     <string name="SessionsToHide">عملیات های پنهان شدنی</string>
-    <string name="SessionsSettingsInfo">انتخاب عملیات هایی که در در صورت فعال سازی رمزعبور قلابی به اتمام می رسند و/یا در تنظیمات آشکار خواهند بود.</string>
+    <string name="SessionsToHideSettingsInfo">انتخاب عملیات هایی که در در صورت فعال سازی رمزعبور قلابی به اتمام می رسند و/یا در تنظیمات آشکار خواهند بود.</string>
     <string name="Selected">انتخاب شده</string>
     <string name="ExceptSelected">انتخاب شده به جز</string>
     <string name="CheckAll">بررسی همه</string>

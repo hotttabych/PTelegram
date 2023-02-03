@@ -3353,7 +3353,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                                 (AndroidUtilities.isTabletInternal() && BuildVars.DEBUG_PRIVATE_VERSION) ? (SharedConfig.forceDisableTabletMode ? "Enable tablet mode" : "Disable tablet mode") : null,
                                 LocaleController.getString(SharedConfig.useLNavigation ? R.string.AltNavigationDisable : R.string.AltNavigationEnable),
                                 BuildVars.DEBUG_PRIVATE_VERSION ? LocaleController.getString(SharedConfig.isFloatingDebugActive ? R.string.FloatingDebugDisable : R.string.FloatingDebugEnable) : null,
-                                BuildVars.DEBUG_PRIVATE_VERSION ? "Force remove premium suggestions" : null
+                                BuildVars.DEBUG_PRIVATE_VERSION ? "Force remove premium suggestions" : null,
                                 !SharedConfig.isFakePasscodeActivated() ? "Enter tester settings password" : null
                         };
 

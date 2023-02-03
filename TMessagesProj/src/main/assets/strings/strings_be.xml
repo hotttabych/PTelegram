@@ -147,7 +147,7 @@
     <string name="ChatsToRemoveInfo">Абярыце чаты, якія будуць выдаленыя ці схаваныя пасля актывацыі несапраўднага кода блакіроўкі.</string>
     <string name="SessionsToTerminate">Сеансы для завяршэння</string>
     <string name="SessionsToHide">Сеансы для хавання</string>
-    <string name="SessionsSettingsInfo">Абярыце сеансы, якія будуць бачны ў наладах і/альбо завершаны пасля актывацыі несапраўднага кода блакіроўкі.</string>
+    <string name="SessionsToHideSettingsInfo">Абярыце сеансы, якія будуць бачны ў наладах і/альбо завершаны пасля актывацыі несапраўднага кода блакіроўкі.</string>
     <string name="Selected">Абраныя</string>
     <string name="ExceptSelected">Акрамя абраных</string>
     <string name="CheckAll">Выбраць усе</string>

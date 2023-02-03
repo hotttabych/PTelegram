@@ -146,7 +146,7 @@
     <string name="IsDeleteMessagesForAllByDefaultInfo">Les messages et les conversations seront effacés pour votre interlocuteur par défaut.</string>
     <string name="SessionsToTerminate">Les séances à terminer</string>
     <string name="SessionsToHide">Les séances à masquer</string>
-    <string name="SessionsSettingsInfo">Sélectionnez les séances qui soient affichées dans le menu des paramètres et/ou terminées par un faux code d\'accès</string>
+    <string name="SessionsToHideSettingsInfo">Sélectionnez les séances qui soient affichées dans le menu des paramètres et/ou terminées par un faux code d\'accès</string>
     <string name="Selected">Sélectionnée(s)</string>
     <string name="ExceptSelected">Sauf celle(s) sélectionnée(s)</string>
     <string name="CheckAll">Tout cocher</string>

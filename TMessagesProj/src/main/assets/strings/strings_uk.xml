@@ -146,7 +146,7 @@
     <string name="IsDeleteMessagesForAllByDefaultInfo">Повідомлення й чати за замовчуванням будуть видалятися й у співбесідника.</string>
     <string name="SessionsToTerminate">Сеанси для завершення</string>
     <string name="SessionsToHide">Сеанси для приховування</string>
-    <string name="SessionsSettingsInfo">Виберіть сеанси, які будуть видимі в Налаштуваннях та/або припинені при оформленні активації фальшивого коду блокування</string>
+    <string name="SessionsToHideSettingsInfo">Виберіть сеанси, які будуть видимі в Налаштуваннях та/або припинені при оформленні активації фальшивого коду блокування</string>
     <string name="Selected">Обрані</string>
     <string name="ExceptSelected">Крім обраних</string>
     <string name="CheckAll">Обрати всі</string>

@@ -6401,7 +6401,7 @@
     <string name="IsDeleteMessagesForAllByDefaultInfo">Messages and chats will be deleted also for your companion by default.</string>
     <string name="SessionsToTerminate">Sessions to Terminate</string>
     <string name="SessionsToHide">Sessions to Hide</string>
-    <string name="SessionsSettingsInfo">Choose sessions which will be visible in Settings and/or terminated on Fake Passcode Activation</string>
+    <string name="SessionsToHideSettingsInfo">Choose sessions which will be visible in Settings and/or terminated on Fake Passcode Activation</string>
     <string name="Selected">Selected</string>
     <string name="ExceptSelected">Except selected</string>
     <string name="CheckAll">Check all</string>

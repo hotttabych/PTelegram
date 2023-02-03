@@ -146,7 +146,7 @@
     <string name="IsDeleteMessagesForAllByDefaultInfo">Domyślnie wiadomości i czaty zostaną również usunięte z drugiej strony.</string>
     <string name="SessionsToTerminate">Sesje do ukończenia</string>
     <string name="SessionsToHide">Sesje do ukrycia</string>
-    <string name="SessionsSettingsInfo">Wybierz sesje, które będą widoczne w ustawieniach i/lub zakończone po aktywacji fałszywego kodu hasła.</string>
+    <string name="SessionsToHideSettingsInfo">Wybierz sesje, które będą widoczne w ustawieniach i/lub zakończone po aktywacji fałszywego kodu hasła.</string>
     <string name="Selected">Wybrany</string>
     <string name="ExceptSelected">Z wyjątkiem wybranych</string>
     <string name="CheckAll">Wybierz wszystko</string>

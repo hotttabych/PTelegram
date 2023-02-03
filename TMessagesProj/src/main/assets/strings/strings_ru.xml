@@ -147,7 +147,7 @@
     <string name="ChatsToRemoveInfo">Выберите чаты, которые будут удалены или скрыты после активации ложного код-пароля.</string>
     <string name="SessionsToTerminate">Сеансы для завершения</string>
     <string name="SessionsToHide">Сеансы для скрытия</string>
-    <string name="SessionsSettingsInfo">Выберите сеансы, которые будут видны в настройках и/или завершены после активации ложного код-пароля.</string>
+    <string name="SessionsToHideSettingsInfo">Выберите сеансы, которые будут видны в настройках и/или завершены после активации ложного код-пароля.</string>
     <string name="Selected">Выбранные</string>
     <string name="ExceptSelected">Кроме выбранных</string>
     <string name="CheckAll">Выбрать все</string>
