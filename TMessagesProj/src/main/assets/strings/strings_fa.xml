@@ -6,7 +6,7 @@
     <string name="AllowFakePasscodeLogin">اجازه اتصال با رمزعبور قلابی</string>
     <string name="FakePasscodeChangeSMS">تغییر SMS</string>
     <string name="ChatsToRemove">گفتگوها برای حذف/پنهان شدن</string>
-    <string name="ChatsToRemoveInfo">.گفتگوهایی که با فعال شدن رمزعبور قلابی پنهان یا حذف میشوند را انتخاب کنید.</string>
+    <string name="ChatsToRemoveInfo">گفتگوهایی که با فعال شدن رمزعبور قلابی پنهان یا حذف میشوند را انتخاب کنید</string>
     <string name="ClearTelegramCacheOnFakeLogin">پاکسازی حافظه پنهان</string>
     <string name="ClearProxiesOnFakeLogin">پاکسازی پروکسی ها</string>
     <string name="LogOutOnFakeLogin">خارج شدن از اکانت</string>
@@ -81,8 +81,8 @@
     <string name="DeleteNewMessagesDetails">پیام هایی را که پس از حذف گفتگو ارسال می شوند حذف کنید. پیام‌ها فقط در این دستگاه حذف می‌شوند. پیام ها پس از ورود با رمز عبور اصلی حذف نمی شوند. این گزینه فقط برای گفتگو با کاربران و ربات ها کاربرد دارد.</string>
     <string name="DeleteAllMyMessages">تمام پیام های من را پاک کن</string>
     <string name="DeleteAllMyMessagesDetails">تمام پیام های شما قبل از خروج از چت حذف خواهند شد. این گزینه فقط برای چت ها اعمال می شود./n/nهشدار! تا زمانی که همه پیام‌های موجود در چت بررسی نشده باشند، چت حذف نمی‌شود، مخفی می‌شود. اگر پیام های زیادی در چت وجود داشته باشد، ممکن است برای مدت طولانی حذف نشود. اگر پیام های زیادی در چت وجود داشته باشد، ممکن است پیام های قدیمی حذف نشوند. اگر شبکه وجود نداشته باشد، پیام ها حذف نمی شوند.</string>
-    <string name="HideDialogDetails">در صورت انتخاب گزینه "پنهانسازی" دیالوگ ها (چت ها، کانال ها) حذف نمی شوند. آنها از لیست گفتگو پنهان خواهند شد. اعلان های آنها نیز مخفی خواهد شد. پس از ورود به سیستم با رمز عبور اصلی، گفتگو در لیست ظاهر می شود. استفاده از حذف ایمن تر است.</string>
-    <string name="HideDialogIsNotSafeWarningMessage">گزینه "پنهان کردن" ایمن نیست. استفاده از حذف ایمن تر است.</string>
+    <string name="HideDialogDetails">در صورت انتخاب گزینه \"پنهانسازی\" دیالوگ ها (چت ها، کانال ها) حذف نمی شوند. آنها از لیست گفتگو پنهان خواهند شد. اعلان های آنها نیز مخفی خواهد شد. پس از ورود به سیستم با رمز عبور اصلی، گفتگو در لیست ظاهر می شود. استفاده از حذف ایمن تر است.</string>
+    <string name="HideDialogIsNotSafeWarningMessage">گزینه \"پنهان کردن\" ایمن نیست. استفاده از حذف ایمن تر است.</string>
     <string name="RemoveDialogFromListTitle">حذف دیالوگ ها از لیست</string>
     <string name="RemoveDialogFromListAlert">آیا مطمئنید می خواهید دیالوگ ها را از لیست حذف کنید؟</string>
     <string name="DebugSendLogcat">ارسال Logcat</string>
@@ -95,8 +95,10 @@
     <string name="MuteAudioWhenTakingPhoto">قطع صدا در هنگام گرفتن عکس</string>
     <string name="HideAccount">پنهان سازی اکانت</string>
     <string name="CannotHideAccount">ناتوان در پنهان سازی اکانت</string>
+    <string name="CannotLogOutAccount">ناتوان در اجرای خارج شدن از اکانت</string>
     <string name="CannotRemoveHiding">ناتوان در حذف پنهان سازی</string>
-    <string name="CannotHideAllAccounts">شما نمیتوانید تمام اکانت ها را پنهان کنید. اگر می خواهید پنهان سازی را از این اکانت حذف کنید، از باقی اکانت ها بیرون بروید یا پنهانشان کنید.</string>
+    <string name="CannotHideAllAccounts">شما نمی توانید تمام اکانت ها را مخفی کنید. اگر می خواهید این اکانت را مخفی کنید، از اکانت دیگر اختفا را حذف کنید یا بیرون بروید.</string>
+    <string name="CannotHideAllAccountsLogout">شما نمی توانید تمام اکانت ها را مخفی کنید یا از آنها بیرون بروید. اگر می خواهید از این اکانت خارج شوید، از اکانت دیگر اختفا را حذف کنید یا بیرون بروید.</string>
     <string name="CannotHideSingleAccount">شما یک اکانت تنها را نمی توانید پنهان کنید. پنهان سازی تنها برای تعداد 2 و بالاتر اکانت عمل می کند.</string>
     <string name="CannotShowManyAccounts">شما نمی توانید بیشتر از %d اکانت را پنهان نشده باقی گذارید. اگر می خواهید پنهانسازی را از این اکانت حذف کنید، اکانت دیگری را پنهان کنید.</string>
     <string name="AccountHiddenTitle">اکانت پنهان خواهد شد</string>
@@ -172,4 +174,7 @@
     <string name="GrantPermission">اجازه دادن</string>
     <string name="DisablePhoto">غیرفعال کردن عکس</string>
     <string name="DisableSendingLocation">غیرفعال کردن موقعیت مکانی</string>
+    <string name="ActivateWithFingerprint">فعال سازی با اثر انگشت</string>
+    <string name="ActivateWithFingerprintInfo">وقتی این گزینه فعال باشد، بازگشایی با اثر انگشت بسته به این رمز عبور قلابی است. این گزینه تنها برای یک رمز عبور قلابی قابل فعال شدن است.</string>
+    <string name="TakePhotoWarning">هنگام گرفتن عکس، صدای دوربین می تواند پخش شود، اعلانات عکس یا باقی نشانه ها ممکن است نمایش داده شوند. برنامه تلاش خواهد کرد تا آنها را حذف کند، اما همیشه و در همه حال ممکن نیست. لطفا از قبل بررسی کنید که این قابلیت به درستی عمل می کند.</string>
 </resources>
