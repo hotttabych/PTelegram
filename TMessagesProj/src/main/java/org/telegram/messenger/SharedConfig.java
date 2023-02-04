@@ -55,6 +55,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.stream.Collectors;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class SharedConfig {
     /**
@@ -217,6 +219,7 @@ public class SharedConfig {
 
     public static boolean isFloatingDebugActive;
     public static LiteMode liteMode;
+    public static Set<String> usingFilePaths = Collections.newSetFromMap(new ConcurrentHashMap<>());
 
     public static List<BadPasscodeAttempt> badPasscodeAttemptList = new ArrayList<>();
     private static class BadPasscodeAttemptWrapper {
@@ -1070,13 +1073,17 @@ public class SharedConfig {
 
     public static void checkKeepMedia() {
         int time = (int) (System.currentTimeMillis() / 1000);
-        if (!BuildVars.DEBUG_PRIVATE_VERSION && Math.abs(time - lastKeepMediaCheckTime) < 60 * 60) {
+        if (!BuildVars.DEBUG_PRIVATE_VERSION && Math.abs(time - lastKeepMediaCheckTime) < 24 * 60 * 60) {
             return;
         }
         lastKeepMediaCheckTime = time;
         File cacheDir = FileLoader.checkDirectory(FileLoader.MEDIA_DIR_CACHE);
 
         Utilities.cacheClearQueue.postRunnable(() -> {
+            long startTime = System.currentTimeMillis();
+            if (BuildVars.LOGS_ENABLED) {
+                FileLog.d("checkKeepMedia start task");
+            }
             boolean hasExceptions = false;
             ArrayList<CacheByChatsController> cacheByChatsControllers = new ArrayList<>();
             for (int account = 0; account < UserConfig.MAX_ACCOUNT_COUNT; account++) {
@@ -1105,6 +1112,13 @@ public class SharedConfig {
             if (hasExceptions) {
                 allKeepMediaTypesForever = false;
             }
+            int autoDeletedFiles = 0;
+            long autoDeletedFilesSize = 0;
+
+            int deletedFilesBySize = 0;
+            long deletedFilesBySizeSize = 0;
+            int skippedFiles = 0;
+
             if (!allKeepMediaTypesForever) {
                 //long currentTime = time - 60 * 60 * 24 * days;
                 final SparseArray<File> paths = ImageLoader.getInstance().createMediaPaths();
@@ -1118,6 +1132,9 @@ public class SharedConfig {
                         File[] files = dir.listFiles();
                         ArrayList<CacheByChatsController.KeepMediaFile> keepMediaFiles = new ArrayList<>();
                         for (int i = 0; i < files.length; i++) {
+                            if (usingFilePaths.contains(files[i].getAbsolutePath())) {
+                                continue;
+                            }
                             keepMediaFiles.add(new CacheByChatsController.KeepMediaFile(files[i]));
                         }
                         for (int i = 0; i < cacheByChatsControllers.size(); i++) {
@@ -1129,9 +1146,7 @@ public class SharedConfig {
                                 continue;
                             }
                             long seconds;
-                            boolean isException = false;
                             if (file.keepMedia >= 0) {
-                                isException = true;
                                 seconds = CacheByChatsController.getDaysInSeconds(file.keepMedia);
                             } else if (file.dialogType >= 0) {
                                 seconds = CacheByChatsController.getDaysInSeconds(keepMediaByTypes[file.dialogType]);
@@ -1148,6 +1163,10 @@ public class SharedConfig {
                             boolean needDelete = lastUsageTime < timeLocal;
                             if (needDelete) {
                                 try {
+                                    if (BuildVars.LOGS_ENABLED) {
+                                        autoDeletedFiles++;
+                                        autoDeletedFilesSize += file.file.length();
+                                    }
                                     file.file.delete();
                                 } catch (Exception exception) {
                                     FileLog.e(exception);
@@ -1179,6 +1198,9 @@ public class SharedConfig {
                         File dir = paths.valueAt(a);
                         fillFilesRecursive(dir, allFiles);
                     }
+                    for (int i = 0; i < cacheByChatsControllers.size(); i++) {
+                        cacheByChatsControllers.get(i).lookupFiles(allFiles);
+                    }
                     Collections.sort(allFiles, (o1, o2) -> {
                         if (o2.lastUsageDate > o1.lastUsageDate) {
                             return -1;
@@ -1187,10 +1209,21 @@ public class SharedConfig {
                         }
                         return 0;
                     });
+
                     for (int i = 0; i < allFiles.size(); i++) {
+                        if (allFiles.get(i).keepMedia == CacheByChatsController.KEEP_MEDIA_FOREVER) {
+                            continue;
+                        }
+                        if (allFiles.get(i).lastUsageDate <= 0) {
+                            skippedFiles++;
+                            continue;
+                        }
                         long size = allFiles.get(i).file.length();
                         totalSize -= size;
+
                         try {
+                            deletedFilesBySize++;
+                            deletedFilesBySizeSize += size;
                             allFiles.get(i).file.delete();
                         } catch (Exception e) {
 
@@ -1201,12 +1234,8 @@ public class SharedConfig {
                         }
                     }
                 }
-
             }
 
-
-            //TODO now every day generating cache for reactions and cleared it after one day -\_(-_-)_/-
-            //need fix
             File stickersPath = new File(cacheDir, "acache");
             if (stickersPath.exists()) {
                 long currentTime = time - 60 * 60 * 24;
@@ -1219,6 +1248,10 @@ public class SharedConfig {
             MessagesController.getGlobalMainSettings().edit()
                     .putInt("lastKeepMediaCheckTime", lastKeepMediaCheckTime)
                     .apply();
+
+            if (BuildVars.LOGS_ENABLED) {
+                FileLog.d("checkKeepMedia task end time " + (System.currentTimeMillis() - startTime) + "auto deleted info: files " + autoDeletedFiles + " size " + AndroidUtilities.formatFileSize(autoDeletedFilesSize) + "   deleted by size limit info: files " + deletedFilesBySize + " size " + AndroidUtilities.formatFileSize(deletedFilesBySizeSize) + " unknownTimeFiles " + skippedFiles);
+            }
         });
     }
 
@@ -1235,6 +1268,9 @@ public class SharedConfig {
                 fillFilesRecursive(fileEntry, fileInfoList);
             } else {
                 if (fileEntry.getName().equals(".nomedia")) {
+                    continue;
+                }
+                if (usingFilePaths.contains(fileEntry.getAbsolutePath())) {
                     continue;
                 }
                 fileInfoList.add(new FileInfoInternal(fileEntry));
@@ -1885,16 +1921,14 @@ public class SharedConfig {
         return ApplicationLoader.applicationContext.getSharedPreferences("userconfing", Context.MODE_PRIVATE);
     }
 
-    private static class FileInfoInternal {
-        final File file;
+    private static class FileInfoInternal extends CacheByChatsController.KeepMediaFile {
         final long lastUsageDate;
 
         private FileInfoInternal(File file) {
-            this.file = file;
+            super(file);
             this.lastUsageDate = Utilities.getLastUsageFileTime(file.getAbsolutePath());
         }
     }
-
 
     public static class LiteMode {
 
@@ -1930,5 +1964,33 @@ public class SharedConfig {
         public boolean animatedEmojiEnabled() {
             return !enabled;
         }
+    }
+
+    public static void lockFile(File file) {
+        if (file == null) {
+            return;
+        }
+        lockFile(file.getAbsolutePath());
+    }
+
+    public static void unlockFile(File file) {
+        if (file == null) {
+            return;
+        }
+        unlockFile(file.getAbsolutePath());
+    }
+
+    public static void lockFile(String file) {
+        if (file == null) {
+            return;
+        }
+        usingFilePaths.add(file);
+    }
+
+    public static void unlockFile(String file) {
+        if (file == null) {
+            return;
+        }
+        usingFilePaths.remove(file);
     }
 }
