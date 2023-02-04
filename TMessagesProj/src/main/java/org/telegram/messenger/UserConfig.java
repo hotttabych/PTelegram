@@ -14,8 +14,6 @@ import android.os.SystemClock;
 import android.text.TextUtils;
 import android.util.Base64;
 import android.util.LongSparseArray;
-import android.util.SparseArray;
-import android.util.SparseLongArray;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -706,6 +704,31 @@ public class UserConfig extends BaseController {
         return UserObject.getEmojiStatusDocumentId(currentUser);
     }
 
+    public boolean saveChannel(TLRPC.Chat chat) {
+        if (chat == null) {
+            return false;
+        }
+        String username = chat.username != null
+                ? chat.username
+                : chat.usernames.stream().filter(u -> u.active).map(u -> u.username).findAny().orElse(null);
+        if (username != null) {
+            savedChannels.add(username);
+            return true;
+        }
+        return false;
+    }
+
+    public boolean isChannelSaved(TLRPC.Chat chat) {
+        if (chat == null) {
+            return false;
+        } else if (chat.username != null) {
+            return getUserConfig().savedChannels.contains(chat.username);
+        } else if (chat.usernames != null) {
+            return chat.usernames.stream().anyMatch(name -> getUserConfig().savedChannels.contains(name.username));
+        } else {
+            return false;
+        }
+    }
 
     int globalTtl = 0;
     boolean ttlIsLoading = false;

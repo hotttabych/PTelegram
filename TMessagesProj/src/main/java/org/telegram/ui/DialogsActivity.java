@@ -209,7 +209,6 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Optional;
-import java.util.Set;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -7707,17 +7706,15 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             });
             return;
         } else if (action == save) {
-            UserConfig userConfig = getUserConfig();
-            Set<String> savedChannels = userConfig.savedChannels;
+            boolean saved = false;
             for (int a = 0, N = selectedDialogs.size(); a < N; a++) {
                 long did = selectedDialogs.get(a);
-                TLRPC.Chat chat = getMessagesController().getChat(-did);
-                if (chat != null && chat.username != null) {
-                    savedChannels.add(chat.username);
-                }
+                saved |= getUserConfig().saveChannel(getMessagesController().getChat(-did));
             }
-            Toast.makeText(getParentActivity(), LocaleController.getString("Saved", R.string.Saved), Toast.LENGTH_SHORT).show();
-            userConfig.saveConfig(true);
+            if (saved) {
+                getUserConfig().saveConfig(true);
+                Toast.makeText(getParentActivity(), LocaleController.getString("Saved", R.string.Saved), Toast.LENGTH_SHORT).show();
+            }
         }
         int minPinnedNum = Integer.MAX_VALUE;
         if (filter != null && (action == pin || action == pin2) && canPinCount != 0) {
@@ -8166,7 +8163,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     }
                     canDeleteCount++;
                 }
-                if (chat != null && chat.username != null && !getUserConfig().savedChannels.contains(chat.username)) {
+                if (chat != null && !getUserConfig().isChannelSaved(chat)) {
                     canSaveCount++;
                 }
             } else {
@@ -8192,7 +8189,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 }
                 canClearHistoryCount++;
                 canDeleteCount++;
-                if (chat != null && chat.username != null) {
+                if (chat != null && !getUserConfig().isChannelSaved(chat)) {
                     canSaveCount++;
                 }
             }
