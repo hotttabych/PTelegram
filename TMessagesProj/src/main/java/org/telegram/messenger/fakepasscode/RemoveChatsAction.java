@@ -246,7 +246,7 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
         folder.neverShow.removeAll(idsToRemove);
         for (Long chatId : idsToRemove) {
             if (folder.pinnedDialogs.get(chatId.intValue()) != 0) {
-                folder.pinnedDialogs.removeAt(chatId.intValue());
+                folder.pinnedDialogs.delete(chatId.intValue());
             }
         }
         List<Long> pinnedDialogs = getFolderPinnedDialogs(folder);
