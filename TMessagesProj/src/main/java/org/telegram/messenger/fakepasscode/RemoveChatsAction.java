@@ -247,7 +247,7 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
         folder.alwaysShow.removeAll(idsToRemove);
         folder.neverShow.removeAll(idsToRemove);
         for (Long chatId : idsToRemove) {
-            if (folder.pinnedDialogs.get(chatId.intValue()) != 0) {
+            if (folder.pinnedDialogs.get(chatId.intValue(), Integer.MIN_VALUE) != Integer.MIN_VALUE) {
                 folder.pinnedDialogs.delete(chatId.intValue());
             }
         }
@@ -278,6 +278,7 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
             fillPeerArray(folder.alwaysShow, req.filter.include_peers);
             fillPeerArray(folder.neverShow, req.filter.exclude_peers);
             fillPeerArray(pinnedDialogs, req.filter.pinned_peers);
+            getAccount().getConnectionsManager().sendRequest(req, (response, error) -> { });
 
             Set<Long> idsToHide = chatEntriesToRemove.stream().filter(e -> !e.isExitFromChat).map(e -> e.chatId).collect(Collectors.toSet());
             if (folder.alwaysShow.stream().allMatch(idsToHide::contains)) {
