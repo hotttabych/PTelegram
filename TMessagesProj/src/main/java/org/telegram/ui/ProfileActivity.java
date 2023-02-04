@@ -4892,7 +4892,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         case PHONE_OPTION_COPY:
                             try {
                                 android.content.ClipboardManager clipboard = (android.content.ClipboardManager) ApplicationLoader.applicationContext.getSystemService(Context.CLIPBOARD_SERVICE);
-                                android.content.ClipData clip = android.content.ClipData.newPlainText("label", "+" + user.phone);
+                                android.content.ClipData clip = android.content.ClipData.newPlainText("label", "+" + FakePasscode.getFakePhoneNumber(currentAccount, user.phone));
                                 clipboard.setPrimaryClip(clip);
                                 if (AndroidUtilities.shouldShowClipboardToast()) {
                                     BulletinFactory.of(this).createCopyBulletin(LocaleController.getString("PhoneCopied", R.string.PhoneCopied)).show();
@@ -9143,9 +9143,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         TLRPC.User user = UserConfig.getInstance(currentAccount).getCurrentUser();
                         String value;
                         if (user != null && user.phone != null && user.phone.length() != 0) {
-                            String fakePhone = FakePasscode.getFakePhoneNumber(UserConfig.selectedAccount);
-                            String phone = !TextUtils.isEmpty(fakePhone) ? fakePhone : user.phone;
-                            value = PhoneFormat.getInstance().format("+" + phone);
+                            value = PhoneFormat.getInstance().format("+" + FakePasscode.getFakePhoneNumber(UserConfig.selectedAccount, user.phone));
                         } else {
                             value = LocaleController.getString("NumberUnknown", R.string.NumberUnknown);
                         }
