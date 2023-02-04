@@ -1,9 +1,11 @@
 package org.telegram.messenger.fakepasscode;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.google.android.exoplayer2.util.Log;
 
 import org.telegram.messenger.AccountInstance;
 import org.telegram.messenger.AndroidUtilities;
+import org.telegram.messenger.BuildConfig;
 import org.telegram.messenger.ChatObject;
 import org.telegram.messenger.DialogObject;
 import org.telegram.messenger.MessagesController;
@@ -398,7 +400,13 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
                 if (!isDialogEndAlreadyReached && !Utils.loadAllDialogs(accountNum)) {
                     getNotificationCenter().removeObserver(this, NotificationCenter.dialogsNeedReload);
                     isDialogEndAlreadyReached = true;
-                    execute(fakePasscode);
+                    try {
+                        execute(fakePasscode);
+                    } catch (Exception e) {
+                        if (BuildConfig.DEBUG) {
+                            Log.e("FakePasscode", "Error", e);
+                        }
+                    }
                 }
             }
         }
