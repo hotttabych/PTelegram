@@ -548,7 +548,7 @@ public class CachedMediaLayout extends FrameLayout implements NestedSizeNotifier
                         userCell.getImageView().getAvatarDrawable().setAvatarType(AvatarDrawable.AVATAR_TYPE_OTHER_CHATS);
                         userCell.getImageView().setForUserOrChat(null, userCell.getImageView().getAvatarDrawable());
                     } else {
-                        title = DialogObject.setDialogPhotoTitle(userCell.getImageView(), object);
+                        title = DialogObject.setDialogPhotoTitle(userCell.getImageView(), object, UserConfig.selectedAccount);
                     }
                     userCell.dialogFileEntities = dialogFileEntities;
                     userCell.getImageView().setRoundRadius(AndroidUtilities.dp(object instanceof TLRPC.Chat && ((TLRPC.Chat) object).forum ? 12 : 19));

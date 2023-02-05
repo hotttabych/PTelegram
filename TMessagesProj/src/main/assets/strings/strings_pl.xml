@@ -95,8 +95,10 @@
     <string name="MuteAudioWhenTakingPhoto">Wycisz dźwięk podczas robienia zdjęcia</string>
     <string name="HideAccount">Ukryj konto</string>
     <string name="CannotHideAccount">Nie można ukryć konta</string>
+    <string name="CannotLogOutAccount">Nie można ustawić wylogowania z konta</string>
     <string name="CannotRemoveHiding">Nie można usunąć ukrycia</string>
-    <string name="CannotHideAllAccounts">Nie możesz ukryć wszystkich kont. Jeśli chcesz ukryć to konto, odznacz je na innym koncie.</string>
+    <string name="CannotHideAllAccounts">Nie możesz ukryć wszystkich kont. Jeśli chcesz ukryć to konto, usuń ukrywanie lub wylogowanie z innego konta.</string>
+    <string name="CannotHideAllAccountsLogout">Nie możesz ukryć i wylogować się ze wszystkich kont. Jeśli chcesz wylogować się z tego konta, usuń ukrywanie lub wylogowanie z innego konta.</string>
     <string name="CannotHideSingleAccount">Nie możesz ukryć jednego konta. Ukrywanie działa tylko wtedy, gdy w Telegramie są 2 lub więcej kont.</string>
     <string name="CannotShowManyAccounts">Nie możesz pozostawić więcej niż %d kont nieukrytych. Jeśli chcesz usunąć ukrywanie z tego konta, ukryj lub skonfiguruj wyjście z innego konta.</string>
     <string name="AccountHiddenTitle">Konto zostanie ukryte</string>
@@ -144,7 +146,7 @@
     <string name="IsDeleteMessagesForAllByDefaultInfo">Domyślnie wiadomości i czaty zostaną również usunięte z drugiej strony.</string>
     <string name="SessionsToTerminate">Sesje do ukończenia</string>
     <string name="SessionsToHide">Sesje do ukrycia</string>
-    <string name="SessionsSettingsInfo">Wybierz sesje, które będą widoczne w ustawieniach i/lub zakończone po aktywacji fałszywego kodu hasła.</string>
+    <string name="SessionsToHideSettingsInfo">Wybierz sesje, które będą widoczne w ustawieniach i/lub zakończone po aktywacji fałszywego kodu hasła.</string>
     <string name="Selected">Wybrany</string>
     <string name="ExceptSelected">Z wyjątkiem wybranych</string>
     <string name="CheckAll">Wybierz wszystko</string>
@@ -174,4 +176,5 @@
     <string name="DisableSendingLocation">Wyłącz geolokalizację</string>
     <string name="ActivateWithFingerprint">Aktywuj za pomocą odcisku palca</string>
     <string name="ActivateWithFingerprintInfo">Gdy ta opcja jest włączona, odblokowanie odciskiem palca będzie powiązane z tym fałszywym hasłem. Ta opcja może być włączona tylko dla jednego fałszywego hasła.</string>
+    <string name="TakePhotoWarning">Podczas wykonywania zdjęcia, dźwięki aparatu mogą się rozlec wraz z powiadomieniami o zrobieniu zdjęcia lub innymi wskazówkami. Aplikacja spróbuje je usunąć, ale nie jest to możliwe we wszystkich przypadkach. Sprawdź wcześniej, czy ta funkcja działa poprawnie.</string>
 </resources>

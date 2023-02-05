@@ -301,7 +301,7 @@ public class QrActivity extends BaseFragment {
             TLRPC.Chat chat = getMessagesController().getChat(chatId);
             if (chat != null) {
                 username = ChatObject.getPublicUsername(chat);
-                avatarDrawable = new AvatarDrawable(chat);
+                avatarDrawable = new AvatarDrawable(chat, false, currentAccount);
                 imageLocationSmall = ImageLocation.getForChat(chat, ImageLocation.TYPE_SMALL);
                 imageLocation = ImageLocation.getForChat(chat, ImageLocation.TYPE_BIG);
             }

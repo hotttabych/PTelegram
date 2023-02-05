@@ -741,7 +741,7 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
                 if (count > 0) {
                     newSubtitle = LocaleController.formatPluralString("messages", count, count);
                 } else {
-                    newSubtitle = LocaleController.formatString("TopicProfileStatus", R.string.TopicProfileStatus, chat.title);
+                    newSubtitle = LocaleController.formatString("TopicProfileStatus", R.string.TopicProfileStatus, UserConfig.getChatTitleOverride(currentAccount, chat.id, chat.title));
                 }
             } else if (chat != null) {
                 TLRPC.ChatFull info = parentFragment.getCurrentChatInfo();

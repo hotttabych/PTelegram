@@ -16,6 +16,7 @@ import org.telegram.messenger.CacheByChatsController;
 import org.telegram.messenger.ContactsController;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.R;
+import org.telegram.messenger.UserConfig;
 import org.telegram.tgnet.TLObject;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.ActionBar;
@@ -280,7 +281,7 @@ public class CacheChatsExceptionsFragment extends BaseFragment {
                     }
                 } else if (object instanceof TLRPC.Chat) {
                     TLRPC.Chat chat = (TLRPC.Chat) object;
-                    title = chat.title;
+                    title = UserConfig.getChatTitleOverride(currentAccount, chat.id, chat.title);
                 }
                 cell.setSelfAsSavedMessages(true);
                 cell.setData(object, title, CacheByChatsController.getKeepMediaString(exception.keepMedia), 0, !(position != items.size() - 1 && items.get(position + 1).viewType != VIEW_TYPE_CHAT));

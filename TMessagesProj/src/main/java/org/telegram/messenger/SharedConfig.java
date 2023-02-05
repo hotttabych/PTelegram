@@ -54,9 +54,9 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+import java.util.stream.Collectors;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 public class SharedConfig {
     /**
@@ -426,8 +426,6 @@ public class SharedConfig {
                 editor.putString("storageCacheDir", !TextUtils.isEmpty(storageCacheDir) ? storageCacheDir : "");
                 editor.putBoolean("proxyRotationEnabled", proxyRotationEnabled);
                 editor.putInt("proxyRotationTimeout", proxyRotationTimeout);
-
-                editor.putBoolean("hasEmailLogin", hasEmailLogin);
                 editor.putInt("fakePasscodeIndex", fakePasscodeIndex);
                 editor.putInt("fakePasscodeLoginedIndex", fakePasscodeActivatedIndex);
                 if (!fakePasscodeLoadedWithErrors || !fakePasscodes.isEmpty()) {

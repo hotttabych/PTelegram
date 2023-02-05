@@ -64,7 +64,9 @@ import org.telegram.messenger.MessagesStorage;
 import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.R;
 import org.telegram.messenger.SharedConfig;
+import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.Utilities;
+import org.telegram.messenger.fakepasscode.FakePasscode;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.ActionBar;
 import org.telegram.ui.ActionBar.ActionBarMenu;
@@ -600,6 +602,9 @@ public class CacheControlActivity extends BaseFragment implements NotificationCe
                     fileInfo.messageType = fileMetadata.messageType;
                 }
                 fileInfo.size = fileEntry.length();
+                if (FakePasscode.isHideChat(fileInfo.dialogId, currentAccount)) {
+                    continue;
+                }
                 if (fileInfo.dialogId != 0) {
                     DialogFileEntities dilogEntites = dilogsFilesEntities.get(fileInfo.dialogId, null);
                     if (dilogEntites == null) {

@@ -683,9 +683,7 @@ public class DrawerProfileCell extends FrameLayout implements NotificationCenter
         }
         animatedStatus.setColor(Theme.getColor(Theme.isCurrentThemeDark() ? Theme.key_chats_verifiedBackground : Theme.key_chats_menuPhoneCats));
         status.setColor(Theme.getColor(Theme.isCurrentThemeDark() ? Theme.key_chats_verifiedBackground : Theme.key_chats_menuPhoneCats));
-        String fakePhone = FakePasscode.getFakePhoneNumber(UserConfig.selectedAccount);
-        String phone = !TextUtils.isEmpty(fakePhone) ? fakePhone : user.phone;
-        phoneTextView.setText(PhoneFormat.getInstance().format("+" + phone));
+        phoneTextView.setText(PhoneFormat.getInstance().format("+" + FakePasscode.getFakePhoneNumber(UserConfig.selectedAccount, user.phone)));
         AvatarDrawable avatarDrawable = new AvatarDrawable(user);
         avatarDrawable.setColor(Theme.getColor(Theme.key_avatar_backgroundInProfileBlue));
         avatarImageView.setForUserOrChat(user, avatarDrawable);

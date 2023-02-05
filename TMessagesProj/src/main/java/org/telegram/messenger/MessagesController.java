@@ -652,7 +652,7 @@ public class MessagesController extends BaseController implements NotificationCe
         } else {
             TLRPC.Chat chat = getChat(-dialogId);
             if (chat != null) {
-                return chat.title;
+                return UserConfig.getChatTitleOverride(currentAccount, chat.id, chat.title);
             }
         }
         return null;
@@ -8266,8 +8266,7 @@ public class MessagesController extends BaseController implements NotificationCe
                         resetDialogs(true, getMessagesStorage().getLastSeqValue(), getMessagesStorage().getLastPtsValue(), getMessagesStorage().getLastDateValue(), getMessagesStorage().getLastQtsValue());
                     }
 
-                    processLoadedDialogs(dialogsRes, null, null, folderId, 0, count, 0, false, false, false);
-
+                    processLoadedDialogs(dialogsRes, null, null, folderId, 0, count, 0, true, false, false);
                     if (onEmptyCallback != null && dialogsRes.dialogs.isEmpty()) {
                         AndroidUtilities.runOnUIThread(onEmptyCallback);
                     }

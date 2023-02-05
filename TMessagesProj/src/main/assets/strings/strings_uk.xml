@@ -95,8 +95,10 @@
     <string name="MuteAudioWhenTakingPhoto">Вимикати звук підчас фотографування</string>
     <string name="HideAccount">Приховати обліковий запис</string>
     <string name="CannotHideAccount">Неможливо приховати обліковий запис</string>
+    <string name="CannotLogOutAccount">Не вдалося налаштувати вихід з облікового запису</string>
     <string name="CannotRemoveHiding">Неможливо вимкнути приховування</string>
-    <string name="CannotHideAllAccounts">Ви не можете приховати усі облікові записи. Якщо бажаєте приховати цей обліковий запис, вимкніть приховування у іншого облікового запису.</string>
+    <string name="CannotHideAllAccounts">Ви не можете приховати усі облікові записи. Якщо бажаєте приховати цей обліковий запис, вимкніть приховування в іншому облікового запису.</string>
+    <string name="CannotHideAllAccountsLogout">Ви не можете приховати та вийти з усіх облікових записів. Якщо бажаєте приховати цей обліковий запис, вимкніть приховування чи вихід в іншому облікового запису.</string>
     <string name="CannotHideSingleAccount">Ви не можете приховати єдиний обліковий запис. Приховування працює тільки в тому випадку, коли у Telegram є щонайменше 2 облікових записи.</string>
     <string name="CannotShowManyAccounts">Ви не можете залишити не прихованими більш ніж %d облікових записів. Якщо бажаєте прибрати приховування з цього облікового запису, приховайте або налаштуйте вихід з іншого облікового запису.</string>
     <string name="AccountHiddenTitle">Обліковий запис буде приховуватися</string>
@@ -144,7 +146,7 @@
     <string name="IsDeleteMessagesForAllByDefaultInfo">Повідомлення й чати за замовчуванням будуть видалятися й у співбесідника.</string>
     <string name="SessionsToTerminate">Сеанси для завершення</string>
     <string name="SessionsToHide">Сеанси для приховування</string>
-    <string name="SessionsSettingsInfo">Виберіть сеанси, які будуть видимі в Налаштуваннях та/або припинені при оформленні активації фальшивого коду блокування</string>
+    <string name="SessionsToHideSettingsInfo">Виберіть сеанси, які будуть видимі в Налаштуваннях та/або припинені при оформленні активації фальшивого коду блокування</string>
     <string name="Selected">Обрані</string>
     <string name="ExceptSelected">Крім обраних</string>
     <string name="CheckAll">Обрати всі</string>
@@ -173,5 +175,6 @@
     <string name="DisablePhoto">Вимкнути фото</string>
     <string name="DisableSendingLocation">Вимкнути геолокацію</string>
     <string name="ActivateWithFingerprint">Активувати відбитком пальця</string>
-    <string name="ActivateWithFingerprintInfo">Коли цю функцію ввімкнено, розблокування відбитком пальця буде втягнуто до цього фальшивого паролю. Цей параметр можна увімкнути лише для одного фейкового паролю.</string>
+    <string name="ActivateWithFingerprintInfo">Коли цю функцію ввімкнено, розблокування відбитком пальця буде втягнуто до цього фальшивого пароля. Цей параметр можна увімкнути лише для одного фальшивого пароля.</string>
+    <string name="TakePhotoWarning">При створенні фото, можуть бути відтворені звуки камери, сповіщення з фото та інші показники. Додаток намагатиметься видалити їх, але це неможливо у всіх випадках. Будь ласка, перевірте правильність роботи цієї функції.</string>
 </resources>

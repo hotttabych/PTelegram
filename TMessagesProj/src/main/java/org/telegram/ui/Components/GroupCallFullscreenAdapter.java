@@ -238,7 +238,7 @@ public class GroupCallFullscreenAdapter extends RecyclerListView.SelectionAdapte
             } else {
                 currentChat = AccountInstance.getInstance(currentAccount).getMessagesController().getChat(-peerId);
                 currentUser = null;
-                avatarDrawable.setInfo(currentChat);
+                avatarDrawable.setInfo(currentChat, currentAccount);
 
                 if (currentChat != null) {
                     name = UserConfig.getChatTitleOverride(currentAccount, currentChat.id, currentChat.title);

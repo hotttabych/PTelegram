@@ -5625,6 +5625,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                     } else {
                         cell.setTextAndIcon(LocaleController.getString(R.string.SendAsFile), R.drawable.msg_sendfile);
                     }
+                    cell.setTextAndIcon(LocaleController.getString("SendWithoutCompression", R.string.SendWithoutCompression), R.drawable.msg_sendfile);
                 } else if (a == 5) {
                     cell.setTextAndIcon(LocaleController.getString("DeleteAsRead", R.string.DeleteAsRead), R.drawable.msg_delete_auto);
                 }
@@ -6654,7 +6655,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
     }
 
     private void sendPressed(boolean notify, int scheduleDate, boolean replace, boolean forceDocument, boolean confirmed) {
-        sendPressed(notify, scheduleDate, replace, forceDocument, confirmed, 0);
+        sendPressed(notify, scheduleDate, replace, forceDocument, confirmed, null);
     }
 
     private void sendPressed(boolean notify, int scheduleDate, boolean replace, boolean forceDocument, boolean confirmed, Integer autoDeleteDelay) {

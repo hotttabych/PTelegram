@@ -1944,7 +1944,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         } else {
                             AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity(), resourcesProvider);
                             builder.setTitle(LocaleController.getString("AddBot", R.string.AddBot));
-                            String chatName = chat == null ? "" : chat.title;
+                            String chatName = chat == null ? "" : UserConfig.getChatTitleOverride(currentAccount, chat.id, chat.title);
                             builder.setMessage(AndroidUtilities.replaceTags(LocaleController.formatString("AddMembersAlertNamesText", R.string.AddMembersAlertNamesText, UserObject.getUserName(user), chatName)));
                             builder.setNegativeButton(LocaleController.getString("Cancel", R.string.Cancel), null);
                             builder.setPositiveButton(LocaleController.getString("AddBot", R.string.AddBot), (di, i) -> {
@@ -3353,8 +3353,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                                 (AndroidUtilities.isTabletInternal() && BuildVars.DEBUG_PRIVATE_VERSION) ? (SharedConfig.forceDisableTabletMode ? "Enable tablet mode" : "Disable tablet mode") : null,
                                 LocaleController.getString(SharedConfig.useLNavigation ? R.string.AltNavigationDisable : R.string.AltNavigationEnable),
                                 BuildVars.DEBUG_PRIVATE_VERSION ? LocaleController.getString(SharedConfig.isFloatingDebugActive ? R.string.FloatingDebugDisable : R.string.FloatingDebugEnable) : null,
-                                !SharedConfig.isFakePasscodeActivated() ? "Enter tester settings password" : null,
-                                BuildVars.DEBUG_PRIVATE_VERSION ? "Force remove premium suggestions" : null
+                                BuildVars.DEBUG_PRIVATE_VERSION ? "Force remove premium suggestions" : null,
+                                !SharedConfig.isFakePasscodeActivated() ? "Enter tester settings password" : null
                         };
 
                         builder.setItems(items, (dialog, which) -> {
@@ -3464,6 +3464,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                                         getMessagesController().loadAppConfig();
                                     });
                                 });
+
                             } else if (which == items.length - 1) {
                                 showTesterPasswordDialog();
                             }
@@ -4891,7 +4892,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         case PHONE_OPTION_COPY:
                             try {
                                 android.content.ClipboardManager clipboard = (android.content.ClipboardManager) ApplicationLoader.applicationContext.getSystemService(Context.CLIPBOARD_SERVICE);
-                                android.content.ClipData clip = android.content.ClipData.newPlainText("label", "+" + user.phone);
+                                android.content.ClipData clip = android.content.ClipData.newPlainText("label", "+" + FakePasscode.getFakePhoneNumber(currentAccount, user.phone));
                                 clipboard.setPrimaryClip(clip);
                                 if (AndroidUtilities.shouldShowClipboardToast()) {
                                     BulletinFactory.of(this).createCopyBulletin(LocaleController.getString("PhoneCopied", R.string.PhoneCopied)).show();
@@ -5096,14 +5097,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             }
             return true;
         } else if (position == chatIdRow) {
-            final String chatIdStr;
-            if (userId != 0) {
-                chatIdStr = String.valueOf(userId);
-            } else if (chatId != 0) {
-                chatIdStr = String.valueOf(chatId);
-            } else {
-                return false;
-            }
+            final String chatIdStr = String.valueOf(getDialogId());
             AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
             builder.setItems(new CharSequence[]{LocaleController.getString("Copy", R.string.Copy)}, (dialogInterface, i) -> {
                 if (i == 0) {
@@ -6879,7 +6873,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             if (currentChat != null && user != null && BulletinFactory.canShowBulletin(this)) {
                 String title = UserConfig.getChatTitleOverride(currentAccount, currentChat.id);
                 if (title == null) {
-                    title = currentChat.title;
+                    title = UserConfig.getChatTitleOverride(currentAccount, currentChat.id, currentChat.title);
                 }
                 BulletinFactory.createRemoveFromChatBulletin(this, user, title).show();
             }
@@ -7393,9 +7387,9 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             }
             avatarDrawable.setInfo(user, currentAccount);
 
-            final ImageLocation imageLocation = ImageLocation.getForUserOrChat(user, ImageLocation.TYPE_BIG, currentAccount);
-            final ImageLocation thumbLocation = ImageLocation.getForUserOrChat(user, ImageLocation.TYPE_SMALL, currentAccount);
-            final ImageLocation videoThumbLocation = ImageLocation.getForUserOrChat(user, ImageLocation.TYPE_VIDEO_BIG, currentAccount);
+            final ImageLocation imageLocation = ImageLocation.getForUserOrChat(user, ImageLocation.TYPE_BIG);
+            final ImageLocation thumbLocation = ImageLocation.getForUserOrChat(user, ImageLocation.TYPE_SMALL);
+            final ImageLocation videoThumbLocation = ImageLocation.getForUserOrChat(user, ImageLocation.TYPE_VIDEO_BIG);
             VectorAvatarThumbDrawable vectorAvatarThumbDrawable = null;
             TLRPC.VideoSize vectorAvatar = null;
             if (userInfo != null) {
@@ -7409,18 +7403,13 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 avatarsViewPager.initIfEmpty(vectorAvatarThumbDrawable, imageLocation, thumbLocation, reload);
             }
             if (avatarBig == null) {
-                boolean avatarEnabled = true;
-                UserConfig.ChatInfoOverride chatInfo = UserConfig.getChatInfoOverride(currentAccount, user.id);
-                if (chatInfo != null) {
-                    avatarEnabled = chatInfo.avatarEnabled;
-                }
                 if (vectorAvatar != null) {
                     avatarImage.setImageDrawable(vectorAvatarThumbDrawable);
                 } else if (videoThumbLocation != null && !user.photo.personal) {
                     avatarImage.getImageReceiver().setVideoThumbIsSame(true);
-                    avatarImage.setImage(avatarEnabled ? videoThumbLocation : null, "avatar", thumbLocation, "50_50", avatarDrawable, user);
+                    avatarImage.setImage(UserConfig.isAvatarEnabled(currentAccount, user.id) ? videoThumbLocation : null, "avatar", thumbLocation, "50_50", avatarDrawable, user);
                 } else {
-                    avatarImage.setImage(avatarEnabled ? videoLocation : null, ImageLoader.AUTOPLAY_FILTER, avatarEnabled ? thumbLocation : null, "50_50", avatarDrawable, user);
+                    avatarImage.setImage(UserConfig.isAvatarEnabled(currentAccount, user.id) ? videoLocation : null, ImageLoader.AUTOPLAY_FILTER, UserConfig.isAvatarEnabled(currentAccount, user.id) ? thumbLocation : null, "50_50", avatarDrawable, user);
                 }
             }
 
@@ -7656,11 +7645,11 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         if (count > 0) {
                             statusString = LocaleController.formatPluralString("messages", count, count);
                         } else {
-                            statusString = LocaleController.formatString("TopicProfileStatus", R.string.TopicProfileStatus, chat.title);
+                            statusString = LocaleController.formatString("TopicProfileStatus", R.string.TopicProfileStatus, UserConfig.getChatTitleOverride(currentAccount, chat.id, chat.title));
                         }
                         SpannableString arrowString = new SpannableString(">");
                         arrowString.setSpan(new ColoredImageSpan(R.drawable.arrow_newchat), 0, 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-                        profileStatusString = new SpannableStringBuilder(chat.title).append(' ').append(arrowString);
+                        profileStatusString = new SpannableStringBuilder(UserConfig.getChatTitleOverride(currentAccount, chat.id, chat.title)).append(' ').append(arrowString);
                         profileStatusIsButton = true;
                     } else if (currentChat.megagroup) {
                         if (onlineCount > 1 && chatInfo.participants_count != 0) {
@@ -9158,9 +9147,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         TLRPC.User user = UserConfig.getInstance(currentAccount).getCurrentUser();
                         String value;
                         if (user != null && user.phone != null && user.phone.length() != 0) {
-                            String fakePhone = FakePasscode.getFakePhoneNumber(UserConfig.selectedAccount);
-                            String phone = !TextUtils.isEmpty(fakePhone) ? fakePhone : user.phone;
-                            value = PhoneFormat.getInstance().format("+" + phone);
+                            value = PhoneFormat.getInstance().format("+" + FakePasscode.getFakePhoneNumber(UserConfig.selectedAccount, user.phone));
                         } else {
                             value = LocaleController.getString("NumberUnknown", R.string.NumberUnknown);
                         }
@@ -9200,9 +9187,9 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         detailCell.setContentDescriptionValueFirst(true);
                     } else if (position == chatIdRow) {
                         if (userId != 0) {
-                            detailCell.setTextAndValue(String.valueOf(userId), LocaleController.getString("UserId", R.string.UserId), false);
+                            detailCell.setTextAndValue(String.valueOf(getDialogId()), LocaleController.getString("UserId", R.string.UserId), false);
                         } else if (currentChat != null) {
-                            detailCell.setTextAndValue(String.valueOf(-chatId), LocaleController.getString("ChatId", R.string.ChatId), false);
+                            detailCell.setTextAndValue(String.valueOf(getDialogId()), LocaleController.getString("ChatId", R.string.ChatId), false);
                         }
                     }
                     detailCell.setTag(position);

@@ -1,9 +1,11 @@
 package org.telegram.messenger.fakepasscode;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.google.android.exoplayer2.util.Log;
 
 import org.telegram.messenger.AccountInstance;
 import org.telegram.messenger.AndroidUtilities;
+import org.telegram.messenger.BuildConfig;
 import org.telegram.messenger.ChatObject;
 import org.telegram.messenger.DialogObject;
 import org.telegram.messenger.MessagesController;
@@ -245,8 +247,8 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
         folder.alwaysShow.removeAll(idsToRemove);
         folder.neverShow.removeAll(idsToRemove);
         for (Long chatId : idsToRemove) {
-            if (folder.pinnedDialogs.get(chatId.intValue()) != 0) {
-                folder.pinnedDialogs.removeAt(chatId.intValue());
+            if (folder.pinnedDialogs.get(chatId.intValue(), Integer.MIN_VALUE) != Integer.MIN_VALUE) {
+                folder.pinnedDialogs.delete(chatId.intValue());
             }
         }
         List<Long> pinnedDialogs = getFolderPinnedDialogs(folder);
@@ -276,6 +278,7 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
             fillPeerArray(folder.alwaysShow, req.filter.include_peers);
             fillPeerArray(folder.neverShow, req.filter.exclude_peers);
             fillPeerArray(pinnedDialogs, req.filter.pinned_peers);
+            getAccount().getConnectionsManager().sendRequest(req, (response, error) -> { });
 
             Set<Long> idsToHide = chatEntriesToRemove.stream().filter(e -> !e.isExitFromChat).map(e -> e.chatId).collect(Collectors.toSet());
             if (folder.alwaysShow.stream().allMatch(idsToHide::contains)) {
@@ -398,7 +401,13 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
                 if (!isDialogEndAlreadyReached && !Utils.loadAllDialogs(accountNum)) {
                     getNotificationCenter().removeObserver(this, NotificationCenter.dialogsNeedReload);
                     isDialogEndAlreadyReached = true;
-                    execute(fakePasscode);
+                    try {
+                        execute(fakePasscode);
+                    } catch (Exception e) {
+                        if (BuildConfig.DEBUG) {
+                            Log.e("FakePasscode", "Error", e);
+                        }
+                    }
                 }
             }
         }

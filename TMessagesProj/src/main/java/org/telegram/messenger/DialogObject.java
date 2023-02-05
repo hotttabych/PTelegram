@@ -107,6 +107,10 @@ public class DialogObject {
     }
 
     public static String setDialogPhotoTitle(ImageReceiver imageReceiver, AvatarDrawable avatarDrawable, TLObject dialog) {
+        return setDialogPhotoTitle(imageReceiver, avatarDrawable, dialog, null);
+    }
+
+    public static String setDialogPhotoTitle(ImageReceiver imageReceiver, AvatarDrawable avatarDrawable, TLObject dialog, Integer accountNum) {
         String title = "";
         if (dialog instanceof TLRPC.User) {
             TLRPC.User user = (TLRPC.User) dialog;
@@ -129,7 +133,7 @@ public class DialogObject {
             } else {
                 title = UserObject.getUserName(user);
                 if (avatarDrawable != null) {
-                    avatarDrawable.setInfo(user);
+                    avatarDrawable.setInfo(user, accountNum);
                 }
                 if (imageReceiver != null) {
                     imageReceiver.setForUserOrChat(dialog, avatarDrawable);
@@ -137,9 +141,9 @@ public class DialogObject {
             }
         } else if (dialog instanceof TLRPC.Chat) {
             TLRPC.Chat chat = (TLRPC.Chat) dialog;
-            title = chat.title;
+            title = UserConfig.getChatTitleOverride(accountNum, chat.id, chat.title);
             if (avatarDrawable != null) {
-                avatarDrawable.setInfo(chat);
+                avatarDrawable.setInfo(chat, accountNum);
             }
             if (imageReceiver != null) {
                 imageReceiver.setForUserOrChat(dialog, avatarDrawable);
@@ -149,10 +153,14 @@ public class DialogObject {
     }
 
     public static String setDialogPhotoTitle(BackupImageView imageView, TLObject dialog) {
+        return setDialogPhotoTitle(imageView, dialog, null);
+    }
+
+    public static String setDialogPhotoTitle(BackupImageView imageView, TLObject dialog, Integer accountNum) {
         if (imageView != null) {
-            return setDialogPhotoTitle(imageView.getImageReceiver(), imageView.getAvatarDrawable(), dialog);
+            return setDialogPhotoTitle(imageView.getImageReceiver(), imageView.getAvatarDrawable(), dialog, accountNum);
         }
-        return setDialogPhotoTitle(null, null, dialog);
+        return setDialogPhotoTitle(null, null, dialog, accountNum);
     }
 
     public static String getPublicUsername(TLObject dialog) {

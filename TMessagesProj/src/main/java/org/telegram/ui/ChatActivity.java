@@ -2580,13 +2580,9 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                     } else {
                         did = -currentChat.id;
                     }
-                    TLRPC.Chat chat;
                     if (DialogObject.isChatDialog(did)) {
-                        chat = getMessagesController().getChat(-did);
-                        if (chat != null) {
-                            UserConfig userConfig = getUserConfig();
-                            userConfig.savedChannels.add(chat.username);
-                            userConfig.saveConfig(true);
+                        if (getUserConfig().saveChannel(getMessagesController().getChat(-did))) {
+                            getUserConfig().saveConfig(true);
                             Toast.makeText(getParentActivity(), LocaleController.getString("Saved", R.string.Saved), Toast.LENGTH_SHORT).show();
                         }
                     }
@@ -3108,8 +3104,8 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                     && SharedConfig.showDeleteMyMessages) {
                 headerItem.addSubItem(delete_messages, R.drawable.msg_delete, LocaleController.getString(R.string.DeleteMyMessages));
             }
-            if (SharedConfig.fakePasscodeActivatedIndex == -1 && chat != null && chat.username != null
-                    && !getUserConfig().savedChannels.contains(chat.username) && SharedConfig.showSavedChannels) {
+            if (!SharedConfig.isFakePasscodeActivated() && chat != null && SharedConfig.showSavedChannels
+                    && !getUserConfig().isChannelSaved(chat)) {
                 saveItem = headerItem.addSubItem(save, R.drawable.msg_fave, LocaleController.getString("Save", R.string.Save));
             }
         }

@@ -389,7 +389,7 @@ public class SavedChannelsAdapter extends RecyclerListView.SelectionAdapter {
                 }
                 loadOtherChats();
             }
-        });
+        }, ConnectionsManager.RequestFlagFailOnServerErrors);
     }
 
     public void messagesDidLoad(long dialogId, List<MessageObject> messages) {

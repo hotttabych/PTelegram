@@ -16,6 +16,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.MessageObject;
+import org.telegram.messenger.SharedConfig;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.Cells.ChatMessageCell;
 import org.telegram.ui.ChatActivity;
@@ -297,6 +298,10 @@ public class ChatSelectionReactionMenuOverlay extends FrameLayout {
 
     public void setSelectedMessages(List<MessageObject> messages) {
         this.selectedMessages = messages;
+
+        if (!SharedConfig.allowReactions) {
+            return;
+        }
 
         boolean visible = false;
 

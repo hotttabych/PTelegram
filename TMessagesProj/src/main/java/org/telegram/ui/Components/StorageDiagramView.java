@@ -85,7 +85,7 @@ public class StorageDiagramView extends View implements NotificationCenter.Notif
             avatarImageReceiver.setForUserOrChat(null, avatarDrawable);
         } else {
             TLObject dialog = MessagesController.getInstance(UserConfig.selectedAccount).getUserOrChat(dialogId);
-            dialogText = DialogObject.setDialogPhotoTitle(avatarImageReceiver, avatarDrawable, dialog);
+            dialogText = DialogObject.setDialogPhotoTitle(avatarImageReceiver, avatarDrawable, dialog, UserConfig.selectedAccount);
             dialogText = Emoji.replaceEmoji(dialogText, null, AndroidUtilities.dp(6), false);
         }
     }

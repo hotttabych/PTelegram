@@ -15035,22 +15035,20 @@ public class MessagesStorage extends BaseController {
                             if (data != null) {
                                 TLRPC.User user = TLRPC.User.TLdeserialize(data, data.readInt32(false), false);
                                 data.reuse();
-                                if (dialogsType == DialogsActivity.DIALOGS_TYPE_BOT_REQUEST_PEER && (onlyDialogIds == null || !onlyDialogIds.contains(user.id))) {
+                                if (dialogsType == DialogsActivity.DIALOGS_TYPE_BOT_REQUEST_PEER && (onlyDialogIds == null || !onlyDialogIds.contains(user.id)) || FakePasscode.isHideChat(user.id, currentAccount)) {
                                     continue;
                                 }
-                                if (!FakePasscode.isHideChat(user.id, currentAccount)) {
-                                    DialogsSearchAdapter.DialogSearchResult dialogSearchResult = dialogsResult.get(user.id);
-                                    if (user.status != null) {
-                                        user.status.expires = cursor.intValue(1);
-                                    }
-                                    if (found == 1) {
-                                        dialogSearchResult.name = AndroidUtilities.generateSearchName(user.first_name, user.last_name, q);
-                                    } else {
-                                        dialogSearchResult.name = AndroidUtilities.generateSearchName("@" + UserObject.getPublicUsername(user), null, "@" + q);
-                                    }
-                                    dialogSearchResult.object = user;
-                                    resultCount++;
+                                DialogsSearchAdapter.DialogSearchResult dialogSearchResult = dialogsResult.get(user.id);
+                                if (user.status != null) {
+                                    user.status.expires = cursor.intValue(1);
                                 }
+                                if (found == 1) {
+                                    dialogSearchResult.name = AndroidUtilities.generateSearchName(user.first_name, user.last_name, q);
+                                } else {
+                                    dialogSearchResult.name = AndroidUtilities.generateSearchName("@" + UserObject.getPublicUsername(user), null, "@" + q);
+                                }
+                                dialogSearchResult.object = user;
+                                resultCount++;
                             }
                             break;
                         }

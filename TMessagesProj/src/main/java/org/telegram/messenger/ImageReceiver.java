@@ -429,20 +429,10 @@ public class ImageReceiver implements NotificationCenter.NotificationCenterDeleg
                     }
                 }
             }
-            if (SharedConfig.fakePasscodeActivatedIndex == -1) {
-                UserConfig.ChatInfoOverride chatInfo = UserConfig.getChatInfoOverride(currentAccount, user.id);
-                if (chatInfo != null) {
-                    avatarEnabled = chatInfo.avatarEnabled;
-                }
-            }
+            avatarEnabled = UserConfig.isAvatarEnabled(currentAccount, user.id);
         } else if (object instanceof TLRPC.Chat) {
             TLRPC.Chat chat = (TLRPC.Chat) object;
-            if (SharedConfig.fakePasscodeActivatedIndex == -1) {
-                UserConfig.ChatInfoOverride chatInfo = UserConfig.getChatInfoOverride(currentAccount, chat.id);
-                if (chatInfo != null) {
-                    avatarEnabled = chatInfo.avatarEnabled;
-                }
-            }
+            avatarEnabled = UserConfig.isAvatarEnabled(currentAccount, chat.id);
             if (chat.photo != null) {
                 strippedBitmap = chat.photo.strippedBitmap;
                 hasStripped = chat.photo.stripped_thumb != null;

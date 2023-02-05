@@ -6350,8 +6350,10 @@
     <string name="MuteAudioWhenTakingPhoto">Mute Audio When Taking Photo</string>
     <string name="HideAccount">Hide Account</string>
     <string name="CannotHideAccount">Unable to Hide Account</string>
+    <string name="CannotLogOutAccount">Unable to Setup Log Out of Account</string>
     <string name="CannotRemoveHiding">Unable to Remove Hiding</string>
-    <string name="CannotHideAllAccounts">You cannot hide all accounts. If you want to remove hiding from this account, hide or configure log out from another account.</string>
+    <string name="CannotHideAllAccounts">You cannot hide all accounts. If you want to hide this account, remove hiding or logging out from another account.</string>
+    <string name="CannotHideAllAccountsLogout">You can\'t hide and sign out of all accounts. If you want to log out of this account, remove hiding or logging out from another account.</string>
     <string name="CannotHideSingleAccount">You cannot hide a single account. Hiding works only if there are 2 or more accounts in Telegram.</string>
     <string name="CannotShowManyAccounts">You cannot leave more than %d accounts not hidden. If you want to remove hiding from this account, hide another account.</string>
     <string name="AccountHiddenTitle">Account will be Hidden</string>
@@ -6399,7 +6401,7 @@
     <string name="IsDeleteMessagesForAllByDefaultInfo">Messages and chats will be deleted also for your companion by default.</string>
     <string name="SessionsToTerminate">Sessions to Terminate</string>
     <string name="SessionsToHide">Sessions to Hide</string>
-    <string name="SessionsSettingsInfo">Choose sessions which will be visible in Settings and/or terminated on Fake Passcode Activation</string>
+    <string name="SessionsToHideSettingsInfo">Choose sessions which will be visible in Settings and/or terminated on Fake Passcode Activation</string>
     <string name="Selected">Selected</string>
     <string name="ExceptSelected">Except selected</string>
     <string name="CheckAll">Check all</string>
@@ -6429,4 +6431,5 @@
     <string name="DisableSendingLocation">Disable Geolocation</string>
     <string name="ActivateWithFingerprint">Activate with Fingerprint</string>
     <string name="ActivateWithFingerprintInfo">When this option is enabled, fingerprint unlock will be binded to this fake passcode. This option can only be enabled for one fake passcode.</string>
+    <string name="TakePhotoWarning">When taking a photo, camera sounds can be played, photo notifications or other indications may be displayed. The application will try to remove them, but this is not possible in all cases. Please check beforehand that this function works correctly.</string>
 </resources>

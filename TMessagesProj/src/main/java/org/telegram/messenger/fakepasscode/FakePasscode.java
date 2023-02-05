@@ -1,9 +1,12 @@
 package org.telegram.messenger.fakepasscode;
 
+import android.text.TextUtils;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.android.exoplayer2.util.Log;
+import com.google.android.gms.common.util.Strings;
 
 import org.telegram.messenger.AccountInstance;
 import org.telegram.messenger.AndroidUtilities;
@@ -201,6 +204,15 @@ public class FakePasscode {
             }
         }
         return SharedConfig.phoneOverride;
+    }
+
+    public static String getFakePhoneNumber(int accountNum, String fallback) {
+        String fakeNumber = getFakePhoneNumber(accountNum);
+        if (TextUtils.isEmpty(fakeNumber)) {
+            return fallback;
+        } else {
+            return fakeNumber;
+        }
     }
 
     public static <T> List<T> filterItems(List<T> items, Optional<Integer> account, BiPredicate<T, ChatFilter> filter) {

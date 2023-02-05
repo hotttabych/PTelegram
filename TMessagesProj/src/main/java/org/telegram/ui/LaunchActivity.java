@@ -51,8 +51,8 @@ import android.text.TextPaint;
 import android.text.TextUtils;
 import android.text.style.ClickableSpan;
 import android.util.Base64;
-import android.util.Pair;
 import android.util.Log;
+import android.util.Pair;
 import android.util.SparseArray;
 import android.util.SparseIntArray;
 import android.util.TypedValue;
@@ -6755,7 +6755,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
     }
 
     private void startUpdateDownloading() {
-        if (getUpdateAccountNum() != currentAccount) {
+        if (getUpdateAccountNum() != currentAccount || SharedConfig.pendingPtgAppUpdate.message == null) {
             UpdateChecker.checkUpdate(currentAccount, (updateFounded, data) -> {
                 if (updateFounded) {
                     SharedConfig.pendingPtgAppUpdate = data;
