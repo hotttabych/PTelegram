@@ -4159,6 +4159,7 @@ public class NotificationsController extends BaseController {
 
         long selfUserId = getUserConfig().getClientUserId();
         boolean waitingForPasscode = AndroidUtilities.needShowPasscode() || SharedConfig.isWaitingForPasscodeEnter;
+        boolean passcode = SharedConfig.passcodeHash.length() > 0;
 
         int maxCount = 7;
         LongSparseArray<Person> personCache = new LongSparseArray<>();
@@ -4223,6 +4224,7 @@ public class NotificationsController extends BaseController {
                 } else {
                     chat = getMessagesController().getChat(-dialogId);
                     if (chat == null) {
+                        canReply = false;
                         if (lastMessageObject.isFcmMessage()) {
                             isSupergroup = lastMessageObject.isSupergroup();
                             name = UserConfig.getChatTitleOverride(currentAccount, dialogId, lastMessageObject.localName);
@@ -4247,7 +4249,9 @@ public class NotificationsController extends BaseController {
                                 name = topic.title + " in " + name;
                             }
                         }
-
+                        if (canReply) {
+                            canReply = ChatObject.canSendPlain(chat);
+                        }
                     }
                 }
             } else {
@@ -4280,6 +4284,9 @@ public class NotificationsController extends BaseController {
                     name = LocaleController.getString("NotificationHiddenName", R.string.NotificationHiddenName);
                 }
                 photoPath = null;
+                canReply = false;
+            }
+            if (passcode) {
                 canReply = false;
             }
 
@@ -4598,6 +4605,7 @@ public class NotificationsController extends BaseController {
             } else {
                 intent.putExtra("chatId", -dialogId);
             }
+            FileLog.d("show extra notifications chatId " + dialogId + " topicId " + topicId);
             if (topicId != 0) {
                 intent.putExtra("topicId", topicId);
             }
@@ -4673,7 +4681,7 @@ public class NotificationsController extends BaseController {
             if (wearReplyAction != null) {
                 builder.addAction(wearReplyAction);
             }
-            if (!waitingForPasscode) {
+            if (!passcode) {
                 builder.addAction(readAction);
             }
             if (sortedDialogs.size() == 1 && !TextUtils.isEmpty(summary)) {

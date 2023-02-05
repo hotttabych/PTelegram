@@ -553,7 +553,7 @@ public class UndoView extends FrameLayout {
                 icon = 0;
                 AvatarDrawable avatarDrawable = new AvatarDrawable();
                 avatarDrawable.setTextSize(AndroidUtilities.dp(12));
-                avatarDrawable.setInfo((TLObject) infoObject);
+                avatarDrawable.setInfo((TLObject) infoObject, currentAccount);
                 avatarImageView.setForUserOrChat((TLObject) infoObject, avatarDrawable);
                 avatarImageView.setVisibility(VISIBLE);
                 timeLeft = 3000;

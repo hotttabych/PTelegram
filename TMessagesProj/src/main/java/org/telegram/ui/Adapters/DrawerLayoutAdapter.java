@@ -235,7 +235,7 @@ public class DrawerLayoutAdapter extends RecyclerListView.SelectionAdapter {
         }
         i -= 2;
         if (accountsShown) {
-            if (allAccountsShown) {
+            if (allAccountsShown || SharedConfig.isFakePasscodeActivated()) {
                 if (i < accountNumbers.size()) {
                     return 4;
                 } else {

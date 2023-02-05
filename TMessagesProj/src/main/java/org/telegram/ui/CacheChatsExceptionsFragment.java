@@ -16,6 +16,7 @@ import org.telegram.messenger.CacheByChatsController;
 import org.telegram.messenger.ContactsController;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.R;
+import org.telegram.messenger.UserConfig;
 import org.telegram.tgnet.TLObject;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.ActionBar;
@@ -81,11 +82,11 @@ public class CacheChatsExceptionsFragment extends BaseFragment {
                 args.putBoolean("onlySelect", true);
                 args.putBoolean("checkCanWrite", false);
                 if (currentType == CacheControlActivity.KEEP_MEDIA_TYPE_GROUP) {
-                    args.putInt("dialogsType", 6);
+                    args.putInt("dialogsType", DialogsActivity.DIALOGS_TYPE_GROUPS_ONLY);
                 } else if (currentType == CacheControlActivity.KEEP_MEDIA_TYPE_CHANNEL) {
-                    args.putInt("dialogsType", 5);
+                    args.putInt("dialogsType", DialogsActivity.DIALOGS_TYPE_CHANNELS_ONLY);
                 } else {
-                    args.putInt("dialogsType", 4);
+                    args.putInt("dialogsType", DialogsActivity.DIALOGS_TYPE_USERS_ONLY);
                 }
                 args.putBoolean("allowGlobalSearch", false);
                 DialogsActivity activity = new DialogsActivity(args);
@@ -123,6 +124,7 @@ public class CacheChatsExceptionsFragment extends BaseFragment {
                         int finalP = p;
                         showPopupFor(newException);
                     }
+                    return true;
                 });
                 presentFragment(activity);
             } else if (items.get(position).viewType == VIEW_TYPE_CHAT) {
@@ -279,7 +281,7 @@ public class CacheChatsExceptionsFragment extends BaseFragment {
                     }
                 } else if (object instanceof TLRPC.Chat) {
                     TLRPC.Chat chat = (TLRPC.Chat) object;
-                    title = chat.title;
+                    title = UserConfig.getChatTitleOverride(currentAccount, chat.id, chat.title);
                 }
                 cell.setSelfAsSavedMessages(true);
                 cell.setData(object, title, CacheByChatsController.getKeepMediaString(exception.keepMedia), 0, !(position != items.size() - 1 && items.get(position + 1).viewType != VIEW_TYPE_CHAT));

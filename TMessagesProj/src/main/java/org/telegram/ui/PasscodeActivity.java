@@ -430,31 +430,35 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
                     } else if (position == badPasscodeAttemptsRow) {
                         presentFragment(new BadPasscodeAttemptsActivity());
                     } else if (position == badPasscodePhotoFrontRow) {
-                        Activity parentActivity = getParentActivity();
-                        if (SharedConfig.takePhotoWithBadPasscodeFront || ContextCompat.checkSelfPermission(parentActivity, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
-                            SharedConfig.takePhotoWithBadPasscodeFront = !SharedConfig.takePhotoWithBadPasscodeFront;
-                            SharedConfig.saveConfig();
-                            ((TextCheckCell) view).setChecked(SharedConfig.takePhotoWithBadPasscodeFront);
-                        } else {
-                            ActivityCompat.requestPermissions(parentActivity, new String[]{Manifest.permission.CAMERA}, 2000);
-                        }
-                        updateRows();
-                        if (listAdapter != null) {
-                            listAdapter.notifyDataSetChanged();
-                        }
+                        showPhotoWarning(() -> {
+                            Activity parentActivity = getParentActivity();
+                            if (SharedConfig.takePhotoWithBadPasscodeFront || ContextCompat.checkSelfPermission(parentActivity, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+                                SharedConfig.takePhotoWithBadPasscodeFront = !SharedConfig.takePhotoWithBadPasscodeFront;
+                                SharedConfig.saveConfig();
+                                ((TextCheckCell) view).setChecked(SharedConfig.takePhotoWithBadPasscodeFront);
+                            } else {
+                                ActivityCompat.requestPermissions(parentActivity, new String[]{Manifest.permission.CAMERA}, 2000);
+                            }
+                            updateRows();
+                            if (listAdapter != null) {
+                                listAdapter.notifyDataSetChanged();
+                            }
+                        });
                     } else if (position == badPasscodePhotoBackRow) {
-                        Activity parentActivity = getParentActivity();
-                        if (SharedConfig.takePhotoWithBadPasscodeBack || ContextCompat.checkSelfPermission(parentActivity, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
-                            SharedConfig.takePhotoWithBadPasscodeBack = !SharedConfig.takePhotoWithBadPasscodeBack;
-                            SharedConfig.saveConfig();
-                            ((TextCheckCell) view).setChecked(SharedConfig.takePhotoWithBadPasscodeBack);
-                        } else {
-                            ActivityCompat.requestPermissions(parentActivity, new String[]{Manifest.permission.CAMERA}, 2001);
-                        }
-                        updateRows();
-                        if (listAdapter != null) {
-                            listAdapter.notifyDataSetChanged();
-                        }
+                        showPhotoWarning(() -> {
+                            Activity parentActivity = getParentActivity();
+                            if (SharedConfig.takePhotoWithBadPasscodeBack || ContextCompat.checkSelfPermission(parentActivity, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+                                SharedConfig.takePhotoWithBadPasscodeBack = !SharedConfig.takePhotoWithBadPasscodeBack;
+                                SharedConfig.saveConfig();
+                                ((TextCheckCell) view).setChecked(SharedConfig.takePhotoWithBadPasscodeBack);
+                            } else {
+                                ActivityCompat.requestPermissions(parentActivity, new String[]{Manifest.permission.CAMERA}, 2001);
+                            }
+                            updateRows();
+                            if (listAdapter != null) {
+                                listAdapter.notifyDataSetChanged();
+                            }
+                        });
                     } else if (position == badPasscodeMuteAudioRow) {
                         SharedConfig.takePhotoMuteAudio = !SharedConfig.takePhotoMuteAudio;
                         SharedConfig.saveConfig();
@@ -1376,6 +1380,19 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
         builder.setNegativeButton(LocaleController.getString("Cancel", R.string.Cancel), null);
         AlertDialog alertDialog = builder.create();
         showDialog(alertDialog);
+    }
+
+    private void showPhotoWarning(Runnable callback) {
+        if (SharedConfig.takePhotoWithBadPasscodeFront || SharedConfig.takePhotoWithBadPasscodeBack) {
+            callback.run();
+        } else {
+            AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
+            builder.setMessage(LocaleController.getString(R.string.TakePhotoWarning));
+            builder.setTitle(LocaleController.getString(R.string.Warning));
+            builder.setPositiveButton(LocaleController.getString(R.string.OK), (d, v) -> callback.run());
+            AlertDialog alertDialog = builder.create();
+            showDialog(alertDialog);
+        }
     }
 
     private class ListAdapter extends RecyclerListView.SelectionAdapter {

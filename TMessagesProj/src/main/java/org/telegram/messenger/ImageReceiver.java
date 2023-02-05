@@ -33,12 +33,14 @@ import androidx.annotation.Keep;
 import org.telegram.tgnet.TLObject;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.Components.AnimatedFileDrawable;
+import org.telegram.ui.Components.AttachableDrawable;
 import org.telegram.ui.Components.AvatarDrawable;
 import org.telegram.ui.Components.ClipRoundedDrawable;
 import org.telegram.ui.Components.CubicBezierInterpolator;
 import org.telegram.ui.Components.LoadingStickerDrawable;
 import org.telegram.ui.Components.RLottieDrawable;
 import org.telegram.ui.Components.RecyclableDrawable;
+import org.telegram.ui.Components.VectorAvatarThumbDrawable;
 
 import java.util.ArrayList;
 
@@ -370,10 +372,10 @@ public class ImageReceiver implements NotificationCenter.NotificationCenterDeleg
         setForUserOrChat(object, avatarDrawable, null);
     }
     public void setForUserOrChat(TLObject object, Drawable avatarDrawable, Object parentObject) {
-        setForUserOrChat(object, avatarDrawable, null, false);
+        setForUserOrChat(object, avatarDrawable, parentObject, false, 0);
     }
 
-    public void setForUserOrChat(TLObject object, Drawable avatarDrawable, Object parentObject, boolean animationEnabled) {
+    public void setForUserOrChat(TLObject object, Drawable avatarDrawable, Object parentObject, boolean animationEnabled, int vectorType) {
         if (parentObject == null) {
             parentObject = object;
         }
@@ -382,72 +384,83 @@ public class ImageReceiver implements NotificationCenter.NotificationCenterDeleg
         boolean hasStripped = false;
         boolean avatarEnabled = true;
         ImageLocation videoLocation = null;
+        TLRPC.VideoSize vectorImageMarkup = null;
+        boolean isPremium = false;
         if (object instanceof TLRPC.User) {
             TLRPC.User user = (TLRPC.User) object;
+            isPremium = user.premium;
             if (user.photo != null) {
                 strippedBitmap = user.photo.strippedBitmap;
                 hasStripped = user.photo.stripped_thumb != null;
-                if (animationEnabled && MessagesController.getInstance(currentAccount).isPremiumUser(user) && user.photo.has_video && !SharedConfig.getLiteMode().enabled()) {
+                if (vectorType == VectorAvatarThumbDrawable.TYPE_STATIC) {
+                    final TLRPC.UserFull userFull = MessagesController.getInstance(currentAccount).getUserFull(user.id);
+                    if (userFull != null) {
+                        TLRPC.Photo photo = user.photo.personal ? userFull.personal_photo : userFull.profile_photo;
+                        if (photo != null) {
+                            vectorImageMarkup = FileLoader.getVectorMarkupVideoSize(photo);
+                        }
+                    }
+                }
+                if (vectorImageMarkup == null && animationEnabled && MessagesController.getInstance(currentAccount).isPremiumUser(user) && user.photo.has_video && !SharedConfig.getLiteMode().enabled()) {
                     final TLRPC.UserFull userFull = MessagesController.getInstance(currentAccount).getUserFull(user.id);
                     if (userFull == null) {
                         MessagesController.getInstance(currentAccount).loadFullUser(user, currentGuid, false);
                     } else {
-                        TLRPC.Photo photo = userFull.profile_photo;
+                        TLRPC.Photo photo = user.photo.personal ? userFull.personal_photo : userFull.profile_photo;
                         if (photo != null) {
-                            ArrayList<TLRPC.VideoSize> videoSizes = photo.video_sizes;
-                            if (videoSizes != null && !videoSizes.isEmpty()) {
-                                TLRPC.VideoSize videoSize = videoSizes.get(0);
-                                for (int i = 0; i < videoSizes.size(); i++) {
-                                    TLRPC.VideoSize videoSize1 = videoSizes.get(i);
-                                    if ("p".equals(videoSize1.type)) {
-                                        videoSize = videoSize1;
-                                        break;
+                            vectorImageMarkup = FileLoader.getVectorMarkupVideoSize(photo);
+                            if (vectorImageMarkup == null) {
+                                ArrayList<TLRPC.VideoSize> videoSizes = photo.video_sizes;
+                                if (videoSizes != null && !videoSizes.isEmpty()) {
+                                    TLRPC.VideoSize videoSize = FileLoader.getClosestVideoSizeWithSize(videoSizes, 100);
+                                    for (int i = 0; i < videoSizes.size(); i++) {
+                                        TLRPC.VideoSize videoSize1 = videoSizes.get(i);
+                                        if ("p".equals(videoSize1.type)) {
+                                            videoSize = videoSize1;
+                                        }
+                                        if (videoSize1 instanceof TLRPC.TL_videoSizeEmojiMarkup || videoSize1 instanceof TLRPC.TL_videoSizeStickerMarkup) {
+                                            vectorImageMarkup = videoSize1;
+                                        }
                                     }
+                                    videoLocation = ImageLocation.getForPhoto(videoSize, photo);
                                 }
-                                videoLocation = ImageLocation.getForPhoto(videoSize, photo);
                             }
                         }
                     }
                 }
             }
-            if (SharedConfig.fakePasscodeActivatedIndex == -1) {
-                UserConfig.ChatInfoOverride chatInfo = UserConfig.getChatInfoOverride(currentAccount, user.id);
-                if (chatInfo != null) {
-                    avatarEnabled = chatInfo.avatarEnabled;
-                }
-            }
+            avatarEnabled = UserConfig.isAvatarEnabled(currentAccount, user.id);
         } else if (object instanceof TLRPC.Chat) {
             TLRPC.Chat chat = (TLRPC.Chat) object;
-            if (SharedConfig.fakePasscodeActivatedIndex == -1) {
-                UserConfig.ChatInfoOverride chatInfo = UserConfig.getChatInfoOverride(currentAccount, chat.id);
-                if (chatInfo != null) {
-                    avatarEnabled = chatInfo.avatarEnabled;
-                }
-            }
+            avatarEnabled = UserConfig.isAvatarEnabled(currentAccount, chat.id);
             if (chat.photo != null) {
                 strippedBitmap = chat.photo.strippedBitmap;
                 hasStripped = chat.photo.stripped_thumb != null;
             }
         }
-        ImageLocation location = ImageLocation.getForUserOrChat(object, ImageLocation.TYPE_SMALL, currentAccount);
-        String filter = "50_50";
-        if (avatarEnabled) {
-            if (videoLocation != null) {
-            setImage(videoLocation, "avatar", location, filter, null, null, strippedBitmap, 0, null, parentObject, 0);
-            animatedFileDrawableRepeatMaxCount = 3;
-            } else {
-                if (strippedBitmap != null) {
-                    setImage(location, filter, strippedBitmap, null, parentObject, 0);
-                } else if (hasStripped) {
-                    setImage(location, filter, ImageLocation.getForUserOrChat(object, ImageLocation.TYPE_STRIPPED, currentAccount), "50_50_b", avatarDrawable, parentObject, 0);
-                } else {
-                    setImage(location, filter, avatarDrawable, null, parentObject, 0);
-                }
-            }
+        if (vectorImageMarkup != null && vectorType != 0) {
+            VectorAvatarThumbDrawable drawable = new VectorAvatarThumbDrawable(vectorImageMarkup, isPremium, vectorType);
+            setImageBitmap(drawable);
         } else {
-            setImage(null, "50_50", avatarDrawable, null, parentObject, 0);
+            ImageLocation location = ImageLocation.getForUserOrChat(object, ImageLocation.TYPE_SMALL, currentAccount);
+            String filter = "50_50";
+            if (avatarEnabled) {
+                if (videoLocation != null) {
+                    setImage(videoLocation, "avatar", location, filter, null, null, strippedBitmap, 0, null, parentObject, 0);
+                    animatedFileDrawableRepeatMaxCount = 3;
+                } else {
+                    if (strippedBitmap != null) {
+                        setImage(location, filter, strippedBitmap, null, parentObject, 0);
+                    } else if (hasStripped) {
+                        setImage(location, filter, ImageLocation.getForUserOrChat(object, ImageLocation.TYPE_STRIPPED, currentAccount), "50_50_b", avatarDrawable, parentObject, 0);
+                    } else {
+                        setImage(location, filter, avatarDrawable, null, parentObject, 0);
+                    }
+                }
+            } else {
+                setImage(null, "50_50", avatarDrawable, null, parentObject, 0);
+            }
         }
-
     }
 
     public void setImage(ImageLocation fileLocation, String fileFilter, ImageLocation thumbLocation, String thumbFilter, Drawable thumb, Object parentObject, int cacheType) {
@@ -518,7 +531,7 @@ public class ImageReceiver implements NotificationCenter.NotificationCenterDeleg
             currentParentObject = null;
             currentCacheType = 0;
             roundPaint.setShader(null);
-            staticThumbDrawable = thumb;
+            setStaticDrawable(thumb);
             currentAlpha = 1.0f;
             previousAlpha = 1f;
             currentSize = 0;
@@ -670,7 +683,7 @@ public class ImageReceiver implements NotificationCenter.NotificationCenterDeleg
         currentExt = ext;
         currentSize = size;
         currentCacheType = cacheType;
-        staticThumbDrawable = thumb;
+        setStaticDrawable(thumb);
         imageShader = null;
         composeShader = null;
         thumbShader = null;
@@ -837,7 +850,8 @@ public class ImageReceiver implements NotificationCenter.NotificationCenterDeleg
         }
         thumbShader = null;
         roundPaint.setShader(null);
-        staticThumbDrawable = bitmap;
+        setStaticDrawable(bitmap);
+
         updateDrawableRadius(bitmap);
         currentMediaLocation = null;
         currentMediaFilter = null;
@@ -884,6 +898,26 @@ public class ImageReceiver implements NotificationCenter.NotificationCenterDeleg
             currentAlpha = 0.0f;
             lastUpdateAlphaTime = System.currentTimeMillis();
             crossfadeWithThumb = currentThumbDrawable != null || staticThumbDrawable != null;
+        }
+    }
+
+    private void setStaticDrawable(Drawable bitmap) {
+        if (bitmap == staticThumbDrawable) {
+            return;
+        }
+        AttachableDrawable oldDrawable = null;
+        if (staticThumbDrawable instanceof AttachableDrawable) {
+            if (staticThumbDrawable.equals(bitmap)) {
+                return;
+            }
+            oldDrawable = (AttachableDrawable) staticThumbDrawable;
+        }
+        staticThumbDrawable = bitmap;
+        if (attachedToWindow && staticThumbDrawable instanceof AttachableDrawable) {
+            ((AttachableDrawable) staticThumbDrawable).onAttachedToWindow(this);
+        }
+        if (attachedToWindow && oldDrawable != null) {
+            oldDrawable.onDetachedFromWindow(this);
         }
     }
 
@@ -982,9 +1016,12 @@ public class ImageReceiver implements NotificationCenter.NotificationCenterDeleg
             NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.stopAllHeavyOperations);
             NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.startAllHeavyOperations);
         }
+        if (staticThumbDrawable instanceof AttachableDrawable) {
+            ((AttachableDrawable) staticThumbDrawable).onDetachedFromWindow(this);
+        }
 
         if (staticThumbDrawable != null) {
-            staticThumbDrawable = null;
+            setStaticDrawable(null);
             thumbShader = null;
             roundPaint.setShader(null);
         }
@@ -1071,6 +1108,9 @@ public class ImageReceiver implements NotificationCenter.NotificationCenterDeleg
         }
         if (NotificationCenter.getGlobalInstance().isAnimationInProgress()) {
             didReceivedNotification(NotificationCenter.stopAllHeavyOperations, currentAccount, 512);
+        }
+        if (staticThumbDrawable instanceof AttachableDrawable) {
+            ((AttachableDrawable) staticThumbDrawable).onAttachedToWindow(this);
         }
         return false;
     }
@@ -1905,6 +1945,9 @@ public class ImageReceiver implements NotificationCenter.NotificationCenterDeleg
                 checkAlphaAnimation(animationNotReady && crossfadeWithThumb, backgroundThreadDrawHolder);
                 result = true;
             } else if (staticThumbDrawable != null) {
+                if (staticThumbDrawable instanceof VectorAvatarThumbDrawable) {
+                    ((VectorAvatarThumbDrawable) staticThumbDrawable).setParent(this);
+                }
                 drawDrawable(canvas, staticThumbDrawable, (int) (overrideAlpha * 255), null, thumbOrientation, backgroundThreadDrawHolder);
                 checkAlphaAnimation(animationNotReady, backgroundThreadDrawHolder);
                 result = true;
@@ -2151,7 +2194,7 @@ public class ImageReceiver implements NotificationCenter.NotificationCenterDeleg
     }
 
     public boolean hasNotThumb() {
-        return currentImageDrawable != null || currentMediaDrawable != null;
+        return currentImageDrawable != null || currentMediaDrawable != null || staticThumbDrawable instanceof VectorAvatarThumbDrawable;
     }
 
     public boolean hasStaticThumb() {
@@ -2889,7 +2932,7 @@ public class ImageReceiver implements NotificationCenter.NotificationCenterDeleg
         currentThumbDrawable = null;
         thumbShader = null;
         roundPaint.setShader(null);
-        staticThumbDrawable = thumb;
+        setStaticDrawable(thumb);
         crossfadeWithThumb = true;
         currentAlpha = 0f;
         updateDrawableRadius(staticThumbDrawable);

@@ -13,6 +13,7 @@ import android.content.SharedPreferences;
 import android.os.SystemClock;
 import android.text.TextUtils;
 import android.util.Base64;
+import android.util.LongSparseArray;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -89,6 +90,10 @@ public class UserConfig extends BaseController {
     public volatile byte[] savedPasswordHash;
     public volatile byte[] savedSaltedPassword;
     public volatile long savedPasswordTime;
+    LongSparseArray<SaveToGallerySettingsHelper.DialogException> userSaveGalleryExceptions;
+    LongSparseArray<SaveToGallerySettingsHelper.DialogException> chanelSaveGalleryExceptions;
+    LongSparseArray<SaveToGallerySettingsHelper.DialogException> groupsSaveGalleryExceptions;
+
 
     public static class ChatInfoOverride {
         public String title;
@@ -547,6 +552,48 @@ public class UserConfig extends BaseController {
         }
     }
 
+    public LongSparseArray<SaveToGallerySettingsHelper.DialogException> getSaveGalleryExceptions(int type) {
+        if (type == SharedConfig.SAVE_TO_GALLERY_FLAG_PEER) {
+            if (userSaveGalleryExceptions == null) {
+                userSaveGalleryExceptions = SaveToGallerySettingsHelper.loadExceptions(ApplicationLoader.applicationContext.getSharedPreferences(SaveToGallerySettingsHelper.USERS_PREF_NAME + "_" + currentAccount, Context.MODE_PRIVATE));
+            }
+            return userSaveGalleryExceptions;
+        } else if (type == SharedConfig.SAVE_TO_GALLERY_FLAG_GROUP) {
+            if (groupsSaveGalleryExceptions == null) {
+                groupsSaveGalleryExceptions = SaveToGallerySettingsHelper.loadExceptions(ApplicationLoader.applicationContext.getSharedPreferences(SaveToGallerySettingsHelper.GROUPS_PREF_NAME + "_" + currentAccount, Context.MODE_PRIVATE));
+            }
+            return groupsSaveGalleryExceptions;
+        } else  if (type == SharedConfig.SAVE_TO_GALLERY_FLAG_CHANNELS) {
+            if (chanelSaveGalleryExceptions == null) {
+                chanelSaveGalleryExceptions = SaveToGallerySettingsHelper.loadExceptions(ApplicationLoader.applicationContext.getSharedPreferences(SaveToGallerySettingsHelper.CHANNELS_PREF_NAME + "_" + currentAccount, Context.MODE_PRIVATE));
+            }
+            return chanelSaveGalleryExceptions;
+        }
+        return null;
+    }
+
+    public void updateSaveGalleryExceptions(int type, LongSparseArray<SaveToGallerySettingsHelper.DialogException> exceptions) {
+        if (type == SharedConfig.SAVE_TO_GALLERY_FLAG_PEER) {
+            userSaveGalleryExceptions = exceptions;
+            SaveToGallerySettingsHelper.saveExceptions(
+                    ApplicationLoader.applicationContext.getSharedPreferences(SaveToGallerySettingsHelper.USERS_PREF_NAME + "_" + currentAccount, Context.MODE_PRIVATE),
+                    userSaveGalleryExceptions
+            );
+        } else if (type == SharedConfig.SAVE_TO_GALLERY_FLAG_GROUP) {
+            groupsSaveGalleryExceptions = exceptions;
+            SaveToGallerySettingsHelper.saveExceptions(
+                    ApplicationLoader.applicationContext.getSharedPreferences(SaveToGallerySettingsHelper.GROUPS_PREF_NAME + "_" + currentAccount, Context.MODE_PRIVATE),
+                    groupsSaveGalleryExceptions
+            );
+        } else  if (type == SharedConfig.SAVE_TO_GALLERY_FLAG_CHANNELS) {
+            chanelSaveGalleryExceptions = exceptions;
+            SaveToGallerySettingsHelper.saveExceptions(
+                    ApplicationLoader.applicationContext.getSharedPreferences(SaveToGallerySettingsHelper.CHANNELS_PREF_NAME + "_" + currentAccount, Context.MODE_PRIVATE),
+                    chanelSaveGalleryExceptions
+            );
+        }
+    }
+
     public void clearConfig() {
         getPreferences().edit().clear().apply();
 
@@ -654,18 +701,34 @@ public class UserConfig extends BaseController {
     }
 
     public Long getEmojiStatus() {
-        if (currentUser == null) {
-            return null;
-        }
-        if (currentUser.emoji_status instanceof TLRPC.TL_emojiStatusUntil && ((TLRPC.TL_emojiStatusUntil) currentUser.emoji_status).until > (int) (System.currentTimeMillis() / 1000)) {
-            return ((TLRPC.TL_emojiStatusUntil) currentUser.emoji_status).document_id;
-        }
-        if (currentUser.emoji_status instanceof TLRPC.TL_emojiStatus) {
-            return ((TLRPC.TL_emojiStatus) currentUser.emoji_status).document_id;
-        }
-        return null;
+        return UserObject.getEmojiStatusDocumentId(currentUser);
     }
 
+    public boolean saveChannel(TLRPC.Chat chat) {
+        if (chat == null) {
+            return false;
+        }
+        String username = chat.username != null
+                ? chat.username
+                : chat.usernames.stream().filter(u -> u.active).map(u -> u.username).findAny().orElse(null);
+        if (username != null) {
+            savedChannels.add(username);
+            return true;
+        }
+        return false;
+    }
+
+    public boolean isChannelSaved(TLRPC.Chat chat) {
+        if (chat == null) {
+            return false;
+        } else if (chat.username != null) {
+            return getUserConfig().savedChannels.contains(chat.username);
+        } else if (chat.usernames != null) {
+            return chat.usernames.stream().anyMatch(name -> getUserConfig().savedChannels.contains(name.username));
+        } else {
+            return false;
+        }
+    }
 
     int globalTtl = 0;
     boolean ttlIsLoading = false;

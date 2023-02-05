@@ -741,7 +741,7 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
                 if (count > 0) {
                     newSubtitle = LocaleController.formatPluralString("messages", count, count);
                 } else {
-                    newSubtitle = LocaleController.formatString("TopicProfileStatus", R.string.TopicProfileStatus, chat.title);
+                    newSubtitle = LocaleController.formatString("TopicProfileStatus", R.string.TopicProfileStatus, UserConfig.getChatTitleOverride(currentAccount, chat.id, chat.title));
                 }
             } else if (chat != null) {
                 TLRPC.ChatFull info = parentFragment.getCurrentChatInfo();
@@ -935,7 +935,7 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
             } else {
                 avatarDrawable.setScaleSize(1f);
                 if (avatarImageView != null) {
-                    avatarImageView.imageReceiver.setForUserOrChat(user, avatarDrawable,  null, true);
+                    avatarImageView.imageReceiver.setForUserOrChat(user, avatarDrawable,  null, true, VectorAvatarThumbDrawable.TYPE_STATIC);
                 }
             }
         } else if (chat != null) {

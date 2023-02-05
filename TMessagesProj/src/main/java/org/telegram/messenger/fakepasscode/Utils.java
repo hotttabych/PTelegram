@@ -1,5 +1,7 @@
 package org.telegram.messenger.fakepasscode;
 
+import static java.util.regex.Pattern.CASE_INSENSITIVE;
+
 import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
@@ -35,6 +37,7 @@ import org.telegram.tgnet.TLRPC;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -48,7 +51,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class Utils {
-    private static final Pattern FOREIGN_AGENT_REGEX = Pattern.compile("данное\\s*сообщение\\s*\\(материал\\)\\s*создано\\s*и\\s*\\(или\\)\\s*распространено\\s*(иностранным\\s*)?средством\\s*массовой\\s*информации,\\s*выполняющим\\s*функции\\s*иностранного\\s*агента,\\s*и\\s*\\(или\\)\\s*российским\\s*юридическим\\s*лицом,\\s*выполняющим\\s*функции\\s*иностранного\\s*агента[\\.\\s\\r\\n]*");
+    private static final Pattern FOREIGN_AGENT_REGEX = Pattern.compile("\\s*данное\\s*сообщение\\s*\\(материал\\)\\s*создано\\s*и\\s*\\(или\\)\\s*распространено\\s*(иностранным\\s*)?средством\\s*массовой\\s*информации,\\s*выполняющим\\s*функции\\s*иностранного\\s*агента,\\s*и\\s*\\(или\\)\\s*российским\\s*юридическим\\s*лицом,\\s*выполняющим\\s*функции\\s*иностранного\\s*агента[\\.\\s\\r\\n]*", CASE_INSENSITIVE);
+    private static final Pattern FOREIGN_AGENT_REGEX2 = Pattern.compile("\\s*настоящий\\s*материал\\s*\\(информация\\)\\s*произвед[её]н,\\s*распространен(\\s*и\\s*\\(или\\)\\s*направлен)?\\s*иностранным\\s*агентом\\s*.*(\\s*либо\\s*касается\\s*деятельности\\s*иностранного\\s*агента\\s*.*)?[\\.\\s\\r\\n]*", CASE_INSENSITIVE);
 
     static Location getLastLocation() {
         boolean permissionGranted = ContextCompat.checkSelfPermission(ApplicationLoader.applicationContext, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
@@ -375,46 +379,71 @@ public class Utils {
     }
 
     private static CharSequence cutForeignAgentPart(CharSequence message, boolean leaveEmpty) {
-        String lowerCased = message.toString().toLowerCase(Locale.ROOT);
-        Matcher matcher = FOREIGN_AGENT_REGEX.matcher(lowerCased);
         int lastEnd = -1;
         SpannableStringBuilder builder = new SpannableStringBuilder();
-        while (matcher.find()) {
-            if (lastEnd == -1) {
-                builder.append(message.subSequence(0, matcher.start()));
-            } else {
-                builder.append(message.subSequence(lastEnd, matcher.start()));
+        for (Pattern regex : Arrays.asList(FOREIGN_AGENT_REGEX, FOREIGN_AGENT_REGEX2)) {
+            Matcher matcher = regex.matcher(message);
+            while (matcher.find()) {
+                if (lastEnd == -1) {
+                    builder.append(message.subSequence(0, matcher.start()));
+                } else {
+                    builder.append(message.subSequence(lastEnd, matcher.start()));
+                }
+                lastEnd = matcher.end();
             }
-            lastEnd = matcher.end();
         }
         if (lastEnd != -1) {
             builder.append(message.subSequence(lastEnd, message.length()));
             if (builder.length() != 0) {
+                int end = builder.length() - 1;
+                while (end > 0 && Character.isWhitespace(builder.charAt(end))) {
+                    end--;
+                }
+                if (end != builder.length() - 1) {
+                    builder.replace(end, builder.length(), "");
+                }
                 return SpannableString.valueOf(builder);
             } else {
                 return leaveEmpty ? "" : message;
             }
         } else {
-            return cutTrimmedForeignAgentPart(message, lowerCased, leaveEmpty);
+            CharSequence fixed = message;
+            fixed = cutTrimmedForeignAgentPart(fixed, leaveEmpty,
+                    "данное сообщение (материал) создано и (или) распространено",
+                    Collections.singletonList(FOREIGN_AGENT_REGEX));
+            fixed = cutTrimmedForeignAgentPart(fixed, leaveEmpty,
+                    "настоящий материал (информация)",
+                    Collections.singletonList(FOREIGN_AGENT_REGEX2));
+            return fixed;
         }
     }
 
-    private static CharSequence cutTrimmedForeignAgentPart(CharSequence message, String lowerCased, boolean leaveEmpty) {
-        int startIndex = lowerCased.indexOf("данное сообщение (материал) создано и (или) распространено");
+    private static CharSequence cutTrimmedForeignAgentPart(CharSequence message, boolean leaveEmpty, String foreignAgentPartStart, List<Pattern> regexes) {
+        String lowerCased = message.toString().toLowerCase(Locale.ROOT);
+        int startIndex = lowerCased.indexOf(foreignAgentPartStart);
         if (startIndex != -1) {
             int endIndex = lowerCased.length();
             while (endIndex > 0 && lowerCased.charAt(endIndex - 1) == '.' || lowerCased.charAt(endIndex - 1) == '…') {
                 endIndex--;
             }
-            String endPart = lowerCased.substring(startIndex, endIndex);
-            String foreignAgentText = "данное сообщение (материал) создано и (или) распространено иностранным средством массовой информации, выполняющим функции иностранного агента, и (или) российским юридическим лицом, выполняющим функции иностранного агента";
-            String foreignAgentText2 = "данное сообщение (материал) создано и (или) распространено средством массовой информации, выполняющим функции иностранного агента, и (или) российским юридическим лицом, выполняющим функции иностранного агента";
-            if (foreignAgentText.startsWith(endPart) || foreignAgentText2.startsWith(endPart)) {
+            if (endIndex - startIndex < 50) {
+                return message;
+            }
+            CharSequence endPart = lowerCased.subSequence(startIndex, endIndex);
+            boolean matches = false;
+            for (Pattern regex : regexes) {
+                Matcher matcher = regex.matcher(endPart);
+                if (!matcher.matches() && matcher.hitEnd()) {
+                    matches = true;
+                    break;
+                }
+            }
+            if (matches) {
                 while (startIndex > 0 && Character.isWhitespace(message.charAt(startIndex - 1))) {
                     startIndex--;
                 }
                 if (startIndex > 0) {
-                    return message.toString().substring(0, startIndex);
+                    return message.subSequence(0, startIndex);
                 } else {
                     return leaveEmpty ? "" : message;
                 }
