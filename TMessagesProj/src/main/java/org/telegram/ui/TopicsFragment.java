@@ -828,9 +828,8 @@ public class TopicsFragment extends BaseFragment implements NotificationCenter.N
                     onTopicSelectedListener.onTopicSelected(topic);
                 }
                 if (dialogsActivity != null) {
-                    dialogsActivity.didSelectResult(-chatId, topic.id, true, false);
+                    dialogsActivity.didSelectResult(-chatId, topic.id, true, false, this);
                 }
-                removeFragmentOnTransitionEnd = true;
                 return;
             }
             if (selectedTopics.size() > 0) {
@@ -1393,6 +1392,11 @@ public class TopicsFragment extends BaseFragment implements NotificationCenter.N
                     parentDialogsActivity.getSearchItem().toggleSearch(true)
             );
         }
+    }
+
+    @Override
+    public boolean allowFinishFragmentInsteadOfRemoveFromStack() {
+        return false;
     }
 
     private void updateTopView() {
@@ -2635,7 +2639,7 @@ public class TopicsFragment extends BaseFragment implements NotificationCenter.N
         } else if (id == NotificationCenter.chatSwithcedToForum) {
 
         } else if (id == NotificationCenter.closeChats) {
-            removeSelfFromStack();
+            removeSelfFromStack(true);
         }
         if (id == NotificationCenter.openedChatChanged) {
             if (getParentActivity() == null || !(inPreviewMode && AndroidUtilities.isTablet())) {
