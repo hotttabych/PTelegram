@@ -1008,7 +1008,7 @@ public class ChatEditActivity extends BaseFragment implements ImageUpdater.Image
         undoView = new UndoView(context);
         sizeNotifierFrameLayout.addView(undoView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.BOTTOM | Gravity.LEFT, 8, 0, 8, 8));
 
-        nameTextView.setText(Emoji.replaceEmoji(UserConfig.getChatTitleOverride(currentAccount, currentChat.id, currentChat.title), nameTextView.getEditText().getPaint().getFontMetricsInt(), AndroidUtilities.dp(16), true));
+        nameTextView.setText(Emoji.replaceEmoji(currentChat.title, nameTextView.getEditText().getPaint().getFontMetricsInt(), AndroidUtilities.dp(16), true));
         nameTextView.setSelection(nameTextView.length());
         if (info != null) {
             descriptionTextView.setText(info.about);
