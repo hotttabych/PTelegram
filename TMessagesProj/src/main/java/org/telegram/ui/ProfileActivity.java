@@ -8000,22 +8000,24 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 otherItem.addSubItem(add_shortcut, R.drawable.msg_home, LocaleController.getString("AddShortcut", R.string.AddShortcut));
             }
             if (SharedConfig.fakePasscodeActivatedIndex == -1) {
-                if (SharedConfig.allowRenameChat) {
-                    otherItem.addSubItem(edit_chat_name, R.drawable.floating_pencil, LocaleController.getString("EditChatName", R.string.EditChatName));
-                }
-                if (chat.photo != null && !(chat.photo instanceof TLRPC.TL_chatPhotoEmpty) && SharedConfig.allowDisableAvatar) {
-                    otherItem.addSubItem(disable_avatar, R.drawable.disable_avatar, LocaleController.getString("DisableAvatar", R.string.DisableAvatar));
-                    otherItem.addSubItem(enable_avatar, R.drawable.msg_photos, LocaleController.getString("EnableAvatar", R.string.EnableAvatar));
-                    UserConfig.ChatInfoOverride item;
-                    boolean avatarEnabled = true;
-                    if (getUserConfig().chatInfoOverrides.containsKey(String.valueOf(chatId))) {
-                        item = getUserConfig().chatInfoOverrides.get(String.valueOf(chatId));
-                        avatarEnabled = item.avatarEnabled;
+                if (topicId == 0) {
+                    if (SharedConfig.allowRenameChat) {
+                        otherItem.addSubItem(edit_chat_name, R.drawable.floating_pencil, LocaleController.getString("EditChatName", R.string.EditChatName));
                     }
-                    if (avatarEnabled) {
-                        otherItem.hideSubItem(enable_avatar);
-                    } else {
-                        otherItem.hideSubItem(disable_avatar);
+                    if (chat.photo != null && !(chat.photo instanceof TLRPC.TL_chatPhotoEmpty) && SharedConfig.allowDisableAvatar) {
+                        otherItem.addSubItem(disable_avatar, R.drawable.disable_avatar, LocaleController.getString("DisableAvatar", R.string.DisableAvatar));
+                        otherItem.addSubItem(enable_avatar, R.drawable.msg_photos, LocaleController.getString("EnableAvatar", R.string.EnableAvatar));
+                        UserConfig.ChatInfoOverride item;
+                        boolean avatarEnabled = true;
+                        if (getUserConfig().chatInfoOverrides.containsKey(String.valueOf(chatId))) {
+                            item = getUserConfig().chatInfoOverrides.get(String.valueOf(chatId));
+                            avatarEnabled = item.avatarEnabled;
+                        }
+                        if (avatarEnabled) {
+                            otherItem.hideSubItem(enable_avatar);
+                        } else {
+                            otherItem.hideSubItem(disable_avatar);
+                        }
                     }
                 }
             }
