@@ -1,5 +1,7 @@
 package org.telegram.messenger.fakepasscode;
 
+import static org.telegram.messenger.MessagesController.DIALOG_FILTER_FLAG_ALL_CHATS;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.android.exoplayer2.util.Log;
 
@@ -244,23 +246,25 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
         }
 
         List<Long> idsToRemove = chatEntriesToRemove.stream().filter(e -> e.isExitFromChat).map(e -> e.chatId).collect(Collectors.toList());
-        folder.alwaysShow.removeAll(idsToRemove);
-        folder.neverShow.removeAll(idsToRemove);
+        boolean changed = folder.alwaysShow.removeAll(idsToRemove);
+        changed |= folder.neverShow.removeAll(idsToRemove);
         for (Long chatId : idsToRemove) {
             if (folder.pinnedDialogs.get(chatId.intValue(), Integer.MIN_VALUE) != Integer.MIN_VALUE) {
+                changed = true;
                 folder.pinnedDialogs.delete(chatId.intValue());
             }
         }
         List<Long> pinnedDialogs = getFolderPinnedDialogs(folder);
 
-        if (folder.alwaysShow.isEmpty() && folder.pinnedDialogs.size() == 0) {
+        if (folder.alwaysShow.isEmpty() && folder.pinnedDialogs.size() == 0
+                && (folder.flags & DIALOG_FILTER_FLAG_ALL_CHATS) != 0) {
             TLRPC.TL_messages_updateDialogFilter req = new TLRPC.TL_messages_updateDialogFilter();
             req.id = folder.id;
             getMessagesController().removeFilter(folder);
             getMessagesStorage().deleteDialogFilter(folder);
             getAccount().getConnectionsManager().sendRequest(req, (response, error) -> { });
             return true;
-        } else {
+        } else if (changed) {
             TLRPC.TL_messages_updateDialogFilter req = new TLRPC.TL_messages_updateDialogFilter();
             req.id = folder.id;
             req.flags |= 1;
@@ -284,6 +288,8 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
             if (folder.alwaysShow.stream().allMatch(idsToHide::contains)) {
                 hiddenFolders.add(folder.id);
             }
+            return false;
+        } else {
             return false;
         }
     }
