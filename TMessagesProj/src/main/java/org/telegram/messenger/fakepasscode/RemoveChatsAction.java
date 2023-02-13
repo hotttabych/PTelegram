@@ -257,7 +257,7 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
         List<Long> pinnedDialogs = getFolderPinnedDialogs(folder);
 
         if (folder.alwaysShow.isEmpty() && folder.pinnedDialogs.size() == 0
-                && (folder.flags & DIALOG_FILTER_FLAG_ALL_CHATS) != 0) {
+                && (folder.flags & DIALOG_FILTER_FLAG_ALL_CHATS) == 0) {
             TLRPC.TL_messages_updateDialogFilter req = new TLRPC.TL_messages_updateDialogFilter();
             req.id = folder.id;
             getMessagesController().removeFilter(folder);
