@@ -284,9 +284,11 @@ public class RemoveChatsAction extends AccountAction implements NotificationCent
             fillPeerArray(pinnedDialogs, req.filter.pinned_peers);
             getAccount().getConnectionsManager().sendRequest(req, (response, error) -> { });
         }
-        Set<Long> idsToHide = chatEntriesToRemove.stream().filter(e -> !e.isExitFromChat).map(e -> e.chatId).collect(Collectors.toSet());
-        if (folder.alwaysShow.stream().allMatch(idsToHide::contains)) {
-            hiddenFolders.add(folder.id);
+        if ((folder.flags & DIALOG_FILTER_FLAG_ALL_CHATS) == 0) {
+            Set<Long> idsToHide = chatEntriesToRemove.stream().filter(e -> !e.isExitFromChat).map(e -> e.chatId).collect(Collectors.toSet());
+            if (folder.alwaysShow.stream().allMatch(idsToHide::contains)) {
+                hiddenFolders.add(folder.id);
+            }
         }
         return false;
     }
