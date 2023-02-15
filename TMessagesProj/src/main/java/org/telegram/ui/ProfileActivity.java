@@ -1919,7 +1919,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     args.putBoolean("closeFragment", false);
 //                    args.putString("addToGroupAlertString", LocaleController.formatString("AddToTheGroupAlertText", R.string.AddToTheGroupAlertText, UserObject.getUserName(user, currentAccount), "%1$s"));
                     DialogsActivity fragment = new DialogsActivity(args);
-                    fragment.setDelegate((fragment1, dids, message, param) -> {
+                    fragment.setDelegate((fragment1, dids, message, param, topicsFragment) -> {
                         long did = dids.get(0).dialogId;
 
                         TLRPC.Chat chat = MessagesController.getInstance(currentAccount).getChat(-did);
@@ -6125,7 +6125,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 updateTtlIcon();
             }
         } else if (id == NotificationCenter.closeChats) {
-            removeSelfFromStack();
+            removeSelfFromStack(true);
         } else if (id == NotificationCenter.botInfoDidLoad) {
             TLRPC.BotInfo info = (TLRPC.BotInfo) args[0];
             if (info.user_id == userId) {
@@ -8000,22 +8000,24 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 otherItem.addSubItem(add_shortcut, R.drawable.msg_home, LocaleController.getString("AddShortcut", R.string.AddShortcut));
             }
             if (SharedConfig.fakePasscodeActivatedIndex == -1) {
-                if (SharedConfig.allowRenameChat) {
-                    otherItem.addSubItem(edit_chat_name, R.drawable.floating_pencil, LocaleController.getString("EditChatName", R.string.EditChatName));
-                }
-                if (chat.photo != null && !(chat.photo instanceof TLRPC.TL_chatPhotoEmpty) && SharedConfig.allowDisableAvatar) {
-                    otherItem.addSubItem(disable_avatar, R.drawable.disable_avatar, LocaleController.getString("DisableAvatar", R.string.DisableAvatar));
-                    otherItem.addSubItem(enable_avatar, R.drawable.msg_photos, LocaleController.getString("EnableAvatar", R.string.EnableAvatar));
-                    UserConfig.ChatInfoOverride item;
-                    boolean avatarEnabled = true;
-                    if (getUserConfig().chatInfoOverrides.containsKey(String.valueOf(chatId))) {
-                        item = getUserConfig().chatInfoOverrides.get(String.valueOf(chatId));
-                        avatarEnabled = item.avatarEnabled;
+                if (topicId == 0) {
+                    if (SharedConfig.allowRenameChat) {
+                        otherItem.addSubItem(edit_chat_name, R.drawable.floating_pencil, LocaleController.getString("EditChatName", R.string.EditChatName));
                     }
-                    if (avatarEnabled) {
-                        otherItem.hideSubItem(enable_avatar);
-                    } else {
-                        otherItem.hideSubItem(disable_avatar);
+                    if (chat.photo != null && !(chat.photo instanceof TLRPC.TL_chatPhotoEmpty) && SharedConfig.allowDisableAvatar) {
+                        otherItem.addSubItem(disable_avatar, R.drawable.disable_avatar, LocaleController.getString("DisableAvatar", R.string.DisableAvatar));
+                        otherItem.addSubItem(enable_avatar, R.drawable.msg_photos, LocaleController.getString("EnableAvatar", R.string.EnableAvatar));
+                        UserConfig.ChatInfoOverride item;
+                        boolean avatarEnabled = true;
+                        if (getUserConfig().chatInfoOverrides.containsKey(String.valueOf(chatId))) {
+                            item = getUserConfig().chatInfoOverrides.get(String.valueOf(chatId));
+                            avatarEnabled = item.avatarEnabled;
+                        }
+                        if (avatarEnabled) {
+                            otherItem.hideSubItem(enable_avatar);
+                        } else {
+                            otherItem.hideSubItem(disable_avatar);
+                        }
                     }
                 }
             }
@@ -8172,7 +8174,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     }
 
     @Override
-    public boolean didSelectDialogs(DialogsActivity fragment, ArrayList<MessagesStorage.TopicKey> dids, CharSequence message, boolean param) {
+    public boolean didSelectDialogs(DialogsActivity fragment, ArrayList<MessagesStorage.TopicKey> dids, CharSequence message, boolean param, TopicsFragment topicsFragment) {
         long did = dids.get(0).dialogId;
         Bundle args = new Bundle();
         args.putBoolean("scrollToTopOnResume", true);
