@@ -5308,6 +5308,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                         int[] position = new int[2];
                         passcodeItem.getLocationInWindow(position);
                         ((LaunchActivity) getParentActivity()).showPasscodeActivity(false, true, position[0] + passcodeItem.getMeasuredWidth() / 2, position[1] + passcodeItem.getMeasuredHeight() / 2, () -> passcodeItem.setAlpha(1.0f), () -> passcodeItem.setAlpha(0.0f));
+                        getNotificationsController().showNotifications();
                         if (SharedConfig.appLocked && SharedConfig.fakePasscodeActivatedIndex == -1 && SharedConfig.clearCacheOnLock) {
                             org.telegram.messenger.fakepasscode.Utils.clearCache(null);
                         }

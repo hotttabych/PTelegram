@@ -697,21 +697,23 @@ public class FilterCreateActivity extends BaseFragment {
 
     private boolean hasChanges() {
         hasUserChanged = false;
-        if (filter.alwaysShow.size() != newAlwaysShow.size()) {
+        ArrayList<Long> filterAlwaysShow = new ArrayList<>(FakePasscode.filterDialogIds(filter.alwaysShow, currentAccount));
+        ArrayList<Long> filterNeverShow = new ArrayList<>(FakePasscode.filterDialogIds(filter.neverShow, currentAccount));
+        if (filterAlwaysShow.size() != newAlwaysShow.size()) {
             hasUserChanged = true;
         }
-        if (filter.neverShow.size() != newNeverShow.size()) {
+        if (filterNeverShow.size() != newNeverShow.size()) {
             hasUserChanged = true;
         }
         if (!hasUserChanged) {
-            Collections.sort(filter.alwaysShow);
+            Collections.sort(filterAlwaysShow);
             Collections.sort(newAlwaysShow);
-            if (!filter.alwaysShow.equals(newAlwaysShow)) {
+            if (!filterAlwaysShow.equals(newAlwaysShow)) {
                 hasUserChanged = true;
             }
-            Collections.sort(filter.neverShow);
+            Collections.sort(filterNeverShow);
             Collections.sort(newNeverShow);
-            if (!filter.neverShow.equals(newNeverShow)) {
+            if (!filterNeverShow.equals(newNeverShow)) {
                 hasUserChanged = true;
             }
         }
