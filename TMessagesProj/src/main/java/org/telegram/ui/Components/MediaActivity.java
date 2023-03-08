@@ -222,9 +222,7 @@ public class MediaActivity extends BaseFragment implements SharedMediaLayout.Sha
 
             @Override
             protected void onSearchStateChanged(boolean expanded) {
-                if (SharedConfig.smoothKeyboard) {
-                    AndroidUtilities.removeAdjustResize(getParentActivity(), classGuid);
-                }
+                AndroidUtilities.removeAdjustResize(getParentActivity(), classGuid);
                 AndroidUtilities.updateViewVisibilityAnimated(avatarContainer, !expanded, 0.95f, true);
             }
 
