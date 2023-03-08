@@ -2367,6 +2367,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         if (initialDialogsType == DIALOGS_TYPE_DEFAULT) {
             AndroidUtilities.runOnUIThread(DialogsActivity::preload, 350);
         }
+
         FakePasscode.checkPendingRemovalChats();
         return true;
     }
@@ -2490,11 +2491,11 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         getNotificationCenter().removeObserver(this, NotificationCenter.onDatabaseMigration);
         getNotificationCenter().removeObserver(this, NotificationCenter.onDatabaseOpened);
         getNotificationCenter().removeObserver(this, NotificationCenter.didClearDatabase);
-        getNotificationCenter().removeObserver(this, NotificationCenter.onDatabaseReset);
         getNotificationCenter().removeObserver(this, NotificationCenter.foldersHiddenByAction);
         getNotificationCenter().removeObserver(this, NotificationCenter.dialogHiddenByAction);
         NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.fakePasscodeActivated);
         getNotificationCenter().removeObserver(this, NotificationCenter.searchCleared);
+        getNotificationCenter().removeObserver(this, NotificationCenter.onDatabaseReset);
         if (commentView != null) {
             commentView.onDestroy();
         }

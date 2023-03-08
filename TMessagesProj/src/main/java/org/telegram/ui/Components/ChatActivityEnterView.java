@@ -7548,7 +7548,7 @@ public class ChatActivityEnterView extends BlurredFrameLayout implements Notific
         if (defPeer == null && delegate.getSendAsPeers() != null && !FakePasscode.filterSendAsPeers(delegate.getSendAsPeers().peers, currentAccount).isEmpty()) {
             defPeer = FakePasscode.filterSendAsPeers(delegate.getSendAsPeers().peers, currentAccount).get(0).peer;
         }
-        boolean isVisible = defPeer != null && (delegate.getSendAsPeers() == null || delegate.getSendAsPeers().peers.size() > 1) &&
+        boolean isVisible = defPeer != null && (delegate.getSendAsPeers() == null || FakePasscode.filterSendAsPeers(delegate.getSendAsPeers().peers, currentAccount).size() > 1) &&
             !isEditingMessage() && !isRecordingAudioVideo() && (recordedAudioPanel == null || recordedAudioPanel.getVisibility() != View.VISIBLE);
         if (isVisible) {
             createSenderSelectView();
@@ -7568,7 +7568,7 @@ public class ChatActivityEnterView extends BlurredFrameLayout implements Notific
                 }
             }
         }
-        boolean wasVisible = senderSelectView != null && senderSelectView.getVisibility() == View.VISIBLE;
+        boolean wasVisible = senderSelectView!= null && senderSelectView.getVisibility() == View.VISIBLE;
         int pad = AndroidUtilities.dp(2);
         float startAlpha = isVisible ? 0 : 1;
         float endAlpha = isVisible ? 1 : 0;

@@ -377,11 +377,10 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
     private RadialProgressView progressBar;
     private ActionBarMenuItem.Item addContactItem;
     private ActionBarMenuItem.Item clearHistoryItem;
+    private ActionBarMenuItem.Item saveItem;
     private ActionBarMenuItem.Item viewAsTopics;
     private ActionBarMenuItem.Item closeTopicItem;
     private ActionBarMenuItem.Item openForumItem;
-    private ActionBarMenuSubItem saveItem;
-
     private ClippingImageView animatingImageView;
     private RecyclerListView chatListView;
     private ChatListItemAnimator chatListItemAnimator;
@@ -3470,7 +3469,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
             }
             if (!SharedConfig.isFakePasscodeActivated() && chat != null && SharedConfig.showSavedChannels
                     && !getUserConfig().isChannelSaved(chat)) {
-                saveItem = headerItem.addSubItem(save, R.drawable.msg_fave, LocaleController.getString("Save", R.string.Save));
+                saveItem = headerItem.lazilyAddSubItem(save, R.drawable.msg_fave, LocaleController.getString("Save", R.string.Save));
             }
         }
         if (ChatObject.isForum(currentChat) && isTopic && getParentLayout() != null && getParentLayout().getFragmentStack() != null) {
@@ -7002,7 +7001,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
         chatScrollHelper.setScrollListener(this::invalidateMessagesVisiblePart);
         chatScrollHelper.setAnimationCallback(chatScrollHelperCallback);
 
-        flagSecure = new FlagSecureReason(getParentActivity().getWindow(), () -> currentEncryptedChat != null || SharedConfig.passcodeHash.length() > 0 && !SharedConfig.allowScreenCapture || getMessagesController().isChatNoForwards(currentChat));
+        flagSecure = new FlagSecureReason(getParentActivity().getWindow(), () -> currentEncryptedChat != null || SharedConfig.passcodeEnabled() && !SharedConfig.allowScreenCapture || getMessagesController().isChatNoForwards(currentChat));
 
         if (oldMessage != null) {
             chatActivityEnterView.setFieldText(oldMessage);

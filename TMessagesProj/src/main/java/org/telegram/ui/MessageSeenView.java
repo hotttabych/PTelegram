@@ -393,6 +393,7 @@ public class MessageSeenView extends FrameLayout {
         public void setUser(TLRPC.User user, int date, Integer accountNum) {
             this.user = user;
             updateStatus(false);
+
             if (user != null) {
                 avatarDrawable.setInfo(user, accountNum);
                 ImageLocation imageLocation = ImageLocation.getForUser(user, ImageLocation.TYPE_SMALL, accountNum);

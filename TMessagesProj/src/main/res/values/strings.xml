@@ -6349,6 +6349,7 @@
     <string name="ChannelInviteViaLinkRestricted">You can\'t create a link</string>
     <string name="ChannelInviteViaLinkRestricted2">This user can\'t be invited</string>
     <string name="ChannelInviteViaLinkRestricted3">This users can\'t be invited</string>
+
     <!--partisan telegram-->
     <string name="FakePasscode">Fake Passcode</string>
     <string name="ChangeFakePasscode">Change Fake Passcode</string>

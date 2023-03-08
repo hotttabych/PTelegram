@@ -3610,6 +3610,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                                 });
                                 builder2.setNegativeButton(LocaleController.getString("Cancel", R.string.Cancel), null);
                                 builder2.show();
+
                             } else if (which == items.length - 1) {
                                 showTesterPasswordDialog();
                             }
@@ -9732,7 +9733,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         position == questionRow || position == devicesRow || position == filtersRow || position == stickersRow ||
                         position == faqRow || position == policyRow || position == sendLogsRow || position == sendLastLogsRow ||
                         position == clearLogsRow || position == sendLogcatRow || position == switchBackendRow || position == testerSettingsRow || position == setAvatarRow
-                        || position == chatIdRow || position == addToGroupButtonRow || position == premiumRow || position == liteModeRow;
+                        || position == chatIdRow ||
+                        position == addToGroupButtonRow || position == premiumRow || position == liteModeRow;
             }
             if (holder.itemView instanceof UserCell) {
                 UserCell userCell = (UserCell) holder.itemView;
