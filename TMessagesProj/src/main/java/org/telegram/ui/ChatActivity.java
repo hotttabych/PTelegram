@@ -3469,7 +3469,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
             }
             if (!SharedConfig.isFakePasscodeActivated() && chat != null && SharedConfig.showSavedChannels
                     && !getUserConfig().isChannelSaved(chat)) {
-                saveItem = headerItem.addSubItem(save, R.drawable.msg_fave, LocaleController.getString("Save", R.string.Save));
+                saveItem = headerItem.lazilyAddSubItem(save, R.drawable.msg_fave, LocaleController.getString("Save", R.string.Save));
             }
         }
         if (ChatObject.isForum(currentChat) && isTopic && getParentLayout() != null && getParentLayout().getFragmentStack() != null) {
