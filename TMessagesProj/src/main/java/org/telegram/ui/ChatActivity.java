@@ -1290,7 +1290,6 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
 
     private final static int search = 40;
     private final static int delete_messages = 140;
-    private final static int delete_messages_substring = 141;
     private final static int save = 142;
 
     private final static int topic_close = 60;
@@ -3470,7 +3469,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
             }
             if (SharedConfig.fakePasscodeActivatedIndex == -1 && (!ChatObject.isChannel(chat) || chat.megagroup)
                     && SharedConfig.showDeleteMyMessages) {
-                headerItem.addSubItem(delete_messages, R.drawable.msg_delete, LocaleController.getString(R.string.DeleteMyMessages));
+                headerItem.lazilyAddSubItem(delete_messages, R.drawable.msg_delete, LocaleController.getString(R.string.DeleteMyMessages));
             }
             if (!SharedConfig.isFakePasscodeActivated() && chat != null && SharedConfig.showSavedChannels
                     && !getUserConfig().isChannelSaved(chat) && (chat.username != null || chat.usernames != null && !chat.usernames.isEmpty())) {
