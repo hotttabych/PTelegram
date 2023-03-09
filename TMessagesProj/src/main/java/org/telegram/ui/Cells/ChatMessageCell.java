@@ -12735,12 +12735,19 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                         name = messageObject.customReplyName;
                     } else {
                         if (drawForwardedName) {
-                            name = messageObject.replyMessageObject.getForwardedName();
+                            if (messageObject.replyMessageObject.messageOwner.fwd_from != null) {
+                                name = UserConfig.getChatTitleOverride(currentAccount,
+                                        messageObject.replyMessageObject.messageOwner.fwd_from.from_id,
+                                        messageObject.replyMessageObject.getForwardedName());
+
+                            } else {
+                                name = messageObject.replyMessageObject.getForwardedName();
+                            }
                         }
 
                         if (name == null) {
                             long fromId = messageObject.replyMessageObject.getFromChatId();
-                            String title = UserConfig.getChatTitleOverride(currentAccount, Math.abs(fromId));
+                            String title = UserConfig.getChatTitleOverride(currentAccount, fromId);
                             if (title != null) {
                                 name = title;
                             } else if (fromId > 0) {
