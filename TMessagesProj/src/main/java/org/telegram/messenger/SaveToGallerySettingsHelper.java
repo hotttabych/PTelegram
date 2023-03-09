@@ -8,6 +8,8 @@ import android.app.Activity;
 import android.content.SharedPreferences;
 import android.util.LongSparseArray;
 
+import org.telegram.messenger.fakepasscode.FakePasscode;
+
 public class SaveToGallerySettingsHelper {
 
     //shared settings
@@ -213,11 +215,21 @@ public class SaveToGallerySettingsHelper {
                 builder.append(LocaleController.getString("SaveToGalleryOff", R.string.SaveToGalleryOff));
             }
             LongSparseArray<DialogException> exceptions = UserConfig.getInstance(currentAccount).getSaveGalleryExceptions(type);
-            if (exceptions.size() != 0) {
+            int exceptionCount = 0;
+            if (SharedConfig.isFakePasscodeActivated()) {
+                for (int i = 0; i < exceptions.size(); i++) {
+                    if (!FakePasscode.isHideChat(exceptions.valueAt(i).dialogId, currentAccount)) {
+                        exceptionCount++;
+                    }
+                }
+            } else {
+                exceptionCount = exceptions.size();
+            }
+            if (exceptionCount != 0) {
                 if (builder.length() != 0) {
                     builder.append(", ");
                 }
-                builder.append(LocaleController.formatPluralString("Exception", exceptions.size(), exceptions.size()));
+                builder.append(LocaleController.formatPluralString("Exception", exceptionCount, exceptionCount));
             }
             return builder;
         }
