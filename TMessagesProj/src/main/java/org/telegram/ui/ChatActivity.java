@@ -3284,7 +3284,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                 userFull = getMessagesController().getUserFull(currentUser.id);
                 if (userFull != null && userFull.phone_calls_available) {
                     showAudioCallAsIcon = !inPreviewMode;
-                    audioCallIconItem.setVisibility(View.VISIBLE);
+                    audioCallIconItem.setVisibility((SharedConfig.showCallButton || SharedConfig.isFakePasscodeActivated()) ? View.VISIBLE : View.GONE);
                 } else {
                     showAudioCallAsIcon = false;
                     audioCallIconItem.setVisibility(View.GONE);
@@ -18203,7 +18203,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                                     item.setAlpha(0f);
                                     item.animate().alpha(1f).setDuration(160).setInterpolator(CubicBezierInterpolator.EASE_IN).setStartDelay(50).start();
                                 }
-                                audioCallIconItem.setVisibility(View.VISIBLE);
+                                audioCallIconItem.setVisibility((SharedConfig.showCallButton || SharedConfig.isFakePasscodeActivated()) ? View.VISIBLE : View.GONE);
                             }
                         } else {
                             headerItem.showSubItem(call, true);
@@ -22477,7 +22477,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
             TLRPC.UserFull userFull = getMessagesController().getUserFull(currentUser.id);
             if (userFull != null && userFull.phone_calls_available) {
                 showAudioCallAsIcon = !inPreviewMode;
-                audioCallIconItem.setVisibility(View.VISIBLE);
+                audioCallIconItem.setVisibility((SharedConfig.showCallButton || SharedConfig.isFakePasscodeActivated()) ? View.VISIBLE : View.GONE);
             } else {
                 showAudioCallAsIcon = false;
                 audioCallIconItem.setVisibility(View.GONE);
@@ -28882,7 +28882,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                     headerItem.setVisibility(View.VISIBLE);
                 }
                 if (audioCallIconItem != null && showAudioCallAsIcon) {
-                    audioCallIconItem.setVisibility(View.VISIBLE);
+                    audioCallIconItem.setVisibility((SharedConfig.showCallButton || SharedConfig.isFakePasscodeActivated()) ? View.VISIBLE : View.GONE);
                 }
                 if (searchIconItem != null && showSearchAsIcon) {
                     searchIconItem.setVisibility(View.VISIBLE);
