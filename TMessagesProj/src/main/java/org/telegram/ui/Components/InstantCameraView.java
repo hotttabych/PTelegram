@@ -36,6 +36,7 @@ import android.hardware.Camera;
 import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioRecord;
+import android.media.AudioTimestamp;
 import android.media.MediaCodec;
 import android.media.MediaCodecInfo;
 import android.media.MediaFormat;
@@ -50,6 +51,7 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.HapticFeedbackConstants;
 import android.view.MotionEvent;
@@ -63,6 +65,7 @@ import android.view.animation.DecelerateInterpolator;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 
+import androidx.annotation.RequiresApi;
 import androidx.core.content.ContextCompat;
 import androidx.core.graphics.ColorUtils;
 
@@ -70,6 +73,7 @@ import com.google.android.exoplayer2.ExoPlayer;
 
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ApplicationLoader;
+import org.telegram.messenger.AutoDeleteMediaTask;
 import org.telegram.messenger.BuildVars;
 import org.telegram.messenger.DispatchQueue;
 import org.telegram.messenger.FileLoader;
@@ -590,11 +594,21 @@ public class InstantCameraView extends FrameLayout implements NotificationCenter
         }
         MediaController.getInstance().pauseMessage(MediaController.getInstance().getPlayingMessageObject());
 
-        cameraFile = new File(FileLoader.getDirectory(FileLoader.MEDIA_DIR_CACHE), SharedConfig.getLastLocalId() + ".mp4");
+        cameraFile = new File(FileLoader.getDirectory(FileLoader.MEDIA_DIR_DOCUMENT), System.currentTimeMillis() + "_" + SharedConfig.getLastLocalId() + ".mp4") {
+            @Override
+            public boolean delete() {
+                if (BuildVars.LOGS_ENABLED) {
+                    FileLog.e("delete camera file");
+                }
+                return super.delete();
+            }
+        };
+
         SharedConfig.saveConfig();
+        AutoDeleteMediaTask.lockFile(cameraFile);
 
         if (BuildVars.LOGS_ENABLED) {
-            FileLog.d("show round camera");
+            FileLog.d("show round camera " + cameraFile.getAbsolutePath());
         }
 
         textureView = new TextureView(getContext());
@@ -752,6 +766,9 @@ public class InstantCameraView extends FrameLayout implements NotificationCenter
             videoPlayer = null;
         }
         if (state == 4) {
+            if (BuildVars.DEBUG_VERSION && !cameraFile.exists()) {
+                FileLog.e(new RuntimeException("file not found :( round video"));
+            }
             if (videoEditedInfo.needConvert()) {
                 file = null;
                 encryptedFile = null;
@@ -849,7 +866,11 @@ public class InstantCameraView extends FrameLayout implements NotificationCenter
             cameraThread = null;
         }
         if (cameraFile != null) {
+            if (BuildVars.LOGS_ENABLED) {
+                FileLog.e("delete camera file by cancel");
+            }
             cameraFile.delete();
+            AutoDeleteMediaTask.unlockFile(cameraFile);
             cameraFile = null;
         }
         MediaController.getInstance().requestAudioFocus(false);
@@ -984,7 +1005,8 @@ public class InstantCameraView extends FrameLayout implements NotificationCenter
                 sortedSizes.add(previewSizes.get(i));
             }
         }
-        if (sortedSizes.isEmpty() || SharedConfig.getDevicePerformanceClass() == SharedConfig.PERFORMANCE_CLASS_LOW || SharedConfig.getDevicePerformanceClass() == SharedConfig.PERFORMANCE_CLASS_AVERAGE) {
+        int devicePerformanceClass = SharedConfig.getLegacyDevicePerformanceClass();
+        if (sortedSizes.isEmpty() || devicePerformanceClass == SharedConfig.PERFORMANCE_CLASS_LOW || devicePerformanceClass == SharedConfig.PERFORMANCE_CLASS_AVERAGE) {
             ArrayList<Size> sizes = sortedSizes;
             if (!sortedSizes.isEmpty()) {
                 sizes = sortedSizes;
@@ -1056,7 +1078,11 @@ public class InstantCameraView extends FrameLayout implements NotificationCenter
                         }
                     }
                 }
-            }, () -> cameraThread.setCurrentSession(cameraSession));
+            }, () -> {
+                if (cameraThread != null) {
+                    cameraThread.setCurrentSession(cameraSession);
+                }
+            });
         });
     }
 
@@ -1714,11 +1740,15 @@ public class InstantCameraView extends FrameLayout implements NotificationCenter
 
         private Runnable recorderRunnable = new Runnable() {
 
+            @RequiresApi(api = Build.VERSION_CODES.N)
             @Override
             public void run() {
                 long audioPresentationTimeUs = -1;
                 int readResult;
                 boolean done = false;
+                AudioTimestamp audioTimestamp = new AudioTimestamp();
+                boolean shouldUseTimestamp = Build.VERSION.SDK_INT >= Build.VERSION_CODES.N;
+
                 while (!done) {
                     if (!running && audioRecorder.getRecordingState() != AudioRecord.RECORDSTATE_STOPPED) {
                         try {
@@ -1739,14 +1769,13 @@ public class InstantCameraView extends FrameLayout implements NotificationCenter
                     buffer.lastWroteBuffer = 0;
                     buffer.results = AudioBufferInfo.MAX_SAMPLES;
                     for (int a = 0; a < AudioBufferInfo.MAX_SAMPLES; a++) {
-                        if (audioPresentationTimeUs == -1) {
+                        if (audioPresentationTimeUs == -1 && !shouldUseTimestamp) {
                             audioPresentationTimeUs = System.nanoTime() / 1000;
                         }
 
                         ByteBuffer byteBuffer = buffer.buffer[a];
                         byteBuffer.rewind();
                         readResult = audioRecorder.read(byteBuffer, 2048);
-
                         if (readResult > 0 && a % 2 == 0) {
                             byteBuffer.limit(readResult);
                             double s = 0;
@@ -1765,10 +1794,17 @@ public class InstantCameraView extends FrameLayout implements NotificationCenter
                             }
                             break;
                         }
-                        buffer.offset[a] = audioPresentationTimeUs;
+                        if (shouldUseTimestamp) {
+                            audioRecorder.getTimestamp(audioTimestamp, AudioTimestamp.TIMEBASE_MONOTONIC);
+                            buffer.offset[a] = audioTimestamp.nanoTime / 1000;
+                        } else {
+                            buffer.offset[a] = audioPresentationTimeUs;
+                        }
                         buffer.read[a] = readResult;
                         int bufferDurationUs = 1000000 * readResult / audioSampleRate / 2;
-                        audioPresentationTimeUs += bufferDurationUs;
+                        if (!shouldUseTimestamp) {
+                            audioPresentationTimeUs += bufferDurationUs;
+                        }
                     }
                     if (buffer.results >= 0 || buffer.last) {
                         if (!running && buffer.results < AudioBufferInfo.MAX_SAMPLES) {
@@ -2656,7 +2692,8 @@ public class InstantCameraView extends FrameLayout implements NotificationCenter
     }
 
     private String createFragmentShader(Size previewSize) {
-        if (SharedConfig.getDevicePerformanceClass() == SharedConfig.PERFORMANCE_CLASS_LOW || SharedConfig.getDevicePerformanceClass() == SharedConfig.PERFORMANCE_CLASS_AVERAGE || Math.max(previewSize.getHeight(), previewSize.getWidth()) * 0.7f < MessagesController.getInstance(currentAccount).roundVideoSize) {
+        int devicePerformanceClass = SharedConfig.getLegacyDevicePerformanceClass();
+        if (devicePerformanceClass == SharedConfig.PERFORMANCE_CLASS_LOW || devicePerformanceClass == SharedConfig.PERFORMANCE_CLASS_AVERAGE || Math.max(previewSize.getHeight(), previewSize.getWidth()) * 0.7f < MessagesController.getInstance(currentAccount).roundVideoSize) {
             return "#extension GL_OES_EGL_image_external : require\n" +
                     "precision highp float;\n" +
                     "varying vec2 vTextureCoord;\n" +

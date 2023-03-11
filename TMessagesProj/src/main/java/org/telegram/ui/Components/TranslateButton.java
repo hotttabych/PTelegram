@@ -24,6 +24,7 @@ import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.R;
 import org.telegram.messenger.TranslateController;
+import org.telegram.messenger.UserConfig;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.ActionBarMenuSubItem;
 import org.telegram.ui.ActionBar.ActionBarPopupWindow;
@@ -234,12 +235,14 @@ public class TranslateButton extends FrameLayout {
                 RestrictedLanguagesSelectActivity.toggleLanguage(detectedLanguage, true);
                 translateController.checkRestrictedLanguagesUpdate();
                 translateController.setHideTranslateDialog(dialogId, true);
-                String bulletinText;
+                String bulletinTextString;
                 if (accusative[0]) {
-                    bulletinText = LocaleController.formatString("AddedToDoNotTranslate", R.string.AddedToDoNotTranslate, TranslateAlert2.capitalFirst(detectedLanguageNameAccusative));
+                    bulletinTextString = LocaleController.formatString("AddedToDoNotTranslate", R.string.AddedToDoNotTranslate, detectedLanguageNameAccusative);
                 } else {
-                    bulletinText = LocaleController.formatString("AddedToDoNotTranslateOther", R.string.AddedToDoNotTranslateOther, TranslateAlert2.capitalFirst(detectedLanguageNameAccusative));
+                    bulletinTextString = LocaleController.formatString("AddedToDoNotTranslateOther", R.string.AddedToDoNotTranslateOther, detectedLanguageNameAccusative);
                 }
+                CharSequence bulletinText = AndroidUtilities.replaceTags(bulletinTextString);
+                bulletinText = TranslateAlert2.capitalFirst(bulletinText);
                 BulletinFactory.of(fragment).createSimpleBulletin(
                     R.raw.msg_translate,
                     bulletinText,
@@ -300,5 +303,7 @@ public class TranslateButton extends FrameLayout {
             }
             textView.setText(TextUtils.concat(translateIcon, " ", text));
         }
+
+        menuView.setVisibility(UserConfig.getInstance(currentAccount).isPremium() ? VISIBLE : GONE);
     }
 }

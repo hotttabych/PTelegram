@@ -30,6 +30,7 @@ import android.provider.MediaStore;
 import android.text.TextUtils;
 import android.util.SparseArray;
 
+import androidx.annotation.RequiresApi;
 import androidx.exifinterface.media.ExifInterface;
 
 import org.json.JSONArray;
@@ -1042,7 +1043,7 @@ public class ImageLoader {
                 if ((isAnimatedAvatar(cacheImage.filter) || AUTOPLAY_FILTER.equals(cacheImage.filter)) && !(cacheImage.imageLocation.document instanceof TLRPC.TL_documentEncrypted) && !precache) {
                     TLRPC.Document document = cacheImage.imageLocation.document instanceof TLRPC.Document ? cacheImage.imageLocation.document : null;
                     long size = document != null ? cacheImage.size : cacheImage.imageLocation.currentSize;
-                    fileDrawable = new AnimatedFileDrawable(cacheImage.finalFilePath, fistFrame, notCreateStream ? 0 : size, notCreateStream ? null : document, document == null && !notCreateStream ? cacheImage.imageLocation : null, cacheImage.parentObject, seekTo, cacheImage.currentAccount, false, cacheOptions);
+                    fileDrawable = new AnimatedFileDrawable(cacheImage.finalFilePath, fistFrame, notCreateStream ? 0 : size, cacheImage.priority, notCreateStream ? null : document, document == null && !notCreateStream ? cacheImage.imageLocation : null, cacheImage.parentObject, seekTo, cacheImage.currentAccount, false, cacheOptions);
                     fileDrawable.setIsWebmSticker(MessageObject.isWebM(document) || MessageObject.isVideoSticker(document) || isAnimatedAvatar(cacheImage.filter));
                 } else {
 
@@ -1058,7 +1059,7 @@ public class ImageLoader {
                         }
                     }
                     boolean createDecoder = fistFrame || (cacheImage.filter != null && ("d".equals(cacheImage.filter) || cacheImage.filter.contains("_d")));
-                    fileDrawable = new AnimatedFileDrawable(cacheImage.finalFilePath, createDecoder, 0, notCreateStream ? null : cacheImage.imageLocation.document, null, null, seekTo, cacheImage.currentAccount, false, w, h, cacheOptions);
+                    fileDrawable = new AnimatedFileDrawable(cacheImage.finalFilePath, createDecoder, 0, cacheImage.priority, notCreateStream ? null : cacheImage.imageLocation.document, null, null, seekTo, cacheImage.currentAccount, false, w, h, cacheOptions);
                     fileDrawable.setIsWebmSticker(MessageObject.isWebM(cacheImage.imageLocation.document) || MessageObject.isVideoSticker(cacheImage.imageLocation.document) || isAnimatedAvatar(cacheImage.filter));
                 }
                 if (fistFrame) {
@@ -1409,7 +1410,7 @@ public class ImageLoader {
                         if (mediaId != null && mediaThumbPath == null) {
                             if (mediaIsVideo) {
                                 if (mediaId == 0) {
-                                    AnimatedFileDrawable fileDrawable = new AnimatedFileDrawable(cacheFileFinal, true, 0, null, null, null, 0, 0, true, null);
+                                    AnimatedFileDrawable fileDrawable = new AnimatedFileDrawable(cacheFileFinal, true, 0, 0, null, null, null, 0, 0, true, null);
                                     image = fileDrawable.getFrameAtTime(0, true);
                                     fileDrawable.recycle();
                                 } else {
@@ -1420,7 +1421,7 @@ public class ImageLoader {
                             }
                         }
                         if (image == null) {
-                            if (useNativeWebpLoader) {
+                            if (useNativeWebpLoader && secureDocumentKey == null) {
                                 RandomAccessFile file = new RandomAccessFile(cacheFileFinal, "r");
                                 ByteBuffer buffer = file.getChannel().map(FileChannel.MapMode.READ_ONLY, 0, cacheFileFinal.length());
 
@@ -1432,8 +1433,11 @@ public class ImageLoader {
                                 Utilities.loadWebpImage(image, buffer, buffer.limit(), null, !opts.inPurgeable);
                                 file.close();
                             } else {
+                                String DEBUG_TAG = "secured_document_image";
                                 try {
-
+                                    if (secureDocumentKey != null || cacheImage.encryptionKeyPath != null) {
+                                        FileLog.d( DEBUG_TAG + " try get image from secured document " + secureDocumentKey + " encryption path " + cacheImage.encryptionKeyPath);
+                                    }
                                     RandomAccessFile f = new RandomAccessFile(cacheFileFinal, "r");
                                     int len = (int) f.length();
                                     int offset = 0;
@@ -1457,16 +1461,27 @@ public class ImageLoader {
                                     } else if (inEncryptedFile) {
                                         EncryptedFileInputStream.decryptBytesWithKeyFile(data, 0, len, cacheImage.encryptionKeyPath);
                                     }
+                                    if (secureDocumentKey != null || cacheImage.encryptionKeyPath != null) {
+                                        FileLog.d(DEBUG_TAG + " check error " + error);
+                                    }
                                     if (!error) {
                                         image = BitmapFactory.decodeByteArray(data, offset, len, opts);
+                                        if (secureDocumentKey != null || cacheImage.encryptionKeyPath != null) {
+                                            FileLog.d( DEBUG_TAG + " image " + image);
+                                        }
                                     }
                                 } catch (Throwable e) {
-
+                                    FileLog.e(e);
                                 }
 
                                 if (image == null) {
                                     FileInputStream is;
-                                    if (inEncryptedFile) {
+                                    if (secureDocumentKey != null || cacheImage.encryptionKeyPath != null) {
+                                        FileLog.d(DEBUG_TAG + " try get image from stream ");
+                                    }
+                                    if (secureDocumentKey != null) {
+                                        is = new EncryptedFileInputStream(cacheFileFinal, secureDocumentKey);
+                                    } else if (inEncryptedFile) {
                                         is = new EncryptedFileInputStream(cacheFileFinal, cacheImage.encryptionKeyPath);
                                     } else {
                                         is = new FileInputStream(cacheFileFinal);
@@ -1489,10 +1504,23 @@ public class ImageLoader {
                                         } catch (Throwable ignore) {
 
                                         }
-                                        is.getChannel().position(0);
+                                        if (secureDocumentKey != null || cacheImage.encryptionKeyPath != null) {
+                                            is.close();
+                                            if (secureDocumentKey != null) {
+                                                is = new EncryptedFileInputStream(cacheFileFinal, secureDocumentKey);
+                                            } else if (inEncryptedFile) {
+                                                is = new EncryptedFileInputStream(cacheFileFinal, cacheImage.encryptionKeyPath);
+                                            }
+                                        } else {
+                                            is.getChannel().position(0);
+                                        }
                                     }
                                     image = BitmapFactory.decodeStream(is, null, opts);
                                     is.close();
+
+                                    if (secureDocumentKey != null || cacheImage.encryptionKeyPath != null) {
+                                        FileLog.d(DEBUG_TAG + " image2 " + image);
+                                    }
                                 }
                             }
                         }
@@ -2148,9 +2176,18 @@ public class ImageLoader {
     }
 
     public void checkMediaPaths() {
+        checkMediaPaths(null);
+    }
+
+    public void checkMediaPaths(Runnable after) {
         cacheOutQueue.postRunnable(() -> {
             final SparseArray<File> paths = createMediaPaths();
-            AndroidUtilities.runOnUIThread(() -> FileLoader.setMediaDirs(paths));
+            AndroidUtilities.runOnUIThread(() -> {
+                FileLoader.setMediaDirs(paths);
+                if (after != null) {
+                    after.run();
+                }
+            });
         });
     }
 
@@ -2211,7 +2248,7 @@ public class ImageLoader {
         try {
             if (Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState())) {
                 File path = Environment.getExternalStorageDirectory();
-                if (Build.VERSION.SDK_INT >= 19 && !TextUtils.isEmpty(SharedConfig.storageCacheDir)) {
+                if (!TextUtils.isEmpty(SharedConfig.storageCacheDir)) {
                     ArrayList<File> dirs = AndroidUtilities.getRootDirs();
                     if (dirs != null) {
                         for (int a = 0, N = dirs.size(); a < N; a++) {
@@ -2229,7 +2266,7 @@ public class ImageLoader {
                     File newPath;
                     try {
                         if (ApplicationLoader.applicationContext.getExternalMediaDirs().length > 0) {
-                            publicMediaDir = ApplicationLoader.applicationContext.getExternalMediaDirs()[0];
+                            publicMediaDir = getPublicStorageDir();
                             publicMediaDir = new File(publicMediaDir, "Telegram");
                             publicMediaDir.mkdirs();
                         }
@@ -2239,6 +2276,9 @@ public class ImageLoader {
                     newPath = ApplicationLoader.applicationContext.getExternalFilesDir(null);
                     telegramPath = new File(newPath, "Telegram");
                 } else {
+                    if (!(path.exists() ? path.isDirectory() : path.mkdirs()) || !path.canWrite()) {
+                        path = ApplicationLoader.applicationContext.getExternalFilesDir(null);
+                    }
                     telegramPath = new File(path, "Telegram");
                 }
                 telegramPath.mkdirs();
@@ -2247,7 +2287,7 @@ public class ImageLoader {
                     ArrayList<File> dirs = AndroidUtilities.getDataDirs();
                     for (int a = 0, N = dirs.size(); a < N; a++) {
                         File dir = dirs.get(a);
-                        if (dir.getAbsolutePath().startsWith(SharedConfig.storageCacheDir)) {
+                        if (dir != null && !TextUtils.isEmpty(SharedConfig.storageCacheDir) && dir.getAbsolutePath().startsWith(SharedConfig.storageCacheDir)) {
                             path = dir;
                             telegramPath = new File(path, "Telegram");
                             telegramPath.mkdirs();
@@ -2363,6 +2403,20 @@ public class ImageLoader {
         }
 
         return mediaDirs;
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+    private File getPublicStorageDir() {
+        File publicMediaDir = ApplicationLoader.applicationContext.getExternalMediaDirs()[0];
+        if (!TextUtils.isEmpty(SharedConfig.storageCacheDir)) {
+            for (int i = 0; i < ApplicationLoader.applicationContext.getExternalMediaDirs().length; i++) {
+                File f = ApplicationLoader.applicationContext.getExternalMediaDirs()[i];
+                if (f != null && f.getPath().startsWith(SharedConfig.storageCacheDir)) {
+                    publicMediaDir = ApplicationLoader.applicationContext.getExternalMediaDirs()[i];
+                }
+            }
+        }
+        return publicMediaDir;
     }
 
     private boolean canMoveFiles(File from, File to, int type) {
@@ -2568,7 +2622,7 @@ public class ImageLoader {
                     }
                 }
             }
-        }, imageReceiver.getFileLoadingPriority() == FileLoader.PRIORITY_LOW ? 0 : 1);
+        });
     }
 
     public BitmapDrawable getImageFromMemory(TLObject fileLocation, String httpUrl, String filter) {

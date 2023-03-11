@@ -278,6 +278,9 @@ public class ContentPreviewViewer {
                             Object parent = parentObject;
                             String query = currentQuery;
                             ContentPreviewViewerDelegate stickerPreviewViewerDelegate = delegate;
+                            if (stickerPreviewViewerDelegate == null) {
+                                return;
+                            }
                             AlertsCreator.createScheduleDatePickerDialog(parentActivity, stickerPreviewViewerDelegate.getDialogId(), (notify, scheduleDate) -> stickerPreviewViewerDelegate.sendSticker(sticker, query, parent, notify, scheduleDate));
                         } else if (actions.get(which) == 4) {
                             MediaDataController.getInstance(currentAccount).addRecentSticker(MediaDataController.TYPE_IMAGE, parentObject, currentDocument, (int) (System.currentTimeMillis() / 1000), true);
@@ -416,7 +419,7 @@ public class ContentPreviewViewer {
                     ActionBarMenuSubItem item = ActionBarMenuItem.addItem(i == 0, i == items.size() - 1, previewMenu, icons.get(i), items.get(i), false, resourcesProvider);
                     if (actions.get(i) == 4) {
                         item.setIconColor(getThemedColor(Theme.key_dialogRedIcon));
-                        item.setTextColor(getThemedColor(Theme.key_dialogTextRed2));
+                        item.setTextColor(getThemedColor(Theme.key_dialogTextRed));
                     }
                     item.setTag(i);
                     item.setOnClickListener(onItemClickListener);
@@ -550,7 +553,7 @@ public class ContentPreviewViewer {
                     item.setOnClickListener(onItemClickListener);
 
                     if (canDelete && i == items.size() - 1) {
-                        item.setColors(getThemedColor(Theme.key_dialogTextRed2), getThemedColor(Theme.key_dialogRedIcon));
+                        item.setColors(getThemedColor(Theme.key_dialogTextRed), getThemedColor(Theme.key_dialogRedIcon));
                     }
                 }
                 popupWindow = new ActionBarPopupWindow(previewMenu, LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT) {

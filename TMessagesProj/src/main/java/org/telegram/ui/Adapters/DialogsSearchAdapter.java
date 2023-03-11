@@ -920,7 +920,7 @@ public class DialogsSearchAdapter extends RecyclerListView.SelectionAdapter {
                     }
                 }
 
-                if (resentSearchAvailable()) {
+                if (resentSearchAvailable() && !(obj instanceof TLRPC.EncryptedChat)) {
                     boolean foundInRecent = false;
                     if (delegate != null && delegate.getSearchForumDialogId() == dialogId) {
                         foundInRecent = true;
