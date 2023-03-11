@@ -51,6 +51,7 @@ import org.telegram.messenger.ImageLoader;
 import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.R;
 import org.telegram.messenger.SharedConfig;
+import org.telegram.messenger.fakepasscode.FakePasscodeUtils;
 import org.telegram.ui.ChatActivity;
 import org.telegram.ui.Components.BackButtonMenu;
 import org.telegram.ui.Components.Bulletin;
@@ -1869,7 +1870,7 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
         previousFragment.setParentLayout(this);
         View fragmentView = previousFragment.fragmentView;
         if (fragmentView == null) {
-            if (!SharedConfig.isFakePasscodeActivated() && previousFragment instanceof ChatActivity) {
+            if (!FakePasscodeUtils.isFakePasscodeActivated() && previousFragment instanceof ChatActivity) {
                 ((ChatActivity)previousFragment).restoreStartLoadFromMessage();
             }
             fragmentView = previousFragment.createView(parentActivity);

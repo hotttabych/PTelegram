@@ -16,7 +16,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static org.telegram.messenger.MediaDataController.TYPE_EMOJI;
 import static org.telegram.messenger.MediaDataController.TYPE_IMAGE;
 
 @FakePasscodeSerializer.ToggleSerialization

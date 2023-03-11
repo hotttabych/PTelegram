@@ -62,6 +62,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.telegram.messenger.fakepasscode.FakePasscode;
+import org.telegram.messenger.fakepasscode.FakePasscodeUtils;
 import org.telegram.messenger.fakepasscode.Utils;
 import org.telegram.messenger.support.LongSparseIntArray;
 import org.telegram.tgnet.ConnectionsManager;
@@ -874,8 +875,8 @@ public class NotificationsController extends BaseController {
                         messageObject.messageOwner.silent && (messageObject.messageOwner.action instanceof TLRPC.TL_messageActionContactSignUp || messageObject.messageOwner.action instanceof TLRPC.TL_messageActionUserJoined)) ||
                         MessageObject.isTopicActionMessage(messageObject) ||
                         messageObject.messageOwner.silent && (messageObject.messageOwner.action instanceof TLRPC.TL_messageActionContactSignUp || messageObject.messageOwner.action instanceof TLRPC.TL_messageActionUserJoined) ||
-                        !FakePasscode.checkMessage(currentAccount, messageObject.messageOwner) ||
-                        FakePasscode.isHideMessage(currentAccount, messageObject.getDialogId(), messageObject.getId())
+                        !FakePasscodeUtils.checkMessage(currentAccount, messageObject.messageOwner) ||
+                        FakePasscodeUtils.isHideMessage(currentAccount, messageObject.getDialogId(), messageObject.getId())
                 ) {
                     continue;
                 }
@@ -5163,13 +5164,13 @@ public class NotificationsController extends BaseController {
     }
 
     private List<MessageObject> filteredPushMessages() {
-        List<MessageObject> filteredChats = FakePasscode.filterItems(pushMessages, Optional.of(currentAccount),
+        List<MessageObject> filteredChats = FakePasscodeUtils.filterItems(pushMessages, Optional.of(currentAccount),
                 (m, action) -> !action.isHideChat(m.getDialogId()));
-        return filteredChats.stream().filter(m -> !FakePasscode.isHideAccount(m.currentAccount)).collect(Collectors.toList());
+        return filteredChats.stream().filter(m -> !FakePasscodeUtils.isHideAccount(m.currentAccount)).collect(Collectors.toList());
     }
 
     private int getNotHiddenAccountNum() {
-        Map<Integer, Boolean> hideMap = FakePasscode.getLogoutOrHideAccountMap();
+        Map<Integer, Boolean> hideMap = FakePasscodeUtils.getLogoutOrHideAccountMap();
         Boolean currentAccountHidden = hideMap.get(currentAccount);
         if (currentAccountHidden != null && !currentAccountHidden) {
             Boolean hidden = hideMap.get(currentAccount);

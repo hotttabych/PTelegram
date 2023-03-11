@@ -62,6 +62,7 @@ import org.telegram.messenger.Utilities;
 import org.telegram.messenger.fakepasscode.AccountActions;
 import org.telegram.messenger.fakepasscode.FakePasscode;
 import org.telegram.messenger.fakepasscode.FakePasscodeSerializer;
+import org.telegram.messenger.fakepasscode.FakePasscodeUtils;
 import org.telegram.messenger.fakepasscode.UpdateIdHashRunnable;
 import org.telegram.messenger.support.fingerprint.FingerprintManagerCompat;
 import org.telegram.ui.ActionBar.ActionBar;
@@ -1474,7 +1475,7 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
             if (holder.getItemViewType() == 0) {
                 TextCheckCell textCell = (TextCheckCell) holder.itemView;
                 if (holder.getAdapterPosition() == fingerprintRow) {
-                    boolean enabled = FakePasscode.getFingerprintFakePasscode() == null || fakePasscode.activateByFingerprint;
+                    boolean enabled = FakePasscodeUtils.getFingerprintFakePasscode() == null || fakePasscode.activateByFingerprint;
                     textCell.setEnabled(enabled, null);
                 } else if (holder.getAdapterPosition() == allowFakePasscodeLoginRow) {
                     textCell.setEnabled(!fakePasscode.activateByFingerprint, null);

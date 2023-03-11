@@ -44,6 +44,7 @@ import org.telegram.messenger.R;
 import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.browser.Browser;
 import org.telegram.messenger.fakepasscode.FakePasscode;
+import org.telegram.messenger.fakepasscode.FakePasscodeUtils;
 import org.telegram.messenger.fakepasscode.Utils;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.TLObject;
@@ -634,7 +635,7 @@ public class FilteredSearchView extends FrameLayout implements NotificationCente
                     int n = messageObjects.size();
                     for (int i = 0; i < n; i++) {
                         MessageObject messageObject = messageObjects.get(i);
-                        if (FakePasscode.isHideChat(messageObject.getDialogId(), currentAccount)) {
+                        if (FakePasscodeUtils.isHideChat(messageObject.getDialogId(), currentAccount)) {
                             continue;
                         }
                         ArrayList<MessageObject> messageObjectsByDate = sectionArrays.get(messageObject.monthKey);

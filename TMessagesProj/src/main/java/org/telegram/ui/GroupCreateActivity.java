@@ -64,6 +64,7 @@ import org.telegram.messenger.R;
 import org.telegram.messenger.UserObject;
 import org.telegram.messenger.Utilities;
 import org.telegram.messenger.fakepasscode.FakePasscode;
+import org.telegram.messenger.fakepasscode.FakePasscodeUtils;
 import org.telegram.tgnet.TLObject;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.ActionBar;
@@ -1167,7 +1168,7 @@ public class GroupCreateActivity extends BaseFragment implements NotificationCen
         public GroupCreateAdapter(Context ctx) {
             context = ctx;
 
-            ArrayList<TLRPC.TL_contact> arrayList = (ArrayList<TLRPC.TL_contact>) FakePasscode.filterContacts(getContactsController().contacts, currentAccount);
+            ArrayList<TLRPC.TL_contact> arrayList = (ArrayList<TLRPC.TL_contact>) FakePasscodeUtils.filterContacts(getContactsController().contacts, currentAccount);
             for (int a = 0; a < arrayList.size(); a++) {
                 TLRPC.User user = getMessagesController().getUser(arrayList.get(a).user_id);
                 if (user == null || user.self || user.deleted) {
@@ -1176,7 +1177,7 @@ public class GroupCreateActivity extends BaseFragment implements NotificationCen
                 contacts.add(user);
             }
             if (isNeverShare || isAlwaysShare) {
-                ArrayList<TLRPC.Dialog> dialogs = (ArrayList<TLRPC.Dialog>) FakePasscode.filterDialogs(getMessagesController().getAllDialogs(), Optional.of(currentAccount));
+                ArrayList<TLRPC.Dialog> dialogs = (ArrayList<TLRPC.Dialog>) FakePasscodeUtils.filterDialogs(getMessagesController().getAllDialogs(), Optional.of(currentAccount));
                 for (int a = 0, N = dialogs.size(); a < N; a++) {
                     TLRPC.Dialog dialog = dialogs.get(a);
                     if (!DialogObject.isChatDialog(dialog.id)) {

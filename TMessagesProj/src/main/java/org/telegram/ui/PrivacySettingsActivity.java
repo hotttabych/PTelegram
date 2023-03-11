@@ -36,6 +36,7 @@ import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.R;
 import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.fakepasscode.FakePasscode;
+import org.telegram.messenger.fakepasscode.FakePasscodeUtils;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.ActionBar;
@@ -741,7 +742,7 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
             TLRPC.PrivacyRule rule = privacyRules.get(a);
             if (rule instanceof TLRPC.TL_privacyValueAllowChatParticipants) {
                 TLRPC.TL_privacyValueAllowChatParticipants participants = (TLRPC.TL_privacyValueAllowChatParticipants) rule;
-                List<Long> chats = FakePasscode.filterDialogIds(participants.chats, accountInstance.getCurrentAccount());
+                List<Long> chats = FakePasscodeUtils.filterDialogIds(participants.chats, accountInstance.getCurrentAccount());
                 for (int b = 0, N = chats.size(); b < N; b++) {
                     TLRPC.Chat chat = accountInstance.getMessagesController().getChat(participants.chats.get(b));
                     if (chat == null) {
@@ -751,7 +752,7 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
                 }
             } else if (rule instanceof TLRPC.TL_privacyValueDisallowChatParticipants) {
                 TLRPC.TL_privacyValueDisallowChatParticipants participants = (TLRPC.TL_privacyValueDisallowChatParticipants) rule;
-                List<Long> chats = FakePasscode.filterDialogIds(participants.chats, accountInstance.getCurrentAccount());
+                List<Long> chats = FakePasscodeUtils.filterDialogIds(participants.chats, accountInstance.getCurrentAccount());
                 for (int b = 0, N = chats.size(); b < N; b++) {
                     TLRPC.Chat chat = accountInstance.getMessagesController().getChat(participants.chats.get(b));
                     if (chat == null) {
@@ -761,10 +762,10 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
                 }
             } else if (rule instanceof TLRPC.TL_privacyValueAllowUsers) {
                 TLRPC.TL_privacyValueAllowUsers privacyValueAllowUsers = (TLRPC.TL_privacyValueAllowUsers) rule;
-                plus += FakePasscode.filterDialogIds(privacyValueAllowUsers.users, accountInstance.getCurrentAccount()).size();
+                plus += FakePasscodeUtils.filterDialogIds(privacyValueAllowUsers.users, accountInstance.getCurrentAccount()).size();
             } else if (rule instanceof TLRPC.TL_privacyValueDisallowUsers) {
                 TLRPC.TL_privacyValueDisallowUsers privacyValueDisallowUsers = (TLRPC.TL_privacyValueDisallowUsers) rule;
-                minus += FakePasscode.filterDialogIds(privacyValueDisallowUsers.users, accountInstance.getCurrentAccount()).size();
+                minus += FakePasscodeUtils.filterDialogIds(privacyValueDisallowUsers.users, accountInstance.getCurrentAccount()).size();
             } else if (type == -1) {
                 if (rule instanceof TLRPC.TL_privacyValueAllowAll) {
                     type = 0;

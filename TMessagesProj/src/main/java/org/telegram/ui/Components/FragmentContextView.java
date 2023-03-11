@@ -72,6 +72,7 @@ import org.telegram.messenger.SendMessagesHelper;
 import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.UserObject;
 import org.telegram.messenger.fakepasscode.FakePasscode;
+import org.telegram.messenger.fakepasscode.FakePasscodeUtils;
 import org.telegram.messenger.voip.VoIPService;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.TLRPC;
@@ -954,8 +955,8 @@ public class FragmentContextView extends FrameLayout implements NotificationCent
             }
         } else {
             if (VoIPService.getSharedInstance() != null && !VoIPService.getSharedInstance().isHangingUp() && VoIPService.getSharedInstance().getCallState() != VoIPService.STATE_WAITING_INCOMING &&
-                    (VoIPService.getSharedInstance().groupCall == null || !FakePasscode.isHideChat(VoIPService.getSharedInstance().groupCall.chatId, account)) &&
-                    (VoIPService.getSharedInstance().privateCall == null || !FakePasscode.isHideChat(VoIPService.getSharedInstance().privateCall.participant_id, account))) {
+                    (VoIPService.getSharedInstance().groupCall == null || !FakePasscodeUtils.isHideChat(VoIPService.getSharedInstance().groupCall.chatId, account)) &&
+                    (VoIPService.getSharedInstance().privateCall == null || !FakePasscodeUtils.isHideChat(VoIPService.getSharedInstance().privateCall.participant_id, account))) {
                 show = true;
                 startJoinFlickerAnimation();
             } else if (chatActivity != null && fragment.getSendMessagesHelper().getImportingHistory(chatActivity.getDialogId()) != null && !isPlayingVoice()) {

@@ -62,6 +62,7 @@ import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.UserObject;
 import org.telegram.messenger.fakepasscode.FakePasscode;
+import org.telegram.messenger.fakepasscode.FakePasscodeUtils;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.ActionBar;
 import org.telegram.ui.ActionBar.ActionBarMenu;
@@ -857,7 +858,7 @@ public class EditWidgetActivity extends BaseFragment {
                 InviteMembersBottomSheet bottomSheet = new InviteMembersBottomSheet(context, currentAccount, null, 0, EditWidgetActivity.this, null);
                 bottomSheet.setDelegate(dids -> {
                     selectedDialogs.clear();
-                    selectedDialogs.addAll(FakePasscode.filterDialogIds(dids, currentAccount));
+                    selectedDialogs.addAll(FakePasscodeUtils.filterDialogIds(dids, currentAccount));
                     updateRows();
                     if (widgetPreviewCell != null) {
                         widgetPreviewCell.updateDialogs();

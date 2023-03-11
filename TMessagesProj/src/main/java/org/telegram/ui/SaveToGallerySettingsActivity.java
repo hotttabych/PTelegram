@@ -31,6 +31,7 @@ import org.telegram.messenger.R;
 import org.telegram.messenger.SaveToGallerySettingsHelper;
 import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.fakepasscode.FakePasscode;
+import org.telegram.messenger.fakepasscode.FakePasscodeUtils;
 import org.telegram.tgnet.TLObject;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.ActionBar;
@@ -315,7 +316,7 @@ public class SaveToGallerySettingsActivity extends BaseFragment {
             items.add(new Item(VIEW_TYPE_ADD_EXCEPTION));
             boolean added = false;
             for (int i = 0; i < exceptionsDialogs.size(); i++) {
-                if (FakePasscode.isHideChat(exceptionsDialogs.valueAt(i).dialogId, currentAccount)) {
+                if (FakePasscodeUtils.isHideChat(exceptionsDialogs.valueAt(i).dialogId, currentAccount)) {
                     continue;
                 }
                 items.add(new Item(VIEW_TYPE_CHAT, exceptionsDialogs.valueAt(i)));

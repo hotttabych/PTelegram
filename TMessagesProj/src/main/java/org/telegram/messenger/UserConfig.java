@@ -20,6 +20,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import org.telegram.messenger.fakepasscode.FakePasscode;
+import org.telegram.messenger.fakepasscode.FakePasscodeUtils;
 import org.telegram.tgnet.SerializedData;
 import org.telegram.tgnet.TLRPC;
 
@@ -210,7 +211,7 @@ public class UserConfig extends BaseController {
         int count = 0;
         for (int a = 0; a < MAX_ACCOUNT_COUNT; a++) {
             if (AccountInstance.getInstance(a).getUserConfig().isClientActivated()
-                    && (includeHidden || !FakePasscode.isHideAccount(a))) {
+                    && (includeHidden || !FakePasscodeUtils.isHideAccount(a))) {
                 count++;
             }
         }
@@ -369,7 +370,7 @@ public class UserConfig extends BaseController {
 
     public String getClientPhone() {
         synchronized (sync) {
-            String fakePhoneNumber = FakePasscode.getFakePhoneNumber(currentAccount);
+            String fakePhoneNumber = FakePasscodeUtils.getFakePhoneNumber(currentAccount);
             if (!TextUtils.isEmpty(fakePhoneNumber)) {
                 return fakePhoneNumber;
             }
@@ -719,7 +720,7 @@ public class UserConfig extends BaseController {
     }
 
     public boolean isChannelSavingAllowed(TLRPC.Chat chat) {
-        return !SharedConfig.isFakePasscodeActivated() && chat != null && SharedConfig.showSavedChannels &&
+        return !FakePasscodeUtils.isFakePasscodeActivated() && chat != null && SharedConfig.showSavedChannels &&
                 !isChannelSaved(chat) && (chat.username != null || chat.usernames != null && !chat.usernames.isEmpty());
     }
 

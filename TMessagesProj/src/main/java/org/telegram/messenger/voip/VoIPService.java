@@ -110,6 +110,7 @@ import org.telegram.messenger.UserObject;
 import org.telegram.messenger.Utilities;
 import org.telegram.messenger.XiaomiUtilities;
 import org.telegram.messenger.fakepasscode.FakePasscode;
+import org.telegram.messenger.fakepasscode.FakePasscodeUtils;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.TLObject;
 import org.telegram.tgnet.TLRPC;
@@ -736,7 +737,7 @@ public class VoIPService extends Service implements SensorEventListener, AudioMa
 		} catch (Exception e) {
 			FileLog.e(e);
 		}
-		if (FakePasscode.isHideAccount(currentAccount) || FakePasscode.isHideChat(userID, currentAccount)) {
+		if (FakePasscodeUtils.isHideAccount(currentAccount) || FakePasscodeUtils.isHideChat(userID, currentAccount)) {
 			stopSelf();
 			return START_NOT_STICKY;
 		}

@@ -157,6 +157,7 @@ import org.telegram.messenger.Utilities;
 import org.telegram.messenger.VideoEditedInfo;
 import org.telegram.messenger.browser.Browser;
 import org.telegram.messenger.fakepasscode.FakePasscode;
+import org.telegram.messenger.fakepasscode.FakePasscodeUtils;
 import org.telegram.messenger.fakepasscode.RemoveAfterReadingMessages;
 import org.telegram.messenger.fakepasscode.Utils;
 import org.telegram.messenger.support.LongSparseIntArray;
@@ -3288,7 +3289,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                 userFull = getMessagesController().getUserFull(currentUser.id);
                 if (userFull != null && userFull.phone_calls_available) {
                     showAudioCallAsIcon = !inPreviewMode;
-                    audioCallIconItem.setVisibility((SharedConfig.showCallButton || SharedConfig.isFakePasscodeActivated()) ? View.VISIBLE : View.GONE);
+                    audioCallIconItem.setVisibility((SharedConfig.showCallButton || FakePasscodeUtils.isFakePasscodeActivated()) ? View.VISIBLE : View.GONE);
                 } else {
                     showAudioCallAsIcon = false;
                     audioCallIconItem.setVisibility(View.GONE);
@@ -13575,7 +13576,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                     }
                 }
                 if (!actionBar.isSearchFieldVisible() && audioCallIconItem != null) {
-                    audioCallIconItem.setVisibility((showAudioCallAsIcon && !showSearchAsIcon && (SharedConfig.showCallButton || SharedConfig.isFakePasscodeActivated())) ? View.VISIBLE : View.GONE);
+                    audioCallIconItem.setVisibility((showAudioCallAsIcon && !showSearchAsIcon && (SharedConfig.showCallButton || FakePasscodeUtils.isFakePasscodeActivated())) ? View.VISIBLE : View.GONE);
                 }
                 if (headerItem != null) {
                     TLRPC.UserFull userInfo = getCurrentUserInfo();
@@ -15820,7 +15821,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
             }
             for (int a = 0; a < messArr.size(); a++) {
                 MessageObject obj = messArr.get(a);
-                if (FakePasscode.isHideMessage(currentAccount, dialog_id, obj.getId())) {
+                if (FakePasscodeUtils.isHideMessage(currentAccount, dialog_id, obj.getId())) {
                     continue;
                 }
                 if (obj.replyMessageObject != null) {
@@ -18206,7 +18207,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                                     item.setAlpha(0f);
                                     item.animate().alpha(1f).setDuration(160).setInterpolator(CubicBezierInterpolator.EASE_IN).setStartDelay(50).start();
                                 }
-                                audioCallIconItem.setVisibility((SharedConfig.showCallButton || SharedConfig.isFakePasscodeActivated()) ? View.VISIBLE : View.GONE);
+                                audioCallIconItem.setVisibility((SharedConfig.showCallButton || FakePasscodeUtils.isFakePasscodeActivated()) ? View.VISIBLE : View.GONE);
                             }
                         } else {
                             headerItem.showSubItem(call, true);
@@ -22480,7 +22481,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
             TLRPC.UserFull userFull = getMessagesController().getUserFull(currentUser.id);
             if (userFull != null && userFull.phone_calls_available) {
                 showAudioCallAsIcon = !inPreviewMode;
-                audioCallIconItem.setVisibility((SharedConfig.showCallButton || SharedConfig.isFakePasscodeActivated()) ? View.VISIBLE : View.GONE);
+                audioCallIconItem.setVisibility((SharedConfig.showCallButton || FakePasscodeUtils.isFakePasscodeActivated()) ? View.VISIBLE : View.GONE);
             } else {
                 showAudioCallAsIcon = false;
                 audioCallIconItem.setVisibility(View.GONE);
@@ -28886,7 +28887,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                     headerItem.setVisibility(View.VISIBLE);
                 }
                 if (audioCallIconItem != null && showAudioCallAsIcon) {
-                    audioCallIconItem.setVisibility((SharedConfig.showCallButton || SharedConfig.isFakePasscodeActivated()) ? View.VISIBLE : View.GONE);
+                    audioCallIconItem.setVisibility((SharedConfig.showCallButton || FakePasscodeUtils.isFakePasscodeActivated()) ? View.VISIBLE : View.GONE);
                 }
                 if (searchIconItem != null && showSearchAsIcon) {
                     searchIconItem.setVisibility(View.VISIBLE);
@@ -31938,6 +31939,6 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
     }
 
     public boolean allowShowing() {
-        return !FakePasscode.isHideChat(dialog_id, currentAccount);
+        return !FakePasscodeUtils.isHideChat(dialog_id, currentAccount);
     }
 }

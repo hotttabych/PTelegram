@@ -126,6 +126,7 @@ import org.telegram.messenger.UserObject;
 import org.telegram.messenger.Utilities;
 import org.telegram.messenger.browser.Browser;
 import org.telegram.messenger.fakepasscode.FakePasscode;
+import org.telegram.messenger.fakepasscode.FakePasscodeUtils;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.SerializedData;
 import org.telegram.tgnet.TLObject;
@@ -3405,7 +3406,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                                 BuildVars.DEBUG_PRIVATE_VERSION ? "Force remove premium suggestions" : null,
                                 BuildVars.DEBUG_PRIVATE_VERSION ? "Share device info" : null,
                                 BuildVars.DEBUG_PRIVATE_VERSION ? "Force performance class" : null,
-                                !SharedConfig.isFakePasscodeActivated() ? "Enter tester settings password" : null
+                                !FakePasscodeUtils.isFakePasscodeActivated() ? "Enter tester settings password" : null
                         };
 
                         builder.setItems(items, (dialog, which) -> {
@@ -5038,7 +5039,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         case PHONE_OPTION_COPY:
                             try {
                                 android.content.ClipboardManager clipboard = (android.content.ClipboardManager) ApplicationLoader.applicationContext.getSystemService(Context.CLIPBOARD_SERVICE);
-                                android.content.ClipData clip = android.content.ClipData.newPlainText("label", "+" + FakePasscode.getFakePhoneNumber(currentAccount, user.phone));
+                                android.content.ClipData clip = android.content.ClipData.newPlainText("label", "+" + FakePasscodeUtils.getFakePhoneNumber(currentAccount, user.phone));
                                 clipboard.setPrimaryClip(clip);
                                 if (AndroidUtilities.shouldShowClipboardToast()) {
                                     BulletinFactory.of(this).createCopyBulletin(LocaleController.getString("PhoneCopied", R.string.PhoneCopied)).show();
@@ -7203,7 +7204,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 faqRow = rowCount++;
                 policyRow = rowCount++;
                 if (BuildVars.LOGS_ENABLED || BuildVars.DEBUG_PRIVATE_VERSION
-                    || (SharedConfig.activatedTesterSettingType != 0 && !SharedConfig.isFakePasscodeActivated())) {
+                    || (SharedConfig.activatedTesterSettingType != 0 && !FakePasscodeUtils.isFakePasscodeActivated())) {
                     helpSectionCell = rowCount++;
                     debugHeaderRow = rowCount++;
                 }
@@ -7218,7 +7219,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 if (BuildVars.DEBUG_PRIVATE_VERSION) {
                     switchBackendRow = rowCount++;
                 }
-                if (SharedConfig.activatedTesterSettingType != 0 && !SharedConfig.isFakePasscodeActivated()) {
+                if (SharedConfig.activatedTesterSettingType != 0 && !FakePasscodeUtils.isFakePasscodeActivated()) {
                     testerSettingsRow = rowCount++;
                 }
                 versionRow = rowCount++;
@@ -9325,7 +9326,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         TLRPC.User user = UserConfig.getInstance(currentAccount).getCurrentUser();
                         String value;
                         if (user != null && user.phone != null && user.phone.length() != 0) {
-                            value = PhoneFormat.getInstance().format("+" + FakePasscode.getFakePhoneNumber(UserConfig.selectedAccount, user.phone));
+                            value = PhoneFormat.getInstance().format("+" + FakePasscodeUtils.getFakePhoneNumber(UserConfig.selectedAccount, user.phone));
                         } else {
                             value = LocaleController.getString("NumberUnknown", R.string.NumberUnknown);
                         }

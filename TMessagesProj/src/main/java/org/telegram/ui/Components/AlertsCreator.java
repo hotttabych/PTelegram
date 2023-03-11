@@ -87,6 +87,7 @@ import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.UserObject;
 import org.telegram.messenger.Utilities;
 import org.telegram.messenger.browser.Browser;
+import org.telegram.messenger.fakepasscode.FakePasscodeUtils;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.SerializedData;
 import org.telegram.tgnet.TLObject;
@@ -1499,7 +1500,7 @@ public class AlertsCreator {
             revokeTimeLimit = MessagesController.getInstance(account).revokeTimeLimit;
         }
         boolean canDeleteInbox = !secret && user != null && canRevokeInbox && revokeTimeLimit == 0x7fffffff;
-        final boolean[] deleteForAll =  {!SharedConfig.isFakePasscodeActivated() && SharedConfig.deleteMessagesForAllByDefault};
+        final boolean[] deleteForAll =  {!FakePasscodeUtils.isFakePasscodeActivated() && SharedConfig.deleteMessagesForAllByDefault};
         boolean deleteChatForAll = false;
 
         boolean lastMessageIsJoined = false;
@@ -1518,9 +1519,9 @@ public class AlertsCreator {
                     cell[0].setText(LocaleController.getString("DeleteGroupForAll", R.string.DeleteGroupForAll), "", false, false);
                 }
             } else if (clear) {
-                cell[0].setText(LocaleController.formatString("ClearHistoryOptionAlso", R.string.ClearHistoryOptionAlso, UserObject.getFirstName(user)), "", !SharedConfig.isFakePasscodeActivated() && SharedConfig.deleteMessagesForAllByDefault, false);
+                cell[0].setText(LocaleController.formatString("ClearHistoryOptionAlso", R.string.ClearHistoryOptionAlso, UserObject.getFirstName(user)), "", !FakePasscodeUtils.isFakePasscodeActivated() && SharedConfig.deleteMessagesForAllByDefault, false);
             } else {
-                cell[0].setText(LocaleController.formatString("DeleteMessagesOptionAlso", R.string.DeleteMessagesOptionAlso, UserObject.getFirstName(user)), "", !SharedConfig.isFakePasscodeActivated() && SharedConfig.deleteMessagesForAllByDefault, false);
+                cell[0].setText(LocaleController.formatString("DeleteMessagesOptionAlso", R.string.DeleteMessagesOptionAlso, UserObject.getFirstName(user)), "", !FakePasscodeUtils.isFakePasscodeActivated() && SharedConfig.deleteMessagesForAllByDefault, false);
             }
             cell[0].setPadding(LocaleController.isRTL ? AndroidUtilities.dp(16) : AndroidUtilities.dp(8), 0, LocaleController.isRTL ? AndroidUtilities.dp(8) : AndroidUtilities.dp(16), 0);
             frameLayout.addView(cell[0], LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 48, Gravity.BOTTOM | Gravity.LEFT, 0, 0, 0, 0));
@@ -1755,7 +1756,7 @@ public class AlertsCreator {
             textView.setText(LocaleController.formatPluralString("DeleteDays", days));
             messageTextView.setText(LocaleController.getString("DeleteHistoryByDaysMessage", R.string.DeleteHistoryByDaysMessage));
         }
-        final boolean[] deleteForAll = { !SharedConfig.isFakePasscodeActivated() && SharedConfig.deleteMessagesForAllByDefault};//new boolean[]{false};
+        final boolean[] deleteForAll = { !FakePasscodeUtils.isFakePasscodeActivated() && SharedConfig.deleteMessagesForAllByDefault};//new boolean[]{false};
 
         if (chat != null && canDeleteHistory && ChatObject.isPublic(chat)) {
             deleteForAll[0] = true;
@@ -5338,7 +5339,7 @@ public class AlertsCreator {
         }
 
         final boolean[] checks = new boolean[3];
-        final boolean[] deleteForAll = { !SharedConfig.isFakePasscodeActivated() && SharedConfig.deleteMessagesForAllByDefault};
+        final boolean[] deleteForAll = { !FakePasscodeUtils.isFakePasscodeActivated() && SharedConfig.deleteMessagesForAllByDefault};
         TLRPC.User actionUser = null;
         TLRPC.Chat actionChat = null;
         boolean canRevokeInbox = user != null && MessagesController.getInstance(currentAccount).canRevokePmInbox;
@@ -5476,7 +5477,7 @@ public class AlertsCreator {
                 CheckBoxCell cell = new CheckBoxCell(activity, 1, resourcesProvider);
                 cell.setBackgroundDrawable(Theme.getSelectorDrawable(false));
                 if (chat != null && hasNotOut) {
-                    cell.setText(LocaleController.getString("DeleteForAll", R.string.DeleteForAll), "", !SharedConfig.isFakePasscodeActivated() && SharedConfig.deleteMessagesForAllByDefault, false);
+                    cell.setText(LocaleController.getString("DeleteForAll", R.string.DeleteForAll), "", !FakePasscodeUtils.isFakePasscodeActivated() && SharedConfig.deleteMessagesForAllByDefault, false);
                 } else {
                     cell.setText(LocaleController.getString("DeleteMessagesOption", R.string.DeleteMessagesOption), "", false, false);
                 }
@@ -5535,7 +5536,7 @@ public class AlertsCreator {
                 CheckBoxCell cell = new CheckBoxCell(activity, 1, resourcesProvider);
                 cell.setBackgroundDrawable(Theme.getSelectorDrawable(false));
                 if (canDeleteInbox) {
-                    cell.setText(LocaleController.formatString("DeleteMessagesOptionAlso", R.string.DeleteMessagesOptionAlso, UserObject.getFirstName(user)), "", !SharedConfig.isFakePasscodeActivated() && SharedConfig.deleteMessagesForAllByDefault, false);
+                    cell.setText(LocaleController.formatString("DeleteMessagesOptionAlso", R.string.DeleteMessagesOptionAlso, UserObject.getFirstName(user)), "", !FakePasscodeUtils.isFakePasscodeActivated() && SharedConfig.deleteMessagesForAllByDefault, false);
                 } else if (chat != null && (hasNotOut || myMessagesCount == count)) {
                     cell.setText(LocaleController.getString("DeleteForAll", R.string.DeleteForAll), "", false, false);
                 } else {

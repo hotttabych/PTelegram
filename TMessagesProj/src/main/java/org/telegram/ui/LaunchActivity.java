@@ -128,6 +128,7 @@ import org.telegram.messenger.UserObject;
 import org.telegram.messenger.Utilities;
 import org.telegram.messenger.browser.Browser;
 import org.telegram.messenger.fakepasscode.FakePasscode;
+import org.telegram.messenger.fakepasscode.FakePasscodeUtils;
 import org.telegram.messenger.fakepasscode.RemoveAfterReadingMessages;
 import org.telegram.messenger.fakepasscode.Utils;
 import org.telegram.messenger.partisan.UpdateChecker;
@@ -517,12 +518,12 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                         if (availableAccount == null) {
                             availableAccount = a;
                         }
-                    } else if (!FakePasscode.isHideAccount(a)) {
+                    } else if (!FakePasscodeUtils.isHideAccount(a)) {
                         usedAccounts++;
                     }
                 }
                 int maxAccountCount;
-                if (!SharedConfig.isFakePasscodeActivated()) {
+                if (!FakePasscodeUtils.isFakePasscodeActivated()) {
                     maxAccountCount = UserConfig.MAX_ACCOUNT_COUNT;
                 } else if (UserConfig.hasPremiumOnAccounts()) {
                     maxAccountCount = UserConfig.FAKE_PASSCODE_MAX_PREMIUM_ACCOUNT_COUNT;
@@ -1325,7 +1326,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
     }
 
     public void switchToAccount(int account, boolean removeAll, GenericProvider<Void, DialogsActivity> dialogsActivityProvider) {
-        if (account == UserConfig.selectedAccount || !UserConfig.isValidAccount(account) || FakePasscode.isHideAccount(account)) {
+        if (account == UserConfig.selectedAccount || !UserConfig.isValidAccount(account) || FakePasscodeUtils.isHideAccount(account)) {
             return;
         }
 
@@ -1376,7 +1377,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
         boolean correctAccount = false;
         int accountIndex = 0;
         for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
-            if (UserConfig.getInstance(a).isClientActivated() && !FakePasscode.isHideAccount(a)) {
+            if (UserConfig.getInstance(a).isClientActivated() && !FakePasscodeUtils.isHideAccount(a)) {
                 if (a == UserConfig.selectedAccount) {
                     correctAccount = true;
                     break;
@@ -1395,7 +1396,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
     private void switchToAvailableAccountOrLogout() {
         int account = -1;
         for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
-            if (UserConfig.getInstance(a).isClientActivated() && !FakePasscode.isHideAccount(a)) {
+            if (UserConfig.getInstance(a).isClientActivated() && !FakePasscodeUtils.isHideAccount(a)) {
                 account = a;
                 break;
             }
@@ -5004,7 +5005,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
             if (updateFounded) {
                 AndroidUtilities.runOnUIThread(() -> {
                     if (SharedConfig.pendingPtgAppUpdate != null &&
-                            (SharedConfig.isFakePasscodeActivated() && SharedConfig.pendingPtgAppUpdate.originalVersion.equals(data.originalVersion)
+                            (FakePasscodeUtils.isFakePasscodeActivated() && SharedConfig.pendingPtgAppUpdate.originalVersion.equals(data.originalVersion)
                                     || SharedConfig.pendingPtgAppUpdate.version.equals(data.version))) {
                         return;
                     }
@@ -6281,7 +6282,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                         break;
                     }
                     case Bulletin.TYPE_STICKER: {
-                        if (FakePasscode.isPreventStickersBulletin()) {
+                        if (FakePasscodeUtils.isPreventStickersBulletin()) {
                             break;
                         }
                         TLRPC.Document sticker = (TLRPC.Document) args[1];
@@ -6390,7 +6391,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
         } else if (id == NotificationCenter.fakePasscodeActivated) {
             switchToAvailableAccountIfCurrentAccountIsHidden();
             updateAppUpdateViews(false);
-            if (SharedConfig.isFakePasscodeActivated()) {
+            if (FakePasscodeUtils.isFakePasscodeActivated()) {
                 Utilities.globalQueue.postRunnable(() -> {
                     List<BaseFragment> fragmentsStack = actionBarLayout.getFragmentStack();
                     if (fragmentsStack.stream().noneMatch(f -> f instanceof DialogsActivity)) {

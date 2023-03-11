@@ -43,6 +43,7 @@ import org.telegram.messenger.R;
 import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.UserObject;
 import org.telegram.messenger.fakepasscode.FakePasscode;
+import org.telegram.messenger.fakepasscode.FakePasscodeUtils;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.ActionBarPopupWindow;
 import org.telegram.ui.ActionBar.Theme;
@@ -142,7 +143,7 @@ public class SenderSelectPopup extends ActionBarPopupWindow {
 
         FrameLayout recyclerFrameLayout = new FrameLayout(context);
 
-        List<TLRPC.TL_sendAsPeer> peers = FakePasscode.filterSendAsPeers(sendAsPeers.peers, currentAccount);
+        List<TLRPC.TL_sendAsPeer> peers = FakePasscodeUtils.filterSendAsPeers(sendAsPeers.peers, currentAccount);
 
         recyclerView = new RecyclerListView(context);
         layoutManager = new LinearLayoutManager(context);
@@ -362,8 +363,8 @@ public class SenderSelectPopup extends ActionBarPopupWindow {
         recyclerContainer.setPivotX(0);
         recyclerContainer.setPivotY(0);
 
-        List<TLRPC.TL_sendAsPeer> peers = FakePasscode.filterSendAsPeers(sendAsPeers.peers, currentAccount);
-        TLRPC.Peer defPeer = chatFull.default_send_as != null && !FakePasscode.isHidePeer(chatFull.default_send_as, currentAccount) ? chatFull.default_send_as : null;
+        List<TLRPC.TL_sendAsPeer> peers = FakePasscodeUtils.filterSendAsPeers(sendAsPeers.peers, currentAccount);
+        TLRPC.Peer defPeer = chatFull.default_send_as != null && !FakePasscodeUtils.isHidePeer(chatFull.default_send_as, currentAccount) ? chatFull.default_send_as : null;
         if (defPeer != null) {
             int itemHeight = AndroidUtilities.dp(14 + AVATAR_SIZE_DP);
             int totalRecyclerHeight = peers.size() * itemHeight;
