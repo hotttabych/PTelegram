@@ -28,12 +28,18 @@ public class DeleteStickersAction extends AccountAction implements NotificationC
     @JsonIgnore
     private Set<Long> archivedStickerSets = new HashSet<>();
 
+    private boolean preventBulletin = false;
+
     @Override
     public void execute(FakePasscode fakePasscode) {
         loadedStickerTypes.clear();
         deletedStickerSets.clear();
         NotificationCenter.getInstance(accountNum).addObserver(this, NotificationCenter.stickersDidLoad);
-        MediaDataController.getInstance(accountNum).loadStickers(TYPE_IMAGE, true, false);
+        preventBulletin = true;
+        MediaDataController.getInstance(accountNum).loadStickers(TYPE_IMAGE, true, false, false, s -> {
+            NotificationCenter.getInstance(accountNum).removeObserver(this, NotificationCenter.stickersDidLoad);
+            preventBulletin = false;
+        });
         //delete recent emoji
         Emoji.clearRecentEmoji();
         // delete recent gif
@@ -72,10 +78,10 @@ public class DeleteStickersAction extends AccountAction implements NotificationC
             return;
         }
         int type = (int) args[0];
+        MediaDataController controller = MediaDataController.getInstance(accountNum);
+        List<TLRPC.TL_messages_stickerSet> stickerSets = new ArrayList<>(controller.getStickerSets(type));
         if (!loadedStickerTypes.contains(type)) {
             loadedStickerTypes.add(type);
-            MediaDataController controller = MediaDataController.getInstance(accountNum);
-            List<TLRPC.TL_messages_stickerSet> stickerSets = new ArrayList<>(controller.getStickerSets(type));
             for (TLRPC.TL_messages_stickerSet stickerSet : stickerSets) {
                 if (!deletedStickerSets.contains(stickerSet.set.id)) {
                     deletedStickerSets.add(stickerSet.set.id);
@@ -85,12 +91,7 @@ public class DeleteStickersAction extends AccountAction implements NotificationC
                     }
                 }
             }
-            for (TLRPC.Document document : controller.getRecentStickers(TYPE_IMAGE)) {
-                controller.addRecentSticker(TYPE_IMAGE, null, document, 0, true, false);
-            }
         } else {
-            MediaDataController controller = MediaDataController.getInstance(accountNum);
-            List<TLRPC.TL_messages_stickerSet> stickerSets = new ArrayList<>(controller.getStickerSets(type));
             for (TLRPC.TL_messages_stickerSet stickerSet : stickerSets) {
                 synchronized (this) {
                     if (!archivedStickerSets.contains(stickerSet.set.id)) {
@@ -102,9 +103,16 @@ public class DeleteStickersAction extends AccountAction implements NotificationC
                     controller.toggleStickerSet(null, stickerSet, 0, null, false, false);
                 }
             }
-            for (TLRPC.Document document : controller.getRecentStickers(TYPE_IMAGE)) {
-                controller.addRecentSticker(TYPE_IMAGE, null, document, 0, true, false);
+        }
+        for (int recent_sticker_type = 0; recent_sticker_type < 8; recent_sticker_type++) {
+            for (TLRPC.Document document : controller.getRecentStickers(recent_sticker_type)) {
+                controller.addRecentSticker(recent_sticker_type, null, document, 0, true, false);
             }
         }
+        controller.clearRecentStickers();
+    }
+
+    public boolean isPreventBulletin() {
+        return preventBulletin;
     }
 }

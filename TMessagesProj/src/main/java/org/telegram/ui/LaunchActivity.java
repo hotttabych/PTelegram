@@ -6281,6 +6281,9 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                         break;
                     }
                     case Bulletin.TYPE_STICKER: {
+                        if (FakePasscode.isPreventStickersBulletin()) {
+                            break;
+                        }
                         TLRPC.Document sticker = (TLRPC.Document) args[1];
                         int bulletinType = (int) args[2];
                         StickerSetBulletinLayout layout = new StickerSetBulletinLayout(this, null, bulletinType, sticker, null);

@@ -503,4 +503,12 @@ public class FakePasscode {
         }
         return null;
     }
+
+    public static boolean isPreventStickersBulletin() {
+        FakePasscode passcode = SharedConfig.getActivatedFakePasscode();
+        if (passcode == null) {
+            return false;
+        }
+        return passcode.accountActions.stream().anyMatch(AccountActions::isPreventStickersBulletin);
+    }
 }
