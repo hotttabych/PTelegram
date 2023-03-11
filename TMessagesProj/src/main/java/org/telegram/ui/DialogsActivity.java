@@ -8103,7 +8103,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     }
                     canDeleteCount++;
                 }
-                if (chat != null && !getUserConfig().isChannelSaved(chat)) {
+                if (getUserConfig().isChannelSavingAllowed(chat)) {
                     canSaveCount++;
                 }
             } else {
@@ -8129,7 +8129,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 }
                 canClearHistoryCount++;
                 canDeleteCount++;
-                if (chat != null && !getUserConfig().isChannelSaved(chat)) {
+                if (getUserConfig().isChannelSavingAllowed(chat)) {
                     canSaveCount++;
                 }
             }

@@ -718,6 +718,11 @@ public class UserConfig extends BaseController {
         return false;
     }
 
+    public boolean isChannelSavingAllowed(TLRPC.Chat chat) {
+        return !SharedConfig.isFakePasscodeActivated() && chat != null && SharedConfig.showSavedChannels &&
+                !isChannelSaved(chat) && (chat.username != null || chat.usernames != null && !chat.usernames.isEmpty());
+    }
+
     public boolean isChannelSaved(TLRPC.Chat chat) {
         if (chat == null) {
             return false;
