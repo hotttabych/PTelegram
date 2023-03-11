@@ -465,6 +465,9 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
                         ((TextCheckCell) view).setChecked(SharedConfig.takePhotoMuteAudio);
                     } else if (position == fingerprintRow) {
                         SharedConfig.useFingerprint = !SharedConfig.useFingerprint;
+                        if (SharedConfig.isFakePasscodeActivated()) {
+                            SharedConfig.getActivatedFakePasscode().activateByFingerprint = SharedConfig.useFingerprint;
+                        }
                         UserConfig.getInstance(currentAccount).saveConfig(false);
                         ((TextCheckCell) view).setChecked(SharedConfig.useFingerprint);
                     } else if (position == captureRow) {

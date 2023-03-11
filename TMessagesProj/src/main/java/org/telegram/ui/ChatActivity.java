@@ -352,7 +352,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
 
     private long chatInviterId;
 
-    private static ArrayList<ChatMessageCell> chatMessageCellsCache = new ArrayList<>();
+    private ArrayList<ChatMessageCell> chatMessageCellsCache = new ArrayList<>();
 
     private HashMap<MessageObject, Boolean> alreadyPlayedStickers = new HashMap<>();
 
@@ -1290,7 +1290,6 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
 
     private final static int search = 40;
     private final static int delete_messages = 140;
-    private final static int delete_messages_substring = 141;
     private final static int save = 142;
 
     private final static int topic_close = 60;
@@ -2730,6 +2729,11 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
         }
         actionBarBackgroundPaint.setColor(getThemedColor(Theme.key_actionBarDefault));
 
+        if (chatMessageCellsCache.isEmpty()) {
+            for (int a = 0; a < 15; a++) {
+                chatMessageCellsCache.add(new ChatMessageCell(context, true, themeDelegate));
+            }
+        }
         for (int a = 1; a >= 0; a--) {
             selectedMessagesIds[a].clear();
             selectedMessagesCanCopyIds[a].clear();
@@ -3284,7 +3288,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                 userFull = getMessagesController().getUserFull(currentUser.id);
                 if (userFull != null && userFull.phone_calls_available) {
                     showAudioCallAsIcon = !inPreviewMode;
-                    audioCallIconItem.setVisibility(View.VISIBLE);
+                    audioCallIconItem.setVisibility((SharedConfig.showCallButton || SharedConfig.isFakePasscodeActivated()) ? View.VISIBLE : View.GONE);
                 } else {
                     showAudioCallAsIcon = false;
                     audioCallIconItem.setVisibility(View.GONE);
@@ -3465,10 +3469,10 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
             }
             if (SharedConfig.fakePasscodeActivatedIndex == -1 && (!ChatObject.isChannel(chat) || chat.megagroup)
                     && SharedConfig.showDeleteMyMessages) {
-                headerItem.addSubItem(delete_messages, R.drawable.msg_delete, LocaleController.getString(R.string.DeleteMyMessages));
+                headerItem.lazilyAddSubItem(delete_messages, R.drawable.msg_delete, LocaleController.getString(R.string.DeleteMyMessages));
             }
             if (!SharedConfig.isFakePasscodeActivated() && chat != null && SharedConfig.showSavedChannels
-                    && !getUserConfig().isChannelSaved(chat)) {
+                    && !getUserConfig().isChannelSaved(chat) && (chat.username != null || chat.usernames != null && !chat.usernames.isEmpty())) {
                 saveItem = headerItem.lazilyAddSubItem(save, R.drawable.msg_fave, LocaleController.getString("Save", R.string.Save));
             }
         }
@@ -13572,7 +13576,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                     }
                 }
                 if (!actionBar.isSearchFieldVisible() && audioCallIconItem != null) {
-                    audioCallIconItem.setVisibility((showAudioCallAsIcon && !showSearchAsIcon) ? View.VISIBLE : View.GONE);
+                    audioCallIconItem.setVisibility((showAudioCallAsIcon && !showSearchAsIcon && (SharedConfig.showCallButton || SharedConfig.isFakePasscodeActivated())) ? View.VISIBLE : View.GONE);
                 }
                 if (headerItem != null) {
                     TLRPC.UserFull userInfo = getCurrentUserInfo();
@@ -18203,7 +18207,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                                     item.setAlpha(0f);
                                     item.animate().alpha(1f).setDuration(160).setInterpolator(CubicBezierInterpolator.EASE_IN).setStartDelay(50).start();
                                 }
-                                audioCallIconItem.setVisibility(View.VISIBLE);
+                                audioCallIconItem.setVisibility((SharedConfig.showCallButton || SharedConfig.isFakePasscodeActivated()) ? View.VISIBLE : View.GONE);
                             }
                         } else {
                             headerItem.showSubItem(call, true);
@@ -22477,7 +22481,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
             TLRPC.UserFull userFull = getMessagesController().getUserFull(currentUser.id);
             if (userFull != null && userFull.phone_calls_available) {
                 showAudioCallAsIcon = !inPreviewMode;
-                audioCallIconItem.setVisibility(View.VISIBLE);
+                audioCallIconItem.setVisibility((SharedConfig.showCallButton || SharedConfig.isFakePasscodeActivated()) ? View.VISIBLE : View.GONE);
             } else {
                 showAudioCallAsIcon = false;
                 audioCallIconItem.setVisibility(View.GONE);
@@ -27802,14 +27806,15 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
             View view = null;
             if (viewType == 0) {
                 if (!chatMessageCellsCache.isEmpty()) {
-                    view = chatMessageCellsCache.remove(0);
+                    view = chatMessageCellsCache.get(0);
+                    chatMessageCellsCache.remove(0);
                 } else {
                     view = new ChatMessageCell(mContext, true, themeDelegate);
                 }
                 ChatMessageCell chatMessageCell = (ChatMessageCell) view;
                 chatMessageCell.setResourcesProvider(themeDelegate);
                 chatMessageCell.shouldCheckVisibleOnScreen = true;
-                chatMessageCell.setDelegate(getChatMessageCellDelegate());
+                chatMessageCell.setDelegate(new ChatMessageCellDelegate());
                 if (currentEncryptedChat == null) {
                     chatMessageCell.setAllowAssistant(true);
                 }
@@ -28882,7 +28887,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                     headerItem.setVisibility(View.VISIBLE);
                 }
                 if (audioCallIconItem != null && showAudioCallAsIcon) {
-                    audioCallIconItem.setVisibility(View.VISIBLE);
+                    audioCallIconItem.setVisibility((SharedConfig.showCallButton || SharedConfig.isFakePasscodeActivated()) ? View.VISIBLE : View.GONE);
                 }
                 if (searchIconItem != null && showSearchAsIcon) {
                     searchIconItem.setVisibility(View.VISIBLE);
@@ -31920,14 +31925,6 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
         }
         skeleton.width = (int) Math.min(chatListView.getWidth() * 0.8f - (noAvatar ? 0 : AndroidUtilities.dp(42)), AndroidUtilities.dp(42) + (0.4f + Utilities.fastRandom.nextFloat() * 0.35f) * chatListView.getWidth());
         return skeleton;
-    }
-
-    public static void preload(Context context) {
-        if (context != null && chatMessageCellsCache.isEmpty()) {
-            for (int i = 0; i < 8; ++i) {
-                chatMessageCellsCache.add(new ChatMessageCell(context, true, null));
-            }
-        }
     }
 
     @Override

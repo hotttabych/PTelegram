@@ -53,6 +53,7 @@ import android.text.TextUtils;
 import android.text.style.CharacterStyle;
 import android.text.style.ClickableSpan;
 import android.text.style.URLSpan;
+import android.util.Log;
 import android.util.Property;
 import android.util.SparseArray;
 import android.util.StateSet;
@@ -82,6 +83,7 @@ import org.telegram.PhoneFormat.PhoneFormat;
 import org.telegram.messenger.AccountInstance;
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ApplicationLoader;
+import org.telegram.messenger.BuildVars;
 import org.telegram.messenger.ChatObject;
 import org.telegram.messenger.ContactsController;
 import org.telegram.messenger.DialogObject;
@@ -12735,12 +12737,19 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                         name = messageObject.customReplyName;
                     } else {
                         if (drawForwardedName) {
-                            name = messageObject.replyMessageObject.getForwardedName();
+                            if (messageObject.replyMessageObject.messageOwner.fwd_from != null) {
+                                name = UserConfig.getChatTitleOverride(currentAccount,
+                                        messageObject.replyMessageObject.messageOwner.fwd_from.from_id,
+                                        messageObject.replyMessageObject.getForwardedName());
+
+                            } else {
+                                name = messageObject.replyMessageObject.getForwardedName();
+                            }
                         }
 
                         if (name == null) {
                             long fromId = messageObject.replyMessageObject.getFromChatId();
-                            String title = UserConfig.getChatTitleOverride(currentAccount, Math.abs(fromId));
+                            String title = UserConfig.getChatTitleOverride(currentAccount, fromId);
                             if (title != null) {
                                 name = title;
                             } else if (fromId > 0) {
@@ -12945,9 +12954,7 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
             }
             return "";
         }
-        {
-            return "DELETED";
-        }
+        return "DELETED";
     }
 
     private Object getAuthorStatus() {
