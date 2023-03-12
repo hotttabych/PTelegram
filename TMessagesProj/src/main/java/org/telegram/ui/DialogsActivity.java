@@ -9038,6 +9038,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         } else if (id == NotificationCenter.onDatabaseReset) {
             dialogsLoaded[currentAccount] = false;
             loadDialogs(getAccountInstance());
+            getMessagesController().loadPinnedDialogs(folderId, 0, null);
         }
     }
 

@@ -30,7 +30,6 @@ import android.os.SystemClock;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 import android.util.Base64;
-import android.util.Log;
 import android.util.SparseArray;
 import android.util.SparseBooleanArray;
 import android.util.SparseIntArray;
@@ -505,6 +504,8 @@ public class MessagesController extends BaseController implements NotificationCe
     public boolean uploadMarkupVideo;
     public boolean giftAttachMenuIcon;
     public boolean giftTextFieldIcon;
+
+    public int checkResetLangpack;
 
     public void getNextReactionMention(long dialogId, int topicId, int count, Consumer<Integer> callback) {
         final MessagesStorage messagesStorage = getMessagesStorage();
@@ -1212,8 +1213,6 @@ public class MessagesController extends BaseController implements NotificationCe
         gifSearchBot = mainPreferences.getString("gifSearchBot", "gif");
         imageSearchBot = mainPreferences.getString("imageSearchBot", "pic");
         blockedCountry = mainPreferences.getBoolean("blockedCountry", false);
-        dcDomainName = mainPreferences.getString("dcDomainName2", ConnectionsManager.native_isTestBackend(currentAccount) != 0 ? "tapv3.stel.com" : "apv3.stel.com");
-        webFileDatacenterId = mainPreferences.getInt("webFileDatacenterId", ConnectionsManager.native_isTestBackend(currentAccount) != 0 ? 2 : 4);
         suggestedLangCode = mainPreferences.getString("suggestedLangCode", "en");
         animatedEmojisZoom = mainPreferences.getFloat("animatedEmojisZoom", 0.625f);
         qrLoginCamera = mainPreferences.getBoolean("qrLoginCamera", false);
@@ -1272,7 +1271,11 @@ public class MessagesController extends BaseController implements NotificationCe
         uploadMarkupVideo = mainPreferences.getBoolean("uploadMarkupVideo", true);
         giftAttachMenuIcon = mainPreferences.getBoolean("giftAttachMenuIcon", false);
         giftTextFieldIcon = mainPreferences.getBoolean("giftTextFieldIcon", false);
+        checkResetLangpack = mainPreferences.getInt("checkResetLangpack", 0);
         BuildVars.GOOGLE_AUTH_CLIENT_ID = mainPreferences.getString("googleAuthClientId", BuildVars.GOOGLE_AUTH_CLIENT_ID);
+
+        dcDomainName = mainPreferences.getString("dcDomainName2", ConnectionsManager.native_isTestBackend(currentAccount) != 0 ? "tapv3.stel.com" : "apv3.stel.com");
+        webFileDatacenterId = mainPreferences.getInt("webFileDatacenterId", ConnectionsManager.native_isTestBackend(currentAccount) != 0 ? 2 : 4);
 
         Set<String> currencySet = mainPreferences.getStringSet("directPaymentsCurrency", null);
         if (currencySet != null) {
@@ -2971,6 +2974,18 @@ public class MessagesController extends BaseController implements NotificationCe
                         TLRPC.TL_jsonBool bool = (TLRPC.TL_jsonBool) value.value;
                         if (bool.value != collectDeviceStats) {
                             collectDeviceStats = bool.value;
+                            changed = true;
+                        }
+                    }
+                    break;
+                }
+                case "android_check_reset_langpack": {
+                    if (value.value instanceof TLRPC.TL_jsonNumber) {
+                        TLRPC.TL_jsonNumber num = (TLRPC.TL_jsonNumber) value.value;
+                        if (num.value != checkResetLangpack) {
+                            checkResetLangpack = (int) num.value;
+                            editor.putInt("checkResetLangpack", checkResetLangpack);
+                            LocaleController.getInstance().checkPatchLangpack(currentAccount);
                             changed = true;
                         }
                     }
