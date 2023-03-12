@@ -1693,7 +1693,7 @@ public class SavedChannelsActivity extends BaseFragment implements NotificationC
                 return;
             }
             if (AndroidUtilities.isTablet()) {
-                boolean close = (Boolean) args[1];
+                boolean close = (Boolean) args[2];
                 long dialog_id = (Long) args[0];
                 if (close) {
                     if (dialog_id == openedDialogId) {
