@@ -845,7 +845,9 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
                 keyboardView.setVisibility(visible ? View.VISIBLE : View.GONE);
                 keyboardView.setAlpha(visible ? 1 : 0);
                 keyboardView.setTranslationY(visible ? 0 : AndroidUtilities.dp(CustomPhoneKeyboardView.KEYBOARD_HEIGHT_DP));
-                fragmentView.requestLayout();
+                if (fragmentView != null) {
+                    fragmentView.requestLayout();
+                }
             }
         } else {
             ValueAnimator animator = ValueAnimator.ofFloat(visible ? 0 : 1, visible ? 1 : 0).setDuration(150);
@@ -948,8 +950,10 @@ public class FakePasscodeActivity extends BaseFragment implements NotificationCe
         if (lockImageView != null) {
             lockImageView.setVisibility(!AndroidUtilities.isSmallScreen() && AndroidUtilities.displaySize.x < AndroidUtilities.displaySize.y ? View.VISIBLE : View.GONE);
         }
-        for (CodeNumberField f : codeFieldContainer.codeField) {
-            f.setShowSoftInputOnFocusCompat(!isCustomKeyboardVisible());
+        if (codeFieldContainer != null && codeFieldContainer.codeField != null) {
+            for (CodeNumberField f : codeFieldContainer.codeField) {
+                f.setShowSoftInputOnFocusCompat(!isCustomKeyboardVisible());
+            }
         }
     }
 

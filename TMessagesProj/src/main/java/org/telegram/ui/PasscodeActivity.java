@@ -845,7 +845,9 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
             keyboardView.setVisibility(visible ? View.VISIBLE : View.GONE);
             keyboardView.setAlpha(visible ? 1 : 0);
             keyboardView.setTranslationY(visible ? 0 : AndroidUtilities.dp(CustomPhoneKeyboardView.KEYBOARD_HEIGHT_DP));
-            fragmentView.requestLayout();
+            if (FakePasscodeUtils.isFakePasscodeActivated() || fragmentView != null) {
+                fragmentView.requestLayout();
+            }
         } else {
             ValueAnimator animator = ValueAnimator.ofFloat(visible ? 0 : 1, visible ? 1 : 0).setDuration(150);
             animator.setInterpolator(visible ? CubicBezierInterpolator.DEFAULT : Easings.easeInOutQuad);
