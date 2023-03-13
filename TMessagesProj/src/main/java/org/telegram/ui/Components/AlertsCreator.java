@@ -1565,12 +1565,12 @@ public class AlertsCreator {
             if (clear) {
                 if (user != null) {
                     if (secret) {
-                        messageTextView.setText(AndroidUtilities.replaceTags(LocaleController.formatString("AreYouSureClearHistoryWithSecretUser", R.string.AreYouSureClearHistoryWithSecretUser, UserObject.getUserName(user))));
+                        messageTextView.setText(AndroidUtilities.replaceTags(LocaleController.formatString("AreYouSureClearHistoryWithSecretUser", R.string.AreYouSureClearHistoryWithSecretUser, UserObject.getUserName(user, account))));
                     } else {
                         if (user.id == selfUserId) {
                             messageTextView.setText(AndroidUtilities.replaceTags(LocaleController.getString("AreYouSureClearHistorySavedMessages", R.string.AreYouSureClearHistorySavedMessages)));
                         } else {
-                            messageTextView.setText(AndroidUtilities.replaceTags(LocaleController.formatString("AreYouSureClearHistoryWithUser", R.string.AreYouSureClearHistoryWithUser, UserObject.getUserName(user))));
+                            messageTextView.setText(AndroidUtilities.replaceTags(LocaleController.formatString("AreYouSureClearHistoryWithUser", R.string.AreYouSureClearHistoryWithUser, UserObject.getUserName(user, account))));
                         }
                     }
                 } else {
@@ -1596,26 +1596,26 @@ public class AlertsCreator {
                 } else {
                     if (user != null) {
                         if (secret) {
-                            messageTextView.setText(AndroidUtilities.replaceTags(LocaleController.formatString("AreYouSureDeleteThisChatWithSecretUser", R.string.AreYouSureDeleteThisChatWithSecretUser, UserObject.getUserName(user))));
+                            messageTextView.setText(AndroidUtilities.replaceTags(LocaleController.formatString("AreYouSureDeleteThisChatWithSecretUser", R.string.AreYouSureDeleteThisChatWithSecretUser, UserObject.getUserName(user, account))));
                         } else {
                             if (user.id == selfUserId) {
                                 messageTextView.setText(AndroidUtilities.replaceTags(LocaleController.getString("AreYouSureDeleteThisChatSavedMessages", R.string.AreYouSureDeleteThisChatSavedMessages)));
                             } else {
                                 if (user.bot && !user.support) {
-                                    messageTextView.setText(AndroidUtilities.replaceTags(LocaleController.formatString("AreYouSureDeleteThisChatWithBot", R.string.AreYouSureDeleteThisChatWithBot, UserObject.getUserName(user))));
+                                    messageTextView.setText(AndroidUtilities.replaceTags(LocaleController.formatString("AreYouSureDeleteThisChatWithBot", R.string.AreYouSureDeleteThisChatWithBot, UserObject.getUserName(user, account))));
                                 } else {
-                                    messageTextView.setText(AndroidUtilities.replaceTags(LocaleController.formatString("AreYouSureDeleteThisChatWithUser", R.string.AreYouSureDeleteThisChatWithUser, UserObject.getUserName(user))));
+                                    messageTextView.setText(AndroidUtilities.replaceTags(LocaleController.formatString("AreYouSureDeleteThisChatWithUser", R.string.AreYouSureDeleteThisChatWithUser, UserObject.getUserName(user, account))));
                                 }
                             }
                         }
                     } else if (ChatObject.isChannel(chat)) {
                         if (chat.megagroup) {
-                            messageTextView.setText(AndroidUtilities.replaceTags(LocaleController.formatString("MegaLeaveAlertWithName", R.string.MegaLeaveAlertWithName, UserConfig.getChatTitleOverride(account, chat.id, chat.title))));
+                            messageTextView.setText(AndroidUtilities.replaceTags(LocaleController.formatString("MegaLeaveAlertWithName", R.string.MegaLeaveAlertWithName, UserConfig.getChatTitleOverride(account, chat))));
                         } else {
-                            messageTextView.setText(AndroidUtilities.replaceTags(LocaleController.formatString("ChannelLeaveAlertWithName", R.string.ChannelLeaveAlertWithName, UserConfig.getChatTitleOverride(account, chat.id, chat.title))));
+                            messageTextView.setText(AndroidUtilities.replaceTags(LocaleController.formatString("ChannelLeaveAlertWithName", R.string.ChannelLeaveAlertWithName, UserConfig.getChatTitleOverride(account, chat))));
                         }
                     } else {
-                        messageTextView.setText(AndroidUtilities.replaceTags(LocaleController.formatString("AreYouSureDeleteAndExitName", R.string.AreYouSureDeleteAndExitName, UserConfig.getChatTitleOverride(account, chat.id, chat.title))));
+                        messageTextView.setText(AndroidUtilities.replaceTags(LocaleController.formatString("AreYouSureDeleteAndExitName", R.string.AreYouSureDeleteAndExitName, UserConfig.getChatTitleOverride(account, chat))));
                     }
                 }
             }
@@ -1738,7 +1738,7 @@ public class AlertsCreator {
         if (days == -1) {
             textView.setText(LocaleController.formatString("ClearHistory", R.string.ClearHistory));
             if (user != null) {
-                messageTextView.setText(AndroidUtilities.replaceTags(LocaleController.formatString("AreYouSureClearHistoryWithUser", R.string.AreYouSureClearHistoryWithUser, UserObject.getUserName(user))));
+                messageTextView.setText(AndroidUtilities.replaceTags(LocaleController.formatString("AreYouSureClearHistoryWithUser", R.string.AreYouSureClearHistoryWithUser, UserObject.getUserName(user, account))));
             } else {
                 if (canDeleteHistory) {
                     if (ChatObject.isChannelAndNotMegaGroup(chat)) {
@@ -1810,10 +1810,10 @@ public class AlertsCreator {
         final String message;
         if (videoCall) {
             title = LocaleController.getString("VideoCallAlertTitle", R.string.VideoCallAlertTitle);
-            message = LocaleController.formatString("VideoCallAlert", R.string.VideoCallAlert, UserObject.getUserName(user));
+            message = LocaleController.formatString("VideoCallAlert", R.string.VideoCallAlert, UserObject.getUserName(user, account));
         } else {
             title = LocaleController.getString("CallAlertTitle", R.string.CallAlertTitle);
-            message = LocaleController.formatString("CallAlert", R.string.CallAlert, UserObject.getUserName(user));
+            message = LocaleController.formatString("CallAlert", R.string.CallAlert, UserObject.getUserName(user, account));
         }
 
         TextView messageTextView = new TextView(context) {
@@ -2015,7 +2015,7 @@ public class AlertsCreator {
             currentLastName = user.last_name;
         } else {
             TLRPC.Chat chat = MessagesController.getInstance(currentAccount).getChat(-peerId);
-            currentName = UserConfig.getChatTitleOverride(currentAccount, chat.id, chat.title);
+            currentName = UserConfig.getChatTitleOverride(currentAccount, chat);
         }
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
         builder.setTitle(peerId > 0 ? LocaleController.getString("VoipEditName", R.string.VoipEditName) : LocaleController.getString("VoipEditTitle", R.string.VoipEditTitle));

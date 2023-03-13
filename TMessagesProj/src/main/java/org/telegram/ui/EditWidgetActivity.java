@@ -274,21 +274,17 @@ public class EditWidgetActivity extends BaseFragment {
                             } else if (UserObject.isDeleted(user)) {
                                 name = LocaleController.getString("HiddenName", R.string.HiddenName);
                             } else {
-                                name = ContactsController.formatName(user.first_name, user.last_name);
-                                name = UserConfig.getChatTitleOverride(currentAccount, user.id, name);
+                                name = getContactsController().formatNameWithOverride(user);
                             }
-                            if (!UserObject.isReplyUser(user) && !UserObject.isUserSelf(user) && user.photo != null && user.photo.photo_small != null && user.photo.photo_small.volume_id != 0 && user.photo.photo_small.local_id != 0 && UserConfig.isAvatarEnabled(currentAccount, user.id)) {
+                            if (!UserObject.isReplyUser(user) && !UserObject.isUserSelf(user) && user.photo != null && user.photo.photo_small != null && user.photo.photo_small.volume_id != 0 && user.photo.photo_small.local_id != 0 && getUserConfig().isAvatarEnabled(user.id)) {
                                 photoPath = user.photo.photo_small;
                             }
                         }
                     } else {
                         chat = getMessagesController().getChat(-dialog.id);
                         if (chat != null) {
-                            name = UserConfig.getChatTitleOverride(currentAccount, chat.id);
-                            if (name == null) {
-                                name = UserConfig.getChatTitleOverride(currentAccount, chat.id, chat.title);
-                            }
-                            if (chat.photo != null && chat.photo.photo_small != null && chat.photo.photo_small.volume_id != 0 && chat.photo.photo_small.local_id != 0 && UserConfig.isAvatarEnabled(currentAccount, chat.id)) {
+                            name = getUserConfig().getChatTitleOverride(chat);
+                            if (chat.photo != null && chat.photo.photo_small != null && chat.photo.photo_small.volume_id != 0 && chat.photo.photo_small.local_id != 0 && getUserConfig().isAvatarEnabled(chat.id)) {
                                 photoPath = chat.photo.photo_small;
                             }
                         }
@@ -557,15 +553,15 @@ public class EditWidgetActivity extends BaseFragment {
                                 name = LocaleController.getString("HiddenName", R.string.HiddenName);
                             } else {
                                 name = UserObject.getFirstName(user);
-                                name = UserConfig.getChatTitleOverride(currentAccount, user.id, name);
+                                name = getUserConfig().getChatTitleOverride(user.id, name);
                             }
-                            if (!UserObject.isReplyUser(user) && !UserObject.isUserSelf(user) && user != null && user.photo != null && user.photo.photo_small != null && user.photo.photo_small.volume_id != 0 && user.photo.photo_small.local_id != 0 && UserConfig.isAvatarEnabled(currentAccount, user.id)) {
+                            if (!UserObject.isReplyUser(user) && !UserObject.isUserSelf(user) && user != null && user.photo != null && user.photo.photo_small != null && user.photo.photo_small.volume_id != 0 && user.photo.photo_small.local_id != 0 && getUserConfig().isAvatarEnabled(user.id)) {
                                 photoPath = user.photo.photo_small;
                             }
                         } else {
                             chat = getMessagesController().getChat(-dialog.id);
-                            name = UserConfig.getChatTitleOverride(currentAccount, chat.id, chat.title);
-                            if (chat.photo != null && chat.photo.photo_small != null && chat.photo.photo_small.volume_id != 0 && chat.photo.photo_small.local_id != 0 && UserConfig.isAvatarEnabled(currentAccount, chat.id)) {
+                            name = getUserConfig().getChatTitleOverride(chat);
+                            if (chat.photo != null && chat.photo.photo_small != null && chat.photo.photo_small.volume_id != 0 && chat.photo.photo_small.local_id != 0 && getUserConfig().isAvatarEnabled(chat.id)) {
                                 photoPath = chat.photo.photo_small;
                             }
                         }

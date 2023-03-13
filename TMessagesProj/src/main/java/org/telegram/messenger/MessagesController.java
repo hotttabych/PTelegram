@@ -744,7 +744,7 @@ public class MessagesController extends BaseController implements NotificationCe
         } else {
             TLRPC.Chat chat = getChat(-dialogId);
             if (chat != null) {
-                return UserConfig.getChatTitleOverride(currentAccount, chat.id, chat.title);
+                return getUserConfig().getChatTitleOverride(currentAccount, chat);
             }
         }
         return null;

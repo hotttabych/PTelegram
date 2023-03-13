@@ -832,10 +832,7 @@ public class DialogCell extends BaseCell {
             }
             String title;
             if (currentChat != null) {
-                title = UserConfig.getChatTitleOverride(currentAccount, currentChat.id);
-                if (title == null) {
-                    title = currentChat.title;
-                }
+                title = UserConfig.getChatTitleOverride(currentAccount, currentChat);
                 title = title.replace('\n', ' ');
             } else if (currentUser != null) {
                 if (UserObject.isDeleted(currentUser)) {
@@ -1652,7 +1649,7 @@ public class DialogCell extends BaseCell {
                         topicIconInName[0] = null;
                         nameString = showTopicIconInName ? ForumUtilities.getTopicSpannedName(forumTopic, Theme.dialogs_namePaint[paintIndex], topicIconInName) : forumTopic.title;
                     } else {
-                        nameString = UserConfig.getChatTitleOverride(currentAccount, chat.id, chat.title);
+                        nameString = UserConfig.getChatTitleOverride(currentAccount, chat);
                     }
                 } else if (user != null) {
                     if (UserObject.isReplyUser(user)) {

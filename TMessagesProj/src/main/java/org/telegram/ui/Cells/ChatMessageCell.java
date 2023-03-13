@@ -12553,7 +12553,7 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                     } else if (!TextUtils.isEmpty(messageObject.messageOwner.fwd_from.post_author)) {
                         currentForwardNameString = String.format("%s (%s)", currentForwardChannel.title, messageObject.messageOwner.fwd_from.post_author);
                     } else {
-                        currentForwardNameString = UserConfig.getChatTitleOverride(currentAccount, currentForwardChannel.id, currentForwardChannel.title);
+                        currentForwardNameString = UserConfig.getChatTitleOverride(currentAccount, currentForwardChannel);
                     }
                 } else if (currentForwardUser != null) {
                     currentForwardNameString = UserObject.getUserName(currentForwardUser, currentAccount);
@@ -12726,7 +12726,7 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                                 }
                             } else {
                                 TLRPC.User user = MessagesController.getInstance(currentAccount).getUser(messageObject.sendAsPeer.user_id);
-                                name = UserObject.getUserName(user);
+                                name = UserObject.getUserName(user, currentAccount);
                             }
                         } else {
                             name = UserObject.getUserName(AccountInstance.getInstance(currentAccount).getUserConfig().getCurrentUser());
@@ -12747,23 +12747,20 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
 
                         if (name == null) {
                             long fromId = messageObject.replyMessageObject.getFromChatId();
-                            String title = UserConfig.getChatTitleOverride(currentAccount, fromId);
-                            if (title != null) {
-                                name = title;
-                            } else if (fromId > 0) {
+                            if (fromId > 0) {
                                 TLRPC.User user = MessagesController.getInstance(currentAccount).getUser(fromId);
                                 if (user != null) {
-                                    name = UserObject.getUserName(user);
+                                    name = UserObject.getUserName(user, currentAccount);
                                 }
                             } else if (fromId < 0) {
                                 TLRPC.Chat chat = MessagesController.getInstance(currentAccount).getChat(-fromId);
                                 if (chat != null) {
-                                    name = chat.title;
+                                    name = UserConfig.getChatTitleOverride(currentAccount, chat);
                                 }
                             } else {
                                 TLRPC.Chat chat = MessagesController.getInstance(currentAccount).getChat(messageObject.replyMessageObject.messageOwner.peer_id.channel_id);
                                 if (chat != null) {
-                                    name = chat.title;
+                                    name = UserConfig.getChatTitleOverride(currentAccount, chat);
                                 }
                             }
                         }
@@ -12941,8 +12938,7 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
         if (currentUser != null) {
             return UserObject.getUserName(currentUser, currentAccount);
         } else if (currentChat != null) {
-            String title = UserConfig.getChatTitleOverride(currentAccount, currentChat.id);
-            return title == null ? currentChat.title : title;
+            return UserConfig.getChatTitleOverride(currentAccount, currentChat);
         } else if (currentMessageObject != null && currentMessageObject.isSponsored()) {
             if (currentMessageObject.sponsoredChatInvite != null && currentMessageObject.sponsoredChatInvite.title != null) {
                 return currentMessageObject.sponsoredChatInvite.title;
@@ -18279,7 +18275,7 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                     if (currentUser == null) {
                         return null;
                     }
-                    String content = UserObject.getUserName(currentUser);
+                    String content = UserObject.getUserName(currentUser, currentAccount);
                     info.setText(content);
                     rect.set((int) nameX, (int) nameY, (int) (nameX + nameWidth), (int) (nameY + (nameLayout != null ? nameLayout.getHeight() : 10)));
                     info.setBoundsInParent(rect);

@@ -3626,7 +3626,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                                             if (botApp.inactive) {
                                                 AlertDialog.Builder builder = new AlertDialog.Builder(LaunchActivity.this)
                                                         .setTopAnimation(R.raw.permission_request_apk, AlertsCreator.PERMISSIONS_REQUEST_TOP_ICON_SIZE, false, Theme.getColor(Theme.key_dialogTopBackground))
-                                                        .setMessage(AndroidUtilities.replaceTags(LocaleController.formatString(R.string.BotStartAppPermission, botApp.app.title, UserObject.getUserName(user))))
+                                                        .setMessage(AndroidUtilities.replaceTags(LocaleController.formatString(R.string.BotStartAppPermission, botApp.app.title, UserObject.getUserName(user, currentAccount))))
                                                         .setPositiveButton(LocaleController.getString(R.string.Start), (dialog, which) -> loadBotSheet.run())
                                                         .setNegativeButton(LocaleController.getString(R.string.Cancel), null);
 
@@ -3636,7 +3636,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                                                     CheckBoxCell cell = new CheckBoxCell(LaunchActivity.this, 5, lastFragment.getResourceProvider());
                                                     cell.setBackground(Theme.getSelectorDrawable(false));
                                                     cell.setMultiline(true);
-                                                    cell.setText(AndroidUtilities.replaceTags(LocaleController.formatString("OpenUrlOption2", R.string.OpenUrlOption2, UserObject.getUserName(user))), "", true, false);
+                                                    cell.setText(AndroidUtilities.replaceTags(LocaleController.formatString("OpenUrlOption2", R.string.OpenUrlOption2, UserObject.getUserName(user, currentAccount))), "", true, false);
                                                     cell.setPadding(LocaleController.isRTL ? AndroidUtilities.dp(16) : AndroidUtilities.dp(8), 0, LocaleController.isRTL ? AndroidUtilities.dp(8) : AndroidUtilities.dp(16), 0);
                                                     cell.setOnClickListener(v -> {
                                                         boolean allow = !cell.isChecked();
@@ -3739,7 +3739,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                                                 AtomicBoolean allowWrite = new AtomicBoolean();
                                                 AlertDialog.Builder builder = new AlertDialog.Builder(LaunchActivity.this)
                                                         .setTopView(introTopView)
-                                                        .setMessage(AndroidUtilities.replaceTags(LocaleController.formatString("BotRequestAttachPermission", R.string.BotRequestAttachPermission, UserObject.getUserName(user))))
+                                                        .setMessage(AndroidUtilities.replaceTags(LocaleController.formatString("BotRequestAttachPermission", R.string.BotRequestAttachPermission, UserObject.getUserName(user, currentAccount))))
                                                         .setPositiveButton(LocaleController.getString(R.string.BotAddToMenu), (dialog, which) -> {
                                                             TLRPC.TL_messages_toggleBotInAttachMenu botRequest = new TLRPC.TL_messages_toggleBotInAttachMenu();
                                                             botRequest.bot = MessagesController.getInstance(intentAccount).getInputUser(res.peer.user_id);
@@ -3766,7 +3766,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                                                     CheckBoxCell cell = new CheckBoxCell(LaunchActivity.this, 5, lastFragment.getResourceProvider());
                                                     cell.setBackground(Theme.getSelectorDrawable(false));
                                                     cell.setMultiline(true);
-                                                    cell.setText(AndroidUtilities.replaceTags(LocaleController.formatString("OpenUrlOption2", R.string.OpenUrlOption2, UserObject.getUserName(user))), "", true, false);
+                                                    cell.setText(AndroidUtilities.replaceTags(LocaleController.formatString("OpenUrlOption2", R.string.OpenUrlOption2, UserObject.getUserName(user, currentAccount))), "", true, false);
                                                     cell.setPadding(LocaleController.isRTL ? AndroidUtilities.dp(16) : AndroidUtilities.dp(8), 0, LocaleController.isRTL ? AndroidUtilities.dp(8) : AndroidUtilities.dp(16), 0);
                                                     cell.setOnClickListener(v -> {
                                                         boolean allow = !cell.isChecked();
@@ -3979,7 +3979,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                                     AlertDialog.Builder builder = new AlertDialog.Builder(this);
                                     builder.setTitle(LocaleController.getString("AddBot", R.string.AddBot));
                                     String chatName = chat == null ? "" : chat.title;
-                                    builder.setMessage(AndroidUtilities.replaceTags(LocaleController.formatString("AddMembersAlertNamesText", R.string.AddMembersAlertNamesText, UserObject.getUserName(user), chatName)));
+                                    builder.setMessage(AndroidUtilities.replaceTags(LocaleController.formatString("AddMembersAlertNamesText", R.string.AddMembersAlertNamesText, UserObject.getUserName(user, currentAccount), chatName)));
                                     builder.setNegativeButton(LocaleController.getString("Cancel", R.string.Cancel), null);
                                     builder.setPositiveButton(LocaleController.getString("AddBot", R.string.AddBot), (di, i) -> {
                                         Bundle args12 = new Bundle();

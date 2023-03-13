@@ -2666,11 +2666,7 @@ public class ShareAlert extends BottomSheet implements NotificationCenter.Notifi
                                         data.reuse();
                                         if (!(chat == null || ChatObject.isNotInChat(chat) || ChatObject.isChannel(chat) && !chat.creator && (chat.admin_rights == null || !chat.admin_rights.post_messages) && !chat.megagroup)) {
                                             DialogSearchResult dialogSearchResult = dialogsResult.get(-(long) chat.id);
-                                            String title = UserConfig.getChatTitleOverride(currentAccount, chat.id);
-                                            if (title == null) {
-                                                title = chat.title;
-                                            }
-                                            dialogSearchResult.name = AndroidUtilities.generateSearchName(title, null, q);
+                                            dialogSearchResult.name = AndroidUtilities.generateSearchName(UserConfig.getChatTitleOverride(getCurrentAccount(), chat), null, q);
                                             dialogSearchResult.object = chat;
                                             dialogSearchResult.dialog.id = -chat.id;
                                             resultCount++;
@@ -3098,10 +3094,7 @@ public class ShareAlert extends BottomSheet implements NotificationCenter.Notifi
                     } else {
                         TLRPC.Chat chat = (TLRPC.Chat) object;
                         id = -chat.id;
-                        name = UserConfig.getChatTitleOverride(currentAccount, chat.id);
-                        if (name == null) {
-                            name = chat.title;
-                        }
+                        name = UserConfig.getChatTitleOverride(getCurrentAccount(), chat);
                     }
                     String foundUserName = searchAdapterHelper.getLastFoundUsername();
                     if (!TextUtils.isEmpty(foundUserName)) {

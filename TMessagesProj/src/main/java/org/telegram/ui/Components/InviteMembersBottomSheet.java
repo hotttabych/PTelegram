@@ -317,7 +317,7 @@ public class InviteMembersBottomSheet extends UsersAlertBase implements Notifica
                 }
                 TLRPC.Chat chat = MessagesController.getInstance(currentAccount).getChat(chatId);
                 if (selectedContacts.size() > 5) {
-                    SpannableStringBuilder spannableStringBuilder = new SpannableStringBuilder(AndroidUtilities.replaceTags(LocaleController.formatPluralString("AddManyMembersAlertNamesText", selectedContacts.size(), UserConfig.getChatTitleOverride(currentAccount, chat.id, chat.title))));
+                    SpannableStringBuilder spannableStringBuilder = new SpannableStringBuilder(AndroidUtilities.replaceTags(LocaleController.formatPluralString("AddManyMembersAlertNamesText", selectedContacts.size(), UserConfig.getChatTitleOverride(getCurrentAccount(), chat))));
                     String countString = String.format("%d", selectedContacts.size());
                     int index = TextUtils.indexOf(spannableStringBuilder, countString);
                     if (index >= 0) {
@@ -325,11 +325,7 @@ public class InviteMembersBottomSheet extends UsersAlertBase implements Notifica
                     }
                     builder.setMessage(spannableStringBuilder);
                 } else {
-                    String title = UserConfig.getChatTitleOverride(currentAccount, chat.id);
-                    if (title == null) {
-                        title = chat.title;
-                    }
-                    builder.setMessage(AndroidUtilities.replaceTags(LocaleController.formatString("AddMembersAlertNamesText", R.string.AddMembersAlertNamesText, stringBuilder, title)));
+                    builder.setMessage(AndroidUtilities.replaceTags(LocaleController.formatString("AddMembersAlertNamesText", R.string.AddMembersAlertNamesText, stringBuilder, UserConfig.getChatTitleOverride(currentAccount, chat))));
                 }
                 builder.setPositiveButton(LocaleController.getString("Add", R.string.Add), (dialogInterface, i) -> onAddToGroupDone(0));
                 builder.setNegativeButton(LocaleController.getString("Cancel", R.string.Cancel), null);
@@ -961,7 +957,7 @@ public class InviteMembersBottomSheet extends UsersAlertBase implements Notifica
                                 username = UserObject.getPublicUsername(user);
                             } else {
                                 TLRPC.Chat chat = (TLRPC.Chat) object;
-                                name = UserConfig.getChatTitleOverride(currentAccount, chat.id, chat.title);
+                                name = UserConfig.getChatTitleOverride(getCurrentAccount(), chat);
                                 username = ChatObject.getPublicUsername(chat);
                             }
                             String tName = LocaleController.getInstance().getTranslitString(name);
@@ -984,11 +980,7 @@ public class InviteMembersBottomSheet extends UsersAlertBase implements Notifica
                                             resultArrayNames.add(AndroidUtilities.generateSearchName(user.first_name, user.last_name, q));
                                         } else {
                                             TLRPC.Chat chat = (TLRPC.Chat) object;
-                                            String title = UserConfig.getChatTitleOverride(currentAccount, chat.id);
-                                            if (title == null) {
-                                                title = chat.title;
-                                            }
-                                            resultArrayNames.add(AndroidUtilities.generateSearchName(title, null, q));
+                                            resultArrayNames.add(AndroidUtilities.generateSearchName(UserConfig.getChatTitleOverride(getCurrentAccount(), chat), null, q));
                                         }
                                     } else {
                                         resultArrayNames.add(AndroidUtilities.generateSearchName("@" + username, null, "@" + q));

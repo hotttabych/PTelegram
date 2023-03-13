@@ -6805,11 +6805,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 long did;
                 if (item instanceof TLRPC.Chat) {
                     TLRPC.Chat chat = (TLRPC.Chat) item;
-                    String title = UserConfig.getChatTitleOverride(currentAccount, chat.id);
-                    if (title == null) {
-                        title = chat.title;
-                    }
-                    builder.setMessage(LocaleController.formatString("ClearSearchSingleChatAlertText", R.string.ClearSearchSingleChatAlertText, title));
+                    builder.setMessage(LocaleController.formatString("ClearSearchSingleChatAlertText", R.string.ClearSearchSingleChatAlertText, getUserConfig().getChatTitleOverride(chat)));
                     did = -chat.id;
                 } else if (item instanceof TLRPC.User) {
                     TLRPC.User user = (TLRPC.User) item;
@@ -9744,7 +9740,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     return;
                 }
                 title = LocaleController.getString("SendMessageTitle", R.string.SendMessageTitle);
-                message = LocaleController.formatStringSimple(selectAlertString, UserObject.getUserName(user));
+                message = LocaleController.formatStringSimple(selectAlertString, UserObject.getUserName(user, getCurrentAccount()));
                 buttonText = LocaleController.getString("Send", R.string.Send);
             } else if (DialogObject.isUserDialog(dialogId)) {
                 if (dialogId == getUserConfig().getClientUserId()) {
@@ -9765,7 +9761,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 if (chat == null) {
                     return;
                 }
-                CharSequence chatTitle = UserConfig.getChatTitleOverride(currentAccount, chat.id, chat.title);
+                CharSequence chatTitle = getUserConfig().getChatTitleOverride(chat);
                 if (topicId != 0) {
                     TLRPC.TL_forumTopic topic = getMessagesController().getTopicsController().findTopic(chat.id, topicId);
                     if (topic != null) {

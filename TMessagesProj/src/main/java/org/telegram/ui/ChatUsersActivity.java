@@ -1436,11 +1436,7 @@ public class ChatUsersActivity extends BaseFragment implements NotificationCente
                     } else {
                         TLRPC.Chat chat = getMessagesController().getChat(-peerId);
                         if (chat != null) {
-                            String title = UserConfig.getChatTitleOverride(currentAccount, chat.id);
-                            if (title == null) {
-                                title = chat.title;
-                            }
-                            BulletinFactory.createPromoteToAdminBulletin(ChatUsersActivity.this, title).show();
+                            BulletinFactory.createPromoteToAdminBulletin(ChatUsersActivity.this, getUserConfig().getChatTitleOverride(chat)).show();
                         }
                     }
                 }
@@ -1745,11 +1741,7 @@ public class ChatUsersActivity extends BaseFragment implements NotificationCente
                     getMessagesController().deleteParticipantFromChat(chatId, user);
                     removeParticipants(peerId);
                     if (currentChat != null && user != null && BulletinFactory.canShowBulletin(this)) {
-                        String title = UserConfig.getChatTitleOverride(currentAccount, currentChat.id);
-                        if (title == null) {
-                            title = currentChat.title;
-                        }
-                        BulletinFactory.createRemoveFromChatBulletin(this, user, title).show();
+                        BulletinFactory.createRemoveFromChatBulletin(this, user, getUserConfig().getChatTitleOverride(currentChat)).show();
                     }
                 } else {
                     if (actions.get(i) == 1 && canEditAdmin && (participant instanceof TLRPC.TL_channelParticipantAdmin || participant instanceof TLRPC.TL_chatParticipantAdmin)) {
@@ -2630,7 +2622,7 @@ public class ChatUsersActivity extends BaseFragment implements NotificationCente
                                     TLRPC.Chat chat = getMessagesController().getChat(-peerId);
                                     name = chat.title.toLowerCase();
                                     username = ChatObject.getPublicUsername(chat);
-                                    firstName = UserConfig.getChatTitleOverride(currentAccount, chat.id, chat.title);
+                                    firstName = getUserConfig().getChatTitleOverride(chat);
                                     lastName = null;
                                 }
 

@@ -198,7 +198,7 @@ public class SenderSelectPopup extends ActionBarPopupWindow {
                 } else {
                     TLRPC.User user = messagesController.getUser(peerId);
                     if (user != null) {
-                        senderView.title.setText(UserObject.getUserName(user));
+                        senderView.title.setText(UserObject.getUserName(user, currentAccount));
                         senderView.subtitle.setText(LocaleController.getString("VoipGroupPersonalAccount", R.string.VoipGroupPersonalAccount));
                         senderView.avatar.setAvatar(user);
                     }

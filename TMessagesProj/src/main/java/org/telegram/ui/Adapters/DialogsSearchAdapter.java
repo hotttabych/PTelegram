@@ -217,10 +217,7 @@ public class DialogsSearchAdapter extends RecyclerListView.SelectionAdapter {
             if (user != null) {
                 name = UserObject.getFirstName(user);
             } else if (chat != null) {
-                name = UserConfig.getChatTitleOverride(currentAccount, chat.id);
-                if (name == null) {
-                    name = chat.title;
-                }
+                name = UserConfig.getChatTitleOverride(currentAccount, chat);
             }
             cell.setDialog(did, true, name);
         }
@@ -1501,10 +1498,7 @@ public class DialogsSearchAdapter extends RecyclerListView.SelectionAdapter {
                         if (user != null) {
                             nameSearch = ContactsController.formatName(user.first_name, user.last_name);
                         } else if (chat != null) {
-                            nameSearch = UserConfig.getChatTitleOverride(currentAccount, chat.id);
-                            if (nameSearch == null) {
-                                nameSearch = chat.title;
-                            }
+                            nameSearch = UserConfig.getChatTitleOverride(currentAccount, chat);
                         }
                         if (nameSearch != null && (index = AndroidUtilities.indexOfIgnoreCase(nameSearch, foundUserName)) != -1) {
                             SpannableStringBuilder spannableStringBuilder = new SpannableStringBuilder(nameSearch);
@@ -1921,7 +1915,7 @@ public class DialogsSearchAdapter extends RecyclerListView.SelectionAdapter {
                 title = ((TLRPC.Chat) obj.object).title;
                 username = ((TLRPC.Chat) obj.object).username;
             } else if (obj.object instanceof TLRPC.User) {
-                title = UserObject.getUserName((TLRPC.User) obj.object);
+                title = UserObject.getUserName((TLRPC.User) obj.object, currentAccount);
                 username = ((TLRPC.User) obj.object).username;
             } else if (obj.object instanceof TLRPC.ChatInvite) {
                 title = ((TLRPC.ChatInvite) obj.object).title;

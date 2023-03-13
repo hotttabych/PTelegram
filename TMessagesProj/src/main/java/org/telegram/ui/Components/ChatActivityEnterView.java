@@ -3107,7 +3107,7 @@ public class ChatActivityEnterView extends BlurredFrameLayout implements Notific
         } else {
             new AlertDialog.Builder(parentFragment.getParentActivity())
                     .setTitle(LocaleController.getString(R.string.BotOpenPageTitle))
-                    .setMessage(AndroidUtilities.replaceTags(LocaleController.formatString(R.string.BotOpenPageMessage, UserObject.getUserName(MessagesController.getInstance(currentAccount).getUser(dialog_id)))))
+                    .setMessage(AndroidUtilities.replaceTags(LocaleController.formatString(R.string.BotOpenPageMessage, UserObject.getUserName(MessagesController.getInstance(currentAccount).getUser(dialog_id), currentAccount))))
                     .setPositiveButton(LocaleController.getString(R.string.OK), (dialog, which) -> {
                         onRequestWebView.run();
                         SharedPrefsHelper.setWebViewConfirmShown(currentAccount, dialog_id, true);
@@ -7914,7 +7914,7 @@ public class ChatActivityEnterView extends BlurredFrameLayout implements Notific
             } else {
                 new AlertDialog.Builder(parentFragment.getParentActivity())
                         .setTitle(LocaleController.getString(R.string.BotOpenPageTitle))
-                        .setMessage(AndroidUtilities.replaceTags(LocaleController.formatString("BotOpenPageMessage", R.string.BotOpenPageMessage, UserObject.getUserName(user))))
+                        .setMessage(AndroidUtilities.replaceTags(LocaleController.formatString("BotOpenPageMessage", R.string.BotOpenPageMessage, UserObject.getUserName(user), currentAccount)))
                         .setPositiveButton(LocaleController.getString(R.string.OK), (dialog, which) -> {
                             onRequestWebView.run();
                             SharedPrefsHelper.setWebViewConfirmShown(currentAccount, botId, true);

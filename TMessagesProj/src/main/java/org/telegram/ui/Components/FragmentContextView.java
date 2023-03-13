@@ -645,11 +645,7 @@ public class FragmentContextView extends FrameLayout implements NotificationCent
                     TLRPC.Chat chat = chatActivity.getCurrentChat();
                     TLRPC.User user = chatActivity.getCurrentUser();
                     if (chat != null) {
-                        String title = UserConfig.getChatTitleOverride(account, chat.id);
-                        if (title == null) {
-                            title = chat.title;
-                        }
-                        builder.setMessage(AndroidUtilities.replaceTags(LocaleController.formatString("StopLiveLocationAlertToGroupText", R.string.StopLiveLocationAlertToGroupText, title)));
+                        builder.setMessage(AndroidUtilities.replaceTags(LocaleController.formatString("StopLiveLocationAlertToGroupText", R.string.StopLiveLocationAlertToGroupText, UserConfig.getChatTitleOverride(account, chat))));
                     } else if (user != null) {
                         builder.setMessage(AndroidUtilities.replaceTags(LocaleController.formatString("StopLiveLocationAlertToUserText", R.string.StopLiveLocationAlertToUserText, UserObject.getFirstName(user))));
                     } else {
@@ -1536,10 +1532,7 @@ public class FragmentContextView extends FrameLayout implements NotificationCent
                     } else {
                         TLRPC.Chat chat = MessagesController.getInstance(info.messageObject.currentAccount).getChat(-dialogId);
                         if (chat != null) {
-                            param = UserConfig.getChatTitleOverride(account, chat.id);
-                            if (param == null) {
-                                param = chat.title;
-                            }
+                            param = UserConfig.getChatTitleOverride(account, chat);
                         } else {
                             param = "";
                         }
@@ -2421,11 +2414,7 @@ public class FragmentContextView extends FrameLayout implements NotificationCent
                             }
                         }
                     } else {
-                        String title = UserConfig.getChatTitleOverride(account, service.getChat().id);
-                        if (title == null) {
-                            title = service.getChat().title;
-                        }
-                        titleTextView.setText(title, false);
+                        titleTextView.setText(UserConfig.getChatTitleOverride(account, service.getChat()), false);
                     }
                 }
             } else if (service.getUser() != null) {

@@ -725,7 +725,7 @@ public class DialogsAdapter extends RecyclerListView.SelectionAdapter implements
                         TLRPC.User user = MessagesController.getInstance(currentAccount).getUser(dialog.id);
                         if (user != null) {
                             object = user;
-                            title = UserObject.getUserName(user);
+                            title = UserObject.getUserName(user, currentAccount);
                             if (!UserObject.isReplyUser(user)) {
                                 if (user.bot) {
                                     subtitle = LocaleController.getString("Bot", R.string.Bot);

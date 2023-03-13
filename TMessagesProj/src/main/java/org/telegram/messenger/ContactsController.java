@@ -2788,6 +2788,14 @@ public class ContactsController extends BaseController {
         return formatName(user.first_name, user.last_name, 0);
     }
 
+    public String formatNameWithOverride(TLRPC.User user) {
+        return getUserConfig().getChatTitleOverride(user.id, formatName(user.first_name, user.last_name));
+    }
+
+    public static String formatNameWithOverride(Integer accountNum, TLRPC.User user) {
+        return UserConfig.getChatTitleOverride(accountNum, user.id, formatName(user.first_name, user.last_name));
+    }
+
     public static String formatName(String firstName, String lastName) {
         return formatName(firstName, lastName, 0);
     }

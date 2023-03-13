@@ -1105,11 +1105,7 @@ public class FakePasscodeRemoveChatsActivity extends BaseFragment implements Not
                                             resultArrayNames.add(AndroidUtilities.generateSearchName(user.first_name, user.last_name, q));
                                         } else if (object instanceof TLRPC.Chat){
                                             TLRPC.Chat chat = (TLRPC.Chat) object;
-                                            String title = UserConfig.getChatTitleOverride(currentAccount, chat.id);
-                                            if (title == null) {
-                                                title = chat.title;
-                                            }
-                                            resultArrayNames.add(AndroidUtilities.generateSearchName(title, null, q));
+                                            resultArrayNames.add(AndroidUtilities.generateSearchName(getUserConfig().getChatTitleOverride(chat), null, q));
                                         } else {
                                             RemoveChatsAction.RemoveChatEntry entry = (RemoveChatsAction.RemoveChatEntry) object;
                                             resultArrayNames.add(AndroidUtilities.generateSearchName(entry.title, null, q));

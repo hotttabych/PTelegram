@@ -8122,10 +8122,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                 name = searchingUserMessages.last_name;
             }
         } else {
-            name = UserConfig.getChatTitleOverride(currentAccount, searchingChatMessages.id);
-            if (name == null) {
-                name = searchingChatMessages.title;
-            }
+            name = getUserConfig().getChatTitleOverride(searchingChatMessages);
         }
         if (name == null) {
             return;
@@ -11147,10 +11144,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                         if (chat == null) {
                             return;
                         }
-                        name = UserConfig.getChatTitleOverride(currentAccount, chat.id);
-                        if (name == null) {
-                            name = chat.title;
-                        }
+                        name = getUserConfig().getChatTitleOverride(chat);
                     } else {
                         TLRPC.User user = getMessagesController().getUser(messageObjectToReply.messageOwner.from_id.user_id);
                         if (user == null) {
@@ -11168,10 +11162,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                     if (chat == null) {
                         return;
                     }
-                    name = UserConfig.getChatTitleOverride(currentAccount, chat.id);
-                    if (name == null) {
-                        name = chat.title;
-                    }
+                    name = getUserConfig().getChatTitleOverride(chat);
                 }
                 replyIconImageView.setImageResource(R.drawable.msg_panel_reply);
                 replyNameTextView.setText(name);
@@ -11292,11 +11283,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                         if (user != null) {
                             userNames.append(UserObject.getUserName(user, currentAccount));
                         } else {
-                            String title = UserConfig.getChatTitleOverride(currentAccount, chat.id);
-                            if (title == null) {
-                                title = chat.title;
-                            }
-                            userNames.append(title);
+                            userNames.append(getUserConfig().getChatTitleOverride(chat));
                         }
                     } else if (uids.size() == 2 || userNames.length() == 0) {
                         if (userNames.length() > 0) {
@@ -11311,11 +11298,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                                 userNames.append(" ");
                             }
                         } else {
-                            String title = UserConfig.getChatTitleOverride(currentAccount, chat.id);
-                            if (title == null) {
-                                title = chat.title;
-                            }
-                            userNames.append(title);
+                            userNames.append(getUserConfig().getChatTitleOverride(chat));
                         }
                     } else {
                         userNames.append(" ");
@@ -14726,11 +14709,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
         } else if (chatMode == MODE_PINNED) {
             avatarContainer.setTitle(LocaleController.formatPluralString("PinnedMessagesCount", getPinnedMessagesCount()));
         } else if (currentChat != null) {
-            String title = UserConfig.getChatTitleOverride(currentAccount, currentChat.id);
-            if (title == null) {
-                title = currentChat.title;
-            }
-            avatarContainer.setTitle(title, currentChat.scam, currentChat.fake, currentChat.verified, false, null, animated);
+            avatarContainer.setTitle(getUserConfig().getChatTitleOverride(currentChat), currentChat.scam, currentChat.fake, currentChat.verified, false, null, animated);
         } else if (currentUser != null) {
             if (currentUser.self) {
                 avatarContainer.setTitle(LocaleController.getString("SavedMessages", R.string.SavedMessages));
@@ -20585,7 +20564,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                                         AtomicBoolean allowWrite = new AtomicBoolean();
                                         AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity())
                                                 .setTopView(introTopView)
-                                                .setMessage(AndroidUtilities.replaceTags(LocaleController.formatString("BotRequestAttachPermission", R.string.BotRequestAttachPermission, UserObject.getUserName(user))))
+                                                .setMessage(AndroidUtilities.replaceTags(LocaleController.formatString("BotRequestAttachPermission", R.string.BotRequestAttachPermission, UserObject.getUserName(user, getCurrentAccount()))))
                                                 .setPositiveButton(LocaleController.getString(R.string.BotAddToMenu), (dialog, which) -> {
                                                     TLRPC.TL_messages_toggleBotInAttachMenu botRequest = new TLRPC.TL_messages_toggleBotInAttachMenu();
                                                     botRequest.bot = MessagesController.getInstance(currentAccount).getInputUser(user.id);
@@ -20608,7 +20587,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                                             cell.setPadding(0, AndroidUtilities.dp(8), 0, AndroidUtilities.dp(8));
                                             cell.setBackground(Theme.getSelectorDrawable(false));
                                             cell.setMultiline(true);
-                                            cell.setText(AndroidUtilities.replaceTags(LocaleController.formatString("OpenUrlOption2", R.string.OpenUrlOption2, UserObject.getUserName(user))), "", true, false);
+                                            cell.setText(AndroidUtilities.replaceTags(LocaleController.formatString("OpenUrlOption2", R.string.OpenUrlOption2, UserObject.getUserName(user, getCurrentAccount()))), "", true, false);
                                             cell.setPadding(LocaleController.isRTL ? AndroidUtilities.dp(16) : AndroidUtilities.dp(8), 0, LocaleController.isRTL ? AndroidUtilities.dp(8) : AndroidUtilities.dp(16), 0);
                                             cell.setOnClickListener(v -> {
                                                 boolean allow = !cell.isChecked();
@@ -21576,11 +21555,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                     if (user != null) {
                         nameTextView.setText(ContactsController.formatName(user.first_name, user.last_name));
                     } else if (chat != null) {
-                        String title = UserConfig.getChatTitleOverride(currentAccount, chat.id);
-                        if (title == null) {
-                            title = chat.title;
-                        }
-                        nameTextView.setText(title);
+                        nameTextView.setText(getUserConfig().getChatTitleOverride(chat));
                     }
                 } else {
                     if (pinnedMessageObject.isInvoice() &&
@@ -25390,11 +25365,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                 } else if (fromId < 0) {
                     TLRPC.Chat chat = getMessagesController().getChat(-fromId);
                     if (chat != null) {
-                        String title = UserConfig.getChatTitleOverride(currentAccount, chat.id);
-                        if (title == null) {
-                            title = chat.title;
-                        }
-                        str.append(chat.title).append(":\n");
+                        str.append(getUserConfig().getChatTitleOverride(chat)).append(":\n");
                     }
                 }
             }

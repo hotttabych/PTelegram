@@ -1956,8 +1956,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         } else {
                             AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity(), resourcesProvider);
                             builder.setTitle(LocaleController.getString("AddBot", R.string.AddBot));
-                            String chatName = chat == null ? "" : UserConfig.getChatTitleOverride(currentAccount, chat.id, chat.title);
-                            builder.setMessage(AndroidUtilities.replaceTags(LocaleController.formatString("AddMembersAlertNamesText", R.string.AddMembersAlertNamesText, UserObject.getUserName(user), chatName)));
+                            String chatName = chat == null ? "" : getUserConfig().getChatTitleOverride(chat);
+                            builder.setMessage(AndroidUtilities.replaceTags(LocaleController.formatString("AddMembersAlertNamesText", R.string.AddMembersAlertNamesText, UserObject.getUserName(user, getCurrentAccount()), chatName)));
                             builder.setNegativeButton(LocaleController.getString("Cancel", R.string.Cancel), null);
                             builder.setPositiveButton(LocaleController.getString("AddBot", R.string.AddBot), (di, i) -> {
                                 disableProfileAnimation = true;
@@ -4608,7 +4608,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             return;
         }
         if (userId != 0) {
-            if (!UserConfig.isAvatarEnabled(currentAccount, userId)) {
+            if (!getUserConfig().isAvatarEnabled(userId)) {
                 return;
             }
             TLRPC.User user = getMessagesController().getUser(userId);
@@ -4620,7 +4620,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 PhotoViewer.getInstance().openPhoto(user.photo.photo_big, provider);
             }
         } else if (chatId != 0) {
-            if (!UserConfig.isAvatarEnabled(currentAccount, chatId)) {
+            if (!getUserConfig().isAvatarEnabled(chatId)) {
                 return;
             }
             TLRPC.Chat chat = getMessagesController().getChat(chatId);
@@ -7031,11 +7031,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             TLRPC.User user = getMessagesController().getUser(uid);
             getMessagesController().deleteParticipantFromChat(chatId, user);
             if (currentChat != null && user != null && BulletinFactory.canShowBulletin(this)) {
-                String title = UserConfig.getChatTitleOverride(currentAccount, currentChat.id);
-                if (title == null) {
-                    title = UserConfig.getChatTitleOverride(currentAccount, currentChat.id, currentChat.title);
-                }
-                BulletinFactory.createRemoveFromChatBulletin(this, user, title).show();
+                BulletinFactory.createRemoveFromChatBulletin(this, user, getUserConfig().getChatTitleOverride(currentChat)).show();
             }
             if (chatInfo.participants.participants.remove(participant)) {
                 updateListAnimated(true);
@@ -7572,9 +7568,9 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     avatarImage.setImageDrawable(vectorAvatarThumbDrawable);
                 } else if (videoThumbLocation != null && !user.photo.personal) {
                     avatarImage.getImageReceiver().setVideoThumbIsSame(true);
-                    avatarImage.setImage(UserConfig.isAvatarEnabled(currentAccount, user.id) ? videoThumbLocation : null, "avatar", thumbLocation, "50_50", avatarDrawable, user);
+                    avatarImage.setImage(getUserConfig().isAvatarEnabled(user.id) ? videoThumbLocation : null, "avatar", thumbLocation, "50_50", avatarDrawable, user);
                 } else {
-                    avatarImage.setImage(UserConfig.isAvatarEnabled(currentAccount, user.id) ? videoLocation : null, ImageLoader.AUTOPLAY_FILTER, UserConfig.isAvatarEnabled(currentAccount, user.id) ? thumbLocation : null, "50_50", avatarDrawable, user);
+                    avatarImage.setImage(getUserConfig().isAvatarEnabled(user.id) ? videoLocation : null, ImageLoader.AUTOPLAY_FILTER, getUserConfig().isAvatarEnabled(user.id) ? thumbLocation : null, "50_50", avatarDrawable, user);
                 }
             }
 
@@ -7810,11 +7806,11 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         if (count > 0) {
                             statusString = LocaleController.formatPluralString("messages", count, count);
                         } else {
-                            statusString = LocaleController.formatString("TopicProfileStatus", R.string.TopicProfileStatus, UserConfig.getChatTitleOverride(currentAccount, chat.id, chat.title));
+                            statusString = LocaleController.formatString("TopicProfileStatus", R.string.TopicProfileStatus, getUserConfig().getChatTitleOverride(chat));
                         }
                         SpannableString arrowString = new SpannableString(">");
                         arrowString.setSpan(new ColoredImageSpan(R.drawable.arrow_newchat), 0, 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-                        profileStatusString = new SpannableStringBuilder(UserConfig.getChatTitleOverride(currentAccount, chat.id, chat.title)).append(' ').append(arrowString);
+                        profileStatusString = new SpannableStringBuilder(getUserConfig().getChatTitleOverride(chat)).append(' ').append(arrowString);
                         profileStatusIsButton = true;
                     } else if (currentChat.megagroup) {
                         if (onlineCount > 1 && chatInfo.participants_count != 0) {
@@ -7879,7 +7875,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         changed = true;
                     }
                 } else if (chat.title != null) {
-                    CharSequence title = UserConfig.getChatTitleOverride(currentAccount, chat.id, chat.title);
+                    CharSequence title = getUserConfig().getChatTitleOverride(chat);
                     try {
                         title = Emoji.replaceEmoji(title, nameTextView[a].getPaint().getFontMetricsInt(), AndroidUtilities.dp(24), false);
                     } catch (Exception ignore) {
@@ -7987,7 +7983,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 filter = null;
             }
             if (avatarBig == null && !isTopic) {
-                boolean avatarEnabled = UserConfig.isAvatarEnabled(currentAccount, chat.id);
+                boolean avatarEnabled = getUserConfig().isAvatarEnabled(chat.id);
                 avatarImage.setImage(avatarEnabled ? videoLocation : null, filter, avatarEnabled ? thumbLocation : null, "50_50", avatarDrawable, chat);
             }
             if (imageLocation != null && (prevLoadedImageLocation == null || imageLocation.photoId != prevLoadedImageLocation.photoId)) {

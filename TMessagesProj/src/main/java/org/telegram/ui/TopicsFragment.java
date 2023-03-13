@@ -2356,7 +2356,7 @@ public class TopicsFragment extends BaseFragment implements NotificationCenter.N
 
         if (!opnendForSelect) {
             if (chatLocal != null) {
-                avatarContainer.setTitle(UserConfig.getChatTitleOverride(currentAccount, chatId, chatLocal.title));
+                avatarContainer.setTitle(getUserConfig().getChatTitleOverride(chatLocal));
                 Drawable rightIcon = null;
                 if (getMessagesController().isDialogMuted(-chatId, 0)) {
                     rightIcon = getThemedDrawable(Theme.key_drawable_muteIconDrawable);

@@ -550,7 +550,7 @@ public class SaveToGallerySettingsActivity extends BaseFragment {
                     }
                 } else if (object instanceof TLRPC.Chat) {
                     TLRPC.Chat chat = (TLRPC.Chat) object;
-                    title = UserConfig.getChatTitleOverride(currentAccount, chat.id, chat.title);
+                    title = getUserConfig().getChatTitleOverride(chat);
                 }
                 cell.setSelfAsSavedMessages(true);
                 cell.setData(object, title, exception.createDescription(currentAccount), 0, !(position != items.size() - 1 && items.get(position + 1).viewType != VIEW_TYPE_CHAT));

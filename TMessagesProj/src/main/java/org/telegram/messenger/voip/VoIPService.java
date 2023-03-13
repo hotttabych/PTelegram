@@ -491,7 +491,7 @@ public class VoIPService extends Service implements SensorEventListener, AudioMa
 						return;
 					}
 					updateNotificationRunnable = null;
-					showNotification(UserConfig.getChatTitleOverride(currentAccount, chat.id, chat.title), getRoundAvatarBitmap(chat));
+					showNotification(UserConfig.getChatTitleOverride(getAccount(), chat), getRoundAvatarBitmap(chat));
 				});
 			}
 		}
@@ -3390,7 +3390,7 @@ public class VoIPService extends Service implements SensorEventListener, AudioMa
 		if (user != null) {
 			showNotification(ContactsController.formatName(user.first_name, user.last_name), getRoundAvatarBitmap(user));
 		} else {
-			showNotification(UserConfig.getChatTitleOverride(currentAccount, chat.id, chat.title), getRoundAvatarBitmap(chat));
+			showNotification(UserConfig.getChatTitleOverride(getAccount(), chat), getRoundAvatarBitmap(chat));
 		}
 	}
 
@@ -3922,7 +3922,7 @@ public class VoIPService extends Service implements SensorEventListener, AudioMa
 		try {
 			if (userOrChat instanceof TLRPC.User) {
 				TLRPC.User user = (TLRPC.User) userOrChat;
-				if (UserConfig.isAvatarEnabled(currentAccount, user.id) && user.photo != null && user.photo.photo_small != null) {
+				if (UserConfig.isAvatarEnabled(getAccount(), user.id) && user.photo != null && user.photo.photo_small != null) {
 					BitmapDrawable img = ImageLoader.getInstance().getImageFromMemory(user.photo.photo_small, null, "50_50");
 					if (img != null) {
 						bitmap = img.getBitmap().copy(Bitmap.Config.ARGB_8888, true);
@@ -3938,7 +3938,7 @@ public class VoIPService extends Service implements SensorEventListener, AudioMa
 				}
 			} else {
 				TLRPC.Chat chat = (TLRPC.Chat) userOrChat;
-				if (UserConfig.isAvatarEnabled(currentAccount, chat.id) && chat.photo != null && chat.photo.photo_small != null) {
+				if (UserConfig.isAvatarEnabled(getAccount(), chat.id) && chat.photo != null && chat.photo.photo_small != null) {
 					BitmapDrawable img = ImageLoader.getInstance().getImageFromMemory(chat.photo.photo_small, null, "50_50");
 					if (img != null) {
 						bitmap = img.getBitmap().copy(Bitmap.Config.ARGB_8888, true);

@@ -463,7 +463,7 @@ public class ReactedUsersListView extends FrameLayout {
             }
 
             avatarDrawable.setInfo(u);
-            titleView.setText(UserObject.getUserName(u));
+            titleView.setText(UserObject.getUserName(u, currentAccount));
 
             Drawable thumb = avatarDrawable;
             if (u.photo != null && u.photo.strippedBitmap != null) {
@@ -490,10 +490,10 @@ public class ReactedUsersListView extends FrameLayout {
                     reactView.setAnimatedEmojiDrawable(drawable);
                     hasReactImage = true;
                 }
-                contentDescription = LocaleController.formatString("AccDescrReactedWith", R.string.AccDescrReactedWith, UserObject.getUserName(u), visibleReaction.emojicon != null ? visibleReaction.emojicon : reaction.reaction);
+                contentDescription = LocaleController.formatString("AccDescrReactedWith", R.string.AccDescrReactedWith, UserObject.getUserName(u, currentAccount), visibleReaction.emojicon != null ? visibleReaction.emojicon : reaction.reaction);
             } else {
                 reactView.setImageDrawable(null);
-                contentDescription = LocaleController.formatString("AccDescrPersonHasSeen", R.string.AccDescrPersonHasSeen, UserObject.getUserName(u));
+                contentDescription = LocaleController.formatString("AccDescrPersonHasSeen", R.string.AccDescrPersonHasSeen, UserObject.getUserName(u, currentAccount));
             }
 
             if (reaction.date != 0) {

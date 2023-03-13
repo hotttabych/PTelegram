@@ -150,7 +150,7 @@ public class ChatPullingDownDrawable implements NotificationCenter.NotificationC
             circleRadius = AndroidUtilities.dp(56) / 2f;
             lastWidth = width;
 
-            String nameStr = nextChat != null ? UserConfig.getChatTitleOverride(currentAccount, nextChat.id, nextChat.title) : LocaleController.getString("SwipeToGoNextChannelEnd", R.string.SwipeToGoNextChannelEnd);
+            String nameStr = nextChat != null ? UserConfig.getChatTitleOverride(currentAccount, nextChat) : LocaleController.getString("SwipeToGoNextChannelEnd", R.string.SwipeToGoNextChannelEnd);
             chatNameWidth = (int) textPaint.measureText(nameStr);
             chatNameWidth = Math.min(chatNameWidth, lastWidth - AndroidUtilities.dp(60));
             chatNameLayout = new StaticLayout(nameStr, textPaint, chatNameWidth, Layout.Alignment.ALIGN_NORMAL, 1.0f, 0.0f, false);

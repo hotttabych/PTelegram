@@ -919,11 +919,7 @@ public class ChatRightsEditActivity extends BaseFragment {
                         } else {
                             builder.setTitle(LocaleController.getString("EditAdminGroupTransfer", R.string.EditAdminGroupTransfer));
                         }
-                        String title = UserConfig.getChatTitleOverride(currentAccount, currentChat.id);
-                        if (title == null) {
-                            title = currentChat.title;
-                        }
-                        builder.setMessage(AndroidUtilities.replaceTags(LocaleController.formatString("EditAdminTransferReadyAlertText", R.string.EditAdminTransferReadyAlertText, title, UserObject.getFirstName(currentUser))));
+                        builder.setMessage(AndroidUtilities.replaceTags(LocaleController.formatString("EditAdminTransferReadyAlertText", R.string.EditAdminTransferReadyAlertText, getUserConfig().getChatTitleOverride(currentChat), UserObject.getFirstName(currentUser))));
                         builder.setPositiveButton(LocaleController.getString("EditAdminTransferChangeOwner", R.string.EditAdminTransferChangeOwner), (dialogInterface, i) -> {
                             TwoStepVerificationActivity fragment = new TwoStepVerificationActivity();
                             fragment.setDelegate(password -> initTransfer(password, fragment));
@@ -1278,7 +1274,7 @@ public class ChatRightsEditActivity extends BaseFragment {
                             isChannel ?
                                     LocaleController.formatString("AddBotMessageAdminChannel", R.string.AddBotMessageAdminChannel, chatName) :
                                     LocaleController.formatString("AddBotMessageAdminGroup", R.string.AddBotMessageAdminGroup, chatName)
-                    ) : LocaleController.formatString("AddMembersAlertNamesText", R.string.AddMembersAlertNamesText, UserObject.getUserName(currentUser), chatName)
+                    ) : LocaleController.formatString("AddMembersAlertNamesText", R.string.AddMembersAlertNamesText, UserObject.getUserName(currentUser, getCurrentAccount()), chatName)
             ));
             builder.setNegativeButton(LocaleController.getString("Cancel", R.string.Cancel), null);
             builder.setPositiveButton(asAdmin ? LocaleController.getString("AddAsAdmin", R.string.AddAsAdmin) : LocaleController.getString("AddBot", R.string.AddBot), (di, i) -> {
@@ -1364,11 +1360,7 @@ public class ChatRightsEditActivity extends BaseFragment {
             AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
             builder.setTitle(LocaleController.getString("UserRestrictionsApplyChanges", R.string.UserRestrictionsApplyChanges));
             TLRPC.Chat chat = MessagesController.getInstance(currentAccount).getChat(chatId);
-            String title = UserConfig.getChatTitleOverride(currentAccount, chat.id);
-            if (title == null) {
-                title = chat.title;
-            }
-            builder.setMessage(AndroidUtilities.replaceTags(LocaleController.formatString("UserRestrictionsApplyChangesText", R.string.UserRestrictionsApplyChangesText, title)));
+            builder.setMessage(AndroidUtilities.replaceTags(LocaleController.formatString("UserRestrictionsApplyChangesText", R.string.UserRestrictionsApplyChangesText, getUserConfig().getChatTitleOverride(chat))));
             builder.setPositiveButton(LocaleController.getString("ApplyTheme", R.string.ApplyTheme), (dialogInterface, i) -> onDonePressed());
             builder.setNegativeButton(LocaleController.getString("PassportDiscard", R.string.PassportDiscard), (dialog, which) -> finishFragment());
             showDialog(builder.create());

@@ -792,7 +792,7 @@ public class MemberRequestsDelegate implements MemberRequestCell.OnClickListener
             viewPager.setData(importer.user_id, true);
             viewPager.initIfEmpty(null, imageLocation, thumbLocation, true);
             TLRPC.User user = users.get(importer.user_id);
-            nameText.setText(UserObject.getUserName(user));
+            nameText.setText(UserObject.getUserName(user, currentAccount));
             bioText.setText(importer.about);
             bioText.setVisibility(TextUtils.isEmpty(importer.about) ? GONE : VISIBLE);
             contentView.requestLayout();
