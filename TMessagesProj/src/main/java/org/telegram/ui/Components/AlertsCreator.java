@@ -1500,7 +1500,7 @@ public class AlertsCreator {
             revokeTimeLimit = MessagesController.getInstance(account).revokeTimeLimit;
         }
         boolean canDeleteInbox = !secret && user != null && canRevokeInbox && revokeTimeLimit == 0x7fffffff;
-        final boolean[] deleteForAll =  {!FakePasscodeUtils.isFakePasscodeActivated() && SharedConfig.deleteMessagesForAllByDefault};
+        final boolean[] deleteForAll = new boolean[1];
         boolean deleteChatForAll = false;
 
         boolean lastMessageIsJoined = false;
