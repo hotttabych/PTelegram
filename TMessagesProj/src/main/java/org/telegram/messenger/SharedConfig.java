@@ -643,6 +643,13 @@ public class SharedConfig {
                 }
                 if (pendingPtgAppUpdate != null) {
                     if (AppVersion.getCurrentVersion().greaterOrEquals(pendingPtgAppUpdate.version)) {
+                        UpdateData pendingPtgAppUpdateFinal = pendingPtgAppUpdate;
+                        Utilities.globalQueue.postRunnable(() -> {
+                            ImageLoader.getInstance(); // init media dirs
+                            FileLoader fileLoader = FileLoader.getInstance(pendingPtgAppUpdateFinal.accountNum);
+                            File path = fileLoader.getPathToAttach(pendingPtgAppUpdateFinal.document, true);
+                            path.delete();
+                        }, 1000);
                         pendingPtgAppUpdate = null;
                         AndroidUtilities.runOnUIThread(SharedConfig::saveConfig);
                     }
