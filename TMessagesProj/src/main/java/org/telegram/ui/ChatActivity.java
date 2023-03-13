@@ -3472,7 +3472,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                     && SharedConfig.showDeleteMyMessages) {
                 headerItem.lazilyAddSubItem(delete_messages, R.drawable.msg_delete, LocaleController.getString(R.string.DeleteMyMessages));
             }
-            if (getUserConfig().isChannelSavingAllowed(chat)) {
+            if (!isTopic && getUserConfig().isChannelSavingAllowed(chat)) {
                 saveItem = headerItem.lazilyAddSubItem(save, R.drawable.msg_fave, LocaleController.getString("Save", R.string.Save));
             }
         }
