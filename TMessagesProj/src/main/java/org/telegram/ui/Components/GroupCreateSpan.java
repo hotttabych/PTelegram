@@ -156,7 +156,7 @@ public class GroupCreateSpan extends View {
             TLRPC.Chat chat = (TLRPC.Chat) object;
             avatarDrawable.setInfo(chat, currentAccount);
             uid = -chat.id;
-            firstName = UserConfig.getChatTitleOverride(currentAccount, uid, chat.title);
+            firstName = UserConfig.getChatTitleOverride(currentAccount, chat);
             imageLocation = ImageLocation.getForUserOrChat(chat, ImageLocation.TYPE_SMALL, currentAccount);
             imageParent = chat;
         } else {

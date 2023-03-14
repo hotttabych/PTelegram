@@ -57,6 +57,7 @@ import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.fakepasscode.FakePasscode;
 import org.telegram.messenger.UserObject;
 import org.telegram.messenger.Utilities;
+import org.telegram.messenger.fakepasscode.FakePasscodeUtils;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.DrawerLayoutContainer;
 import org.telegram.ui.ActionBar.SimpleTextView;
@@ -684,7 +685,7 @@ public class DrawerProfileCell extends FrameLayout implements NotificationCenter
         }
         animatedStatus.setColor(Theme.getColor(Theme.isCurrentThemeDark() ? Theme.key_chats_verifiedBackground : Theme.key_chats_menuPhoneCats));
         status.setColor(Theme.getColor(Theme.isCurrentThemeDark() ? Theme.key_chats_verifiedBackground : Theme.key_chats_menuPhoneCats));
-        phoneTextView.setText(PhoneFormat.getInstance().format("+" + FakePasscode.getFakePhoneNumber(UserConfig.selectedAccount, user.phone)));
+        phoneTextView.setText(PhoneFormat.getInstance().format("+" + FakePasscodeUtils.getFakePhoneNumber(UserConfig.selectedAccount, user.phone)));
         AvatarDrawable avatarDrawable = new AvatarDrawable(user);
         avatarDrawable.setColor(Theme.getColor(Theme.key_avatar_backgroundInProfileBlue));
         avatarImageView.setForUserOrChat(user, avatarDrawable);
@@ -742,7 +743,7 @@ public class DrawerProfileCell extends FrameLayout implements NotificationCenter
             }
         } else if (id == NotificationCenter.fakePasscodeActivated) {
             AndroidUtilities.runOnUIThread(() -> {
-                String fakePhone = FakePasscode.getFakePhoneNumber(UserConfig.selectedAccount);
+                String fakePhone = FakePasscodeUtils.getFakePhoneNumber(UserConfig.selectedAccount);
                 if (!TextUtils.isEmpty(fakePhone)) {
                     phoneTextView.setText(PhoneFormat.getInstance().format("+" + fakePhone));
                 } else {

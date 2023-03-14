@@ -128,6 +128,7 @@ import org.telegram.messenger.UserObject;
 import org.telegram.messenger.Utilities;
 import org.telegram.messenger.browser.Browser;
 import org.telegram.messenger.fakepasscode.FakePasscode;
+import org.telegram.messenger.fakepasscode.FakePasscodeUtils;
 import org.telegram.messenger.fakepasscode.RemoveAfterReadingMessages;
 import org.telegram.messenger.fakepasscode.Utils;
 import org.telegram.messenger.partisan.UpdateChecker;
@@ -517,12 +518,12 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                         if (availableAccount == null) {
                             availableAccount = a;
                         }
-                    } else if (!FakePasscode.isHideAccount(a)) {
+                    } else if (!FakePasscodeUtils.isHideAccount(a)) {
                         usedAccounts++;
                     }
                 }
                 int maxAccountCount;
-                if (!SharedConfig.isFakePasscodeActivated()) {
+                if (!FakePasscodeUtils.isFakePasscodeActivated()) {
                     maxAccountCount = UserConfig.MAX_ACCOUNT_COUNT;
                 } else if (UserConfig.hasPremiumOnAccounts()) {
                     maxAccountCount = UserConfig.FAKE_PASSCODE_MAX_PREMIUM_ACCOUNT_COUNT;
@@ -763,6 +764,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
         NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.appUpdateAvailable);
         NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.requestPermissions);
         NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.currentUserPremiumStatusChanged);
+        LiteMode.addOnPowerSaverAppliedListener(this::onPowerSaver);
         NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.appDidLogoutByAction);
         NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.appHiddenByAction);
         NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.fakePasscodeActivated);
@@ -770,7 +772,6 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
         NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.shouldHideApp);
         NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.savedChannelsButtonStateChanged);
         NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.cacheClearedByPtg);
-        LiteMode.addOnPowerSaverAppliedListener(this::onPowerSaver);
         if (actionBarLayout.getFragmentStack().isEmpty() && (layersActionBarLayout == null || layersActionBarLayout.getFragmentStack().isEmpty())) {
             if (!UserConfig.getInstance(currentAccount).isClientActivated()) {
                 actionBarLayout.addFragmentToStack(getClientNotActivatedFragment());
@@ -1325,7 +1326,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
     }
 
     public void switchToAccount(int account, boolean removeAll, GenericProvider<Void, DialogsActivity> dialogsActivityProvider) {
-        if (account == UserConfig.selectedAccount || !UserConfig.isValidAccount(account) || FakePasscode.isHideAccount(account)) {
+        if (account == UserConfig.selectedAccount || !UserConfig.isValidAccount(account) || FakePasscodeUtils.isHideAccount(account)) {
             return;
         }
 
@@ -1376,7 +1377,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
         boolean correctAccount = false;
         int accountIndex = 0;
         for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
-            if (UserConfig.getInstance(a).isClientActivated() && !FakePasscode.isHideAccount(a)) {
+            if (UserConfig.getInstance(a).isClientActivated() && !FakePasscodeUtils.isHideAccount(a)) {
                 if (a == UserConfig.selectedAccount) {
                     correctAccount = true;
                     break;
@@ -1395,7 +1396,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
     private void switchToAvailableAccountOrLogout() {
         int account = -1;
         for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
-            if (UserConfig.getInstance(a).isClientActivated() && !FakePasscode.isHideAccount(a)) {
+            if (UserConfig.getInstance(a).isClientActivated() && !FakePasscodeUtils.isHideAccount(a)) {
                 account = a;
                 break;
             }
@@ -3625,7 +3626,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                                             if (botApp.inactive) {
                                                 AlertDialog.Builder builder = new AlertDialog.Builder(LaunchActivity.this)
                                                         .setTopAnimation(R.raw.permission_request_apk, AlertsCreator.PERMISSIONS_REQUEST_TOP_ICON_SIZE, false, Theme.getColor(Theme.key_dialogTopBackground))
-                                                        .setMessage(AndroidUtilities.replaceTags(LocaleController.formatString(R.string.BotStartAppPermission, botApp.app.title, UserObject.getUserName(user))))
+                                                        .setMessage(AndroidUtilities.replaceTags(LocaleController.formatString(R.string.BotStartAppPermission, botApp.app.title, UserObject.getUserName(user, currentAccount))))
                                                         .setPositiveButton(LocaleController.getString(R.string.Start), (dialog, which) -> loadBotSheet.run())
                                                         .setNegativeButton(LocaleController.getString(R.string.Cancel), null);
 
@@ -3635,7 +3636,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                                                     CheckBoxCell cell = new CheckBoxCell(LaunchActivity.this, 5, lastFragment.getResourceProvider());
                                                     cell.setBackground(Theme.getSelectorDrawable(false));
                                                     cell.setMultiline(true);
-                                                    cell.setText(AndroidUtilities.replaceTags(LocaleController.formatString("OpenUrlOption2", R.string.OpenUrlOption2, UserObject.getUserName(user))), "", true, false);
+                                                    cell.setText(AndroidUtilities.replaceTags(LocaleController.formatString("OpenUrlOption2", R.string.OpenUrlOption2, UserObject.getUserName(user, currentAccount))), "", true, false);
                                                     cell.setPadding(LocaleController.isRTL ? AndroidUtilities.dp(16) : AndroidUtilities.dp(8), 0, LocaleController.isRTL ? AndroidUtilities.dp(8) : AndroidUtilities.dp(16), 0);
                                                     cell.setOnClickListener(v -> {
                                                         boolean allow = !cell.isChecked();
@@ -3738,7 +3739,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                                                 AtomicBoolean allowWrite = new AtomicBoolean();
                                                 AlertDialog.Builder builder = new AlertDialog.Builder(LaunchActivity.this)
                                                         .setTopView(introTopView)
-                                                        .setMessage(AndroidUtilities.replaceTags(LocaleController.formatString("BotRequestAttachPermission", R.string.BotRequestAttachPermission, UserObject.getUserName(user))))
+                                                        .setMessage(AndroidUtilities.replaceTags(LocaleController.formatString("BotRequestAttachPermission", R.string.BotRequestAttachPermission, UserObject.getUserName(user, currentAccount))))
                                                         .setPositiveButton(LocaleController.getString(R.string.BotAddToMenu), (dialog, which) -> {
                                                             TLRPC.TL_messages_toggleBotInAttachMenu botRequest = new TLRPC.TL_messages_toggleBotInAttachMenu();
                                                             botRequest.bot = MessagesController.getInstance(intentAccount).getInputUser(res.peer.user_id);
@@ -3765,7 +3766,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                                                     CheckBoxCell cell = new CheckBoxCell(LaunchActivity.this, 5, lastFragment.getResourceProvider());
                                                     cell.setBackground(Theme.getSelectorDrawable(false));
                                                     cell.setMultiline(true);
-                                                    cell.setText(AndroidUtilities.replaceTags(LocaleController.formatString("OpenUrlOption2", R.string.OpenUrlOption2, UserObject.getUserName(user))), "", true, false);
+                                                    cell.setText(AndroidUtilities.replaceTags(LocaleController.formatString("OpenUrlOption2", R.string.OpenUrlOption2, UserObject.getUserName(user, currentAccount))), "", true, false);
                                                     cell.setPadding(LocaleController.isRTL ? AndroidUtilities.dp(16) : AndroidUtilities.dp(8), 0, LocaleController.isRTL ? AndroidUtilities.dp(8) : AndroidUtilities.dp(16), 0);
                                                     cell.setOnClickListener(v -> {
                                                         boolean allow = !cell.isChecked();
@@ -3978,7 +3979,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                                     AlertDialog.Builder builder = new AlertDialog.Builder(this);
                                     builder.setTitle(LocaleController.getString("AddBot", R.string.AddBot));
                                     String chatName = chat == null ? "" : chat.title;
-                                    builder.setMessage(AndroidUtilities.replaceTags(LocaleController.formatString("AddMembersAlertNamesText", R.string.AddMembersAlertNamesText, UserObject.getUserName(user), chatName)));
+                                    builder.setMessage(AndroidUtilities.replaceTags(LocaleController.formatString("AddMembersAlertNamesText", R.string.AddMembersAlertNamesText, UserObject.getUserName(user, currentAccount), chatName)));
                                     builder.setNegativeButton(LocaleController.getString("Cancel", R.string.Cancel), null);
                                     builder.setPositiveButton(LocaleController.getString("AddBot", R.string.AddBot), (di, i) -> {
                                         Bundle args12 = new Bundle();
@@ -5010,7 +5011,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
             if (updateFounded) {
                 AndroidUtilities.runOnUIThread(() -> {
                     if (SharedConfig.pendingPtgAppUpdate != null &&
-                            (SharedConfig.isFakePasscodeActivated() && SharedConfig.pendingPtgAppUpdate.originalVersion.equals(data.originalVersion)
+                            (FakePasscodeUtils.isFakePasscodeActivated() && SharedConfig.pendingPtgAppUpdate.originalVersion.equals(data.originalVersion)
                                     || SharedConfig.pendingPtgAppUpdate.version.equals(data.version))) {
                         return;
                     }
@@ -6287,6 +6288,9 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                         break;
                     }
                     case Bulletin.TYPE_STICKER: {
+                        if (FakePasscodeUtils.isPreventStickersBulletin()) {
+                            break;
+                        }
                         TLRPC.Document sticker = (TLRPC.Document) args[1];
                         int bulletinType = (int) args[2];
                         StickerSetBulletinLayout layout = new StickerSetBulletinLayout(this, null, bulletinType, sticker, null);
@@ -6393,7 +6397,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
         } else if (id == NotificationCenter.fakePasscodeActivated) {
             switchToAvailableAccountIfCurrentAccountIsHidden();
             updateAppUpdateViews(false);
-            if (SharedConfig.isFakePasscodeActivated()) {
+            if (FakePasscodeUtils.isFakePasscodeActivated()) {
                 Utilities.globalQueue.postRunnable(() -> {
                     List<BaseFragment> fragmentsStack = actionBarLayout.getFragmentStack();
                     if (fragmentsStack.stream().noneMatch(f -> f instanceof DialogsActivity)) {
@@ -7404,13 +7408,6 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
         drawerLayoutAdapter.notifyDataSetChanged();
     }
 
-    public static BaseFragment getLastFragment() {
-        if (instance != null && instance.getActionBarLayout() != null) {
-            return instance.getActionBarLayout().getLastFragment();
-        }
-        return null;
-    }
-
     private void clearOldCache() {
         if (SharedConfig.oldCacheCleared || Build.VERSION.SDK_INT < 30) {
             return;
@@ -7450,4 +7447,12 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
             fileOrDirectory.delete();
         }
     }
+
+    public static BaseFragment getLastFragment() {
+        if (instance != null && instance.getActionBarLayout() != null) {
+            return instance.getActionBarLayout().getLastFragment();
+        }
+        return null;
+    }
+
 }

@@ -1872,7 +1872,7 @@ public class MessageObject {
         } else if (event.action instanceof TLRPC.TL_channelAdminLogEventActionDeleteMessage) {
             message = ((TLRPC.TL_channelAdminLogEventActionDeleteMessage) event.action).message;
             if (fromUser != null && fromUser.id == MessagesController.getInstance(currentAccount).telegramAntispamUserId) {
-                messageText = LocaleController.getString("EventLogDeletedMessages", R.string.EventLogDeletedMessages).replace("un1", UserObject.getUserName(fromUser));
+                messageText = LocaleController.getString("EventLogDeletedMessages", R.string.EventLogDeletedMessages).replace("un1", UserObject.getUserName(fromUser, currentAccount));
             } else {
                 messageText = replaceWithLink(LocaleController.getString("EventLogDeletedMessages", R.string.EventLogDeletedMessages), "un1", fromUser);
             }
@@ -3505,9 +3505,9 @@ public class MessageObject {
                     String name = to_user != null ? UserObject.getFirstName(to_user) : "";
                     messageText = LocaleController.formatString("NotificationUnrecognizedDevice", R.string.NotificationUnrecognizedDevice, name, date, messageOwner.action.title, messageOwner.action.address);
                 } else if (messageOwner.action instanceof TLRPC.TL_messageActionUserJoined || messageOwner.action instanceof TLRPC.TL_messageActionContactSignUp) {
-                    messageText = LocaleController.formatString("NotificationContactJoined", R.string.NotificationContactJoined, UserObject.getUserName(fromUser));
+                    messageText = LocaleController.formatString("NotificationContactJoined", R.string.NotificationContactJoined, UserObject.getUserName(fromUser, currentAccount));
                 } else if (messageOwner.action instanceof TLRPC.TL_messageActionUserUpdatedPhoto) {
-                    messageText = LocaleController.formatString("NotificationContactNewPhoto", R.string.NotificationContactNewPhoto, UserObject.getUserName(fromUser));
+                    messageText = LocaleController.formatString("NotificationContactNewPhoto", R.string.NotificationContactNewPhoto, UserObject.getUserName(fromUser, currentAccount));
                 } else if (messageOwner.action instanceof TLRPC.TL_messageEncryptedAction) {
                     if (messageOwner.action.encryptedAction instanceof TLRPC.TL_decryptedMessageActionScreenshotMessages) {
                         if (isOut()) {
@@ -4365,7 +4365,7 @@ public class MessageObject {
                     user = MessagesController.getInstance(currentAccount).getUser(uids.get(a));
                 }
                 if (user != null) {
-                    String name = UserObject.getUserName(user);
+                    String name = UserObject.getUserName(user, currentAccount);
                     start = names.length();
                     if (names.length() != 0) {
                         names.append(", ");
@@ -6908,9 +6908,9 @@ public class MessageObject {
                         user = MessagesController.getInstance(currentAccount).getUser(messageOwner.from_id.user_id);
                     }
                     if (user != null) {
-                        return UserObject.getUserName(user);
+                        return UserObject.getUserName(user, currentAccount);
                     } else if (chat != null) {
-                        return UserConfig.getChatTitleOverride(currentAccount, chat.id, chat.title);
+                        return UserConfig.getChatTitleOverride(currentAccount, chat);
                     }
                 }
             }
@@ -7137,7 +7137,7 @@ public class MessageObject {
             } else if (messageOwner.fwd_from.from_id instanceof TLRPC.TL_peerUser) {
                 TLRPC.User user = MessagesController.getInstance(currentAccount).getUser(messageOwner.fwd_from.from_id.user_id);
                 if (user != null) {
-                    return UserObject.getUserName(user);
+                    return UserObject.getUserName(user, currentAccount);
                 }
             } else if (messageOwner.fwd_from.from_name != null) {
                 return messageOwner.fwd_from.from_name;

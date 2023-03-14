@@ -386,8 +386,8 @@ public class MessageSeenView extends FrameLayout {
             super.onMeasure(widthMeasureSpec, MeasureSpec.makeMeasureSpec(AndroidUtilities.dp(50), View.MeasureSpec.EXACTLY));
         }
 
-        public void setUser(TLRPC.User user) {
-            setUser(user, null, null);
+        public void setUser(TLRPC.User user, int date) {
+            setUser(user, date, null);
         }
 
         public void setUser(TLRPC.User user, int date, Integer accountNum) {

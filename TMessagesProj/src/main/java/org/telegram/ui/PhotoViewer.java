@@ -11653,11 +11653,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                                 chat = MessagesController.getInstance(currentAccount).getChat(newMessageObject.messageOwner.fwd_from.from_id.channel_id);
                             }
                             if (chat != null) {
-                                String title = UserConfig.getChatTitleOverride(currentAccount, chat.id);
-                                if (title == null) {
-                                    title = chat.title;
-                                }
-                                nameTextView.setText(title, animatedLocal);
+                                nameTextView.setText(UserConfig.getChatTitleOverride(currentAccount, chat), animatedLocal);
                             } else {
                                 nameTextView.setText("", animatedLocal);
                             }
@@ -12028,11 +12024,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
             if (parentChatActivity != null) {
                 TLRPC.Chat chat = parentChatActivity.getCurrentChat();
                 if (chat != null) {
-                    String title = UserConfig.getChatTitleOverride(currentAccount, chat.id);
-                    if (title == null) {
-                        title = chat.title;
-                    }
-                    actionBar.setTitle(title);
+                    actionBar.setTitle(UserConfig.getChatTitleOverride(currentAccount, chat));
                 } else {
                     TLRPC.User user = parentChatActivity.getCurrentUser();
                     if (user != null) {

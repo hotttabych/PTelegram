@@ -3404,13 +3404,6 @@ public class LocaleController {
         }
     }
 
-    private void patched(String lng) {
-        if (BuildVars.LOGS_ENABLED) {
-            FileLog.d("set as patched " + lng + " langpack");
-        }
-        MessagesController.getGlobalMainSettings().edit().putBoolean("lngpack_patched_" + lng, true).apply();
-    }
-
     private HashMap<String, String> addAssetStrings(HashMap<String, String> values, LocaleInfo localeInfo) {
         HashMap<String, String> newValues = new HashMap<>(values);
         HashMap<String, String> assetValues = getLocaleFileStrings(null, false, "strings/strings_" + localeInfo.shortName + ".xml");
@@ -3424,5 +3417,12 @@ public class LocaleController {
 
     public String getLanguageOverride() {
         return languageOverride;
+    }
+
+    private void patched(String lng) {
+        if (BuildVars.LOGS_ENABLED) {
+            FileLog.d("set as patched " + lng + " langpack");
+        }
+        MessagesController.getGlobalMainSettings().edit().putBoolean("lngpack_patched_" + lng, true).apply();
     }
 }

@@ -20,6 +20,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import org.telegram.messenger.fakepasscode.FakePasscode;
+import org.telegram.messenger.fakepasscode.FakePasscodeUtils;
 import org.telegram.tgnet.SerializedData;
 import org.telegram.tgnet.TLRPC;
 
@@ -149,23 +150,27 @@ public class UserConfig extends BaseController {
         return localInstance;
     }
 
-    public static ChatInfoOverride getChatInfoOverride(int accountNum, long id) {
-        return getChatInfoOverride(accountNum < UserConfig.MAX_ACCOUNT_COUNT ? UserConfig.getInstance(accountNum) : null, id);
-    }
-
-    public static ChatInfoOverride getChatInfoOverride(UserConfig config, long id) {
-        if (SharedConfig.fakePasscodeActivatedIndex == -1 && config != null) {
-            if (config.chatInfoOverrides.containsKey(String.valueOf(id))) {
-                return config.chatInfoOverrides.get(String.valueOf(id));
-            } else if (config.chatInfoOverrides.containsKey(String.valueOf(-id))) {
-                return config.chatInfoOverrides.get(String.valueOf(-id));
+    public ChatInfoOverride getChatInfoOverride(long id) {
+        if (SharedConfig.fakePasscodeActivatedIndex == -1) {
+            if (chatInfoOverrides.containsKey(String.valueOf(id))) {
+                return chatInfoOverrides.get(String.valueOf(id));
+            } else if (chatInfoOverrides.containsKey(String.valueOf(-id))) {
+                return chatInfoOverrides.get(String.valueOf(-id));
             }
         }
         return null;
     }
 
     public static boolean isAvatarEnabled(int accountNum, long id) {
-        ChatInfoOverride chatInfo = getChatInfoOverride(accountNum, id);
+        if (accountNum >= UserConfig.MAX_ACCOUNT_COUNT) {
+            return false;
+        }
+        ChatInfoOverride chatInfo = UserConfig.getInstance(accountNum).getChatInfoOverride(id);
+        return chatInfo == null || chatInfo.avatarEnabled;
+    }
+
+    public boolean isAvatarEnabled(long id) {
+        ChatInfoOverride chatInfo = getChatInfoOverride(id);
         return chatInfo == null || chatInfo.avatarEnabled;
     }
 
@@ -174,8 +179,13 @@ public class UserConfig extends BaseController {
     }
 
     public static String getChatTitleOverride(Integer accountNum, long id, String defaultValue) {
-        UserConfig config = accountNum != null && accountNum < UserConfig.MAX_ACCOUNT_COUNT ? UserConfig.getInstance(accountNum) : null;
-        return getChatTitleOverride(config, id, defaultValue);
+        return accountNum != null && accountNum < UserConfig.MAX_ACCOUNT_COUNT
+                ? UserConfig.getInstance(accountNum).getChatTitleOverride(id, defaultValue)
+                : null;
+    }
+
+    public static String getChatTitleOverride(Integer accountNum, TLRPC.Chat chat) {
+        return getChatTitleOverride(accountNum, chat.id, chat.title);
     }
 
     public static String getChatTitleOverride(Integer accountNum, TLRPC.Peer peer, String defaultValue) {
@@ -189,12 +199,16 @@ public class UserConfig extends BaseController {
         return title != null ? title : defaultValue;
     }
 
-    public static String getChatTitleOverride(UserConfig config, long id) {
-        return getChatTitleOverride(config, id, null);
+    public String getChatTitleOverride(long id) {
+        return getChatTitleOverride(id, null);
     }
 
-    public static String getChatTitleOverride(UserConfig config, long id, String defaultValue) {
-        ChatInfoOverride chatInfo = getChatInfoOverride(config, id);
+    public String getChatTitleOverride(TLRPC.Chat chat) {
+        return getChatTitleOverride(chat.id, chat.title);
+    }
+
+    public String getChatTitleOverride(long id, String defaultValue) {
+        ChatInfoOverride chatInfo = getChatInfoOverride(id);
         if (chatInfo != null && chatInfo.title != null) {
             return chatInfo.title;
         } else {
@@ -210,7 +224,7 @@ public class UserConfig extends BaseController {
         int count = 0;
         for (int a = 0; a < MAX_ACCOUNT_COUNT; a++) {
             if (AccountInstance.getInstance(a).getUserConfig().isClientActivated()
-                    && (includeHidden || !FakePasscode.isHideAccount(a))) {
+                    && (includeHidden || !FakePasscodeUtils.isHideAccount(a))) {
                 count++;
             }
         }
@@ -372,7 +386,7 @@ public class UserConfig extends BaseController {
 
     public String getClientPhone() {
         synchronized (sync) {
-            String fakePhoneNumber = FakePasscode.getFakePhoneNumber(currentAccount);
+            String fakePhoneNumber = FakePasscodeUtils.getFakePhoneNumber(currentAccount);
             if (!TextUtils.isEmpty(fakePhoneNumber)) {
                 return fakePhoneNumber;
             }
@@ -730,6 +744,11 @@ public class UserConfig extends BaseController {
             return true;
         }
         return false;
+    }
+
+    public boolean isChannelSavingAllowed(TLRPC.Chat chat) {
+        return !FakePasscodeUtils.isFakePasscodeActivated() && chat != null && SharedConfig.showSavedChannels &&
+                !isChannelSaved(chat) && (chat.username != null || chat.usernames != null && !chat.usernames.isEmpty());
     }
 
     public boolean isChannelSaved(TLRPC.Chat chat) {

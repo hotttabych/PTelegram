@@ -72,6 +72,7 @@ import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.UserObject;
 import org.telegram.messenger.Utilities;
 import org.telegram.messenger.fakepasscode.FakePasscode;
+import org.telegram.messenger.fakepasscode.FakePasscodeUtils;
 import org.telegram.messenger.fakepasscode.Utils;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.TLRPC;
@@ -810,7 +811,7 @@ public class DialogCell extends BaseCell {
     }
 
     private CharSequence formatArchivedDialogNames() {
-        List<TLRPC.Dialog> dialogs = FakePasscode.filterDialogs(MessagesController.getInstance(currentAccount).getDialogs(currentDialogFolderId), Optional.of(currentAccount));
+        List<TLRPC.Dialog> dialogs = FakePasscodeUtils.filterDialogs(MessagesController.getInstance(currentAccount).getDialogs(currentDialogFolderId), Optional.of(currentAccount));
         currentDialogFolderDialogsCount = dialogs.size();
         SpannableStringBuilder builder = new SpannableStringBuilder();
         for (int a = 0, N = dialogs.size(); a < N; a++) {
@@ -831,10 +832,7 @@ public class DialogCell extends BaseCell {
             }
             String title;
             if (currentChat != null) {
-                title = UserConfig.getChatTitleOverride(currentAccount, currentChat.id);
-                if (title == null) {
-                    title = currentChat.title;
-                }
+                title = UserConfig.getChatTitleOverride(currentAccount, currentChat);
                 title = title.replace('\n', ' ');
             } else if (currentUser != null) {
                 if (UserObject.isDeleted(currentUser)) {
@@ -1651,7 +1649,7 @@ public class DialogCell extends BaseCell {
                         topicIconInName[0] = null;
                         nameString = showTopicIconInName ? ForumUtilities.getTopicSpannedName(forumTopic, Theme.dialogs_namePaint[paintIndex], topicIconInName) : forumTopic.title;
                     } else {
-                        nameString = UserConfig.getChatTitleOverride(currentAccount, chat.id, chat.title);
+                        nameString = UserConfig.getChatTitleOverride(currentAccount, chat);
                     }
                 } else if (user != null) {
                     if (UserObject.isReplyUser(user)) {
@@ -2572,7 +2570,7 @@ public class DialogCell extends BaseCell {
                     if (mask == 0) {
                         clearingDialog = MessagesController.getInstance(currentAccount).isClearingDialog(dialog.id);
                         ArrayList<MessageObject> newMessage = MessagesController.getInstance(currentAccount).dialogMessage.get(dialog.id);
-                        if (newMessage == null || newMessage.isEmpty() || !FakePasscode.isHideMessage(currentAccount, dialog.id, newMessage.get(0).getId())) {
+                        if (newMessage == null || newMessage.isEmpty() || !FakePasscodeUtils.isHideMessage(currentAccount, dialog.id, newMessage.get(0).getId())) {
                             groupMessages = newMessage;
                         }
                         message = groupMessages != null && groupMessages.size() > 0 ? groupMessages.get(0) : null;
@@ -2753,7 +2751,7 @@ public class DialogCell extends BaseCell {
                 message = findFolderTopMessage();
                 if (message != null) {
                     dialogId = message.getDialogId();
-                    if (FakePasscode.isHideMessage(currentAccount, dialogId, message.getId())) {
+                    if (FakePasscodeUtils.isHideMessage(currentAccount, dialogId, message.getId())) {
                         return requestLayout;
                     }
                 } else {

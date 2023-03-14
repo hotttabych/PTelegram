@@ -32,6 +32,7 @@ import com.fasterxml.jackson.module.kotlin.KotlinModule;
 
 import org.json.JSONObject;
 import org.telegram.messenger.fakepasscode.FakePasscode;
+import org.telegram.messenger.fakepasscode.FakePasscodeUtils;
 import org.telegram.messenger.partisan.AppVersion;
 import org.telegram.messenger.partisan.UpdateData;
 import org.telegram.tgnet.ConnectionsManager;
@@ -52,9 +53,9 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
-import java.util.stream.Collectors;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 public class SharedConfig {
     /**
@@ -642,6 +643,13 @@ public class SharedConfig {
                 }
                 if (pendingPtgAppUpdate != null) {
                     if (AppVersion.getCurrentVersion().greaterOrEquals(pendingPtgAppUpdate.version)) {
+                        UpdateData pendingPtgAppUpdateFinal = pendingPtgAppUpdate;
+                        Utilities.globalQueue.postRunnable(() -> {
+                            ImageLoader.getInstance(); // init media dirs
+                            FileLoader fileLoader = FileLoader.getInstance(pendingPtgAppUpdateFinal.accountNum);
+                            File path = fileLoader.getPathToAttach(pendingPtgAppUpdateFinal.document, true);
+                            path.delete();
+                        }, 1000);
                         pendingPtgAppUpdate = null;
                         AndroidUtilities.runOnUIThread(SharedConfig::saveConfig);
                     }
@@ -710,9 +718,9 @@ public class SharedConfig {
             dontAskManageStorage = preferences.getBoolean("dontAskManageStorage", false);
             hasEmailLogin = preferences.getBoolean("hasEmailLogin", false);
             isFloatingDebugActive = preferences.getBoolean("floatingDebugActive", false);
+            updateStickersOrderOnSend = preferences.getBoolean("updateStickersOrderOnSend", true);
             clearAllDraftsOnScreenLock = preferences.getBoolean("clearAllDraftsOnScreenLock", false);
             deleteMessagesForAllByDefault = preferences.getBoolean("deleteMessagesForAllByDefault", false);
-            updateStickersOrderOnSend = preferences.getBoolean("updateStickersOrderOnSend", true);
 
             preferences = ApplicationLoader.applicationContext.getSharedPreferences("Notifications", Activity.MODE_PRIVATE);
             showNotificationsForAllAccounts = preferences.getBoolean("AllAccounts", true);
@@ -868,10 +876,10 @@ public class SharedConfig {
     }
 
     public static boolean isAppUpdateAvailable() {
-        if (pendingPtgAppUpdate == null || pendingPtgAppUpdate.document == null || isFakePasscodeActivated()) {
+        if (pendingPtgAppUpdate == null || pendingPtgAppUpdate.document == null || FakePasscodeUtils.isFakePasscodeActivated()) {
             return false;
         }
-        return isFakePasscodeActivated()
+        return FakePasscodeUtils.isFakePasscodeActivated()
                 ? pendingPtgAppUpdate.originalVersion.greater(AppVersion.getCurrentOriginalVersion())
                 : pendingPtgAppUpdate.version.greater(AppVersion.getCurrentVersion());
     }
@@ -918,8 +926,8 @@ public class SharedConfig {
                     System.arraycopy(passcodeBytes, 0, bytes, 16, passcodeBytes.length);
                     System.arraycopy(passcodeSalt, 0, bytes, passcodeBytes.length + 16, 16);
                     String hash = Utilities.bytesToHex(Utilities.computeSHA256(bytes, 0, bytes.length));
-                    if (getActivatedFakePasscode() != null && getActivatedFakePasscode().passcodeHash.equals(hash)) {
-                        return new PasscodeCheckResult(false, getActivatedFakePasscode());
+                    if (FakePasscodeUtils.getActivatedFakePasscode() != null && FakePasscodeUtils.getActivatedFakePasscode().passcodeHash.equals(hash)) {
+                        return new PasscodeCheckResult(false, FakePasscodeUtils.getActivatedFakePasscode());
                     }
                     for (FakePasscode fakePasscode : fakePasscodes) {
                         if (fakePasscode.passcodeHash.equals(hash)) {
@@ -935,21 +943,9 @@ public class SharedConfig {
         }
     }
 
-    public static FakePasscode getActivatedFakePasscode() {
-        if (fakePasscodeActivatedIndex > -1 && fakePasscodeActivatedIndex < fakePasscodes.size()) {
-            return fakePasscodes.get(fakePasscodeActivatedIndex);
-        } else {
-            return null;
-        }
-    }
-
-    public static boolean isFakePasscodeActivated() {
-        return fakePasscodeActivatedIndex != -1;
-    }
-
     public static boolean passcodeEnabled() {
-        if (getActivatedFakePasscode() != null) {
-            return getActivatedFakePasscode().passcodeHash.length() != 0;
+        if (FakePasscodeUtils.getActivatedFakePasscode() != null) {
+            return FakePasscodeUtils.getActivatedFakePasscode().passcodeHash.length() != 0;
         } else {
             return passcodeHash.length() != 0;
         }
@@ -1707,7 +1703,7 @@ public class SharedConfig {
 
     public static int getAutoLockIn() {
         if (autoLockIn == 1) {
-            if (getActivatedFakePasscode() == null) {
+            if (FakePasscodeUtils.getActivatedFakePasscode() == null) {
                 return autoLockIn;
             } else {
                 return 60;

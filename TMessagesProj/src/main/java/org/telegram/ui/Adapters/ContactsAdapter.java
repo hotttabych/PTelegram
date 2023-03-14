@@ -28,6 +28,7 @@ import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.R;
 import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.fakepasscode.FakePasscode;
+import org.telegram.messenger.fakepasscode.FakePasscodeUtils;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.ActionBar;
@@ -86,7 +87,7 @@ public class ContactsAdapter extends RecyclerListView.SectionsAdapter {
         sortType = value;
         if (sortType == SORT_TYPE_BY_TIME) {
             if (onlineContacts == null || force) {
-                onlineContacts = (ArrayList<TLRPC.TL_contact>) FakePasscode.filterContacts(ContactsController.getInstance(currentAccount).contacts, currentAccount);
+                onlineContacts = (ArrayList<TLRPC.TL_contact>) FakePasscodeUtils.filterContacts(ContactsController.getInstance(currentAccount).contacts, currentAccount);
                 long selfId = UserConfig.getInstance(currentAccount).clientUserId;
                 for (int a = 0, N = onlineContacts.size(); a < N; a++) {
                     if (onlineContacts.get(a).user_id == selfId) {

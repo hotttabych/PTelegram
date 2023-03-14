@@ -762,7 +762,7 @@ public class BotWebViewSheet extends Dialog implements NotificationCenter.Notifi
         this.silent = silent;
         this.buttonText = buttonText;
 
-        actionBar.setTitle(UserObject.getUserName(MessagesController.getInstance(currentAccount).getUser(botId)));
+        actionBar.setTitle(UserObject.getUserName(MessagesController.getInstance(currentAccount).getUser(botId), currentAccount));
         ActionBarMenu menu = actionBar.createMenu();
         menu.removeAllViews();
 

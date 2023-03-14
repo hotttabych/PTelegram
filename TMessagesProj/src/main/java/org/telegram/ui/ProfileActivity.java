@@ -126,6 +126,7 @@ import org.telegram.messenger.UserObject;
 import org.telegram.messenger.Utilities;
 import org.telegram.messenger.browser.Browser;
 import org.telegram.messenger.fakepasscode.FakePasscode;
+import org.telegram.messenger.fakepasscode.FakePasscodeUtils;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.SerializedData;
 import org.telegram.tgnet.TLObject;
@@ -1955,8 +1956,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         } else {
                             AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity(), resourcesProvider);
                             builder.setTitle(LocaleController.getString("AddBot", R.string.AddBot));
-                            String chatName = chat == null ? "" : UserConfig.getChatTitleOverride(currentAccount, chat.id, chat.title);
-                            builder.setMessage(AndroidUtilities.replaceTags(LocaleController.formatString("AddMembersAlertNamesText", R.string.AddMembersAlertNamesText, UserObject.getUserName(user), chatName)));
+                            String chatName = chat == null ? "" : getUserConfig().getChatTitleOverride(chat);
+                            builder.setMessage(AndroidUtilities.replaceTags(LocaleController.formatString("AddMembersAlertNamesText", R.string.AddMembersAlertNamesText, UserObject.getUserName(user, getCurrentAccount()), chatName)));
                             builder.setNegativeButton(LocaleController.getString("Cancel", R.string.Cancel), null);
                             builder.setPositiveButton(LocaleController.getString("AddBot", R.string.AddBot), (di, i) -> {
                                 disableProfileAnimation = true;
@@ -3405,7 +3406,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                                 BuildVars.DEBUG_PRIVATE_VERSION ? "Force remove premium suggestions" : null,
                                 BuildVars.DEBUG_PRIVATE_VERSION ? "Share device info" : null,
                                 BuildVars.DEBUG_PRIVATE_VERSION ? "Force performance class" : null,
-                                !SharedConfig.isFakePasscodeActivated() ? "Enter tester settings password" : null
+                                !FakePasscodeUtils.isFakePasscodeActivated() ? "Enter tester settings password" : null
                         };
 
                         builder.setItems(items, (dialog, which) -> {
@@ -3610,6 +3611,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                                 });
                                 builder2.setNegativeButton(LocaleController.getString("Cancel", R.string.Cancel), null);
                                 builder2.show();
+
                             } else if (which == items.length - 1) {
                                 showTesterPasswordDialog();
                             }
@@ -4606,7 +4608,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             return;
         }
         if (userId != 0) {
-            if (!UserConfig.isAvatarEnabled(currentAccount, userId)) {
+            if (!getUserConfig().isAvatarEnabled(userId)) {
                 return;
             }
             TLRPC.User user = getMessagesController().getUser(userId);
@@ -4618,7 +4620,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 PhotoViewer.getInstance().openPhoto(user.photo.photo_big, provider);
             }
         } else if (chatId != 0) {
-            if (!UserConfig.isAvatarEnabled(currentAccount, chatId)) {
+            if (!getUserConfig().isAvatarEnabled(chatId)) {
                 return;
             }
             TLRPC.Chat chat = getMessagesController().getChat(chatId);
@@ -5037,7 +5039,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         case PHONE_OPTION_COPY:
                             try {
                                 android.content.ClipboardManager clipboard = (android.content.ClipboardManager) ApplicationLoader.applicationContext.getSystemService(Context.CLIPBOARD_SERVICE);
-                                android.content.ClipData clip = android.content.ClipData.newPlainText("label", "+" + FakePasscode.getFakePhoneNumber(currentAccount, user.phone));
+                                android.content.ClipData clip = android.content.ClipData.newPlainText("label", "+" + FakePasscodeUtils.getFakePhoneNumber(currentAccount, user.phone));
                                 clipboard.setPrimaryClip(clip);
                                 if (AndroidUtilities.shouldShowClipboardToast()) {
                                     BulletinFactory.of(this).createCopyBulletin(LocaleController.getString("PhoneCopied", R.string.PhoneCopied)).show();
@@ -7029,11 +7031,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             TLRPC.User user = getMessagesController().getUser(uid);
             getMessagesController().deleteParticipantFromChat(chatId, user);
             if (currentChat != null && user != null && BulletinFactory.canShowBulletin(this)) {
-                String title = UserConfig.getChatTitleOverride(currentAccount, currentChat.id);
-                if (title == null) {
-                    title = UserConfig.getChatTitleOverride(currentAccount, currentChat.id, currentChat.title);
-                }
-                BulletinFactory.createRemoveFromChatBulletin(this, user, title).show();
+                BulletinFactory.createRemoveFromChatBulletin(this, user, getUserConfig().getChatTitleOverride(currentChat)).show();
             }
             if (chatInfo.participants.participants.remove(participant)) {
                 updateListAnimated(true);
@@ -7202,7 +7200,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 faqRow = rowCount++;
                 policyRow = rowCount++;
                 if (BuildVars.LOGS_ENABLED || BuildVars.DEBUG_PRIVATE_VERSION
-                    || (SharedConfig.activatedTesterSettingType != 0 && !SharedConfig.isFakePasscodeActivated())) {
+                    || (SharedConfig.activatedTesterSettingType != 0 && !FakePasscodeUtils.isFakePasscodeActivated())) {
                     helpSectionCell = rowCount++;
                     debugHeaderRow = rowCount++;
                 }
@@ -7217,7 +7215,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 if (BuildVars.DEBUG_PRIVATE_VERSION) {
                     switchBackendRow = rowCount++;
                 }
-                if (SharedConfig.activatedTesterSettingType != 0 && !SharedConfig.isFakePasscodeActivated()) {
+                if (SharedConfig.activatedTesterSettingType != 0 && !FakePasscodeUtils.isFakePasscodeActivated()) {
                     testerSettingsRow = rowCount++;
                 }
                 versionRow = rowCount++;
@@ -7570,9 +7568,9 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     avatarImage.setImageDrawable(vectorAvatarThumbDrawable);
                 } else if (videoThumbLocation != null && !user.photo.personal) {
                     avatarImage.getImageReceiver().setVideoThumbIsSame(true);
-                    avatarImage.setImage(UserConfig.isAvatarEnabled(currentAccount, user.id) ? videoThumbLocation : null, "avatar", thumbLocation, "50_50", avatarDrawable, user);
+                    avatarImage.setImage(getUserConfig().isAvatarEnabled(user.id) ? videoThumbLocation : null, "avatar", thumbLocation, "50_50", avatarDrawable, user);
                 } else {
-                    avatarImage.setImage(UserConfig.isAvatarEnabled(currentAccount, user.id) ? videoLocation : null, ImageLoader.AUTOPLAY_FILTER, UserConfig.isAvatarEnabled(currentAccount, user.id) ? thumbLocation : null, "50_50", avatarDrawable, user);
+                    avatarImage.setImage(getUserConfig().isAvatarEnabled(user.id) ? videoLocation : null, ImageLoader.AUTOPLAY_FILTER, getUserConfig().isAvatarEnabled(user.id) ? thumbLocation : null, "50_50", avatarDrawable, user);
                 }
             }
 
@@ -7808,11 +7806,11 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         if (count > 0) {
                             statusString = LocaleController.formatPluralString("messages", count, count);
                         } else {
-                            statusString = LocaleController.formatString("TopicProfileStatus", R.string.TopicProfileStatus, UserConfig.getChatTitleOverride(currentAccount, chat.id, chat.title));
+                            statusString = LocaleController.formatString("TopicProfileStatus", R.string.TopicProfileStatus, getUserConfig().getChatTitleOverride(chat));
                         }
                         SpannableString arrowString = new SpannableString(">");
                         arrowString.setSpan(new ColoredImageSpan(R.drawable.arrow_newchat), 0, 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-                        profileStatusString = new SpannableStringBuilder(UserConfig.getChatTitleOverride(currentAccount, chat.id, chat.title)).append(' ').append(arrowString);
+                        profileStatusString = new SpannableStringBuilder(getUserConfig().getChatTitleOverride(chat)).append(' ').append(arrowString);
                         profileStatusIsButton = true;
                     } else if (currentChat.megagroup) {
                         if (onlineCount > 1 && chatInfo.participants_count != 0) {
@@ -7877,7 +7875,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         changed = true;
                     }
                 } else if (chat.title != null) {
-                    CharSequence title = UserConfig.getChatTitleOverride(currentAccount, chat.id, chat.title);
+                    CharSequence title = getUserConfig().getChatTitleOverride(chat);
                     try {
                         title = Emoji.replaceEmoji(title, nameTextView[a].getPaint().getFontMetricsInt(), AndroidUtilities.dp(24), false);
                     } catch (Exception ignore) {
@@ -7985,7 +7983,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 filter = null;
             }
             if (avatarBig == null && !isTopic) {
-                boolean avatarEnabled = UserConfig.isAvatarEnabled(currentAccount, chat.id);
+                boolean avatarEnabled = getUserConfig().isAvatarEnabled(chat.id);
                 avatarImage.setImage(avatarEnabled ? videoLocation : null, filter, avatarEnabled ? thumbLocation : null, "50_50", avatarDrawable, chat);
             }
             if (imageLocation != null && (prevLoadedImageLocation == null || imageLocation.photoId != prevLoadedImageLocation.photoId)) {
@@ -9324,7 +9322,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         TLRPC.User user = UserConfig.getInstance(currentAccount).getCurrentUser();
                         String value;
                         if (user != null && user.phone != null && user.phone.length() != 0) {
-                            value = PhoneFormat.getInstance().format("+" + FakePasscode.getFakePhoneNumber(UserConfig.selectedAccount, user.phone));
+                            value = PhoneFormat.getInstance().format("+" + FakePasscodeUtils.getFakePhoneNumber(UserConfig.selectedAccount, user.phone));
                         } else {
                             value = LocaleController.getString("NumberUnknown", R.string.NumberUnknown);
                         }
@@ -9732,7 +9730,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         position == questionRow || position == devicesRow || position == filtersRow || position == stickersRow ||
                         position == faqRow || position == policyRow || position == sendLogsRow || position == sendLastLogsRow ||
                         position == clearLogsRow || position == sendLogcatRow || position == switchBackendRow || position == testerSettingsRow || position == setAvatarRow
-                        || position == chatIdRow || position == addToGroupButtonRow || position == premiumRow || position == liteModeRow;
+                        || position == chatIdRow ||
+                        position == addToGroupButtonRow || position == premiumRow || position == liteModeRow;
             }
             if (holder.itemView instanceof UserCell) {
                 UserCell userCell = (UserCell) holder.itemView;

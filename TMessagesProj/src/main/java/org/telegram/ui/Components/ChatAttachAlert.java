@@ -2676,7 +2676,7 @@ public class ChatAttachAlert extends BottomSheet implements NotificationCenter.N
     }
 
     public void onLongClickBotButton(TLRPC.TL_attachMenuBot attachMenuBot, TLRPC.User currentUser) {
-        String botName = attachMenuBot != null ? attachMenuBot.short_name : UserObject.getUserName(currentUser);
+        String botName = attachMenuBot != null ? attachMenuBot.short_name : UserObject.getUserName(currentUser, currentAccount);
         new AlertDialog.Builder(getContext())
                 .setTitle(LocaleController.getString(R.string.BotRemoveFromMenuTitle))
                 .setMessage(AndroidUtilities.replaceTags(attachMenuBot != null ? LocaleController.formatString("BotRemoveFromMenu", R.string.BotRemoveFromMenu, botName) : LocaleController.formatString("BotRemoveInlineFromMenu", R.string.BotRemoveInlineFromMenu, botName)))

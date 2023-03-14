@@ -41,6 +41,7 @@ import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.fakepasscode.FakePasscode;
 import org.telegram.messenger.UserObject;
+import org.telegram.messenger.fakepasscode.FakePasscodeUtils;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.TLObject;
 import org.telegram.tgnet.TLRPC;
@@ -724,7 +725,7 @@ public class DialogsAdapter extends RecyclerListView.SelectionAdapter implements
                         TLRPC.User user = MessagesController.getInstance(currentAccount).getUser(dialog.id);
                         if (user != null) {
                             object = user;
-                            title = UserObject.getUserName(user);
+                            title = UserObject.getUserName(user, currentAccount);
                             if (!UserObject.isReplyUser(user)) {
                                 if (user.bot) {
                                     subtitle = LocaleController.getString("Bot", R.string.Bot);
@@ -1100,7 +1101,7 @@ public class DialogsAdapter extends RecyclerListView.SelectionAdapter implements
             return false;
         }
         List<TLRPC.Dialog> dialogs = controller.getDialogs(1);
-        return dialogs != null && !FakePasscode.filterDialogs(dialogs, Optional.of(currentAccount)).isEmpty();
+        return dialogs != null && !FakePasscodeUtils.filterDialogs(dialogs, Optional.of(currentAccount)).isEmpty();
     }
 
     public class LastEmptyView extends View {

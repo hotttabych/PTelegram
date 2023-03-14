@@ -40,10 +40,11 @@ import androidx.core.app.NotificationManagerCompat;
 import androidx.core.util.Consumer;
 
 import org.telegram.SQLite.SQLiteCursor;
+import org.telegram.SQLite.SQLiteDatabase;
 import org.telegram.messenger.fakepasscode.FakePasscode;
 import org.telegram.messenger.fakepasscode.FakePasscodeMessages;
+import org.telegram.messenger.fakepasscode.FakePasscodeUtils;
 import org.telegram.messenger.fakepasscode.Utils;
-import org.telegram.SQLite.SQLiteDatabase;
 import org.telegram.SQLite.SQLiteException;
 import org.telegram.SQLite.SQLitePreparedStatement;
 import org.telegram.messenger.browser.Browser;
@@ -743,7 +744,7 @@ public class MessagesController extends BaseController implements NotificationCe
         } else {
             TLRPC.Chat chat = getChat(-dialogId);
             if (chat != null) {
-                return UserConfig.getChatTitleOverride(currentAccount, chat.id, chat.title);
+                return getUserConfig().getChatTitleOverride(currentAccount, chat);
             }
         }
         return null;
@@ -2208,8 +2209,8 @@ public class MessagesController extends BaseController implements NotificationCe
                 case "qr_login_camera": {
                     if (value.value instanceof TLRPC.TL_jsonBool) {
                         TLRPC.TL_jsonBool bool = (TLRPC.TL_jsonBool) value.value;
-                                if (/*bool.value*/ true != qrLoginCamera) {
-                                    qrLoginCamera = true; //bool.value;
+                        if (/*bool.value*/ true != qrLoginCamera) {
+                            qrLoginCamera = true; //bool.value;
                             editor.putBoolean("qrLoginCamera", qrLoginCamera);
                             changed = true;
                         }
@@ -3691,7 +3692,7 @@ public class MessagesController extends BaseController implements NotificationCe
             TLRPC.Dialog dialog = dialogs_dict.get(did);
             if (dialog != null && dialog.top_message == msgId) {
                 dialog.top_message = newMsgId;
-                if (!FakePasscode.isHideMessage(account, dialog.id, msgId) && !FakePasscode.isHideMessage(account, dialog.id, newMsgId)) {
+                if (!FakePasscodeUtils.isHideMessage(account, dialog.id, msgId) && !FakePasscodeUtils.isHideMessage(account, dialog.id, newMsgId)) {
                     getNotificationCenter().postNotificationName(NotificationCenter.dialogsNeedReload);
                 }
             }
@@ -10271,7 +10272,7 @@ public class MessagesController extends BaseController implements NotificationCe
                     }
                     allDialogs.add(dialog);
                 }
-                if (dialogsRes.messages.stream().noneMatch(m -> FakePasscode.isHideMessage(currentAccount, m.dialog_id, m.id))) {
+                if (dialogsRes.messages.stream().noneMatch(m -> FakePasscodeUtils.isHideMessage(currentAccount, m.dialog_id, m.id))) {
                     sortDialogs(null);
                     getNotificationCenter().postNotificationName(NotificationCenter.dialogsNeedReload);
                 }
@@ -12478,7 +12479,7 @@ public class MessagesController extends BaseController implements NotificationCe
                                         continue;
                                     }
                                     MessageObject.getDialogId(message);
-                                    if (!FakePasscode.checkMessage(currentAccount, message)) {
+                                    if (!FakePasscodeUtils.checkMessage(currentAccount, message)) {
                                         continue;
                                     }
                                     Utils.fixTlrpcMessage(message);
@@ -12536,7 +12537,7 @@ public class MessagesController extends BaseController implements NotificationCe
                                         getMediaDataController().loadReplyMessagesForMessages(arr, dialogId, false, 0, () -> {
                                             AndroidUtilities.runOnUIThread(() -> {
                                                 updateInterfaceWithMessages(dialogId, arr, false);
-                                                if (arr.stream().allMatch(m -> !FakePasscode.isHideMessage(currentAccount, m.getDialogId(), m.getId()))) {
+                                                if (arr.stream().allMatch(m -> !FakePasscodeUtils.isHideMessage(currentAccount, m.getDialogId(), m.getId()))) {
                                                     getNotificationCenter().postNotificationName(NotificationCenter.dialogsNeedReload);
                                                 }
                                             });
@@ -13456,7 +13457,7 @@ public class MessagesController extends BaseController implements NotificationCe
                     }
 
                     getMessagesStorage().setLastPtsValue(updates.pts);
-                    if (SharedConfig.fakePasscodeActivatedIndex == -1 || FakePasscode.checkMessage(currentAccount, message)) {
+                    if (SharedConfig.fakePasscodeActivatedIndex == -1 || FakePasscodeUtils.checkMessage(currentAccount, message)) {
                         Utils.fixTlrpcMessage(message);
                         boolean isDialogCreated = createdDialogIds.contains(message.dialog_id);
                         MessageObject obj = new MessageObject(currentAccount, message, isDialogCreated, isDialogCreated);
@@ -14030,7 +14031,7 @@ public class MessagesController extends BaseController implements NotificationCe
                 ImageLoader.saveMessageThumbs(message);
 
                 MessageObject.getDialogId(message);
-                if (!FakePasscode.checkMessage(currentAccount, message)) {
+                if (!FakePasscodeUtils.checkMessage(currentAccount, message)) {
                     continue;
                 }
                 if (baseUpdate instanceof TLRPC.TL_updateNewChannelMessage && message.reply_to != null && !(message.action instanceof TLRPC.TL_messageActionPinMessage)) {
@@ -16695,7 +16696,7 @@ public class MessagesController extends BaseController implements NotificationCe
             }
         }
 
-        if (messages.stream().anyMatch(m -> FakePasscode.isHideMessage(currentAccount, dialogId, m.getId()))) {
+        if (messages.stream().anyMatch(m -> FakePasscodeUtils.isHideMessage(currentAccount, dialogId, m.getId()))) {
             return false;
         }
 
@@ -17658,7 +17659,7 @@ public class MessagesController extends BaseController implements NotificationCe
     private ArrayList<TLRPC.Message> filterMessages(ArrayList<TLRPC.Message> arr, long dialogId) {
         return arr.stream()
                 .filter(message ->
-                        FakePasscode.checkMessage(currentAccount,
+                        FakePasscodeUtils.checkMessage(currentAccount,
                                 dialogId,
                                 message.from_id != null ? message.from_id.user_id : null,
                                 message.message,

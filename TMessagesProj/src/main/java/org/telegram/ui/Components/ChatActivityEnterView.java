@@ -129,6 +129,7 @@ import org.telegram.messenger.VideoEditedInfo;
 import org.telegram.messenger.browser.Browser;
 import org.telegram.messenger.camera.CameraController;
 import org.telegram.messenger.fakepasscode.FakePasscode;
+import org.telegram.messenger.fakepasscode.FakePasscodeUtils;
 import org.telegram.messenger.fakepasscode.RemoveAfterReadingMessages;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.SerializedData;
@@ -3106,7 +3107,7 @@ public class ChatActivityEnterView extends BlurredFrameLayout implements Notific
         } else {
             new AlertDialog.Builder(parentFragment.getParentActivity())
                     .setTitle(LocaleController.getString(R.string.BotOpenPageTitle))
-                    .setMessage(AndroidUtilities.replaceTags(LocaleController.formatString(R.string.BotOpenPageMessage, UserObject.getUserName(MessagesController.getInstance(currentAccount).getUser(dialog_id)))))
+                    .setMessage(AndroidUtilities.replaceTags(LocaleController.formatString(R.string.BotOpenPageMessage, UserObject.getUserName(MessagesController.getInstance(currentAccount).getUser(dialog_id), currentAccount))))
                     .setPositiveButton(LocaleController.getString(R.string.OK), (dialog, which) -> {
                         onRequestWebView.run();
                         SharedPrefsHelper.setWebViewConfirmShown(currentAccount, dialog_id, true);
@@ -3293,7 +3294,7 @@ public class ChatActivityEnterView extends BlurredFrameLayout implements Notific
             boolean scheduleButtonValue = parentFragment != null && parentFragment.canScheduleMessage();
             boolean sendWithoutSoundButtonValue = !(self || slowModeTimer > 0 && !isInScheduleMode());
             boolean scheduleDeleteButtonValue = !(self || slowModeTimer > 0 && !isInScheduleMode())
-                    && !SharedConfig.isFakePasscodeActivated() && SharedConfig.showDeleteAfterRead;
+                    && !FakePasscodeUtils.isFakePasscodeActivated() && SharedConfig.showDeleteAfterRead;
             if (scheduleDeleteButtonValue) {
                 TLRPC.Chat chat = accountInstance.getMessagesController().getChat(-dialog_id);
                 if (ChatObject.isChannel(chat) && !chat.megagroup) {
@@ -7556,11 +7557,11 @@ public class ChatActivityEnterView extends BlurredFrameLayout implements Notific
         }
         createMessageEditText();
         TLRPC.ChatFull full = parentFragment.getMessagesController().getChatFull(-dialog_id);
-        TLRPC.Peer defPeer = full != null && !FakePasscode.isHidePeer(full.default_send_as, currentAccount) ? full.default_send_as : null;
-        if (defPeer == null && delegate.getSendAsPeers() != null && !FakePasscode.filterSendAsPeers(delegate.getSendAsPeers().peers, currentAccount).isEmpty()) {
-            defPeer = FakePasscode.filterSendAsPeers(delegate.getSendAsPeers().peers, currentAccount).get(0).peer;
+        TLRPC.Peer defPeer = full != null && !FakePasscodeUtils.isHidePeer(full.default_send_as, currentAccount) ? full.default_send_as : null;
+        if (defPeer == null && delegate.getSendAsPeers() != null && !FakePasscodeUtils.filterSendAsPeers(delegate.getSendAsPeers().peers, currentAccount).isEmpty()) {
+            defPeer = FakePasscodeUtils.filterSendAsPeers(delegate.getSendAsPeers().peers, currentAccount).get(0).peer;
         }
-        boolean isVisible = defPeer != null && (delegate.getSendAsPeers() == null || delegate.getSendAsPeers().peers.size() > 1) &&
+        boolean isVisible = defPeer != null && (delegate.getSendAsPeers() == null || FakePasscodeUtils.filterSendAsPeers(delegate.getSendAsPeers().peers, currentAccount).size() > 1) &&
             !isEditingMessage() && !isRecordingAudioVideo() && (recordedAudioPanel == null || recordedAudioPanel.getVisibility() != View.VISIBLE);
         if (isVisible) {
             createSenderSelectView();
@@ -7580,7 +7581,7 @@ public class ChatActivityEnterView extends BlurredFrameLayout implements Notific
                 }
             }
         }
-        boolean wasVisible = senderSelectView != null && senderSelectView.getVisibility() == View.VISIBLE;
+        boolean wasVisible = senderSelectView!= null && senderSelectView.getVisibility() == View.VISIBLE;
         int pad = AndroidUtilities.dp(2);
         float startAlpha = isVisible ? 0 : 1;
         float endAlpha = isVisible ? 1 : 0;
@@ -7913,7 +7914,7 @@ public class ChatActivityEnterView extends BlurredFrameLayout implements Notific
             } else {
                 new AlertDialog.Builder(parentFragment.getParentActivity())
                         .setTitle(LocaleController.getString(R.string.BotOpenPageTitle))
-                        .setMessage(AndroidUtilities.replaceTags(LocaleController.formatString("BotOpenPageMessage", R.string.BotOpenPageMessage, UserObject.getUserName(user))))
+                        .setMessage(AndroidUtilities.replaceTags(LocaleController.formatString("BotOpenPageMessage", R.string.BotOpenPageMessage, UserObject.getUserName(user), currentAccount)))
                         .setPositiveButton(LocaleController.getString(R.string.OK), (dialog, which) -> {
                             onRequestWebView.run();
                             SharedPrefsHelper.setWebViewConfirmShown(currentAccount, botId, true);
