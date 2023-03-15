@@ -37,6 +37,7 @@ import android.text.TextPaint;
 import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.text.style.ImageSpan;
+import android.util.Log;
 import android.util.LongSparseArray;
 import android.util.Property;
 import android.util.TypedValue;
@@ -680,6 +681,7 @@ public class ChatAttachAlert extends BottomSheet implements NotificationCenter.N
 
     private FrameLayout frameLayout2;
     protected EditTextEmoji commentTextView;
+    private int[] commentTextViewLocation = new int[2];
     private FrameLayout writeButtonContainer;
     private ImageView writeButton;
     private Drawable writeButtonDrawable;
@@ -1228,6 +1230,8 @@ public class ChatAttachAlert extends BottomSheet implements NotificationCenter.N
                     setCurrentPanTranslationY(currentPanTranslationY);
                     invalidate();
                     frameLayout2.invalidate();
+
+                    updateCommentTextViewPosition();
 
                     if (currentAttachLayout != null) {
                         currentAttachLayout.onContainerTranslationUpdated(currentPanTranslationY);
@@ -2227,7 +2231,13 @@ public class ChatAttachAlert extends BottomSheet implements NotificationCenter.N
                     float dy = (messageEditTextPredrawHeigth - editText.getMeasuredHeight()) + (messageEditTextPredrawScrollY - editText.getScrollY());
                     editText.setOffsetY(editText.getOffsetY() - dy);
                     ValueAnimator a = ValueAnimator.ofFloat(editText.getOffsetY(), 0);
-                    a.addUpdateListener(animation -> editText.setOffsetY((float) animation.getAnimatedValue()));
+                    a.addUpdateListener(animation -> {
+                        editText.setOffsetY((float) animation.getAnimatedValue());
+                        updateCommentTextViewPosition();
+                        if (currentAttachLayout == photoLayout) {
+                            photoLayout.onContainerTranslationUpdated(currentPanTranslationY);
+                        }
+                    });
                     if (messageEditTextAnimator != null) {
                         messageEditTextAnimator.cancel();
                     }
@@ -2254,6 +2264,7 @@ public class ChatAttachAlert extends BottomSheet implements NotificationCenter.N
                 }
                 chatActivityEnterViewAnimateFromTop = frameLayout2.getTop() + captionEditTextTopOffset;
                 frameLayout2.invalidate();
+                updateCommentTextViewPosition();
             }
 
             @Override
@@ -2270,6 +2281,12 @@ public class ChatAttachAlert extends BottomSheet implements NotificationCenter.N
             @Override
             protected void closeParent() {
                 ChatAttachAlert.super.dismiss();
+            }
+
+            @Override
+            protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
+                super.onLayout(changed, left, top, right, bottom);
+                updateCommentTextViewPosition();
             }
         };
         commentTextView.setHint(LocaleController.getString("AddCaption", R.string.AddCaption));
@@ -2624,6 +2641,14 @@ public class ChatAttachAlert extends BottomSheet implements NotificationCenter.N
         }
     }
 
+    public void updateCommentTextViewPosition() {
+        commentTextView.getLocationOnScreen(commentTextViewLocation);
+    }
+
+    public int getCommentTextViewTop() {
+        return commentTextViewLocation[1];
+    }
+
     private void showCaptionLimitBulletin(BaseFragment parentFragment) {
         if (!(parentFragment instanceof ChatActivity) || !ChatObject.isChannelAndNotMegaGroup(((ChatActivity) parentFragment).getCurrentChat())) {
             return;
@@ -2651,7 +2676,7 @@ public class ChatAttachAlert extends BottomSheet implements NotificationCenter.N
     }
 
     public void onLongClickBotButton(TLRPC.TL_attachMenuBot attachMenuBot, TLRPC.User currentUser) {
-        String botName = attachMenuBot != null ? attachMenuBot.short_name : UserObject.getUserName(currentUser);
+        String botName = attachMenuBot != null ? attachMenuBot.short_name : UserObject.getUserName(currentUser, currentAccount);
         new AlertDialog.Builder(getContext())
                 .setTitle(LocaleController.getString(R.string.BotRemoveFromMenuTitle))
                 .setMessage(AndroidUtilities.replaceTags(attachMenuBot != null ? LocaleController.formatString("BotRemoveFromMenu", R.string.BotRemoveFromMenu, botName) : LocaleController.formatString("BotRemoveInlineFromMenu", R.string.BotRemoveInlineFromMenu, botName)))

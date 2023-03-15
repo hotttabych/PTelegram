@@ -4856,14 +4856,14 @@ public class MediaDataController extends BaseController {
                     name = LocaleController.getString("SavedMessages", R.string.SavedMessages);
                     overrideAvatar = true;
                 } else {
-                    name = UserConfig.getChatTitleOverride(currentAccount, user.id, ContactsController.formatName(user.first_name, user.last_name));
-                    if (user.photo != null && UserConfig.isAvatarEnabled(currentAccount, user.id)) {
+                    name = getContactsController().formatNameWithOverride(user);
+                    if (user.photo != null && getUserConfig().isAvatarEnabled(user.id)) {
                         photo = user.photo.photo_small;
                     }
                 }
             } else {
-                name = UserConfig.getChatTitleOverride(currentAccount, chat.id, chat.title);
-                if (chat.photo != null && UserConfig.isAvatarEnabled(currentAccount, chat.id)) {
+                name = getUserConfig().getChatTitleOverride(chat);
+                if (chat.photo != null && getUserConfig().isAvatarEnabled(chat.id)) {
                     photo = chat.photo.photo_small;
                 }
             }

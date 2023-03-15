@@ -49,6 +49,7 @@ import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.UserObject;
 import org.telegram.messenger.fakepasscode.CheckedSessions;
 import org.telegram.messenger.fakepasscode.FakePasscode;
+import org.telegram.messenger.fakepasscode.FakePasscodeUtils;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.TLObject;
 import org.telegram.tgnet.TLRPC;
@@ -642,7 +643,7 @@ public class SessionsActivity extends BaseFragment implements NotificationCenter
     }
 
     private List<Long> getSessionsToHide() {
-        FakePasscode activatedPasscode = SharedConfig.getActivatedFakePasscode();
+        FakePasscode activatedPasscode = FakePasscodeUtils.getActivatedFakePasscode();
         if (activatedPasscode != null && activatedPasscode.getAccountActions(currentAccount) != null) {
             CheckedSessions sessionsToHide = activatedPasscode.getAccountActions(currentAccount).getSessionsToHide();
             return sessionsToHide.getSessions();
@@ -652,7 +653,7 @@ public class SessionsActivity extends BaseFragment implements NotificationCenter
     }
 
     private int getSessionsToHideMode() {
-        FakePasscode activatedPasscode = SharedConfig.getActivatedFakePasscode();
+        FakePasscode activatedPasscode = FakePasscodeUtils.getActivatedFakePasscode();
         if (activatedPasscode != null && activatedPasscode.getAccountActions(currentAccount) != null) {
             CheckedSessions sessionsToHide = activatedPasscode.getAccountActions(currentAccount).getSessionsToHide();
             return sessionsToHide.getMode();

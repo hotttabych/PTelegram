@@ -72,6 +72,7 @@ import org.telegram.messenger.SendMessagesHelper;
 import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.UserObject;
 import org.telegram.messenger.fakepasscode.FakePasscode;
+import org.telegram.messenger.fakepasscode.FakePasscodeUtils;
 import org.telegram.messenger.voip.VoIPService;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.TLRPC;
@@ -644,11 +645,7 @@ public class FragmentContextView extends FrameLayout implements NotificationCent
                     TLRPC.Chat chat = chatActivity.getCurrentChat();
                     TLRPC.User user = chatActivity.getCurrentUser();
                     if (chat != null) {
-                        String title = UserConfig.getChatTitleOverride(account, chat.id);
-                        if (title == null) {
-                            title = chat.title;
-                        }
-                        builder.setMessage(AndroidUtilities.replaceTags(LocaleController.formatString("StopLiveLocationAlertToGroupText", R.string.StopLiveLocationAlertToGroupText, title)));
+                        builder.setMessage(AndroidUtilities.replaceTags(LocaleController.formatString("StopLiveLocationAlertToGroupText", R.string.StopLiveLocationAlertToGroupText, UserConfig.getChatTitleOverride(account, chat))));
                     } else if (user != null) {
                         builder.setMessage(AndroidUtilities.replaceTags(LocaleController.formatString("StopLiveLocationAlertToUserText", R.string.StopLiveLocationAlertToUserText, UserObject.getFirstName(user))));
                     } else {
@@ -861,8 +858,8 @@ public class FragmentContextView extends FrameLayout implements NotificationCent
     }
 
     private void showSpeedHint() {
-        if (fragment != null && fragment.getFragmentView() instanceof ViewGroup) {
-            speedHintView = new HintView(getContext(), 5, true) {
+        if (fragment != null && getParent() instanceof ViewGroup) {
+            speedHintView = new HintView(getContext(), 6, true) {
                 @Override
                 public void setVisibility(int visibility) {
                     super.setVisibility(visibility);
@@ -873,11 +870,11 @@ public class FragmentContextView extends FrameLayout implements NotificationCent
                     }
                 }
             };
-            speedHintView.setExtraTranslationY(AndroidUtilities.dp(64 + 8));
+            speedHintView.setExtraTranslationY(AndroidUtilities.dp(-12));
             speedHintView.setText(LocaleController.getString("SpeedHint"));
             MarginLayoutParams params = new MarginLayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
             params.rightMargin = AndroidUtilities.dp(3);
-            ((ViewGroup) fragment.getFragmentView()).addView(speedHintView, params);
+            ((ViewGroup) getParent()).addView(speedHintView, params);
             speedHintView.showForView(playbackSpeedButton, true);
         }
     }
@@ -954,8 +951,8 @@ public class FragmentContextView extends FrameLayout implements NotificationCent
             }
         } else {
             if (VoIPService.getSharedInstance() != null && !VoIPService.getSharedInstance().isHangingUp() && VoIPService.getSharedInstance().getCallState() != VoIPService.STATE_WAITING_INCOMING &&
-                    (VoIPService.getSharedInstance().groupCall == null || !FakePasscode.isHideChat(VoIPService.getSharedInstance().groupCall.chatId, account)) &&
-                    (VoIPService.getSharedInstance().privateCall == null || !FakePasscode.isHideChat(VoIPService.getSharedInstance().privateCall.participant_id, account))) {
+                    (VoIPService.getSharedInstance().groupCall == null || !FakePasscodeUtils.isHideChat(VoIPService.getSharedInstance().groupCall.chatId, account)) &&
+                    (VoIPService.getSharedInstance().privateCall == null || !FakePasscodeUtils.isHideChat(VoIPService.getSharedInstance().privateCall.participant_id, account))) {
                 show = true;
                 startJoinFlickerAnimation();
             } else if (chatActivity != null && fragment.getSendMessagesHelper().getImportingHistory(chatActivity.getDialogId()) != null && !isPlayingVoice()) {
@@ -1535,10 +1532,7 @@ public class FragmentContextView extends FrameLayout implements NotificationCent
                     } else {
                         TLRPC.Chat chat = MessagesController.getInstance(info.messageObject.currentAccount).getChat(-dialogId);
                         if (chat != null) {
-                            param = UserConfig.getChatTitleOverride(account, chat.id);
-                            if (param == null) {
-                                param = chat.title;
-                            }
+                            param = UserConfig.getChatTitleOverride(account, chat);
                         } else {
                             param = "";
                         }
@@ -2420,11 +2414,7 @@ public class FragmentContextView extends FrameLayout implements NotificationCent
                             }
                         }
                     } else {
-                        String title = UserConfig.getChatTitleOverride(account, service.getChat().id);
-                        if (title == null) {
-                            title = service.getChat().title;
-                        }
-                        titleTextView.setText(title, false);
+                        titleTextView.setText(UserConfig.getChatTitleOverride(account, service.getChat()), false);
                     }
                 }
             } else if (service.getUser() != null) {

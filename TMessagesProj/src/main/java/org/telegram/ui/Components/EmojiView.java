@@ -6542,11 +6542,7 @@ public class EmojiView extends FrameLayout implements NotificationCenter.Notific
                             icon = groupStickerSet != null ? R.drawable.msg_mini_customize : R.drawable.msg_close;
                         }
                         TLRPC.Chat chat = info != null ? MessagesController.getInstance(currentAccount).getChat(info.id) : null;
-                        String title = UserConfig.getChatTitleOverride(currentAccount, chat.id);
-                        if (title == null) {
-                            title = chat.title;
-                        }
-                        cell.setText(LocaleController.formatString("CurrentGroupStickers", R.string.CurrentGroupStickers, chat != null ? title : "Group Stickers"), icon);
+                        cell.setText(LocaleController.formatString("CurrentGroupStickers", R.string.CurrentGroupStickers, chat != null ? UserConfig.getChatTitleOverride(currentAccount, chat) : "Group Stickers"), icon);
                     } else {
                         Object object = cache.get(position);
                         if (object instanceof TLRPC.TL_messages_stickerSet) {
@@ -7831,6 +7827,7 @@ public class EmojiView extends FrameLayout implements NotificationCenter.Notific
             switch (viewType) {
                 case 0:
                     ContextLinkCell cell = new ContextLinkCell(context);
+                    cell.setIsKeyboard(true);
                     cell.setCanPreviewGif(true);
                     view = cell;
                     break;

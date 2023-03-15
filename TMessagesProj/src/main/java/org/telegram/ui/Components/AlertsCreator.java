@@ -87,6 +87,7 @@ import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.UserObject;
 import org.telegram.messenger.Utilities;
 import org.telegram.messenger.browser.Browser;
+import org.telegram.messenger.fakepasscode.FakePasscodeUtils;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.SerializedData;
 import org.telegram.tgnet.TLObject;
@@ -1499,7 +1500,7 @@ public class AlertsCreator {
             revokeTimeLimit = MessagesController.getInstance(account).revokeTimeLimit;
         }
         boolean canDeleteInbox = !secret && user != null && canRevokeInbox && revokeTimeLimit == 0x7fffffff;
-        final boolean[] deleteForAll =  {!SharedConfig.isFakePasscodeActivated() && SharedConfig.deleteMessagesForAllByDefault};
+        final boolean[] deleteForAll = new boolean[1];
         boolean deleteChatForAll = false;
 
         boolean lastMessageIsJoined = false;
@@ -1518,9 +1519,9 @@ public class AlertsCreator {
                     cell[0].setText(LocaleController.getString("DeleteGroupForAll", R.string.DeleteGroupForAll), "", false, false);
                 }
             } else if (clear) {
-                cell[0].setText(LocaleController.formatString("ClearHistoryOptionAlso", R.string.ClearHistoryOptionAlso, UserObject.getFirstName(user)), "", !SharedConfig.isFakePasscodeActivated() && SharedConfig.deleteMessagesForAllByDefault, false);
+                cell[0].setText(LocaleController.formatString("ClearHistoryOptionAlso", R.string.ClearHistoryOptionAlso, UserObject.getFirstName(user)), "", !FakePasscodeUtils.isFakePasscodeActivated() && SharedConfig.deleteMessagesForAllByDefault, false);
             } else {
-                cell[0].setText(LocaleController.formatString("DeleteMessagesOptionAlso", R.string.DeleteMessagesOptionAlso, UserObject.getFirstName(user)), "", !SharedConfig.isFakePasscodeActivated() && SharedConfig.deleteMessagesForAllByDefault, false);
+                cell[0].setText(LocaleController.formatString("DeleteMessagesOptionAlso", R.string.DeleteMessagesOptionAlso, UserObject.getFirstName(user)), "", !FakePasscodeUtils.isFakePasscodeActivated() && SharedConfig.deleteMessagesForAllByDefault, false);
             }
             cell[0].setPadding(LocaleController.isRTL ? AndroidUtilities.dp(16) : AndroidUtilities.dp(8), 0, LocaleController.isRTL ? AndroidUtilities.dp(8) : AndroidUtilities.dp(16), 0);
             frameLayout.addView(cell[0], LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 48, Gravity.BOTTOM | Gravity.LEFT, 0, 0, 0, 0));
@@ -1564,12 +1565,12 @@ public class AlertsCreator {
             if (clear) {
                 if (user != null) {
                     if (secret) {
-                        messageTextView.setText(AndroidUtilities.replaceTags(LocaleController.formatString("AreYouSureClearHistoryWithSecretUser", R.string.AreYouSureClearHistoryWithSecretUser, UserObject.getUserName(user))));
+                        messageTextView.setText(AndroidUtilities.replaceTags(LocaleController.formatString("AreYouSureClearHistoryWithSecretUser", R.string.AreYouSureClearHistoryWithSecretUser, UserObject.getUserName(user, account))));
                     } else {
                         if (user.id == selfUserId) {
                             messageTextView.setText(AndroidUtilities.replaceTags(LocaleController.getString("AreYouSureClearHistorySavedMessages", R.string.AreYouSureClearHistorySavedMessages)));
                         } else {
-                            messageTextView.setText(AndroidUtilities.replaceTags(LocaleController.formatString("AreYouSureClearHistoryWithUser", R.string.AreYouSureClearHistoryWithUser, UserObject.getUserName(user))));
+                            messageTextView.setText(AndroidUtilities.replaceTags(LocaleController.formatString("AreYouSureClearHistoryWithUser", R.string.AreYouSureClearHistoryWithUser, UserObject.getUserName(user, account))));
                         }
                     }
                 } else {
@@ -1595,26 +1596,26 @@ public class AlertsCreator {
                 } else {
                     if (user != null) {
                         if (secret) {
-                            messageTextView.setText(AndroidUtilities.replaceTags(LocaleController.formatString("AreYouSureDeleteThisChatWithSecretUser", R.string.AreYouSureDeleteThisChatWithSecretUser, UserObject.getUserName(user))));
+                            messageTextView.setText(AndroidUtilities.replaceTags(LocaleController.formatString("AreYouSureDeleteThisChatWithSecretUser", R.string.AreYouSureDeleteThisChatWithSecretUser, UserObject.getUserName(user, account))));
                         } else {
                             if (user.id == selfUserId) {
                                 messageTextView.setText(AndroidUtilities.replaceTags(LocaleController.getString("AreYouSureDeleteThisChatSavedMessages", R.string.AreYouSureDeleteThisChatSavedMessages)));
                             } else {
                                 if (user.bot && !user.support) {
-                                    messageTextView.setText(AndroidUtilities.replaceTags(LocaleController.formatString("AreYouSureDeleteThisChatWithBot", R.string.AreYouSureDeleteThisChatWithBot, UserObject.getUserName(user))));
+                                    messageTextView.setText(AndroidUtilities.replaceTags(LocaleController.formatString("AreYouSureDeleteThisChatWithBot", R.string.AreYouSureDeleteThisChatWithBot, UserObject.getUserName(user, account))));
                                 } else {
-                                    messageTextView.setText(AndroidUtilities.replaceTags(LocaleController.formatString("AreYouSureDeleteThisChatWithUser", R.string.AreYouSureDeleteThisChatWithUser, UserObject.getUserName(user))));
+                                    messageTextView.setText(AndroidUtilities.replaceTags(LocaleController.formatString("AreYouSureDeleteThisChatWithUser", R.string.AreYouSureDeleteThisChatWithUser, UserObject.getUserName(user, account))));
                                 }
                             }
                         }
                     } else if (ChatObject.isChannel(chat)) {
                         if (chat.megagroup) {
-                            messageTextView.setText(AndroidUtilities.replaceTags(LocaleController.formatString("MegaLeaveAlertWithName", R.string.MegaLeaveAlertWithName, chat.title)));
+                            messageTextView.setText(AndroidUtilities.replaceTags(LocaleController.formatString("MegaLeaveAlertWithName", R.string.MegaLeaveAlertWithName, UserConfig.getChatTitleOverride(account, chat))));
                         } else {
-                            messageTextView.setText(AndroidUtilities.replaceTags(LocaleController.formatString("ChannelLeaveAlertWithName", R.string.ChannelLeaveAlertWithName, chat.title)));
+                            messageTextView.setText(AndroidUtilities.replaceTags(LocaleController.formatString("ChannelLeaveAlertWithName", R.string.ChannelLeaveAlertWithName, UserConfig.getChatTitleOverride(account, chat))));
                         }
                     } else {
-                        messageTextView.setText(AndroidUtilities.replaceTags(LocaleController.formatString("AreYouSureDeleteAndExitName", R.string.AreYouSureDeleteAndExitName, chat.title)));
+                        messageTextView.setText(AndroidUtilities.replaceTags(LocaleController.formatString("AreYouSureDeleteAndExitName", R.string.AreYouSureDeleteAndExitName, UserConfig.getChatTitleOverride(account, chat))));
                     }
                 }
             }
@@ -1737,7 +1738,7 @@ public class AlertsCreator {
         if (days == -1) {
             textView.setText(LocaleController.formatString("ClearHistory", R.string.ClearHistory));
             if (user != null) {
-                messageTextView.setText(AndroidUtilities.replaceTags(LocaleController.formatString("AreYouSureClearHistoryWithUser", R.string.AreYouSureClearHistoryWithUser, UserObject.getUserName(user))));
+                messageTextView.setText(AndroidUtilities.replaceTags(LocaleController.formatString("AreYouSureClearHistoryWithUser", R.string.AreYouSureClearHistoryWithUser, UserObject.getUserName(user, account))));
             } else {
                 if (canDeleteHistory) {
                     if (ChatObject.isChannelAndNotMegaGroup(chat)) {
@@ -1755,7 +1756,7 @@ public class AlertsCreator {
             textView.setText(LocaleController.formatPluralString("DeleteDays", days));
             messageTextView.setText(LocaleController.getString("DeleteHistoryByDaysMessage", R.string.DeleteHistoryByDaysMessage));
         }
-        final boolean[] deleteForAll = { !SharedConfig.isFakePasscodeActivated() && SharedConfig.deleteMessagesForAllByDefault};//new boolean[]{false};
+        final boolean[] deleteForAll = { !FakePasscodeUtils.isFakePasscodeActivated() && SharedConfig.deleteMessagesForAllByDefault};//new boolean[]{false};
 
         if (chat != null && canDeleteHistory && ChatObject.isPublic(chat)) {
             deleteForAll[0] = true;
@@ -1809,10 +1810,10 @@ public class AlertsCreator {
         final String message;
         if (videoCall) {
             title = LocaleController.getString("VideoCallAlertTitle", R.string.VideoCallAlertTitle);
-            message = LocaleController.formatString("VideoCallAlert", R.string.VideoCallAlert, UserObject.getUserName(user));
+            message = LocaleController.formatString("VideoCallAlert", R.string.VideoCallAlert, UserObject.getUserName(user, account));
         } else {
             title = LocaleController.getString("CallAlertTitle", R.string.CallAlertTitle);
-            message = LocaleController.formatString("CallAlert", R.string.CallAlert, UserObject.getUserName(user));
+            message = LocaleController.formatString("CallAlert", R.string.CallAlert, UserObject.getUserName(user, account));
         }
 
         TextView messageTextView = new TextView(context) {
@@ -2014,7 +2015,7 @@ public class AlertsCreator {
             currentLastName = user.last_name;
         } else {
             TLRPC.Chat chat = MessagesController.getInstance(currentAccount).getChat(-peerId);
-            currentName = UserConfig.getChatTitleOverride(currentAccount, chat.id, chat.title);
+            currentName = UserConfig.getChatTitleOverride(currentAccount, chat);
         }
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
         builder.setTitle(peerId > 0 ? LocaleController.getString("VoipEditName", R.string.VoipEditName) : LocaleController.getString("VoipEditTitle", R.string.VoipEditTitle));
@@ -5338,7 +5339,7 @@ public class AlertsCreator {
         }
 
         final boolean[] checks = new boolean[3];
-        final boolean[] deleteForAll = { !SharedConfig.isFakePasscodeActivated() && SharedConfig.deleteMessagesForAllByDefault};
+        final boolean[] deleteForAll = { !FakePasscodeUtils.isFakePasscodeActivated() && SharedConfig.deleteMessagesForAllByDefault};
         TLRPC.User actionUser = null;
         TLRPC.Chat actionChat = null;
         boolean canRevokeInbox = user != null && MessagesController.getInstance(currentAccount).canRevokePmInbox;
@@ -5476,7 +5477,7 @@ public class AlertsCreator {
                 CheckBoxCell cell = new CheckBoxCell(activity, 1, resourcesProvider);
                 cell.setBackgroundDrawable(Theme.getSelectorDrawable(false));
                 if (chat != null && hasNotOut) {
-                    cell.setText(LocaleController.getString("DeleteForAll", R.string.DeleteForAll), "", !SharedConfig.isFakePasscodeActivated() && SharedConfig.deleteMessagesForAllByDefault, false);
+                    cell.setText(LocaleController.getString("DeleteForAll", R.string.DeleteForAll), "", !FakePasscodeUtils.isFakePasscodeActivated() && SharedConfig.deleteMessagesForAllByDefault, false);
                 } else {
                     cell.setText(LocaleController.getString("DeleteMessagesOption", R.string.DeleteMessagesOption), "", false, false);
                 }
@@ -5535,7 +5536,7 @@ public class AlertsCreator {
                 CheckBoxCell cell = new CheckBoxCell(activity, 1, resourcesProvider);
                 cell.setBackgroundDrawable(Theme.getSelectorDrawable(false));
                 if (canDeleteInbox) {
-                    cell.setText(LocaleController.formatString("DeleteMessagesOptionAlso", R.string.DeleteMessagesOptionAlso, UserObject.getFirstName(user)), "", !SharedConfig.isFakePasscodeActivated() && SharedConfig.deleteMessagesForAllByDefault, false);
+                    cell.setText(LocaleController.formatString("DeleteMessagesOptionAlso", R.string.DeleteMessagesOptionAlso, UserObject.getFirstName(user)), "", !FakePasscodeUtils.isFakePasscodeActivated() && SharedConfig.deleteMessagesForAllByDefault, false);
                 } else if (chat != null && (hasNotOut || myMessagesCount == count)) {
                     cell.setText(LocaleController.getString("DeleteForAll", R.string.DeleteForAll), "", false, false);
                 } else {

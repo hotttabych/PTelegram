@@ -32,6 +32,7 @@ import androidx.collection.LongSparseArray;
 
 import org.telegram.PhoneFormat.PhoneFormat;
 import org.telegram.messenger.fakepasscode.FakePasscode;
+import org.telegram.messenger.fakepasscode.FakePasscodeUtils;
 import org.telegram.messenger.fakepasscode.HideAccountAction;
 import org.telegram.messenger.fakepasscode.LogOutAction;
 import org.telegram.tgnet.ConnectionsManager;
@@ -371,7 +372,7 @@ public class ContactsController extends BaseController {
 
     public void checkAppAccount() {
         AccountManager am = AccountManager.get(ApplicationLoader.applicationContext);
-        Map<Integer, Boolean> logoutMap = FakePasscode.getLogoutOrHideAccountMap();
+        Map<Integer, Boolean> logoutMap = FakePasscodeUtils.getLogoutOrHideAccountMap();
         try {
             Account[] accounts = am.getAccountsByType("org.telegram.messenger");
             systemAccount = null;
@@ -2785,6 +2786,14 @@ public class ContactsController extends BaseController {
 
     public static String formatName(TLRPC.User user) {
         return formatName(user.first_name, user.last_name, 0);
+    }
+
+    public String formatNameWithOverride(TLRPC.User user) {
+        return getUserConfig().getChatTitleOverride(user.id, formatName(user.first_name, user.last_name));
+    }
+
+    public static String formatNameWithOverride(Integer accountNum, TLRPC.User user) {
+        return UserConfig.getChatTitleOverride(accountNum, user.id, formatName(user.first_name, user.last_name));
     }
 
     public static String formatName(String firstName, String lastName) {

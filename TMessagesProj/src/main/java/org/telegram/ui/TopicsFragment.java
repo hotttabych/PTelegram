@@ -832,7 +832,6 @@ public class TopicsFragment extends BaseFragment implements NotificationCenter.N
                 }
                 if (dialogsActivity != null) {
                     dialogsActivity.didSelectResult(-chatId, topic.id, true, false, this);
-                    dialogsActivity.removeSelfFromStack();
                 }
                 return;
             }
@@ -2356,7 +2355,7 @@ public class TopicsFragment extends BaseFragment implements NotificationCenter.N
 
         if (!opnendForSelect) {
             if (chatLocal != null) {
-                avatarContainer.setTitle(UserConfig.getChatTitleOverride(currentAccount, chatId, chatLocal.title));
+                avatarContainer.setTitle(getUserConfig().getChatTitleOverride(chatLocal));
                 Drawable rightIcon = null;
                 if (getMessagesController().isDialogMuted(-chatId, 0)) {
                     rightIcon = getThemedDrawable(Theme.key_drawable_muteIconDrawable);
@@ -2971,7 +2970,7 @@ public class TopicsFragment extends BaseFragment implements NotificationCenter.N
             } else if (topic != null && topic.icon_emoji_id != 0) {
                 setForumIcon(null);
                 if (animatedEmojiDrawable == null || animatedEmojiDrawable.getDocumentId() != topic.icon_emoji_id) {
-                    setAnimatedEmojiDrawable(new AnimatedEmojiDrawable(AnimatedEmojiDrawable.CACHE_TYPE_FORUM_TOPIC, currentAccount, topic.icon_emoji_id));
+                    setAnimatedEmojiDrawable(new AnimatedEmojiDrawable(openedForForward ? AnimatedEmojiDrawable.CACHE_TYPE_ALERT_PREVIEW_STATIC : AnimatedEmojiDrawable.CACHE_TYPE_FORUM_TOPIC, currentAccount, topic.icon_emoji_id));
                 }
             } else {
                 setAnimatedEmojiDrawable(null);

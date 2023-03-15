@@ -423,6 +423,7 @@ public class ReactedUsersListView extends FrameLayout {
             titleView.setImportantForAccessibility(IMPORTANT_FOR_ACCESSIBILITY_NO);
             titleView.setRightPadding(AndroidUtilities.dp(30));
             titleView.setTranslationX(LocaleController.isRTL ? AndroidUtilities.dp(30) : 0);
+            titleView.setRightDrawableOutside(true);
             addView(titleView, LayoutHelper.createFrameRelatively(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.FILL_HORIZONTAL | Gravity.TOP, 55, 5.33f, 12, 0));
 
             rightDrawable = new AnimatedEmojiDrawable.SwapAnimatedEmojiDrawable(this, AndroidUtilities.dp(18));
@@ -463,7 +464,7 @@ public class ReactedUsersListView extends FrameLayout {
             }
 
             avatarDrawable.setInfo(u);
-            titleView.setText(UserObject.getUserName(u));
+            titleView.setText(UserObject.getUserName(u, currentAccount));
 
             Drawable thumb = avatarDrawable;
             if (u.photo != null && u.photo.strippedBitmap != null) {
@@ -490,10 +491,10 @@ public class ReactedUsersListView extends FrameLayout {
                     reactView.setAnimatedEmojiDrawable(drawable);
                     hasReactImage = true;
                 }
-                contentDescription = LocaleController.formatString("AccDescrReactedWith", R.string.AccDescrReactedWith, UserObject.getUserName(u), visibleReaction.emojicon != null ? visibleReaction.emojicon : reaction.reaction);
+                contentDescription = LocaleController.formatString("AccDescrReactedWith", R.string.AccDescrReactedWith, UserObject.getUserName(u, currentAccount), visibleReaction.emojicon != null ? visibleReaction.emojicon : reaction.reaction);
             } else {
                 reactView.setImageDrawable(null);
-                contentDescription = LocaleController.formatString("AccDescrPersonHasSeen", R.string.AccDescrPersonHasSeen, UserObject.getUserName(u));
+                contentDescription = LocaleController.formatString("AccDescrPersonHasSeen", R.string.AccDescrPersonHasSeen, UserObject.getUserName(u, currentAccount));
             }
 
             if (reaction.date != 0) {
