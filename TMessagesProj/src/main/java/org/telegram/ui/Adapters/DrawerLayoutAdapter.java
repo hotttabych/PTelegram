@@ -22,6 +22,7 @@ import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.R;
 import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.UserConfig;
+import org.telegram.messenger.fakepasscode.FakePasscodeUtils;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.DrawerLayoutContainer;
 import org.telegram.messenger.fakepasscode.FakePasscode;
@@ -45,6 +46,7 @@ public class DrawerLayoutAdapter extends RecyclerListView.SelectionAdapter {
     private ArrayList<Item> items = new ArrayList<>(11);
     private ArrayList<Integer> accountNumbers = new ArrayList<>();
     private boolean accountsShown;
+    private boolean allAccountsShown;
     public DrawerProfileCell profileCell;
     private SideMenultItemAnimator itemAnimator;
     private boolean hasGps;
@@ -65,6 +67,9 @@ public class DrawerLayoutAdapter extends RecyclerListView.SelectionAdapter {
 
     private int getAccountRowsCount() {
         int count = accountNumbers.size() + 1;
+        if (!allAccountsShown && accountNumbers.size() > 4) {
+            count = 3 + 1 + 1; // accounts + "More" + divider
+        }
         if (accountNumbers.size() < getMaxAccountCount()) {
             count++;
         }
@@ -84,6 +89,7 @@ public class DrawerLayoutAdapter extends RecyclerListView.SelectionAdapter {
         if (accountsShown == value || itemAnimator.isRunning()) {
             return;
         }
+        int oldAccountRowsCount = getAccountRowsCount();
         accountsShown = value;
         if (profileCell != null) {
             profileCell.setAccountsShown(accountsShown, animated);
@@ -91,18 +97,30 @@ public class DrawerLayoutAdapter extends RecyclerListView.SelectionAdapter {
         MessagesController.getGlobalMainSettings().edit().putBoolean("accountsShown", accountsShown).commit();
         if (animated) {
             itemAnimator.setShouldClipChildren(false);
-            if (accountsShown) {
-                notifyItemRangeInserted(2, getAccountRowsCount());
+            if (!accountsShown) {
+                notifyItemRangeRemoved(2, oldAccountRowsCount);
             } else {
-                notifyItemRangeRemoved(2, getAccountRowsCount());
+                notifyItemRangeInserted(2, getAccountRowsCount());
             }
         } else {
             notifyDataSetChanged();
         }
     }
 
+    public void setAllAccountsShown(boolean value) {
+        if (allAccountsShown == value || itemAnimator.isRunning()) {
+            return;
+        }
+        allAccountsShown = value;
+        notifyDataSetChanged();
+    }
+
     public boolean isAccountsShown() {
         return accountsShown;
+    }
+
+    public boolean isAllAccountsShown() {
+        return allAccountsShown;
     }
 
     private View.OnClickListener onPremiumDrawableClick;
@@ -114,12 +132,12 @@ public class DrawerLayoutAdapter extends RecyclerListView.SelectionAdapter {
         int accountCount = 0;
         boolean correct = true;
         for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
-            if (UserConfig.getInstance(a).isClientActivated() && !FakePasscode.isHideAccount(a)) {
+            if (UserConfig.getInstance(a).isClientActivated() && !FakePasscodeUtils.isHideAccount(a)) {
                 if (!accountNumbers.contains(a)) {
                     correct = false;
                     break;
                 }
-                if (accountCount < getMaxAccountCount()) {
+                if (accountCount < getMaxAccountCount(true)) {
                     accountCount++;
                     accountNumbers.add(a);
                 }
@@ -190,6 +208,10 @@ public class DrawerLayoutAdapter extends RecyclerListView.SelectionAdapter {
                 DrawerActionCell drawerActionCell = (DrawerActionCell) holder.itemView;
                 position -= 2;
                 if (accountsShown) {
+                    if (position < getAccountRowsCount()) {
+                        drawerActionCell.setTextAndIcon(101, LocaleController.getString(R.string.PremiumMore), R.drawable.msg_expand, 0);
+                        break;
+                    }
                     position -= getAccountRowsCount();
                 }
                 items.get(position).bind(drawerActionCell);
@@ -199,6 +221,7 @@ public class DrawerLayoutAdapter extends RecyclerListView.SelectionAdapter {
             case 4: {
                 DrawerUserCell drawerUserCell = (DrawerUserCell) holder.itemView;
                 drawerUserCell.setAccount(accountNumbers.get(position - 2));
+                drawerUserCell.setTranslationY(0.0f);
                 break;
             }
         }
@@ -213,17 +236,33 @@ public class DrawerLayoutAdapter extends RecyclerListView.SelectionAdapter {
         }
         i -= 2;
         if (accountsShown) {
-            if (i < accountNumbers.size()) {
-                return 4;
-            } else {
-                if (accountNumbers.size() < getMaxAccountCount()) {
-                    if (i == accountNumbers.size()){
-                        return 5;
-                    } else if (i == accountNumbers.size() + 1) {
-                        return 2;
-                    }
+            if (allAccountsShown || FakePasscodeUtils.isFakePasscodeActivated()) {
+                if (i < accountNumbers.size()) {
+                    return 4;
                 } else {
-                    if (i == accountNumbers.size()) {
+                    if (accountNumbers.size() < getMaxAccountCount()) {
+                        if (i == accountNumbers.size()){
+                            return 5;
+                        } else if (i == accountNumbers.size() + 1) {
+                            return 2;
+                        }
+                    } else {
+                        if (i == accountNumbers.size()) {
+                            return 2;
+                        }
+                    }
+                }
+            } else {
+                if (i < accountNumbers.size() && i < 3 || i == 3 && accountNumbers.size() == 4) {
+                    return 4;
+                } else {
+                    if (i == 3 && accountNumbers.size() > 4) {
+                        return 3;
+                    } else if (accountNumbers.size() <= 4 && i == accountNumbers.size() ||
+                            accountNumbers.size() > 4 && i == 4) {
+                        return 5;
+                    } else if (accountNumbers.size() <= 4 && i == accountNumbers.size() + 1 ||
+                            accountNumbers.size() > 4 && i == 5) {
                         return 2;
                     }
                 }
@@ -256,8 +295,8 @@ public class DrawerLayoutAdapter extends RecyclerListView.SelectionAdapter {
     private void resetItems() {
         accountNumbers.clear();
         for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
-            if (UserConfig.getInstance(a).isClientActivated() && !FakePasscode.isHideAccount(a)
-                    && accountNumbers.size() < getMaxAccountCount()) {
+            if (UserConfig.getInstance(a).isClientActivated() && !FakePasscodeUtils.isHideAccount(a)
+                    && accountNumbers.size() < getMaxAccountCount(true)) {
                 accountNumbers.add(a);
             }
         }
@@ -362,6 +401,9 @@ public class DrawerLayoutAdapter extends RecyclerListView.SelectionAdapter {
     public int getId(int position) {
         position -= 2;
         if (accountsShown) {
+            if (position < getAccountRowsCount()) {
+                return 101;
+            }
             position -= getAccountRowsCount();
         }
         if (position < 0 || position >= items.size()) {
@@ -382,13 +424,23 @@ public class DrawerLayoutAdapter extends RecyclerListView.SelectionAdapter {
         if (!accountsShown) {
             return RecyclerView.NO_POSITION;
         }
+        if (!allAccountsShown && accountNumbers.size() > 4) {
+            return 1 + 3;
+        }
         return 1 + accountNumbers.size();
     }
 
     private int getMaxAccountCount() {
-        return (SharedConfig.fakePasscodeActivatedIndex == -1)
-                ? UserConfig.MAX_ACCOUNT_COUNT
-                : UserConfig.getFakePasscodeMaxAccountCount();
+        return getMaxAccountCount(false);
+    }
+
+    private int getMaxAccountCount(boolean checkPremium) {
+        if (!FakePasscodeUtils.isFakePasscodeActivated()) {
+            return UserConfig.MAX_ACCOUNT_COUNT;
+        }
+        return checkPremium
+                ? UserConfig.getMaxAccountCount()
+                : UserConfig.FAKE_PASSCODE_MAX_PREMIUM_ACCOUNT_COUNT;
     }
 
     private static class Item {

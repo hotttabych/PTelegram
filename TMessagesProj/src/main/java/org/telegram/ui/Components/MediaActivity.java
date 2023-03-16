@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.res.Configuration;
 import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.graphics.PorterDuff;
 import android.graphics.Rect;
 import android.os.Build;
 import android.os.Bundle;
@@ -26,7 +27,6 @@ import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.MediaDataController;
 import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.R;
-import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.UserConfig;
 import org.telegram.tgnet.TLObject;
 import org.telegram.tgnet.TLRPC;
@@ -36,11 +36,16 @@ import org.telegram.ui.ActionBar.BaseFragment;
 import org.telegram.ui.ActionBar.SimpleTextView;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.ActionBar.ThemeDescription;
+import org.telegram.ui.Components.FloatingDebug.FloatingDebugController;
+import org.telegram.ui.Components.FloatingDebug.FloatingDebugProvider;
+import org.telegram.ui.Components.Paint.ShapeDetector;
 import org.telegram.ui.ProfileActivity;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
-public class MediaActivity extends BaseFragment implements SharedMediaLayout.SharedMediaPreloaderDelegate {
+public class MediaActivity extends BaseFragment implements SharedMediaLayout.SharedMediaPreloaderDelegate, FloatingDebugProvider {
 
     private SharedMediaLayout.SharedMediaPreloader sharedMediaPreloader;
     private TLRPC.ChatFull currentChatInfo;
@@ -79,6 +84,7 @@ public class MediaActivity extends BaseFragment implements SharedMediaLayout.Sha
                 }
             }
         });
+        actionBar.setColorFilterMode(PorterDuff.Mode.SRC_IN);
         FrameLayout avatarContainer = new FrameLayout(context);
         SizeNotifierFrameLayout fragmentView = new SizeNotifierFrameLayout(context) {
 
@@ -215,9 +221,7 @@ public class MediaActivity extends BaseFragment implements SharedMediaLayout.Sha
 
             @Override
             protected void onSearchStateChanged(boolean expanded) {
-                if (SharedConfig.smoothKeyboard) {
-                    AndroidUtilities.removeAdjustResize(getParentActivity(), classGuid);
-                }
+                AndroidUtilities.removeAdjustResize(getParentActivity(), classGuid);
                 AndroidUtilities.updateViewVisibilityAnimated(avatarContainer, !expanded, 0.95f, true);
             }
 
@@ -257,7 +261,7 @@ public class MediaActivity extends BaseFragment implements SharedMediaLayout.Sha
                 if (user.self) {
                     nameTextView.setText(LocaleController.getString("SavedMessages", R.string.SavedMessages));
                     avatarDrawable.setAvatarType(AvatarDrawable.AVATAR_TYPE_SAVED);
-                    avatarDrawable.setSmallSize(true);
+                    avatarDrawable.setScaleSize(.8f);
                 } else {
                     nameTextView.setText(ContactsController.formatName(user.first_name, user.last_name));
                     avatarDrawable.setInfo(user, currentAccount);
@@ -268,7 +272,7 @@ public class MediaActivity extends BaseFragment implements SharedMediaLayout.Sha
         } else {
             TLRPC.Chat chat = MessagesController.getInstance(currentAccount).getChat(-dialogId);
             if (chat != null) {
-                nameTextView.setText(UserConfig.getChatTitleOverride(currentAccount, chat.id, chat.title));
+                nameTextView.setText(getUserConfig().getChatTitleOverride(chat));
                 avatarDrawable.setInfo(chat, currentAccount);
                 avatarObject = chat;
             }
@@ -280,7 +284,7 @@ public class MediaActivity extends BaseFragment implements SharedMediaLayout.Sha
         } else if (avatarObject instanceof TLRPC.User) {
             id = ((TLRPC.User) avatarObject).id;
         }
-        if (UserConfig.isAvatarEnabled(currentAccount, id)) {
+        if (getUserConfig().isAvatarEnabled(id)) {
             final ImageLocation thumbLocation = ImageLocation.getForUserOrChat(avatarObject, ImageLocation.TYPE_SMALL);
             avatarImageView.setImage(thumbLocation, "50_50", avatarDrawable, avatarObject);
         }
@@ -393,5 +397,17 @@ public class MediaActivity extends BaseFragment implements SharedMediaLayout.Sha
             color = Theme.getColor(Theme.key_actionBarActionModeDefault);
         }
         return ColorUtils.calculateLuminance(color) > 0.7f;
+    }
+
+    @Override
+    public List<FloatingDebugController.DebugItem> onGetDebugItems() {
+        return Arrays.asList(
+            new FloatingDebugController.DebugItem(
+                (ShapeDetector.isLearning(getContext()) ? "Disable" : "Enable") + " shape detector learning debug",
+                () -> {
+                    ShapeDetector.setLearning(getContext(), !ShapeDetector.isLearning(getContext()));
+                }
+            )
+        );
     }
 }

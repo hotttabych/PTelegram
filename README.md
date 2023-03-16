@@ -1,9 +1,18 @@
 ## Partisan-Telegram messenger for Android
 
+[![Crowdin](https://badges.crowdin.net/p-telegram-android/localized.svg)](https://crowdin.com/project/p-telegram-android)
+[![Bitcoin donation](https://img.shields.io/badge/donate-bitcoin-fe9515.svg)](https://telegra.ph/Partisan-Telegram--P-SMS-support-01-02-2)
+[![Ethereum donation](https://img.shields.io/badge/donate-ethereum-536bc3.svg)](https://telegra.ph/Partisan-Telegram--P-SMS-support-01-02-2)
+[![USDT donation](https://img.shields.io/badge/donate-USDT-26A17B.svg)](https://telegra.ph/Partisan-Telegram--P-SMS-support-01-02-2)
+[![Monero donation](https://img.shields.io/badge/donate-monero-f26822.svg)](https://telegra.ph/Partisan-Telegram--P-SMS-support-01-02-2)
+[![Litecoin donation](https://img.shields.io/badge/donate-Litecoin-345d9d.svg)](https://telegra.ph/Partisan-Telegram--P-SMS-support-01-02-2)
+
+![](https://github.com/wrwrabbit/Partisan-Telegram-Android/blob/wiki_images/wiki_images/Readme.jpg)
+
 A special version of Telegram that protects peaceful protesters in Belarus (can be used in other countries with authoritarian regimes as well). 
 P-Telegram has two passcodes instead of one - the real passcode and a false passcode.
 If a user enters the false passcode a series of pre-defined actions is performed such as:
-- Sending a custom SOS message to family and a trusted contact using SMS
+- Sending a custom SOS message to family and a trusted contact using Telegram
 - Delete chats and channels that can be used against the user
 - Log-out of the account on this device
 - Delete all other sessions besides the current one
@@ -13,7 +22,15 @@ Usage of P-Telegram can be used against the user in Belarus to justify torture a
 
 Stay safe.
 
-### Compilation Guide
+## Translations
+
+If you'd like to add translations to Partisan Telegram, please join the project on [Crowdin](https://crowdin.com/project/p-telegram-android).
+
+## Contact
+
+Partisan Telegram is developed and maintained by [Cyber Partisans](https://t.me/cpartisans_security). If you have questions about the application, you can ask them in our [bot](https://t.me/partisan_telegram_bot).
+
+## Compilation Guide
 
 **Note**: In order to support [reproducible builds](https://core.telegram.org/reproducible-builds), this repo contains dummy release.keystore,  google-services.json and filled variables inside BuildVars.java. Before publishing your own APKs please make sure to replace all these files with your own.
 

@@ -142,7 +142,6 @@ public class TwoStepVerificationSetupActivity extends BaseFragment {
     private RadialProgressView floatingProgressView;
 
     private CustomPhoneKeyboardView keyboardView;
-    public boolean returnToSettings = true;
 
     private RLottieDrawable[] animationDrawables;
     private Runnable setAnimationRunnable;
@@ -235,7 +234,7 @@ public class TwoStepVerificationSetupActivity extends BaseFragment {
         }
         if (animationDrawables != null) {
             for (int a = 0; a < animationDrawables.length; a++) {
-                animationDrawables[a].recycle();
+                animationDrawables[a].recycle(false);
             }
             animationDrawables = null;
         }
@@ -282,7 +281,7 @@ public class TwoStepVerificationSetupActivity extends BaseFragment {
                     showDialog(alertDialog);
                     TextView button = (TextView) alertDialog.getButton(DialogInterface.BUTTON_POSITIVE);
                     if (button != null) {
-                        button.setTextColor(Theme.getColor(Theme.key_dialogTextRed2));
+                        button.setTextColor(Theme.getColor(Theme.key_dialogTextRed));
                     }
                 }
             }
@@ -395,7 +394,7 @@ public class TwoStepVerificationSetupActivity extends BaseFragment {
                 showDialog(alertDialog);
                 TextView button = (TextView) alertDialog.getButton(DialogInterface.BUTTON_POSITIVE);
                 if (button != null) {
-                    button.setTextColor(Theme.getColor(Theme.key_dialogTextRed2));
+                    button.setTextColor(Theme.getColor(Theme.key_dialogTextRed));
                 }
             } else if (currentType == TYPE_ENTER_HINT) {
                 onHintDone();
@@ -463,6 +462,7 @@ public class TwoStepVerificationSetupActivity extends BaseFragment {
                 titleTextView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 18);
                 break;
         }
+
         switch (currentType) {
             case TYPE_INTRO:
             case TYPE_PASSWORD_SET:
@@ -983,10 +983,8 @@ public class TwoStepVerificationSetupActivity extends BaseFragment {
                     buttonTextView.setText(LocaleController.getString("TwoStepVerificationPasswordReturnPassport", R.string.TwoStepVerificationPasswordReturnPassport));
                 } else if (fromRegistration) {
                     buttonTextView.setText(LocaleController.getString(R.string.Continue));
-                } else if (returnToSettings) {
-                    buttonTextView.setText(LocaleController.getString("TwoStepVerificationPasswordReturnSettings", R.string.TwoStepVerificationPasswordReturnSettings));
                 } else {
-                    buttonTextView.setText(LocaleController.getString("TwoStepVerificationPasswordReturn", R.string.TwoStepVerificationPasswordReturn));
+                    buttonTextView.setText(LocaleController.getString("TwoStepVerificationPasswordReturnSettings", R.string.TwoStepVerificationPasswordReturnSettings));
                 }
                 descriptionText.setVisibility(View.VISIBLE);
 
@@ -1326,13 +1324,12 @@ public class TwoStepVerificationSetupActivity extends BaseFragment {
                 TwoStepVerificationSetupActivity fragment = new TwoStepVerificationSetupActivity(currentAccount, TYPE_CREATE_PASSWORD_STEP_1, currentPassword);
                 fragment.fromRegistration = fromRegistration;
                 fragment.closeAfterSet = closeAfterSet;
-                fragment.returnToSettings = returnToSettings;
                 fragment.setBlockingAlert(otherwiseReloginDays);
                 presentFragment(fragment, true);
                 break;
             }
             case TYPE_PASSWORD_SET: {
-                if (closeAfterSet || !returnToSettings) {
+                if (closeAfterSet) {
                     finishFragment();
                 } else if (fromRegistration) {
                     Bundle args = new Bundle();
@@ -1466,7 +1463,6 @@ public class TwoStepVerificationSetupActivity extends BaseFragment {
                 fragment.fragmentsToClose.addAll(fragmentsToClose);
                 fragment.fragmentsToClose.add(this);
                 fragment.closeAfterSet = closeAfterSet;
-                fragment.returnToSettings = returnToSettings;
                 fragment.setBlockingAlert(otherwiseReloginDays);
                 presentFragment(fragment);
 
@@ -1546,17 +1542,13 @@ public class TwoStepVerificationSetupActivity extends BaseFragment {
                                         fragmentsToClose.get(a).removeSelfFromStack();
                                     }
                                     NotificationCenter.getInstance(currentAccount).postNotificationName(NotificationCenter.twoStepPasswordChanged, currentPasswordHash, currentPassword.new_algo, currentPassword.new_secure_algo, currentPassword.secure_random, email, hint, null, firstPassword);
-                                    if (returnToSettings) {
-                                        TwoStepVerificationActivity fragment = new TwoStepVerificationActivity();
-                                        currentPassword.has_password = true;
-                                        currentPassword.has_recovery = true;
-                                        currentPassword.email_unconfirmed_pattern = "";
-                                        fragment.setCurrentPasswordParams(currentPassword, currentPasswordHash, currentSecretId, currentSecret);
-                                        fragment.setBlockingAlert(otherwiseReloginDays);
-                                        presentFragment(fragment, true);
-                                    } else {
-                                        finishFragment();
-                                    }
+                                    TwoStepVerificationActivity fragment = new TwoStepVerificationActivity();
+                                    currentPassword.has_password = true;
+                                    currentPassword.has_recovery = true;
+                                    currentPassword.email_unconfirmed_pattern = "";
+                                    fragment.setCurrentPasswordParams(currentPassword, currentPasswordHash, currentSecretId, currentSecret);
+                                    fragment.setBlockingAlert(otherwiseReloginDays);
+                                    presentFragment(fragment, true);
                                     NotificationCenter.getInstance(currentAccount).postNotificationName(NotificationCenter.didSetOrRemoveTwoStepPassword, currentPassword);
                                 });
                                 if (currentPassword.has_recovery) {
@@ -1582,7 +1574,6 @@ public class TwoStepVerificationSetupActivity extends BaseFragment {
                                 fragment.setCurrentPasswordParams(currentPasswordHash, currentSecretId, currentSecret, emailOnly);
                                 fragment.fragmentsToClose.addAll(fragmentsToClose);
                                 fragment.closeAfterSet = closeAfterSet;
-                                fragment.returnToSettings = returnToSettings;
                                 fragment.setBlockingAlert(otherwiseReloginDays);
                                 presentFragment(fragment, true);
                                 NotificationCenter.getInstance(currentAccount).postNotificationName(NotificationCenter.twoStepPasswordChanged, currentPasswordHash, currentPassword.new_algo, currentPassword.new_secure_algo, currentPassword.secure_random, email, hint, null, firstPassword);
@@ -1644,7 +1635,6 @@ public class TwoStepVerificationSetupActivity extends BaseFragment {
             fragment.fragmentsToClose.add(this);
             fragment.closeAfterSet = closeAfterSet;
             fragment.setBlockingAlert(otherwiseReloginDays);
-            fragment.returnToSettings = returnToSettings;
             presentFragment(fragment);
         } else {
             email = "";
@@ -1862,16 +1852,12 @@ public class TwoStepVerificationSetupActivity extends BaseFragment {
             ConnectionsManager.getInstance(currentAccount).sendRequest(req, (response, error) -> AndroidUtilities.runOnUIThread(() -> {
                 needHideProgress();
                 if (error == null) {
-                    if (returnToSettings) {
-                        TwoStepVerificationActivity fragment = new TwoStepVerificationActivity();
-                        currentPassword.has_recovery = false;
-                        currentPassword.email_unconfirmed_pattern = "";
-                        fragment.setCurrentPasswordParams(currentPassword, currentPasswordHash, currentSecretId, currentSecret);
-                        fragment.setBlockingAlert(otherwiseReloginDays);
-                        presentFragment(fragment, true);
-                    } else {
-                        finishFragment();
-                    }
+                    TwoStepVerificationActivity fragment = new TwoStepVerificationActivity();
+                    currentPassword.has_recovery = false;
+                    currentPassword.email_unconfirmed_pattern = "";
+                    fragment.setCurrentPasswordParams(currentPassword, currentPasswordHash, currentSecretId, currentSecret);
+                    fragment.setBlockingAlert(otherwiseReloginDays);
+                    presentFragment(fragment, true);
                     NotificationCenter.getInstance(currentAccount).postNotificationName(NotificationCenter.didRemoveTwoStepPassword);
                 }
             }));
@@ -1984,18 +1970,14 @@ public class TwoStepVerificationSetupActivity extends BaseFragment {
                                 for (int a = 0, N = fragmentsToClose.size(); a < N; a++) {
                                     fragmentsToClose.get(a).removeSelfFromStack();
                                 }
-                                if (returnToSettings) {
-                                    TwoStepVerificationActivity fragment = new TwoStepVerificationActivity();
-                                    currentPassword.has_password = true;
-                                    if (!currentPassword.has_recovery) {
-                                        currentPassword.has_recovery = !TextUtils.isEmpty(currentPassword.email_unconfirmed_pattern);
-                                    }
-                                    fragment.setCurrentPasswordParams(currentPassword, newPasswordHash != null ? newPasswordHash : currentPasswordHash, currentSecretId, currentSecret);
-                                    fragment.setBlockingAlert(otherwiseReloginDays);
-                                    presentFragment(fragment, true);
-                                } else {
-                                    finishFragment();
+                                TwoStepVerificationActivity fragment = new TwoStepVerificationActivity();
+                                currentPassword.has_password = true;
+                                if (!currentPassword.has_recovery) {
+                                    currentPassword.has_recovery = !TextUtils.isEmpty(currentPassword.email_unconfirmed_pattern);
                                 }
+                                fragment.setCurrentPasswordParams(currentPassword, newPasswordHash != null ? newPasswordHash : currentPasswordHash, currentSecretId, currentSecret);
+                                fragment.setBlockingAlert(otherwiseReloginDays);
+                                presentFragment(fragment, true);
                                 NotificationCenter.getInstance(currentAccount).postNotificationName(NotificationCenter.didSetOrRemoveTwoStepPassword, currentPassword);
                             });
                             if (password == null && currentPassword != null && currentPassword.has_password) {
@@ -2024,7 +2006,6 @@ public class TwoStepVerificationSetupActivity extends BaseFragment {
                             fragment.fromRegistration = fromRegistration;
                             fragment.setCurrentPasswordParams(newPasswordHash != null ? newPasswordHash : currentPasswordHash, currentSecretId, currentSecret, emailOnly);
                             fragment.closeAfterSet = closeAfterSet;
-                            fragment.returnToSettings = returnToSettings;
                             fragment.setBlockingAlert(otherwiseReloginDays);
                             presentFragment(fragment, true);
                             NotificationCenter.getInstance(currentAccount).postNotificationName(NotificationCenter.didSetOrRemoveTwoStepPassword, currentPassword);
@@ -2042,7 +2023,6 @@ public class TwoStepVerificationSetupActivity extends BaseFragment {
                         fragment.fromRegistration = fromRegistration;
                         fragment.setCurrentPasswordParams(newPasswordHash != null ? newPasswordHash : currentPasswordHash, currentSecretId, currentSecret, emailOnly);
                         fragment.closeAfterSet = closeAfterSet;
-                        fragment.returnToSettings = returnToSettings;
                         fragment.setBlockingAlert(otherwiseReloginDays);
                         presentFragment(fragment, true);
                     } else {
@@ -2174,14 +2154,14 @@ public class TwoStepVerificationSetupActivity extends BaseFragment {
     }
 
     @Override
-    public void finishFragment(boolean animated) {
+    public boolean finishFragment(boolean animated) {
         for (BaseFragment fragment : getParentLayout().getFragmentStack()) {
             if (fragment != this && fragment instanceof TwoStepVerificationSetupActivity) {
                 ((TwoStepVerificationSetupActivity) fragment).floatingAutoAnimator.ignoreNextLayout();
             }
         }
 
-        super.finishFragment(animated);
+        return super.finishFragment(animated);
     }
 
     private void showSetForcePasswordAlert() {
@@ -2192,7 +2172,7 @@ public class TwoStepVerificationSetupActivity extends BaseFragment {
 
         builder.setNegativeButton(LocaleController.getString("ForceSetPasswordCancel", R.string.ForceSetPasswordCancel), (a1, a2) -> finishFragment());
         AlertDialog alertDialog = builder.show();
-        ((TextView)alertDialog.getButton(DialogInterface.BUTTON_NEGATIVE)).setTextColor(Theme.getColor(Theme.key_dialogTextRed2));
+        ((TextView)alertDialog.getButton(DialogInterface.BUTTON_NEGATIVE)).setTextColor(Theme.getColor(Theme.key_dialogTextRed));
     }
 
     public void setBlockingAlert(int otherwiseRelogin) {

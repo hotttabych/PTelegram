@@ -202,7 +202,7 @@ public class NotificationsSoundActivity extends BaseFragment implements ChatAtta
                     AlertDialog dialog = builder.show();
                     TextView button = (TextView) dialog.getButton(DialogInterface.BUTTON_POSITIVE);
                     if (button != null) {
-                        button.setTextColor(Theme.getColor(Theme.key_dialogTextRed2, resourcesProvider));
+                        button.setTextColor(Theme.getColor(Theme.key_dialogTextRed, resourcesProvider));
                     }
                 } else if (id == shareId) {
                     if (selectedTones.size() == 1) {
@@ -298,7 +298,7 @@ public class NotificationsSoundActivity extends BaseFragment implements ChatAtta
             if (dialogId < 0) {
                 if (topicId != 0) {
                     TLRPC.TL_forumTopic forumTopic = getMessagesController().getTopicsController().findTopic(-dialogId, topicId);
-                    ForumUtilities.setTopicIcon(avatarContainer.getAvatarImageView(), forumTopic, true);
+                    ForumUtilities.setTopicIcon(avatarContainer.getAvatarImageView(), forumTopic, false, true, resourcesProvider);
                     avatarContainer.setTitle(forumTopic.title);
                 } else {
                     TLRPC.Chat chatLocal = getMessagesController().getChat(-dialogId);

@@ -30,6 +30,10 @@ public class AppVersion {
         return currentVersion;
     }
 
+    public static synchronized AppVersion getCurrentOriginalVersion() {
+        return parseVersion(BuildVars.BUILD_VERSION_STRING, "(\\d+).(\\d+).(\\d+)");
+    }
+
     public static AppVersion parseVersion(String versionString, String regex) {
         return parseVersion(versionString, Pattern.compile(regex));
     }

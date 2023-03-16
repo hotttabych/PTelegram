@@ -13,12 +13,14 @@ import android.content.SharedPreferences;
 import android.os.SystemClock;
 import android.text.TextUtils;
 import android.util.Base64;
+import android.util.LongSparseArray;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import org.telegram.messenger.fakepasscode.FakePasscode;
+import org.telegram.messenger.fakepasscode.FakePasscodeUtils;
 import org.telegram.tgnet.SerializedData;
 import org.telegram.tgnet.TLRPC;
 
@@ -40,7 +42,7 @@ public class UserConfig extends BaseController {
     public final static int MAX_ACCOUNT_COUNT = 30;
 
     private final Object sync = new Object();
-    private boolean configLoaded;
+    private volatile boolean configLoaded;
     private TLRPC.User currentUser;
     public boolean registeredForPush;
     public int lastSendMessageId = -210000;
@@ -89,6 +91,10 @@ public class UserConfig extends BaseController {
     public volatile byte[] savedPasswordHash;
     public volatile byte[] savedSaltedPassword;
     public volatile long savedPasswordTime;
+    LongSparseArray<SaveToGallerySettingsHelper.DialogException> userSaveGalleryExceptions;
+    LongSparseArray<SaveToGallerySettingsHelper.DialogException> chanelSaveGalleryExceptions;
+    LongSparseArray<SaveToGallerySettingsHelper.DialogException> groupsSaveGalleryExceptions;
+
 
     public static class ChatInfoOverride {
         public String title;
@@ -144,23 +150,27 @@ public class UserConfig extends BaseController {
         return localInstance;
     }
 
-    public static ChatInfoOverride getChatInfoOverride(int accountNum, long id) {
-        return getChatInfoOverride(accountNum < UserConfig.MAX_ACCOUNT_COUNT ? UserConfig.getInstance(accountNum) : null, id);
-    }
-
-    public static ChatInfoOverride getChatInfoOverride(UserConfig config, long id) {
-        if (SharedConfig.fakePasscodeActivatedIndex == -1 && config != null) {
-            if (config.chatInfoOverrides.containsKey(String.valueOf(id))) {
-                return config.chatInfoOverrides.get(String.valueOf(id));
-            } else if (config.chatInfoOverrides.containsKey(String.valueOf(-id))) {
-                return config.chatInfoOverrides.get(String.valueOf(-id));
+    public ChatInfoOverride getChatInfoOverride(long id) {
+        if (SharedConfig.fakePasscodeActivatedIndex == -1) {
+            if (chatInfoOverrides.containsKey(String.valueOf(id))) {
+                return chatInfoOverrides.get(String.valueOf(id));
+            } else if (chatInfoOverrides.containsKey(String.valueOf(-id))) {
+                return chatInfoOverrides.get(String.valueOf(-id));
             }
         }
         return null;
     }
 
     public static boolean isAvatarEnabled(int accountNum, long id) {
-        ChatInfoOverride chatInfo = getChatInfoOverride(accountNum, id);
+        if (accountNum >= UserConfig.MAX_ACCOUNT_COUNT) {
+            return false;
+        }
+        ChatInfoOverride chatInfo = UserConfig.getInstance(accountNum).getChatInfoOverride(id);
+        return chatInfo == null || chatInfo.avatarEnabled;
+    }
+
+    public boolean isAvatarEnabled(long id) {
+        ChatInfoOverride chatInfo = getChatInfoOverride(id);
         return chatInfo == null || chatInfo.avatarEnabled;
     }
 
@@ -169,8 +179,13 @@ public class UserConfig extends BaseController {
     }
 
     public static String getChatTitleOverride(Integer accountNum, long id, String defaultValue) {
-        UserConfig config = accountNum != null && accountNum < UserConfig.MAX_ACCOUNT_COUNT ? UserConfig.getInstance(accountNum) : null;
-        return getChatTitleOverride(config, id, defaultValue);
+        return accountNum != null && accountNum < UserConfig.MAX_ACCOUNT_COUNT
+                ? UserConfig.getInstance(accountNum).getChatTitleOverride(id, defaultValue)
+                : null;
+    }
+
+    public static String getChatTitleOverride(Integer accountNum, TLRPC.Chat chat) {
+        return getChatTitleOverride(accountNum, chat.id, chat.title);
     }
 
     public static String getChatTitleOverride(Integer accountNum, TLRPC.Peer peer, String defaultValue) {
@@ -184,12 +199,16 @@ public class UserConfig extends BaseController {
         return title != null ? title : defaultValue;
     }
 
-    public static String getChatTitleOverride(UserConfig config, long id) {
-        return getChatTitleOverride(config, id, null);
+    public String getChatTitleOverride(long id) {
+        return getChatTitleOverride(id, null);
     }
 
-    public static String getChatTitleOverride(UserConfig config, long id, String defaultValue) {
-        ChatInfoOverride chatInfo = getChatInfoOverride(config, id);
+    public String getChatTitleOverride(TLRPC.Chat chat) {
+        return getChatTitleOverride(chat.id, chat.title);
+    }
+
+    public String getChatTitleOverride(long id, String defaultValue) {
+        ChatInfoOverride chatInfo = getChatInfoOverride(id);
         if (chatInfo != null && chatInfo.title != null) {
             return chatInfo.title;
         } else {
@@ -205,7 +224,7 @@ public class UserConfig extends BaseController {
         int count = 0;
         for (int a = 0; a < MAX_ACCOUNT_COUNT; a++) {
             if (AccountInstance.getInstance(a).getUserConfig().isClientActivated()
-                    && (includeHidden || !FakePasscode.isHideAccount(a))) {
+                    && (includeHidden || !FakePasscodeUtils.isHideAccount(a))) {
                 count++;
             }
         }
@@ -244,6 +263,9 @@ public class UserConfig extends BaseController {
 
     public void saveConfig(boolean withFile) {
         NotificationCenter.getInstance(currentAccount).doOnIdle(() -> {
+            if (!configLoaded) {
+                return;
+            }
             synchronized (sync) {
                 try {
                     SharedPreferences.Editor editor = getPreferences().edit();
@@ -364,7 +386,7 @@ public class UserConfig extends BaseController {
 
     public String getClientPhone() {
         synchronized (sync) {
-            String fakePhoneNumber = FakePasscode.getFakePhoneNumber(currentAccount);
+            String fakePhoneNumber = FakePasscodeUtils.getFakePhoneNumber(currentAccount);
             if (!TextUtils.isEmpty(fakePhoneNumber)) {
                 return fakePhoneNumber;
             }
@@ -400,7 +422,8 @@ public class UserConfig extends BaseController {
         }
     }
 
-    public void loadConfig() {
+    public void
+    loadConfig() {
         synchronized (sync) {
             if (configLoaded) {
                 return;
@@ -547,6 +570,48 @@ public class UserConfig extends BaseController {
         }
     }
 
+    public LongSparseArray<SaveToGallerySettingsHelper.DialogException> getSaveGalleryExceptions(int type) {
+        if (type == SharedConfig.SAVE_TO_GALLERY_FLAG_PEER) {
+            if (userSaveGalleryExceptions == null) {
+                userSaveGalleryExceptions = SaveToGallerySettingsHelper.loadExceptions(ApplicationLoader.applicationContext.getSharedPreferences(SaveToGallerySettingsHelper.USERS_PREF_NAME + "_" + currentAccount, Context.MODE_PRIVATE));
+            }
+            return userSaveGalleryExceptions;
+        } else if (type == SharedConfig.SAVE_TO_GALLERY_FLAG_GROUP) {
+            if (groupsSaveGalleryExceptions == null) {
+                groupsSaveGalleryExceptions = SaveToGallerySettingsHelper.loadExceptions(ApplicationLoader.applicationContext.getSharedPreferences(SaveToGallerySettingsHelper.GROUPS_PREF_NAME + "_" + currentAccount, Context.MODE_PRIVATE));
+            }
+            return groupsSaveGalleryExceptions;
+        } else  if (type == SharedConfig.SAVE_TO_GALLERY_FLAG_CHANNELS) {
+            if (chanelSaveGalleryExceptions == null) {
+                chanelSaveGalleryExceptions = SaveToGallerySettingsHelper.loadExceptions(ApplicationLoader.applicationContext.getSharedPreferences(SaveToGallerySettingsHelper.CHANNELS_PREF_NAME + "_" + currentAccount, Context.MODE_PRIVATE));
+            }
+            return chanelSaveGalleryExceptions;
+        }
+        return null;
+    }
+
+    public void updateSaveGalleryExceptions(int type, LongSparseArray<SaveToGallerySettingsHelper.DialogException> exceptions) {
+        if (type == SharedConfig.SAVE_TO_GALLERY_FLAG_PEER) {
+            userSaveGalleryExceptions = exceptions;
+            SaveToGallerySettingsHelper.saveExceptions(
+                    ApplicationLoader.applicationContext.getSharedPreferences(SaveToGallerySettingsHelper.USERS_PREF_NAME + "_" + currentAccount, Context.MODE_PRIVATE),
+                    userSaveGalleryExceptions
+            );
+        } else if (type == SharedConfig.SAVE_TO_GALLERY_FLAG_GROUP) {
+            groupsSaveGalleryExceptions = exceptions;
+            SaveToGallerySettingsHelper.saveExceptions(
+                    ApplicationLoader.applicationContext.getSharedPreferences(SaveToGallerySettingsHelper.GROUPS_PREF_NAME + "_" + currentAccount, Context.MODE_PRIVATE),
+                    groupsSaveGalleryExceptions
+            );
+        } else  if (type == SharedConfig.SAVE_TO_GALLERY_FLAG_CHANNELS) {
+            chanelSaveGalleryExceptions = exceptions;
+            SaveToGallerySettingsHelper.saveExceptions(
+                    ApplicationLoader.applicationContext.getSharedPreferences(SaveToGallerySettingsHelper.CHANNELS_PREF_NAME + "_" + currentAccount, Context.MODE_PRIVATE),
+                    chanelSaveGalleryExceptions
+            );
+        }
+    }
+
     public void clearConfig() {
         getPreferences().edit().clear().apply();
 
@@ -605,6 +670,16 @@ public class UserConfig extends BaseController {
         getPreferences().edit().putBoolean("2pinnedDialogsLoaded" + folderId, loaded).commit();
     }
 
+    public void clearPinnedDialogsLoaded() {
+        SharedPreferences.Editor editor = getPreferences().edit();
+        for (String key : getPreferences().getAll().keySet()) {
+            if (key.startsWith("2pinnedDialogsLoaded")) {
+                editor.remove(key);
+            }
+        }
+        editor.apply();
+    }
+
     public static final int i_dialogsLoadOffsetId = 0;
     public static final int i_dialogsLoadOffsetDate = 1;
     public static final int i_dialogsLoadOffsetUserId = 2;
@@ -654,15 +729,71 @@ public class UserConfig extends BaseController {
     }
 
     public Long getEmojiStatus() {
-        if (currentUser == null) {
-            return null;
+        return UserObject.getEmojiStatusDocumentId(currentUser);
+    }
+
+    public boolean saveChannel(TLRPC.Chat chat) {
+        if (chat == null) {
+            return false;
         }
-        if (currentUser.emoji_status instanceof TLRPC.TL_emojiStatusUntil && ((TLRPC.TL_emojiStatusUntil) currentUser.emoji_status).until > (int) (System.currentTimeMillis() / 1000)) {
-            return ((TLRPC.TL_emojiStatusUntil) currentUser.emoji_status).document_id;
+        String username = chat.username != null
+                ? chat.username
+                : chat.usernames.stream().filter(u -> u.active).map(u -> u.username).findAny().orElse(null);
+        if (username != null) {
+            savedChannels.add(username);
+            return true;
         }
-        if (currentUser.emoji_status instanceof TLRPC.TL_emojiStatus) {
-            return ((TLRPC.TL_emojiStatus) currentUser.emoji_status).document_id;
+        return false;
+    }
+
+    public boolean isChannelSavingAllowed(TLRPC.Chat chat) {
+        return !FakePasscodeUtils.isFakePasscodeActivated() && chat != null && SharedConfig.showSavedChannels &&
+                !isChannelSaved(chat) && (chat.username != null || chat.usernames != null && !chat.usernames.isEmpty());
+    }
+
+    public boolean isChannelSaved(TLRPC.Chat chat) {
+        if (chat == null) {
+            return false;
+        } else if (chat.username != null) {
+            return getUserConfig().savedChannels.contains(chat.username);
+        } else if (chat.usernames != null) {
+            return chat.usernames.stream().anyMatch(name -> getUserConfig().savedChannels.contains(name.username));
+        } else {
+            return false;
         }
-        return null;
+    }
+
+    int globalTtl = 0;
+    boolean ttlIsLoading = false;
+    long lastLoadingTime;
+
+    public int getGlobalTTl() {
+        return globalTtl;
+    }
+
+    public void loadGlobalTTl() {
+        if (ttlIsLoading || System.currentTimeMillis() - lastLoadingTime < 60 * 1000) {
+            return;
+        }
+        ttlIsLoading = true;
+        TLRPC.TL_messages_getDefaultHistoryTTL getDefaultHistoryTTL = new TLRPC.TL_messages_getDefaultHistoryTTL();
+        getConnectionsManager().sendRequest(getDefaultHistoryTTL, (response, error) -> AndroidUtilities.runOnUIThread(() -> {
+            if (response != null) {
+                globalTtl = ((TLRPC.TL_defaultHistoryTTL) response).period / 60;
+                getNotificationCenter().postNotificationName(NotificationCenter.didUpdateGlobalAutoDeleteTimer);
+                ttlIsLoading = false;
+                lastLoadingTime = System.currentTimeMillis();
+            }
+        }));
+
+    }
+
+    public void setGlobalTtl(int ttl) {
+        globalTtl = ttl;
+    }
+
+    public void clearFilters() {
+        getPreferences().edit().remove("filtersLoaded").apply();
+        filtersLoaded = false;
     }
 }

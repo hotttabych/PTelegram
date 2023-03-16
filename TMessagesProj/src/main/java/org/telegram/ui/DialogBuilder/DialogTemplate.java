@@ -19,7 +19,7 @@ public class DialogTemplate {
         editTemplate.text = text;
         editTemplate.name = name;
         editTemplate.singleLine = singleLine;
-        viewTemplates.add(editTemplate);
+        addViewTemplate(editTemplate);
     }
 
     public void addPhoneEditTemplate(String text, String name, boolean singleLine) {
@@ -27,7 +27,7 @@ public class DialogTemplate {
         editTemplate.text = text;
         editTemplate.name = name;
         editTemplate.singleLine = singleLine;
-        viewTemplates.add(editTemplate);
+        addViewTemplate(editTemplate);
     }
 
     public void addNumberEditTemplate(String text, String name, boolean singleLine) {
@@ -35,7 +35,7 @@ public class DialogTemplate {
         editTemplate.text = text;
         editTemplate.name = name;
         editTemplate.singleLine = singleLine;
-        viewTemplates.add(editTemplate);
+        addViewTemplate(editTemplate);
     }
 
     public void addCheckboxTemplate(boolean checked, String name) {
@@ -47,6 +47,10 @@ public class DialogTemplate {
         checkBoxTemplate.name = name;
         checkBoxTemplate.checked = checked;
         checkBoxTemplate.onCheckedChangeListener = onCheckedChangeListener;
-        viewTemplates.add(checkBoxTemplate);
+        addViewTemplate(checkBoxTemplate);
+    }
+
+    public void addViewTemplate(ViewTemplate template) {
+        viewTemplates.add(template);
     }
 }

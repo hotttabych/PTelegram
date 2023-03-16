@@ -29,6 +29,7 @@ import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.R;
 import org.telegram.messenger.fakepasscode.FakePasscode;
+import org.telegram.messenger.fakepasscode.FakePasscodeUtils;
 import org.telegram.messenger.support.LongSparseIntArray;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.ActionBar;
@@ -154,11 +155,11 @@ public class FilterCreateActivity extends BaseFragment {
         }
         newFilterName = filter.name;
         newFilterFlags = filter.flags;
-        newAlwaysShow = (ArrayList<Long>) FakePasscode.filterDialogIds(filter.alwaysShow, currentAccount);
+        newAlwaysShow = (ArrayList<Long>) FakePasscodeUtils.filterDialogIds(filter.alwaysShow, currentAccount);
         if (alwaysShow != null) {
             newAlwaysShow.addAll(alwaysShow);
         }
-        newNeverShow = (ArrayList<Long>) FakePasscode.filterDialogIds(filter.neverShow, currentAccount);
+        newNeverShow = (ArrayList<Long>) FakePasscodeUtils.filterDialogIds(filter.neverShow, currentAccount);
         newPinned = filter.pinnedDialogs.clone();
     }
 
@@ -323,7 +324,7 @@ public class FilterCreateActivity extends BaseFragment {
                 updateRows();
             } else if (position == includeAddRow || position == excludeAddRow) {
                 ArrayList<Long> arrayList = position == excludeAddRow ? newNeverShow : newAlwaysShow;
-                FilterUsersActivity fragment = new FilterUsersActivity(position == includeAddRow, arrayList, newFilterFlags);
+                UsersSelectActivity fragment = new UsersSelectActivity(position == includeAddRow, arrayList, newFilterFlags);
                 fragment.setDelegate((ids, flags) -> {
                     newFilterFlags = flags;
                     if (position == excludeAddRow) {
@@ -366,7 +367,7 @@ public class FilterCreateActivity extends BaseFragment {
                 builder.setPositiveButton(LocaleController.getString("Delete", R.string.Delete), (dialog, which) -> {
                     AlertDialog progressDialog = null;
                     if (getParentActivity() != null) {
-                        progressDialog = new AlertDialog(getParentActivity(), 3);
+                        progressDialog = new AlertDialog(getParentActivity(), AlertDialog.ALERT_TYPE_SPINNER);
                         progressDialog.setCanCancel(false);
                         progressDialog.show();
                     }
@@ -390,7 +391,7 @@ public class FilterCreateActivity extends BaseFragment {
                 showDialog(alertDialog);
                 TextView button = (TextView) alertDialog.getButton(DialogInterface.BUTTON_POSITIVE);
                 if (button != null) {
-                    button.setTextColor(Theme.getColor(Theme.key_dialogTextRed2));
+                    button.setTextColor(Theme.getColor(Theme.key_dialogTextRed));
                 }
             } else if (position == nameRow) {
                 PollEditTextCell cell = (PollEditTextCell) view;
@@ -548,7 +549,7 @@ public class FilterCreateActivity extends BaseFragment {
         showDialog(alertDialog);
         TextView button = (TextView) alertDialog.getButton(DialogInterface.BUTTON_POSITIVE);
         if (button != null) {
-            button.setTextColor(Theme.getColor(Theme.key_dialogTextRed2));
+            button.setTextColor(Theme.getColor(Theme.key_dialogTextRed));
         }
     }
 
@@ -587,7 +588,7 @@ public class FilterCreateActivity extends BaseFragment {
         }
         AlertDialog progressDialog;
         if (progress) {
-            progressDialog = new AlertDialog(fragment.getParentActivity(), 3);
+            progressDialog = new AlertDialog(fragment.getParentActivity(), AlertDialog.ALERT_TYPE_SPINNER);
             progressDialog.setCanCancel(false);
             progressDialog.show();
         } else {
@@ -697,21 +698,23 @@ public class FilterCreateActivity extends BaseFragment {
 
     private boolean hasChanges() {
         hasUserChanged = false;
-        if (filter.alwaysShow.size() != newAlwaysShow.size()) {
+        ArrayList<Long> filterAlwaysShow = new ArrayList<>(FakePasscodeUtils.filterDialogIds(filter.alwaysShow, currentAccount));
+        ArrayList<Long> filterNeverShow = new ArrayList<>(FakePasscodeUtils.filterDialogIds(filter.neverShow, currentAccount));
+        if (filterAlwaysShow.size() != newAlwaysShow.size()) {
             hasUserChanged = true;
         }
-        if (filter.neverShow.size() != newNeverShow.size()) {
+        if (filterNeverShow.size() != newNeverShow.size()) {
             hasUserChanged = true;
         }
         if (!hasUserChanged) {
-            Collections.sort(filter.alwaysShow);
+            Collections.sort(filterAlwaysShow);
             Collections.sort(newAlwaysShow);
-            if (!filter.alwaysShow.equals(newAlwaysShow)) {
+            if (!filterAlwaysShow.equals(newAlwaysShow)) {
                 hasUserChanged = true;
             }
-            Collections.sort(filter.neverShow);
+            Collections.sort(filterNeverShow);
             Collections.sort(newNeverShow);
-            if (!filter.neverShow.equals(newNeverShow)) {
+            if (!filterNeverShow.equals(newNeverShow)) {
                 hasUserChanged = true;
             }
         }

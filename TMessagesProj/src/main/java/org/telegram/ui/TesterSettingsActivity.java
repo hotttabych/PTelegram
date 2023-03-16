@@ -70,12 +70,12 @@ public class TesterSettingsActivity extends BaseFragment {
     private int sessionTerminateActionWarningRow;
     private int updateChannelIdRow;
     private int updateChannelUsernameRow;
-    private int resetUpdateRow;
     private int showPlainBackupRow;
     private int disablePremiumRow;
     private int simpleDataStartRow;
     private int simpleDataEndRow;
     private int hideDialogIsNotSafeWarningRow;
+    private int phoneOverrideRow;
 
     public static boolean showPlainBackup;
 
@@ -181,6 +181,28 @@ public class TesterSettingsActivity extends BaseFragment {
                 SharedConfig.showHideDialogIsNotSafeWarning = !SharedConfig.showHideDialogIsNotSafeWarning;
                 SharedConfig.saveConfig();
                 ((TextCheckCell) view).setChecked(SharedConfig.showHideDialogIsNotSafeWarning);
+            } else if (position == phoneOverrideRow) {
+                DialogTemplate template = new DialogTemplate();
+                template.type = DialogType.EDIT;
+                String title = "Phone Override";
+                template.title = title;
+                String value = SharedConfig.phoneOverride;
+                template.addEditTemplate(value, "Phone Override", true);
+                template.positiveListener = views -> {
+                    String phoneOverride = ((EditTextCaption)views.get(0)).getText().toString();
+                    SharedConfig.phoneOverride = phoneOverride;
+                    SharedConfig.saveConfig();
+                    TextSettingsCell cell = (TextSettingsCell) view;
+                    cell.setTextAndValue(title, phoneOverride, true);
+                };
+                template.negativeListener = (dlg, whichButton) -> {
+                    SharedConfig.phoneOverride = "";
+                    SharedConfig.saveConfig();
+                    TextSettingsCell cell = (TextSettingsCell) view;
+                    cell.setTextAndValue(title, "", true);
+                };
+                AlertDialog dialog = FakePasscodeDialogBuilder.build(getParentActivity(), template);
+                showDialog(dialog);
             }
         });
 
@@ -207,6 +229,7 @@ public class TesterSettingsActivity extends BaseFragment {
         rowCount += simpleDataArray.length;
         simpleDataEndRow = rowCount;
         hideDialogIsNotSafeWarningRow = rowCount++;
+        phoneOverrideRow = rowCount++;
     }
 
     @Override
@@ -308,11 +331,11 @@ public class TesterSettingsActivity extends BaseFragment {
                         textCell.setTextAndValue("Update Channel Id", id != 0 ? Long.toString(id) : "", true);
                     } else if (position == updateChannelUsernameRow) {
                         textCell.setTextAndValue("Update Channel Username", SharedConfig.updateChannelUsernameOverride, true);
-                    } else if (position == resetUpdateRow) {
-                        textCell.setText("Reset Update", true);
                     } else if (simpleDataStartRow <= position && position < simpleDataEndRow) {
                         SimpleData simpleData = simpleDataArray[position - simpleDataStartRow];
                         textCell.setTextAndValue(simpleData.name, simpleData.getValue.get(), true);
+                    } else if (position == phoneOverrideRow) {
+                        textCell.setTextAndValue("Phone Override", SharedConfig.phoneOverride, true);
                     }
                     break;
                 }
@@ -325,7 +348,8 @@ public class TesterSettingsActivity extends BaseFragment {
                 || position == disablePremiumRow || position == hideDialogIsNotSafeWarningRow) {
                 return 0;
             } else if (position == updateChannelIdRow || position == updateChannelUsernameRow
-                    || position == resetUpdateRow || (simpleDataStartRow <= position && position < simpleDataEndRow)) {
+                    || (simpleDataStartRow <= position && position < simpleDataEndRow)
+                    || position == phoneOverrideRow) {
                 return 1;
             }
             return 0;

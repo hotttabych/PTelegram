@@ -19,8 +19,13 @@ import android.graphics.drawable.Drawable;
 import android.os.Vibrator;
 import android.text.Editable;
 import android.text.InputType;
+import android.text.SpannableStringBuilder;
+import android.text.Spanned;
+import android.text.TextPaint;
 import android.text.TextUtils;
 import android.text.TextWatcher;
+import android.text.style.ClickableSpan;
+import android.text.style.ForegroundColorSpan;
 import android.util.TypedValue;
 import android.view.MotionEvent;
 import android.view.View;
@@ -41,6 +46,7 @@ import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.R;
+import org.telegram.messenger.browser.Browser;
 import org.telegram.messenger.UserConfig;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.TLRPC;
@@ -70,6 +76,7 @@ import org.telegram.ui.Components.LayoutHelper;
 import org.telegram.ui.Components.LinkActionView;
 import org.telegram.ui.Components.Premium.LimitReachedBottomSheet;
 import org.telegram.ui.Components.RecyclerListView;
+import org.telegram.ui.Components.TypefaceSpan;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -465,7 +472,82 @@ public class ChatEditTypeActivity extends BaseFragment implements NotificationCe
         permanentLinkView.setUsers(0, null);
         privateContainer.addView(permanentLinkView);
 
-        checkTextView = new TextInfoPrivacyCell(context);
+        checkTextView = new TextInfoPrivacyCell(context) {
+            @Override
+            public void setText(CharSequence text) {
+                if (text != null) {
+                    SpannableStringBuilder tagsString = AndroidUtilities.replaceTags(text.toString());
+                    int index = tagsString.toString().indexOf('\n');
+                    if (index >= 0) {
+                        tagsString.replace(index, index + 1, " ");
+                        tagsString.setSpan(new ForegroundColorSpan(getThemedColor(Theme.key_windowBackgroundWhiteRedText4)), 0, index, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                    }
+                    TypefaceSpan[] spans = tagsString.getSpans(0, tagsString.length(), TypefaceSpan.class);
+                    final String username = usernameTextView == null || usernameTextView.getText() == null ? "" : usernameTextView.getText().toString();
+                    for (int i = 0; i < spans.length; ++i) {
+                        tagsString.setSpan(
+                            new ClickableSpan() {
+                                @Override
+                                public void onClick(@NonNull View view) {
+                                    Browser.openUrl(getContext(), "https://fragment.com/username/" + username);
+                                }
+                                @Override
+                                public void updateDrawState(@NonNull TextPaint ds) {
+                                    super.updateDrawState(ds);
+                                    ds.setUnderlineText(false);
+                                }
+                            },
+                            tagsString.getSpanStart(spans[i]),
+                            tagsString.getSpanEnd(spans[i]),
+                            Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                        );
+                        tagsString.removeSpan(spans[i]);
+                    }
+                    text = tagsString;
+                }
+                super.setText(text);
+            }
+
+            ValueAnimator translateAnimator;
+            int prevHeight = -1;
+
+            @Override
+            protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
+                super.onLayout(changed, left, top, right, bottom);
+
+                if (prevHeight != -1 && linearLayout != null) {
+                    ArrayList<View> viewsToTranslate = new ArrayList<>();
+                    boolean passedMe = false;
+                    for (int i = 0; i < linearLayout.getChildCount(); ++i) {
+                        View child = linearLayout.getChildAt(i);
+                        if (passedMe) {
+                            viewsToTranslate.add(child);
+                        } else if (child == this) {
+                            passedMe = true;
+                        }
+                    }
+
+                    float diff = prevHeight - getHeight();
+                    if (translateAnimator != null) {
+                        translateAnimator.cancel();
+                    }
+                    translateAnimator = ValueAnimator.ofFloat(0, 1);
+                    translateAnimator.addUpdateListener(anm -> {
+                        float t = 1f - (float) anm.getAnimatedValue();
+                        for (int i = 0; i < viewsToTranslate.size(); ++i) {
+                            View view = viewsToTranslate.get(i);
+                            if (view != null) {
+                                view.setTranslationY(diff * t);
+                            }
+                        }
+                    });
+                    translateAnimator.setInterpolator(CubicBezierInterpolator.EASE_OUT_QUINT);
+                    translateAnimator.setDuration(350);
+                    translateAnimator.start();
+                }
+                prevHeight = getHeight();
+            }
+        };
         checkTextView.setBackgroundDrawable(Theme.getThemedDrawable(context, R.drawable.greydivider_bottom, Theme.key_windowBackgroundGrayShadow));
         checkTextView.setBottomPadding(6);
         linearLayout.addView(checkTextView, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT));
@@ -804,7 +886,7 @@ public class ChatEditTypeActivity extends BaseFragment implements NotificationCe
 
         @Override
         protected void onMeasure(int widthSpec, int heightSpec) {
-            super.onMeasure(widthSpec, MeasureSpec.makeMeasureSpec(999999999, MeasureSpec.AT_MOST));
+            super.onMeasure(widthSpec, MeasureSpec.makeMeasureSpec(9999999, MeasureSpec.AT_MOST));
         }
 
         public class TouchHelperCallback extends ItemTouchHelper.Callback {
@@ -1176,14 +1258,10 @@ public class ChatEditTypeActivity extends BaseFragment implements NotificationCe
                         final TLRPC.Chat channel = cell.getCurrentChannel();
                         AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
                         builder.setTitle(LocaleController.getString("AppName", R.string.AppName));
-                        String title = UserConfig.getChatTitleOverride(currentAccount, channel.id);
-                        if (title == null) {
-                            title = channel.title;
-                        }
                         if (isChannel) {
-                            builder.setMessage(AndroidUtilities.replaceTags(LocaleController.formatString("RevokeLinkAlertChannel", R.string.RevokeLinkAlertChannel, getMessagesController().linkPrefix + "/" + ChatObject.getPublicUsername(channel), UserConfig.getChatTitleOverride(currentAccount, channel.id, channel.title))));
+                            builder.setMessage(AndroidUtilities.replaceTags(LocaleController.formatString("RevokeLinkAlertChannel", R.string.RevokeLinkAlertChannel, getMessagesController().linkPrefix + "/" + ChatObject.getPublicUsername(channel), getUserConfig().getChatTitleOverride(channel))));
                         } else {
-                            builder.setMessage(AndroidUtilities.replaceTags(LocaleController.formatString("RevokeLinkAlert", R.string.RevokeLinkAlert, getMessagesController().linkPrefix + "/" + ChatObject.getPublicUsername(channel), UserConfig.getChatTitleOverride(currentAccount, channel.id, channel.title))));
+                            builder.setMessage(AndroidUtilities.replaceTags(LocaleController.formatString("RevokeLinkAlert", R.string.RevokeLinkAlert, getMessagesController().linkPrefix + "/" + ChatObject.getPublicUsername(channel), getUserConfig().getChatTitleOverride(channel))));
                         }
                         builder.setNegativeButton(LocaleController.getString("Cancel", R.string.Cancel), null);
                         builder.setPositiveButton(LocaleController.getString("RevokeButton", R.string.RevokeButton), (dialogInterface, i) -> {
@@ -1349,7 +1427,7 @@ public class ChatEditTypeActivity extends BaseFragment implements NotificationCe
                 }
             }
         }
-        if (name == null || name.length() < 5) {
+        if (name == null || name.length() < 4) {
             if (isChannel) {
                 checkTextView.setText(LocaleController.getString("LinkInvalidShort", R.string.LinkInvalidShort));
             } else {
@@ -1379,13 +1457,23 @@ public class ChatEditTypeActivity extends BaseFragment implements NotificationCe
                         checkTextView.setTextColor(Theme.key_windowBackgroundWhiteGreenText);
                         lastNameAvailable = true;
                     } else {
-                        if (error != null && error.text.equals("CHANNELS_ADMIN_PUBLIC_TOO_MUCH")) {
+                        if (error != null && "USERNAME_INVALID".equals(error.text) && req.username.length() == 4) {
+                            checkTextView.setText(LocaleController.getString("UsernameInvalidShort", R.string.UsernameInvalidShort));
+                            checkTextView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteRedText4));
+                        } else if (error != null && "USERNAME_PURCHASE_AVAILABLE".equals(error.text)) {
+                            if (req.username.length() == 4) {
+                                checkTextView.setText(LocaleController.getString("UsernameInvalidShortPurchase", R.string.UsernameInvalidShortPurchase));
+                            } else {
+                                checkTextView.setText(LocaleController.getString("UsernameInUsePurchase", R.string.UsernameInUsePurchase));
+                            }
+                            checkTextView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteGrayText8));
+                        } else if (error != null && "CHANNELS_ADMIN_PUBLIC_TOO_MUCH".equals(error.text)) {
                             canCreatePublic = false;
                             showPremiumIncreaseLimitDialog();
                         } else {
                             checkTextView.setText(LocaleController.getString("LinkInUse", R.string.LinkInUse));
+                            checkTextView.setTextColor(Theme.key_windowBackgroundWhiteRedText4);
                         }
-                        checkTextView.setTextColor(Theme.key_windowBackgroundWhiteRedText4);
                         lastNameAvailable = false;
                     }
                 }

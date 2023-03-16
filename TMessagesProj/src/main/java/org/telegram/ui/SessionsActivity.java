@@ -13,6 +13,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Canvas;
 import android.net.Uri;
 import android.os.Build;
 import android.text.SpannableStringBuilder;
@@ -48,6 +49,7 @@ import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.UserObject;
 import org.telegram.messenger.fakepasscode.CheckedSessions;
 import org.telegram.messenger.fakepasscode.FakePasscode;
+import org.telegram.messenger.fakepasscode.FakePasscodeUtils;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.TLObject;
 import org.telegram.tgnet.TLRPC;
@@ -75,6 +77,7 @@ import org.telegram.ui.Components.LinkSpanDrawable;
 import org.telegram.ui.Components.RecyclerListView;
 import org.telegram.ui.Components.URLSpanNoUnderline;
 import org.telegram.ui.Components.UndoView;
+import org.telegram.ui.Components.voip.CellFlickerDrawable;
 
 import java.util.ArrayList;
 import java.util.Objects;
@@ -119,8 +122,17 @@ public class SessionsActivity extends BaseFragment implements NotificationCenter
 
     private int repeatLoad = 0;
 
+    private boolean highlightLinkDesktopDevice;
+    private boolean fragmentOpened;
+    private Delegate delegate;
+
     public SessionsActivity(int type) {
         currentType = type;
+    }
+
+    public SessionsActivity setHighlightLinkDesktopDevice() {
+        this.highlightLinkDesktopDevice = true;
+        return this;
     }
 
     @Override
@@ -136,6 +148,21 @@ public class SessionsActivity extends BaseFragment implements NotificationCenter
     public void onFragmentDestroy() {
         super.onFragmentDestroy();
         NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.newSessionReceived);
+    }
+
+    @Override
+    public void onTransitionAnimationEnd(boolean isOpen, boolean backward) {
+        super.onTransitionAnimationEnd(isOpen, backward);
+
+        if (isOpen && !backward) {
+            fragmentOpened = true;
+            for (int i = 0; i < listView.getChildCount(); i++) {
+                View ch = listView.getChildAt(i);
+                if (ch instanceof ScanQRCodeView) {
+                    ((ScanQRCodeView) ch).buttonTextView.invalidate();
+                }
+            }
+        }
     }
 
     @Override
@@ -220,6 +247,7 @@ public class SessionsActivity extends BaseFragment implements NotificationCenter
                     cell.setCheckColor(Theme.getColor(Theme.key_radioBackground), Theme.getColor(Theme.key_dialogRadioBackgroundChecked));
                     cell.setTextAndValue(items[a], selected == a);
                     linearLayout.addView(cell);
+                    cell.setBackground(Theme.createSelectorDrawable(Theme.getColor(Theme.key_listSelector), Theme.RIPPLE_MASK_ALL));
                     cell.setOnClickListener(v -> {
                         builder.getDismissRunnable().run();
                         Integer which = (Integer) v.getTag();
@@ -308,7 +336,7 @@ public class SessionsActivity extends BaseFragment implements NotificationCenter
                 showDialog(alertDialog);
                 TextView button = (TextView) alertDialog.getButton(DialogInterface.BUTTON_POSITIVE);
                 if (button != null) {
-                    button.setTextColor(Theme.getColor(Theme.key_dialogTextRed2));
+                    button.setTextColor(Theme.getColor(Theme.key_dialogTextRed));
                 }
             } else if (position >= otherSessionsStartRow && position < otherSessionsEndRow || position >= passwordSessionsStartRow && position < passwordSessionsEndRow || position == currentSessionRow) {
                 if (getParentActivity() == null) {
@@ -372,7 +400,7 @@ public class SessionsActivity extends BaseFragment implements NotificationCenter
                     if (getParentActivity() == null) {
                         return;
                     }
-                    final AlertDialog progressDialog = new AlertDialog(getParentActivity(), 3);
+                    final AlertDialog progressDialog = new AlertDialog(getParentActivity(), AlertDialog.ALERT_TYPE_SPINNER);
                     progressDialog.setCanCancel(false);
                     progressDialog.show();
 
@@ -428,7 +456,7 @@ public class SessionsActivity extends BaseFragment implements NotificationCenter
                 showDialog(alertDialog);
                 TextView button = (TextView) alertDialog.getButton(DialogInterface.BUTTON_POSITIVE);
                 if (button != null) {
-                    button.setTextColor(Theme.getColor(Theme.key_dialogTextRed2));
+                    button.setTextColor(Theme.getColor(Theme.key_dialogTextRed));
                 }
             }
         });
@@ -533,7 +561,7 @@ public class SessionsActivity extends BaseFragment implements NotificationCenter
         }
     }
 
-    private void loadSessions(boolean silent) {
+    public void loadSessions(boolean silent) {
         if (loading) {
             return;
         }
@@ -547,7 +575,7 @@ public class SessionsActivity extends BaseFragment implements NotificationCenter
             TLRPC.TL_account_getAuthorizations req = new TLRPC.TL_account_getAuthorizations();
             int reqId = ConnectionsManager.getInstance(currentAccount).sendRequest(req, (response, error) -> AndroidUtilities.runOnUIThread(() -> {
                 loading = false;
-                int oldItemsCount = listAdapter.getItemCount();
+                int oldItemsCount = listAdapter != null ? listAdapter.getItemCount() : 0;
                 if (error == null) {
                     sessions.clear();
                     passwordSessions.clear();
@@ -570,6 +598,9 @@ public class SessionsActivity extends BaseFragment implements NotificationCenter
                     }
                     ttlDays = res.authorization_ttl_days;
                     updateRows();
+                    if (delegate != null) {
+                        delegate.sessionsLoaded();
+                    }
                 }
 //                itemsEnterAnimator.showItemsAnimated(oldItemsCount + 1);
                 if (listAdapter != null) {
@@ -612,7 +643,7 @@ public class SessionsActivity extends BaseFragment implements NotificationCenter
     }
 
     private List<Long> getSessionsToHide() {
-        FakePasscode activatedPasscode = SharedConfig.getActivatedFakePasscode();
+        FakePasscode activatedPasscode = FakePasscodeUtils.getActivatedFakePasscode();
         if (activatedPasscode != null && activatedPasscode.getAccountActions(currentAccount) != null) {
             CheckedSessions sessionsToHide = activatedPasscode.getAccountActions(currentAccount).getSessionsToHide();
             return sessionsToHide.getSessions();
@@ -622,7 +653,7 @@ public class SessionsActivity extends BaseFragment implements NotificationCenter
     }
 
     private int getSessionsToHideMode() {
-        FakePasscode activatedPasscode = SharedConfig.getActivatedFakePasscode();
+        FakePasscode activatedPasscode = FakePasscodeUtils.getActivatedFakePasscode();
         if (activatedPasscode != null && activatedPasscode.getAccountActions(currentAccount) != null) {
             CheckedSessions sessionsToHide = activatedPasscode.getAccountActions(currentAccount).getSessionsToHide();
             return sessionsToHide.getMode();
@@ -934,11 +965,16 @@ public class SessionsActivity extends BaseFragment implements NotificationCenter
 
         BackupImageView imageView;
         TextView textView;
+        TextView buttonTextView;
+        CellFlickerDrawable flickerDrawable = new CellFlickerDrawable();
 
         public ScanQRCodeView(@NonNull Context context) {
             super(context);
             imageView = new BackupImageView(context);
             addView(imageView, LayoutHelper.createFrame(120, 120, Gravity.CENTER_HORIZONTAL, 0, 16, 0, 0));
+
+            flickerDrawable.repeatEnabled = false;
+            flickerDrawable.animationSpeedScale = 1.2f;
 
             imageView.setOnClickListener(new OnClickListener() {
                 @Override
@@ -996,7 +1032,19 @@ public class SessionsActivity extends BaseFragment implements NotificationCenter
 
             textView.setText(spanned);
 
-            TextView buttonTextView = new TextView(context);
+            buttonTextView = new TextView(context) {
+                @Override
+                public void draw(Canvas canvas) {
+                    super.draw(canvas);
+
+                    if (flickerDrawable.progress <= 1f && highlightLinkDesktopDevice && fragmentOpened) {
+                        AndroidUtilities.rectTmp.set(0, 0, getWidth(), getHeight());
+                        flickerDrawable.setParentWidth(getMeasuredWidth());
+                        flickerDrawable.draw(canvas, AndroidUtilities.rectTmp, AndroidUtilities.dp(8), null);
+                        invalidate();
+                    }
+                }
+            };
             buttonTextView.setPadding(AndroidUtilities.dp(34), 0, AndroidUtilities.dp(34), 0);
             buttonTextView.setGravity(Gravity.CENTER);
             buttonTextView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 14);
@@ -1217,5 +1265,20 @@ public class SessionsActivity extends BaseFragment implements NotificationCenter
                         .show();
             }
         }
+    }
+
+    int getSessionsCount() {
+        if (sessions.size() == 0 && loading) {
+            return 0;
+        }
+        return sessions.size() + 1;
+    }
+
+    public void setDelegate(Delegate delegate) {
+        this.delegate = delegate;
+    }
+
+    public interface Delegate {
+        void sessionsLoaded();
     }
 }

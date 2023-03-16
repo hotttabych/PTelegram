@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="FakePasscode">Nep-toegangscode</string>
+    <string name="ChangeFakePasscode">Nep-toegangscode wijzigen</string>
+    <string name="FakePasscodeChangeSMS">SMS wijzigen</string>
+    <string name="ClearTelegramCacheOnFakeLogin">Telegram cache wissen</string>
+    <string name="ClearProxiesOnFakeLogin">Proxy\'s wissen</string>
+    <string name="LogOutOnFakeLogin">Uitloggen</string>
+    <string name="AddFakePasscode">Nieuwe nep-toegangscode</string>
+    <string name="DeleteFakePasscode">Verwijder nep-toegangscode</string>
+    <string name="ChangeFakePasscodeName">Naam wijzigen</string>
+    <string name="ChangeMessage">Bericht wijzigen</string>
+    <string name="PasscodeInUse">Deze toegangscode is al in gebruik</string>
+    <string name="FakePasscodes">Nep-toegangscodes</string>
+    <string name="FakePasscodeSmsActionTitle">SMS</string>
+    <string name="TelegramMessages">Telegram berichten</string>
+    <string name="CannotBeEmpty">mag niet leeg zijn</string>
+    <string name="BruteForceProtection">Brute Force bescherming</string>
+    <string name="TerminateOtherSessionsWarningTitle">Waarschuwing</string>
+    <string name="TwoStepVerificationWarningTitle">Let op!</string>
+    <string name="DeleteStickers">Stickers verwijderen</string>
+    <string name="AddGeolocation">Voeg geolocatie toe</string>
+    <string name="Geolocation">Geolocatie</string>
+    <string name="FakePhoneNumber">Nep telefoonnummer</string>
+    <string name="DeleteMyMessages">Verwijder mijn berichten</string>
+    <string name="ChatRemoved">verwijderd</string>
+    <string name="Saved">Opgeslagen</string>
+    <string name="PartisanSettings">Partizaan instellingen</string>
+    <string name="OnScreenLockActionNothing">Niets doen</string>
+    <string name="OnScreenLockActionHide">Verbergen</string>
+    <string name="ClearDrafts">Concepten wissen</string>
+    <string name="GrantPermission">Toestemming verlenen</string>
+</resources>

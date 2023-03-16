@@ -12,14 +12,13 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffColorFilter;
-import android.text.TextUtils;
 import android.view.Gravity;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ChatObject;
-import org.telegram.messenger.ImageLocation;
+import org.telegram.messenger.Emoji;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.R;
@@ -242,7 +241,7 @@ public class ManageChatUserCell extends FrameLayout {
                 nameTextView.setText(currentName);
             } else {
                 lastName = newName == null ? UserObject.getUserName(currentUser, currentAccount) : newName;
-                nameTextView.setText(lastName);
+                nameTextView.setText(Emoji.replaceEmoji(lastName, nameTextView.getPaint().getFontMetricsInt(), AndroidUtilities.dp(15), false));
             }
             if (currrntStatus != null) {
                 statusTextView.setTextColor(statusColor);
@@ -284,10 +283,7 @@ public class ManageChatUserCell extends FrameLayout {
                     }
                 }
                 if (!continueUpdate && currentName == null && lastName != null && (mask & MessagesController.UPDATE_MASK_NAME) != 0) {
-                    newName = UserConfig.getChatTitleOverride(currentAccount, currentChat.id);
-                    if (newName == null) {
-                        newName = currentChat.title;
-                    }
+                    newName = UserConfig.getChatTitleOverride(currentAccount, currentChat);
                     if (!newName.equals(lastName)) {
                         continueUpdate = true;
                     }
@@ -303,11 +299,7 @@ public class ManageChatUserCell extends FrameLayout {
                 lastName = null;
                 nameTextView.setText(currentName);
             } else {
-                String title = UserConfig.getChatTitleOverride(currentAccount, currentChat.id);
-                if (title == null) {
-                    title = currentChat.title;
-                }
-                lastName = newName == null ? title : newName;
+                lastName = newName == null ? UserConfig.getChatTitleOverride(currentAccount, currentChat) : newName;
                 nameTextView.setText(lastName);
             }
             if (currrntStatus != null) {

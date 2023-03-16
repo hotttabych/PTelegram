@@ -20,6 +20,8 @@ import android.widget.RemoteViewsService;
 
 import androidx.collection.LongSparseArray;
 
+import com.google.android.exoplayer2.util.Log;
+
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.Components.AvatarDrawable;
@@ -115,7 +117,7 @@ class ContactsRemoteViewsFactory implements RemoteViewsService.RemoteViewsFactor
                         name = LocaleController.getString("HiddenName", R.string.HiddenName);
                     } else {
                         name = UserObject.getFirstName(user);
-                        name = UserConfig.getChatTitleOverride(accountInstance.getCurrentAccount(), user.id, name);
+                        name = accountInstance.getUserConfig().getChatTitleOverride(user.id, name);
                     }
                     if (!UserObject.isReplyUser(user) && !UserObject.isUserSelf(user) && user != null && user.photo != null && user.photo.photo_small != null && user.photo.photo_small.volume_id != 0 && user.photo.photo_small.local_id != 0) {
                         photoPath = user.photo.photo_small;
@@ -123,8 +125,8 @@ class ContactsRemoteViewsFactory implements RemoteViewsService.RemoteViewsFactor
                 } else {
                     chat = accountInstance.getMessagesController().getChat(-id);
                     if (chat != null) {
-                        name = UserConfig.getChatTitleOverride(accountInstance.getCurrentAccount(), chat.id, chat.title);
-                        if (chat.photo != null && chat.photo.photo_small != null && chat.photo.photo_small.volume_id != 0 && chat.photo.photo_small.local_id != 0 && UserConfig.isAvatarEnabled(accountInstance.getCurrentAccount(), chat.id)) {
+                        name = accountInstance.getUserConfig().getChatTitleOverride(chat.id, chat.title);
+                        if (chat.photo != null && chat.photo.photo_small != null && chat.photo.photo_small.volume_id != 0 && chat.photo.photo_small.local_id != 0 && accountInstance.getUserConfig().isAvatarEnabled(chat.id)) {
                             photoPath = chat.photo.photo_small;
                         }
                     } else {
@@ -147,14 +149,14 @@ class ContactsRemoteViewsFactory implements RemoteViewsService.RemoteViewsFactor
                     if (bitmap == null) {
                         AvatarDrawable avatarDrawable;
                         if (user != null) {
-                            avatarDrawable = new AvatarDrawable(user, false, accountInstance.getUserConfig());
+                            avatarDrawable = new AvatarDrawable(user, false, accountInstance.getCurrentAccount());
                             if (UserObject.isReplyUser(user)) {
                                 avatarDrawable.setAvatarType(AvatarDrawable.AVATAR_TYPE_REPLIES);
                             } else if (UserObject.isUserSelf(user)) {
                                 avatarDrawable.setAvatarType(AvatarDrawable.AVATAR_TYPE_SAVED);
                             }
                         } else {
-                            avatarDrawable = new AvatarDrawable(chat, false, accountInstance.getUserConfig());
+                            avatarDrawable = new AvatarDrawable(chat, false, accountInstance.getCurrentAccount());
                         }
                         avatarDrawable.setBounds(0, 0, size, size);
                         avatarDrawable.draw(canvas);

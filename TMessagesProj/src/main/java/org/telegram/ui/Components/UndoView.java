@@ -151,8 +151,6 @@ public class UndoView extends FrameLayout {
     public final static int ACTION_IMPORT_GROUP_NOT_ADMIN = 46;
     public final static int ACTION_IMPORT_INFO = 47;
 
-    public final static int ACTION_PLAYBACK_SPEED_ENABLED = 50;
-    public final static int ACTION_PLAYBACK_SPEED_DISABLED = 51;
     public final static int ACTION_MESSAGE_COPIED = 52;
     public final static int ACTION_FWD_MESSAGES = 53;
     public final static int ACTION_NOTIFY_ON = 54;
@@ -181,6 +179,8 @@ public class UndoView extends FrameLayout {
     public final static int ACTION_PREMIUM_TRANSCRIPTION = 84;
     public final static int ACTION_HINT_SWIPE_TO_REPLY = 85;
     public final static int ACTION_PREMIUM_ALL_FOLDER = 86;
+
+    public final static int ACTION_PROXY_ADDED = 87;
 
     private CharSequence infoText;
     private int hideAnimationType = 1;
@@ -324,7 +324,7 @@ public class UndoView extends FrameLayout {
 
     private boolean isTooltipAction() {
         return currentAction == ACTION_ARCHIVE_HIDDEN || currentAction == ACTION_ARCHIVE_HINT || currentAction == ACTION_ARCHIVE_FEW_HINT ||
-                currentAction == ACTION_ARCHIVE_PINNED || currentAction == ACTION_CONTACT_ADDED || currentAction == ACTION_OWNER_TRANSFERED_CHANNEL ||
+                currentAction == ACTION_ARCHIVE_PINNED || currentAction == ACTION_CONTACT_ADDED || currentAction == ACTION_PROXY_ADDED || currentAction == ACTION_OWNER_TRANSFERED_CHANNEL ||
                 currentAction == ACTION_OWNER_TRANSFERED_GROUP || currentAction == ACTION_QUIZ_CORRECT || currentAction == ACTION_QUIZ_INCORRECT || currentAction == ACTION_CACHE_WAS_CLEARED ||
                 currentAction == ACTION_ADDED_TO_FOLDER || currentAction == ACTION_REMOVED_FROM_FOLDER || currentAction == ACTION_PROFILE_PHOTO_CHANGED ||
                 currentAction == ACTION_CHAT_UNARCHIVED || currentAction == ACTION_VOIP_MUTED || currentAction == ACTION_VOIP_UNMUTED || currentAction == ACTION_VOIP_REMOVED ||
@@ -551,7 +551,7 @@ public class UndoView extends FrameLayout {
                 icon = 0;
                 AvatarDrawable avatarDrawable = new AvatarDrawable();
                 avatarDrawable.setTextSize(AndroidUtilities.dp(12));
-                avatarDrawable.setInfo((TLObject) infoObject);
+                avatarDrawable.setInfo((TLObject) infoObject, currentAccount);
                 avatarImageView.setForUserOrChat((TLObject) infoObject, avatarDrawable);
                 avatarImageView.setVisibility(VISIBLE);
                 timeLeft = 3000;
@@ -568,10 +568,7 @@ public class UndoView extends FrameLayout {
                     TLRPC.Chat chat = (TLRPC.Chat) infoObject;
                     avatarDrawable.setInfo(chat, currentAccount);
                     avatarImageView.setForUserOrChat(chat, avatarDrawable);
-                    name = UserConfig.getChatTitleOverride(currentAccount, chat.id);
-                    if (name == null) {
-                        name = chat.title;
-                    }
+                    name = UserConfig.getChatTitleOverride(currentAccount, chat);
                 }
                 TLRPC.Chat currentChat = (TLRPC.Chat) infoObject2;
                 if (ChatObject.isChannelOrGiga(currentChat)) {
@@ -616,10 +613,7 @@ public class UndoView extends FrameLayout {
                     name = UserObject.getFirstName(user);
                 } else {
                     TLRPC.Chat chat = (TLRPC.Chat) infoObject;
-                    name = UserConfig.getChatTitleOverride(currentAccount, chat.id);
-                    if (name == null) {
-                        name = chat.title;
-                    }
+                    name = UserConfig.getChatTitleOverride(currentAccount, chat);
                 }
                 infoText = AndroidUtilities.replaceTags(LocaleController.formatString("VoipGroupUserCantNowSpeak", R.string.VoipGroupUserCantNowSpeak, name));
                 subInfoText = null;
@@ -632,10 +626,7 @@ public class UndoView extends FrameLayout {
                     name = UserObject.getFirstName(user);
                 } else if (infoObject instanceof TLRPC.Chat) {
                     TLRPC.Chat chat = (TLRPC.Chat) infoObject;
-                    name = UserConfig.getChatTitleOverride(currentAccount, chat.id);
-                    if (name == null) {
-                        name = chat.title;
-                    }
+                    name = UserConfig.getChatTitleOverride(currentAccount, chat);
                 } else {
                     name = "";
                 }
@@ -650,10 +641,7 @@ public class UndoView extends FrameLayout {
                     name = UserObject.getFirstName(user);
                 } else {
                     TLRPC.Chat chat = (TLRPC.Chat) infoObject;
-                    name = UserConfig.getChatTitleOverride(currentAccount, chat.id);
-                    if (name == null) {
-                        name = chat.title;
-                    }
+                    name = UserConfig.getChatTitleOverride(currentAccount, chat);
                 }
                 infoText = AndroidUtilities.replaceTags(LocaleController.formatString("VoipGroupUserCanNowSpeak", R.string.VoipGroupUserCanNowSpeak, name));
                 subInfoText = null;
@@ -662,10 +650,7 @@ public class UndoView extends FrameLayout {
             } else if (action == ACTION_VOIP_CAN_NOW_SPEAK) {
                 if (infoObject instanceof TLRPC.Chat) {
                     TLRPC.Chat chat = (TLRPC.Chat) infoObject;
-                    String title = UserConfig.getChatTitleOverride(currentAccount, chat.id);
-                    if (title == null) {
-                        title = chat.title;
-                    }
+                    String title = UserConfig.getChatTitleOverride(currentAccount, chat);
                     infoText = AndroidUtilities.replaceTags(LocaleController.formatString("VoipGroupYouCanNowSpeakIn", R.string.VoipGroupYouCanNowSpeakIn, title));
                 } else {
                     infoText = AndroidUtilities.replaceTags(LocaleController.getString("VoipGroupYouCanNowSpeak", R.string.VoipGroupYouCanNowSpeak));
@@ -724,10 +709,7 @@ public class UndoView extends FrameLayout {
                     name = UserObject.getFirstName(user);
                 } else {
                     TLRPC.Chat chat = (TLRPC.Chat) infoObject;
-                    name = UserConfig.getChatTitleOverride(currentAccount, chat.id);
-                    if (name == null) {
-                        name = chat.title;
-                    }
+                    name = UserConfig.getChatTitleOverride(currentAccount, chat);
                 }
                 infoText = AndroidUtilities.replaceTags(LocaleController.formatString("VoipGroupUserCanNowSpeakForYou", R.string.VoipGroupUserCanNowSpeakForYou, name));
                 subInfoText = null;
@@ -740,10 +722,7 @@ public class UndoView extends FrameLayout {
                     name = UserObject.getFirstName(user);
                 } else {
                     TLRPC.Chat chat = (TLRPC.Chat) infoObject;
-                    name = UserConfig.getChatTitleOverride(currentAccount, chat.id);
-                    if (name == null) {
-                        name = chat.title;
-                    }
+                    name = UserConfig.getChatTitleOverride(currentAccount, chat);
                 }
                 infoText = AndroidUtilities.replaceTags(LocaleController.formatString("VoipGroupRemovedFromGroup", R.string.VoipGroupRemovedFromGroup, name));
                 subInfoText = null;
@@ -761,6 +740,10 @@ public class UndoView extends FrameLayout {
             } else if (action == ACTION_CONTACT_ADDED) {
                 TLRPC.User user = (TLRPC.User) infoObject;
                 infoText = LocaleController.formatString("NowInContacts", R.string.NowInContacts, UserObject.getFirstName(user));
+                subInfoText = null;
+                icon = R.raw.contact_check;
+            } else if (action == ACTION_PROXY_ADDED) {
+                infoText = LocaleController.formatString(R.string.ProxyAddedSuccess);
                 subInfoText = null;
                 icon = R.raw.contact_check;
             } else if (action == ACTION_PROFILE_PHOTO_CHANGED) {
@@ -833,16 +816,10 @@ public class UndoView extends FrameLayout {
                     } else {
                         TLRPC.Chat chat = MessagesController.getInstance(currentAccount).getChat(-dialogId);
                         if (action == ACTION_ADDED_TO_FOLDER) {
-                            String title = UserConfig.getChatTitleOverride(currentAccount, chat.id);
-                            if (title == null) {
-                                title = chat.title;
-                            }
+                            String title = UserConfig.getChatTitleOverride(currentAccount, chat);
                             infoText = AndroidUtilities.replaceTags(LocaleController.formatString("FilterChatAddedToExisting", R.string.FilterChatAddedToExisting, title, filter.name));
                         } else {
-                            String title = UserConfig.getChatTitleOverride(currentAccount, chat.id);
-                            if (title == null) {
-                                title = chat.title;
-                            }
+                            String title = UserConfig.getChatTitleOverride(currentAccount, chat);
                             infoText = AndroidUtilities.replaceTags(LocaleController.formatString("FilterChatRemovedFrom", R.string.FilterChatRemovedFrom, title, filter.name));
                         }
                     }
@@ -858,7 +835,7 @@ public class UndoView extends FrameLayout {
             } else if (action == ACTION_CACHE_WAS_CLEARED) {
                 infoText = this.infoText;
                 subInfoText = null;
-                icon = R.raw.chats_infotip;
+                icon = R.raw.ic_delete;
             } else if (action == ACTION_PREVIEW_MEDIA_DESELECTED) {
                 MediaController.PhotoEntry photo = (MediaController.PhotoEntry) infoObject;
                 infoText = photo.isVideo ? LocaleController.getString("AttachMediaVideoDeselected", R.string.AttachMediaVideoDeselected) : LocaleController.getString("AttachMediaPhotoDeselected", R.string.AttachMediaPhotoDeselected);
@@ -930,7 +907,7 @@ public class UndoView extends FrameLayout {
 
             undoButton.setVisibility(GONE);
         } else if (currentAction == ACTION_IMPORT_NOT_MUTUAL || currentAction == ACTION_IMPORT_GROUP_NOT_ADMIN || currentAction == ACTION_IMPORT_INFO ||
-                currentAction == ACTION_PLAYBACK_SPEED_DISABLED || currentAction == ACTION_PLAYBACK_SPEED_ENABLED || currentAction == ACTION_MESSAGE_COPIED ||
+                currentAction == ACTION_MESSAGE_COPIED ||
                 currentAction == ACTION_FWD_MESSAGES || currentAction == ACTION_NOTIFY_ON || currentAction == ACTION_NOTIFY_OFF ||  currentAction == ACTION_USERNAME_COPIED ||
                 currentAction == ACTION_HASHTAG_COPIED || currentAction == ACTION_TEXT_COPIED || currentAction == ACTION_LINK_COPIED || currentAction == ACTION_PHONE_COPIED ||
                 currentAction == ACTION_AUTO_DELETE_OFF || currentAction == ACTION_AUTO_DELETE_ON || currentAction == ACTION_GIGAGROUP_CANCEL || currentAction == ACTION_GIGAGROUP_SUCCESS ||
@@ -988,16 +965,6 @@ public class UndoView extends FrameLayout {
                 infoOnly = true;
                 layoutParams.topMargin = AndroidUtilities.dp(9);
                 infoTextView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 14);
-            } else if (currentAction == ACTION_PLAYBACK_SPEED_DISABLED) {
-                infoTextView.setText(LocaleController.getString("AudioSpeedNormal", R.string.AudioSpeedNormal));
-                leftImageView.setAnimation(R.raw.audio_stop_speed, 36, 36);
-                timeLeft = 3000;
-                infoTextView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 15);
-            } else if (currentAction == ACTION_PLAYBACK_SPEED_ENABLED) {
-                infoTextView.setText(LocaleController.getString("AudioSpeedFast", R.string.AudioSpeedFast));
-                leftImageView.setAnimation(R.raw.audio_speed, 36, 36);
-                timeLeft = 3000;
-                infoTextView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 15);
             } else if (currentAction == ACTION_MESSAGE_COPIED || currentAction == ACTION_USERNAME_COPIED || currentAction == ACTION_HASHTAG_COPIED || currentAction == ACTION_TEXT_COPIED || currentAction == ACTION_LINK_COPIED || currentAction == ACTION_PHONE_COPIED || currentAction == ACTION_EMAIL_COPIED) {
                 if (!AndroidUtilities.shouldShowClipboardToast()) {
                     return;
@@ -1039,10 +1006,7 @@ public class UndoView extends FrameLayout {
                     } else {
                         if (DialogObject.isChatDialog(did)) {
                             TLRPC.Chat chat = MessagesController.getInstance(currentAccount).getChat(-did);
-                            String title = UserConfig.getChatTitleOverride(currentAccount, chat.id);
-                            if (title == null) {
-                                title = chat.title;
-                            }
+                            String title = UserConfig.getChatTitleOverride(currentAccount, chat);
                             infoTextView.setText(AndroidUtilities.replaceTags(LocaleController.formatString("InvLinkToGroup", R.string.InvLinkToGroup, title)));
                         } else {
                             TLRPC.User user = MessagesController.getInstance(currentAccount).getUser(did);
@@ -1070,9 +1034,9 @@ public class UndoView extends FrameLayout {
                             TLRPC.Chat chat = MessagesController.getInstance(currentAccount).getChat(-did);
                             TLRPC.TL_forumTopic topic = (TLRPC.TL_forumTopic) infoObject2;
                             if (count == 1) {
-                                infoTextView.setText(AndroidUtilities.replaceTags(LocaleController.formatString("FwdMessageToGroup", R.string.FwdMessageToGroup, topic != null ? topic.title : UserConfig.getChatTitleOverride(currentAccount, chat.id, chat.title))));
+                                infoTextView.setText(AndroidUtilities.replaceTags(LocaleController.formatString("FwdMessageToGroup", R.string.FwdMessageToGroup, topic != null ? topic.title : UserConfig.getChatTitleOverride(currentAccount, chat))));
                             } else {
-                                infoTextView.setText(AndroidUtilities.replaceTags(LocaleController.formatString("FwdMessagesToGroup", R.string.FwdMessagesToGroup, topic != null ? topic.title : UserConfig.getChatTitleOverride(currentAccount, chat.id, chat.title))));
+                                infoTextView.setText(AndroidUtilities.replaceTags(LocaleController.formatString("FwdMessagesToGroup", R.string.FwdMessagesToGroup, topic != null ? topic.title : UserConfig.getChatTitleOverride(currentAccount, chat))));
                             }
                         } else {
                             TLRPC.User user = MessagesController.getInstance(currentAccount).getUser(did);
@@ -1088,9 +1052,9 @@ public class UndoView extends FrameLayout {
                 } else {
                     int amount = (Integer) infoObject2;
                     if (count == 1) {
-                        infoTextView.setText(AndroidUtilities.replaceTags(LocaleController.formatString("FwdMessageToChats", R.string.FwdMessageToChats, LocaleController.formatPluralString("Chats", amount))));
+                        infoTextView.setText(AndroidUtilities.replaceTags(LocaleController.formatPluralString("FwdMessageToManyChats", amount)));
                     } else {
-                        infoTextView.setText(AndroidUtilities.replaceTags(LocaleController.formatString("FwdMessagesToChats", R.string.FwdMessagesToChats, LocaleController.formatPluralString("Chats", amount))));
+                        infoTextView.setText(AndroidUtilities.replaceTags(LocaleController.formatPluralString("FwdMessagesToManyChats", amount)));
                     }
                     leftImageView.setAnimation(R.raw.forward, 30, 30);
                     hapticDelay = 300;

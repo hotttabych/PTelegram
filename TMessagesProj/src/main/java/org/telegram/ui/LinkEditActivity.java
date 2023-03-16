@@ -434,15 +434,7 @@ public class LinkEditActivity extends BaseFragment {
             @Override public void onTextChanged(CharSequence s, int start, int before, int count) { }
             @Override
             public void afterTextChanged(Editable s) {
-                SpannableStringBuilder builder = new SpannableStringBuilder(s);
-                Emoji.replaceEmoji(builder, nameEditText.getPaint().getFontMetricsInt(), (int) nameEditText.getPaint().getTextSize(), false);
-                int selection = nameEditText.getSelectionStart();
-                nameEditText.removeTextChangedListener(this);
-                nameEditText.setText(builder);
-                if (selection >= 0) {
-                    nameEditText.setSelection(selection);
-                }
-                nameEditText.addTextChangedListener(this);
+                Emoji.replaceEmoji(s, nameEditText.getPaint().getFontMetricsInt(), (int) nameEditText.getPaint().getTextSize(), false);
             }
         });
         nameEditText.setCursorVisible(false);
@@ -537,7 +529,7 @@ public class LinkEditActivity extends BaseFragment {
                 progressDialog.dismiss();
             }
             loading = true;
-            progressDialog = new AlertDialog(getParentActivity(), 3);
+            progressDialog = new AlertDialog(getParentActivity(), AlertDialog.ALERT_TYPE_SPINNER);
             progressDialog.showDelayed(500);
             TLRPC.TL_messages_exportChatInvite req = new TLRPC.TL_messages_exportChatInvite();
             req.peer = getMessagesController().getInputPeer(-chatId);
@@ -646,7 +638,7 @@ public class LinkEditActivity extends BaseFragment {
 
             if (edited) {
                 loading = true;
-                progressDialog = new AlertDialog(getParentActivity(), 3);
+                progressDialog = new AlertDialog(getParentActivity(), AlertDialog.ALERT_TYPE_SPINNER);
                 progressDialog.showDelayed(500);
                 getConnectionsManager().sendRequest(req, (response, error) -> AndroidUtilities.runOnUIThread(() -> {
                     loading = false;

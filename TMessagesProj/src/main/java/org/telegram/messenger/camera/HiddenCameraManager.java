@@ -46,19 +46,23 @@ public class HiddenCameraManager implements Camera.PictureCallback, Camera.Previ
     }
 
     private boolean isCameraAvailable(int facing) {
-        boolean result = false;
-        if (context != null && context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA)) {
-            int numberOfCameras = Camera.getNumberOfCameras();
-            for (int i = 0; i < numberOfCameras; i++) {
-                Camera.CameraInfo info = new Camera.CameraInfo();
-                Camera.getCameraInfo(i, info);
-                if (info.facing == facing) {
-                    result = true;
-                    break;
+        try {
+            boolean result = false;
+            if (context != null && context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA)) {
+                int numberOfCameras = Camera.getNumberOfCameras();
+                for (int i = 0; i < numberOfCameras; i++) {
+                    Camera.CameraInfo info = new Camera.CameraInfo();
+                    Camera.getCameraInfo(i, info);
+                    if (info.facing == facing) {
+                        result = true;
+                        break;
+                    }
                 }
             }
+            return result;
+        } catch (Exception ignored) {
+            return false;
         }
-        return result;
     }
 
     private void initCamera(int facing) {
@@ -172,20 +176,19 @@ public class HiddenCameraManager implements Camera.PictureCallback, Camera.Previ
 
     @Override
     public void onPictureTaken(byte[] bytes, Camera camera) {
-        savePicture(bytes);
+        String filePath = savePicture(bytes);
         releaseCamera();
+        onPhotoTaken.accept(filePath);
     }
 
-    private void savePicture(byte[] bytes) {
+    private String savePicture(byte[] bytes) {
         try {
             File pictureFileDir = ApplicationLoader.getFilesDirFixed();
             if (bytes == null) {
-                onPhotoTaken.accept(null);
-                return;
+                return null;
             }
             if (!pictureFileDir.exists() && !pictureFileDir.mkdirs()) {
-                onPhotoTaken.accept(null);
-                return;
+                return null;
             }
             SimpleDateFormat dateFormat = new SimpleDateFormat("(hh:mm:ss)(dd.MM.yyyy)", Locale.US);
             String date = dateFormat.format(new Date());
@@ -196,9 +199,9 @@ public class HiddenCameraManager implements Camera.PictureCallback, Camera.Previ
             FileOutputStream fos = new FileOutputStream(pictureFile);
             fos.write(bytes);
             fos.close();
-            onPhotoTaken.accept(filePath);
+            return filePath;
         } catch (Exception e) {
-            onPhotoTaken.accept(null);
+            return null;
         }
     }
 }

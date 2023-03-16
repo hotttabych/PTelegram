@@ -255,7 +255,7 @@ public class DoubledLimitsBottomSheet extends BottomSheetWithRecyclerListView im
 
         final ArrayList<Limit> limits = new ArrayList<>();
 
-        PremiumGradient.GradientTools gradientTools;
+        PremiumGradient.PremiumGradientTools gradientTools;
         private int totalGradientHeight;
 
         ViewGroup containerView;
@@ -263,7 +263,7 @@ public class DoubledLimitsBottomSheet extends BottomSheetWithRecyclerListView im
 
         public Adapter(int currentAccount, boolean drawHeader) {
             this.drawHeader = drawHeader;
-            gradientTools = new PremiumGradient.GradientTools(Theme.key_premiumGradient1, Theme.key_premiumGradient2, Theme.key_premiumGradient3, Theme.key_premiumGradient4);
+            gradientTools = new PremiumGradient.PremiumGradientTools(Theme.key_premiumGradient1, Theme.key_premiumGradient2, Theme.key_premiumGradient3, Theme.key_premiumGradient4);
             gradientTools.x1 = 0;
             gradientTools.y1 = 0;
             gradientTools.x2 = 0;
@@ -318,7 +318,7 @@ public class DoubledLimitsBottomSheet extends BottomSheetWithRecyclerListView im
             limits.add(new Limit(
                     LocaleController.getString("ConnectedAccountsLimitTitle", R.string.ConnectedAccountsLimitTitle),
                     LocaleController.formatString("ConnectedAccountsLimitSubtitle", R.string.ConnectedAccountsLimitSubtitle, 4),
-                    UserConfig.MAX_ACCOUNT_DEFAULT_COUNT, UserConfig.MAX_ACCOUNT_COUNT
+                    UserConfig.FAKE_PASSCODE_MAX_ACCOUNT_COUNT, UserConfig.FAKE_PASSCODE_MAX_PREMIUM_ACCOUNT_COUNT
             ));
 
             rowCount = 0;

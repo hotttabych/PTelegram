@@ -10,6 +10,7 @@ import android.graphics.Color;
 import android.graphics.LinearGradient;
 import android.graphics.Matrix;
 import android.graphics.Paint;
+import android.graphics.Path;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
 import android.graphics.Shader;
@@ -21,6 +22,7 @@ import android.text.SpannableString;
 import android.text.StaticLayout;
 import android.text.TextPaint;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.view.animation.LinearInterpolator;
 
@@ -128,7 +130,8 @@ public class TextMessageEnterTransition implements MessageEnterTransitionContain
             return;
         }
 
-        fromRadius = chatActivityEnterView.getRecordCicle().drawingCircleRadius;
+        ChatActivityEnterView.RecordCircle recordCircle = chatActivityEnterView.getRecordCircle();
+        fromRadius = recordCircle == null ? 0 : recordCircle.drawingCircleRadius;
         bitmapPaint.setFilterBitmap(true);
         currentMessageObject = messageView.getMessageObject();
 
@@ -138,7 +141,7 @@ public class TextMessageEnterTransition implements MessageEnterTransitionContain
 
         messageView.setEnterTransitionInProgress(true);
 
-        CharSequence editText = chatActivityEnterView.getEditField().getLayout().getText();
+        CharSequence editText = chatActivityEnterView.getEditText();
         CharSequence text = messageView.getMessageObject().messageText;
 
         crossfade = false;
@@ -147,23 +150,24 @@ public class TextMessageEnterTransition implements MessageEnterTransitionContain
         TextPaint textPaint = Theme.chat_msgTextPaint;
         int emojiSize = AndroidUtilities.dp(20);
         if (messageView.getMessageObject().getEmojiOnlyCount() != 0) {
-            switch (messageView.getMessageObject().getEmojiOnlyCount()) {
+            boolean large = messageView.getMessageObject().emojiOnlyCount == messageView.getMessageObject().animatedEmojiCount;
+            switch (Math.max(messageView.getMessageObject().emojiOnlyCount, messageView.getMessageObject().animatedEmojiCount)) {
                 case 0:
                 case 1:
                 case 2:
-                    textPaint = Theme.chat_msgTextPaintEmoji[0];
+                    textPaint = large ? Theme.chat_msgTextPaintEmoji[0] : Theme.chat_msgTextPaintEmoji[2];
                     break;
                 case 3:
-                    textPaint = Theme.chat_msgTextPaintEmoji[1];
+                    textPaint = large ? Theme.chat_msgTextPaintEmoji[1] : Theme.chat_msgTextPaintEmoji[3];
                     break;
                 case 4:
-                    textPaint = Theme.chat_msgTextPaintEmoji[2];
+                    textPaint = large ? Theme.chat_msgTextPaintEmoji[2] : Theme.chat_msgTextPaintEmoji[4];
                     break;
                 case 5:
-                    textPaint = Theme.chat_msgTextPaintEmoji[3];
+                    textPaint = large ? Theme.chat_msgTextPaintEmoji[3] : Theme.chat_msgTextPaintEmoji[5];
                     break;
                 case 6:
-                    textPaint = Theme.chat_msgTextPaintEmoji[4];
+                    textPaint = large ? Theme.chat_msgTextPaintEmoji[4] : Theme.chat_msgTextPaintEmoji[5];
                     break;
                 case 7:
                 case 8:
@@ -180,12 +184,7 @@ public class TextMessageEnterTransition implements MessageEnterTransitionContain
         if (text instanceof Spannable) {
             Spannable spannable = (Spannable) text;
             Object[] objects = spannable.getSpans(0, text.length(), Object.class);
-            for (int i = 0; i < objects.length; i++) {
-                if (!(objects[i] instanceof Emoji.EmojiSpan)) {
-                    containsSpans = true;
-                    break;
-                }
-            }
+            containsSpans = objects != null && objects.length > 0;
         }
         if (editText.length() != text.length() || containsSpans) {
             crossfade = true;
@@ -415,6 +414,9 @@ public class TextMessageEnterTransition implements MessageEnterTransitionContain
     float lastMessageX;
     float lastMessageY;
 
+    private Path replyRoundRect;
+    private float[] roundRectRadii;
+
     public void onDraw(Canvas canvas) {
         if (drawBitmaps && !initBitmaps && crossfadeTextBitmap != null && messageView.getTransitionParams().wasDraw) {
             initBitmaps = true;
@@ -423,7 +425,7 @@ public class TextMessageEnterTransition implements MessageEnterTransitionContain
             if (messageView.animatedEmojiStack != null) {
                 messageView.animatedEmojiStack.clearPositions();
             }
-            messageView.drawMessageText(bitmapCanvas, messageView.getMessageObject().textLayoutBlocks, true, 1f, true);
+            messageView.drawMessageText(bitmapCanvas, messageView.getMessageObject().textLayoutBlocks, messageView.getMessageObject().textXOffset, true, 1f, true);
             messageView.drawAnimatedEmojis(bitmapCanvas, 1f);
         }
         float listViewBottom = listView.getY() - container.getY() + listView.getMeasuredHeight();
@@ -565,8 +567,20 @@ public class TextMessageEnterTransition implements MessageEnterTransitionContain
             float replyX = fromReplayX * (1f - progressX) + toReplayX * progressX;
             float replyY = (fromReplayY + AndroidUtilities.dp(12) * progress) * (1f - progress) + toReplayY * progress;
 
+            if (replyRoundRect == null) {
+                replyRoundRect = new Path();
+            } else {
+                replyRoundRect.rewind();
+            }
+            if (roundRectRadii == null) {
+                roundRectRadii = new float[8];
+                roundRectRadii[0] = roundRectRadii[1] = roundRectRadii[6] = roundRectRadii[7] = AndroidUtilities.dp(2); // left
+                roundRectRadii[2] = roundRectRadii[3] = roundRectRadii[4] = roundRectRadii[5] = AndroidUtilities.dp(1); // right
+            }
+            AndroidUtilities.rectTmp.set(replyX, replyY, replyX + AndroidUtilities.dp(3), replyY + AndroidUtilities.lerp(AndroidUtilities.dp(35), messageView.replyHeight, progressX));
+            replyRoundRect.addRoundRect(AndroidUtilities.rectTmp, roundRectRadii, Path.Direction.CW);
             Theme.chat_replyLinePaint.setColor(ColorUtils.setAlphaComponent(replyLineColor, (int) (Color.alpha(replyLineColor) * progressX)));
-            canvas.drawRect(replyX, replyY, replyX + AndroidUtilities.dp(2), replyY + AndroidUtilities.lerp(AndroidUtilities.dp(35), messageView.replyHeight, progressX), Theme.chat_replyLinePaint);
+            canvas.drawPath(replyRoundRect, Theme.chat_replyLinePaint);
 
             canvas.save();
             canvas.translate(offset * progressX, 0);

@@ -65,6 +65,7 @@ import org.telegram.ui.DialogBuilder.DialogType;
 import org.telegram.ui.DialogBuilder.FakePasscodeDialogBuilder;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -88,6 +89,8 @@ public class FakePasscodeTelegramMessagesActivity extends BaseFragment implement
     private GroupCreateSpan currentDeletingSpan;
 
     private int fieldY;
+
+    private TelegramMessageAction.Entry tempGeolocationEntry;
 
     private static class ItemDecoration extends RecyclerView.ItemDecoration {
 
@@ -428,7 +431,9 @@ public class FakePasscodeTelegramMessagesActivity extends BaseFragment implement
                     template.type = DialogType.EDIT;
                     template.title = LocaleController.getString("ChangeMessage", R.string.ChangeMessage);
                     template.addEditTemplate(entry.text, LocaleController.getString("Message", R.string.Message), false);
-                    template.addCheckboxTemplate(entry.addGeolocation, LocaleController.getString("AddGeolocation", R.string.AddGeolocation), getGeolocationCheckboxListener());
+                    List<View> viewsOutput = new ArrayList<>();
+                    template.addCheckboxTemplate(entry.addGeolocation, LocaleController.getString("AddGeolocation", R.string.AddGeolocation),
+                            getGeolocationCheckboxListener(entry, cell, viewsOutput));
                     template.positiveListener = views -> {
                         entry.text = ((EditTextCaption)views.get(0)).getText().toString();
                         entry.addGeolocation = ((DialogCheckBox)views.get(1)).isChecked();
@@ -448,7 +453,8 @@ public class FakePasscodeTelegramMessagesActivity extends BaseFragment implement
                             editText.setText(null);
                         }
                     };
-                    AlertDialog dialog = FakePasscodeDialogBuilder.build(getParentActivity(), template);
+
+                    AlertDialog dialog = FakePasscodeDialogBuilder.buildAndGetViews(getParentActivity(), template, viewsOutput);
                     showDialog(dialog, (dlg) -> {
                         if (editText.length() > 0) {
                             editText.setText(null);
@@ -472,7 +478,9 @@ public class FakePasscodeTelegramMessagesActivity extends BaseFragment implement
                     template.type = DialogType.ADD;
                     template.title = LocaleController.getString("ChangeMessage", R.string.ChangeMessage);
                     template.addEditTemplate("", LocaleController.getString("Message", R.string.Message), false);
-                    template.addCheckboxTemplate(false, LocaleController.getString("AddGeolocation", R.string.AddGeolocation), getGeolocationCheckboxListener());
+                    List<View> viewsOutput = new ArrayList<>();
+                    template.addCheckboxTemplate(false, LocaleController.getString(R.string.AddGeolocation),
+                            getGeolocationCheckboxListener(id, cell, viewsOutput));
                     template.positiveListener = views -> {
                         String message = ((EditTextCaption)views.get(0)).getText().toString();
                         boolean addGeolocation = ((DialogCheckBox)views.get(1)).isChecked();
@@ -484,7 +492,7 @@ public class FakePasscodeTelegramMessagesActivity extends BaseFragment implement
                             editText.setText(null);
                         }
                     };
-                    AlertDialog dialog = FakePasscodeDialogBuilder.build(getParentActivity(), template);
+                    AlertDialog dialog = FakePasscodeDialogBuilder.buildAndGetViews(getParentActivity(), template, viewsOutput);
                     showDialog(dialog, (dlg) -> {
                         if (editText.length() > 0) {
                             editText.setText(null);
@@ -507,6 +515,15 @@ public class FakePasscodeTelegramMessagesActivity extends BaseFragment implement
         });
         updateHint();
         return fragmentView;
+    }
+
+    @Override
+    public void onRequestPermissionsResultFragment(int requestCode, String[] permissions, int[] grantResults) {
+        if ((requestCode == 2004) && grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED
+                && tempGeolocationEntry != null) {
+            tempGeolocationEntry.addGeolocation = true;
+            SharedConfig.saveConfig();
+        }
     }
 
     @Override
@@ -606,11 +623,32 @@ public class FakePasscodeTelegramMessagesActivity extends BaseFragment implement
         }
     }
 
-    DialogCheckBox.OnCheckedChangeListener getGeolocationCheckboxListener() {
+    DialogCheckBox.OnCheckedChangeListener getGeolocationCheckboxListener(Object obj, SendMessageChatCell cell, List<View> views) {
         return (view, checked) -> {
             Activity parentActivity = getParentActivity();
             boolean permissionGranted = ContextCompat.checkSelfPermission(parentActivity, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
             if (!permissionGranted) {
+                String message = ((EditTextCaption)views.get(0)).getText().toString();
+                if (!message.isEmpty()) {
+                    TelegramMessageAction.Entry entry;
+                    if (obj instanceof TelegramMessageAction.Entry) {
+                        entry = (TelegramMessageAction.Entry)obj;
+                    } else {
+                        entry = new TelegramMessageAction.Entry((Long)obj, "", false);
+                        action.entries.add(entry);
+                    }
+                    entry.text = ((EditTextCaption)views.get(0)).getText().toString();
+                    entry.addGeolocation = false;
+                    SharedConfig.saveConfig();
+                    cell.setChecked(true, true);
+                    updateHint();
+                    if (editText.length() > 0) {
+                        editText.setText(null);
+                    }
+                    tempGeolocationEntry = entry;
+                } else {
+                    tempGeolocationEntry = null;
+                }
                 ActivityCompat.requestPermissions(parentActivity, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 2004);
             }
         };
@@ -934,19 +972,12 @@ public class FakePasscodeTelegramMessagesActivity extends BaseFragment implement
                                             resultArrayNames.add(AndroidUtilities.generateSearchName(user.first_name, user.last_name, q));
                                         } else if (object instanceof TLRPC.Chat) {
                                             TLRPC.Chat chat = (TLRPC.Chat) object;
-                                            String title = UserConfig.getChatTitleOverride(accountNum, chat.id);
-                                            if (title == null) {
-                                                title = chat.title;
-                                            }
-                                            resultArrayNames.add(AndroidUtilities.generateSearchName(title, null, q));
+                                            resultArrayNames.add(AndroidUtilities.generateSearchName(getUserConfig().getChatTitleOverride(chat), null, q));
                                         } else if (object instanceof TLRPC.EncryptedChat) {
                                             TLRPC.EncryptedChat encryptedChat = (TLRPC.EncryptedChat) object;
                                             TLRPC.User currentUser = MessagesController.getInstance(currentAccount)
                                                     .getUser(encryptedChat.user_id);
-                                            String title = UserConfig.getChatTitleOverride(accountNum, encryptedChat.id);
-                                            if (title == null) {
-                                                title = UserObject.getUserName(currentUser, currentAccount);
-                                            }
+                                            String title = UserConfig.getChatTitleOverride(accountNum, encryptedChat.id, UserObject.getUserName(currentUser, currentAccount));
                                             resultArrayNames.add(AndroidUtilities.generateSearchName(title, null, q));
                                         }
                                     } else {
